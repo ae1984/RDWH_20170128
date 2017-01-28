@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_TMP_PKB_REP_DIFF_FOLDER
+refresh force on demand
+as
+select distinct report_iin_rnn, v.report_id,    v.folder_id, v.report_status,v.report_type,v.rfo_report_date_time
+from v_pkb_report v
+where v.report_iin_rnn in (
+            (select  v.report_iin_rnn  from v_pkb_report v
+                                           where RFO_REPORT_DATE>=to_date('01.07.2015','dd.mm.yyyy')
+                                           and RFO_REPORT_DATE<=to_date('31.07.2015','dd.mm.yyyy')
+                                           and is_from_cache=0
+                                          and v.report_status ='БЕКИ'
+minus
+
+select  t.iin from RISK_SDARYA.T_TMP_BILLING_BANK t
+where t.rep_status='Субъект не найден'))
+                  and RFO_REPORT_DATE>=to_date('01.07.2015','dd.mm.yyyy')
+                  and RFO_REPORT_DATE<=to_date('31.07.2015','dd.mm.yyyy')
+                  and is_from_cache=0
+                  and v.report_status ='БЕКИ';
+grant select on U1.M_TMP_PKB_REP_DIFF_FOLDER to LOADDB;
+grant select on U1.M_TMP_PKB_REP_DIFF_FOLDER to LOADER;
+
+

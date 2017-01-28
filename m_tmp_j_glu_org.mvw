@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_TMP_J_GLU_ORG
+refresh force on demand
+as
+select t.bin, upper(t.org_name_max) as org_name_max from M_GX_ORG@EE13 t where t.org_name_max like '%ГЛУХИХ%' and
+       t.org_name_max not like 'ИП ГЛУХИХ%' and
+       t.org_name_max not like 'ГЛУХИХ%'
+union
+select t.bin, upper(t.org_name_max) as org_name_max from M_GX_ORG@EE13 t where t.org_name_max like '%ИНВАЛИД%'
+union
+select t.bin, upper(t.org_name_max) as org_name_max from M_GX_ORG@EE13 t where t.org_name_max like '%СЛЕПЫХ%' and
+       t.org_name_max not like 'СЛЕПЫХ%';
+grant select on U1.M_TMP_J_GLU_ORG to LOADDB;
+grant select on U1.M_TMP_J_GLU_ORG to LOADER;
+
+

@@ -1,0 +1,33 @@
+﻿create materialized view U1.M_TMP_J_DEL_BY_REP_NEW_1
+refresh complete on demand
+as
+select
+  e.rep_date,
+  e.yy_mm_report,
+  e.cred_program_name,
+  count(1) as con_cnt,
+  count(distinct rbo_contract_id) as dist_con_cnt,
+
+  sum(total_debt) as tot_debt,
+  sum(total_debt_x) as tot_debt_x,
+
+  sum(case when del_days > 7 then total_debt end) as del_7_tot_debt,
+  sum(case when del_days_x > 7 then e.total_debt_x end) as del_7_X_tot_debt,
+
+  sum(case when del_days > 30 then total_debt end) as del_30_tot_debt,
+  sum(case when del_days_x > 30 then e.total_debt_x end) as del_30_X_tot_debt,
+
+  sum(case when del_days > 60 then total_debt end) as del_60_tot_debt,
+  sum(case when del_days_x > 60 then e.total_debt_x end) as del_60_X_tot_debt,
+
+  sum(case when del_days_x > 7 and del_days_x < 31 then e.total_debt_x end) as del_7_30_X_tot_debt,
+  sum(case when del_days > 7 and del_days < 31 then total_debt end) as del_7_30_tot_debt
+
+from U1.T_RBO_CONTRACT_PORTFOLIO e
+group by e.rep_date,
+         e.yy_mm_report,
+         e.cred_program_name;
+grant select on U1.M_TMP_J_DEL_BY_REP_NEW_1 to LOADDB;
+grant select on U1.M_TMP_J_DEL_BY_REP_NEW_1 to LOADER;
+
+

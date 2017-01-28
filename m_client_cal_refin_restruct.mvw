@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_CLIENT_CAL_REFIN_RESTRUCT
+refresh complete on demand
+as
+select co.client_id,
+              max(co.is_refin_restruct_ever) as is_refin_restruct_ever,
+              min(co.yms_res_first) as yms_res_first,
+              min(co.yms_res_last) as yms_res_last
+              from v_contract_cal co
+              group by co.client_id;
+grant select on U1.M_CLIENT_CAL_REFIN_RESTRUCT to LOADDB;
+grant select on U1.M_CLIENT_CAL_REFIN_RESTRUCT to LOADER;
+
+

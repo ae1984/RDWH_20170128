@@ -1,0 +1,24 @@
+﻿create table U1.NT_DATAFILE_IO_HIST
+(
+  sdt                 DATE,
+  name                VARCHAR2(257),
+  "Physical Reads"    NUMBER,
+  "Read %"            NUMBER,
+  "Physical Writes"   NUMBER,
+  "Write %"           NUMBER,
+  "Total Block I/O's" NUMBER
+)
+tablespace USERS
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+nologging;
+grant select on U1.NT_DATAFILE_IO_HIST to LOADDB;
+

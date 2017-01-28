@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_4_B
+refresh force on demand
+as
+select gm.claim_id,
+       max(w.total_debt) as total_debt
+from (select fcc.claim_id,
+             max(coalesce(v1.report_id,v2.report_id)) as pkb_report_id
+          from u1.M_MATRIX_BASE fcc
+          left join u1.V_PKB_REPORT v1 on v1.report_iin_rnn = fcc.iin and
+                                          v1.rfo_report_date_time >= trunc(fcc.folder_date_create_mi) - 60 and
+                                          v1.rfo_report_date_time <= trunc(fcc.folder_date_create_mi) + 5  and
+                                          trunc(v1.rfo_report_date_time) >= to_date('01-01-2013','dd-mm-yyyy')
+          left join u1.V_PKB_REPORT v2 on v2.report_iin_rnn = fcc.rnn and
+                                          v2.rfo_report_date_time >= trunc(fcc.folder_date_create_mi) - 60 and
+                                          v2.rfo_report_date_time <= trunc(fcc.folder_date_create_mi) + 5  and
+                                          trunc(v2.rfo_report_date_time) < to_date('01-01-2013','dd-mm-yyyy')
+          group by fcc.claim_id
+     ) gm
+join V_PKB_REPORT w on w.report_id = gm.pkb_report_id
+group by gm.claim_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_4_B to LOADDB;
+
+

@@ -1,0 +1,117 @@
+﻿create materialized view U1.V_CONTRACT_CAL_RFO
+refresh complete on demand
+as
+select /*+all_rows*/
+    cd.c_num_dog as contract_number,
+    cd.c_client_ref as rfo_client_id,
+    0 as is_card,
+    cd.c_date_begin as date_begin,
+    sd.c_code as contract_status_code,
+    upper(sd.c_name) as contract_status_name,
+    pr.c_code as cr_program_code,
+    upper(pr.c_name) as cr_program_name,
+/*    decode(cd.c_info_cred#type_cred#0,
+        1, 'ДЕНЬГИ',
+        2, 'ТОВАРЫ',
+        3, 'УСЛУГИ',
+        4, 'ИМЕННАЯ КАРТА',
+        5, 'АВТО',
+        'НЕ ОПРЕДЕЛЕН'
+        ) as credit_type_of_contract,  */
+    decode(cs.c_type_cred#0,
+        1, 'ДЕНЬГИ',
+        2, 'ТОВАРЫ',
+        3, 'УСЛУГИ',
+        4, 'ИМЕННАЯ КАРТА', -- не встречается
+        5, 'АВТО',
+        'НЕ ОПРЕДЕЛЕН'      -- не встречается
+        ) as credit_type_of_scheme,
+    upper(cs.c_name) as cr_scheme_name,
+--    ud.c_code as tariff_plan_code,
+    cards_tp.tariff_plan_code,
+--    upper(ud.c_name) as tariff_plan_name,
+    cards_tp.tariff_plan_name,
+    pcd.c_num_dog as gu_contract_num
+from
+    V_RFO_Z#CREDIT_DOG cd,
+    (select max(cd1.id) as max_id from V_RFO_Z#CREDIT_DOG cd1
+        where cd1.c_num_dog is not null
+        group by cd1.c_num_dog) cd_max, -- для получения актуальных данных
+    V_RFO_Z#PROPERTIES p,
+    V_RFO_Z#CRED_SCHEME cs,
+    V_RFO_Z#PROD_PROPERTY pr,
+    V_RFO_Z#PROPERTY_GRP gr,
+    V_RFO_Z#KAS_PC_DOG pcd,
+    V_RFO_Z#STATUS_DOG sd,
+    V_RFO_Z#FDOC fd,
+    V_RFO_Z#KAS_UNIVERSAL_D ud,
+    (select
+          cd2q.c_num_dog as contract_number,
+          udq.C_CODE as tariff_plan_code,
+          upper(udq.c_name) as tariff_plan_name
+      from
+          V_RFO_Z#KAS_PC_DOG cd2q,
+          (select max(cd1q.id) as max_id from V_RFO_Z#KAS_PC_DOG cd1q
+              where cd1q.c_num_dog is not null
+                 and cd1q.c_id_back is not null
+              group by cd1q.c_num_dog) cd_maxq, -- для получения актуальных данных
+          V_RFO_Z#KAS_UNIVERSAL_D udq
+      where
+          cd2q.id = cd_maxq.max_id and
+          cd2q.c_tariff_plan = udq.id(+)) cards_tp
+where
+    cd.id = cd_max.max_id and
+    cs.c_add_prop = p.collection_id and
+    gr.id = pr.c_group_prop and
+    gr.c_code = 'KAS_CRED_PROGRAM' and
+    p.c_prop = pr.id and
+    cs.id = cd.c_cred_scheme and
+    fd.id = cd.id and
+    sd.id = fd.c_status_doc and
+    cs.c_kas_tp_ref = ud.id(+) and
+    pcd.id(+) = cd.c_kas_pc_dog_ref and
+    cards_tp.contract_number(+) = pcd.c_num_dog
+union
+-- карты
+select /*+all_rows*/
+    cd2.c_num_dog as contract_number,
+    cd2.c_client_ref as rfo_client_id,
+    1 as is_card,
+    cd2.c_date_begin as date_begin,
+    sd.c_code as contract_status_code,
+    upper(sd.c_name) as contract_status_name,
+    pr.c_code as cr_program_code,
+    upper(pr.c_name) as cr_program_name,
+--    'КАРТА' as credit_type_of_contract,
+    'КАРТА' as credit_type_of_scheme,
+    upper(cs.c_name) as cr_scheme_name,
+    ud.C_CODE as tariff_plan_code,
+    upper(ud.c_name) as tariff_plan_name,
+    cd2.c_num_dog as gu_contract_num
+from
+    V_RFO_Z#KAS_PC_DOG cd2,
+    (select max(cd1.id) as max_id from V_RFO_Z#KAS_PC_DOG cd1
+        where cd1.c_num_dog is not null
+           and cd1.c_id_back is not null
+        group by cd1.c_num_dog) cd_max, -- для получения актуальных данных
+    V_RFO_Z#PROPERTIES p,
+    V_RFO_Z#KAS_CARD_SCHEME cs,
+    V_RFO_Z#PROD_PROPERTY pr,
+    V_RFO_Z#PROPERTY_GRP gr,
+    V_RFO_Z#STATUS_DOG sd,
+    V_RFO_Z#FDOC fd,
+    V_RFO_Z#KAS_UNIVERSAL_D ud
+where
+    cd2.id = cd_max.max_id and
+    cs.c_add_prop = p.collection_id and
+    gr.id = pr.c_group_prop and
+    gr.c_code = 'KAS_CRED_PROGRAM' and
+    p.c_prop = pr.id and
+    cs.id = cd2.c_pc_scheme and
+    fd.id = cd2.id and
+    sd.id = fd.c_status_doc and
+    cd2.c_tariff_plan = ud.id(+);
+grant select on U1.V_CONTRACT_CAL_RFO to LOADDB;
+grant select on U1.V_CONTRACT_CAL_RFO to LOADER;
+
+

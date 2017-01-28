@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_TMP_J_SAL_GCVP_TO_SAL_FORM
+refresh force on demand
+as
+select floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 as value,
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate,
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1,
+    round(sum(c.max_debt_used) / 1000000) as sales_mln,
+    round(sum(c.max_debt_used)) as sales,
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt,
+    round(sum(c.delinq_rate_b * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b,
+    round(sum(c.delinq_rate_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_w,
+    round(sum(c.delinq_rate_g * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_g
+from V_TMP_CONTRACT_CAL_DEL_NEW c
+join M_FOLDER_CON_MINER_X m on m.contract_id = c.contract_id
+where (c.yms like '2013 - %' or c.yms like '2012 - %' or c.yms like '2011 - %')
+group by floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10
+having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_J_SAL_GCVP_TO_SAL_FORM to LOADDB;
+grant select on U1.M_TMP_J_SAL_GCVP_TO_SAL_FORM to LOADER;
+
+

@@ -1,0 +1,46 @@
+﻿create materialized view U1.M_CONTRACT_CAL_DEL_PLAN_DAILY
+using no index
+refresh complete on demand
+as
+select a.*,
+       case when d.delinq_days >0 then 1 else 0 end as fpd,
+       case when d1.delinq_days >0 then 1 else 0 end as fpd7,
+       case when d2.delinq_days >15 then 1 else 0 end as spd,
+       case when a.x_amount > 0 and x.max_debt_used > 0 then
+                 trunc(d.total_debt/ x.max_debt_used * 100,2) 
+            else 0 end as delinq_rate_fpd,
+       case when a.x_amount > 0 and x.max_debt_used > 0  then
+                 trunc(d1.total_debt/ x.max_debt_used * 100,2) 
+            else 0 end as delinq_rate_fpd7,   
+       case when a.x_amount > 0 and x.max_debt_used > 0  then
+                 trunc(d2.total_debt/ x.max_debt_used * 100,2) 
+            else 0 end as delinq_rate_spd,  
+       d.total_debt as total_debt_fpd,
+       d1.total_debt as total_debt_fpd7,
+       d2.total_debt as total_debt_spd,
+       case when a.x_is_card = 1 then a.x_amount else x.max_debt_used end as max_debt_used
+from (
+    select p.*,
+           nvl(t.date_plan_pay,q.date_plan_pay) as fpd_date,   
+           nvl(t.date_plan_pay,q.date_plan_pay)+7 as fpd7_date,
+           nvl(t.date_plan_pay,q.date_plan_pay)+30 as spd_date
+    from V_DWH_PORTFOLIO_CURRENT p 
+    left join
+       (select min(t.date_plan_pay) as date_plan_pay, t.dcard_number 
+       from M_DWH_PLAN_OPER_CARD t
+       group by t.dcard_number) t on t.dcard_number = p.deal_number
+   left join
+       (select min(q.crdtplanr_date_plan_pay) as date_plan_pay, q.crdt_number 
+       from M_DWH_PLAN_OPER_CREDIT q
+       group by q.crdt_number) q on q.crdt_number = p.deal_number       
+    where p.x_start_date >= to_date('01.12.2013','dd.mm.yyyy') 
+      and p.x_is_credit_issued = 1
+) a
+left join DWH_PORT d on d.DEAL_NUMBER = a.deal_number and d.REP_DATE = a.fpd_date                   
+left join DWH_PORT d1 on d1.DEAL_NUMBER = a.deal_number and d1.rep_date = a.fpd7_date                    
+left join DWH_PORT d2 on d2.DEAL_NUMBER = a.deal_number and d2.rep_date = a.spd_date                     
+left join V_CONTRACT_CAL x on x.contract_number = a.deal_number;
+grant select on U1.M_CONTRACT_CAL_DEL_PLAN_DAILY to LOADDB;
+grant select on U1.M_CONTRACT_CAL_DEL_PLAN_DAILY to LOADER;
+
+

@@ -1,0 +1,59 @@
+﻿create table U1.V_FOLDER_ALL_RFO_SNAP170221
+(
+  folder_id                  NUMBER not null,
+  folder_number              VARCHAR2(60),
+  folder_date_create         DATE,
+  folder_yy_mm_create        VARCHAR2(9),
+  folder_year_create         VARCHAR2(4),
+  rfo_client_id              NUMBER,
+  folder_state               VARCHAR2(300),
+  process_code               VARCHAR2(300),
+  process_name               VARCHAR2(4000),
+  route_code                 VARCHAR2(75),
+  route_name                 VARCHAR2(300),
+  delivery_type              VARCHAR2(750),
+  source_system              VARCHAR2(750),
+  card_contract_id           NUMBER,
+  card_contract_number       VARCHAR2(300),
+  credit_contract_id         NUMBER,
+  credit_contract_number     VARCHAR2(300),
+  contract_id                NUMBER,
+  pos_code                   VARCHAR2(150),
+  dnp_name                   VARCHAR2(300),
+  is_credit_process          NUMBER,
+  is_credit_issued           NUMBER,
+  is_credit_issued_new       NUMBER,
+  is_form_exists             NUMBER,
+  underwriter                VARCHAR2(400),
+  underwriter_senior         VARCHAR2(400),
+  form_client_id             NUMBER,
+  fld_c_docs                 NUMBER not null,
+  autocalc_doc_id            NUMBER,
+  org_bin                    VARCHAR2(80),
+  route_point_code           VARCHAR2(90),
+  route_point_name           VARCHAR2(300),
+  expert_login               VARCHAR2(90),
+  expert_name                VARCHAR2(400),
+  expert_position            VARCHAR2(750),
+  is_daytime_decision_folder NUMBER,
+  manager_result             VARCHAR2(300),
+  manager_result_note        VARCHAR2(4000),
+  manager_input_time         NUMBER,
+  is_ind_enterpreneur_clear  NUMBER,
+  is_ind_enterpreneur        NUMBER,
+  expert_id                  NUMBER,
+  is_alt                     NUMBER
+)
+tablespace USERS_ARC
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+nologging;
+

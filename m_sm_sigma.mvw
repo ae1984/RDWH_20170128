@@ -1,0 +1,141 @@
+﻿create materialized view U1.M_SM_SIGMA
+build deferred
+refresh force on demand
+as
+select y.rfo_client_id as client_id,
+       rfcl.c_inn as client_inn,
+       max(y.a_date) as a_date,
+
+--       max(y.op_sum_bal_avg) keep (dense_rank last order by y.a_date) as sum_avg,
+       max(y.sigm_sum_bal) keep (dense_rank last order by y.a_date) as sigm_sum_bal,
+
+--      max(y.op_sum_kzt_avg) keep (dense_rank last order by y.a_date) as sum_avg_kzt,
+       max(y.sigm_sum_kzt) keep (dense_rank last order by y.a_date) as sigm_sum_kzt,
+
+--       max(y.op_sum_usd_avg) keep (dense_rank last order by y.a_date) as sum_avg_usd,
+       max(y.sigm_sum_usd) keep (dense_rank last order by y.a_date) as sigm_sum_usd,
+
+--       max(y.op_sum_eur_avg) keep (dense_rank last order by y.a_date) as sum_avg_eur,
+       max(y.sigm_sum_eur) keep (dense_rank last order by y.a_date) as sigm_sum_eur
+from (
+  select t.rbo_client_id,
+         cl.rfo_client_id,
+         a_date,
+
+         t.op_sum_bal,
+         floor(op_sum_bal/100000) as op_sum_bal_cat,
+         op_sum_bal_stddev,
+         op_sum_bal_avg,
+         op_sum_bal - op_sum_bal_avg as avg_sum_bal_dev,
+         case when op_sum_bal_stddev != 0 then (op_sum_bal - op_sum_bal_avg) / op_sum_bal_stddev end as avg_dev_sigm_sum_bal,
+         case when op_sum_bal_stddev != 0 then floor((op_sum_bal - op_sum_bal_avg) / op_sum_bal_stddev) end as sigm_sum_bal,       -- sigm_sum_bal
+
+         op_sum_kzt,
+         floor(op_sum_kzt/100000) as op_sum_kzt_cat,
+         op_sum_kzt_stddev,
+         op_sum_kzt_avg,
+         op_sum_kzt - op_sum_kzt_avg as avg_sum_kzt_dev,
+         case when op_sum_kzt_stddev != 0 then (op_sum_kzt - op_sum_kzt_avg) / op_sum_kzt_stddev end as avg_dev_sigm_sum_kzt,
+         case when op_sum_kzt_stddev != 0 then floor((op_sum_kzt - op_sum_kzt_avg) / op_sum_kzt_stddev) end as sigm_sum_kzt,       -- sigm_sum_kzt
+
+         op_sum_usd,
+         floor(op_sum_usd/500) as op_sum_usd_cat,
+         op_sum_usd_stddev,
+         op_sum_usd_avg,
+         op_sum_usd - op_sum_usd_avg as avg_sum_usd_dev,
+         case when op_sum_usd_stddev != 0 then (op_sum_usd - op_sum_usd_avg) / op_sum_usd_stddev end as avg_dev_sigm_sum_usd,
+         case when op_sum_usd_stddev != 0 then floor((op_sum_usd - op_sum_usd_avg) / op_sum_usd_stddev) end as sigm_sum_usd,       -- sigm_sum_usd
+
+         op_sum_eur,
+         floor(op_sum_eur/500) as op_sum_eur_cat,
+         op_sum_eur_stddev,
+         op_sum_eur_avg,
+         op_sum_eur - op_sum_eur_avg as avg_sum_eur_dev,
+         case when op_sum_eur_stddev != 0 then (op_sum_eur - op_sum_eur_avg) / op_sum_eur_stddev end as avg_dev_sigm_sum_eur,
+         case when op_sum_eur_stddev != 0 then floor((op_sum_eur - op_sum_eur_avg) / op_sum_eur_stddev) end as sigm_sum_eur        -- sigm_sum_eur
+  from (
+       select rbo_client_id, a_date,
+              day_bal as op_sum_bal,
+              stddev(day_bal) over (partition by rbo_client_id order by a_date
+                             range between unbounded preceding and current row) as op_sum_bal_stddev,
+              avg(day_bal) over (partition by rbo_client_id order by a_date
+                             range between unbounded preceding and current row) as op_sum_bal_avg,
+              op_sum_kzt,
+              stddev(op_sum_kzt) over (partition by rbo_client_id order by a_date
+                             range between unbounded preceding and current row) as op_sum_kzt_stddev,
+              avg(op_sum_kzt) over (partition by rbo_client_id order by a_date
+                             range between unbounded preceding and current row) as op_sum_kzt_avg,
+              op_sum_usd,
+              stddev(op_sum_usd) over (partition by rbo_client_id order by a_date
+                             range between unbounded preceding and current row) as op_sum_usd_stddev,
+              avg(op_sum_usd) over (partition by rbo_client_id order by a_date
+                             range between unbounded preceding and current row) as op_sum_usd_avg,
+              op_sum_eur,
+              stddev(op_sum_eur) over (partition by rbo_client_id order by a_date
+                             range between unbounded preceding and current row) as op_sum_eur_stddev,
+              avg(op_sum_eur) over (partition by rbo_client_id order by a_date
+                             range between unbounded preceding and current row) as op_sum_eur_avg
+       from (select nvl(x.op_sum_all_p,0) - nvl(x.op_sum_all_s,0) as day_bal,
+                    x.*
+             from (
+                    select t.rbo_client_id, t.date_doc_prov as a_date,
+                           sum(case when t.is_dt_ct = 1 then
+                             case when t.contract_currency  = 'KZT' then t.amount_oper
+                                when t.contract_currency = 'USD' then t.amount_oper * c.curs_usd
+                                when t.contract_currency = 'EUR' then t.amount_oper * c.curs_eur
+                             end
+                           end) as op_sum_all_s,
+
+                           sum(case when t.is_dt_ct = 0 then
+                             case when t.contract_currency = 'KZT' then t.amount_oper
+                                when t.contract_currency = 'USD' then t.amount_oper * c.curs_usd
+                                when t.contract_currency = 'EUR' then t.amount_oper * c.curs_eur
+                            end
+                           end) as op_sum_all_p,
+
+                           sum(case when t.is_dt_ct = 1 and t.contract_currency = 'KZT' then t.amount_oper end) as op_sum_kzt,
+                           sum(case when t.is_dt_ct = 1 and t.contract_currency = 'USD' then t.amount_oper end) as op_sum_usd,
+                           sum(case when t.is_dt_ct = 1 and t.contract_currency = 'EUR' then t.amount_oper end) as op_sum_eur
+
+                    from u1.T_CONTRACT_DEPN_OPER_ALL t
+                    left join u1.M_COURSES c on c.date_recount = t.date_doc_prov
+
+                    join (select *                                                                    -- только клиенты с ограниченной историей операций > 2 дней
+                          from (select t.rbo_client_id,
+                                       max(t.date_doc_prov) as last_op_date,
+                                       min(t.date_doc_prov) as first_op_date,
+                                       count(distinct trunc(t.date_doc_prov)) as date_cnt
+                                from u1.T_CONTRACT_DEPN_OPER_ALL t
+                                group by t.rbo_client_id)
+                          where date_cnt >= 10
+                          ) t1 on t1.rbo_client_id = t.rbo_client_id
+
+                    join (select a.rbo_client_id,                                                     -- только депозитчики
+                                 round(sum(a.sum_depn * a.val_cource), 0) as sum_depn_kzt_now
+                          from u1.M_CLIENT_DEPN a
+                          join u1.V_RBO_Z#DEPN d on a.rbo_depn_id = d.id
+                          join u1.V_RBO_Z#VID_DEPOSIT vd on vd.id = d.c_vid_dog
+                                                        and vd.c_has_timeout = 1
+                          group by a.rbo_client_id
+                          ) t2 on t2.rbo_client_id = t.rbo_client_id
+
+                    where t.oper_dog_name in ('ВОЗВРАТ ДЕПОЗИТА','ПЕРЕВОД НА KASPIGOLD','ПЕРЕВОД НА KASPIBLACK','СПИСАНИЕ БЕЗНАЛИЧНЫМИ (БЕЗНАЛ)','СПИСАНИЕ БЕЗНАЛИЧНЫМИ (СЛУЖЕБНАЯ)',
+                                              'СПИСАНИЕ БЕЗНАЛИЧНЫМИ (СЧЕТА ОДНОГО КЛИЕНТА)','СПИСАНИЕ БЕЗНАЛИЧНЫМИ ИО (БЕЗНАЛ)','СПИСАНИЕ БЕЗНАЛИЧНЫМИ ИО (БЕЗНАЛ) В НОЧНОЕ ВРЕМЯ',
+                                              'СПИСАНИЕ НА СЧЕТ','СПИСАНИЕ С ДЕПОЗИТА НА СЧЕТ','СПИСАНИЕ С ДЕПОЗИТА ЧЕРЕЗ POS-ТЕРМИНАЛ (БЕЗНАЛ)','СПИСАНИЕ С ДЕПОЗИТА ЧЕРЕЗ БАНКОМАТ (БЕЗНАЛ)',
+
+                                              'ВЗНОС НА СЧЕТ ЧЕРЕЗ POS-ТЕРМИНАЛ (БЕЗНАЛ)','ВЗНОС НАЛИЧНЫМИ (ВНЕШ. ТЕРМИНАЛ)','ВЗНОС НАЛИЧНЫМИ (КАСПИ ТЕРМИНАЛ)','ВЗНОС НАЛИЧНЫМИ НА СЧЕТ',
+                                              'ЗАЧИСЛЕНИЕ БЕЗНАЛ (СЛУЖЕБНАЯ)','ЗАЧИСЛЕНИЕ БЕЗНАЛИЧНЫМИ (БЕЗНАЛ)','ЗАЧИСЛЕНИЕ БЕЗНАЛИЧНЫМИ(СЧЕТА ОДНОГО КЛИЕНТА)','ЗАЧИСЛЕНИЕ НА ДЕПОЗИТ (БЕЗНАЛ)',
+                                              'ЗАЧИСЛЕНИЕ С ВИРТУАЛЬНОГО POS-ТЕРМИНАЛА НА ДЕПОЗИТ','ПОСТУПЛЕНИЕ С KASPIBLACK','ПОСТУПЛЕНИЕ С KASPIGOLD')
+                    group by t.rbo_client_id, t.date_doc_prov
+               ) x
+           )
+       order by 1,2) t
+       join u1.m_client_link cl on cl.rbo_client_id = t.rbo_client_id
+) y
+join V_RFO_Z#CLIENT  rfcl on rfcl.id = y.rfo_client_id
+where y.sigm_sum_bal <= -3
+group by y.rfo_client_id, rfcl.c_inn;
+grant select on U1.M_SM_SIGMA to LOADDB;
+grant select on U1.M_SM_SIGMA to LOADER;
+
+

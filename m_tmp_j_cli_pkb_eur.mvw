@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_TMP_J_CLI_PKB_EUR
+refresh force on demand
+as
+select c.client_iin, max(c.del_days) as del_days,
+       max(upper(pa.c_fin_inst)) as bank, max(pa.report_date) as rep_date,
+       max(coalesce(case when length(pa.c_fact_gash_date)= 10 then to_date(pa.c_fact_gash_date,'dd.mm.yyyy') else null end,
+                    to_date(pa.c_date_end,'dd.mm.yyyy'))) as contract_end_date_max
+from (
+     select p.client_iin, max(p.x_delinq_days) as del_days
+     from v_dwh_portfolio_current p
+     where p.x_delinq_days > 90 and
+           p.x_is_credit_issued = 1
+     group by p.client_iin
+) c join (
+     select r.report_iin_rnn, max(r.report_id) as rep_id_max
+     from V_PKB_REPORT r
+     where r.report_type in ('РАСШИРЕННЫЙ','СТАНДАРТНЫЙ')
+     group by r.report_iin_rnn
+) rr on rr.report_iin_rnn = c.client_iin
+join V_PKB_ALL pa on pa.report_id = rr.rep_id_max
+where coalesce(case when length(pa.c_fact_gash_date)= 10 then to_date(pa.c_fact_gash_date,'dd.mm.yyyy') else null end,
+                    to_date(pa.c_date_end,'dd.mm.yyyy')) > trunc(sysdate) + 10 and
+      upper(pa.c_fin_inst) like '%ЕВРАЗ%'
+group by c.client_iin;
+grant select on U1.M_TMP_J_CLI_PKB_EUR to LOADDB;
+grant select on U1.M_TMP_J_CLI_PKB_EUR to LOADER;
+
+

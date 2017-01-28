@@ -1,0 +1,36 @@
+﻿create table U1.T_SHOLPAN_TST2
+(
+  q VARCHAR2(512),
+  w VARCHAR2(512),
+  e DATE,
+  r DATE,
+  t VARCHAR2(512),
+  y VARCHAR2(512),
+  u DATE,
+  i DATE,
+  o DATE,
+  p DATE,
+  a VARCHAR2(512),
+  s VARCHAR2(512),
+  d VARCHAR2(512),
+  f VARCHAR2(512),
+  g VARCHAR2(512),
+  h VARCHAR2(512),
+  j VARCHAR2(512)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_SHOLPAN_TST2 to LOADDB;
+grant select on U1.T_SHOLPAN_TST2 to LOADER;
+

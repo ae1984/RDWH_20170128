@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_TMP_K_SCORE_RES_F_45_2
+refresh complete on demand
+as
+select t.*
+           , case when t.inc_rise_prc > 100 then
+                t.form_income_gcvp_salary_max + round(t.form_income_gcvp_salary_max*0.99, -3)
+             else t.score_inc_f end  score_inc_f2
+
+           , case when t.inc_rise_prc > 100 then
+                 round(coalesce(t.contract_pmt,0) + coalesce(t.other_deal_pmt,0) + coalesce(t.pkb_pmt,0))/
+                 (t.form_income_gcvp_salary_max + round(t.form_income_gcvp_salary_max*0.99, -3))*100
+             else t.score_kdn_f end as score_kdn_f2
+
+
+           , case when t.inc_rise_prc > 100 then
+                 case when (t.form_income_gcvp_salary_max + round(t.form_income_gcvp_salary_max*0.99, -3)) < sv.salary_double then 1 else 0 end
+             else t.score_is_kdn_regulated_f end score_is_kdn_regulated_f2
+
+             , case when t.inc_rise_prc > 100 then
+                 5
+               else t.score_card_f end score_card_f2
+
+             , case when t.inc_rise_prc > 100 then
+                100
+              else t.inc_rise_prc end  inc_rise_prc2
+
+    from M_TMP_K_SCORE_RES_F_45 t
+    left join T_SALARY_AVERAGE sv on sv.ym_str = t.yy_mm_start_b;
+grant select on U1.M_TMP_K_SCORE_RES_F_45_2 to LOADDB;
+grant select on U1.M_TMP_K_SCORE_RES_F_45_2 to LOADER;
+
+

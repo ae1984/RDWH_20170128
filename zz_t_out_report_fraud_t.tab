@@ -1,0 +1,33 @@
+﻿create table U1.ZZ_T_OUT_REPORT_FRAUD_T
+(
+  type_report         VARCHAR2(500) not null,
+  c_main_v_id         VARCHAR2(100),
+  c_name              VARCHAR2(1000),
+  mm_yyyy_report_date VARCHAR2(7) not null,
+  c_date_doc_x        DATE not null,
+  c_date_prov         DATE not null,
+  c_nazn              VARCHAR2(4000),
+  c_sum               NUMBER not null,
+  valuta              VARCHAR2(12),
+  is_db_kt            VARCHAR2(100) not null,
+  comments            VARCHAR2(2000),
+  c_gk_num            VARCHAR2(50),
+  c_acc_num_h         VARCHAR2(100),
+  c_gk_num_h          VARCHAR2(50),
+  quarter             VARCHAR2(7) not null
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.ZZ_T_OUT_REPORT_FRAUD_T to LOADDB;
+

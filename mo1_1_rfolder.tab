@@ -1,0 +1,27 @@
+﻿create table U1.MO1_1_RFOLDER
+(
+  id              NUMBER not null,
+  rclient_id      NUMBER,
+  date_create     TIMESTAMP(6) not null,
+  date_update     TIMESTAMP(6),
+  is_active       NUMBER(1) not null,
+  create_duration NUMBER,
+  update_duration NUMBER,
+  rfo_folder_id   NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO1_1_RFOLDER to LOADDB;
+grant select on U1.MO1_1_RFOLDER to LOADER;
+

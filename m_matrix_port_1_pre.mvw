@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_MATRIX_PORT_1_PRE
+build deferred
+refresh complete on demand
+as
+select b.rbo_contract_id,
+       case when f.process_name = 'ОНЛАЙН КРЕДИТ' then 'ОНЛАЙН-КРЕДИТ ЭКТ' else b.cred_program_name end as product,
+       case when f.process_name = 'ОНЛАЙН КРЕДИТ' then 'ОНЛАЙН-КРЕДИТ' else b.product_type end as product_type,
+       b.x_dnp_name as city
+  from M_RBO_CONTRACT_BAS       b
+  left join M_FOLDER_CON_CANCEL f on f.folder_id = b.folder_id_first
+                                 and f.contract_number = b.contract_number;
+grant select on U1.M_MATRIX_PORT_1_PRE to LOADDB;
+grant select on U1.M_MATRIX_PORT_1_PRE to LOADER;
+
+

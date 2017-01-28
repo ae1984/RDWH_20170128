@@ -1,0 +1,37 @@
+﻿create table U1.T_RDWH_GU_VERSIONS
+(
+  id              NUMBER,
+  gu_version      NUMBER,
+  description     VARCHAR2(200),
+  date_start      DATE,
+  date_end        DATE,
+  gu_version_code VARCHAR2(50)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RDWH_GU_VERSIONS
+  is 'Справочник распределения версий ГУ';
+comment on column U1.T_RDWH_GU_VERSIONS.id
+  is 'Идентификатор таблицы';
+comment on column U1.T_RDWH_GU_VERSIONS.gu_version
+  is 'Номер версии';
+comment on column U1.T_RDWH_GU_VERSIONS.description
+  is 'Наименование версии';
+comment on column U1.T_RDWH_GU_VERSIONS.date_start
+  is 'Дата начала действия текущей версии';
+comment on column U1.T_RDWH_GU_VERSIONS.date_end
+  is 'Дата окончания действия текущей версии';
+comment on column U1.T_RDWH_GU_VERSIONS.gu_version_code
+  is 'Код версии ГУ';
+grant select on U1.T_RDWH_GU_VERSIONS to LOADDB;
+

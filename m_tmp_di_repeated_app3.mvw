@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_TMP_DI_REPEATED_APP3
+refresh complete on demand
+as
+select
+client_iin,
+yy_mm_start,
+begin_date,
+plan_end_date,
+actual_end_date,
+planned_term,
+report_status,
+case when actual_payment_num<=15 then '<=15 days'
+     when actual_payment_num>15 and actual_payment_num<=31 then '16-31 days'
+     when actual_payment_num>=32 and actual_payment_num<=61 then '2 months'
+     when actual_payment_num>=62 and actual_payment_num<=91 then '3 months'
+     when actual_payment_num>=92 and actual_payment_num<=121 then '4 months'
+     when actual_payment_num>=122 and actual_payment_num<=151 then '5 months'
+     when actual_payment_num>=152 and actual_payment_num<=181 then '6 months'
+     when actual_payment_num>=182 then '> 6 months'
+     when actual_payment_num is null and is_credit_active=1 then 'active credit' else 'Other' end as actual_payment_num2,
+actual_payment_num,
+contract_amount,
+x_product_type,
+deal_status,
+deal_number,
+is_credit_active, x_is_credit_issued
+from m_tmp_di_repeated_app2;
+grant select on U1.M_TMP_DI_REPEATED_APP3 to LOADDB;
+grant select on U1.M_TMP_DI_REPEATED_APP3 to LOADER;
+
+

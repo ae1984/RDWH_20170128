@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_FORM_CLIENT_ALL_RFO_PRE7
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/
+      distinct pr6.collection_id, pp6.c_name as prop_name
+             from V_RFO_Z#PROPERTIES pr6
+             join V_RFO_Z#PROD_PROPERTY pp6 on pp6.id = pr6.c_prop
+                                           and pp6.c_group_prop = pr6.c_group_prop
+             join V_RFO_Z#PROPERTY_GRP pg6  on pg6.id = pr6.c_group_prop
+             where pg6.c_code = 'NALICHIE_AUTO' --Наличие автомобиля  8823555 -- NALICHIE_AUTO;
+grant select on U1.V_FORM_CLIENT_ALL_RFO_PRE7 to LOADDB;
+
+

@@ -1,0 +1,27 @@
+﻿create table U1.T_NPS_CLIENT_PHONED_ALL
+(
+  client_iin  VARCHAR2(256),
+  insert_date DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_NPS_CLIENT_PHONED_ALL
+  is 'Справочник всех клиентов которым уже звонили(Проект для Маркетинга)';
+comment on column U1.T_NPS_CLIENT_PHONED_ALL.client_iin
+  is 'иин';
+comment on column U1.T_NPS_CLIENT_PHONED_ALL.insert_date
+  is 'дата вставки';
+grant select on U1.T_NPS_CLIENT_PHONED_ALL to LOADDB;
+grant select on U1.T_NPS_CLIENT_PHONED_ALL to LOADER;
+grant select on U1.T_NPS_CLIENT_PHONED_ALL to NPS;
+

@@ -1,0 +1,23 @@
+﻿create table U1.TMP_DHC_PORT_IIN_20150820_CALL
+(
+  iin                       VARCHAR2(50),
+  contract_number           VARCHAR2(50),
+  contract_status_1         VARCHAR2(200),
+  delay_days_quantity_level NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.TMP_DHC_PORT_IIN_20150820_CALL to LOADDB;
+grant select on U1.TMP_DHC_PORT_IIN_20150820_CALL to LOADER;
+

@@ -1,0 +1,64 @@
+﻿create materialized view U1.V_PHONE
+using no index
+refresh complete on demand
+as
+select /*+ all_rows */
+       x.phone_number,
+       count(distinct x.rfo_client_id) as client_count,
+--       count(distinct x.iin) as client_iin_count,
+--       count(distinct x.rnn) as client_rnn_count,
+       count(distinct (case when x.phone_type = 'МОБИЛЬНЫЙ' then x.rfo_client_id else null end)) as client_count_mobile,
+       count(distinct (case when x.phone_type = 'ДОМАШНИЙ' then x.rfo_client_id else null end)) as client_count_home,
+       count(distinct (case when x.phone_type = 'СУПРУГА' then x.rfo_client_id else null end)) as client_count_spouse,
+       count(distinct (case when x.phone_type = 'МОБИЛЬНЫЙ СУПРУГИ' then x.rfo_client_id else null end)) as client_count_spouse_mobile,
+       count(distinct (case when x.phone_type = 'КОНТАКТ' then x.rfo_client_id else null end)) as client_count_contact,
+       count(distinct (case when x.phone_type = 'РАБОЧИЙ' then x.rfo_client_id else null end)) as client_count_work,
+       count(distinct (case when x.phone_type = 'ОРГАНИЗАЦИЯ' then x.rfo_client_id else null end)) as client_count_org,
+       count(distinct (case when x.phone_type = 'ОРГАНИЗАЦИЯ СУПРУГИ' then x.rfo_client_id else null end)) as client_count_org_spouse,
+       count(distinct (case when x.phone_type in ('РАБОЧИЙ','ОРГАНИЗАЦИЯ','ОРГАНИЗАЦИЯ СУПРУГИ') then x.rfo_client_id else null end)) as client_count_org_any,
+       count(distinct (case when x.phone_type in ('МОБИЛЬНЫЙ','МОБИЛЬНЫЙ СУПРУГИ') then x.rfo_client_id else null end)) as client_count_mobile_any,
+--       count(distinct (case when x.phone_type in ('home','spouse') then x.rnn else null end)) as client_count_home_any,
+       min(x.form_client_date) as phone_date_min,
+       max(x.form_client_date) as phone_date_max,
+       min(x.start_date_first) as contract_start_date_first,
+       max(x.delinq_days_max) as delinq_days_max,
+--       round(sum(x.delinq_days_max) / count(distinct x.contract_number),0) as delinq_days_avg,
+       max(x.is_delinq) as is_delinq,
+       count(distinct (case when x.is_delinq = 1 then x.rfo_client_id else null end)) as client_delinq_count,
+       max(x.is_high_delinq) as is_high_delinq,
+       count(distinct (case when x.is_high_delinq = 1 then x.rfo_client_id else null end)) as client_high_delinq_count,
+       max(x.fact_pmts) as fact_pmts_max,
+--       round(sum(x.fact_pmts) / count(distinct x.contract_number),0) as fact_pmts_avg,
+       count(distinct x.credit_folder_id) as folder_count,
+       count(distinct (case when x.is_credit_issued = 1 then x.rfo_client_id else null end)) as approved_client_count,
+       count(distinct (case when x.is_credit_issued = 1 then x.credit_folder_id else null end)) as approved_folder_count,
+       count(distinct (x.contract_number)) as report_contract_count--,
+--           case when sum(vp.max_debt_used) > 0 then
+--                round(sum(vp.new_total_debt_if_delinq) / sum(vp.max_debt_used) * 100, 2)
+--                else null end as
+--       deling_rate
+from (
+select pa.folder_id,
+       pa.form_client_date,
+       pa.rfo_client_id,
+       pa.phone_number,
+       pa.phone_type,
+       c1.contract_number,
+       c1.start_date_first,
+       c1.delinq_days_max,
+       case when c1.delinq_days_max > 5 then 1 else 0 end as is_delinq,
+       case when c1.delinq_days_max > 90 then 1 else 0 end as is_high_delinq,
+       c1.fact_pmts,
+       f1.folder_id as credit_folder_id,
+       f1.is_credit_issued
+from
+V_FORM_CLIENT_CONTACT_PHONE pa, V_CONTRACT_CAL c1, V_FOLDER_ALL f1
+where pa.folder_id = c1.folder_id_first(+)
+and pa.folder_id = f1.folder_id(+)
+) x--, V_PORTFOLIO_DELINQ vp
+--where vp.contract_number(+) = nvl(x.contract_number,'')
+group by x.phone_number;
+grant select on U1.V_PHONE to LOADDB;
+grant select on U1.V_PHONE to LOADER;
+
+

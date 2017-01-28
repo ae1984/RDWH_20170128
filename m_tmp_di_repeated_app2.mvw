@@ -1,0 +1,50 @@
+﻿create materialized view U1.M_TMP_DI_REPEATED_APP2
+refresh complete on demand
+as
+select
+client_iin,
+yy_mm_start,
+begin_date,
+plan_end_date,
+actual_end_date,
+report_status,
+round((plan_end_date-begin_date)/30) as planned_term,
+case when is_credit_active=0 and actual_end_date is not null --and deal_status='ПОГАШЕН ДОСРОЧНО'
+  then actual_end_date-begin_date end as actual_payment_num,
+case when x_amount=0 then '0'
+     when x_amount>0 and x_amount<=50000 then '<=50 000'
+     when x_amount>50000 and x_amount<=100000 then '50 001 - 100 000'
+     when x_amount>100000 and x_amount<=150000 then '100 001 - 150 000'
+     when x_amount>150000 and x_amount<=200000 then '150 001 - 200 000'
+     when x_amount>200000 and x_amount<=250000 then '200 001 - 250 000'
+     when x_amount>250000 and x_amount<=300000 then '250 001 - 300 000'
+     when x_amount>300000 and x_amount<=350000 then '300 001 - 350 000'
+     when x_amount>350000 and x_amount<=400000 then '350 001 - 400 000'
+     when x_amount>400000 and x_amount<=450000 then '400 001 - 450 000'
+     when x_amount>450000 and x_amount<=500000 then '450 001 - 500 000'
+     when x_amount>500000 and x_amount<=600000 then '500 001 - 600 000'
+     when x_amount>600000 and x_amount<=700000 then '600 001 - 700 000'
+     when x_amount>700000 and x_amount<=800000 then '700 001 - 800 000'
+     when x_amount>800000 and x_amount<=900000 then '800 001 - 900 000'
+     when x_amount>900000 and x_amount<=1000000 then '900 001 - 1 000 000'
+     when x_amount>1000000 and x_amount<=1500000 then '1 000 001 - 1 500 000'
+     when x_amount>1500000 and x_amount<=2000000 then '1 500 001 - 2 000 000'
+     when x_amount>2000000 and x_amount<=2500000 then '2 000 001 - 2 500 000'
+     when x_amount>2500000 and x_amount<=3000000 then '2 500 001 - 3 000 000'
+     when x_amount>3000000 then '>3 000 001' else 'Other' end as contract_amount,
+x_product_type,
+deal_status,
+deal_number,
+is_credit_active,
+x_is_credit_issued
+from m_tmp_di_repeated_app1
+where deal_number not in
+('R2218888-002',
+'R4426606-001',
+'R3247130-003',
+'R3920021-002',
+'R3454849-001/CRD-2');
+grant select on U1.M_TMP_DI_REPEATED_APP2 to LOADDB;
+grant select on U1.M_TMP_DI_REPEATED_APP2 to LOADER;
+
+

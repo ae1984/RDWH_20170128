@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_TDWH_WA_FREQ
+using no index
+refresh complete on demand
+as
+select mn.client_dwh_id,
+            mn.mob_num,
+            case when regexp_like(mn.mob_num, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(mn.mob_num,'^[7-8]{1}','')
+                 when regexp_like(mn.mob_num, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(mn.mob_num,'^[7-8]{2}','')
+                 when regexp_like(mn.mob_num, '^[+]7[[:digit:]]{10}$') then regexp_replace(mn.mob_num,'^[+]7','')
+                 else to_char(mn.mob_num)
+             end as mob_num_clear,
+            mn.check_cnt,
+            mn.min_ls_date,
+            mn.max_ls_date,
+            mn.freq
+       from WA.V$WA_FREQ@tdwh2 mn;
+grant select on U1.M_TDWH_WA_FREQ to LOADDB;
+grant select on U1.M_TDWH_WA_FREQ to LOADER;
+
+

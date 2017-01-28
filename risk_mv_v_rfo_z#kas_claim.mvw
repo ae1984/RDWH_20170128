@@ -1,0 +1,11 @@
+﻿create materialized view U1.RISK_MV_V_RFO_Z#KAS_CLAIM
+refresh complete on demand
+as
+select t.*,
+       to_number(coalesce(replace(replace(regexp_substr(t.c_parameters,'GCVP_ID#.*?]',1),'GCVP_ID#',''),']',''),
+                          replace(replace(regexp_substr(t.c_parameters,'GCVP_REPORT_ID#.*?]',1),'GCVP_REPORT_ID#',''),']',''))) as gcvp_report_id
+  from ibs.z#kas_claim@rfo_snap t
+ where t.c_type in ('GCVP_REP_SEND','GCVP_REP_GET');
+grant select on U1.RISK_MV_V_RFO_Z#KAS_CLAIM to LOADDB;
+
+

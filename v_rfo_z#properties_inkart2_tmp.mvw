@@ -1,0 +1,12 @@
+﻿create materialized view U1.V_RFO_Z#PROPERTIES_INKART2_TMP
+using no index
+refresh complete on demand
+as
+select p.c_prop, p.c_str, p.c_bool, p.c_group_prop, p.collection_id, p.c_obj, p.c_v_date
+from IBS.Z#PROPERTIES@RFO_SNAP p where p.c_group_prop in
+-- IS_IN_KART2
+(9204014444);
+grant select on U1.V_RFO_Z#PROPERTIES_INKART2_TMP to LOADDB;
+grant select on U1.V_RFO_Z#PROPERTIES_INKART2_TMP to LOADER;
+
+

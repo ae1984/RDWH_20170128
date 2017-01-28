@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_TMP_J_ONLN_CRED_FLD_W_PURSE
+refresh complete on demand
+as
+select f.folder_id, f.folder_date_create, f.rfo_client_id
+from V_FOLDER_ALL_RFO f
+where --f.folder_date_create > trunc(sysdate) - 30 and
+      f.process_name = 'ОНЛАЙН КРЕДИТ' and
+      exists (select null from V_FOLDER_ALL_RFO f2
+                     where f2.rfo_client_id = f.rfo_client_id and
+                           f2.folder_date_create < f.folder_date_create and
+                           trunc(f2.folder_date_create) >= trunc(f.folder_date_create) - 7 and
+                           f2.process_name = 'ВЫДАЧА КОШЕЛЬКА');
+grant select on U1.M_TMP_J_ONLN_CRED_FLD_W_PURSE to LOADDB;
+grant select on U1.M_TMP_J_ONLN_CRED_FLD_W_PURSE to LOADER;
+
+

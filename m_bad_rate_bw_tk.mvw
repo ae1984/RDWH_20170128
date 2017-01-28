@@ -1,0 +1,43 @@
+﻿create materialized view U1.M_BAD_RATE_BW_TK
+refresh complete on demand
+as
+select *
+from (
+  (select ti.yyyy_mm,
+         x.is_client_new_by_con,
+         x.is_bad,
+         x.cnt
+  from v_time_months ti
+  left join
+      (select t3.yy_mm_report_date, t3.is_bad,  t3.is_client_new_by_con, count(*) cnt
+       from (
+          select t2.*, t.is_client_new_by_con
+          from (
+            select /*+ noparallel */ t.*,
+            to_date(t.yy_mm_start, 'yyyy - mm') yy_mm_start_date,
+            to_date(t.yy_mm_report, 'yyyy - mm') yy_mm_report_date,
+            case when t.client_status in ('B','W') then 1 else 0 end is_bad
+            from v_portfolio t
+          ) t2
+          join m_folder_con_miner m on m.contract_number = t2.contract_number
+                                       and m."CR_PROGRAM_NAME" like 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР'
+          join m_folder_con_cancel t on t.contract_number = m.contract_number
+          where (t2.yy_mm_start_date >= to_date('20100101', 'yyyymmdd')
+              and t2.yy_mm_start_date < to_date('20150531', 'yyyymmdd'))
+            and (
+                --t2.yy_mm_report_date >= to_date('20100101', 'yyyymmdd') and
+                t2.yy_mm_report_date < to_date('20150531', 'yyyymmdd'))
+              ) t3
+       group by t3.yy_mm_report_date, t3.is_bad, t3.is_client_new_by_con
+      ) x on x.yy_mm_report_date = ti.yyyy_mm
+  where ti.yyyy_mm >= to_date('20100101', 'yyyymmdd')
+    and ti.yyyy_mm < to_date('20150531', 'yyyymmdd')
+  ) y
+) pivot (
+sum(cnt)
+for is_bad in (0, 1)
+  );
+grant select on U1.M_BAD_RATE_BW_TK to LOADDB;
+grant select on U1.M_BAD_RATE_BW_TK to LOADER;
+
+

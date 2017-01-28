@@ -1,0 +1,35 @@
+﻿create materialized view U1.M_FOLDER_MO_SCO_REQUEST_RES
+build deferred
+refresh complete on demand
+as
+select v.folder_id                                                                                                         as folder_id,
+       v.rfo_client_id                                                                                                     as rfo_client_id,
+       min(v.scorecard_num)      keep(dense_rank first order by v.date_create, v.rfolder_id)                               as scorecard_num_first,
+       max(v.scorecard_num)      keep(dense_rank last  order by v.date_create, v.rfolder_id)                               as scorecard_num_last,
+       min(v.sco_gcvp_real_need) keep(dense_rank first order by v.date_create, v.rfolder_id)                               as sco_gcvp_real_need_first,
+       max(v.sco_gcvp_real_need) keep(dense_rank last  order by v.date_create, v.rfolder_id)                               as sco_gcvp_real_need_last,
+       min(v.date_create)        keep(dense_rank first order by v.date_create, v.rfolder_id)                               as date_create_first,
+       max(v.date_create)        keep(dense_rank last  order by v.date_create, v.rfolder_id)                               as date_create_last,
+       min(v.rfolder_id)         keep(dense_rank first order by v.date_create, v.rfolder_id)                               as rfolder_id_first,
+       max(v.rfolder_id)         keep(dense_rank last  order by v.date_create, v.rfolder_id)                               as rfolder_id_last,
+       count(distinct v.rfolder_id)                                                                                        as rfolder_cnt,
+       min(v.mo_sco_reject)      keep(dense_rank first order by v.date_create, v.rfolder_id)                               as mo_sco_reject_first,
+       max(v.mo_sco_reject)      keep(dense_rank last  order by v.date_create, v.rfolder_id)                               as mo_sco_reject_last,
+
+       min(t.par_name)           keep(dense_rank first order by v.date_create, t.reject_prior)                             as par_name_first,
+       max(t.par_name)           keep(dense_rank last  order by v.date_create, t.reject_prior)                             as par_name_last,
+       min(t.is_rejecting)       keep(dense_rank first order by v.date_create, t.reject_prior)                             as is_rejecting_first,
+       max(t.is_rejecting)       keep(dense_rank last  order by v.date_create, t.reject_prior)                             as is_rejecting_last,
+
+       min(case when r.rfolder_id is null then 1 else 0 end) keep(dense_rank first order by v.date_create, v.rfolder_id)   as is_dummy_std_first,
+       max(case when r.rfolder_id is null then 1 else 0 end) keep(dense_rank first order by v.date_create, v.rfolder_id)   as is_dummy_std_last
+  from u1.V_FOLDER_MO_SCO_REQUEST v
+       left  join u1.M_FOLDER_MO_CANCEL_LAST t on  t.folder_id = v.folder_id
+                                              and t.rfolder_id = v.rfolder_id
+                                              and t.is_rejecting < 2
+       left  join u1.M_FOLDER_MO_SCO_DUMMY   r on r.rfolder_id = t.rfolder_id
+ where v.date_create >= to_date('01.01.2014', 'dd.mm.yyyy')
+ group by v.folder_id, v.rfo_client_id;
+grant select on U1.M_FOLDER_MO_SCO_REQUEST_RES to LOADDB;
+
+

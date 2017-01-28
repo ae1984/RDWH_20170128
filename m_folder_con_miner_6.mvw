@@ -1,0 +1,84 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_6
+build deferred
+refresh complete on demand
+as
+select /*+parallel(5)*/
+       client_id,
+       contract_no contract_number,
+       min(yy_mm_report) keep (dense_rank first order by yy_mm_report_num) yy_mm_report,
+       --min(yy_mm_report_num) keep (dense_rank first order by yy_mm_report_num) yy_mm_report_num,
+       min(yy_mm_start) keep (dense_rank first order by yy_mm_report_num) yy_mm_start,
+       /*min(delinq_days) keep (dense_rank first order by yy_mm_report_num) delinq_days,
+       min(total_debt) keep (dense_rank first order by yy_mm_report_num) total_debt,
+       min(rank_by_cli) keep (dense_rank first order by yy_mm_report_num) rank_by_cli,
+       min(rank_by_con) keep (dense_rank first order by yy_mm_report_num) rank_by_con,
+
+       min(contract_amount) keep (dense_rank first order by yy_mm_report_num) contract_amount,
+       min(contract_term_months) keep (dense_rank first order by yy_mm_report_num) contract_term_months,
+       min(pmt_nom_rate) keep (dense_rank first order by yy_mm_report_num) pmt_nom_rate,
+       min(inc_total) keep (dense_rank first order by yy_mm_report_num) inc_total,
+       min(exp_utilities) keep (dense_rank first order by yy_mm_report_num) exp_utilities,*/
+
+       min(pre_amount_rest) keep (dense_rank first order by yy_mm_report_num) pre_amount_rest,
+       min(ymr_paid_sal_count) keep (dense_rank first order by yy_mm_report_num) ymr_paid_sal_count,
+       min(ymr_paid_sal_count_all_con) keep (dense_rank first order by yy_mm_report_num) ymr_paid_sal_count_all_con
+from (
+    select y.*,
+           round(case when (coalesce(y.inc_total, 0) - coalesce(y.exp_utilities, 0)) > 0
+                      then (y.pre_amount_rest +
+                           (y.pmt_nom_rate * (case when (coalesce(y.contract_term_months, 0) - y.rank_by_con + 1) < 0 then 0
+                                                  else (coalesce(y.contract_term_months, 0) - y.rank_by_con + 1) end)))
+                           /(coalesce(y.inc_total, 0) - coalesce(y.exp_utilities, 0))
+                      else 0 end) ymr_paid_sal_count_all_con
+    from (
+          select --+ parallel 30
+                 x.client_id,
+                 x.contract_no,
+                 x.yy_mm_report,
+                 x.yy_mm_report_num,
+                 x.yy_mm_start,
+                 x.total_debt,
+                 x.delinq_days,
+                 x.rank_by_cli,
+                 x.rank_by_con,
+
+                 c.contract_amount,
+                 c.contract_term_months,
+                 c.pmt_nom_rate,
+                 c.inc_total,
+                 c.exp_utilities,
+                 /*Вычисляем остаток на момент выдачи - платеж * сколько месяцев осталось по другим кредитам*/
+                 coalesce(sum(c.pmt_nom_rate*(case when (c.contract_term_months-x.rank_by_con+1) < 0 then 0
+                                                   else (c.contract_term_months-x.rank_by_con+1) end)) over (partition by x.client_id order by x.rank_by_cli
+                                                                                    range between 1 preceding and 1 preceding)
+                          , 0) pre_amount_rest,
+
+                 round(case when (coalesce(c.inc_total, 0) - coalesce(c.exp_utilities, 0)) > 0
+                      then c.pmt_nom_rate * (case when (coalesce(c.contract_term_months, 0) - x.rank_by_con+1) < 0 then 0
+                                                  else (coalesce(c.contract_term_months, 0) - x.rank_by_con+1) end)/(coalesce(c.inc_total, 0) - coalesce(c.exp_utilities, 0))
+                      else 0 end) ymr_paid_sal_count
+
+
+          from M_FOLDER_CON_MINER_4 c
+          join (select t.*,
+                       --Пронумеруем записи по клиенту, отсортировав по дате отчета
+                       --У записей с одинаковым YMR будет одинаковая цифра.
+                       dense_rank() over (partition by t.client_id order by t.yy_mm_report_num) rank_by_cli,
+                       --считаем если toal_debt > 1000, то должен быть платеж
+                       --нумеруем по контракту для вычисления остатка кол-ва месяцев
+                       case when t.total_debt > 1000 then
+                            dense_rank() over (partition by t.contract_no, case when (t.total_debt > 1000)
+                                                                                then 1 else 0 end
+                                               order by t.yy_mm_report_num)
+                       else 0 end rank_by_con
+               from V_DATA_ALL t) x on c.contract_number = x.contract_no
+
+          --test
+          --where c.rfo_client_id = 7817396827
+    ) y
+) z
+group by client_id,
+         contract_no;
+grant select on U1.M_FOLDER_CON_MINER_6 to LOADDB;
+
+

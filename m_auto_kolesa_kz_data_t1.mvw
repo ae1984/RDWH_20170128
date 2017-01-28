@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_AUTO_KOLESA_KZ_DATA_T1
+build deferred
+refresh force on demand
+as
+select t.akk_sub_id,
+       t.akk_data_id,
+       t.akk_kpp_type,
+       t.akk_year_car,
+       t.count_price_confidence,
+       t.avg_price
+ from M_AUTO_KOLESA_KZ_DATA_SUB_T t
+ group by t.akk_sub_id,
+          t.akk_data_id,
+          t.akk_kpp_type,
+          t.akk_year_car,
+          t.count_price_confidence,
+          t.avg_price;
+grant select on U1.M_AUTO_KOLESA_KZ_DATA_T1 to LOADDB;
+
+

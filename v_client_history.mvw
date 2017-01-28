@@ -1,0 +1,81 @@
+﻿create materialized view U1.V_CLIENT_HISTORY
+build deferred
+refresh complete on demand
+as
+select /*+ parallel 15*/
+      y.*,
+      lag(total_fact_pmts,1,0) over (partition by client_id order by report_month) as
+  total_fact_pmts_prev_rep,
+      lag(total_planned_pmts,1,0) over (partition by client_id order by report_month) as
+  total_planned_pmts_prev_rep,
+      lag(max_pmt,1,0) over (partition by client_id order by report_month) as
+  max_pmt_prev_rep,
+
+    case when max_delinq_days >= 90 then 'B'
+       when total_ref_res_count > 1 then 'B'
+--       when ppz.client_id is not null then 'B'
+       when total_ref_res_count = 1 and coalesce(delinq_days_in_month,0) >= 30 then 'B'
+       when total_ref_res_count = 1 and coalesce(delinq_days_in_month,0) < 30 then 'W'
+       when coalesce(delinq_days_in_month,0) >= 60 and
+            coalesce(delinq_days_in_month,0) < 90 then 'W'
+       else 'G'
+     end as client_status
+
+from (
+select
+  x.*,
+      sum(x.fact_pmts_in_month) over (partition by x.client_id
+          order by x.report_month range unbounded preceding) as
+  total_fact_pmts,
+      sum(x.planned_pmts_in_month) over (partition by x.client_id
+          order by x.report_month range unbounded preceding) as
+  total_planned_pmts,
+      max(x.pmt_in_month) over (partition by x.client_id
+          order by x.report_month range unbounded preceding) as
+  max_pmt,
+      max(x.total_debt_in_month) over (partition by x.client_id
+          order by x.report_month range unbounded preceding) as
+  max_total_debt,
+      max(x.delinq_days_in_month) over (partition by x.client_id
+          order by x.report_month range unbounded preceding) as
+  max_delinq_days,
+      sum(x.ref_res_count) over (partition by x.client_id
+          order by x.report_month range unbounded preceding) as
+  total_ref_res_count,
+      max(x.total_contract_amount_in_month) over (partition by x.client_id
+          order by x.report_month range unbounded preceding) as
+  max_total_contract_amount
+from (
+select tm.yyyy_mm_num, tm.text_yyyy_mm, tt.*, rr.ref_res_count
+from u1.V_TIME_MONTHS tm
+
+-- объединить с клиентами, желательно после появления
+
+left join (
+  select t.report_month, t.client_id,
+         max(t.actual_pmt_bonus) as fact_pmts_in_month,
+         max(t.planned_pmt_bonus) as planned_pmts_in_month,
+         sum(t.pmt_in_rep) as pmt_in_month,
+         sum(case when t.total_debt < 0 then 0 else t.total_debt end) as total_debt_in_month,
+         max(t.delinq_days) as delinq_days_in_month,
+         count(distinct t.contract_number) as number_of_con_in_month,
+         sum(t.contract_amount) as total_contract_amount_in_month
+  from u1.V_REPORT_CAL_1 t
+  group by t.report_month, t.client_id
+) tt on tt.report_month = tm.report_month
+left join (
+  select to_char(t.spof_end_date,'yyyy - mm') as yy_mm_report, c.client_id,
+         count(distinct t.contract_number ||' '|| t.spof_end_date) as ref_res_count
+  from u1.M_DWH_ACC_SPECIAL_OFFER_CON t
+  join V_CONTRACT_CAL c on c.contract_number = t.contract_number
+  where t.spof_spec_offer_status_cd in ('WORK', 'DEFAULT', 'EXECUTED','SWITCHED')
+  group by to_char(t.spof_end_date,'yyyy - mm'), c.client_id
+) rr on rr.yy_mm_report = tm.text_yyyy_mm and rr.client_id = tt.client_id
+where tm.yyyy_mm <= (select max(da.yy_mm_report_date) from v_data_all da)
+) x
+) y
+where client_id is not null;
+grant select on U1.V_CLIENT_HISTORY to LOADDB;
+grant select on U1.V_CLIENT_HISTORY to LOADER;
+
+

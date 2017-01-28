@@ -1,0 +1,7 @@
+﻿create materialized view U1.M_TST_MO_KASPI_RED9
+refresh force on demand
+as
+select h.iin from M_TST_MO_KASPI_RED4@Mo1_Prod h;
+grant select on U1.M_TST_MO_KASPI_RED9 to LOADDB;
+
+

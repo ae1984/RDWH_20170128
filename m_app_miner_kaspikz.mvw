@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_APP_MINER_KASPIKZ
+build deferred
+refresh complete on demand
+as
+select ab.app_id,
+       ks.user_pay_count,
+       ks.user_pay_amount,
+       ks.user_pay_avg_amount,
+       ks.user_pay_max_amount,
+       ks.user_pay_median_amount,
+       ks.category_count,
+       ks.max_category_name,
+       ks.max_category_pay_count,
+       ks.max_category_pay_amount,
+       ks.max_category_pay_avg_amount,
+       ks.max_category_pay_max_amount,
+       ks.max_category_pay_median_amount,
+       ks.min_category_name,
+       ks.min_category_pay_count,
+       ks.min_category_pay_amount,
+       ks.min_category_pay_avg_amount,
+       ks.min_category_pay_max_amount,
+       ks.min_category_pay_median_amount
+  from u1.M_APP_MINER_BAS ab
+  left join U1.M_KASPIKZ_STAT_6M ks on ab.app_id = ks.app_id;
+grant select on U1.M_APP_MINER_KASPIKZ to LOADDB;
+
+

@@ -1,0 +1,25 @@
+﻿create materialized view U1.V_FOR_SCORING_JAN_P2_FEB
+refresh complete on demand
+as
+select p1.yy_mm_report, p1.rfo_client_id,
+       max(f_cl.inc_sal) keep (dense_rank last order by f_cl.folder_date_create) as form_salary,
+       min(da.prescoring_result) keep(dense_rank first order by da.folder_date_create) as form_prescoring_result_first,
+       max(da.prescoring_result) keep(dense_rank last order by da.folder_date_create) as form_prescoring_result_last
+from V_FOR_SCORING_JAN_P1_FEB p1
+left join
+     (select f.rfo_client_id, f.folder_date_create,f.is_credit_process,f_cl.inc_sal
+     from V_FOLDER_ALL_RFO f
+     join V_FORM_CLIENT_ALL_RFO f_cl on f_cl.form_client_id = f.form_client_id
+     ) f_cl on f_cl.rfo_client_id = p1.rfo_client_id and f_cl.folder_date_create < p1.yy_mm_end_date and
+            f_cl.is_credit_process = 1
+left join
+       (select f.rfo_client_id, f.folder_date_create, f.is_credit_process, a.prescoring_result
+       from V_FOLDER_ALL_RFO f
+       join DATA_ASOKR a on a.folder_id = f.folder_id
+       ) da on da.rfo_client_id = p1.rfo_client_id and da.folder_date_create < p1.yy_mm_end_date and
+          da.is_credit_process = 1
+group by p1.yy_mm_report, p1.rfo_client_id;
+grant select on U1.V_FOR_SCORING_JAN_P2_FEB to LOADDB;
+grant select on U1.V_FOR_SCORING_JAN_P2_FEB to LOADER;
+
+

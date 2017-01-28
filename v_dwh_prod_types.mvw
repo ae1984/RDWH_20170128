@@ -1,0 +1,16 @@
+﻿create materialized view U1.V_DWH_PROD_TYPES
+refresh complete on demand
+as
+select upper(c.cdld_prod_type) as prod_type, 1 as is_card,
+       min(c.cdld_begin_date) as first_date, max(c.cdld_begin_date) as last_date
+from DWH_DM_CARDSDAILY_LD c
+group by c.cdld_prod_type
+union all
+select upper(r.exld_prod_type) as prod_type, 0 as is_card,
+       min(r.exld_begin_date) as first_date, max(r.exld_begin_date) as last_date
+from DWH_DM_SPGU_LD r
+group by r.exld_prod_type;
+grant select on U1.V_DWH_PROD_TYPES to LOADDB;
+grant select on U1.V_DWH_PROD_TYPES to LOADER;
+
+

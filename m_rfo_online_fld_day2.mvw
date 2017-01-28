@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_RFO_ONLINE_FLD_DAY2
+build deferred
+refresh force on demand
+as
+select /*+ parallel(20)*/
+       c.id as folder_id,
+       f.c_n as folder_number,
+       cd.id as rfo_contract_id,
+       cd.c_num_dog,
+       c.c_date_create,
+       cl.c_inn,
+       f.c_client,
+       f.c_business,
+       c.c_st_depart,
+       c.c_way,
+       c.c_point,
+       c.c_create_user,
+       cd.c_info_cred#summa_cred,
+       cd.c_shop,
+       fd.c_status_doc as credit_dog_status_id,
+       upper(pr.c_name) as cr_program_name
+from GG_RFO.Z#CM_CHECKPOINT c
+join GG_RFO.Z#FOLDERS f on f.id = c.id
+join GG_RFO.Z#CLIENT cl on cl.id = f.c_client
+join GG_RFO.Z#RDOC rd on rd.collection_id = f.c_docs
+join GG_RFO.Z#FDOC fd on fd.id = rd.c_doc and fd.class_id = 'CREDIT_DOG'
+join GG_RFO.Z#CREDIT_DOG cd on cd.id = rd.c_doc --and cd.c_shop is not null
+join GG_RFO.Z#CRED_SCHEME cs on cs.id = cd.c_cred_scheme
+join GG_RFO.Z#PROPERTIES p on p.COLLECTION_ID = cs.c_add_prop
+join GG_RFO.Z#PROD_PROPERTY pr on pr.id = p.C_PROP and pr.c_group_prop = 188106869 -- KAS_CRED_PROGRAM
+where c.c_date_create > trunc(sysdate);
+

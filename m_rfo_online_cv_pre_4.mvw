@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_RFO_ONLINE_CV_PRE_4
+build deferred
+refresh force on demand
+as
+select /*+ parallel(2) */
+       cx.rfo_client_id,
+       max(trunc(f.folder_date_create)) as folder_date_create_cancel
+from T_CANCEL cx
+join V_FOLDER_ALL_RFO f on f.folder_id = cx.folder_id
+join M_RFO_ONLINE_CV_PRE_3 x on x.par_code = cx.cancel_type_code
+where cx.cancel_type_group = 'MO-MO_SCO_REJECT'
+group by cx.rfo_client_id;
+grant select on U1.M_RFO_ONLINE_CV_PRE_4 to LOADDB;
+grant select on U1.M_RFO_ONLINE_CV_PRE_4 to LOADER;
+grant select on U1.M_RFO_ONLINE_CV_PRE_4 to LOAD_MO;
+
+

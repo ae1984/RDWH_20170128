@@ -1,0 +1,47 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_15
+refresh force on demand
+as
+select
+       count( distinct
+       case
+         when c.cash_reg_group in ('Внешнии терминалы "Касса 24"','Street Терминалы Каспи банка')
+          and c.document_date between add_months(b.date_create,-3) and b.date_create
+          then
+           c.acash_doc_id
+       end )                 as ex_terminal_share_count,
+
+       count( distinct
+       case
+         when c.document_date between add_months(b.date_create,-3) and b.date_create then
+           c.acash_doc_id
+       end )                 as terminal_share_count,
+
+       /*count( distinct
+       case
+         when trunc(b.date_create) between trunc(b.date_create) - 30 and trunc(b.date_create)
+          and b.is_credit_rejected = 1
+          --and e.cr_program_name = 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР'
+          then
+           b.claim_id
+       end )                 as fail_share_30_d_count,
+
+       count( distinct
+       case
+         when  trunc(b.date_create) between trunc(b.date_create) - 30 and trunc(b.date_create)
+             --and e.cr_program_name = 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР'
+           then
+           b.claim_id
+       end )                 as share_30_d_count,*/
+
+       t.rfo_client_id       as rfo_client_id,
+       b.claim_id            as claim_id,
+       trunc(b.date_create)  as date_create
+  from m_folder_con_cancel_online_1 b
+       left  join m_rbo_contract_bas           t on b.rfo_client_id = t.rfo_client_id and t.begin_date < b.date_create
+--       left  join v_contract_ekt_dwh_online    e on     e.folder_id = b.folder_id
+       left  join m_cash_terminal              c on c.rbo_client_id = t.rbo_client_id
+ --where t.rfo_client_id = 31393192
+group by b.claim_id, t.rfo_client_id, trunc(b.date_create);
+grant select on U1.M_RFO_FRAUD_SEARCH_15 to LOADDB;
+
+

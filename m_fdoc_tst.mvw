@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_FDOC_TST
+refresh force on demand
+as
+select distinct r.id as gcvp_rep_id, f.id as folder_id -- только связанные с заявками
+      from V_RFO_Z#KAS_GCVP_REPORT r
+        left join v_rfo_z#fdoc fd on fd.id = r.id and fd.class_id = 'KAS_GCVP_REPORT'
+      left join v_rfo_z#rdoc rd on rd.c_doc = r.id
+      left join v_rfo_z#folders f on f.c_docs = rd.collection_id;
+grant select on U1.M_FDOC_TST to LOADDB;
+grant select on U1.M_FDOC_TST to LOADER;
+
+

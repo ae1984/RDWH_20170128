@@ -1,0 +1,57 @@
+﻿create materialized view U1.M_PARAMS_FOR_MODEL_PRE_0
+build deferred
+refresh force on demand
+as
+select /*+parallel(20)*/
+        cln.rfo_client_id
+       ,cln.app_id
+       ,cln.folder_date_create_mi
+       ,substr(trim(frm.phone_mobile),1,11) as phone_mobile
+       ,case
+          when substr(trim(frm.phone_mobile),2,3) = '701' then 3
+          when substr(trim(frm.phone_mobile),2,3) = '702' then 2
+          when substr(trim(frm.phone_mobile),2,3) = '705' then 2
+          when substr(trim(frm.phone_mobile),2,3) = '771' then 2
+          when substr(trim(frm.phone_mobile),2,3) = '775' then 2
+          when substr(trim(frm.phone_mobile),2,3) = '776' then 2
+          when substr(trim(frm.phone_mobile),2,3) = '777' then 2
+          when substr(trim(frm.phone_mobile),2,3) = '778' then 2
+          when substr(trim(frm.phone_mobile),2,3) = '700' then 1
+          when substr(trim(frm.phone_mobile),2,3) = '707' then 1
+          when substr(trim(frm.phone_mobile),2,3) = '708' then 1
+          when substr(trim(frm.phone_mobile),2,3) = '747' then 1
+        end as OPERATOR_VALUE
+       , (case when substr(trim(frm.phone_mobile),5,7)like'%0%' then 1 else 0 end)
+        +(case when substr(trim(frm.phone_mobile),5,7)like'%1%' then 1 else 0 end)
+        +(case when substr(trim(frm.phone_mobile),5,7)like'%2%' then 1 else 0 end)
+        +(case when substr(trim(frm.phone_mobile),5,7)like'%3%' then 1 else 0 end)
+        +(case when substr(trim(frm.phone_mobile),5,7)like'%4%' then 1 else 0 end)
+        +(case when substr(trim(frm.phone_mobile),5,7)like'%5%' then 1 else 0 end)
+        +(case when substr(trim(frm.phone_mobile),5,7)like'%6%' then 1 else 0 end)
+        +(case when substr(trim(frm.phone_mobile),5,7)like'%7%' then 1 else 0 end)
+        +(case when substr(trim(frm.phone_mobile),5,7)like'%8%' then 1 else 0 end)
+        +(case when substr(trim(frm.phone_mobile),5,7)like'%9%' then 1 else 0 end)as UNIQUE_SUMBOL_QTY
+       ,FNC_CELLPHONE2MASK(substr(trim(frm.phone_mobile),1,11)) as mask_cellphone
+       ,count(distinct case when cln.rfo_client_id<>cph.rfo_client_id and cph.phone_type_simple='КОНТАКТ' then cph.rfo_client_id end) as UNIQUE_CONTACT_PERSONS
+       ,count(distinct cph.rfo_client_id) as UNIQUE_SUBS_ON_A_NUMBER
+       --,count(distinct def.rbo_client_id) as SUBS_WITH_DELAY_IN_CONTACT
+       --,count(distinct def.rbo_client_id)/count(distinct cph.rfo_client_id)*100 as DELAY_CONTACTS_SHARE
+       --,case when count(distinct cln1.rfo_contract_id)>0 then 1 else 0 end as APPLICATION_FLAG
+       --,count(distinct cln1.rfo_contract_id) as COUNT_APPLICATION
+from M_APP_MINER_BAS cln--V_CLIENT_RFO_BY_ID cln
+left join v_form_client_all_rfo frm on frm.form_client_id = cln.form_client_id
+left join V_FORM_CLIENT_CONTACT_PHONE cph on cph.phone_number = substr(trim(frm.phone_mobile),1,11) and cph.form_client_date<trunc(cln.folder_date_create_mi)
+--left join M_PARAMS_FOR_MODEL_PRE_1 def on def.phone_mobile=cph.phone_number and def.rep_date<trunc(cln.folder_date_create_mi) and cph.phone_type_simple='КОНТАКТ'
+--left join M_FOLDER_CON_CANCEL_BASE cln1 on cln1.rfo_client_id=cln.rfo_client_id and cln1.folder_date_create_mi <trunc(cln.folder_date_create_mi)
+--where cln.folder_date_create_mi >= to_date('01.01.2015','dd.mm.yyyy')
+group by
+        cln.rfo_client_id
+       ,cln.app_id
+       ,cln.folder_date_create_mi
+       ,frm.phone_mobile
+       ,substr(trim(frm.phone_mobile),1,11)
+       ,substr(trim(frm.phone_mobile),2,3)
+       ,substr(trim(frm.phone_mobile),5,7);
+grant select on U1.M_PARAMS_FOR_MODEL_PRE_0 to LOADDB;
+
+

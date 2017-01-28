@@ -1,0 +1,27 @@
+﻿create table U1.T_22042014_TMP
+(
+  rbo_contract_id       NUMBER not null,
+  deal_number_to        VARCHAR2(66) not null,
+  refin_deal_number     VARCHAR2(66) not null,
+  refin_rbo_contract_id NUMBER not null,
+  refin_type            VARCHAR2(50) not null,
+  refin_summa           NUMBER(21,2) not null,
+  refin_date            DATE not null,
+  kas_pc_fo_id          NUMBER not null
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_22042014_TMP to LOADDB;
+grant select on U1.T_22042014_TMP to LOADER;
+

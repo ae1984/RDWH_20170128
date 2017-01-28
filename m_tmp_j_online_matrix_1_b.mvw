@@ -1,0 +1,60 @@
+﻿create materialized view U1.M_TMP_J_ONLINE_MATRIX_1_B
+refresh complete on demand
+as
+select --trunc(t.folder_date_create_mi) as a_date,
+           d.begin_date,
+           case when t.is_categ_a = 0 and (
+                 (d.amount >= 100000 and d.amount < 160000 and
+                       g.salary >= 0 and g.salary < 3000 and
+                             p.report_status = 'БЕКИ') or
+                 (d.amount >= 160000 and
+                       ((g.salary >= 0 and g.salary < 3000) or
+                        (g.salary >= 3000 and g.salary < 15000))) or
+                 (d.amount >= 160000 and
+                       ((g.salary >= 15000 and g.salary < 65000) or
+                         g.salary is null) and
+                             p.report_status = 'БЕКИ')
+                ) then 'BAD' else 'REST' end as group_name,
+           count(*) as cnt, count(distinct d.deal_number) as con_cnt,
+           count(distinct d.client_iin) as cli_cnt,
+           sum(d.amount) / 1000000 as sales_mln,
+--           sum(case when d.x_delinq_days > 7 then d.x_total_debt end) / 1000000 as del_7_total_debt_mln
+           sum(case when d.x_delinq_days > 7 then d.x_total_debt end) / sum(d.amount) as del_7_rate_by_vol
+    from V_DWH_PORTFOLIO_CURRENT d
+    join M_FOLDER_CON_CANCEL t on t.folder_id = d.folder_id_first
+    left join V_CONTRACT_EKT_DWH e on e.rfo_contract_id = t.rfo_contract_id
+    left join V_PKB_REPORT p on p.folder_id = t.folder_id
+    left join (select fcc.rfo_contract_id, max(v.gcvp_rep_id) as gcvp_max_id
+              from V_GCVP_REPORT v
+              join M_FOLDER_CON_CANCEL fcc on fcc.iin = v.client_iin and
+                   (v.rep_date >= trunc(fcc.folder_date_create_mi) - 60 and v.rep_date <= trunc(fcc.folder_date_create_mi))
+              where v.error_code = 0
+              group by fcc.rfo_contract_id
+    ) gm on gm.rfo_contract_id = t.rfo_contract_id
+    left join (select v.gcvp_rep_id, max(v.salary) as salary,
+                      max(v.pmts_count_from_rep) as gcvp_pmts_count_from_rep
+              from V_GCVP_REPORT v
+              group by v.gcvp_rep_id
+    ) g on g.gcvp_rep_id = gm.gcvp_max_id
+    where d.x_is_credit_issued = 1 and
+          d.begin_date >= to_date('2014-12-08','yyyy-mm-dd') and
+          d.prod_type = 'ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)' and
+          t.process_name = 'ОНЛАЙН КРЕДИТ'
+    group by --trunc(t.folder_date_create_mi),
+             d.begin_date,
+             case when t.is_categ_a = 0 and (
+                 (d.amount >= 100000 and d.amount < 160000 and
+                       g.salary >= 0 and g.salary < 3000 and
+                             p.report_status = 'БЕКИ') or
+                 (d.amount >= 160000 and
+                       ((g.salary >= 0 and g.salary < 3000) or
+                        (g.salary >= 3000 and g.salary < 15000))) or
+                 (d.amount >= 160000 and
+                       ((g.salary >= 15000 and g.salary < 65000) or
+                         g.salary is null) and
+                             p.report_status = 'БЕКИ')
+                ) then 'BAD' else 'REST' end;
+grant select on U1.M_TMP_J_ONLINE_MATRIX_1_B to LOADDB;
+grant select on U1.M_TMP_J_ONLINE_MATRIX_1_B to LOADER;
+
+

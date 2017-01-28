@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_SCCL_KSPKZ_PAR2
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       cl.rfo_client_id
+
+       ,count(distinct case when c.start_time >= add_months(trunc(sysdate), -6)
+                            then c.id end) as kspkz_sess_6m_cnt
+
+       /*,count(distinct case when c.start_time >= add_months(trunc(sysdate), -6)
+                                 and c.start_time < t.folder_date_create_mi
+                            then c.id end) as kspkz_sess_6m_cnt_x*/
+from u1.V_CLIENT_RFO_BY_ID cl
+left join u1.M_KASPIKZ_USERS_ALL t on t.rfo_id = to_char(cl.rfo_client_id)
+left join u1.M_KASPIKZ_SESSIONS c on c.user_id = t.user_id
+                                     and c.start_time >= add_months(trunc(sysdate), -6)
+--where c.start_time >= add_months(trunc(sysdate), -6)
+group by cl.rfo_client_id;
+grant select on U1.M_SCCL_KSPKZ_PAR2 to LOADDB;
+grant select on U1.M_SCCL_KSPKZ_PAR2 to LOAD_MO;
+grant select on U1.M_SCCL_KSPKZ_PAR2 to RTS_RDWH;
+
+

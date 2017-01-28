@@ -1,0 +1,40 @@
+﻿create materialized view U1.M_DWH_ACC_SERVICE_REQUEST_REP
+build deferred
+refresh force on demand
+as
+select /* +paralell (a,20)*/
+    case
+       when a.srvrq_risk_flg = 'N' then 'Риск ДКК'
+       when a.srvrq_risk_flg = 'Y' then 'Риск ДК'
+    else a.srvrq_risk_flg end srvrq_risk,
+    a.srvrq_rqst_num,
+    s.request_status_name srvrq_status_name,
+    a.srvrq_last_upd,
+    a.srvrq_assign_date, --Дата назначения исполнителя
+    a.srvrq_start_date, --Дата получения в ДК
+    a.srvrq_inc_num,
+    a.srvrq_city,
+    a.srvrq_branch,
+    a.srvrq_last_name || ' ' || a.srvrq_fst_name SRVRQ_clnt_name,
+    a.srvrq_inn,
+    th.CLNT_CONT_THEME_name srvrq_clnt_cont_theme_name,
+    tp.request_type_name  srvrq_type_name,
+    e.empl_name,
+    a.SRVRQ_DSCRPTN,
+    case
+       when a.srvrq_deal_gid in (select dpst_gid from DWH_MAIN.REF_DEAL_DEPOSIT@RDWH_EXD where dpst_gid != '-1') then 'deposit'
+       when a.srvrq_deal_gid in (select crdt_gid from DWH_MAIN.REF_DEAL_CREDIT@RDWH_EXD) then 'credit'
+       when a.srvrq_deal_gid in (select dcard_gid from DWH_MAIN.REF_DEAL_CARD@RDWH_EXD) then 'card'
+    else to_char(a.srvrq_deal_gid) end srvrq_deal,
+     a.srvrq_legal_term,
+     a.srvrq_actual_term,
+     a.SRVRQ_CLOSE_DATE,
+     a.SRVRQ_PRLNGTN_DATE, --Дата пролонгации
+     a.SRVRQ_PRPRTN_DATE --Дата подготовки ответа ОРО
+
+from u1.M_DWH_ACC_SERVICE_REQUEST a
+     left join u1.m_dwh_ref_employee e on a.srvrq_empl_gid = e.empl_gid and e.empl$end_date > sysdate
+     left join u1.M_DWH_DICT_CLNT_CONT_THEME th on th.CLNT_CONT_THEME_CD = a.SRVRQ_CLNT_CONT_THEME_CD
+     left join u1.M_DWH_DICT_REQUEST_TYPE tp on a.SRVRQ_CONTACT_CHNL_TYPE_CD = tp.request_type_cd
+     left join u1.M_DWH_DICT_REQUEST_STATUS s on a.srvrq_request_status_cd = s.request_status_cd;
+

@@ -1,0 +1,36 @@
+﻿create materialized view U1.M_VINTAGE_NBRK_V2
+build deferred
+refresh force on demand
+as
+select '1' as rep_type,
+      t.cred_program_code_x,
+      t.cred_program_name_x,
+      t.yy_mm_start_date,
+      t.yy_mm_report,
+      count(distinct t.rfo_client_id ) as count_distinct_clients,
+      count(distinct case when t.total_debt>0 then t.rfo_client_id else 0 end ) as count_clients_w_dbt,
+      Case when nvl(t.DEL_DAYS_MAX_X,0) <= 90 then 'OK'
+           when nvl(t.DEL_DAYS_MAX_X,0) > 90 then 'NPL'
+      end as long_delinq,
+      vd.quarter,
+      trunc(t.rep_date,'mm') as report_date
+from u1.M_RBO_CONTRACT_PORTFOLIO t
+join V_TIME_DAYS vd on vd.yyyy_mm_dd = t.start_date
+/*where nvl(t.DEL_DAYS_MAX_X,0) > 90
+  and t.yy_mm_start_date >= '2009 - 01'
+  and t.cred_program_code_x  in ('PC_POST_CLIENT','AUTO_SERV','GU_AVTO','GU_AVTO_BU','MONEY_CN','MONEY_ECN','MONEY_KN_P','MONEY_LK','MONEY_LKN','OSOB_CLIENT_PC','OSOB_CLIENT_MON',
+                                 'OSOB_CLIENT','MONEY_POST', 'PROST_KART', 'KAS_PC_DOG','SMENA_KK_KN','EC_MANY','EC_GOODS','EC_SERVICE')
+*/group by
+      t.cred_program_code_x,
+      t.cred_program_name_x,
+      t.yy_mm_start_date,
+      t.yy_mm_report,
+      Case when nvl(t.DEL_DAYS_MAX_X,0) <= 90 then 'OK'
+           when nvl(t.DEL_DAYS_MAX_X,0) > 90 then 'NPL'
+      end ,
+      vd.quarter,
+      trunc(t.rep_date,'mm');
+grant select on U1.M_VINTAGE_NBRK_V2 to LOADDB;
+grant select on U1.M_VINTAGE_NBRK_V2 to LOADER;
+
+

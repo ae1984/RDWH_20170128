@@ -1,0 +1,51 @@
+﻿create materialized view U1.M_TMP_J_DEL_CG_2_MO
+refresh force on demand
+as
+select c.yy_mm_start_last,
+--       f.cr_program_name, ff.par_code, ff.par_name,
+--       ff.par_code, ff.par_name,
+    -- ПРОВЕРКА
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt, -- проверка - если эти два поля равны, значит выборка верна
+    -- ПРОДАЖИ
+    round(sum(c.max_debt_used) / 1000000) as sales_mln, -- USE THIS! - продажи, млн
+    round(sum(c.max_debt_used)) as sales, -- продажи
+    round(sum(c.total_debt_fpd_1_7),0) as total_debt_fpd_1_7,
+    round(sum(c.total_debt_fpd_8_30),0) as total_debt_fpd_8_30,
+    round(sum(c.total_debt_last_rep_new_npl),0) as total_debt_last_rep_new_npl,
+    round(sum(c.total_debt_last_rep_new_b),0) as total_debt_last_rep_new_b,
+    round(sum(c.total_debt_last_rep_newd_w),0) as total_debt_last_rep_newd_w,
+    -- ПРОСРОЧКА
+    round(sum(c.delinq_rate_b_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b_w, -- USE THIS! - просрочка всего по-новому
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate, -- просрочка всего по-старому
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1, -- USE THIS! - просрочка 1-го платежа
+    round(sum(c.delinq_rate_npl * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_npl, -- USE THIS! - просрочка по NPL (>=90 days)
+    round(sum(c.delinq_rate_b * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b, -- просрочка по BAD клиентам
+    round(sum(c.delinq_rate_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_w, -- просрочка по WATCH клиентам
+    round(sum(c.delinq_rate_g * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_g -- просрочка по GOOD клиентам
+
+from M_CONTRACT_CAL_DEL c
+--join V_CONTRACT_CAL cc on cc.contract_number = c.contract_number
+join M_FOLDER_CON_CANCEL f on f.folder_id = c.folder_id_first and f.is_refin = 0 and
+                              f.contract_number = c.contract_number
+join (
+     select distinct cc.folder_id, cc.par_code, cc.par_name
+     from M_FOLDER_MO_CANCEL_LAST cc
+     join V_FOLDER_ALL_RFO f1 on f1.folder_id = cc.folder_id
+     where /*extract(year from f1.folder_date_create) = 2013 and*/
+           f1.folder_date_create >= to_date('17.10.2013','dd.mm.yyyy') and
+           cc.par_code = 'SC_CARD_8_RES_PRE'
+) ff on ff.folder_id = c.folder_id_first
+where --not exists (select null from M_FOLDER_CON_CANCEL f
+      --            where f.folder_id = c.folder_id_first and f.is_refin = 1) and ----!
+      c.yy_mm_start_last like '2014 - %' --or c.yy_mm_start_last in (
+               --'2014 - 01'/*,'2014 - 02'/*,'2014 - 03','2014 - 04','2014 - 05','2014 - 06'*/))
+--      (c.yy_mm_start_last in ('2014 - 01','2014 - 02','2014 - 03','2014 - 04','2014 - 05','2014 - 06'))
+      --c.product_last in ('КН','КНП','ПК','КК','ТК')
+group by c.yy_mm_start_last
+--group by f.cr_program_name, ff.par_code, ff.par_name
+--group by ff.par_code, ff.par_name
+having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_J_DEL_CG_2_MO to LOADDB;
+grant select on U1.M_TMP_J_DEL_CG_2_MO to LOADER;
+
+

@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_TMP_J_MILITARY_ORG
+refresh complete on demand
+as
+select distinct t.tax_org_bin, t.tax_org_name
+from V_ORG_TAX t
+where (upper(t.tax_org_name) like '%МИН%ОБОРОН%' or
+       upper(t.tax_org_name) like '%В/Ч%' or
+       upper(t.tax_org_name) like '%ВО%СК%АЯ ЧАСТЬ%') and
+       t.tax_org_bin is not null;
+grant select on U1.M_TMP_J_MILITARY_ORG to LOADDB;
+grant select on U1.M_TMP_J_MILITARY_ORG to LOADER;
+
+

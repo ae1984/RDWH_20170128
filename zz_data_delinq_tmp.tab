@@ -1,0 +1,25 @@
+﻿create table U1.ZZ_DATA_DELINQ_TMP
+(
+  yy_mm_report     VARCHAR2(9),
+  contract_number  VARCHAR2(19),
+  deling_principal NUMBER,
+  deling_interest  NUMBER,
+  deling_total     NUMBER,
+  penalty          NUMBER,
+  is_card          NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.ZZ_DATA_DELINQ_TMP to LOADDB;
+grant select on U1.ZZ_DATA_DELINQ_TMP to LOADER;
+

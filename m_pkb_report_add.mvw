@@ -1,0 +1,135 @@
+﻿create materialized view U1.M_PKB_REPORT_ADD
+build deferred
+refresh force on demand
+as
+select /*+ parallel(20)*/ pa.report_id,
+    pa.iin_rnn,
+    cast (pa.report_type as varchar2(22)) as report_type,
+    pa.report_status,
+    pa.report_date,
+    pa.report_source,
+    case when pa.cred_hist_date_beg is not null then floor(months_between(pa.report_date,pa.cred_hist_date_beg ) / 12) end as cred_hist_age_years,
+    case when pa.cred_hist_date_beg is not null then floor(months_between(pa.report_date,pa.cred_hist_date_beg )) end as cred_hist_age_months,
+    pa.con_active_cnt,
+    pa.con_closed_cnt,
+    pa.con_closed_12m_cnt,
+    pa.con_closed_6m_cnt,
+    pa2.del_days_max,
+    pa2.del_days_max_old,
+    pa2.del_days_12m_max,
+    pa2.del_days_12m_max_old,
+    pa2.del_days_6m_max,
+    pa2.del_days_6m_max_old,
+    pa2.pmt_cnt,
+    pa2.pmt_12m_cnt,
+    pa2.pmt_6m_cnt,
+    pa.total_debt_old,
+    pa.total_debt,
+    pa.total_debt_close,
+    pa.is_from_cache,
+    pa.err_status
+from (select v.report_id,
+       v.iin_rnn,
+       v.report_type,
+       v.report_status,
+       v.report_date,
+       v.report_source,
+       min(to_date(v.date_begin,'dd.mm.yyyy')) as cred_hist_date_beg,
+       max(to_number(active_contracts)) as con_active_cnt,
+       max(to_number(closed_contracts)) as con_closed_cnt,
+       sum(case when length(fact_gash_date) = 10 and v.report_date is not null and
+              to_date(v.fact_gash_date,'dd.mm.yyyy') between add_months(v.report_date,-12) and v.report_date then
+             1
+            else 0 end) as con_closed_12m_cnt,
+       sum(case when length(fact_gash_date) = 10 and v.report_date is not null and
+              to_date(v.fact_gash_date,'dd.mm.yyyy') between add_months(v.report_date,-6) and v.report_date then
+             1
+            else 0 end)  as con_closed_6m_cnt,
+       max(v.total_debt) as total_debt_old ,
+       sum(case when v.pkb_contract_status = 'АКТИВНЫЙ' then
+          v.total_amount
+       end) as total_debt,
+       sum(case when v.pkb_contract_status = 'ЗАКРЫТЫЙ' then
+
+         v.total_amount
+       end) as total_debt_close,
+       v.is_from_cache,
+       upper(ud.c_name) as err_status
+   from T_PKB_REPORT v
+   left join V_RFO_Z#KAS_UNIVERSAL_D ud on ud.id  = v.c_error_status
+   where v.subj_role = 'ЗАЁМЩИК'
+   and v.report_type ! = 'ПЕРВИЧНЫЙ'
+  -- and v.report_source = 'ПКБ'
+   group by v.report_id,
+       v.iin_rnn,
+       v.report_type,
+       v.report_status,
+       v.report_date,
+       v.report_source,
+       v.is_from_cache,
+       upper(ud.c_name)
+   union all
+   select v.report_id,
+       v.iin_rnn,
+       v.report_type,
+       v.report_status,
+       v.report_date,
+       v.report_source,
+       min(to_date(v.date_begin,'dd.mm.yyyy')) as cred_hist_date_beg,
+       max(to_number(active_contracts)) as con_active_cnt,
+       max(to_number(closed_contracts)) as con_closed_cnt,
+       sum(case when length(fact_gash_date) = 10 and v.report_date is not null and
+              to_date(v.fact_gash_date,'dd.mm.yyyy') between add_months(v.report_date,-12) and v.report_date then
+             1
+            else 0 end) as con_closed_12m_cnt,
+       sum(case when length(fact_gash_date) = 10 and v.report_date is not null and
+              to_date(v.fact_gash_date,'dd.mm.yyyy') between add_months(v.report_date,-6) and v.report_date then
+             1
+            else 0 end)  as con_closed_6m_cnt,
+       max(v.total_debt) as total_debt_old ,
+       sum(case when v.pkb_contract_status = 'АКТИВНЫЙ' then
+          v.total_amount
+       end) as total_debt,
+       sum(case when v.pkb_contract_status = 'ЗАКРЫТЫЙ' then
+         v.total_amount
+       end) as total_debt_close,
+       v.is_from_cache,
+       upper(ud.c_name) as err_status
+   from T_PKB_REPORT v
+   left join V_RFO_Z#KAS_UNIVERSAL_D ud on ud.id  = v.c_error_status
+   where v.report_type = 'ПЕРВИЧНЫЙ'--по первичному c_subj_role нет значений
+   group by v.report_id,
+       v.iin_rnn,
+       v.report_type,
+       v.report_status,
+       v.report_date,
+       v.report_source,
+       v.is_from_cache,
+       upper(ud.c_name)
+       ) pa
+ left join (select v.report_id,
+                    v.report_source,
+                    max(to_number(c.c_payment_overdue)) as del_days_max,
+                    max(c.c_payment_overdue) as del_days_max_old,
+                    max(case when c.c_payment_date between add_months(v.report_date,-12) and v.report_date then
+                          to_number(c.c_payment_overdue) end)  as del_days_12m_max,
+                    max(case when c.c_payment_date between add_months(v.report_date,-6) and v.report_date then to_number(c.c_payment_overdue) end) as del_days_6m_max,
+                    max(case when c.c_payment_date between add_months(v.report_date,-12) and v.report_date then
+                          c.c_payment_overdue end)  as del_days_12m_max_old,
+                    max(case when c.c_payment_date between add_months(v.report_date,-6) and v.report_date then c.c_payment_overdue end) as del_days_6m_max_old,
+                    sum(case when to_number(c_payment_overdue) = 0 then 1 else 0 end) as pmt_cnt,
+                    sum(case
+                        when c.c_payment_date between add_months(v.report_date,-12) and v.report_date and to_number(c_payment_overdue) = 0 then
+                         1
+                        else 0 end) as pmt_12m_cnt,
+                    sum(case
+                        when c.c_payment_date between add_months(v.report_date,-6) and v.report_date and to_number(c_payment_overdue) = 0 then
+                         1
+                        else 0 end) as pmt_6m_cnt
+              from T_PKB_REPORT v
+              join T_RFO_Z#KAS_PKB_PC c on c.collection_id = v.pkb_pc_id
+              where v.subj_role = 'ЗАЁМЩИК'
+              group by v.report_id,v.report_source) pa2 on pa2.report_id = pa.report_id;
+grant select on U1.M_PKB_REPORT_ADD to LOADDB;
+
+

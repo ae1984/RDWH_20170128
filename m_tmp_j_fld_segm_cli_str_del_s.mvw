@@ -1,0 +1,54 @@
+﻿create materialized view U1.M_TMP_J_FLD_SEGM_CLI_STR_DEL_S
+refresh complete on demand
+as
+select to_char(d.x_start_date_actual, 'yyyy - mm') as start_mon,
+       count(*) as cnt, count(distinct d.deal_number) as con_cnt,
+       count(distinct d.client_iin) as cli_cnt,
+       sum(d.x_total_debt) as total_debt,
+       sum(case when d.x_delinq_days > 7 then d.x_total_debt end) as total_debt_del_7,
+       sum(case when d.x_delinq_days > 0 then d.x_total_debt end) as total_debt_del_1,
+       sum(coalesce(greatest(c.max_debt_used,d.x_total_debt),
+                        c.max_debt_used,d.x_total_debt)) as sales,
+       sum(case when d.x_delinq_days > 7 then d.x_total_debt end) /
+           sum(coalesce(greatest(c.max_debt_used,d.x_total_debt),
+                        c.max_debt_used,d.x_total_debt)) as del_7_rate_by_vol,
+       count(case when d.x_delinq_days > 7 then d.deal_number end) /
+           count(d.deal_number) as del_7_rate_by_quant,
+       count(case when cd.is_del_60_plus = 1 then d.deal_number end) /
+           count(d.deal_number) as del_60_plus_rate_by_quant
+from V_DWH_PORTFOLIO_CURRENT d
+join V_CONTRACT_CAL c on c.contract_number = d.deal_number -- для max_debt_used
+join M_CONTRACT_CAL_DEL_PLUS cd on cd.contract_number = c.contract_number
+join M_FOLDER_CON_CANCEL fcc on fcc.contract_number = d.deal_number and fcc.folder_id = d.folder_id_first
+join M_TMP_J_FLD_PREV_CON_CLOSED pcc on pcc.rfo_contract_id = fcc.rfo_contract_id
+join M_TMP_J_FLD_PREV_CON_DEL_CLHST pd on pd.rfo_contract_id = fcc.rfo_contract_id
+join M_TMP_J_FLD_PREV_OPT fo on fo.rfo_contract_id = fcc.rfo_contract_id
+where d.x_is_credit_issued = 1 and -- выданные
+      fcc.is_refin = 0 and
+      d.x_start_date_actual < trunc(sysdate,'mm') and
+      d.x_start_date_actual is not null and
+      -- sel_1:
+/*      pcc.prev_con_closed_cnt >= 2 and -- +
+      coalesce(pd.prev_con_del_days_max,0) <= 15 and -- +
+      fcc.contract_amount <= pcc.amount_max_before -- */
+      -- sel_2:
+      pcc.prev_con_closed_cnt >= 2 and -- +
+      coalesce(pd.prev_con_del_days_max,0) <= 15 and -- +
+      fo.is_optimized_before = 0 and -- +
+      pd.fact_pmt_mon_before >= 12 and -- +
+      pd.is_active_12_mon_before = 1 -- +
+      -- sel_3:
+/*      pcc.prev_con_closed_cnt >= 2 and -- +
+      coalesce(pd.prev_con_del_days_max,0) <= 15 and -- +
+      fo.is_optimized_before = 0 and -- +
+      pd.fact_pmt_mon_before >= 12 and -- +
+      pd.is_active_12_mon_before = 1 and -- +
+      fcc.contract_amount <= pcc.amount_max_before -- */ and
+      d.x_product_type in ('ДЕНЬГИ','ТОВАРЫ')
+group by to_char(d.x_start_date_actual, 'yyyy - mm')
+having sum(coalesce(greatest(c.max_debt_used,d.x_total_debt),
+                        c.max_debt_used,d.x_total_debt)) > 0;
+grant select on U1.M_TMP_J_FLD_SEGM_CLI_STR_DEL_S to LOADDB;
+grant select on U1.M_TMP_J_FLD_SEGM_CLI_STR_DEL_S to LOADER;
+
+

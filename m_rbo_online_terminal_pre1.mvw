@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_RBO_ONLINE_TERMINAL_PRE1
+refresh complete on demand
+as
+select  *  from V_RBO_PROD_PAYS_TERMINAL_OUT@rdwh11 f;
+grant select on U1.M_RBO_ONLINE_TERMINAL_PRE1 to LOADDB;
+grant select on U1.M_RBO_ONLINE_TERMINAL_PRE1 to LOADER;
+
+

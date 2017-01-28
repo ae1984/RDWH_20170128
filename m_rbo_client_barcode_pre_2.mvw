@@ -1,0 +1,57 @@
+﻿create materialized view U1.M_RBO_CLIENT_BARCODE_PRE_2
+build deferred
+refresh force on demand
+as
+select /*+ parallel 15 */
+             t.rep_date,
+             t.rbo_client_id,
+             t.client_id,
+             delinq_days_cli,
+             t.date_fact_end,
+             case when spec.rbo_client_id is not null then 'R'
+                  when t.rep_date > t.date_fact_end then 'N'
+                  when t.total_debt_cli = 0 then '0'
+                  when delinq_days_cli > 0 and delinq_days_cli <= 30 then '2'
+                  when delinq_days_cli > 30 then '3'
+                  else '1'
+            end as pmt_full_code,
+            max_date_fact_end,
+            t.total_debt_cli
+      from
+          (
+              select dt.rep_date,
+                 trunc(dt.rep_date,'mm') as spof_date_mm,
+                 b.rbo_client_id,
+                 max(nvl(vp.total_debt,0)) as total_debt_cli,
+                 max(nvl(vp.delinq_days_cli,0)) as delinq_days_cli,
+                 substr(ltrim(b.contract_number, 'R'),1,7) as client_id ,
+                 max(last_day(coalesce(b.date_fact_end,to_date('01-01-9999','dd-mm-yyyy')))) as date_fact_end,
+                 max(date_fact_end) as max_date_fact_end
+          from (select value as rep_date
+                from M_RBO_CALENDAR_VALUE v
+                where v.value >= to_date('01-12-2008','dd-mm-yyyy')
+                and v.value <= trunc(sysdate-1,'mm')
+                and v.calendar_name = 'LAST_MONTH_DAY'
+                union all
+                select trunc(sysdate)-1 as rep_date
+                from dual) dt
+          join M_RBO_CONTRACT_BAS b on b.begin_date <= dt.rep_date --and ( b.date_fact_end is null or b.date_fact_end >= dt.rep_date)
+          left join V_RBO_PORT vp on vp.rep_date = dt.rep_date and vp.rbo_contract_id = b.rbo_contract_id
+          group by dt.rep_date,
+                   b.rbo_client_id,
+                   substr(ltrim(b.contract_number, 'R'),1,7)) t
+left join
+     (
+     select trunc(t.spof_end_date,'mm') as spof_date_mm,
+            b.rbo_client_id,
+            count(distinct t.contract_number ||' '|| t.spof_end_date) as ref_res_count
+      from u1.M_DWH_ACC_SPECIAL_OFFER_CON t
+      join M_RBO_CONTRACT_BAS b on b.contract_number = t.contract_number
+      where t.spof_spec_offer_status_cd in ('WORK', 'DEFAULT', 'EXECUTED','SWITCHED')
+      group by trunc(t.spof_end_date,'mm'),
+               b.rbo_client_id
+      ) spec on spec.rbo_client_id = t.rbo_client_id
+             and t.spof_date_mm = spec.spof_date_mm;
+grant select on U1.M_RBO_CLIENT_BARCODE_PRE_2 to LOADDB;
+
+

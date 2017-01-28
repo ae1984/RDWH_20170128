@@ -1,0 +1,28 @@
+﻿create table U1.MO1_1_CALC
+(
+  id                NUMBER not null,
+  d_calc_id         NUMBER not null,
+  date_start        TIMESTAMP(6),
+  process_id        NUMBER not null,
+  date_end          TIMESTAMP(6),
+  error_code        NUMBER(1) not null,
+  error_msg         VARCHAR2(2048),
+  d_process_calc_id NUMBER,
+  d_calc_type_id    NUMBER,
+  d_cacl_group_id   NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.MO1_1_CALC to LOADDB;
+grant select on U1.MO1_1_CALC to LOADER;
+

@@ -1,0 +1,563 @@
+﻿create materialized view U1.M_TMP_DI_BEST_CLIENTS_1
+refresh force on demand
+as
+select
+------ALL
+case when con_any_bef = 0 then '0'
+     when con_any_bef = 1 then '1'
+     when con_any_bef = 2 then '2'
+     when con_any_bef = 3 then '3'
+     when con_any_bef = 4 then '4'
+     when con_any_bef = 5 then '5'
+     when con_any_bef = 6 then '6'
+     when con_any_bef = 7 then '7'
+     when con_any_bef = 8 then '8'
+     when con_any_bef = 9 then '9'
+     when con_any_bef = 10 then '10'
+     when con_any_bef > 10 then '> 10' else 'Other' end as con_any_bef,
+case when con_debt10k_bef = 0 then '0'
+     when con_debt10k_bef = 1 then '1'
+     when con_debt10k_bef = 2 then '2'
+     when con_debt10k_bef = 3 then '3'
+     when con_debt10k_bef = 4 then '4'
+     when con_debt10k_bef = 5 then '5'
+     when con_debt10k_bef = 6 then '6'
+     when con_debt10k_bef = 7 then '7'
+     when con_debt10k_bef = 8 then '8'
+     when con_debt10k_bef = 9 then '9'
+     when con_debt10k_bef = 10 then '10'
+     when con_debt10k_bef > 10 then '> 10' else 'Other' end as con_debt10k_bef,
+case when del_days_any_max_bef = 0 then '0'
+     when del_days_any_max_bef > 0 and del_days_any_max_bef<=7 then '1 - 7 days'
+     when del_days_any_max_bef > 7 and del_days_any_max_bef<=30 then '8 - 30 days'
+     when del_days_any_max_bef > 30 and del_days_any_max_bef<=60 then '31 - 60 days'
+     when del_days_any_max_bef > 60 and del_days_any_max_bef<=90 then '61 - 90 days'
+     when del_days_any_max_bef > 90 and del_days_any_max_bef<=120 then '91 - 120 days'
+     when del_days_any_max_bef > 120 and del_days_any_max_bef<=150 then '121 - 150 days'
+     when del_days_any_max_bef > 150 and del_days_any_max_bef<=180 then '151 - 180 days'
+     when del_days_any_max_bef > 180 and del_days_any_max_bef<=210 then '181 - 210 days'
+     when del_days_any_max_bef > 210 and del_days_any_max_bef<=240 then '211 - 240 days'
+     when del_days_any_max_bef > 240 and del_days_any_max_bef<=270 then '241 - 270 days'
+     when del_days_any_max_bef > 270 and del_days_any_max_bef<=300 then '271 - 300 days'
+     when del_days_any_max_bef > 300 and del_days_any_max_bef<=330 then '301 - 330 days'
+     when del_days_any_max_bef > 330 and del_days_any_max_bef<=360 then '331 - 360 days'
+     when del_days_any_max_bef > 360 then '> 360 days'
+      when del_days_any_max_bef is null then 'EMPTY' else 'Other' end as del_days_any_max_bef,
+
+case when del_days_debt10k_max_bef = 0 then '0'
+     when del_days_debt10k_max_bef > 0 and del_days_debt10k_max_bef<=7 then '1 - 7 days'
+     when del_days_debt10k_max_bef > 7 and del_days_debt10k_max_bef<=30 then '8 - 30 days'
+     when del_days_debt10k_max_bef > 30 and del_days_debt10k_max_bef<=60 then '31 - 60 days'
+     when del_days_debt10k_max_bef > 60 and del_days_debt10k_max_bef<=90 then '61 - 90 days'
+     when del_days_debt10k_max_bef > 90 and del_days_debt10k_max_bef<=120 then '91 - 120 days'
+     when del_days_debt10k_max_bef > 120 and del_days_debt10k_max_bef<=150 then '121 - 150 days'
+     when del_days_debt10k_max_bef > 150 and del_days_debt10k_max_bef<=180 then '151 - 180 days'
+     when del_days_debt10k_max_bef > 180 and del_days_debt10k_max_bef<=210 then '181 - 210 days'
+     when del_days_debt10k_max_bef > 210 and del_days_debt10k_max_bef<=240 then '211 - 240 days'
+     when del_days_debt10k_max_bef > 240 and del_days_debt10k_max_bef<=270 then '241 - 270 days'
+     when del_days_debt10k_max_bef > 270 and del_days_debt10k_max_bef<=300 then '271 - 300 days'
+     when del_days_debt10k_max_bef > 300 and del_days_debt10k_max_bef<=330 then '301 - 330 days'
+     when del_days_debt10k_max_bef > 330 and del_days_debt10k_max_bef<=360 then '331 - 360 days'
+     when del_days_debt10k_max_bef > 360 then '> 360 days'
+      when del_days_debt10k_max_bef is null then 'EMPTY' else 'Other' end as del_days_debt10k_max_bef,
+
+case when active_mon_debt10k_bef=0 then '0'
+     when active_mon_debt10k_bef>0 and active_mon_debt10k_bef<=6 then '1 - 6 months'
+     when active_mon_debt10k_bef>6 and active_mon_debt10k_bef<=12 then '7 - 12 months'
+     when active_mon_debt10k_bef>12 and active_mon_debt10k_bef<=18 then '13 - 18 months'
+     when active_mon_debt10k_bef>18 and active_mon_debt10k_bef<=24 then '19 - 24 months'
+     when active_mon_debt10k_bef>24 and active_mon_debt10k_bef<=30 then '25 - 30 months'
+     when active_mon_debt10k_bef>30 and active_mon_debt10k_bef<=36 then '31 - 36 months'
+     when active_mon_debt10k_bef>36 and active_mon_debt10k_bef<=42 then '37 - 42 months'
+     when active_mon_debt10k_bef>42 and active_mon_debt10k_bef<=48 then '43 - 48 months'
+     when active_mon_debt10k_bef>48 then '> 48 months' else 'Other' end as active_mon_debt10k_bef,
+
+case when good_active_mon_debt10k_bef=0 then '0'
+     when good_active_mon_debt10k_bef>0 and good_active_mon_debt10k_bef<=6 then '1 - 6 months'
+     when good_active_mon_debt10k_bef>6 and good_active_mon_debt10k_bef<=12 then '7 - 12 months'
+     when good_active_mon_debt10k_bef>12 and good_active_mon_debt10k_bef<=18 then '13 - 18 months'
+     when good_active_mon_debt10k_bef>18 and good_active_mon_debt10k_bef<=24 then '19 - 24 months'
+     when good_active_mon_debt10k_bef>24 and good_active_mon_debt10k_bef<=30 then '25 - 30 months'
+     when good_active_mon_debt10k_bef>30 and good_active_mon_debt10k_bef<=36 then '31 - 36 months'
+     when good_active_mon_debt10k_bef>36 and good_active_mon_debt10k_bef<=42 then '37 - 42 months'
+     when good_active_mon_debt10k_bef>42 and good_active_mon_debt10k_bef<=48 then '43 - 48 months'
+     when good_active_mon_debt10k_bef>48 then '> 48 months' else 'Other' end as good_active_mon_debt10k_bef,
+
+case when bad_active_mon_debt10k_bef=0 then '0'
+     when bad_active_mon_debt10k_bef=1 then '1 month'
+     when bad_active_mon_debt10k_bef=2 then '2 months'
+     when bad_active_mon_debt10k_bef=3 then '3 months'
+     when bad_active_mon_debt10k_bef=4 then '4 months'
+     when bad_active_mon_debt10k_bef=5 then '5 months'
+     when bad_active_mon_debt10k_bef=6 then '6 months'
+     when bad_active_mon_debt10k_bef>6 and bad_active_mon_debt10k_bef<=12 then '7 - 12 months'
+     when bad_active_mon_debt10k_bef>12 and bad_active_mon_debt10k_bef<=18 then '13 - 18 months'
+     when bad_active_mon_debt10k_bef>18 and bad_active_mon_debt10k_bef<=24 then '19 - 24 months'
+     when bad_active_mon_debt10k_bef>24 and bad_active_mon_debt10k_bef<=30 then '25 - 30 months'
+     when bad_active_mon_debt10k_bef>30 and bad_active_mon_debt10k_bef<=36 then '31 - 36 months'
+     when bad_active_mon_debt10k_bef>36 and bad_active_mon_debt10k_bef<=42 then '37 - 42 months'
+     when bad_active_mon_debt10k_bef>42 and bad_active_mon_debt10k_bef<=48 then '43 - 48 months'
+     when bad_active_mon_debt10k_bef>48 then '> 48 months' else 'Other' end as bad_active_mon_debt10k_bef,
+
+case when amount_max_bef=0 then '0'
+     when amount_max_bef>0 and amount_max_bef<=50000 then '<=50 000'
+     when amount_max_bef>50000 and amount_max_bef<=100000 then '50 001 - 100 000'
+     when amount_max_bef>100000 and amount_max_bef<=150000 then '100 001 - 150 000'
+     when amount_max_bef>150000 and amount_max_bef<=200000 then '150 001 - 200 000'
+     when amount_max_bef>200000 and amount_max_bef<=300000 then '200 001 - 300 000'
+     when amount_max_bef>300000 and amount_max_bef<=400000 then '300 001 - 400 000'
+     when amount_max_bef>400000 and amount_max_bef<=500000 then '400 001 - 500 000'
+     when amount_max_bef>500000 and amount_max_bef<=750000 then '500 001 - 750 000'
+     when amount_max_bef>750000 and amount_max_bef<=1000000 then '750 001 - 1 000 000'
+     when amount_max_bef>1000000 and amount_max_bef<=1500000 then '1 000 001 - 1 500 000'
+     when amount_max_bef>1500000 and amount_max_bef<=2000000 then '1 500 001 - 2 000 000'
+     when amount_max_bef>2000000 and amount_max_bef<=3000000 then '2 000 001 - 3 000 000'
+     when amount_max_bef>3000000 then '> 3 000 000'
+     when amount_max_bef is null then 'EMPTY' else 'Other' end as amount_max_bef,
+
+case when inactive_period=0 then '0'
+     when inactive_period>0 and inactive_period<=6 then '1 - 6 months'
+     when inactive_period>6 and inactive_period<=12 then '7 - 12 months'
+     when inactive_period>12 and inactive_period<=18 then '13 - 18 months'
+     when inactive_period>18 and inactive_period<=24 then '19 - 24 months'
+     when inactive_period>24 and inactive_period<=30 then '25 - 30 months'
+     when inactive_period>30 and inactive_period<=36 then '31 - 36 months'
+     when inactive_period>36 and inactive_period<=42 then '37 - 42 months'
+     when inactive_period>42 and inactive_period<=48 then '43 - 48 months'
+     when inactive_period>48 then '> 48 months'
+     when inactive_period is null then 'EMPTY'
+       else 'Other' end as inactive_period,
+
+-----1 YEAR
+case when con_any_bef_1y = 0 then '0'
+     when con_any_bef_1y = 1 then '1'
+     when con_any_bef_1y = 2 then '2'
+     when con_any_bef_1y = 3 then '3'
+     when con_any_bef_1y = 4 then '4'
+     when con_any_bef_1y = 5 then '5'
+     when con_any_bef_1y = 6 then '6'
+     when con_any_bef_1y = 7 then '7'
+     when con_any_bef_1y = 8 then '8'
+     when con_any_bef_1y = 9 then '9'
+     when con_any_bef_1y = 10 then '10'
+     when con_any_bef_1y > 10 then '> 10' else 'Other' end as con_any_bef_1y,
+
+case when con_debt10k_bef_1y = 0 then '0'
+     when con_debt10k_bef_1y = 1 then '1'
+     when con_debt10k_bef_1y = 2 then '2'
+     when con_debt10k_bef_1y = 3 then '3'
+     when con_debt10k_bef_1y = 4 then '4'
+     when con_debt10k_bef_1y = 5 then '5'
+     when con_debt10k_bef_1y = 6 then '6'
+     when con_debt10k_bef_1y = 7 then '7'
+     when con_debt10k_bef_1y = 8 then '8'
+     when con_debt10k_bef_1y = 9 then '9'
+     when con_debt10k_bef_1y = 10 then '10'
+     when con_debt10k_bef_1y > 10 then '> 10' else 'Other' end as con_debt10k_bef_1y,
+case when del_days_any_max_bef_1y = 0 then '0'
+     when del_days_any_max_bef_1y > 0 and del_days_any_max_bef_1y<=7 then '1 - 7 days'
+     when del_days_any_max_bef_1y > 7 and del_days_any_max_bef_1y<=30 then '8 - 30 days'
+     when del_days_any_max_bef_1y > 30 and del_days_any_max_bef_1y<=60 then '31 - 60 days'
+     when del_days_any_max_bef_1y > 60 and del_days_any_max_bef_1y<=90 then '61 - 90 days'
+     when del_days_any_max_bef_1y > 90 and del_days_any_max_bef_1y<=120 then '91 - 120 days'
+     when del_days_any_max_bef_1y > 120 and del_days_any_max_bef_1y<=150 then '121 - 150 days'
+     when del_days_any_max_bef_1y > 150 and del_days_any_max_bef_1y<=180 then '151 - 180 days'
+     when del_days_any_max_bef_1y > 180 and del_days_any_max_bef_1y<=210 then '181 - 210 days'
+     when del_days_any_max_bef_1y > 210 and del_days_any_max_bef_1y<=240 then '211 - 240 days'
+     when del_days_any_max_bef_1y > 240 and del_days_any_max_bef_1y<=270 then '241 - 270 days'
+     when del_days_any_max_bef_1y > 270 and del_days_any_max_bef_1y<=300 then '271 - 300 days'
+     when del_days_any_max_bef_1y > 300 and del_days_any_max_bef_1y<=330 then '301 - 330 days'
+     when del_days_any_max_bef_1y > 330 and del_days_any_max_bef_1y<=360 then '331 - 360 days'
+     when del_days_any_max_bef_1y > 360 then '> 360 days'
+      when del_days_any_max_bef_1y is null then 'EMPTY' else 'Other' end as del_days_any_max_bef_1y,
+
+case when del_days_debt10k_max_bef_1y = 0 then '0'
+     when del_days_debt10k_max_bef_1y > 0 and del_days_debt10k_max_bef_1y<=7 then '1 - 7 days'
+     when del_days_debt10k_max_bef_1y > 7 and del_days_debt10k_max_bef_1y<=30 then '8 - 30 days'
+     when del_days_debt10k_max_bef_1y > 30 and del_days_debt10k_max_bef_1y<=60 then '31 - 60 days'
+     when del_days_debt10k_max_bef_1y > 60 and del_days_debt10k_max_bef_1y<=90 then '61 - 90 days'
+     when del_days_debt10k_max_bef_1y > 90 and del_days_debt10k_max_bef_1y<=120 then '91 - 120 days'
+     when del_days_debt10k_max_bef_1y > 120 and del_days_debt10k_max_bef_1y<=150 then '121 - 150 days'
+     when del_days_debt10k_max_bef_1y > 150 and del_days_debt10k_max_bef_1y<=180 then '151 - 180 days'
+     when del_days_debt10k_max_bef_1y > 180 and del_days_debt10k_max_bef_1y<=210 then '181 - 210 days'
+     when del_days_debt10k_max_bef_1y > 210 and del_days_debt10k_max_bef_1y<=240 then '211 - 240 days'
+     when del_days_debt10k_max_bef_1y > 240 and del_days_debt10k_max_bef_1y<=270 then '241 - 270 days'
+     when del_days_debt10k_max_bef_1y > 270 and del_days_debt10k_max_bef_1y<=300 then '271 - 300 days'
+     when del_days_debt10k_max_bef_1y > 300 and del_days_debt10k_max_bef_1y<=330 then '301 - 330 days'
+     when del_days_debt10k_max_bef_1y > 330 and del_days_debt10k_max_bef_1y<=360 then '331 - 360 days'
+     when del_days_debt10k_max_bef_1y > 360 then '> 360 days'
+      when del_days_debt10k_max_bef_1y is null then 'EMPTY' else 'Other' end as del_days_debt10k_max_bef_1y,
+
+case when active_mon_debt10k_bef_1y=0 then '0'
+     when active_mon_debt10k_bef_1y>0 and active_mon_debt10k_bef_1y<=6 then '1 - 6 months'
+     when active_mon_debt10k_bef_1y>6 and active_mon_debt10k_bef_1y<=12 then '7 - 12 months'
+     when active_mon_debt10k_bef_1y>12 and active_mon_debt10k_bef_1y<=18 then '13 - 18 months'
+     when active_mon_debt10k_bef_1y>18 and active_mon_debt10k_bef_1y<=24 then '19 - 24 months'
+     when active_mon_debt10k_bef_1y>24 and active_mon_debt10k_bef_1y<=30 then '25 - 30 months'
+     when active_mon_debt10k_bef_1y>30 and active_mon_debt10k_bef_1y<=36 then '31 - 36 months'
+     when active_mon_debt10k_bef_1y>36 and active_mon_debt10k_bef_1y<=42 then '37 - 42 months'
+     when active_mon_debt10k_bef_1y>42 and active_mon_debt10k_bef_1y<=48 then '43 - 48 months'
+     when active_mon_debt10k_bef_1y>48 then '> 48 months' else 'Other' end as active_mon_debt10k_bef_1y,
+
+case when good_active_mon_debt10k_bef_1y=0 then '0'
+     when good_active_mon_debt10k_bef_1y>0 and good_active_mon_debt10k_bef_1y<=6 then '1 - 6 months'
+     when good_active_mon_debt10k_bef_1y>6 and good_active_mon_debt10k_bef_1y<=12 then '7 - 12 months'
+     when good_active_mon_debt10k_bef_1y>12 and good_active_mon_debt10k_bef_1y<=18 then '13 - 18 months'
+     when good_active_mon_debt10k_bef_1y>18 and good_active_mon_debt10k_bef_1y<=24 then '19 - 24 months'
+     when good_active_mon_debt10k_bef_1y>24 and good_active_mon_debt10k_bef_1y<=30 then '25 - 30 months'
+     when good_active_mon_debt10k_bef_1y>30 and good_active_mon_debt10k_bef_1y<=36 then '31 - 36 months'
+     when good_active_mon_debt10k_bef_1y>36 and good_active_mon_debt10k_bef_1y<=42 then '37 - 42 months'
+     when good_active_mon_debt10k_bef_1y>42 and good_active_mon_debt10k_bef_1y<=48 then '43 - 48 months'
+     when good_active_mon_debt10k_bef_1y>48 then '> 48 months' else 'Other' end as good_active_mon_debt10k_bef_1y,
+
+case when bad_active_mon_debt10k_bef_1y=0 then '0'
+     when bad_active_mon_debt10k_bef_1y=1 then '1 month'
+     when bad_active_mon_debt10k_bef_1y=2 then '2 months'
+     when bad_active_mon_debt10k_bef_1y=3 then '3 months'
+     when bad_active_mon_debt10k_bef_1y=4 then '4 months'
+     when bad_active_mon_debt10k_bef_1y=5 then '5 months'
+     when bad_active_mon_debt10k_bef_1y=6 then '6 months'
+     when bad_active_mon_debt10k_bef_1y>6 and bad_active_mon_debt10k_bef_1y<=12 then '7 - 12 months'
+     when bad_active_mon_debt10k_bef_1y>12 and bad_active_mon_debt10k_bef_1y<=18 then '13 - 18 months'
+     when bad_active_mon_debt10k_bef_1y>18 and bad_active_mon_debt10k_bef_1y<=24 then '19 - 24 months'
+     when bad_active_mon_debt10k_bef_1y>24 and bad_active_mon_debt10k_bef_1y<=30 then '25 - 30 months'
+     when bad_active_mon_debt10k_bef_1y>30 and bad_active_mon_debt10k_bef_1y<=36 then '31 - 36 months'
+     when bad_active_mon_debt10k_bef_1y>36 and bad_active_mon_debt10k_bef_1y<=42 then '37 - 42 months'
+     when bad_active_mon_debt10k_bef_1y>42 and bad_active_mon_debt10k_bef_1y<=48 then '43 - 48 months'
+     when bad_active_mon_debt10k_bef_1y>48 then '> 48 months' else 'Other' end as bad_active_mon_debt10k_bef_1y,
+
+case when amount_max_bef_1y=0 then '0'
+     when amount_max_bef_1y>0 and amount_max_bef_1y<=50000 then '<=50 000'
+     when amount_max_bef_1y>50000 and amount_max_bef_1y<=100000 then '50 001 - 100 000'
+     when amount_max_bef_1y>100000 and amount_max_bef_1y<=150000 then '100 001 - 150 000'
+     when amount_max_bef_1y>150000 and amount_max_bef_1y<=200000 then '150 001 - 200 000'
+     when amount_max_bef_1y>200000 and amount_max_bef_1y<=300000 then '200 001 - 300 000'
+     when amount_max_bef_1y>300000 and amount_max_bef_1y<=400000 then '300 001 - 400 000'
+     when amount_max_bef_1y>400000 and amount_max_bef_1y<=500000 then '400 001 - 500 000'
+     when amount_max_bef_1y>500000 and amount_max_bef_1y<=750000 then '500 001 - 750 000'
+     when amount_max_bef_1y>750000 and amount_max_bef_1y<=1000000 then '750 001 - 1 000 000'
+     when amount_max_bef_1y>1000000 and amount_max_bef_1y<=1500000 then '1 000 001 - 1 500 000'
+     when amount_max_bef_1y>1500000 and amount_max_bef_1y<=2000000 then '1 500 001 - 2 000 000'
+     when amount_max_bef_1y>2000000 and amount_max_bef_1y<=3000000 then '2 000 001 - 3 000 000'
+     when amount_max_bef_1y>3000000 then '> 3 000 000'
+     when amount_max_bef_1y is null then 'EMPTY' else 'Other' end as amount_max_bef_1y,
+
+case when inactive_period_1y=0 then '0'
+     when inactive_period_1y>0 and inactive_period_1y<=6 then '1 - 6 months'
+     when inactive_period_1y>6 and inactive_period_1y<=12 then '7 - 12 months'
+     when inactive_period_1y>12 and inactive_period_1y<=18 then '13 - 18 months'
+     when inactive_period_1y>18 and inactive_period_1y<=24 then '19 - 24 months'
+     when inactive_period_1y>24 and inactive_period_1y<=30 then '25 - 30 months'
+     when inactive_period_1y>30 and inactive_period_1y<=36 then '31 - 36 months'
+     when inactive_period_1y>36 and inactive_period_1y<=42 then '37 - 42 months'
+     when inactive_period_1y>42 and inactive_period_1y<=48 then '43 - 48 months'
+     when inactive_period_1y>48 then '> 48 months'
+     when inactive_period_1y is null then 'EMPTY'
+       else 'Other' end as inactive_period_1y,
+c.yy_mm_start_last,
+count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt,
+
+round(sum(c.max_debt_used)/1000000) as sales_mln, -- продажи
+sum(c.max_debt_used) as sales, -- продажи
+sum(c.delinq_rate_pmt_1 * c.max_debt_used) as del_rate_pmt_1,
+sum(c.delinq_rate_b_w * c.max_debt_used) as del_rate_b_w,
+sum(c.delinq_rate_b * c.max_debt_used) as del_rate_b,
+sum(c.delinq_rate_w * c.max_debt_used) as del_rate_w,
+sum(c.delinq_rate_g * c.max_debt_used) as del_rate_g,
+sum(c.delinq_rate_npl * c.max_debt_used) as del_rate_npl,
+sum(c.delinq_rate * c.max_debt_used) as del_rate,
+sum(c.max_debt_used) as total_used_sum,
+
+sum(case when c.yy_mm_start_last_date <= add_months(sysdate,-6) then c.delinq_rate_b_w * c.max_debt_used end) as del_rate_b_w_tolerance,
+sum(case when c.yy_mm_start_last_date <= add_months(sysdate,-6) then c.max_debt_used end) as total_used_sum_b_w_tolerance,   --b_w, считаем до -8 месяцев назад
+count(distinct(case when c.yy_mm_start_last_date <= add_months(sysdate,-6) and c.delinq_rate_b_w>0 then c.contract_number end)) as b_w_tolerance_cnt,
+count(distinct(case when c.yy_mm_start_last_date <= add_months(sysdate,-6) and c.max_debt_used>0 then c.contract_number end)) as total_b_w_tolerance_cnt,   --b_w, считаем до -8 месяцев назад
+
+count(distinct(case when c.delinq_rate_pmt_1>0 then c.contract_number end)) as pmt_1_cnt,
+count(distinct(case when c.max_debt_used_pmt_1>0 then c.contract_number end)) as max_debt_used_pmt_1,
+count(distinct(case when c.delinq_rate_npl>0 then c.contract_number end)) as npl_cnt,
+count(distinct(case when c.max_debt_used>0 then c.contract_number end)) as total_cnt,
+
+count(distinct case when n.is_del_npl_plus = 1 then c.contract_number end) as npl_plus_cnt,
+count(distinct c.contract_number) as npl_plus_all_cnt
+
+from M_CONTRACT_CAL_DEL c
+join M_CONTRACT_CAL_START_TMP_1 s on s.contract_number = c.contract_number
+join M_TMP_J_CON_DEL_PLUS n on n.contract_number = c.contract_number
+join M_FOLDER_CON_CANCEL fc on fc.folder_id = c.folder_id_first and
+                               fc.contract_number = c.contract_number
+join M_FOLDER_CON_MINER m on m.rfo_contract_id = fc.rfo_contract_id
+where (c.yy_mm_start_last like '2013%' or c.yy_mm_start_last like '2014%')
+         and not exists (select null from M_FOLDER_CON_CANCEL f where f.folder_id = c.folder_id_first and f.is_refin = 1)  ---- не РР
+     -- s.del_days_any_max_bef = 0 and
+     -- s.good_active_mon_debt10k_bef_1y >= 10 and
+      --s.good_active_mon_debt10k_bef >= 20 --and
+
+      --m.start_total_fact_pmts_by_cli >= 20 and
+      --nvl(cc.start_con_del_days_max_by_cli,0) = 0 and
+--      cc.start_date_first - cc.prev_con_st_date_by_start_date < 360 and
+--      m.gcvp_salary >= 200000 and
+--      s.amount_max_bef_1y >= 500000 and
+--      s.amount_max_bef_1y * 2 >= fc.contract_amount and
+--      nvl(m.pkb_active_contracts,0) < 2 and
+      --m.sal_gcvp_to_sal_form_prc_floor > 95 --and
+      --fc.contract_amount < 500000
+--group by c.yy_mm_start_last having sum(c.max_debt_used) > 0;
+group by
+case when con_any_bef = 0 then '0'
+     when con_any_bef = 1 then '1'
+     when con_any_bef = 2 then '2'
+     when con_any_bef = 3 then '3'
+     when con_any_bef = 4 then '4'
+     when con_any_bef = 5 then '5'
+     when con_any_bef = 6 then '6'
+     when con_any_bef = 7 then '7'
+     when con_any_bef = 8 then '8'
+     when con_any_bef = 9 then '9'
+     when con_any_bef = 10 then '10'
+     when con_any_bef > 10 then '> 10' else 'Other' end ,
+case when con_debt10k_bef = 0 then '0'
+     when con_debt10k_bef = 1 then '1'
+     when con_debt10k_bef = 2 then '2'
+     when con_debt10k_bef = 3 then '3'
+     when con_debt10k_bef = 4 then '4'
+     when con_debt10k_bef = 5 then '5'
+     when con_debt10k_bef = 6 then '6'
+     when con_debt10k_bef = 7 then '7'
+     when con_debt10k_bef = 8 then '8'
+     when con_debt10k_bef = 9 then '9'
+     when con_debt10k_bef = 10 then '10'
+     when con_debt10k_bef > 10 then '> 10' else 'Other' end ,
+case when del_days_any_max_bef = 0 then '0'
+     when del_days_any_max_bef > 0 and del_days_any_max_bef<=7 then '1 - 7 days'
+     when del_days_any_max_bef > 7 and del_days_any_max_bef<=30 then '8 - 30 days'
+     when del_days_any_max_bef > 30 and del_days_any_max_bef<=60 then '31 - 60 days'
+     when del_days_any_max_bef > 60 and del_days_any_max_bef<=90 then '61 - 90 days'
+     when del_days_any_max_bef > 90 and del_days_any_max_bef<=120 then '91 - 120 days'
+     when del_days_any_max_bef > 120 and del_days_any_max_bef<=150 then '121 - 150 days'
+     when del_days_any_max_bef > 150 and del_days_any_max_bef<=180 then '151 - 180 days'
+     when del_days_any_max_bef > 180 and del_days_any_max_bef<=210 then '181 - 210 days'
+     when del_days_any_max_bef > 210 and del_days_any_max_bef<=240 then '211 - 240 days'
+     when del_days_any_max_bef > 240 and del_days_any_max_bef<=270 then '241 - 270 days'
+     when del_days_any_max_bef > 270 and del_days_any_max_bef<=300 then '271 - 300 days'
+     when del_days_any_max_bef > 300 and del_days_any_max_bef<=330 then '301 - 330 days'
+     when del_days_any_max_bef > 330 and del_days_any_max_bef<=360 then '331 - 360 days'
+     when del_days_any_max_bef > 360 then '> 360 days'
+      when del_days_any_max_bef is null then 'EMPTY' else 'Other' end ,
+
+case when del_days_debt10k_max_bef = 0 then '0'
+     when del_days_debt10k_max_bef > 0 and del_days_debt10k_max_bef<=7 then '1 - 7 days'
+     when del_days_debt10k_max_bef > 7 and del_days_debt10k_max_bef<=30 then '8 - 30 days'
+     when del_days_debt10k_max_bef > 30 and del_days_debt10k_max_bef<=60 then '31 - 60 days'
+     when del_days_debt10k_max_bef > 60 and del_days_debt10k_max_bef<=90 then '61 - 90 days'
+     when del_days_debt10k_max_bef > 90 and del_days_debt10k_max_bef<=120 then '91 - 120 days'
+     when del_days_debt10k_max_bef > 120 and del_days_debt10k_max_bef<=150 then '121 - 150 days'
+     when del_days_debt10k_max_bef > 150 and del_days_debt10k_max_bef<=180 then '151 - 180 days'
+     when del_days_debt10k_max_bef > 180 and del_days_debt10k_max_bef<=210 then '181 - 210 days'
+     when del_days_debt10k_max_bef > 210 and del_days_debt10k_max_bef<=240 then '211 - 240 days'
+     when del_days_debt10k_max_bef > 240 and del_days_debt10k_max_bef<=270 then '241 - 270 days'
+     when del_days_debt10k_max_bef > 270 and del_days_debt10k_max_bef<=300 then '271 - 300 days'
+     when del_days_debt10k_max_bef > 300 and del_days_debt10k_max_bef<=330 then '301 - 330 days'
+     when del_days_debt10k_max_bef > 330 and del_days_debt10k_max_bef<=360 then '331 - 360 days'
+     when del_days_debt10k_max_bef > 360 then '> 360 days'
+      when del_days_debt10k_max_bef is null then 'EMPTY' else 'Other' end ,
+
+case when active_mon_debt10k_bef=0 then '0'
+     when active_mon_debt10k_bef>0 and active_mon_debt10k_bef<=6 then '1 - 6 months'
+     when active_mon_debt10k_bef>6 and active_mon_debt10k_bef<=12 then '7 - 12 months'
+     when active_mon_debt10k_bef>12 and active_mon_debt10k_bef<=18 then '13 - 18 months'
+     when active_mon_debt10k_bef>18 and active_mon_debt10k_bef<=24 then '19 - 24 months'
+     when active_mon_debt10k_bef>24 and active_mon_debt10k_bef<=30 then '25 - 30 months'
+     when active_mon_debt10k_bef>30 and active_mon_debt10k_bef<=36 then '31 - 36 months'
+     when active_mon_debt10k_bef>36 and active_mon_debt10k_bef<=42 then '37 - 42 months'
+     when active_mon_debt10k_bef>42 and active_mon_debt10k_bef<=48 then '43 - 48 months'
+     when active_mon_debt10k_bef>48 then '> 48 months' else 'Other' end ,
+
+case when good_active_mon_debt10k_bef=0 then '0'
+     when good_active_mon_debt10k_bef>0 and good_active_mon_debt10k_bef<=6 then '1 - 6 months'
+     when good_active_mon_debt10k_bef>6 and good_active_mon_debt10k_bef<=12 then '7 - 12 months'
+     when good_active_mon_debt10k_bef>12 and good_active_mon_debt10k_bef<=18 then '13 - 18 months'
+     when good_active_mon_debt10k_bef>18 and good_active_mon_debt10k_bef<=24 then '19 - 24 months'
+     when good_active_mon_debt10k_bef>24 and good_active_mon_debt10k_bef<=30 then '25 - 30 months'
+     when good_active_mon_debt10k_bef>30 and good_active_mon_debt10k_bef<=36 then '31 - 36 months'
+     when good_active_mon_debt10k_bef>36 and good_active_mon_debt10k_bef<=42 then '37 - 42 months'
+     when good_active_mon_debt10k_bef>42 and good_active_mon_debt10k_bef<=48 then '43 - 48 months'
+     when good_active_mon_debt10k_bef>48 then '> 48 months' else 'Other' end ,
+
+case when bad_active_mon_debt10k_bef=0 then '0'
+     when bad_active_mon_debt10k_bef=1 then '1 month'
+     when bad_active_mon_debt10k_bef=2 then '2 months'
+     when bad_active_mon_debt10k_bef=3 then '3 months'
+     when bad_active_mon_debt10k_bef=4 then '4 months'
+     when bad_active_mon_debt10k_bef=5 then '5 months'
+     when bad_active_mon_debt10k_bef=6 then '6 months'
+     when bad_active_mon_debt10k_bef>6 and bad_active_mon_debt10k_bef<=12 then '7 - 12 months'
+     when bad_active_mon_debt10k_bef>12 and bad_active_mon_debt10k_bef<=18 then '13 - 18 months'
+     when bad_active_mon_debt10k_bef>18 and bad_active_mon_debt10k_bef<=24 then '19 - 24 months'
+     when bad_active_mon_debt10k_bef>24 and bad_active_mon_debt10k_bef<=30 then '25 - 30 months'
+     when bad_active_mon_debt10k_bef>30 and bad_active_mon_debt10k_bef<=36 then '31 - 36 months'
+     when bad_active_mon_debt10k_bef>36 and bad_active_mon_debt10k_bef<=42 then '37 - 42 months'
+     when bad_active_mon_debt10k_bef>42 and bad_active_mon_debt10k_bef<=48 then '43 - 48 months'
+     when bad_active_mon_debt10k_bef>48 then '> 48 months' else 'Other' end ,
+
+case when amount_max_bef=0 then '0'
+     when amount_max_bef>0 and amount_max_bef<=50000 then '<=50 000'
+     when amount_max_bef>50000 and amount_max_bef<=100000 then '50 001 - 100 000'
+     when amount_max_bef>100000 and amount_max_bef<=150000 then '100 001 - 150 000'
+     when amount_max_bef>150000 and amount_max_bef<=200000 then '150 001 - 200 000'
+     when amount_max_bef>200000 and amount_max_bef<=300000 then '200 001 - 300 000'
+     when amount_max_bef>300000 and amount_max_bef<=400000 then '300 001 - 400 000'
+     when amount_max_bef>400000 and amount_max_bef<=500000 then '400 001 - 500 000'
+     when amount_max_bef>500000 and amount_max_bef<=750000 then '500 001 - 750 000'
+     when amount_max_bef>750000 and amount_max_bef<=1000000 then '750 001 - 1 000 000'
+     when amount_max_bef>1000000 and amount_max_bef<=1500000 then '1 000 001 - 1 500 000'
+     when amount_max_bef>1500000 and amount_max_bef<=2000000 then '1 500 001 - 2 000 000'
+     when amount_max_bef>2000000 and amount_max_bef<=3000000 then '2 000 001 - 3 000 000'
+     when amount_max_bef>3000000 then '> 3 000 000'
+     when amount_max_bef is null then 'EMPTY' else 'Other' end ,
+
+case when inactive_period=0 then '0'
+     when inactive_period>0 and inactive_period<=6 then '1 - 6 months'
+     when inactive_period>6 and inactive_period<=12 then '7 - 12 months'
+     when inactive_period>12 and inactive_period<=18 then '13 - 18 months'
+     when inactive_period>18 and inactive_period<=24 then '19 - 24 months'
+     when inactive_period>24 and inactive_period<=30 then '25 - 30 months'
+     when inactive_period>30 and inactive_period<=36 then '31 - 36 months'
+     when inactive_period>36 and inactive_period<=42 then '37 - 42 months'
+     when inactive_period>42 and inactive_period<=48 then '43 - 48 months'
+     when inactive_period>48 then '> 48 months'
+     when inactive_period is null then 'EMPTY'
+       else 'Other' end,
+
+-----1 YEAR
+case when con_any_bef_1y = 0 then '0'
+     when con_any_bef_1y = 1 then '1'
+     when con_any_bef_1y = 2 then '2'
+     when con_any_bef_1y = 3 then '3'
+     when con_any_bef_1y = 4 then '4'
+     when con_any_bef_1y = 5 then '5'
+     when con_any_bef_1y = 6 then '6'
+     when con_any_bef_1y = 7 then '7'
+     when con_any_bef_1y = 8 then '8'
+     when con_any_bef_1y = 9 then '9'
+     when con_any_bef_1y = 10 then '10'
+     when con_any_bef_1y > 10 then '> 10' else 'Other' end ,
+
+case when con_debt10k_bef_1y = 0 then '0'
+     when con_debt10k_bef_1y = 1 then '1'
+     when con_debt10k_bef_1y = 2 then '2'
+     when con_debt10k_bef_1y = 3 then '3'
+     when con_debt10k_bef_1y = 4 then '4'
+     when con_debt10k_bef_1y = 5 then '5'
+     when con_debt10k_bef_1y = 6 then '6'
+     when con_debt10k_bef_1y = 7 then '7'
+     when con_debt10k_bef_1y = 8 then '8'
+     when con_debt10k_bef_1y = 9 then '9'
+     when con_debt10k_bef_1y = 10 then '10'
+     when con_debt10k_bef_1y > 10 then '> 10' else 'Other' end ,
+case when del_days_any_max_bef_1y = 0 then '0'
+     when del_days_any_max_bef_1y > 0 and del_days_any_max_bef_1y<=7 then '1 - 7 days'
+     when del_days_any_max_bef_1y > 7 and del_days_any_max_bef_1y<=30 then '8 - 30 days'
+     when del_days_any_max_bef_1y > 30 and del_days_any_max_bef_1y<=60 then '31 - 60 days'
+     when del_days_any_max_bef_1y > 60 and del_days_any_max_bef_1y<=90 then '61 - 90 days'
+     when del_days_any_max_bef_1y > 90 and del_days_any_max_bef_1y<=120 then '91 - 120 days'
+     when del_days_any_max_bef_1y > 120 and del_days_any_max_bef_1y<=150 then '121 - 150 days'
+     when del_days_any_max_bef_1y > 150 and del_days_any_max_bef_1y<=180 then '151 - 180 days'
+     when del_days_any_max_bef_1y > 180 and del_days_any_max_bef_1y<=210 then '181 - 210 days'
+     when del_days_any_max_bef_1y > 210 and del_days_any_max_bef_1y<=240 then '211 - 240 days'
+     when del_days_any_max_bef_1y > 240 and del_days_any_max_bef_1y<=270 then '241 - 270 days'
+     when del_days_any_max_bef_1y > 270 and del_days_any_max_bef_1y<=300 then '271 - 300 days'
+     when del_days_any_max_bef_1y > 300 and del_days_any_max_bef_1y<=330 then '301 - 330 days'
+     when del_days_any_max_bef_1y > 330 and del_days_any_max_bef_1y<=360 then '331 - 360 days'
+     when del_days_any_max_bef_1y > 360 then '> 360 days'
+      when del_days_any_max_bef_1y is null then 'EMPTY' else 'Other' end ,
+
+case when del_days_debt10k_max_bef_1y = 0 then '0'
+     when del_days_debt10k_max_bef_1y > 0 and del_days_debt10k_max_bef_1y<=7 then '1 - 7 days'
+     when del_days_debt10k_max_bef_1y > 7 and del_days_debt10k_max_bef_1y<=30 then '8 - 30 days'
+     when del_days_debt10k_max_bef_1y > 30 and del_days_debt10k_max_bef_1y<=60 then '31 - 60 days'
+     when del_days_debt10k_max_bef_1y > 60 and del_days_debt10k_max_bef_1y<=90 then '61 - 90 days'
+     when del_days_debt10k_max_bef_1y > 90 and del_days_debt10k_max_bef_1y<=120 then '91 - 120 days'
+     when del_days_debt10k_max_bef_1y > 120 and del_days_debt10k_max_bef_1y<=150 then '121 - 150 days'
+     when del_days_debt10k_max_bef_1y > 150 and del_days_debt10k_max_bef_1y<=180 then '151 - 180 days'
+     when del_days_debt10k_max_bef_1y > 180 and del_days_debt10k_max_bef_1y<=210 then '181 - 210 days'
+     when del_days_debt10k_max_bef_1y > 210 and del_days_debt10k_max_bef_1y<=240 then '211 - 240 days'
+     when del_days_debt10k_max_bef_1y > 240 and del_days_debt10k_max_bef_1y<=270 then '241 - 270 days'
+     when del_days_debt10k_max_bef_1y > 270 and del_days_debt10k_max_bef_1y<=300 then '271 - 300 days'
+     when del_days_debt10k_max_bef_1y > 300 and del_days_debt10k_max_bef_1y<=330 then '301 - 330 days'
+     when del_days_debt10k_max_bef_1y > 330 and del_days_debt10k_max_bef_1y<=360 then '331 - 360 days'
+     when del_days_debt10k_max_bef_1y > 360 then '> 360 days'
+      when del_days_debt10k_max_bef_1y is null then 'EMPTY' else 'Other' end ,
+
+case when active_mon_debt10k_bef_1y=0 then '0'
+     when active_mon_debt10k_bef_1y>0 and active_mon_debt10k_bef_1y<=6 then '1 - 6 months'
+     when active_mon_debt10k_bef_1y>6 and active_mon_debt10k_bef_1y<=12 then '7 - 12 months'
+     when active_mon_debt10k_bef_1y>12 and active_mon_debt10k_bef_1y<=18 then '13 - 18 months'
+     when active_mon_debt10k_bef_1y>18 and active_mon_debt10k_bef_1y<=24 then '19 - 24 months'
+     when active_mon_debt10k_bef_1y>24 and active_mon_debt10k_bef_1y<=30 then '25 - 30 months'
+     when active_mon_debt10k_bef_1y>30 and active_mon_debt10k_bef_1y<=36 then '31 - 36 months'
+     when active_mon_debt10k_bef_1y>36 and active_mon_debt10k_bef_1y<=42 then '37 - 42 months'
+     when active_mon_debt10k_bef_1y>42 and active_mon_debt10k_bef_1y<=48 then '43 - 48 months'
+     when active_mon_debt10k_bef_1y>48 then '> 48 months' else 'Other' end ,
+
+case when good_active_mon_debt10k_bef_1y=0 then '0'
+     when good_active_mon_debt10k_bef_1y>0 and good_active_mon_debt10k_bef_1y<=6 then '1 - 6 months'
+     when good_active_mon_debt10k_bef_1y>6 and good_active_mon_debt10k_bef_1y<=12 then '7 - 12 months'
+     when good_active_mon_debt10k_bef_1y>12 and good_active_mon_debt10k_bef_1y<=18 then '13 - 18 months'
+     when good_active_mon_debt10k_bef_1y>18 and good_active_mon_debt10k_bef_1y<=24 then '19 - 24 months'
+     when good_active_mon_debt10k_bef_1y>24 and good_active_mon_debt10k_bef_1y<=30 then '25 - 30 months'
+     when good_active_mon_debt10k_bef_1y>30 and good_active_mon_debt10k_bef_1y<=36 then '31 - 36 months'
+     when good_active_mon_debt10k_bef_1y>36 and good_active_mon_debt10k_bef_1y<=42 then '37 - 42 months'
+     when good_active_mon_debt10k_bef_1y>42 and good_active_mon_debt10k_bef_1y<=48 then '43 - 48 months'
+     when good_active_mon_debt10k_bef_1y>48 then '> 48 months' else 'Other' end ,
+
+case when bad_active_mon_debt10k_bef_1y=0 then '0'
+     when bad_active_mon_debt10k_bef_1y=1 then '1 month'
+     when bad_active_mon_debt10k_bef_1y=2 then '2 months'
+     when bad_active_mon_debt10k_bef_1y=3 then '3 months'
+     when bad_active_mon_debt10k_bef_1y=4 then '4 months'
+     when bad_active_mon_debt10k_bef_1y=5 then '5 months'
+     when bad_active_mon_debt10k_bef_1y=6 then '6 months'
+     when bad_active_mon_debt10k_bef_1y>6 and bad_active_mon_debt10k_bef_1y<=12 then '7 - 12 months'
+     when bad_active_mon_debt10k_bef_1y>12 and bad_active_mon_debt10k_bef_1y<=18 then '13 - 18 months'
+     when bad_active_mon_debt10k_bef_1y>18 and bad_active_mon_debt10k_bef_1y<=24 then '19 - 24 months'
+     when bad_active_mon_debt10k_bef_1y>24 and bad_active_mon_debt10k_bef_1y<=30 then '25 - 30 months'
+     when bad_active_mon_debt10k_bef_1y>30 and bad_active_mon_debt10k_bef_1y<=36 then '31 - 36 months'
+     when bad_active_mon_debt10k_bef_1y>36 and bad_active_mon_debt10k_bef_1y<=42 then '37 - 42 months'
+     when bad_active_mon_debt10k_bef_1y>42 and bad_active_mon_debt10k_bef_1y<=48 then '43 - 48 months'
+     when bad_active_mon_debt10k_bef_1y>48 then '> 48 months' else 'Other' end ,
+
+case when amount_max_bef_1y=0 then '0'
+     when amount_max_bef_1y>0 and amount_max_bef_1y<=50000 then '<=50 000'
+     when amount_max_bef_1y>50000 and amount_max_bef_1y<=100000 then '50 001 - 100 000'
+     when amount_max_bef_1y>100000 and amount_max_bef_1y<=150000 then '100 001 - 150 000'
+     when amount_max_bef_1y>150000 and amount_max_bef_1y<=200000 then '150 001 - 200 000'
+     when amount_max_bef_1y>200000 and amount_max_bef_1y<=300000 then '200 001 - 300 000'
+     when amount_max_bef_1y>300000 and amount_max_bef_1y<=400000 then '300 001 - 400 000'
+     when amount_max_bef_1y>400000 and amount_max_bef_1y<=500000 then '400 001 - 500 000'
+     when amount_max_bef_1y>500000 and amount_max_bef_1y<=750000 then '500 001 - 750 000'
+     when amount_max_bef_1y>750000 and amount_max_bef_1y<=1000000 then '750 001 - 1 000 000'
+     when amount_max_bef_1y>1000000 and amount_max_bef_1y<=1500000 then '1 000 001 - 1 500 000'
+     when amount_max_bef_1y>1500000 and amount_max_bef_1y<=2000000 then '1 500 001 - 2 000 000'
+     when amount_max_bef_1y>2000000 and amount_max_bef_1y<=3000000 then '2 000 001 - 3 000 000'
+     when amount_max_bef_1y>3000000 then '> 3 000 000'
+     when amount_max_bef_1y is null then 'EMPTY' else 'Other' end ,
+
+case when inactive_period_1y=0 then '0'
+     when inactive_period_1y>0 and inactive_period_1y<=6 then '1 - 6 months'
+     when inactive_period_1y>6 and inactive_period_1y<=12 then '7 - 12 months'
+     when inactive_period_1y>12 and inactive_period_1y<=18 then '13 - 18 months'
+     when inactive_period_1y>18 and inactive_period_1y<=24 then '19 - 24 months'
+     when inactive_period_1y>24 and inactive_period_1y<=30 then '25 - 30 months'
+     when inactive_period_1y>30 and inactive_period_1y<=36 then '31 - 36 months'
+     when inactive_period_1y>36 and inactive_period_1y<=42 then '37 - 42 months'
+     when inactive_period_1y>42 and inactive_period_1y<=48 then '43 - 48 months'
+     when inactive_period_1y>48 then '> 48 months'
+     when inactive_period_1y is null then 'EMPTY'
+       else 'Other' end ,
+c.yy_mm_start_last
+having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_DI_BEST_CLIENTS_1 to LOADDB;
+grant select on U1.M_TMP_DI_BEST_CLIENTS_1 to LOADER;
+
+

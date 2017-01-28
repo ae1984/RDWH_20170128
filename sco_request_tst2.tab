@@ -1,0 +1,53 @@
+﻿create table U1.SCO_REQUEST_TST2
+(
+  id                 NUMBER not null,
+  process_request_id NUMBER not null,
+  client_id          NUMBER,
+  folder_id          NUMBER,
+  code_process       VARCHAR2(64),
+  date_create        TIMESTAMP(6)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.SCO_REQUEST_TST2_DATE on U1.SCO_REQUEST_TST2 (DATE_CREATE)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.SCO_REQUEST_TST2
+  add constraint SCO_REQUEST_TST2_PK primary key (ID)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.SCO_REQUEST_TST2_PK nologging;
+grant select on U1.SCO_REQUEST_TST2 to LOADDB;
+grant select on U1.SCO_REQUEST_TST2 to LOADER;
+

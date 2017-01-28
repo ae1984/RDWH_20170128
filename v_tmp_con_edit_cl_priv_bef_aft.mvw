@@ -1,0 +1,60 @@
+﻿create materialized view U1.V_TMP_CON_EDIT_CL_PRIV_BEF_AFT
+refresh force on demand
+as
+select x.*,
+       case when is_edit_cli_fld_two_days_bef = 1 and is_edit_cli_fld_two_days_aft = 1 then 1
+         else 0 end as is_edit_cli_fld_two_days_ba
+from (
+select c.contract_number,
+       max(c.start_date_first) as start_date_first,
+       max(c.start_date_last) as start_date_last,
+       max(fc.rfo_client_id) as rfo_client_id,
+       case when max(c.start_date_first) = max(c.start_date_last) then 1 else 0 end as is_single_start_date,
+       count(distinct fc.rfo_client_id) as rfo_client_id_cnt,
+       sign(count(distinct case when trunc(fc.folder_date_create) = trunc(f.folder_date_create) and
+                           fc.folder_date_create > f.folder_date_create then f.folder_id end)) as is_edit_cli_fld_same_day_bef,
+       sign(count(distinct case when trunc(fc.folder_date_create) = trunc(f.folder_date_create) and
+                           fc.folder_date_create < f.folder_date_create then f.folder_id end)) as is_edit_cli_fld_same_day_aft,
+
+       sign(count(distinct case when abs(trunc(fc.folder_date_create) - trunc(f.folder_date_create)) < 2 and
+                           fc.folder_date_create > f.folder_date_create then f.folder_id end)) as is_edit_cli_fld_two_days_bef,
+       sign(count(distinct case when abs(trunc(fc.folder_date_create) - trunc(f.folder_date_create)) < 2 and
+                           fc.folder_date_create < f.folder_date_create then f.folder_id end)) as is_edit_cli_fld_two_days_aft,
+
+       sign(count(distinct case when abs(trunc(fc.folder_date_create) - trunc(f.folder_date_create)) < 3 and
+                           fc.folder_date_create > f.folder_date_create then f.folder_id end)) as is_edit_cli_fld_three_days_bef,
+       sign(count(distinct case when abs(trunc(fc.folder_date_create) - trunc(f.folder_date_create)) < 3 and
+                           fc.folder_date_create < f.folder_date_create then f.folder_id end)) as is_edit_cli_fld_three_days_aft,
+
+       sign(count(distinct case when abs(trunc(fc.folder_date_create) - trunc(f.folder_date_create)) < 4 and
+                           fc.folder_date_create > f.folder_date_create then f.folder_id end)) as is_edit_cli_fld_four_days_bef,
+       sign(count(distinct case when abs(trunc(fc.folder_date_create) - trunc(f.folder_date_create)) < 4 and
+                           fc.folder_date_create < f.folder_date_create then f.folder_id end)) as is_edit_cli_fld_four_days_aft,
+
+       sign(count(distinct case when abs(trunc(fc.folder_date_create) - trunc(f.folder_date_create)) < 5 and
+                           fc.folder_date_create > f.folder_date_create then f.folder_id end)) as is_edit_cli_fld_five_days_bef,
+       sign(count(distinct case when abs(trunc(fc.folder_date_create) - trunc(f.folder_date_create)) < 5 and
+                           fc.folder_date_create < f.folder_date_create then f.folder_id end)) as is_edit_cli_fld_five_days_aft,
+
+       sign(count(distinct case when abs(trunc(fc.folder_date_create) - trunc(f.folder_date_create)) < 6 and
+                           fc.folder_date_create > f.folder_date_create then f.folder_id end)) as is_edit_cli_fld_six_days_bef,
+       sign(count(distinct case when abs(trunc(fc.folder_date_create) - trunc(f.folder_date_create)) < 6 and
+                           fc.folder_date_create < f.folder_date_create then f.folder_id end)) as is_edit_cli_fld_six_days_aft,
+
+       sign(count(distinct case when fc.folder_date_create > f.folder_date_create then f.folder_id end)) as is_edit_cli_fld_week_bef,
+       sign(count(distinct case when fc.folder_date_create < f.folder_date_create then f.folder_id end)) as is_edit_cli_fld_week_aft
+from V_CONTRACT_CAL c
+--left join V_CLIENT_RFO_BY_IIN cl on cl.iin = c.client_iin_last
+left join V_FOLDER_ALL_RFO fc on fc.folder_id = c.folder_id_first
+left join V_FOLDER_ALL_RFO f on f.rfo_client_id = fc.rfo_client_id and f.process_code = 'EDIT_CL_PRIV' and
+      trunc(f.folder_date_create) > trunc(fc.folder_date_create) - 8 and
+      trunc(f.folder_date_create) < trunc(fc.folder_date_create) + 8
+--where c.contract_number = 'R1687487-002/CRD-2'
+--where --c.product_first in ('АВТО','КН','КН-15','ТК')
+--fc.rfo_client_id = 11361153810
+group by c.contract_number
+) x;
+grant select on U1.V_TMP_CON_EDIT_CL_PRIV_BEF_AFT to LOADDB;
+grant select on U1.V_TMP_CON_EDIT_CL_PRIV_BEF_AFT to LOADER;
+
+

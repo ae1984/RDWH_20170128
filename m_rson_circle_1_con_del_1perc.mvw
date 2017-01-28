@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_RSON_CIRCLE_1_CON_DEL_1PERC
+refresh complete on demand
+as
+select h.rfo_client_id,
+       contract_number,
+       h.circle_1_cli_cnt,
+    perc_del_days_max_by_cli
+  from (select t.rfo_client_id,
+               t.contract_number,
+               count(c.client_id) circle_1_cli_cnt,
+               round(sum(case
+                           when c.pr_rep_con_del_days_max_by_cli >= 60 then
+                            1
+                           else
+                            0
+                         end) / count(*) * 100) perc_del_days_max_by_cli
+          from M_RSON_CIRCLE_1_CON_CNT t -- на каждый договор рассчитали кол-во связей 1 го круга, дата связей, меньше даты создания договора
+          join (selecT client_id,
+                      max(g.pr_rep_con_del_days_max_by_cli) pr_rep_con_del_days_max_by_cli
+                 from V_REPORT_CAL_1_PRE_1 g join M_RSON_CIRCLE_1_CON_CNT b on g.client_id = b.client_id_link
+                where g.yy_mm_report <= b.yy_mm_start_last  -- берем информацию о просрочках в связях перовго круга, меньше даты  наших договоров которые за февраль(взяли срез)
+                group by client_id) c
+            on c.client_id = t.client_id_link
+     --    where t.yy_mm_start_last = '2013 - 09' --берем те договора которые стартовали в феврале(взяли срез данных)
+         group by t.contract_number, t.rfo_client_id) h;
+grant select on U1.M_RSON_CIRCLE_1_CON_DEL_1PERC to LOADDB;
+grant select on U1.M_RSON_CIRCLE_1_CON_DEL_1PERC to LOADER;
+
+

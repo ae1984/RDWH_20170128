@@ -1,0 +1,71 @@
+﻿create materialized view U1.M_AN_DEL_ONLINE_FLD_WEEK
+refresh complete on demand
+as
+select -- ПРОСРОЧКА ПО НЕДЕЛЯМ - ОНЛАЙН И POS - по дате заявки
+       td.week_text_online_credit,
+       x.del_1_rate_by_vol,
+       x.del_7_rate_by_vol,
+       y.pos_del_1_rate_by_vol,
+       y.pos_del_7_rate_by_vol,
+       x.sales_mln,
+       x.sales_mln / y.pos_sales_mln as online_to_pos_sales_ratio,
+       x.cnt,
+       x.con_cnt,
+       x.cli_cnt,
+       y.pos_cnt,
+       y.pos_con_cnt,
+       y.pos_cli_cnt
+from (
+    select distinct td0.week_text_online_credit
+      from V_TIME_DAYS td0
+      where td0.yyyy_mm_dd >= to_date('2014-12-08','yyyy-mm-dd') and
+            td0.yyyy_mm_dd < trunc(sysdate)
+    ) td
+left join (
+    select td1.week_text_online_credit,
+           count(*) as cnt,
+           count(distinct d.deal_number) as con_cnt,
+           count(distinct d.client_iin) as cli_cnt,
+           sum(d.amount) / 1000000 as sales_mln,
+           coalesce(sum(case when d.x_delinq_days > 0 then d.x_total_debt end) / sum(d.amount),0) as del_1_rate_by_vol,
+           sum(case when trunc(t.folder_date_create_mi) <= add_months(trunc(sysdate),-1) - 10 then
+                       case when d.x_delinq_days > 7 then d.x_total_debt else 0 end
+                    end) /
+               sum(case when trunc(t.folder_date_create_mi) <= add_months(trunc(sysdate),-1) - 10
+                             then d.amount end) as del_7_rate_by_vol
+    from V_DWH_PORTFOLIO_CURRENT d
+    join M_FOLDER_CON_CANCEL t on t.folder_id = d.folder_id_first
+    join V_TIME_DAYS td1 on td1.yyyy_mm_dd = trunc(t.folder_date_create_mi)
+    where d.x_is_credit_issued = 1 and
+          d.begin_date >= to_date('2014-12-08','yyyy-mm-dd') and
+          d.prod_type = 'ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)' and
+          t.process_name = 'ОНЛАЙН КРЕДИТ'
+    group by td1.week_text_online_credit
+    having sum(d.amount) > 0
+ ) x on x.week_text_online_credit = td.week_text_online_credit
+left join (
+    select td2.week_text_online_credit,
+           count(*) as pos_cnt,
+           count(distinct d.deal_number) as pos_con_cnt,
+           count(distinct d.client_iin) as pos_cli_cnt,
+           sum(d.amount) / 1000000 as pos_sales_mln,
+           coalesce(sum(case when d.x_delinq_days > 0 then d.x_total_debt end) / sum(d.amount),0) as pos_del_1_rate_by_vol,
+           sum(case when trunc(t.folder_date_create_mi) <= add_months(trunc(sysdate),-1) - 10 then
+                       case when d.x_delinq_days > 7 then d.x_total_debt else 0 end
+                    end) /
+               sum(case when trunc(t.folder_date_create_mi) <= add_months(trunc(sysdate),-1) - 10
+                             then d.amount end) as pos_del_7_rate_by_vol
+    from V_DWH_PORTFOLIO_CURRENT d
+    join M_FOLDER_CON_CANCEL t on t.folder_id = d.folder_id_first
+    join V_TIME_DAYS td2 on td2.yyyy_mm_dd = trunc(t.folder_date_create_mi)
+    where d.x_is_credit_issued = 1 and
+          d.begin_date >= to_date('2014-12-08','yyyy-mm-dd') and
+          d.prod_type = 'ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)' and
+          t.process_name != 'ОНЛАЙН КРЕДИТ'
+    group by td2.week_text_online_credit
+    having sum(d.amount) > 0
+ ) y on y.week_text_online_credit = td.week_text_online_credit;
+grant select on U1.M_AN_DEL_ONLINE_FLD_WEEK to LOADDB;
+grant select on U1.M_AN_DEL_ONLINE_FLD_WEEK to LOADER;
+
+

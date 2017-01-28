@@ -1,0 +1,18 @@
+﻿create materialized view U1.V_RBO_Z#KAS_CALC_EPS
+refresh complete on demand
+as
+select id,
+      c_cred_ref,
+      c_kas_plan_eps_arr,
+      c_kas_plan_eps_hst,
+      c_kas_jrn_eps_arr,
+      c_notes,
+      c_status,
+      c_date_close,
+      c_error_msg,
+      c_date_change
+from s02.Z#KAS_CALC_EPS@rdwh_exd;
+grant select on U1.V_RBO_Z#KAS_CALC_EPS to LOADDB;
+grant select on U1.V_RBO_Z#KAS_CALC_EPS to LOADER;
+
+

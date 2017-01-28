@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_TMP_J_SYS_MON_FRAUD_MAN_1
+refresh complete on demand
+as
+select
+    td.yyyy, td.text_yyyy_mm, td.text_yyyy_mm_dd, c.process_name, c.expert_name, c.pos_code, c.dnp_name, mvv.question,
+    ---
+    count(*) as cnt, count(distinct c.folder_id) as fld_cnt,
+    count(distinct c.rfo_client_id) as cli_cnt
+from U1.V_FOLDER_ALL_RFO c
+join V_TIME_DAYS td on td.yyyy_mm_dd = trunc(c.folder_date_create)
+left join u1.M_VERIFICATION mvv on nvl(mvv.verify_folder_id, mvv.demand_folder_id) = c.folder_id and
+          mvv.question in (
+                'Фото клиента и фото документа цветные (похожи на оригинал)?',
+                'На документе уд. личности и фото Клиента изображен один человек?',
+                'Фото клиента и фото документа цветные?',
+                'Фото Клиента (уд.личности и снимок Клиента) совпадает с фото из предыдущей заявки?',
+                'Фото клиента и фото документа цветные (похожи на оригинал) ?',
+                'Фото клиента и фото документа цветные?',
+                'На документе уд. личности и фото Клиента изображен один человек?')
+          and mvv.answer_text = 'НЕТ'
+          and mvv.verification_scheme = 'PHOTO'
+where c.folder_date_create >= to_date('01.05.2015', 'dd.mm.yyyy')
+group by td.yyyy, td.text_yyyy_mm, td.text_yyyy_mm_dd, c.process_name, c.expert_name, c.pos_code, c.dnp_name,
+         mvv.question;
+grant select on U1.M_TMP_J_SYS_MON_FRAUD_MAN_1 to LOADDB;
+grant select on U1.M_TMP_J_SYS_MON_FRAUD_MAN_1 to LOADER;
+
+

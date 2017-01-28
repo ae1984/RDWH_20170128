@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_RBO_COURSES
+build deferred
+refresh force on demand
+as
+select r.c_date_recount as date_recount, fm.c_cur_short as currency,r.c_course as curs_value
+ from V_RBO_Z#FT_MONEY fm
+ join V_RBO_Z#RECONT r on r.collection_id = fm.c_jour_recont;
+grant select on U1.M_RBO_COURSES to LOADDB;
+grant select on U1.M_RBO_COURSES to LOAD_MO;
+
+

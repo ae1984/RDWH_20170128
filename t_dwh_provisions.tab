@@ -1,0 +1,58 @@
+﻿create table U1.T_DWH_PROVISIONS
+(
+  rep_date      DATE not null,
+  prod          VARCHAR2(3) not null,
+  long_delinq   VARCHAR2(15) not null,
+  value_calc    NUMBER not null,
+  value_nb      NUMBER,
+  is_on_balance NUMBER(1) not null,
+  rep_lvl       NUMBER(2) not null,
+  rep_type      VARCHAR2(15),
+  name          VARCHAR2(50)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_DWH_PROVISIONS
+  is 'Расчет провизий';
+comment on column U1.T_DWH_PROVISIONS.rep_date
+  is 'Дата';
+comment on column U1.T_DWH_PROVISIONS.prod
+  is 'Продукт (А-авто,М-массовое)';
+comment on column U1.T_DWH_PROVISIONS.long_delinq
+  is 'Дни на просрочке';
+comment on column U1.T_DWH_PROVISIONS.value_calc
+  is 'Рассчитанное значение';
+comment on column U1.T_DWH_PROVISIONS.value_nb
+  is 'Внесенное значение';
+comment on column U1.T_DWH_PROVISIONS.is_on_balance
+  is 'Признак: 1-Вся задолженность на балансе, 0 - Вся задолженность на внебалансе';
+comment on column U1.T_DWH_PROVISIONS.rep_lvl
+  is 'Уровень расчета (1-начальный, 2-промежуточный,3-конечный)';
+comment on column U1.T_DWH_PROVISIONS.rep_type
+  is 'Тип расчета (fact - на конец месяца, pre - на 20 для предварительного расчета, pre2 - за предыдущие месяцы)';
+alter table U1.T_DWH_PROVISIONS
+  add constraint T_DWH_PROVISIONS_UK1 unique (REP_DATE, PROD, LONG_DELINQ, IS_ON_BALANCE, NAME)
+  disable
+  novalidate;
+alter table U1.T_DWH_PROVISIONS
+  add constraint T_DWH_PROVISIONS_CHK1
+  check (prod in ('A','M'));
+alter table U1.T_DWH_PROVISIONS
+  add constraint T_DWH_PROVISIONS_CHK2
+  check (is_on_balance in (0,1));
+alter table U1.T_DWH_PROVISIONS
+  add constraint T_DWH_PROVISIONS_CHK3
+  check (rep_lvl in (1,2,3));
+grant select on U1.T_DWH_PROVISIONS to LOADDB;
+grant select on U1.T_DWH_PROVISIONS to LOADER;
+

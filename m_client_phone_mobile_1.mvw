@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_CLIENT_PHONE_MOBILE_1
+refresh complete on demand
+as
+select  f.folder_id,
+        f.form_client_id,
+        f.rfo_client_id,
+        f.phone_number,
+        0 as is_deposit,
+        f.form_client_date as phone_date
+from V_FORM_CLIENT_CONTACT_PHONE f
+where  f.phone_type = 'МОБИЛЬНЫЙ'
+union all
+select  cc.id as  form_client_id,
+        dd.folder_id,
+        ee.rfo_client_id,
+        hh.c_numb as phone_number,
+        1 as is_deposit,
+        hh.c_date_audit  as phone_date
+from V_CLIENT_RFO_BY_ID ee
+join V_RFO_Z#DEPOSIT cc  on (ee.iin = cc.c_cl_req#inn or ee.rnn = cc.c_cl_req#inn)
+join v_folder_all_rfo dd on ee.rfo_client_id = dd.rfo_client_id and trunc(dd.folder_date_create) = trunc(cc.c_date_create) and dd.process_name = 'ВВОД АНКЕТЫ НА ОТКРЫТИЕ ДЕПОЗИТНОГО ДОГОВОРА'
+join v_rfo_z#contacts hh on cc.c_cl_req#contacts = hh.collection_id  and hh.c_private = 690120;
+grant select on U1.M_CLIENT_PHONE_MOBILE_1 to LOADDB;
+grant select on U1.M_CLIENT_PHONE_MOBILE_1 to LOADER;
+
+

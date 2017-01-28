@@ -1,0 +1,152 @@
+﻿create materialized view U1.M_SCCL_RBO_DEP_ALL_PAR
+build deferred
+refresh force on demand
+as
+with curs as (select *
+              from u1.M_COURSES
+              unpivot
+              (curs_value for currency in (curs_usd,curs_eur,curs_rur,curs_gbp,curs_kgs)))
+
+select yy.rfo_client_id,
+
+       yy.balance_all_dep_beg,
+       yy.balance_all_dep_usd_beg,
+       yy.balance_all_dep_beg_m,
+
+       yy.count_ottok_last_12m,
+       yy.count_pritok_last_12m,
+
+       yy.last_pritok_sum_usd,
+       yy.last_pritok_usd_date,--days_from_last_pritok_usd
+
+       yy.last_ottok_sum_usd,
+       yy.last_ottok_usd_date, --days_from_last_ottok_usd
+
+       yy.count_ottok_all_usd,
+       yy.count_pritok_all_usd,
+
+       yy.count_ottok_last_12m_usd,
+       yy.count_pritok_last_12m_usd,
+
+       -- t-1
+       case when yy.balance_all_dep_beg > 0 then yy.balance_all_dep_usd_beg / yy.balance_all_dep_beg * 100 end as share_usd_dep_sum
+
+  from (
+        select t.rfo_client_id,
+               --dd.currency,
+
+               -- t-1
+               sum(do.amount_oper * (case when do.is_dt_ct = 0 then 1 else -1 end) * coalesce(fc.curs_value, 1)) as balance_all_dep_beg,
+
+               sum(case when dd.currency != 'KZT' then do.amount_oper * (case when do.is_dt_ct = 0 then 1 else -1 end) * coalesce(fc.curs_value, 1) end) as balance_all_dep_usd_beg,
+
+
+               --Остаток на всех депозитах на начало месяца заявки
+               sum(case when do.date_doc_prov < trunc(sysdate, 'mm')
+                        then do.amount_oper * (case when do.is_dt_ct = 0 then 1 else -1 end) * coalesce(mc.curs_value, 1) end) as balance_all_dep_beg_m,
+
+              --новые параметры
+              --количество снятий с депозитов за 360 дней до заявки
+               sum(case when do.date_doc_prov >= trunc(sysdate) - 360
+                             and nvl(vod.c_check_oper_depn_cli, 0) = 1
+                             and do.is_dt_ct = 1 --только клиентские снятия
+                        then 1 end) as count_ottok_last_12m,
+
+               -- количество пополнений депозитов за 360 дней до заявки
+               sum(case when do.date_doc_prov >= trunc(sysdate) - 360
+                             and nvl(vod.c_check_oper_depn_cli, 0) = 1
+                             and do.is_dt_ct = 0 --только клиентские снятия
+                        then 1 end) -
+                   case when min(dd.begin_date) >= trunc(sysdate) - 360--исключаем операцию открытия
+                        then 1 else 0 end as count_pritok_last_12m,
+
+
+              --Последняя сумма пополнения валютного депозита
+               max(case when dd.currency != 'KZT'
+                             and nvl(vod.c_check_oper_depn_cli,0) = 1
+                             and do.is_dt_ct = 0
+                        then do.amount_oper*coalesce(bc.curs_value, 1) end)
+                   keep (dense_rank last order by do.date_doc_prov) as last_pritok_sum_usd,
+
+               max(case when dd.currency != 'KZT'
+                             and nvl(vod.c_check_oper_depn_cli, 0) = 1
+                             and do.is_dt_ct = 0
+                        then do.date_doc_prov end) as last_pritok_usd_date,
+
+               --Последняя сумма снятия с валютного депозита
+               max(case when dd.currency != 'KZT'
+                             and nvl(vod.c_check_oper_depn_cli, 0) = 1
+                             and do.is_dt_ct = 1
+                        then do.amount_oper*coalesce(bc.curs_value, 1) end)
+                   keep (dense_rank last order by do.date_doc_prov) as last_ottok_sum_usd,
+
+               max(case when dd.currency != 'KZT'
+                             and nvl(vod.c_check_oper_depn_cli,0) = 1
+                             and do.is_dt_ct = 1
+                        then do.date_doc_prov end) as last_ottok_usd_date,
+
+               --Кол-во снятий с валютных депозитов за всё время
+               sum(case when dd.currency != 'KZT'
+                             and nvl(vod.c_check_oper_depn_cli, 0) = 1
+                             and do.is_dt_ct = 1 --только клиентские снятия
+                        then 1 end) as count_ottok_all_usd,
+
+               --Кол-во пополнений валютных депозитов за всё время
+               sum(case when dd.currency != 'KZT'
+                             and nvl(vod.c_check_oper_depn_cli, 0) = 1
+                             and do.is_dt_ct = 0 --только клиентские пополнения
+                        then 1 end) -
+                    --исключаем операцию открытия
+                  case when min(dd.currency) != 'KZT'
+                       then 1 else 0 end as count_pritok_all_usd,
+
+
+               --Кол-во снятий с валютных депозитов за последние 12 месяцев
+               sum(case when dd.currency != 'KZT'
+                            and do.date_doc_prov >= trunc(sysdate) - 360
+                            and nvl(vod.c_check_oper_depn_cli, 0) = 1
+                            and do.is_dt_ct = 1 --только клиентские снятия
+                        then 1 end) as count_ottok_last_12m_usd,
+
+               --Кол-во пополнений валютных депозитов за последние 12 месяцев
+               sum(case when dd.currency != 'KZT'
+                            and do.date_doc_prov >= trunc(sysdate) - 360
+                            and nvl(vod.c_check_oper_depn_cli, 0) = 1
+                            and do.is_dt_ct = 0 --только клиентские пополнения
+                        then 1 end) -
+                    --исключаем операцию открытия
+                  case when min(dd.currency) != 'KZT'
+                            and min(dd.begin_date) >= trunc(sysdate) - 360
+                       then 1 else 0 end as count_pritok_last_12m_usd
+
+         from u1.V_CLIENT_RFO_BY_ID t
+         left join u1.M_CLIENT_LINK cl on cl.rfo_client_id = t.rfo_client_id
+         left join u1.M_RBO_CONTRACT_DEPOSIT_BAS dd on dd.rbo_client_id = cl.rbo_client_id
+                                                       and dd.is_has_timeout = 1                     --только срочные депозиты
+         left join u1.T_CONTRACT_DEPN_OPER_ALL do on do.rbo_contract_id = dd.rbo_contract_id
+         left join u1.V_RBO_Z#VID_OPER_DOG vod on vod.c_code = do.oper_dog_code
+         left join curs fc on fc.date_recount = trunc(sysdate) - 1 --на день заявки
+                              and fc.currency = 'CURS_'||do.contract_currency     --создать отдельную mview по курсам, с нормальным кодом валют
+                              and do.contract_currency != 'KZT'
+
+         left join curs mc on mc.date_recount = trunc(sysdate, 'mm') - 1 --на начало месяца
+                              and mc.currency = 'CURS_'||do.contract_currency
+                              and do.contract_currency != 'KZT'
+
+         left join curs dc on dc.date_recount = do.date_doc_prov  --на дату операции
+                              and dc.currency = 'CURS_'||do.contract_currency
+                              and do.contract_currency != 'KZT'
+
+         left join curs bc on bc.date_recount = dd.begin_date        --на дату начала договора
+                              and bc.currency = 'CURS_'||do.contract_currency
+                              and do.contract_currency != 'KZT'
+
+         --where do.date_doc_prov >= trunc(sysdate) - 360
+
+         group by t.rfo_client_id
+) yy;
+grant select on U1.M_SCCL_RBO_DEP_ALL_PAR to LOADDB;
+grant select on U1.M_SCCL_RBO_DEP_ALL_PAR to LOAD_MO;
+grant select on U1.M_SCCL_RBO_DEP_ALL_PAR to RTS_RDWH;
+
+

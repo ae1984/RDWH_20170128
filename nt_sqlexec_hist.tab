@@ -1,0 +1,63 @@
+﻿create table U1.NT_SQLEXEC_HIST
+(
+  sql_id         VARCHAR2(13),
+  sql_exec_start DATE,
+  username       VARCHAR2(100),
+  module         VARCHAR2(100),
+  action         VARCHAR2(100),
+  program        VARCHAR2(100)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.IDX_SQLEXEC_HIST_1 on U1.NT_SQLEXEC_HIST (SQL_ID, SQL_EXEC_START)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_SQLEXEC_HIST_2 on U1.NT_SQLEXEC_HIST (USERNAME)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_SQLEXEC_HIST_3 on U1.NT_SQLEXEC_HIST (SQL_EXEC_START)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.NT_SQLEXEC_HIST to LOADDB;
+

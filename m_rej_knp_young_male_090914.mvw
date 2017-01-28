@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_REJ_KNP_YOUNG_MALE_090914
+refresh force on demand
+as
+select /*+ no_parallel*/ distinct t.contract_number
+from U1.M_FOLDER_CON_MINER t
+where upper(t.cr_program_name) = 'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ'
+        and (upper(t.x_dnp_name) = 'АЛМАТЫ'
+          or upper(t.x_dnp_name) = 'АТЫРАУ'
+          or upper(t.x_dnp_name) = 'КАСКЕЛЕН'
+          or upper(t.x_dnp_name) = 'КОКШЕТАУ'
+          or upper(t.x_dnp_name) = 'ПАВЛОДАР'
+          or upper(t.x_dnp_name) = 'ТАЛДЫКОРГАН'
+          or upper(t.x_dnp_name) = 'ШЫМКЕНТ'
+          or upper(t.x_dnp_name) = 'ЭКИБАСТУЗ'
+        )
+        and t.contract_amount >= 1000000
+        and t.Sex = 'М'
+        and upper(t.real_estate_relation) = 'ЖИЛИЩЕ РОДИТЕЛЕЙ'
+        and t.age_full_years <= 25
+        and (upper(t.org_sector) <> 'ГОСС.СЛУЖБА (ВОЕННЫЕ, ОБОРОНА, МИНИСТЕРСТВА, АКИМАТЫ)'
+        and upper(t.org_sector) <> 'СТРОИТЕЛЬСТВО/СТРОЙМАТЕРИАЛЫ'
+        and upper(t.org_sector) <> 'СЕРВИС/РЕСТОРАНЫ/ГОСТИНИЦЫ/РАЗВЛЕЧЕНИЯ'
+        and upper(t.org_sector) <> 'ТРАНСПОРТ И СВЯЗЬ'
+        and upper(t.org_sector) <> 'НОТАРИАТ/ЮРИДИЧЕСКИЕ УСЛУГИ/ОХРАНА'
+        and upper(t.org_sector) <> 'ДОБЫВАЮЩАЯ ПРОМЫШЛЕННОСТЬ'
+        and upper(t.org_sector) <> 'ОБРАЗОВАНИЕ'
+        and upper(t.org_sector) <> 'БАНКИ/СТРАХОВАНИЕ');
+grant select on U1.M_REJ_KNP_YOUNG_MALE_090914 to LOADDB;
+grant select on U1.M_REJ_KNP_YOUNG_MALE_090914 to LOADER;
+
+

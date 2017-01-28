@@ -1,0 +1,279 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_4_FOLDER
+refresh force on demand
+as
+select -- --+first_rows noparallel
+       f.rfo_contract_id,
+       f.folder_id,
+       /*
+       c.contract_number,
+       c.contract_id,
+       c.yms,
+       c.yy_mm_start_first,
+       c.yy_mm_start_last,
+       */
+       /*to_char(null) contract_number,
+       to_number(null) contract_id,
+       to_char(null) yms,
+       to_char(null) yy_mm_start_first,
+       to_char(null) yy_mm_start_last,*/
+
+       f.rfo_client_id,
+       fc.form_client_id,
+       trunc(f.folder_date_create_mi) as folder_date_create,
+       f.is_credit_issued,
+
+       /*case when cl.delinq_days_max >= 90 then 1 else 0 end is_bad_by_con_del_max_90,*/
+       /*to_number(null) is_bad_by_con_del_max_90,*/
+
+       /*case when (f.is_refin = 1 or cl.client_status in ('B','W')) then 1 else 0 end is_bad_by_cli_B_W,*/
+       /*to_number(null) is_bad_by_cli_B_W,*/
+
+       /*case when (case when (f.is_refin = 1 or cl.client_status in ('B','W')) and c.max_debt_used > 0
+                       then
+                            nvl(cc.total_debt_last_rep_new,0) / c.max_debt_used * 100
+                       else 0 end
+                  ) >= 40 then 1
+            else 0 end as is_bad_by_cli_B_W_del_40,*/
+       /*to_number(null) is_bad_by_cli_B_W_del_40,*/
+
+       /*
+       case when f.is_refin = 1 then 'B' else cl.client_status end client_status,
+       cl.delinq_days_max,
+       */
+       /*to_char(null) client_status,
+       to_number(null) delinq_days_max,*/
+
+       f.cr_program_name,
+       f.is_card,
+       nvl(f.contract_amount, 0) as contract_amount,
+
+       /*
+       c.contract_amount_first,
+       c.contract_amount_categ_first,
+       c.contract_amount_last,
+       c.contract_amount_categ_last,
+       */
+
+       f.x_dnp_region,
+       f.x_dnp_name,
+       f.pos_type,
+
+       fc.sex,
+       fc.reg_address_region,
+       fc.reg_address_city,
+       trunc(f.folder_date_create_mi) - fc.reg_address_date_begin as reg_address_age_days,
+       floor(MONTHS_BETWEEN(f.folder_date_create_mi, fc.reg_address_date_begin)) as reg_address_age_mon_floor,
+       fc.fact_address_region,
+       fc.fact_address_city,
+       trunc(f.folder_date_create_mi) - fc.fact_address_date_begin as fact_address_age_days,
+       floor(MONTHS_BETWEEN(f.folder_date_create_mi, fc.fact_address_date_begin)) as fact_address_age_mon_floor,
+       fc.education,
+       fc.marital_status,
+       fc.children,
+       fc.job_position,
+       fc.org_activity,
+       fc.org_sector,
+       fc.org_type,
+       fc.job_position_type,
+       fc.is_bank_account_exists,
+       fc.is_auto_exists,
+       fc.real_estate_relation,
+       fc.is_garage_exists,
+       trunc(f.folder_date_create_mi) - fc.work_experience_last_place as work_expr_last_place_days,
+       floor(MONTHS_BETWEEN(f.folder_date_create_mi, fc.work_experience_last_place)) as work_expr_last_place_mon_floor,
+       fc.age_full_years,
+       fc.dependants_count,
+       fc.inc_sal,
+       fc.inc_sal_add,
+       fc.inc_sal_spouse,
+       fc.inc_rent,
+       fc.inc_pension_benefits,
+       fc.inc_interest,
+           nvl(fc.inc_sal,0) + nvl(fc.inc_sal_add,0) + nvl(fc.inc_sal_spouse,0) + nvl(fc.inc_rent,0) +
+           nvl(fc.inc_pension_benefits,0) + nvl(fc.inc_interest,0) as
+       inc_total,
+       fc.exp_utilities,
+       fc.exp_transport,
+       fc.exp_children,
+       fc.exp_nutrition,
+       fc.exp_clothes,
+       fc.exp_obligations,
+       fc.exp_other,
+           nvl(fc.exp_utilities,0) + nvl(fc.exp_transport,0) + nvl(fc.exp_children,0) +
+           nvl(fc.exp_nutrition,0) + nvl(fc.exp_clothes,0) + nvl(fc.exp_obligations,0) +
+           nvl(fc.exp_other,0) as
+       exp_total,
+       fc.term_duration as contract_term_months,
+
+       tm.num_hh as time_num_hour,
+       tm.day_num_of_week as time_day_num_of_week,
+
+       p.report_status as pkb_report_status,
+       p.active_contracts as pkb_active_contracts,
+       p.closed_contracts as pkb_closed_contracts,
+       p.pmt_active_all_sum as pkb_pmt_active_all_sum,
+       p.total_debt as pkb_total_debt,
+       g.salary as gcvp_salary,
+       floor(trunc(f.folder_date_create_mi) - g.max_pmt_date) as gcvp_last_pmt_days_ago_floor,
+       floor(trunc(f.folder_date_create_mi) - g.min_pmt_date) as gcvp_first_pmt_days_ago_floor,
+       g.pmts_count_from_rep as gcvp_pmts_count_from_rep,
+       g.org_count as gcvp_org_count_by_name,
+       g.pmts_per_day_max as gcvp_pmts_per_day_max,
+
+       trunc(f.folder_date_create_mi) - o.gcvp_rep_date_min as org_gcvp_maxpmtd_age_days,
+       floor(MONTHS_BETWEEN(f.folder_date_create_mi, o.gcvp_rep_date_min)) as org_gcvp_maxpmtd_age_mon_floor,
+
+           case when fc.inc_sal > 0 /*and g.salary > 0*/ then floor(g.salary / fc.inc_sal * 100) end as
+       sal_gcvp_to_sal_form_prc_floor,
+
+           case when f.cr_program_name = 'ПРОСТАЯ КАРТА' then
+                decode(f.tariff_plan_name,'ПРОСТАЯ КАРТА 6/50',10000,
+                                          'ПРОСТАЯ КАРТА 1/50',6000,
+                                          'ПРОСТАЯ КАРТА 1/100',12000,
+                                          'ПРОСТАЯ КАРТА 2/100',7700,
+                                          'ПРОСТАЯ КАРТА 1/150',17500,
+                                          'ПРОСТАЯ КАРТА 2/150',11300,
+                                          'ПРОСТАЯ КАРТА (A)',10000,
+                                          'ПРОСТАЯ КАРТА (B)',10000,
+                                          'ПРОСТАЯ КАРТА – 1/200',23500,
+                                          'ПРОСТАЯ КАРТА – 2/200',15000,
+                                          'ПРОСТАЯ КАРТА – 1/250',29000,
+                                          'ПРОСТАЯ КАРТА – 2/250',18500,
+                                          'ПРОСТАЯ КАРТА – 1/300',34500,
+                                          'ПРОСТАЯ КАРТА – 2/300',22000
+                                          )
+            when f.is_card = 1 then
+                round(f.contract_amount * 0.07, 0)
+            else
+             case when fc.term_duration > 0 then
+                case
+                when f.cr_program_name = 'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ' then
+                   round(f.contract_amount/(1 - 1/
+                      power((1 + 0.33/12), fc.term_duration)
+                   )*0.33/12, 0)
+                when f.cr_program_name in ('ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР','ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)','АВТОЗАПЧАСТИ') then
+                   round(f.contract_amount/(1 - 1/
+                      power((1 + 0.15/12), fc.term_duration)
+                   )*0.15/12, 0)
+                when f.cr_program_name in ('ЛУЧШИЙ КЛИЕНТ – НАЛИЧНЫЕ','ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ') then
+                   round(f.contract_amount/(1 - 1/
+                      power((1 + 0.56/12), fc.term_duration)
+                   )*0.56/12, 0)
+                when f.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ','ОСОБЕННЫЙ КЛИЕНТ - КН') then
+                   round(f.contract_amount/(1 - 1/
+                      power((1 + 0.37/12), fc.term_duration)
+                   )*0.37/12, 0)
+                when f.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ','ОСОБЕННЫЙ КЛИЕНТ - КН 15','ЭКСПРЕСС-КРЕДИТЫ (ДЕНЬГИ)') then
+                   round(f.contract_amount/(1 - 1/
+                      power((1 + 0.57/12), fc.term_duration)
+                   )*0.57/12, 0)
+                when f.cr_program_name in ('АВТОКРЕДИТОВАНИЕ','АВТОКРЕДИТОВАНИЕ БУ','АВТОКРЕДИТ') then
+                   round(f.contract_amount/(1 - 1/
+                      power((1 + 0.21/12), fc.term_duration)
+                   )*0.21/12, 0)
+                end
+              end
+            end as pmt_ours,
+
+       --c.pmt_nom_rate,
+       --to_number(null) pmt_nom_rate,
+
+       fx.fld_number_in_24h,
+       fx.fld_number_in_48h,
+       fx.fld_number_in_1w,
+       fx.fld_number_in_1m,
+
+       fxc.cancel_fld_count_in_24h - decode(f.is_credit_issued,0,1,0) as cancel_fld_count_in_24h,
+       fxc.cancel_fld_count_in_48h - decode(f.is_credit_issued,0,1,0) as cancel_fld_count_in_48h,
+       fxc.cancel_fld_count_in_1w - decode(f.is_credit_issued,0,1,0) as cancel_fld_count_in_1w,
+       fxc.cancel_fld_count_in_1m - decode(f.is_credit_issued,0,1,0) as cancel_fld_count_in_1m,
+
+
+       c.start_total_fact_pmts_by_cli,
+       c.start_con_del_days_max_by_cli,
+       c.start_num_of_con_by_cli,
+       c.start_num_of_con_by_cli_pr_rep,
+
+
+       floor(trunc(f.folder_date_create_mi) - cl.start_date_first) as cli_age_basing_on_con,
+       floor(MONTHS_BETWEEN(f.folder_date_create_mi, cl.start_date_first)) as cli_age_basing_on_con_mon_fl,
+
+
+       floor(trunc(f.folder_date_create_mi) - cd.folder_date_create_min) as cli_age_based_on_fld,
+       floor(MONTHS_BETWEEN(f.folder_date_create_mi, cd.folder_date_create_min)) as cli_age_based_on_fld_mon_fl,
+
+       substr(fc.patronymic,-2) as client_patronymic_type,
+
+
+       case when nvl(c.start_num_of_con_by_cli, 0) = 0 then 'NEW'
+            when nvl(c.start_total_fact_pmts_by_cli, 0) > 3 then 'OLD'
+            else 'FRESH'
+            end as client_new_fresh_old,
+
+       c.start_con_amount_max_by_cli,
+       c.start_pmt_max_by_cli,
+
+       f.is_refin
+
+
+from M_FOLDER_CON_CANCEL f
+join V_CLIENT_CAL cl on cl.client_iin_last = f.iin
+join V_FOLDER_ALL_RFO fa on fa.folder_id = f.folder_id
+left join M_FOLDER_CON_MINER_7_FOLDER c on c.folder_id = f.folder_id --and c.contract_number = f.contract_number
+--left join M_CONTRACT_START_CON_ORD_X cc on cc.client_id = cl.client_id
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = fa.form_client_id
+join V_TIME_MINUTES tm on tm.yyyy_mm_dd_hh_mi = f.folder_date_create_mi
+left join V_PKB_REPORT p on p.folder_id = f.folder_id
+left join V_GCVP_REPORT g on g.folder_id = f.folder_id
+left join V_ORG_GCVP o on o.bin = g.pmts_per_day_max_org_rnn_bin or o.rnn = g.pmts_per_day_max_org_rnn_bin
+left join /*(
+      select t.folder_id, --t.folder_date_create_mi, t.rfo_client_id,
+             count(t.folder_id) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 1 preceding and current row) as fld_number_in_24h,
+             count(t.folder_id) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 2 preceding and current row) as fld_number_in_48h,
+             count(t.folder_id) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 7 preceding and current row) as fld_number_in_1w,
+             count(t.folder_id) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 30 preceding and current row) as fld_number_in_1m
+      from (select distinct folder_id, folder_date_create_mi, rfo_client_id from M_FOLDER_CON_CANCEL) t
+) fx on fx.folder_id = f.folder_id*/
+M_FOLDER_CON_MINER_1 fx on fx.folder_id = f.folder_id
+left join /*(
+      select t.folder_id, --t.folder_date_create_mi, t.rfo_client_id,
+             count(case when is_credit_issued = 0 then t.folder_id end) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 1 preceding and current row) as cancel_fld_count_in_24h,
+             count(case when is_credit_issued = 0 then t.folder_id end) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 2 preceding and current row) as cancel_fld_count_in_48h,
+             count(case when is_credit_issued = 0 then t.folder_id end) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 7 preceding and current row) as cancel_fld_count_in_1w,
+             count(case when is_credit_issued = 0 then t.folder_id end) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 30 preceding and current row) as cancel_fld_count_in_1m
+      from (select folder_id, folder_date_create_mi, rfo_client_id, max(is_credit_issued) as is_credit_issued
+           from M_FOLDER_CON_CANCEL
+           group by folder_id, folder_date_create_mi, rfo_client_id) t
+) fxc on fx.folder_id = f.folder_id*/
+M_FOLDER_CON_MINER_2 fxc on fxc.folder_id = f.folder_id
+left join /*(
+      select fc1.rfo_client_id, min(fc1.folder_date_create_mi) as folder_date_create_mi_min
+      from M_FOLDER_CON_CANCEL fc1
+      where fc1.rfo_client_id is not null
+      group by fc1.rfo_client_id
+) cd on cd.rfo_client_id = f.rfo_client_id*/
+M_FOLDER_CON_MINER_3 cd on cd.rfo_client_id = f.rfo_client_id
+
+
+
+/*left join V_CONTRACT_ALL_RFO c10 on c10.folder_id = f.folder_id
+left join V_RFO_Z#CREDIT_DOG cr on cr.id = c10.rfo_contract_id
+left join v_folder_mo_term_cred term2 on term2.folder_id = f.folder_id*/
+
+
+
+where --f.is_refin = 0 and
+f.folder_date_create_mi > to_date('2010-01-01','yyyy-mm-dd')
+and f.is_credit_issued = 0;
+grant select on U1.M_FOLDER_CON_MINER_4_FOLDER to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER_4_FOLDER to LOADER;
+
+

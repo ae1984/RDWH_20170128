@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_CONTRACT_LIMIT_HST
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       kpd.id as rbo_contract_id,
+       kpd.c_limit_sum as limit_sum,
+       lth.c_limit_sum as limit_sum_hst,
+       lth.c_date_begin as date_begin,
+       lth.c_date_end as date_end,
+       lth.cnt,
+       lth.c_code_system as code_system,
+       lth.c_name_system as name_sistem,
+       lth.c_set_user as set_user
+  from V_RBO_Z#KAS_PC_DOG kpd
+   join (select lh.collection_id, lh.c_date_begin, lh.c_limit_sum,
+                    kd.c_code c_code_system, upper(kd.c_name) c_name_system, upper(lh.c_set_user) c_set_user,
+                    dense_rank() over (partition by lh.collection_id order by lh.c_date_begin) cnt,
+                    lead(lh.c_date_begin-1,1,null) over (partition by lh.collection_id order by lh.c_date_begin nulls first) c_date_end
+               from V_RBO_Z#KAS_PC_LIMIT_HST lh
+               join V_RBO_Z#KAS_DIC kd    on lh.c_set_system = kd.id) lth on kpd.c_limit_arr = lth.collection_id;
+grant select on U1.M_CONTRACT_LIMIT_HST to LOADDB;
+grant select on U1.M_CONTRACT_LIMIT_HST to LOADER;
+
+

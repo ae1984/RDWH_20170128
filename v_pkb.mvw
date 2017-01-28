@@ -1,0 +1,132 @@
+﻿create materialized view U1.V_PKB
+using no index
+refresh complete on demand
+as
+with xr as (
+select
+     fld.id as folder_id,
+     pr.id as pkb_report_id,
+     pr.c_rnn as report_iin_rnn,
+     pr.c_dateofrptissue as report_date,
+         case when pr.c_status = 'SubjectNotFound' then 'БЕКИ'
+              else upper(pr.c_status) end as
+     report_status,
+         case when pr.c_rpt_type = 4 then 'СТАНДАРТНЫЙ'
+              when pr.c_rpt_type = 6 then 'РАСШИРЕННЫЙ'
+              else 'ПЕРВИЧНЫЙ' end as
+     report_type,
+     pr.c_si_tdo as overdue_amount_total,
+     pr.c_agre_statuses,
+     pr.c_ci,
+     pr.c_closed_ci
+from V_RFO_Z#FOLDERS fld
+     join V_RFO_Z#RDOC rd on rd.collection_id = fld.c_docs
+     join v_rfo_z#fdoc fd on fd.id = rd.c_doc and fd.class_id = 'PKB_REPORT'
+     full outer join V_RFO_Z#PKB_REPORT pr on pr.id = fd.id and pr.c_status != 'NoAction'
+) select /*+parallel(15) parallel_index(15) */
+    x.folder_id,
+    x.pkb_report_id,
+    x.report_iin_rnn,
+    x.report_date,
+    x.report_status,
+    x.report_type,
+    x.overdue_amount_total,
+        case when x.contract_state_count = 0 then null else x.contract_state end as
+    contract_state,
+    x.contract_state_count,
+    x.contract_status,
+    x.contract_type,
+    x.credit_purpose,
+    x.overdue_amount,
+    x.overdue_instalments,
+    x.update_date,
+    x.contract_id
+from (---
+select
+    xr.folder_id,
+    xr.pkb_report_id,
+    xr.report_iin_rnn,
+    xr.report_date,
+    xr.report_status,
+    xr.report_type,
+    xr.overdue_amount_total,
+    'OPEN' as contract_state,
+    count(distinct s.id) over (partition by xr.pkb_report_id) as contract_state_count,
+    upper(s.c_value) as contract_status,
+    null as contract_type,
+    null as credit_purpose,
+    null as overdue_amount,
+    null as overdue_instalments,
+    null as update_date,
+    s.id as contract_id
+from xr
+     left join V_RFO_Z#KAS_STRING_250 s on s.collection_id = xr.c_agre_statuses
+where xr.report_type = 'ПЕРВИЧНЫЙ'
+union all
+select
+    xr.folder_id,
+    xr.pkb_report_id,
+    xr.report_iin_rnn,
+    xr.report_date,
+    xr.report_status,
+    xr.report_type,
+    xr.overdue_amount_total,
+    'OPEN' as contract_state,
+    count(distinct pc_open.id) over (partition by xr.pkb_report_id) as contract_state_count,
+    upper(pc_open.c_contr_status) as contract_status,
+    upper(pc_open.c_dog_type) as contract_type,
+    upper(pc_open.c_cr_purpose) as credit_purpose,
+    pc_open.c_overdue_sum as overdue_amount,
+    pc_open.c_ovrd_instalments as overdue_instalments,
+    pc_open.c_last_update as update_date,
+    pc_open.id as contract_id
+from xr
+     left join V_RFO_Z#KAS_PKB_CI pc_open on pc_open.collection_id = xr.c_ci
+where xr.report_type = 'СТАНДАРТНЫЙ'
+union all
+select
+    xr.folder_id,
+    xr.pkb_report_id,
+    xr.report_iin_rnn,
+    xr.report_date,
+    xr.report_status,
+    xr.report_type,
+    xr.overdue_amount_total,
+    'OPEN' as contract_state,
+    count(distinct pc_open.id) over (partition by xr.pkb_report_id) as contract_state_count,
+    upper(pc_open.c_contr_status) as contract_status,
+    upper(pc_open.c_dog_type) as contract_type,
+    upper(pc_open.c_cr_purpose) as credit_purpose,
+    pc_open.c_overdue_sum as overdue_amount,
+    pc_open.c_ovrd_instalments as overdue_instalments,
+    pc_open.c_last_update as update_date,
+    pc_open.id as contract_id
+from xr
+     left join V_RFO_Z#KAS_PKB_CI pc_open on pc_open.collection_id = xr.c_ci
+where xr.report_type = 'РАСШИРЕННЫЙ'
+union all
+select
+    xr.folder_id,
+    xr.pkb_report_id,
+    xr.report_iin_rnn,
+    xr.report_date,
+    xr.report_status,
+    xr.report_type,
+    xr.overdue_amount_total,
+    'CLOSED' as contract_state,
+    count(distinct pc_closed.id) over (partition by xr.pkb_report_id) as contract_state_count,
+    upper(pc_closed.c_contr_status) as contract_status,
+    upper(pc_closed.c_dog_type) as contract_type,
+    upper(pc_closed.c_cr_purpose) as credit_purpose,
+    pc_closed.c_overdue_sum as overdue_amount,
+    pc_closed.c_ovrd_instalments as overdue_instalments,
+    pc_closed.c_last_update as update_date,
+    pc_closed.id as contract_id
+from xr
+     left join V_RFO_Z#KAS_PKB_CI  pc_closed on pc_closed.collection_id = xr.c_closed_ci
+where xr.report_type = 'РАСШИРЕННЫЙ'
+) x;
+grant select on U1.V_PKB to LOADDB;
+grant select on U1.V_PKB to LOADER;
+
+

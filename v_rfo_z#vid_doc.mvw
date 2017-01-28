@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_RFO_Z#VID_DOC
+refresh complete on demand
+as
+select t.id
+       ,upper(t.c_code) as c_code
+       ,upper(t.c_name) as c_name
+       ,t.c_form
+       ,t.c_hint
+       ,t.sn
+       ,t.su
+from S01.Z#VID_DOC@RDWH_EXD t;
+grant select on U1.V_RFO_Z#VID_DOC to LOADDB;
+
+

@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_SC_CLIENT_DWH_DATA
+build deferred
+refresh force on demand
+as
+select --+ parallel(30) parallel_index(30)
+       --M_SC_CLIENT_DWH_DATA_PRE1
+       t.iin,
+       t.client_id,
+
+       --M_SC_CLIENT_DWH_DATA_PRE1
+       t.pre_amount_rest,
+
+       --M_SC_CLIENT_DWH_DATA_PRE2
+       t2.other_deal_pmt,
+       t2.other_written_off_con_count,
+       t2.other_delinq_con_count,
+       t2.other_ok_con_count
+
+from u1.M_SC_CLIENT_DWH_DATA_PRE1 t
+left join M_SC_CLIENT_DWH_DATA_PRE2 t2 on t2.iin = t.iin;
+grant select on U1.M_SC_CLIENT_DWH_DATA to LOADDB;
+grant select on U1.M_SC_CLIENT_DWH_DATA to LOAD_MO;
+
+

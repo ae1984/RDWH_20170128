@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_HISTORY
+refresh force on demand
+as
+select /*+ parallel(15) */
+  ced.initial_payment as initial_payment,
+  xxx.con_any_bef_4y,
+  xxx.con_debt10k_bef_4y,
+  xxx.del_days_any_max_bef_4y,
+  xxx.del_days_debt10k_max_bef_4y,
+  xxx.active_mon_debt10k_bef_4y,
+  xxx.good_active_mon_debt10k_bef_4y,
+  xxx.bad_active_mon_debt10k_bef_4y,
+  xxx.amount_max_bef_4y,
+  xxx.inactive_period_4y as cli_inactive_period_4y,
+  x.contract_number
+  from m_folder_con_miner x
+left join M_TMP_J_FLD_START_TMP_2 xxx on xxx.rfo_contract_id = x.rfo_contract_id
+left join
+         (select sum(nvl(ce.initial_payment,0)) as initial_payment, ce.contract_number
+          from V_CONTRACT_EKT_DWH ce
+          group by ce.contract_number) ced on ced.contract_number = x.contract_number;
+grant select on U1.M_FOLDER_CON_MINER_HISTORY to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER_HISTORY to LOADER;
+
+

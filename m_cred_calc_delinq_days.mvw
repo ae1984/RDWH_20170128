@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_CRED_CALC_DELINQ_DAYS
+build deferred
+refresh complete on demand
+as
+select rbo_cred_id,
+       d_fo,
+       n_ovrd_to,
+       n_ovrd_from,
+       sum(n_ovrd_to) over (partition by rbo_cred_id order by d_fo rows unbounded preceding) n_ovrd_to_part,
+       sum(n_ovrd_from) over (partition by rbo_cred_id order by d_fo rows unbounded preceding) n_ovrd_from_part,
+       c_date_close
+  from M_CRED_CALC_DELINQ_DAYS_PRE;
+grant select on U1.M_CRED_CALC_DELINQ_DAYS to LOADDB;
+grant select on U1.M_CRED_CALC_DELINQ_DAYS to LOADER;
+
+

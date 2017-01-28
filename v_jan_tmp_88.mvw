@@ -1,0 +1,19 @@
+﻿create materialized view U1.V_JAN_TMP_88
+refresh force on demand
+as
+select count(*) as cnt, xx.prod from (
+select distinct x.con_num, x.prod from (
+    select t.cdhd_deal_number as con_num, t.cdhd_prod_type as prod from DWH_DM_CARDSDAILY_HD t
+    where t.cdhd_rep_date = trunc(sysdate) - 2
+    union all
+    select d.exhd_deal_number as con_num, d.exhd_prod_type as prod from DWH_DM_SPGU_HD d
+    where d.exhd_rep_date = trunc(sysdate) - 2
+) x where not exists (
+    select null from V_DWH_PORT_201312_t p
+    where p.rep_date = trunc(sysdate) - 2 and
+          x.con_num = p.deal_number
+)) xx group by xx.prod;
+grant select on U1.V_JAN_TMP_88 to LOADDB;
+grant select on U1.V_JAN_TMP_88 to LOADER;
+
+

@@ -1,0 +1,23 @@
+﻿create table U1.T_TMP_E_SC_KN_BW2_2014_NEW1
+(
+  rfo_contract_id   VARCHAR2(100),
+  contract_number   VARCHAR2(100),
+  scorecard_points  NUMBER,
+  is_bad_by_cli_b_w NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_E_SC_KN_BW2_2014_NEW1 to LOADDB;
+grant select on U1.T_TMP_E_SC_KN_BW2_2014_NEW1 to LOADER;
+

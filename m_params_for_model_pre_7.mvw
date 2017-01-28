@@ -1,0 +1,36 @@
+﻿create materialized view U1.M_PARAMS_FOR_MODEL_PRE_7
+build deferred
+refresh force on demand
+as
+select  /*+parallel(5)*/
+        cln.rfo_client_id
+       ,cln.app_id
+       ,cln.folder_date_create_mi
+       ,cln.phone_mobile
+       ,count(distinct case when kpay1.pay_date >= trunc(cln.folder_date_create_mi)-90 then  kpay1.category_name end) as COUNT_CATEGORY_KSPKZ
+       ,count(distinct case when kpay1.pay_date >= trunc(cln.folder_date_create_mi)-180 then trunc(kpay1.pay_date,'mm') end) as COUNT_MONTH_KSPKZ
+       ,count(distinct
+         case when kpay1.service_name in (
+            'AIRASTANA'
+            ,'AVIATA'
+            ,'CHOCOTRAVEL'
+            ,'FLIGHTKZ'
+            ,'SANTUFEIACCOUNT'
+            ,'SANTUFEIORDER'
+            ,'AVIABILET_KZ'
+            ,'CHOCOTRAVESURCHARGE'
+            ,'CHOCOTRAVELPAY'
+            ,'CHOCOTRAVELRETURN'
+          ) then kpay1.pay_info_id
+        end) as FLAG_AVIA_KSPKZ
+
+from M_PARAMS_FOR_MODEL_PRE_0 cln--V_CLIENT_RFO_BY_ID cln
+left join M_KASPIKZ_PAY kpay1 on kpay1.rfo_client_id=cln.rfo_client_id and kpay1.is_prov=1 and
+                                 kpay1.pay_date <trunc(cln.folder_date_create_mi) and
+                                 kpay1.pay_date >= trunc(cln.folder_date_create_mi)-365
+where cln.folder_date_create_mi >= to_date('01.01.2015','dd.mm.yyyy')
+group by cln.rfo_client_id,cln.app_id,cln.folder_date_create_mi
+        ,cln.phone_mobile;
+grant select on U1.M_PARAMS_FOR_MODEL_PRE_7 to LOADDB;
+
+

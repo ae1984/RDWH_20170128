@@ -1,0 +1,23 @@
+﻿create table U1.RISK_RKATE_T1
+(
+  a1 NUMBER(10),
+  a2 VARCHAR2(200),
+  a3 VARCHAR2(200),
+  a4 VARCHAR2(500)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.RISK_RKATE_T1 to LOADDB;
+grant select on U1.RISK_RKATE_T1 to LOADER;
+

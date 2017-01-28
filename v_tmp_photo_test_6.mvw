@@ -1,0 +1,122 @@
+﻿create materialized view U1.V_TMP_PHOTO_TEST_6
+using no index
+refresh complete on demand
+as
+select distinct a.*,
+max(d.photo_date) keep (dense_rank last order by d.photo_date) as photo_date_prev,
+max(d.c_uid) keep (dense_rank last order by d.photo_date) as c_uid_prev
+from
+(select
+a.rfo_client_id,
+a.folder_id,
+a.folder_date_create,
+a.folder_state,
+a.process_name,
+a.iin,
+max(a.photo_date) keep (dense_rank first order by a.photo_date) as photo_date,
+max(a.photo_name) keep (dense_rank first order by a.photo_date) as photo_name,
+max(a.c_uid) keep (dense_rank first order by a.photo_date) as c_uid,
+a.folder_id_prev,
+a.process_name_prev,
+a.folder_date_create_prev,
+a.verif_doc_date_prev,
+a.verif_photo_result_prev
+from (
+select
+a.rfo_client_id,
+a.folder_id,
+a.folder_date_create,
+a.folder_state,
+a.process_name,
+a.iin,
+a.photo_date,
+a.photo_name,
+a.c_uid,
+max(folder_id_prev) keep (dense_rank last order by folder_date_create_prev) as folder_id_prev,
+max(process_name_prev) keep (dense_rank last order by folder_date_create_prev) as process_name_prev,
+max(folder_date_create_prev) keep (dense_rank last order by folder_date_create_prev) as folder_date_create_prev,
+max(verif_doc_date_prev) keep (dense_rank last order by folder_date_create_prev) as verif_doc_date_prev,
+max(verif_photo_result_prev) keep (dense_rank last order by folder_date_create_prev) as verif_photo_result_prev
+from (
+select a.*,
+b.folder_id as folder_id_prev,
+b.process_name as process_name_prev,
+b.folder_date_create as folder_date_create_prev,
+dq.verif_doc_date as verif_doc_date_prev,
+dq.verif_photo_result as verif_photo_result_prev
+from (
+select distinct a.rfo_client_id,
+a.folder_id,
+a.folder_date_create,
+a.folder_state,
+a.process_name,
+c.iin,
+d.photo_date,
+d.photo_name,
+d.c_uid
+from T_SHOLPAN_TST2 t
+join v_folder_all_rfo a on t.g = a.folder_id
+join v_verification b on t.g = b.folder_id
+join V_CLIENT_RFO_BY_ID c on a.rfo_client_id = c.rfo_client_id
+join V_CLIENT_IMAGES d on c.iin = d.iin
+and trunc(b.verif_doc_date)-trunc(d.photo_date)=0
+and d.photo_date > a.folder_date_create
+and trunc(a.folder_date_create, 'hh') = trunc(d.photo_date, 'hh')
+and d.photo_name not like '%DOC_UD_LICHNOST%'
+and d.photo_name not like '%УД%'
+where f not in (select iin from V_TMP_PHOTO_TEST_1)
+and g is not null) a
+join v_folder_all_rfo b on a.rfo_client_id = b.rfo_client_id and a.folder_date_create > b.folder_date_create
+join v_verification dq on b.folder_id = dq.folder_id and dq.verif_photo_result = 'ОДОБРЕНИЕ'
+where b.process_name in ('КАСПИЙСКИЙ. ВЫДАЧА АВТОКРЕДИТА НА КАРТУ',
+'КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НА КАРТУ',
+'КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НАЛИЧНЫМИ НА КАРТУ',
+'ИЗМЕНЕНИЕ АНКЕТНЫХ ДАННЫХ КЛИЕНТА')
+and trunc(dq.verif_doc_date)<> trunc(a.photo_date)) a
+group by
+a.rfo_client_id,
+a.folder_id,
+a.folder_date_create,
+a.folder_state,
+a.process_name,
+a.iin,
+a.photo_date,
+a.photo_name,
+a.c_uid) a
+group by
+a.rfo_client_id,
+a.folder_id,
+a.folder_date_create,
+a.folder_state,
+a.process_name,
+a.iin,
+a.folder_id_prev,
+a.process_name_prev,
+a.folder_date_create_prev,
+a.verif_doc_date_prev,
+a.verif_photo_result_prev) a
+join V_CLIENT_IMAGES d on a.iin = d.iin
+and trunc(a.folder_date_create_prev)-trunc(d.photo_date)=0
+and d.photo_date > a.folder_date_create_prev
+and trunc(a.folder_date_create_prev, 'hh') = trunc(d.photo_date, 'hh')
+and d.photo_name not like '%DOC_UD_LICHNOST%'
+and d.photo_name not like '%УД%'
+group by
+a.rfo_client_id,
+a.folder_id,
+a.folder_date_create,
+a.folder_state,
+a.process_name,
+a.iin,
+a.photo_date,
+a.photo_name,
+a.c_uid,
+a.folder_id_prev,
+a.process_name_prev,
+a.folder_date_create_prev,
+a.verif_doc_date_prev,
+a.verif_photo_result_prev;
+grant select on U1.V_TMP_PHOTO_TEST_6 to LOADDB;
+grant select on U1.V_TMP_PHOTO_TEST_6 to LOADER;
+
+

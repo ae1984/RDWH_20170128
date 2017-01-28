@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_TMP_J_3002
+refresh complete on demand
+as
+select t.text_yyyy_mm, rd.del_long, count(distinct t.client_id) as client_count
+from V_CLIENT_HISTORY t
+join REF_DELINQ rd on rd.days_del_from <= nvl(t.delinq_days_in_month,0) and
+                      rd.days_del_to >= nvl(t.delinq_days_in_month,0)
+where t.max_delinq_days > 90 and
+      not exists (select null from M_TMP_J_3001 x where x.client_id = t.client_id and
+                         to_char(min_hard_opt_date,'yyyy - mm') >= t.text_yyyy_mm) and
+      t.text_yyyy_mm >= '2013 - 01' and t.text_yyyy_mm <= '2014 - 12'
+group by t.text_yyyy_mm, rd.del_long;
+grant select on U1.M_TMP_J_3002 to LOADDB;
+grant select on U1.M_TMP_J_3002 to LOADER;
+
+

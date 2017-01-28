@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_MVD_AUTO_SAME_CONTACTS
+refresh force on demand
+as
+select ca.*,cc.contact_relation as contact_relation1,cc2.contact_relation as contact_relation2 ,cc.phone_number ,cc.phone_number_clear
+from M_CONTRACT_AUTO_MVD_PRE ca
+ join V_CLIENT_RFO_BY_ID cl1 on cl1.iin = ca.buyer_iin
+ join V_CLIENT_RFO_BY_ID cl2 on cl2.iin = ca.seller_iin
+ join V_FOLDER_ALL_RFO f on f.rfo_client_id = cl1.rfo_client_id and trunc(f.folder_date_create) < ca.contract_date
+ join V_FORM_CLIENT_CONTACT_PHONE cc on cc.folder_id = f.folder_id and cc.phone_type_simple ='КОНТАКТ'
+ join V_FOLDER_ALL_RFO f2 on f2.rfo_client_id = cl2.rfo_client_id and trim(f2.folder_date_create) < ca.contract_date
+ join V_FORM_CLIENT_CONTACT_PHONE cc2 on cc2.folder_id = f2.folder_id and cc2.phone_type_simple ='КОНТАКТ'
+where  cc.phone_number_clear = cc2.phone_number_clear;
+grant select on U1.M_MVD_AUTO_SAME_CONTACTS to LOADDB;
+grant select on U1.M_MVD_AUTO_SAME_CONTACTS to LOADER;
+
+

@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_RFO_PURSE_LAST
+refresh complete on demand
+as
+select f.rfo_client_id, trunc(f.folder_date_create) as folder_date_create
+  from u1.V_FOLDER_ALL_RFO f
+  join u1.V_CONTRACT_ALL_RFO c
+    on c.folder_id = f.folder_id
+   and c.is_card = 1
+ where f.process_name = 'ВЫДАЧА КОШЕЛЬКА'
+   and f.folder_state in ('ИСПОЛНЕНО',
+                          'ОТПРАВЛЕНО В ЦА',
+                          'АРХИВ',
+                          'ПРОВЕРКА ДОСЬЕ',
+                          'АРХИВ С ОШИБКАМИ',
+                          'НА РЕКЛАМАЦИЮ')
+   and trunc(f.folder_date_create) > trunc(sysdate) - 7
+   and not exists (select null
+                      from u1.M_FOLDER_CON_CANCEL_BASE ff
+                      where ff.rfo_client_id = f.rfo_client_id and
+                            ff.process_name in ('ОНЛАЙН КРЕДИТ', 'КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НА КАРТУ')  and
+                            f.folder_date_create > ff.folder_date_create_mi and
+                            f.folder_date_create - ff.folder_date_create_mi < 4);
+grant select on U1.M_RFO_PURSE_LAST to LOADDB;
+grant select on U1.M_RFO_PURSE_LAST to LOAD_MO;
+
+

@@ -1,0 +1,47 @@
+﻿create table U1.T_S02_Z#KAS_PC_FO
+(
+  id                NUMBER not null,
+  class_id          VARCHAR2(16),
+  collection_id     NUMBER,
+  state_id          VARCHAR2(16),
+  c_key             NUMBER(3),
+  c_num             NUMBER(24,4) not null,
+  c_oper_date       DATE not null,
+  c_vid_oper_ref    NUMBER not null,
+  c_date_grace_end  DATE,
+  c_card_ref        NUMBER,
+  c_summa           NUMBER(17,2) not null,
+  c_exec_summa      NUMBER(17,2),
+  c_doc_ref         NUMBER,
+  c_parent_ref      NUMBER,
+  c_child_ref       NUMBER,
+  c_reverse_fo      NUMBER,
+  c_is_grace_exec   VARCHAR2(1),
+  c_is_storno       VARCHAR2(1),
+  c_slip_ref        NUMBER,
+  c_tarifchik_ref   NUMBER,
+  c_pay_off_date    DATE,
+  c_prc_ref         NUMBER,
+  c_op_ref          NUMBER,
+  c_stmt_ref        NUMBER,
+  c_fld_num         NUMBER(24,4),
+  c_req_ref         NUMBER,
+  c_correct_date    DATE,
+  c_client_summa    NUMBER(17,2),
+  c_grace_type_ref  NUMBER,
+  c_grace_state_ref NUMBER,
+  c_grace_date_plan DATE,
+  c_grace_date_fact DATE,
+  c_sum_for_pay     NUMBER(17,2),
+  c_doc_date        DATE,
+  c_doc_state       VARCHAR2(16)
+)
+tablespace USERS_ARC
+  pctfree 10
+  initrans 1
+  maxtrans 255
+nologging;
+grant select, insert, update, delete on U1.T_S02_Z#KAS_PC_FO to ETL;
+grant select on U1.T_S02_Z#KAS_PC_FO to LOADDB;
+grant select on U1.T_S02_Z#KAS_PC_FO to LOADER;
+

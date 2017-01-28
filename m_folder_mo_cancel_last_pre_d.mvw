@@ -1,0 +1,48 @@
+﻿create materialized view U1.M_FOLDER_MO_CANCEL_LAST_PRE_D
+refresh force on demand
+as
+select distinct dp.code_int, /* as par_code, dp.name as par_name*/
+                case /*проверки по одобрению*/
+                     when dp.code_int in ('CLIENT_WL_EXISTS',
+                                          'SC_CATEG_KDN_REGUL_RES_PRE',
+                                          'SC_CATEG_B_KDN_REGUL_RES_PRE',
+                                          'SC_FAST_APPROVAL_81',
+                                          'SC_PRE_APPROVED_81_RES_PRE',
+                                          'SC_CLIENT_DEPN_APPR_RES_PRE',
+                                          'SC_CARD_CATEG_B_RES_PRE') then 0
+
+                     /*проверки не влияющие на финальный отказ или
+                     результаты до конторольной группы*/
+                     when dp.code_int in ('SC_ROUTE_RFO_VER_ONLINE_NEED')
+                          or dp.code_int like ('MO_SCO_IS_CTRL_GR_%')
+                          or dp.code_int like ('MO_SCO_REJECT_PRE_%') then 2
+                 else 1 end is_rejecting
+
+from V_MO_D_PAR dp
+join V_MO_D_CALC_PAR cp on cp.d_par_code = dp.code_int and cp.is_out = 1
+join V_MO_D_CALC dc on dc.code = cp.d_calc_code and
+      (dc.d_calc_group_code like 'SC_%' or dc.d_calc_group_code in ('AR1_EKT','AR1_KN','AR1_KN15_LKN_PKN','AR1_KNP'))
+where dp.is_critical = 1/*dp.code_int like '%_RES_PRE%' or
+      dp.code_int like 'MO_SCO_REJECT_PRE_%' or ---- интересно посмотреть
+      dp.code_int in ('CLIENT_BL_EXISTS_SCO',
+                      'CLIENT_DOC_BL_EXISTS',
+                      'RISK_AUTO_AMOUNT_BEKI_GCVP',
+                      'SC_RISK_EKT_UNMARRIED_BEKI_LOW_SAL',
+                      'SC_RISK_KN_KDN_HIGH_INCOME',
+                      'SC_RISK_KN_KDN_LOW_INCOME',
+                      'SC_AR1_KN15_LKN_PKN',
+                      'SC_AR1_EKT',
+                      'SC_AR1_KN',
+                      'SC_AR1_KNP',
+                      'SC_2_KN_RULES_SET_J1',
+                      'SC_22_ANTIFRAUD_201405',
+                      'SC_8_ANTIFRAUD_201405',
+                      'SC_17_ANTIFRAUD_201406',
+                      'SC_CHECK_MAN_REJ',
+                      'SC_AUTO_GAI_NO_GCVP',
+                      'SC_ROUTE_RES'
+                      )*/;
+grant select on U1.M_FOLDER_MO_CANCEL_LAST_PRE_D to LOADDB;
+grant select on U1.M_FOLDER_MO_CANCEL_LAST_PRE_D to LOADER;
+
+

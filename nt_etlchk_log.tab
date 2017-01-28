@@ -1,0 +1,23 @@
+﻿create table U1.NT_ETLCHK_LOG
+(
+  id        NUMBER default "U1"."SEQ_ETLCHK"."NEXTVAL",
+  sdt       DATE default sysdate,
+  chk_name  VARCHAR2(50),
+  descr     VARCHAR2(1000),
+  send_mail DATE
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_ETLCHK_LOG to LOADDB;
+

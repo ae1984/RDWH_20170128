@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_DWH_PLAN_OPER_CREDIT
+build deferred
+refresh force on demand
+as
+select /*+parallel(5)*/ c.*,ot.OPERATION_TYPE_NAME,ot.OPERATION_TYPE_CODE
+from M_DWH_PLAN_OPER_CREDIT_PRE1 c
+left join M_DWH_DICT_OPERATION_TYPE ot on ot.OPERATION_TYPE_CD = c.crdtplanr_operation_type_cd;
+grant select on U1.M_DWH_PLAN_OPER_CREDIT to LOADDB;
+grant select on U1.M_DWH_PLAN_OPER_CREDIT to LOADER;
+
+

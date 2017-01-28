@@ -1,0 +1,36 @@
+﻿create table U1.V_RFO_Z#KAS_ARCH_DATA_TEST
+(
+  id                 NUMBER not null,
+  sn                 NUMBER,
+  su                 NUMBER,
+  c_sec_recl_date    DATE,
+  c_first_recl_date  DATE,
+  c_sec_corr_date    DATE,
+  c_first_corr_date  DATE,
+  c_control_date     DATE,
+  c_postctrl_date    DATE,
+  c_check_ca         VARCHAR2(3),
+  c_control_errors   VARCHAR2(3),
+  c_user_control_ref NUMBER,
+  c_postctrl_usr_ref NUMBER,
+  c_user_send_ca_ref NUMBER,
+  c_folder_ref       NUMBER,
+  c_arch_type_ref    NUMBER,
+  c_cancel_point     NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.V_RFO_Z#KAS_ARCH_DATA_TEST to LOADDB;
+grant select on U1.V_RFO_Z#KAS_ARCH_DATA_TEST to LOADER;
+

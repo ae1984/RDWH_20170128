@@ -1,0 +1,15 @@
+﻿create materialized view U1.V_RBO_Z#KAS_PC_LIMIT_HST
+build deferred
+refresh complete on demand
+as
+select id,
+collection_id,
+c_limit_sum,
+c_date_begin,
+c_set_system,
+cast (c_set_user as varchar2(600)) as c_set_user
+from rdwh.V_RBO_Z#KAS_PC_LIMIT_HST@rdwh_exd;
+grant select on U1.V_RBO_Z#KAS_PC_LIMIT_HST to LOADDB;
+grant select on U1.V_RBO_Z#KAS_PC_LIMIT_HST to LOADER;
+
+

@@ -1,0 +1,36 @@
+﻿create table U1.ZZ_MO_RFOL_SERVICE
+(
+  servi_id          NUMBER not null,
+  foldr_id          NUMBER,
+  foldr_client      NUMBER,
+  crdog_id          NUMBER,
+  servi_name        VARCHAR2(300),
+  servi_price       NUMBER(17,2),
+  servi_quant       NUMBER(4),
+  servi_cost        NUMBER(17,2),
+  servi_bill_number VARCHAR2(150),
+  servi_bill_date   DATE,
+  servi_bill_summ   NUMBER(17,2),
+  ksern_id          NUMBER,
+  ksern_code        VARCHAR2(75),
+  ksern_name        VARCHAR2(750),
+  kunid_id          NUMBER,
+  kunid_code        VARCHAR2(120),
+  kunid_name        VARCHAR2(750)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.ZZ_MO_RFOL_SERVICE to LOADDB;
+grant select on U1.ZZ_MO_RFOL_SERVICE to LOADER;
+

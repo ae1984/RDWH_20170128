@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_TMP_J_Z49_ASOKR_REJECTED
+refresh force on demand
+as
+select distinct ff.folder_id -- отказанные АСОКР (отправленные на АСОКР и отказанные скорингом или прескорингом или АА)
+                             -- включая отказанные, но выданные (контрольная группа)
+from M_FOLDER_CON_CANCEL ff
+join M_TMP_J_Z49_TO_ASOKR a on a.folder_id = ff.folder_id
+where extract (year from ff.folder_date_create_mi) = 2013 and
+      ff.is_refin = 0 and ff.is_point_active = 0 and
+      (exists (select null from M_TMP_J_Z49_SCORING_REJECTS r
+                  where r.folder_id = ff.folder_id) or
+      ff.cancel_prescoring = 1 or
+      ff.cancel_middle_office = 1 or
+      ff.is_aa_reject = 1);
+grant select on U1.M_TMP_J_Z49_ASOKR_REJECTED to LOADDB;
+grant select on U1.M_TMP_J_Z49_ASOKR_REJECTED to LOADER;
+
+

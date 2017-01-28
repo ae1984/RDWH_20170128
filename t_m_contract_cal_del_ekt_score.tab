@@ -1,0 +1,91 @@
+﻿create table U1.T_M_CONTRACT_CAL_DEL_EKT_SCORE
+(
+  contract_id                   NUMBER,
+  contract_number               VARCHAR2(250 CHAR),
+  client_id                     VARCHAR2(7 CHAR),
+  yms                           VARCHAR2(9),
+  yy_mm_start_last              VARCHAR2(9),
+  yy_mm_start_first             VARCHAR2(9),
+  max_debt_used                 NUMBER,
+  total_debt_pmt_1              NUMBER,
+  total_debt_pmt_2              NUMBER,
+  total_debt_pmt_3              NUMBER,
+  total_debt_pmt_4              NUMBER,
+  total_debt_pmt_5              NUMBER,
+  pmt_cnt                       NUMBER,
+  is_bad                        NUMBER,
+  is_bad_by_profit              NUMBER,
+  max_debt_used_b_w             NUMBER,
+  max_debt_used_b               NUMBER,
+  max_debt_used_w               NUMBER,
+  max_debt_used_g               NUMBER,
+  max_debt_used_npl             NUMBER,
+  max_debt_used_fpd             NUMBER,
+  total_debt_last_rep_new       NUMBER,
+  total_debt_last_rep           NUMBER,
+  total_debt_last_rep_new_b_w   NUMBER,
+  total_debt_last_rep_new_b     NUMBER,
+  total_debt_last_rep_newd_w    NUMBER,
+  total_debt_last_rep_new_g     NUMBER,
+  total_debt_last_rep_new_npl   NUMBER,
+  total_debt_fpd                NUMBER,
+  total_debt_fpd_45             NUMBER,
+  delinq_days_max               NUMBER,
+  delinq_rate                   NUMBER,
+  delinq_rate_last_rep          NUMBER,
+  delinq_rate_npl               NUMBER,
+  delinq_rate_b_w               NUMBER,
+  delinq_rate_b                 NUMBER,
+  delinq_rate_w                 NUMBER,
+  delinq_rate_g                 NUMBER,
+  delinq_days_last_rep          NUMBER,
+  delinq_days_last_rep_new      NUMBER,
+  income                        NUMBER,
+  expense                       NUMBER,
+  profit                        NUMBER,
+  product_first                 VARCHAR2(20),
+  product_start_last            VARCHAR2(20),
+  product_last                  VARCHAR2(20),
+  is_card                       NUMBER,
+  start_total_fact_pmts_by_cli  NUMBER,
+  folder_id_first               NUMBER,
+  rfo_client_id                 NUMBER,
+  delinq_rate_pmt_1             NUMBER,
+  delinq_rate_pmt_2_x1          NUMBER,
+  delinq_rate_pmt_2_01          NUMBER,
+  delinq_rate_pmt_3_xx1         NUMBER,
+  delinq_rate_pmt_3_001         NUMBER,
+  delinq_rate_pmt_4_xxx1        NUMBER,
+  delinq_rate_pmt_4_0001        NUMBER,
+  delinq_rate_pmt_5_xxxx1       NUMBER,
+  delinq_rate_pmt_5_00001       NUMBER,
+  delinq_rate_pmt_6_xxxxx1      NUMBER,
+  delinq_rate_pmt_6_000001      NUMBER,
+  con_fact_pmts                 NUMBER,
+  con_planned_pmts              NUMBER,
+  client_status                 CHAR(1),
+  is_fraud_1                    NUMBER,
+  delinq_rate_frd_1             NUMBER,
+  max_debt_used_frd_1           NUMBER,
+  total_debt_last_rep_new_frd_1 NUMBER,
+  is_fraud_2_0                  NUMBER,
+  is_fraud_2_1                  NUMBER,
+  is_fraud_2_3                  NUMBER,
+  is_fraud_2_4                  NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_M_CONTRACT_CAL_DEL_EKT_SCORE to LOADDB;
+grant select on U1.T_M_CONTRACT_CAL_DEL_EKT_SCORE to LOADER;
+

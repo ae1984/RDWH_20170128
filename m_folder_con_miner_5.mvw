@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_5
+refresh complete on demand
+as
+select xxx.rfo_client_id,
+       xxx.contract_number,
+       xxx.contract_id,
+       xxx.paid_sal_count,
+       sum(xxx.paid_sal_count_con_other) paid_sal_count_con_other,
+       xxx.paid_sal_count + sum(xxx.paid_sal_count_con_other) paid_sal_count_all_con
+
+from M_FOLDER_CON_MINER_5_PRE xxx
+group by xxx.rfo_client_id,
+         xxx.contract_number,
+         xxx.contract_id,
+         xxx.paid_sal_count;
+grant select on U1.M_FOLDER_CON_MINER_5 to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER_5 to LOADER;
+
+

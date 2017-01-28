@@ -1,0 +1,71 @@
+﻿create table U1.T_MO_RFOLDER_PAR_VALUE_DD
+(
+  id                     NUMBER not null,
+  rfolder_id             NUMBER not null,
+  d_par_id               NUMBER not null,
+  value_text             VARCHAR2(2048),
+  value_date             DATE,
+  value_number           NUMBER,
+  date_create            TIMESTAMP(6) default systimestamp not null,
+  date_update            TIMESTAMP(6),
+  d_par_datatype_id      NUMBER default 1 not null,
+  calc_par_value_last_id NUMBER,
+  value_index            NUMBER,
+  d_par_object_id        NUMBER,
+  d_system_id            NUMBER,
+  value_index2           NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+create index U1.T_MO_RFOLDER_PAR_VAL_DD_IDX1 on U1.T_MO_RFOLDER_PAR_VALUE_DD (RFOLDER_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_MO_RFOLDER_PAR_VAL_DD_IDX2 on U1.T_MO_RFOLDER_PAR_VALUE_DD (DATE_CREATE)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_MO_RFOLDER_PAR_VAL_DD_IDX3 on U1.T_MO_RFOLDER_PAR_VALUE_DD (DATE_CREATE, DATE_UPDATE)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_MO_RFOLDER_PAR_VALUE_DD to LOADDB;
+grant select on U1.T_MO_RFOLDER_PAR_VALUE_DD to LOADER;
+

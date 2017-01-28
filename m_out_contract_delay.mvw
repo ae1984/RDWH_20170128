@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_OUT_CONTRACT_DELAY
+build deferred
+refresh complete on demand
+as
+select pd.id as rbo_contract_id,
+       pd.c_num_dog as contract_number,
+       pt.c_code as property_type_code,
+       pt.c_name  as property_type_name,
+       t.c_date_begin as date_begin_property,
+       t.c_date_end as end_begin_property,
+       t.c_num_value as value_property
+  from u1.V_RBO_Z#PROPERTY t
+  join u1.V_RBO_Z#PROPERTY_TYPE pt on pt.id = t.c_property_type
+  join u1.V_RBO_Z#KAS_PC_DOG pd on pd.c_property_arr = t.collection_id
+ where pt.c_code in ('DELAY_PAY_DHK','DELAY_PAY');
+grant select on U1.M_OUT_CONTRACT_DELAY to IT6_USER;
+grant select on U1.M_OUT_CONTRACT_DELAY to LOADDB;
+grant select on U1.M_OUT_CONTRACT_DELAY to LOADER;
+
+

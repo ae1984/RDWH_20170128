@@ -1,0 +1,21 @@
+﻿create table U1.T_MO_CLIENT_PHOTO_LIST_85
+(
+  rfo_client_id NUMBER,
+  photo_luna_id VARCHAR2(4000),
+  cnt_photo     NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_MO_CLIENT_PHOTO_LIST_85 to LOADDB;
+

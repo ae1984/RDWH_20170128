@@ -1,0 +1,17 @@
+﻿create materialized view U1.V_RFO_Z#KAS_TP_CR_LIMIT
+build deferred
+refresh force on demand
+as
+select id,
+       collection_id,
+       c_tarif_plan_ref,
+       c_lim_code,
+       c_lim_name,
+       c_lim_sum_min,
+       c_lim_sum_max,
+       sn, su
+  from ibs.z#KAS_TP_CR_LIMIT@RFO_SNAP;
+grant select on U1.V_RFO_Z#KAS_TP_CR_LIMIT to LOADDB;
+grant select on U1.V_RFO_Z#KAS_TP_CR_LIMIT to LOAD_MO;
+
+

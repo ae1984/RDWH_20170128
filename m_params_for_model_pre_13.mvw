@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_PARAMS_FOR_MODEL_PRE_13
+build deferred
+refresh force on demand
+as
+select  /*+parallel(5)*/
+        cln.mask_cellphone
+       ,cln.dt
+       ,count(distinct a.rfo_client_id) as POPULARITY_90
+       ,count(distinct (case when a.dt>=trunc(cln.dt)-30 then a.rfo_client_id end)) as POPULARITY_30
+from M_PARAMS_FOR_MODEL_PRE_13_2 cln--V_CLIENT_RFO_BY_ID cln
+join M_PARAMS_FOR_MODEL_PRE_13_1 a on a.mask_cellphone=cln.mask_cellphone
+                                  and a.dt<cln.dt
+                                  and a.dt>=cln.dt-90
+where cln.dt >= to_date('01.01.2015','dd.mm.yyyy') and cln.mask_cellphone<>'-------'
+group by cln.mask_cellphone,cln.dt;
+grant select on U1.M_PARAMS_FOR_MODEL_PRE_13 to LOADDB;
+
+

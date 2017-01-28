@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_SC_APP_KN_EKT_ONLINE
+build deferred
+refresh force on demand
+as
+select t.rfo_client_id                                                         as rfo_client_id,
+
+       count(case when t.product_type = 'ДЕНЬГИ' then t.folder_id end)         as cnt_cl_kn,
+       count(case when t.product_type = 'ДЕНЬГИ' and
+                       t.is_credit_issued = 0 then t.folder_id end)            as cnt_cl_kn_cancel,
+
+       count(case when t.product_type = 'ТОВАРЫ' and
+                       t.process_name != 'ОНЛАЙН КРЕДИТ' then t.folder_id end) as cnt_cl_offline,
+       count(case when t.product_type = 'ТОВАРЫ' and
+                       t.process_name != 'ОНЛАЙН КРЕДИТ' and
+                       t.is_credit_issued = 0 then t.folder_id end)            as cnt_cl_offline_cancel
+from u1.M_FOLDER_CON_CANCEL t
+where t.folder_date_create_mi >= trunc(sysdate) - 30
+group by t.rfo_client_id;
+grant select on U1.M_SC_APP_KN_EKT_ONLINE to LOADDB;
+grant select on U1.M_SC_APP_KN_EKT_ONLINE to LOAD_MO;
+
+

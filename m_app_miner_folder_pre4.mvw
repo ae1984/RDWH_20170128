@@ -1,0 +1,80 @@
+﻿create materialized view U1.M_APP_MINER_FOLDER_PRE4
+build deferred
+refresh force on demand
+as
+select t2.app_id
+
+       ,max(t2.max_tov_categ_cnt_90d) as max_tov_categ_cnt_90d
+       ,max(t2.max_tov_categ_cnt_90d_pr) as max_tov_categ_cnt_90d_pr
+
+       ,max(t2.max_tov_categ_cnt_30d) as max_tov_categ_cnt_30d
+       ,max(t2.max_tov_categ_cnt_30d_pr) as max_tov_categ_cnt_30d_pr
+
+from (
+      select t1.app_id
+
+             /*,t1.rfo_client_id
+             ,t1.folder_date_create_mi
+             ,t1.product_type
+             ,t1.tov_categ_code
+
+             ,trunc(t1.folder_date_create_mi) - 30 as diff30
+             ,trunc(t1.folder_date_create_mi) - 90 as diff90
+
+             ,t1.tov_categ_cnt_drank
+             ,t1.tov_categ_cnt_pr_drank
+
+             ,t1.tov_categ_cnt_drank_rev
+             ,t1.tov_categ_cnt_pr_drank_rev*/
+
+             ,max(t1.tov_categ_cnt_drank) over (partition by t1.rfo_client_id order by trunc(t1.folder_date_create_mi)
+                                                range between 90 preceding and 1 preceding) as max_tov_categ_cnt_90d
+
+             ,max(t1.tov_categ_cnt_pr_drank) over (partition by t1.rfo_client_id, t1.product_type order by trunc(t1.folder_date_create_mi)
+                                                   range between 90 preceding and 1 preceding) as max_tov_categ_cnt_90d_pr
+
+             --30 days
+             ,max(t1.tov_categ_cnt_drank) over (partition by t1.rfo_client_id order by trunc(t1.folder_date_create_mi)
+                                                range between 30 preceding and 1 preceding) as max_tov_categ_cnt_30d
+
+             ,max(t1.tov_categ_cnt_pr_drank) over (partition by t1.rfo_client_id, t1.product_type order by trunc(t1.folder_date_create_mi)
+                                                   range between 30 preceding and 1 preceding) as max_tov_categ_cnt_30d_pr
+
+      from (
+            select am.*
+
+                   ,coalesce(ed1.tov_categ_code, ed.tov_categ_code) as tov_categ_code
+
+
+                   ,case when coalesce(ed1.tov_categ_code, ed.tov_categ_code) is not null
+                         then dense_rank() over (partition by am.rfo_client_id, coalesce(ed1.tov_categ_code, ed.tov_categ_code), trunc(am.folder_date_create_mi)
+                                                 order by am.folder_date_create_mi)
+                    end as tov_categ_cnt_drank
+
+                   ,case when coalesce(ed1.tov_categ_code, ed.tov_categ_code) is not null
+                         then dense_rank() over (partition by am.rfo_client_id, coalesce(ed1.tov_categ_code, ed.tov_categ_code), am.product_type, trunc(am.folder_date_create_mi)
+                                       order by am.folder_date_create_mi)
+                    end as tov_categ_cnt_pr_drank
+
+                   ,case when coalesce(ed1.tov_categ_code, ed.tov_categ_code) is not null
+                         then dense_rank() over (partition by am.rfo_client_id, coalesce(ed1.tov_categ_code, ed.tov_categ_code), trunc(am.folder_date_create_mi)
+                                       order by am.folder_date_create_mi desc)
+                    end as tov_categ_cnt_drank_rev
+
+                   ,case when coalesce(ed1.tov_categ_code, ed.tov_categ_code) is not null
+                         then dense_rank() over (partition by am.rfo_client_id, coalesce(ed1.tov_categ_code, ed.tov_categ_code), am.product_type, trunc(am.folder_date_create_mi)
+                                       order by am.folder_date_create_mi desc)
+                    end as tov_categ_cnt_pr_drank_rev
+
+
+            from u1.M_APP_MINER_BAS am
+            left join u1.V_CONTRACT_EKT_DWH ed on ed.rfo_contract_id = am.rfo_contract_id
+            left join u1.V_CONTRACT_EKT_DWH_ONLINE ed1 on ed1.claim_id = am.claim_id
+            where am.folder_date_create >= to_date('01012015', 'ddmmyyyy') - 90
+            --and am.rfo_client_id = 64486015201
+      ) t1
+) t2
+group by t2.app_id;
+grant select on U1.M_APP_MINER_FOLDER_PRE4 to LOADDB;
+
+

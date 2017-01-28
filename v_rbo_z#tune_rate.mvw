@@ -1,0 +1,27 @@
+﻿create materialized view U1.V_RBO_Z#TUNE_RATE
+refresh complete on demand
+as
+select ID,
+C_NUM,
+C_SPIS_OPER,
+C_INT_SUMM,
+C_CURRENCY,
+C_BANK_RATE,
+C_CURRENCY_BASE,
+C_DEPART,
+C_BACK_RATE,
+C_PAY_DOC,
+C_SHOW_IN_SALE,
+C_CORRECT_D_NAL,
+C_CORRECT_D_BEZNAL,
+COLLECTION_ID,
+C_SUM_OPER,
+C_MAX_BANK_RATE,
+C_MIN_BANK_RATE,
+C_NUM_OP,
+C_GROUP_DEPART
+from s02.Z#TUNE_RATE@rdwh_exd;
+grant select on U1.V_RBO_Z#TUNE_RATE to LOADDB;
+grant select on U1.V_RBO_Z#TUNE_RATE to LOADER;
+
+

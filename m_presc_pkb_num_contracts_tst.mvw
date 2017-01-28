@@ -1,0 +1,46 @@
+﻿create materialized view U1.M_PRESC_PKB_NUM_CONTRACTS_TST
+refresh complete on demand
+as
+with send_pkb as
+ (select to_date(v.c_value, 'dd.mm.yyyy') as send_pkb_date
+    from V_RFO_Z#TUNE t
+    left join V_RFO_Z#TUNE_VAL v
+      on v.collection_id = t.c_values
+   where t.c_code = 'KAS_DATE_PKB'
+     and rownum = 1)
+selecT x.rfo_client_id,
+       (case
+         when is_priv_active_card = 1 and cnt_active_con = 0 then
+          cnt_cr_con_aft_send_pkb - cnt_cl_con_aft_send_pkb - 1
+         when is_priv_active_card = 1 and cnt_active_con >= 2 then
+          cnt_cr_con_aft_send_pkb - cnt_cl_con_aft_send_pkb + 1
+         when is_priv_active_card = 0 and cnt_active_con >= 2 then
+          cnt_cr_con_aft_send_pkb - cnt_cl_con_aft_send_pkb - 1
+         when is_priv_active_card = 1 and cnt_active_con = 1 then
+          cnt_cr_con_aft_send_pkb - cnt_cl_con_aft_send_pkb
+         else
+          cnt_cr_con_aft_send_pkb - cnt_cl_con_aft_send_pkb
+       end) as pkb_act_cnt
+  from (seleCT d.rfo_client_id,
+               sum(case
+                     when (d.prod_type in ('ПРОСТАЯ КАРТА') or d.x_is_card = 0) and
+                          d.is_credit_active = 1 and
+                          d.begin_date > (select send_pkb_date from send_pkb) then 1 else 0 end) as cnt_cr_con_aft_send_pkb, -- договора созданные после отправки в ПКБ, прибавляем.
+               sum(case
+                     when (d.prod_type in ('ПРОСТАЯ КАРТА') or d.x_is_card = 0) and
+                          d.is_credit_active != 1 and
+                          d.actual_end_date >
+                          (select send_pkb_date from send_pkb) then 1 else 0 end) as cnt_cl_con_aft_send_pkb, -- договора закрытые после отправки в ПКБ, отнимаем
+               max(case
+                     when d.prod_name = 'ПРИВИЛЕГИРОВАННЫЙ' and d.card_limit = 0 and
+                          d.is_credit_active = 1 and d.x_is_card = 1 and
+                          d.begin_date < (select send_pkb_date from send_pkb) then 1 else 0 end) as is_priv_active_card, --Если у клиента есть активная привилегированная карта
+               sum(case
+                     when (d.prod_type in ('ПРОСТАЯ КАРТА') or d.x_is_card = 0) and
+                          d.is_credit_active = 1 then 1 else 0 end) as cnt_active_con --кол-во активных кредитов
+          from v_dwh_portfolio_current d
+         where d.x_is_credit_issued = 1
+         group by d.rfo_client_id) x;
+grant select on U1.M_PRESC_PKB_NUM_CONTRACTS_TST to LOADDB;
+
+

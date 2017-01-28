@@ -1,0 +1,26 @@
+﻿create table U1.NT_TEMP_TS_SQL
+(
+  sdt            DATE,
+  schemaname     VARCHAR2(30),
+  osuser         VARCHAR2(30),
+  sql_id         VARCHAR2(13),
+  sql_exec_start DATE,
+  tablespace     VARCHAR2(30) not null,
+  segtype        VARCHAR2(9),
+  blocks         NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_TEMP_TS_SQL to LOADDB;
+

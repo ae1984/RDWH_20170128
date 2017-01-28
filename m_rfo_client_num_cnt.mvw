@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_RFO_CLIENT_NUM_CNT
+build deferred
+refresh force on demand
+as
+with client_phone as (
+select/*+parallel(2)*/ f.c_client,
+       oc.c_form_client_st#mobile#numb numb
+  from u1.T_RFO_Z#KAS_ONLINE_CLAIM oc
+left join u1.T_RFO_Z#CM_CHECKPOINT c on c.id = oc.c_folder_ref
+left join u1.T_RFO_Z#FOLDERS f on f.id = c.id
+)
+select/*+parallel(2)*/ ph1.c_client,ph1.numb, count(distinct ph2.c_client) cnt
+  from client_phone ph1
+  join client_phone ph2 on  ph2.numb = ph1.numb
+                        and ph2.c_client<>ph1.c_client
+
+  group by ph1.c_client,ph1.numb;
+grant select on U1.M_RFO_CLIENT_NUM_CNT to LOADDB;
+
+

@@ -1,0 +1,28 @@
+﻿create table U1.T_LUNA_PHOTO_NOT_FOUND
+(
+  luna_id VARCHAR2(4000),
+  sdt     DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_LUNA_PHOTO_NOT_FOUND
+  is 'Не найденные фото на Luna';
+comment on column U1.T_LUNA_PHOTO_NOT_FOUND.luna_id
+  is 'LUNA_ID, который не был найден на LUNA';
+comment on column U1.T_LUNA_PHOTO_NOT_FOUND.sdt
+  is 'Дата поиска';
+grant select on U1.T_LUNA_PHOTO_NOT_FOUND to LOADDB;
+grant select, insert, update, delete, references, alter, index on U1.T_LUNA_PHOTO_NOT_FOUND to RISK_ALEXEY;
+grant select, insert, update, delete, references, alter, index on U1.T_LUNA_PHOTO_NOT_FOUND to RISK_ALEXEY2;
+

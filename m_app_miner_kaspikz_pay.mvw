@@ -1,0 +1,161 @@
+﻿create materialized view U1.M_APP_MINER_KASPIKZ_PAY
+build deferred
+refresh force on demand
+as
+select x.app_id
+
+       ,x.kspkz_pay_30d_sum
+       ,x.kspkz_pay_30d_sum_x
+
+       ,x.kspkz_pay_30d_avg
+       ,x.kspkz_pay_30d_avg_x
+
+       ,x.kspkz_pay_30d_cnt
+       ,x.kspkz_pay_30d_cnt_x
+
+       ,x.kspkz_month_6m_cnt
+       ,x.kspkz_month_6m_cnt_x
+
+       ,case when x.kspkz_month_180d_avg > 100 then 100 else x.kspkz_month_180d_avg end as kspkz_month_180d_avg
+       ,case when x.kspkz_month_180d_avg_x > 100 then 100 else x.kspkz_month_180d_avg_x end as kspkz_month_180d_avg_x
+
+       ,x.kspkz_mobile_24m_cnt
+       ,x.kspkz_mobile_24m_cnt_x
+
+       ,x.kspkz_komm_month_6m_cnt
+       ,x.kspkz_komm_month_6m_cnt_x
+
+       ,x.kspkz_serv_6m_cnt
+       ,x.kspkz_serv_6m_cnt_x
+
+       ,x.kspkz_dep_90d_cnt
+       ,x.kspkz_dep_90d_cnt_x
+
+       ,x.kspkz_dep_90d_sum
+       ,x.kspkz_dep_90d_sum_x
+
+       ,x.kspkz_dep_day_90d_cnt
+       ,x.kspkz_dep_day_90d_cnt_x
+
+from (
+      select am.app_id
+
+             ,sum(case when kp.pay_date >= trunc(am.folder_date_create_mi) - 30
+                             and kp.pay_date < trunc(am.folder_date_create_mi)
+                        then kp.pay_amount end) as kspkz_pay_30d_sum
+
+             ,sum(case when kp.pay_date >= trunc(am.folder_date_create_mi) - 30
+                             and kp.pay_date < am.folder_date_create_mi
+                        then kp.pay_amount end) as kspkz_pay_30d_sum_x
+
+
+             ,round(avg(case when kp.pay_date >= trunc(am.folder_date_create_mi) - 30
+                                  and kp.pay_date < trunc(am.folder_date_create_mi)
+                             then kp.pay_amount end)) as kspkz_pay_30d_avg
+
+             ,round(avg(case when kp.pay_date >= trunc(am.folder_date_create_mi) - 30
+                                  and kp.pay_date < am.folder_date_create_mi
+                             then kp.pay_amount end)) as kspkz_pay_30d_avg_x
+
+             --
+             ,count(distinct case when kp.pay_date >= trunc(am.folder_date_create_mi) - 30
+                                       and kp.pay_date < trunc(am.folder_date_create_mi)
+                                   then kp.pay_info_id end) as kspkz_pay_30d_cnt
+
+             ,count(distinct case when kp.pay_date >= trunc(am.folder_date_create_mi) - 30
+                                       and kp.pay_date < am.folder_date_create_mi
+                                   then trunc(kp.pay_date, 'mm') end) as kspkz_pay_30d_cnt_x
+
+             --
+             ,count(distinct case when kp.pay_date >= add_months(trunc(am.folder_date_create_mi), -6)
+                                       and kp.pay_date < trunc(am.folder_date_create_mi)
+                                   then trunc(kp.pay_date, 'mm') end) as kspkz_month_6m_cnt
+
+             ,count(distinct case when kp.pay_date >= add_months(trunc(am.folder_date_create_mi), -6)
+                                       and kp.pay_date < am.folder_date_create_mi
+                                   then trunc(kp.pay_date, 'mm') end) as kspkz_month_6m_cnt_x
+
+             --
+             ,round(count(distinct case when kp.pay_date >= trunc(am.folder_date_create_mi) - 180
+                                        and kp.pay_date < trunc(am.folder_date_create_mi)
+                                   then trunc(kp.pay_date, 'mm') end)/6*100) as kspkz_month_180d_avg
+
+             ,round(count(distinct case when kp.pay_date >= trunc(am.folder_date_create_mi) - 180
+                                        and kp.pay_date < am.folder_date_create_mi
+                                   then trunc(kp.pay_date, 'mm') end)/6*100) as kspkz_month_180d_avg_x
+
+
+             ,count(distinct case when kp.pay_date >= add_months(trunc(am.folder_date_create_mi), -24)
+                                       and kp.pay_date < trunc(am.folder_date_create_mi)
+                                       and kp.category_name = 'MOBILE'
+                                  then kp.pay_param_clear end) as kspkz_mobile_24m_cnt
+
+             ,count(distinct case when kp.pay_date >= add_months(trunc(am.folder_date_create_mi), -24)
+                                       and kp.pay_date < am.folder_date_create_mi
+                                       and kp.category_name = 'MOBILE'
+                                  then kp.pay_param_clear end) as kspkz_mobile_24m_cnt_x
+
+             --
+             ,count(distinct case when kp.pay_date >= add_months(trunc(am.folder_date_create_mi), -6)
+                                       and kp.pay_date < trunc(am.folder_date_create_mi)
+                                       and kp.category_name = 'КОМУСЛУГИ'
+                                  then trunc(kp.pay_date, 'mm') end) as kspkz_komm_month_6m_cnt
+
+             ,count(distinct case when kp.pay_date >= add_months(trunc(am.folder_date_create_mi), -6)
+                                       and kp.pay_date < am.folder_date_create_mi
+                                       and kp.category_name = 'КОМУСЛУГИ'
+                                  then trunc(kp.pay_date, 'mm') end) as kspkz_komm_month_6m_cnt_x
+
+             --
+             ,count(distinct case when kp.pay_date >= add_months(trunc(am.folder_date_create_mi), -6)
+                                       and kp.pay_date < trunc(am.folder_date_create_mi)
+                                  then kp.category_name end) as kspkz_serv_6m_cnt
+
+             ,count(distinct case when kp.pay_date >= add_months(trunc(am.folder_date_create_mi), -6)
+                                       and kp.pay_date < am.folder_date_create_mi
+                                  then kp.category_name end) as kspkz_serv_6m_cnt_x
+
+
+             --deposit 90 days
+             ,count(distinct case when kp.pay_date >= trunc(am.folder_date_create_mi) - 90
+                                       and kp.pay_date < trunc(am.folder_date_create_mi)
+                                       and kp.deposit_account_number is not null
+                                  then kp.pay_info_id end) as kspkz_dep_90d_cnt
+
+             ,count(distinct case when kp.pay_date >= trunc(am.folder_date_create_mi) - 90
+                                       and kp.pay_date < am.folder_date_create_mi
+                                       and kp.deposit_account_number is not null
+                                  then kp.pay_info_id end) as kspkz_dep_90d_cnt_x
+
+             ,sum(distinct case when kp.pay_date >= trunc(am.folder_date_create_mi) - 90
+                                       and kp.pay_date < trunc(am.folder_date_create_mi)
+                                       and kp.deposit_account_number is not null
+                                  then kp.pay_amount end) as kspkz_dep_90d_sum
+
+             ,sum(distinct case when kp.pay_date >= trunc(am.folder_date_create_mi) - 90
+                                       and kp.pay_date < am.folder_date_create_mi
+                                       and kp.deposit_account_number is not null
+                                  then kp.pay_amount end) as kspkz_dep_90d_sum_x
+
+             ,count(distinct case when kp.pay_date >= trunc(am.folder_date_create_mi) - 90
+                                       and kp.pay_date < trunc(am.folder_date_create_mi)
+                                       and kp.deposit_account_number is not null
+                                   then trunc(kp.pay_date) end) as kspkz_dep_day_90d_cnt
+
+             ,count(distinct case when kp.pay_date >= trunc(am.folder_date_create_mi) - 90
+                                       and kp.pay_date < am.folder_date_create_mi
+                                       and kp.deposit_account_number is not null
+                                   then trunc(kp.pay_date) end) as kspkz_dep_day_90d_cnt_x
+
+
+      from u1.M_APP_MINER_BAS am
+      left join u1.M_KASPIKZ_PAY kp on kp.rfo_client_id = am.rfo_client_id
+                                       and kp.pay_date >= add_months(trunc(am.folder_date_create_mi), -24)
+                                       and kp.pay_date < am.folder_date_create_mi
+                                       and kp.is_prov = 1
+      where am.folder_date_create_mi >= to_date('01-01-2015','dd-mm-yyyy')
+      group by am.app_id
+) x;
+grant select on U1.M_APP_MINER_KASPIKZ_PAY to LOADDB;
+
+

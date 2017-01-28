@@ -1,0 +1,81 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_V2
+build deferred
+refresh complete on demand
+as
+select fo.rfo_client_id,
+       fo.claim_id,
+       fo.date_create,
+       fo.process_id,
+       --параметры
+       case when dep.balance_all_dep_beg_m < 0 then 0 else dep.balance_all_dep_beg_m  end as balance_all_dep_beg_m,
+       case when dep.balance_all_dep_beg < 0 then 0 else dep.balance_all_dep_beg  end as balance_all_dep_beg,
+       dep.deposit_life_length,
+       case when dep.sum_pritok_dep_3_m < 0 then 0 else dep.sum_pritok_dep_3_m  end as sum_pritok_dep_3_m,
+       dep.share_usd_dep_sum,
+       onl.avg_count_app_onl_day,
+       onl.avg_count_app_onl_day_x,
+       onl.avg_sum_online_ekt_3_m,
+       onl.avg_sum_online_ekt_3_m_x,
+       sb.avg_term_cred_plan,
+       onl.count_category_3_m,
+       onl.count_category_3_m_x,
+       ff.count_fail_30_d,
+       onl.count_fail_online_30_d,
+       onl.count_fail_online_30_d_x,
+       kz.count_mob_kspkz,
+       sh.count_visit_guest,
+       sh.count_visit_guest_x,
+       sh.count_visit_client,
+       sh.count_visit_client_x,
+       s19.installment_incom_avg,
+       s19.installment_incom_avg_30d,
+       s19.installment_incom_avg_30d_x,
+       sb.life_length,
+       s19.avg_zp_h,
+       s19.avg_zp_h_x,
+       s19.max_zp_h,
+       s19.max_zp_h_x,
+       ff.min_sum_appl_kn_30_d,
+       ff.min_sum_appl_kn_30_d_x,
+       onl.min_sum_online_ekt_3_m,
+       onl.min_sum_online_ekt_3_m_x,
+       --sb.pkb_count_kzt,
+       case when kz.share_month_kaspikz_6_m > 100 then 100 else kz.share_month_kaspikz_6_m end as share_month_kaspikz_6_m,
+       sb.sum_pay_cred_3_m,
+       kz.sum_pay_kspkz_30_d,
+       sb.total_max_delay,
+       sb.total_max_delay_2years,
+       onl.count_shops_on_client,
+       onl.count_shops_on_client_x,
+       onl.max_count_app_onl_day,
+       onl.max_count_app_onl_day_x,
+       onl.max_sum_online_ekt_3_m,
+       onl.max_sum_online_ekt_3_m_x,
+       --null as top_1_purchase,
+       tr.terminal_share_count,
+       sb.count_kn_ever--,
+       --null as best_price
+
+       ,f2.count_appl_kn_30_d
+       ,f2.count_fail_kn_30_d
+       ,f2.max_sum_appl_kn_30_d
+
+       --,a.count_fail_30_d+f2.count_fail_30_d as count_fail_30_d
+       ,coalesce(a.count_applications_30_d,0)+coalesce(f2.count_applications_30_d,0) as count_applications_30_d
+       ,coalesce(a.count_applications_30_d_x,0)+coalesce(f2.count_applications_30_d_x,0) as count_applications_30_d_x
+       ,coalesce(a.count_applications_30_d_x,0)+coalesce(f2.count_applications_30_d_x_v2,0) as count_applications_30_d_x_v3
+
+from u1.M_FOLDER_CON_CANCEL_ONLINE_1         fo
+left join u1.M_RFO_FRAUD_SEARCH_DEPO        dep on dep.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_ONL_FOLDER  onl on onl.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_FOLDER       ff on ff.claim_id  = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_KASPIKZ      kz on kz.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_BAS          sb on sb.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_KSPSHOP      sh on sh.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_19          s19 on s19.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_CASH_TERMINAL       tr on tr.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_2            a  on a.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_5            f2 on f2.claim_id = fo.claim_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_V2 to LOADDB;
+
+

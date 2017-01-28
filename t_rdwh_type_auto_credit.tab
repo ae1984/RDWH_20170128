@@ -1,0 +1,25 @@
+﻿create table U1.T_RDWH_TYPE_AUTO_CREDIT
+(
+  tariff_plan_name_code VARCHAR2(500),
+  tariff_plan_name_name VARCHAR2(500),
+  str_value_p1          VARCHAR2(500),
+  type_auto_credit      VARCHAR2(500)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RDWH_TYPE_AUTO_CREDIT
+  is 'Связь между типами автокредитования и схемами кредитования(грузится из excel_файла)';
+grant select on U1.T_RDWH_TYPE_AUTO_CREDIT to LOADDB;
+grant select on U1.T_RDWH_TYPE_AUTO_CREDIT to LOADER;
+

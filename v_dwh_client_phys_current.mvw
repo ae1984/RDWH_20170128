@@ -1,0 +1,18 @@
+﻿create materialized view U1.V_DWH_CLIENT_PHYS_CURRENT
+using no index
+refresh complete on demand
+as
+select
+   t.clnt_gid,
+   t.clnt_iin,
+   t.clnt_inn,
+   upper(t.clnt_name) as clnt_name,
+   t.clnt_birth_date,
+   t.clnt$source_pk as rfo_client_id,
+   t.clnt$rbo_source_pk as rbo_client_id
+from DWH_RAN.REF_CLIENT_V@DWH_PROD2 t
+where t.clnt_client_type_cd = 10000 and
+      t.clnt$end_date = to_date('9999-12-31','yyyy-mm-dd');
+grant select on U1.V_DWH_CLIENT_PHYS_CURRENT to LOADDB;
+
+

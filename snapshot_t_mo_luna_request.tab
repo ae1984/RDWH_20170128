@@ -1,0 +1,27 @@
+﻿create table U1.SNAPSHOT_T_MO_LUNA_REQUEST
+(
+  id            NUMBER not null,
+  request_id    NUMBER,
+  luna_match_id NUMBER,
+  similarity    NUMBER,
+  luna_status   VARCHAR2(64),
+  luna_err_msg  VARCHAR2(2048),
+  date_insert   DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.SNAPSHOT_T_MO_LUNA_REQUEST
+  is 'копия таблицы T_MO_LUNA_REQUEST на  7/06/2016';
+grant select on U1.SNAPSHOT_T_MO_LUNA_REQUEST to LOADDB;
+

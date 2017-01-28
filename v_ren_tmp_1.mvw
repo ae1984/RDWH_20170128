@@ -1,0 +1,33 @@
+﻿create materialized view U1.V_REN_TMP_1
+refresh force on demand
+as
+select * from (
+    select p.start_date, c.product_refin_last,
+           sum(p.total_debt) as tot_debt,
+           sum(c.max_debt_used) as max_debt_used_new
+    from V_CONTRACT_CAL c
+    join DWH_PORT p on p.deal_number = c.contract_number
+    where p.start_date >= to_date('01.11.2013','dd.mm.yyyy')
+    group by p.start_date,c.product_refin_last
+    ) pivot (
+        sum(tot_debt) as tot_debt,
+        sum(max_debt_used_new) as max_debt_used_new
+    for product_refin_last in (
+        'АВТО' as auto,
+        'ЗК' as zk,
+        'КК' as kk,
+        'КН' as kn,
+        'КН-15' as kn15,
+        'КНП' as knp,
+        'ЛК И ПК' as lkpk,
+        'ЛКН И ПКН' as lknpkn,
+        'Н_КВ' as nkv,
+        'Н_П' as np,
+        'ТК' as tk,
+        'ХК' as hk
+    )
+);
+grant select on U1.V_REN_TMP_1 to LOADDB;
+grant select on U1.V_REN_TMP_1 to LOADER;
+
+

@@ -1,0 +1,70 @@
+﻿create materialized view U1.M_CONTRACT_START_CON_ORD
+using no index
+refresh complete on demand
+as
+select c.contract_number, c.client_id, c.yy_mm_start_last,
+       t.pmt_in_rep_sum_by_cli,
+       t.con_amount_in_rep_sum_by_cli,
+       round(t.con_amount_in_rep_sum_by_cli, -5) as con_amount_in_rep_sum_by_c100K,
+       t.total_debt_in_rep_sum_by_cli,
+
+       t.ord_1_product,
+       t.ord_2_product,
+       t.ord_3_product,
+       t.ord_4_product,
+       t.ord_5_product,
+       t.ord_6_product,
+       t.ord_7_product,
+       t.ord_8_product,
+       t.ord_9_product,
+       t.ord_none_product,
+
+       c.product_first, c.product_start_last, c.product_last,
+       c.total_debt_last_rep,
+       c.max_debt_used,
+       c.delinq_days_last_rep,
+       c.delinq_days_max,
+       c.delinq_rate,
+           case when t.ord_1_product is not null then 1 else 0 end +
+           case when t.ord_2_product is not null then 1 else 0 end +
+           case when t.ord_3_product is not null then 1 else 0 end +
+           case when t.ord_4_product is not null then 1 else 0 end +
+           case when t.ord_5_product is not null then 1 else 0 end +
+           case when t.ord_6_product is not null then 1 else 0 end +
+           case when t.ord_7_product is not null then 1 else 0 end +
+           case when t.ord_8_product is not null then 1 else 0 end +
+           case when t.ord_9_product is not null then 1 else 0 end as
+       product_count,
+/*           case when c.product_first = t.ord_1_product then 1
+                when c.product_first = t.ord_2_product then 2
+                when c.product_first = t.ord_3_product then 3
+                when c.product_first = t.ord_4_product then 4
+                when c.product_first = t.ord_5_product then 5
+                when c.product_first = t.ord_6_product then 6
+                when c.product_first = t.ord_7_product then 7
+                when c.product_first = t.ord_8_product then 8
+                when c.product_first = t.ord_9_product then 9
+                when c.product_first = t.ord_none_product then 0
+                \*else -1 *\ end as
+       product_first_number,*/
+           case when c.product_start_last = t.ord_1_product then 1
+                when c.product_start_last = t.ord_2_product then 2
+                when c.product_start_last = t.ord_3_product then 3
+                when c.product_start_last = t.ord_4_product then 4
+                when c.product_start_last = t.ord_5_product then 5
+                when c.product_start_last = t.ord_6_product then 6
+                when c.product_start_last = t.ord_7_product then 7
+                when c.product_start_last = t.ord_8_product then 8
+                when c.product_start_last = t.ord_9_product then 9
+                when c.product_start_last = t.ord_none_product then 0
+                /*else -1 */ end as
+        product_start_number
+from V_CONTRACT_CAL c
+--join V_CONTRACT_CAL c on c.client_id = t.client_id and c.yy_mm_start_last = t.yy_mm_report
+--join M_TMP_PORTFOLIO_CON_ORD_PRE_2 t on t.client_id = c.client_id and t.yy_mm_report = c.yy_mm_report_min
+left join M_PORTFOLIO_CON_ORD_PRE_2 t on t.client_id = c.client_id and
+                t.yy_mm_report = greatest(c.yy_mm_report_min, c.yy_mm_start_last);
+grant select on U1.M_CONTRACT_START_CON_ORD to LOADDB;
+grant select on U1.M_CONTRACT_START_CON_ORD to LOADER;
+
+

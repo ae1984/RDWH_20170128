@@ -1,0 +1,87 @@
+﻿create materialized view U1.M_ONLINE_SIGN_REASON
+build deferred
+refresh complete on demand
+as
+select upper(
+       case
+         when coalesce(t.is_sign_require, t1.is_sign_require) = 0 then
+           'Без подписания'
+         when need_open_gu = 1 then
+           'Необходимо оформить ГУ'
+         when need_update_ver_gu = 1 then
+           'Необходимо обновить ГУ'
+         when need_ask_pkb_gcvp = 1 then
+           'Необходимо согласие на ПКБ/ГЦВП'
+         when need_chng_fc = 1 then
+           'ИАД'
+         when (need_fill_fc = 1 or need_fill_cl_data = 1) then
+           'Дозаполнение анкеты'
+         when need_verification = 1 and a.c_exec_comment like '%timeout%' then
+           'Нужна фотоверификация клиента - Тайм-аут'
+         when need_verification = 1 then
+           'Нужна фотоверификация клиента'
+         when need_asocr_chk = 1 then
+           'Необходима проверка Асокр'
+         else
+           'Other'
+       end)                                                           as sign_reason,
+       td.week_text_online_credit                                    as week_text_online_credit,
+       coalesce(t.is_client_new_by_con, t1.is_client_new_by_con)     as is_client_new_by_con,
+       to_char(f.c_date_create, 'yyyy - mm')                         as month_r,
+       count(distinct a.id)                                          as req_cnt
+  from u1.V_RFO_Z#KAS_ONLINE_CLAIM a
+       inner join u1.V_RFO_Z#KAS_ONLINE_BUY     f on      a.c_buy_ref = f.id
+                                                 and f.c_date_create >= to_date('01.01.2016', 'dd.mm.yyyy')
+       left join u1.m_folder_con_cancel         t on       t.claim_id = a.id
+       left join u1.m_folder_con_cancel_online t1 on      t1.claim_id = a.id
+       left join ( select *
+                     from ( select
+                                   c1.id cliam_id,
+                                   kd1.c_code
+                              from U1.V_RFO_Z#KAS_ONLINE_CLAIM c1
+                                   left join U1.V_RFO_Z#KAS_UNIVERSA_REF s1 on s1.collection_id = c1.c_mng_vis_scen
+                                   left join U1.V_RFO_Z#KAS_UNIVERSAL_D kd1 on           kd1.id = s1.c_value
+                           ) x
+                    pivot ( count(*)
+                            for c_code in (
+                              'NEED_CHNG_FC' NEED_CHNG_FC,
+                              'NEED_FILL_FC' NEED_FILL_FC,
+                              'NEED_ASOCR_CHK' NEED_ASOCR_CHK,
+                              'NEED_VERIFICATION' NEED_VERIFICATION,
+                              'NEED_UPDATE_VER_GU' NEED_UPDATE_VER_GU,
+                              'NEED_FILL_CL_DATA' NEED_FILL_CL_DATA,
+                              'NEED_ASK_PKB_GCVP' NEED_ASK_PKB_GCVP,
+                              'NEED_OPEN_GU' NEED_OPEN_GU)
+                            )
+                 ) x on x.cliam_id = a.id
+
+       inner join u1.V_TIME_DAYS td on td.yyyy_mm_dd = trunc(f.c_date_create)
+ group by case
+            when coalesce(t.is_sign_require, t1.is_sign_require) = 0 then
+              'Без подписания'
+            when need_open_gu = 1 then
+              'Необходимо оформить ГУ'
+            when need_update_ver_gu = 1 then
+              'Необходимо обновить ГУ'
+            when need_ask_pkb_gcvp = 1 then
+              'Необходимо согласие на ПКБ/ГЦВП'
+            when need_chng_fc = 1 then
+              'ИАД'
+            when (need_fill_fc = 1 or need_fill_cl_data = 1) then
+              'Дозаполнение анкеты'
+            when need_verification = 1 and a.c_exec_comment like '%timeout%' then
+              'Нужна фотоверификация клиента - Тайм-аут'
+            when need_verification = 1 then
+              'Нужна фотоверификация клиента'
+            when need_asocr_chk = 1 then
+              'Необходима проверка Асокр'
+            else
+              'Other'
+          end,
+          td.week_text_online_credit,
+          to_char(f.c_date_create, 'yyyy - mm') ,
+          coalesce(t.is_client_new_by_con, t1.is_client_new_by_con);
+grant select on U1.M_ONLINE_SIGN_REASON to DEK_USER;
+grant select on U1.M_ONLINE_SIGN_REASON to LOADDB;
+
+

@@ -1,0 +1,10 @@
+﻿create materialized view U1.V_RBO_Z#PARAM_FOR_PLAN
+build deferred
+refresh complete on demand
+as
+select *
+  from rdwh.V_RBO_Z#PARAM_FOR_PLAN@rdwh_exd;
+grant select on U1.V_RBO_Z#PARAM_FOR_PLAN to LOADDB;
+grant select on U1.V_RBO_Z#PARAM_FOR_PLAN to LOADER;
+
+

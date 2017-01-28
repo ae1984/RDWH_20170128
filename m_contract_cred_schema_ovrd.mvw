@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_CONTRACT_CRED_SCHEMA_OVRD
+build deferred
+refresh force on demand
+as
+select rbo_contract_id,
+       c_old_schema_overdue,
+       c_date_begin,
+       lead(c_date_begin-1) over (partition by rbo_contract_id order by c_date_begin) c_date_end
+  from (
+         select
+                pc.id rbo_contract_id, p.c_str_value,
+                trunc(p.c_date_begin) as c_date_begin,
+                max(p.c_str_value) keep (dense_rank last order by p.c_date_begin)
+                                   over (partition by p.collection_id,trunc(p.c_date_begin)) as c_old_schema_overdue,
+                p.c_date_begin as c_date_begin_mi
+           from u1.V_RBO_Z#PROPERTY p,
+                u1.V_RBO_Z#PROPERTY_TYPE pt,
+                u1.V_RBO_Z#PR_CRED pc
+          where p.collection_id = pc.c_prorerty_arr
+            and p.c_property_type = pt.id
+            and pt.c_code = 'OLD_SCHEMA_OVERDUE');
+grant select on U1.M_CONTRACT_CRED_SCHEMA_OVRD to LOADDB;
+grant select on U1.M_CONTRACT_CRED_SCHEMA_OVRD to LOADER;
+
+

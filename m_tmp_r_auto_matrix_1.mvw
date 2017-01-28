@@ -1,0 +1,129 @@
+﻿create materialized view U1.M_TMP_R_AUTO_MATRIX_1
+refresh complete on demand
+as
+select /*+ noparallel*/ x_dnp_name,
+
+           --floor(d.amount / 5000) * 5000 as amount,
+           case when d.amount >=500000 and  d.amount <=1000000 then '1mln'
+                when d.amount >1000000 and d.amount <=1500000 then '1,5mln'
+                when d.amount >1500000 and d.amount <=2000000 then '2mln'
+                when d.amount >2000000 and d.amount <=3000000 then '3mln'
+                when d.amount >3000000 and d.amount <=3500000 then  '3,5mln'
+                when d.amount >3500000 then  '>3,5mln'
+                when d.amount is null then  'null' else '<500th'end as amount,
+
+
+           t.is_categ_a, t.is_client_new_by_con,
+           a.brand, a.color, a.prod_year, a.shop_name, fc.marital_status, fc.real_estate_relation, fc.is_bank_account_exists, fc.is_garage_exists,
+           fa1.sal_gcvp_to_sal_form_categ,
+           case when e.contract_term_months >= 24 then '24-..'
+                when e.contract_term_months >= 6 and e.contract_term_months < 24 then '06-23'
+                else '01-05' end as contract_term_months,
+           case when p.report_status = 'БЕКИ' then 'БЕКИ'
+                else 'OK/NA' end as pkb_status,
+           case when p.active_contracts is null then 'NA'
+                when p.active_contracts in (1,2) then '1-2'
+                else '3-..' end as pkb_active_contracts,
+/*           floor(case when g.salary is null then -1
+                      when g.salary < 3000 then 0
+                      else g.salary end / 15000) * 15000 as gcvp_salary,*/
+           case when g.salary is null then 'NA'
+                when g.salary < 3000 then '00'
+                when g.salary >= 3000 and g.salary < 15000 then '03-14'
+                when g.salary >= 15000 and g.salary < 65000 then '15-64'
+                else '65-..' end as gcvp_salary,
+           case when g.gcvp_pmts_count_from_rep = 0 then '0'
+                when g.gcvp_pmts_count_from_rep is null or
+                     g.gcvp_pmts_count_from_rep in (1,2,3,4,5) then '1-5,NA'
+                else '6-..' end as gcvp_pmts_count_from_rep,
+           case when substr(fc.patronymic,-2) = 'НА' then 'НА'
+                when substr(fc.patronymic,-2) = 'ЛЫ' then 'ЛЫ'
+                else 'ДР' end as client_patronymic_type,
+           case when tm.num_hh <= 9 or tm.num_hh >= 20 then '20-09'
+                when tm.num_hh = 10 or tm.num_hh = 19 then '10,19'
+                else '11-18' end as time_num_hour,
+           case when tm.day_num_of_week in (5,6) then 'ПТ-СБ'
+                when tm.day_num_of_week in (7,1) then 'ВС-ПН'
+                else 'ВТ-ЧТ' end as time_day_num_of_week,
+           ---
+           count(*) as cnt, count(distinct d.deal_number) as con_cnt,
+           count(distinct d.client_iin) as cli_cnt,
+           sum(d.amount) / 1000000 as sales_mln,
+           sum(case when d.x_delinq_days > 7 then d.x_total_debt end) / 1000000 as del_7_total_debt_mln
+--           sum(case when d.x_delinq_days > 7 then d.x_total_debt end) / sum(d.amount) as del_7_rate_by_vol
+    from V_DWH_PORTFOLIO_CURRENT d
+    join M_FOLDER_CON_CANCEL t on t.folder_id = d.folder_id_first
+    left join V_CONTRACT_ALL_RFO_AUTO a on a.rfo_contract_id = t.rfo_contract_id
+    join v_folder_all fa1 on fa1.folder_id = d.folder_id_first
+    join V_FOLDER_ALL_RFO fa on fa.folder_id = d.folder_id_first
+    left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = fa.form_client_id
+    left join V_TIME_MINUTES tm on tm.yyyy_mm_dd_hh_mi = trunc(t.folder_date_create_mi,'mi')
+    left join V_CONTRACT_EKT_DWH e on e.rfo_contract_id = t.rfo_contract_id
+    left join V_PKB_REPORT p on p.folder_id = t.folder_id
+    left join (select fcc.rfo_contract_id, max(v.gcvp_rep_id) as gcvp_max_id
+              from V_GCVP_REPORT v
+              join M_FOLDER_CON_CANCEL fcc on fcc.iin = v.client_iin and
+                   (v.rep_date >= trunc(fcc.folder_date_create_mi) - 60 and v.rep_date <= trunc(fcc.folder_date_create_mi))
+              where v.error_code = 0
+              group by fcc.rfo_contract_id
+    ) gm on gm.rfo_contract_id = t.rfo_contract_id
+    left join (select v.gcvp_rep_id, max(v.salary) as salary,
+                      max(v.pmts_count_from_rep) as gcvp_pmts_count_from_rep
+              from V_GCVP_REPORT v
+              group by v.gcvp_rep_id
+    ) g on g.gcvp_rep_id = gm.gcvp_max_id
+    where d.x_is_credit_issued = 1 and
+          ((
+--           d.begin_date >= to_date('2014-12-08','yyyy-mm-dd') and
+           d.begin_date >= to_date('2014-12-08','yyyy-mm-dd') and
+           d.begin_date <= to_date('2015-03-12','yyyy-mm-dd')
+           ) /*or (
+           d.begin_date >= to_date('2014-12-14','yyyy-mm-dd') and
+           d.begin_date <= add_months(trunc(sysdate),-1)-8
+           )*/
+          ) and
+          d.prod_type = 'АВТОКРЕДИТОВАНИЕ' and t.cr_scheme_name like 'СТАНДАРТ%'
+
+    group by x_dnp_name, d.amount,
+           --t.shop_name,
+           --floor(d.amount / 5000) * 5000,
+           case when d.amount >=500000 and  d.amount <=1000000 then '1mln'
+                when d.amount >1000000 and d.amount <=1500000 then '1,5mln'
+                when d.amount >1500000 and d.amount <=2000000 then '2mln'
+                when d.amount >2000000 and d.amount <=3000000 then '3mln'
+                when d.amount >3000000 and d.amount <=3500000 then  '3,5mln'
+                when d.amount >3500000 then  '>3,5mln'
+                when d.amount is null then  'null' else '<500th' end,
+t.is_categ_a, t.is_client_new_by_con,
+           fa1.sal_gcvp_to_sal_form_categ,
+           a.brand, a.color, a.prod_year, a.shop_name, fc.marital_status ,fc.real_estate_relation, fc.is_bank_account_exists, fc.is_garage_exists,
+           case when e.contract_term_months >= 24 then '24-..'
+                when e.contract_term_months >= 6 and e.contract_term_months < 24 then '06-23'
+                else '01-05' end,
+           case when p.report_status = 'БЕКИ' then 'БЕКИ'
+                else 'OK/NA' end,
+           case when p.active_contracts is null then 'NA'
+                when p.active_contracts in (1,2) then '1-2'
+                else '3-..' end,
+           case when g.salary is null then 'NA'
+                when g.salary < 3000 then '00'
+                when g.salary >= 3000 and g.salary < 15000 then '03-14'
+                when g.salary >= 15000 and g.salary < 65000 then '15-64'
+                else '65-..' end,
+           case when g.gcvp_pmts_count_from_rep = 0 then '0'
+                when g.gcvp_pmts_count_from_rep is null or
+                     g.gcvp_pmts_count_from_rep in (1,2,3,4,5) then '1-5,NA'
+                else '6-..' end,
+           case when substr(fc.patronymic,-2) = 'НА' then 'НА'
+                when substr(fc.patronymic,-2) = 'ЛЫ' then 'ЛЫ'
+                else 'ДР' end,
+           case when tm.num_hh <= 9 or tm.num_hh >= 20 then '20-09'
+                when tm.num_hh = 10 or tm.num_hh = 19 then '10,19'
+                else '11-18' end,
+           case when tm.day_num_of_week in (5,6) then 'ПТ-СБ'
+                when tm.day_num_of_week in (7,1) then 'ВС-ПН'
+                else 'ВТ-ЧТ' end;
+grant select on U1.M_TMP_R_AUTO_MATRIX_1 to LOADDB;
+grant select on U1.M_TMP_R_AUTO_MATRIX_1 to LOADER;
+
+

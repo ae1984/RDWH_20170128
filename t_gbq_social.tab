@@ -1,0 +1,24 @@
+﻿create table U1.T_GBQ_SOCIAL
+(
+  id      NUMBER,
+  hit_id  VARCHAR2(50),
+  action  VARCHAR2(600),
+  network VARCHAR2(600),
+  target  VARCHAR2(600),
+  idate   TIMESTAMP(6)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_GBQ_SOCIAL to LOADDB;
+

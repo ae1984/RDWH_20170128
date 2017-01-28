@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_TMP_J_SN_2_CLI_OPT
+refresh complete on demand
+as
+select d.client_iin,
+       count(distinct t.spof_end_date) as opt_count,
+       1 as is_optimized
+from M_DWH_ACC_SPECIAL_OFFER_CON t
+join V_DWH_PORTFOLIO_CURRENT d on d.deal_number = t.contract_number and d.x_is_credit_issued = 1
+where t.spof_spec_offer_status_cd in ('EXECUTED','DEFAULT','WORK')
+group by d.client_iin;
+grant select on U1.M_TMP_J_SN_2_CLI_OPT to LOADDB;
+grant select on U1.M_TMP_J_SN_2_CLI_OPT to LOADER;
+
+

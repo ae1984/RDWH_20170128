@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_DWH_SIEBEL_RPT_CLNT_FST_CALL
+refresh complete on demand
+as
+select s.id as call_id,
+       s.call_date,
+       to_char(to_date(to_char(s.call_duration), 'SSSSS'), 'MI:SS') as call_duration,
+       trim(s.mgr_name) mgr_name,
+       s.mgr_position,
+       s.topic1,
+       s.topic2,
+       s.client_iin,
+       trim(s.client_name) client_name,
+       s.client_phone,
+     case when   s.client_language ='KAZ' then 'Казахский' when s.client_language ='RUS' then 'Русский' else 'Другой' end  client_language,
+       trim(s.client_address)  client_address,
+       s.client_id
+  from SIEBEL_DWH.RPT_CLNT_FST_CALL@DWH_PROD2 s
+ where s.call_date > sysdate - 3 / 24
+ and s.call_duration>-1
+ and  not exists (select null
+                  from T_NPS_CLIENT_PHONED_ALL k
+                 where insert_date < sysdate - 1 / 24
+                   and k.client_iin = s.client_iin);
+grant select on U1.M_DWH_SIEBEL_RPT_CLNT_FST_CALL to LOADDB;
+grant select on U1.M_DWH_SIEBEL_RPT_CLNT_FST_CALL to LOADER;
+
+

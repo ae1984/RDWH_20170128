@@ -1,0 +1,23 @@
+﻿create materialized view U1.V_TMP_JAN_D_02
+refresh force on demand
+as
+select * from (
+select round(c.max_debt_used,-5) as amount_categ, c.product_refin_last,
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate,
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1,
+    round(sum(c.max_debt_used) / 1000000, 1) as sales_mln
+--    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt
+from V_TMP_CONTRACT_CAL_DEL c
+where (c.yms in ('2013 - 08','2013 - 09','2014 - 01','2014 - 02') or c.yms like '2013 - 1%')
+      --(c.yms like '2013%' or c.yms like '2014%')
+group by round(c.max_debt_used,-5) , c.product_refin_last having sum(c.max_debt_used) > 0
+) pivot (max(del_rate) as d,
+        max(del_rate_pmt_1) as d1,
+        max(sales_mln) as s
+        for product_refin_last in ('АВТО','АВТО_БУ','ЗК','КК','КН','КН-15','КНП','ЛК','ЛКН','Н_ЗК','Н_КВ',
+                                   'Н_П','ПК','ПКН','ПРК','ТК','ХК','ЭКД')
+);
+grant select on U1.V_TMP_JAN_D_02 to LOADDB;
+grant select on U1.V_TMP_JAN_D_02 to LOADER;
+
+

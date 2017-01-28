@@ -1,0 +1,13 @@
+﻿CREATE MATERIALIZED VIEW U1.V_RFO_Z#TYPE_STRUCT_DEP_T
+REFRESH COMPLETE ON DEMAND
+AS
+SELECT  z#type_struct_dep.id id,
+        z#type_struct_dep.c_code c_code,
+        upper(z#type_struct_dep.c_name) as c_name,
+        z#type_struct_dep.sn sn,
+        z#type_struct_dep.su su
+from ibs.z#type_struct_dep@rfo_snap z#type_struct_dep;
+grant select on U1.V_RFO_Z#TYPE_STRUCT_DEP_T to LOADDB;
+grant select on U1.V_RFO_Z#TYPE_STRUCT_DEP_T to LOADER;
+
+

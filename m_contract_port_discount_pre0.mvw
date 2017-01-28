@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_CONTRACT_PORT_DISCOUNT_PRE0
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/ pc.id,
+           pc.c_num_dog,
+           pc.c_kas_pc_dog_ref,
+           pc.c_kas_pc_dog_t_ref,
+           pc.c_date_begin,
+           nvl(pc.c_date_close, trunc(sysdate)) c_date_close,
+           pc.c_limit_saldo
+      from u1.V_RBO_Z#PR_CRED pc
+      join u1.V_RBO_Z#KIND_CREDITS kc on pc.c_kind_credit = kc.id
+      join u1.v_rbo_z#cred_program cp on kc.c_cred_program = cp.id and cp.product_type = 'АВТО';
+grant select on U1.M_CONTRACT_PORT_DISCOUNT_PRE0 to LOADDB;
+
+

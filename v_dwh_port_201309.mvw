@@ -1,0 +1,46 @@
+﻿create materialized view U1.V_DWH_PORT_201309
+refresh complete on demand
+as
+select
+  xx.*,
+      case when
+        min(xx.rep_date) over (partition by xx.deal_number) - start_date < 15 then
+        min(xx.pmt_date) over (partition by xx.deal_number) end as
+  pmt_date_first
+from (
+select
+  x.*,
+      case when x.total_debt_decrease > 0 or
+            (x.delinq_days != 0 and delinq_days_previous = 0)
+            then x.rep_date end as
+  pmt_date
+from (
+select t.rep_date, t.deal_number,
+       t.x_total_debt as total_debt,
+           max(t.x_total_debt) over (partition by t.deal_number
+                  order by t.rep_date range between 1 preceding
+                  and 1 preceding) - t.x_total_debt as
+       total_debt_decrease,
+       t.x_delinq_days as delinq_days,
+           max(t.x_delinq_days) over (partition by t.deal_number
+                  order by t.rep_date range between 1 preceding
+                  and 1 preceding) as
+       delinq_days_previous,
+       t.x_start_date as start_date,
+       t.prod_type,
+       t.delinq_days_old,
+       t.x_delinq_amount as delinq_amount,
+       t.x_is_card as is_card,
+       t.x_client_id as client_id,
+       t.x_is_active as is_active,
+       t.is_on_balance
+from V_DWH_PORT_201309_T t
+--(select * from V_DWH_PORT_20121201_20121231 union
+--select * from V_DWH_PORT_20130101_20130131) t
+-----where t.deal_number = '1058601-003'
+) x
+) xx;
+grant select on U1.V_DWH_PORT_201309 to LOADDB;
+grant select on U1.V_DWH_PORT_201309 to LOADER;
+
+

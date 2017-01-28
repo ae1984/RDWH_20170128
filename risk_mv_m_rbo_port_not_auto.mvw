@@ -1,0 +1,11 @@
+﻿create materialized view U1.RISK_MV_M_RBO_PORT_NOT_AUTO
+build deferred
+refresh force on demand
+as
+select /*+parallel(30)*/ rp.rbo_client_id, rp.rbo_contract_id, rp.rep_date,  rp.total_debt, cb.cred_program_name,
+       sum(case when cb.cred_program_code in ('GU_AVTO','GU_AVTO_BU','AUTO','GU_AVTO_REF','GU_AVTO_ZALOG') then 0
+           else rp.total_debt end) over (partition by rp.rbo_client_id, rp.rep_date) as total_debt_cli_not_auto,
+       rp.total_debt_cli
+  from m_rbo_contract_bas cb
+  join t_rbo_port         rp on rp.rbo_contract_id = cb.rbo_contract_id;
+

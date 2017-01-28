@@ -1,0 +1,29 @@
+﻿CREATE MATERIALIZED VIEW U1.M_DWH_CARD_PMTS_BY_CON
+USING NO INDEX
+REFRESH COMPLETE ON DEMAND
+AS
+SELECT /*+ driving_site(c) parallel(6)*/
+stmt.cardstm_dcard_gid,
+c.dcard_number,
+MIN(CASE
+       WHEN stmt.cardstm_plan_payment_amount != 0 THEN
+        stmt.cardstm_plan_payment_amount
+     END) AS min_plan_payment_amount,
+MAX(stmt.cardstm_plan_payment_amount) AS max_plan_payment_amount,
+MAX(CASE
+       WHEN SYSDATE <= stmt.cardstm_payment_plan_date THEN
+        stmt.cardstm_plan_payment_amount
+     END) keep(dense_rank LAST ORDER BY stmt.cardstm_payment_plan_date) cur_plan_payment_amount
+  FROM dwh_main.acc_deal_card_statement@DWH_PROD stmt
+  JOIN dwh_main.ref_deal_card@DWH_PROD c
+    ON c.dcard_gid = stmt.cardstm_dcard_gid
+   AND c.dcard$end_date = DATE'9999-12-31'
+   AND c.dcard$row_status = 'A'
+WHERE stmt.cardstm_stmt_status_cd != 1511670768
+  AND stmt.cardstm$row_status = 'A'
+GROUP BY stmt.cardstm_dcard_gid,
+         c.dcard_number;
+grant select on U1.M_DWH_CARD_PMTS_BY_CON to LOADDB;
+grant select on U1.M_DWH_CARD_PMTS_BY_CON to LOADER;
+
+

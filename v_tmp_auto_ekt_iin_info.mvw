@@ -1,0 +1,18 @@
+﻿create materialized view U1.V_TMP_AUTO_EKT_IIN_INFO
+refresh complete on demand
+as
+select count(distinct t.client_iin) as cli_cnt
+from V_DWH_PORTFOLIO_CURRENT t
+join (select distinct p.client_iin
+      from V_DWH_PORTFOLIO_CURRENT p
+      where upper(p.prod_type) like 'АВТО%' and
+            p.x_is_credit_issued = 1 and
+            p.is_credit_active = 1
+) is_cl_avto on is_cl_avto.client_iin = t.client_iin
+where upper(t.prod_type)= 'ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)' and
+      t.x_is_credit_issued = 1 and
+      t.is_credit_active = 1;
+grant select on U1.V_TMP_AUTO_EKT_IIN_INFO to LOADDB;
+grant select on U1.V_TMP_AUTO_EKT_IIN_INFO to LOADER;
+
+

@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_OUT_DWH_PROCESS
+build deferred
+refresh complete on demand
+as
+select p.id,
+       cast (p.close_time as date) as close_time,
+       cast (p.open_time as date) as open_time,
+       p.repeat_photo,
+       p.verification_type,
+       p.verify_result,
+       p.person_tabnum,
+       p.comment_manager,
+       p.comment_cpr,
+       p.verification_id,
+       cast (p.portition_date as date) as portition_date,
+       p.h_process_id,
+       p.script_name,
+       p.employee_group,
+       p.cache
+  from verificator.OUT_DWH_PROCESS@verifais p;
+grant select on U1.M_OUT_DWH_PROCESS to LOADDB;
+grant select on U1.M_OUT_DWH_PROCESS to LOADER;
+grant select on U1.M_OUT_DWH_PROCESS to RISK_VERIF;
+
+

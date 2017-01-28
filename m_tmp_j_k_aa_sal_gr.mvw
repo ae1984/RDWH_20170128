@@ -1,0 +1,414 @@
+﻿create materialized view U1.M_TMP_J_K_AA_SAL_GR
+refresh complete on demand
+as
+select x.*,
+       /*case
+         when x.inc_need < 0 then '001 NOT_INCOME_NEED'
+         when x.inc_need >= 0 and x.inc_need < 50000 then '002 < 50000'
+         \*when x.inc_need >= 10000 and x.inc_need < 20000 then '003 >= 10000'
+         when x.inc_need >= 20000 and x.inc_need < 30000 then '004 >= 20000'
+         when x.inc_need >= 30000 and x.inc_need < 40000 then '005 >= 30000'
+         when x.inc_need >= 40000 and x.inc_need < 50000 then '006 >= 40000'*\
+         when x.inc_need >= 50000 and x.inc_need < 100000 then '007 >= 50000'
+         \*when x.inc_need >= 60000 and x.inc_need < 70000 then '008 >= 60000'
+         when x.inc_need >= 70000 and x.inc_need < 80000 then '009 >= 70000'
+         when x.inc_need >= 80000 and x.inc_need < 90000 then '010 >= 80000'
+         when x.inc_need >= 90000 and x.inc_need < 100000 then '011 >= 90000' *\
+
+         when x.inc_need >= 100000 and x.inc_need < 150000 then '012 >= 100000'
+         \*when x.inc_need >= 110000 and x.inc_need < 120000 then '013 >= 110000'
+         when x.inc_need >= 120000 and x.inc_need < 130000 then '014 >= 120000'
+         when x.inc_need >= 130000 and x.inc_need < 140000 then '015 >= 130000'
+         when x.inc_need >= 140000 and x.inc_need < 150000 then '016 >= 140000'*\
+          \*when x.inc_need >= 150000 and x.inc_need < 160000 then '017 >= 150000'
+        when x.inc_need >= 160000 and x.inc_need < 170000 then '018 >= 160000'
+         when x.inc_need >= 170000 and x.inc_need < 180000 then '019 >= 170000'
+         when x.inc_need >= 180000 and x.inc_need < 190000 then '020 >= 180000'
+         when x.inc_need >= 190000 and x.inc_need < 200000 then '021 >= 190000'*\
+
+         when x.inc_need >= 150000 and x.inc_need < 200000 then '023 >= 150000'
+         when x.inc_need >= 200000 and x.inc_need < 250000 then '024 >= 200000'
+         when x.inc_need >= 250000 and x.inc_need < 300000 then '025 >= 250000'
+         when x.inc_need >= 300000 and x.inc_need < 350000 then '026 >= 300000'
+         when x.inc_need >= 350000 and x.inc_need < 400000 then '027 >= 350000'
+         when x.inc_need >= 400000 and x.inc_need < 450000 then '028 >= 400000'
+         when x.inc_need >= 450000 then '100 >= 450000'
+       end inc_need_gr,*/
+
+       /*case
+         when x.inc_need2 < 0 then '001 NOT_INCOME_NEED'
+         when x.inc_need2 >= 0 and x.inc_need2 < 50000 then '002 < 50000'
+         \*when x.inc_need2 >= 10000 and x.inc_need2 < 20000 then '003 >= 10000'
+         when x.inc_need2 >= 20000 and x.inc_need2 < 30000 then '004 >= 20000'
+         when x.inc_need2 >= 30000 and x.inc_need2 < 40000 then '005 >= 30000'
+         when x.inc_need2 >= 40000 and x.inc_need2 < 50000 then '006 >= 40000'*\
+         when x.inc_need2 >= 50000 and x.inc_need2 < 100000 then '007 >= 50000'
+         \*when x.inc_need2 >= 60000 and x.inc_need2 < 70000 then '008 >= 60000'
+         when x.inc_need2 >= 70000 and x.inc_need2 < 80000 then '009 >= 70000'
+         when x.inc_need2 >= 80000 and x.inc_need2 < 90000 then '010 >= 80000'
+         when x.inc_need2 >= 90000 and x.inc_need2 < 100000 then '011 >= 90000' *\
+
+         when x.inc_need2 >= 100000 and x.inc_need2 < 150000 then '012 >= 100000'
+         \*when x.inc_need2 >= 110000 and x.inc_need2 < 120000 then '013 >= 110000'
+         when x.inc_need2 >= 120000 and x.inc_need2 < 130000 then '014 >= 120000'
+         when x.inc_need2 >= 130000 and x.inc_need2 < 140000 then '015 >= 130000'
+         when x.inc_need2 >= 140000 and x.inc_need2 < 150000 then '016 >= 140000'*\
+          \*when x.inc_need2 >= 150000 and x.inc_need2 < 160000 then '017 >= 150000'
+        when x.inc_need2 >= 160000 and x.inc_need2 < 170000 then '018 >= 160000'
+         when x.inc_need2 >= 170000 and x.inc_need2 < 180000 then '019 >= 170000'
+         when x.inc_need2 >= 180000 and x.inc_need2 < 190000 then '020 >= 180000'
+         when x.inc_need2 >= 190000 and x.inc_need2 < 200000 then '021 >= 190000'*\
+
+         when x.inc_need2 >= 150000 and x.inc_need2 < 200000 then '023 >= 150000'
+         when x.inc_need2 >= 200000 and x.inc_need2 < 250000 then '024 >= 200000'
+         when x.inc_need2 >= 250000 and x.inc_need2 < 300000 then '025 >= 250000'
+         when x.inc_need2 >= 300000 and x.inc_need2 < 350000 then '026 >= 300000'
+         when x.inc_need2 >= 350000 and x.inc_need2 < 400000 then '027 >= 350000'
+         when x.inc_need2 >= 400000 and x.inc_need2 < 450000 then '028 >= 400000'
+         when x.inc_need2 >= 450000 then '100 >= 450000'
+       end inc_need_gr2,*/
+
+       /*case
+         when x.inc_need3 < 0 then '001 NOT_INCOME_NEED'
+         when x.inc_need3 >= 0 and x.inc_need3 < 50000 then '002 < 50000'
+         \*when x.inc_need3 >= 10000 and x.inc_need3 < 20000 then '003 >= 10000'
+         when x.inc_need3 >= 20000 and x.inc_need3 < 30000 then '004 >= 20000'
+         when x.inc_need3 >= 30000 and x.inc_need3 < 40000 then '005 >= 30000'
+         when x.inc_need3 >= 40000 and x.inc_need3 < 50000 then '006 >= 40000'*\
+         when x.inc_need3 >= 50000 and x.inc_need3 < 100000 then '007 >= 50000'
+         \*when x.inc_need3 >= 60000 and x.inc_need3 < 70000 then '008 >= 60000'
+         when x.inc_need3 >= 70000 and x.inc_need3 < 80000 then '009 >= 70000'
+         when x.inc_need3 >= 80000 and x.inc_need3 < 90000 then '010 >= 80000'
+         when x.inc_need3 >= 90000 and x.inc_need3 < 100000 then '011 >= 90000' *\
+
+         when x.inc_need3 >= 100000 and x.inc_need3 < 150000 then '012 >= 100000'
+         \*when x.inc_need3 >= 110000 and x.inc_need3 < 120000 then '013 >= 110000'
+         when x.inc_need3 >= 120000 and x.inc_need3 < 130000 then '014 >= 120000'
+         when x.inc_need3 >= 130000 and x.inc_need3 < 140000 then '015 >= 130000'
+         when x.inc_need3 >= 140000 and x.inc_need3 < 150000 then '016 >= 140000'*\
+          \*when x.inc_need3 >= 150000 and x.inc_need3 < 160000 then '017 >= 150000'
+        when x.inc_need3 >= 160000 and x.inc_need3 < 170000 then '018 >= 160000'
+         when x.inc_need3 >= 170000 and x.inc_need3 < 180000 then '019 >= 170000'
+         when x.inc_need3 >= 180000 and x.inc_need3 < 190000 then '020 >= 180000'
+         when x.inc_need3 >= 190000 and x.inc_need3 < 200000 then '021 >= 190000'*\
+
+         when x.inc_need3 >= 150000 and x.inc_need3 < 200000 then '023 >= 150000'
+         when x.inc_need3 >= 200000 and x.inc_need3 < 250000 then '024 >= 200000'
+         when x.inc_need3 >= 250000 and x.inc_need3 < 300000 then '025 >= 250000'
+         when x.inc_need3 >= 300000 and x.inc_need3 < 350000 then '026 >= 300000'
+         when x.inc_need3 >= 350000 and x.inc_need3 < 400000 then '027 >= 350000'
+         when x.inc_need3 >= 400000 and x.inc_need3 < 450000 then '028 >= 400000'
+         when x.inc_need3 >= 450000 then '100 >= 450000'
+       end inc_need_gr3,*/
+
+
+       case
+         when x.inc_need <= 0 then 0
+         when x.inc_need >= 0 and x.inc_need < 10000 then 1
+         when x.inc_need >= 10000 and x.inc_need < 20000 then 2
+         when x.inc_need >= 20000 and x.inc_need < 30000 then 3
+         when x.inc_need >= 30000 and x.inc_need < 40000 then 4
+         when x.inc_need >= 40000 and x.inc_need < 50000 then 5
+         when x.inc_need >= 50000 and x.inc_need < 60000 then 6
+         when x.inc_need >= 60000 and x.inc_need < 70000 then 7
+         when x.inc_need >= 70000 and x.inc_need < 80000 then 8
+         when x.inc_need >= 80000 and x.inc_need < 90000 then 9
+         when x.inc_need >= 90000 and x.inc_need < 100000 then 10
+
+         when x.inc_need >= 100000 and x.inc_need < 110000 then 11
+         when x.inc_need >= 110000 and x.inc_need < 120000 then 12
+         when x.inc_need >= 120000 and x.inc_need < 130000 then 13
+         when x.inc_need >= 130000 and x.inc_need < 140000 then 14
+         when x.inc_need >= 140000 and x.inc_need < 150000 then 15
+         when x.inc_need >= 150000 and x.inc_need < 160000 then 16
+         when x.inc_need >= 160000 and x.inc_need < 170000 then 17
+         when x.inc_need >= 170000 and x.inc_need < 180000 then 18
+         when x.inc_need >= 180000 and x.inc_need < 190000 then 19
+         when x.inc_need >= 190000 and x.inc_need < 200000 then 20
+
+         when x.inc_need >= 200000 and x.inc_need < 210000 then 21
+         when x.inc_need >= 210000 and x.inc_need < 220000 then 22
+         when x.inc_need >= 220000 and x.inc_need < 230000 then 23
+         when x.inc_need >= 230000 and x.inc_need < 240000 then 24
+         when x.inc_need >= 240000 and x.inc_need < 250000 then 25
+         when x.inc_need >= 250000 and x.inc_need < 260000 then 26
+         when x.inc_need >= 260000 and x.inc_need < 270000 then 27
+         when x.inc_need >= 270000 and x.inc_need < 280000 then 28
+         when x.inc_need >= 280000 and x.inc_need < 290000 then 29
+         when x.inc_need >= 290000 and x.inc_need < 300000 then 30
+
+         when x.inc_need >= 300000 and x.inc_need < 310000 then 31
+         when x.inc_need >= 310000 and x.inc_need < 320000 then 32
+         when x.inc_need >= 320000 and x.inc_need < 330000 then 33
+         when x.inc_need >= 330000 and x.inc_need < 340000 then 34
+         when x.inc_need >= 340000 and x.inc_need < 350000 then 35
+         when x.inc_need >= 350000 and x.inc_need < 360000 then 36
+         when x.inc_need >= 360000 and x.inc_need < 370000 then 37
+         when x.inc_need >= 370000 and x.inc_need < 380000 then 38
+         when x.inc_need >= 380000 and x.inc_need < 390000 then 39
+         when x.inc_need >= 390000 and x.inc_need < 400000 then 40
+
+         when x.inc_need >= 400000 and x.inc_need < 410000 then 41
+         when x.inc_need >= 410000 and x.inc_need < 420000 then 42
+         when x.inc_need >= 420000 and x.inc_need < 430000 then 43
+         when x.inc_need >= 430000 and x.inc_need < 440000 then 44
+         when x.inc_need >= 440000 and x.inc_need < 450000 then 45
+         when x.inc_need >= 450000 and x.inc_need < 460000 then 46
+         when x.inc_need >= 460000 and x.inc_need < 470000 then 47
+         when x.inc_need >= 470000 and x.inc_need < 480000 then 48
+         when x.inc_need >= 480000 and x.inc_need < 490000 then 49
+         when x.inc_need >= 490000 and x.inc_need < 500000 then 50
+
+
+         when x.inc_need >= 500000 then 51
+       end inc_target,
+
+       case
+         when x.inc_min <= 0 then 0
+         when x.inc_min >= 0 and x.inc_min < 10000 then 1
+         when x.inc_min >= 10000 and x.inc_min < 20000 then 2
+         when x.inc_min >= 20000 and x.inc_min < 30000 then 3
+         when x.inc_min >= 30000 and x.inc_min < 40000 then 4
+         when x.inc_min >= 40000 and x.inc_min < 50000 then 5
+         when x.inc_min >= 50000 and x.inc_min < 60000 then 6
+         when x.inc_min >= 60000 and x.inc_min < 70000 then 7
+         when x.inc_min >= 70000 and x.inc_min < 80000 then 8
+         when x.inc_min >= 80000 and x.inc_min < 90000 then 9
+         when x.inc_min >= 90000 and x.inc_min < 100000 then 10
+
+         when x.inc_min >= 100000 and x.inc_min < 110000 then 11
+         when x.inc_min >= 110000 and x.inc_min < 120000 then 12
+         when x.inc_min >= 120000 and x.inc_min < 130000 then 13
+         when x.inc_min >= 130000 and x.inc_min < 140000 then 14
+         when x.inc_min >= 140000 and x.inc_min < 150000 then 15
+         when x.inc_min >= 150000 and x.inc_min < 160000 then 16
+         when x.inc_min >= 160000 and x.inc_min < 170000 then 17
+         when x.inc_min >= 170000 and x.inc_min < 180000 then 18
+         when x.inc_min >= 180000 and x.inc_min < 190000 then 19
+         when x.inc_min >= 190000 and x.inc_min < 200000 then 20
+
+         when x.inc_min >= 200000 and x.inc_min < 210000 then 21
+         when x.inc_min >= 210000 and x.inc_min < 220000 then 22
+         when x.inc_min >= 220000 and x.inc_min < 230000 then 23
+         when x.inc_min >= 230000 and x.inc_min < 240000 then 24
+         when x.inc_min >= 240000 and x.inc_min < 250000 then 25
+         when x.inc_min >= 250000 and x.inc_min < 260000 then 26
+         when x.inc_min >= 260000 and x.inc_min < 270000 then 27
+         when x.inc_min >= 270000 and x.inc_min < 280000 then 28
+         when x.inc_min >= 280000 and x.inc_min < 290000 then 29
+         when x.inc_min >= 290000 and x.inc_min < 300000 then 30
+
+         when x.inc_min >= 300000 and x.inc_min < 310000 then 31
+         when x.inc_min >= 310000 and x.inc_min < 320000 then 32
+         when x.inc_min >= 320000 and x.inc_min < 330000 then 33
+         when x.inc_min >= 330000 and x.inc_min < 340000 then 34
+         when x.inc_min >= 340000 and x.inc_min < 350000 then 35
+         when x.inc_min >= 350000 and x.inc_min < 360000 then 36
+         when x.inc_min >= 360000 and x.inc_min < 370000 then 37
+         when x.inc_min >= 370000 and x.inc_min < 380000 then 38
+         when x.inc_min >= 380000 and x.inc_min < 390000 then 39
+         when x.inc_min >= 390000 and x.inc_min < 400000 then 40
+
+         when x.inc_min >= 400000 and x.inc_min < 410000 then 41
+         when x.inc_min >= 410000 and x.inc_min < 420000 then 42
+         when x.inc_min >= 420000 and x.inc_min < 430000 then 43
+         when x.inc_min >= 430000 and x.inc_min < 440000 then 44
+         when x.inc_min >= 440000 and x.inc_min < 450000 then 45
+         when x.inc_min >= 450000 and x.inc_min < 460000 then 46
+         when x.inc_min >= 460000 and x.inc_min < 470000 then 47
+         when x.inc_min >= 470000 and x.inc_min < 480000 then 48
+         when x.inc_min >= 480000 and x.inc_min < 490000 then 49
+         when x.inc_min >= 490000 and x.inc_min < 500000 then 50
+
+
+         when x.inc_min >= 500000 then 51
+       end inc_min_target,
+
+
+       case
+         when x.inc_min4 <= 0 then 0
+         when x.inc_min4 >= 0 and x.inc_min4 < 10000 then 1
+         when x.inc_min4 >= 10000 and x.inc_min4 < 20000 then 2
+         when x.inc_min4 >= 20000 and x.inc_min4 < 30000 then 3
+         when x.inc_min4 >= 30000 and x.inc_min4 < 40000 then 4
+         when x.inc_min4 >= 40000 and x.inc_min4 < 50000 then 5
+         when x.inc_min4 >= 50000 and x.inc_min4 < 60000 then 6
+         when x.inc_min4 >= 60000 and x.inc_min4 < 70000 then 7
+         when x.inc_min4 >= 70000 and x.inc_min4 < 80000 then 8
+         when x.inc_min4 >= 80000 and x.inc_min4 < 90000 then 9
+         when x.inc_min4 >= 90000 and x.inc_min4 < 100000 then 10
+
+         when x.inc_min4 >= 100000 and x.inc_min4 < 110000 then 11
+         when x.inc_min4 >= 110000 and x.inc_min4 < 120000 then 12
+         when x.inc_min4 >= 120000 and x.inc_min4 < 130000 then 13
+         when x.inc_min4 >= 130000 and x.inc_min4 < 140000 then 14
+         when x.inc_min4 >= 140000 and x.inc_min4 < 150000 then 15
+         when x.inc_min4 >= 150000 and x.inc_min4 < 160000 then 16
+         when x.inc_min4 >= 160000 and x.inc_min4 < 170000 then 17
+         when x.inc_min4 >= 170000 and x.inc_min4 < 180000 then 18
+         when x.inc_min4 >= 180000 and x.inc_min4 < 190000 then 19
+         when x.inc_min4 >= 190000 and x.inc_min4 < 200000 then 20
+
+         when x.inc_min4 >= 200000 and x.inc_min4 < 210000 then 21
+         when x.inc_min4 >= 210000 and x.inc_min4 < 220000 then 22
+         when x.inc_min4 >= 220000 and x.inc_min4 < 230000 then 23
+         when x.inc_min4 >= 230000 and x.inc_min4 < 240000 then 24
+         when x.inc_min4 >= 240000 and x.inc_min4 < 250000 then 25
+         when x.inc_min4 >= 250000 and x.inc_min4 < 260000 then 26
+         when x.inc_min4 >= 260000 and x.inc_min4 < 270000 then 27
+         when x.inc_min4 >= 270000 and x.inc_min4 < 280000 then 28
+         when x.inc_min4 >= 280000 and x.inc_min4 < 290000 then 29
+         when x.inc_min4 >= 290000 and x.inc_min4 < 300000 then 30
+
+         when x.inc_min4 >= 300000 and x.inc_min4 < 310000 then 31
+         when x.inc_min4 >= 310000 and x.inc_min4 < 320000 then 32
+         when x.inc_min4 >= 320000 and x.inc_min4 < 330000 then 33
+         when x.inc_min4 >= 330000 and x.inc_min4 < 340000 then 34
+         when x.inc_min4 >= 340000 and x.inc_min4 < 350000 then 35
+         when x.inc_min4 >= 350000 and x.inc_min4 < 360000 then 36
+         when x.inc_min4 >= 360000 and x.inc_min4 < 370000 then 37
+         when x.inc_min4 >= 370000 and x.inc_min4 < 380000 then 38
+         when x.inc_min4 >= 380000 and x.inc_min4 < 390000 then 39
+         when x.inc_min4 >= 390000 and x.inc_min4 < 400000 then 40
+
+         when x.inc_min4 >= 400000 and x.inc_min4 < 410000 then 41
+         when x.inc_min4 >= 410000 and x.inc_min4 < 420000 then 42
+         when x.inc_min4 >= 420000 and x.inc_min4 < 430000 then 43
+         when x.inc_min4 >= 430000 and x.inc_min4 < 440000 then 44
+         when x.inc_min4 >= 440000 and x.inc_min4 < 450000 then 45
+         when x.inc_min4 >= 450000 and x.inc_min4 < 460000 then 46
+         when x.inc_min4 >= 460000 and x.inc_min4 < 470000 then 47
+         when x.inc_min4 >= 470000 and x.inc_min4 < 480000 then 48
+         when x.inc_min4 >= 480000 and x.inc_min4 < 490000 then 49
+         when x.inc_min4 >= 490000 and x.inc_min4 < 500000 then 50
+
+
+         when x.inc_min4 >= 500000 then 51
+       end inc_min4_target
+
+from (
+select t.deal_number,
+       t.client_iin,
+       t.kdn_form_salary_max - 50 kdn_diff,
+
+       --Необходимый доход - платеж*2, иначе текущий доход
+       case when ((t.is_kdn_regulated_sal_max = 1) and t.kdn_form_salary_max >= 50) then
+         round((coalesce(t.contract_pmt,0) + coalesce(t.other_deal_pmt,0) + coalesce(t.pkb_pmt,0))*2)
+       else form_income_gcvp_salary_max end inc_need,
+
+       case when ((t.is_kdn_regulated_sal_max = 1) and t.kdn_form_salary_max >= 50) then
+         round(((coalesce(t.contract_pmt,0) + coalesce(t.other_deal_pmt,0) + coalesce(t.pkb_pmt,0))*2) - form_income_gcvp_salary_max)
+       else 0 end inc_diff_need,
+
+       --Необходимая разница для выхода по средней ЗП
+       case when ((t.is_kdn_regulated_sal_max = 1) and t.kdn_form_salary_max >= 50) then
+         round((126500*2) - form_income_gcvp_salary_max)
+       else 0 end inc_diff_avg_need,
+
+       --Необходимая разница минимальная
+       case when ((t.is_kdn_regulated_sal_max = 1) and t.kdn_form_salary_max >= 50) then
+         case when nvl(round((126500*2) - form_income_gcvp_salary_max), 999999999999) > nvl(round(((coalesce(t.contract_pmt,0) + coalesce(t.other_deal_pmt,0) + coalesce(t.pkb_pmt,0))*2) - form_income_gcvp_salary_max), 0)
+           then nvl(round(((coalesce(t.contract_pmt,0) + coalesce(t.other_deal_pmt,0) + coalesce(t.pkb_pmt,0))*2) - form_income_gcvp_salary_max), 0)
+           else nvl(round((126500*2) - form_income_gcvp_salary_max), 999999999999) end
+       else 0 end inc_diff_min_need,
+
+       --Процент необходимой разницы от дохода
+       case when ((t.is_kdn_regulated_sal_max = 1) and t.kdn_form_salary_max >= 50) then
+         case when t.form_income_gcvp_salary_max > 0 then
+           round((((coalesce(t.contract_pmt,0) + coalesce(t.other_deal_pmt,0) + coalesce(t.pkb_pmt,0))*2) - form_income_gcvp_salary_max)/t.form_income_gcvp_salary_max*100)
+         else -1 end
+       else 0 end inc_need_prc,
+
+       --Процент необходимой разницы от дохода по средней ЗП
+       case when ((t.is_kdn_regulated_sal_max = 1 or t.is_kdn_regulated_sal_form = 1) and t.kdn_form_salary_max >= 50) then
+         case when t.form_income_gcvp_salary_max > 0 then
+                      round(((126500*2) - form_income_gcvp_salary_max)/t.form_income_gcvp_salary_max*100)
+         else -1 end
+       else 0 end inc_need_avg_prc,
+
+       --Группировка максимального дохода с шагом 10000 до 500000
+       case
+         when t.form_income_gcvp_salary_max <= 0 then 0
+         when t.form_income_gcvp_salary_max >= 0 and t.form_income_gcvp_salary_max < 10000 then 1
+         when t.form_income_gcvp_salary_max >= 10000 and t.form_income_gcvp_salary_max < 20000 then 2
+         when t.form_income_gcvp_salary_max >= 20000 and t.form_income_gcvp_salary_max < 30000 then 3
+         when t.form_income_gcvp_salary_max >= 30000 and t.form_income_gcvp_salary_max < 40000 then 4
+         when t.form_income_gcvp_salary_max >= 40000 and t.form_income_gcvp_salary_max < 50000 then 5
+         when t.form_income_gcvp_salary_max >= 50000 and t.form_income_gcvp_salary_max < 60000 then 6
+         when t.form_income_gcvp_salary_max >= 60000 and t.form_income_gcvp_salary_max < 70000 then 7
+         when t.form_income_gcvp_salary_max >= 70000 and t.form_income_gcvp_salary_max < 80000 then 8
+         when t.form_income_gcvp_salary_max >= 80000 and t.form_income_gcvp_salary_max < 90000 then 9
+         when t.form_income_gcvp_salary_max >= 90000 and t.form_income_gcvp_salary_max < 100000 then 10
+
+         when t.form_income_gcvp_salary_max >= 100000 and t.form_income_gcvp_salary_max < 110000 then 11
+         when t.form_income_gcvp_salary_max >= 110000 and t.form_income_gcvp_salary_max < 120000 then 12
+         when t.form_income_gcvp_salary_max >= 120000 and t.form_income_gcvp_salary_max < 130000 then 13
+         when t.form_income_gcvp_salary_max >= 130000 and t.form_income_gcvp_salary_max < 140000 then 14
+         when t.form_income_gcvp_salary_max >= 140000 and t.form_income_gcvp_salary_max < 150000 then 15
+         when t.form_income_gcvp_salary_max >= 150000 and t.form_income_gcvp_salary_max < 160000 then 16
+         when t.form_income_gcvp_salary_max >= 160000 and t.form_income_gcvp_salary_max < 170000 then 17
+         when t.form_income_gcvp_salary_max >= 170000 and t.form_income_gcvp_salary_max < 180000 then 18
+         when t.form_income_gcvp_salary_max >= 180000 and t.form_income_gcvp_salary_max < 190000 then 19
+         when t.form_income_gcvp_salary_max >= 190000 and t.form_income_gcvp_salary_max < 200000 then 20
+
+         when t.form_income_gcvp_salary_max >= 200000 and t.form_income_gcvp_salary_max < 210000 then 21
+         when t.form_income_gcvp_salary_max >= 210000 and t.form_income_gcvp_salary_max < 220000 then 22
+         when t.form_income_gcvp_salary_max >= 220000 and t.form_income_gcvp_salary_max < 230000 then 23
+         when t.form_income_gcvp_salary_max >= 230000 and t.form_income_gcvp_salary_max < 240000 then 24
+         when t.form_income_gcvp_salary_max >= 240000 and t.form_income_gcvp_salary_max < 250000 then 25
+         when t.form_income_gcvp_salary_max >= 250000 and t.form_income_gcvp_salary_max < 260000 then 26
+         when t.form_income_gcvp_salary_max >= 260000 and t.form_income_gcvp_salary_max < 270000 then 27
+         when t.form_income_gcvp_salary_max >= 270000 and t.form_income_gcvp_salary_max < 280000 then 28
+         when t.form_income_gcvp_salary_max >= 280000 and t.form_income_gcvp_salary_max < 290000 then 29
+         when t.form_income_gcvp_salary_max >= 290000 and t.form_income_gcvp_salary_max < 300000 then 30
+
+         when t.form_income_gcvp_salary_max >= 300000 and t.form_income_gcvp_salary_max < 310000 then 31
+         when t.form_income_gcvp_salary_max >= 310000 and t.form_income_gcvp_salary_max < 320000 then 32
+         when t.form_income_gcvp_salary_max >= 320000 and t.form_income_gcvp_salary_max < 330000 then 33
+         when t.form_income_gcvp_salary_max >= 330000 and t.form_income_gcvp_salary_max < 340000 then 34
+         when t.form_income_gcvp_salary_max >= 340000 and t.form_income_gcvp_salary_max < 350000 then 35
+         when t.form_income_gcvp_salary_max >= 350000 and t.form_income_gcvp_salary_max < 360000 then 36
+         when t.form_income_gcvp_salary_max >= 360000 and t.form_income_gcvp_salary_max < 370000 then 37
+         when t.form_income_gcvp_salary_max >= 370000 and t.form_income_gcvp_salary_max < 380000 then 38
+         when t.form_income_gcvp_salary_max >= 380000 and t.form_income_gcvp_salary_max < 390000 then 39
+         when t.form_income_gcvp_salary_max >= 390000 and t.form_income_gcvp_salary_max < 400000 then 40
+
+         when t.form_income_gcvp_salary_max >= 400000 and t.form_income_gcvp_salary_max < 410000 then 41
+         when t.form_income_gcvp_salary_max >= 410000 and t.form_income_gcvp_salary_max < 420000 then 42
+         when t.form_income_gcvp_salary_max >= 420000 and t.form_income_gcvp_salary_max < 430000 then 43
+         when t.form_income_gcvp_salary_max >= 430000 and t.form_income_gcvp_salary_max < 440000 then 44
+         when t.form_income_gcvp_salary_max >= 440000 and t.form_income_gcvp_salary_max < 450000 then 45
+         when t.form_income_gcvp_salary_max >= 450000 and t.form_income_gcvp_salary_max < 460000 then 46
+         when t.form_income_gcvp_salary_max >= 460000 and t.form_income_gcvp_salary_max < 470000 then 47
+         when t.form_income_gcvp_salary_max >= 470000 and t.form_income_gcvp_salary_max < 480000 then 48
+         when t.form_income_gcvp_salary_max >= 480000 and t.form_income_gcvp_salary_max < 490000 then 49
+         when t.form_income_gcvp_salary_max >= 490000 and t.form_income_gcvp_salary_max < 500000 then 50
+
+
+         when t.form_income_gcvp_salary_max >= 500000 then 51
+       end inc_real_target,
+
+       case when t.is_kdn_regulated_sal_max = 1
+                 and (t.kdn_form_salary_max >= 20
+                 and t.kdn_form_salary_max < 35) then 1 else 0 end is_score3,
+
+       case when t.is_kdn_regulated_sal_max = 1
+                 and (t.kdn_form_salary_max >= 20
+                 and t.kdn_form_salary_max < 35)
+            then
+              round((coalesce(t.contract_pmt,0) + coalesce(t.other_deal_pmt,0) + coalesce(t.pkb_pmt,0)) * 0.45, -3)
+            else 0 end inc_min,
+
+       case when t.is_kdn_regulated_sal_max = 0 and t.kdn_form_salary_max >= 55 then 1 else 0 end is_score4,
+
+       case when t.is_kdn_regulated_sal_max = 0 and t.kdn_form_salary_max >= 55
+            then
+              round((form_income_gcvp_salary_max - (t.form_income_gcvp_salary_max * 0.10)), -3)
+            else 0 end inc_min4
+
+from M_TMP_J_K_AA t
+) x;
+grant select on U1.M_TMP_J_K_AA_SAL_GR to LOADDB;
+grant select on U1.M_TMP_J_K_AA_SAL_GR to LOADER;
+
+

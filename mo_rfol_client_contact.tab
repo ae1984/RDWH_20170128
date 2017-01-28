@@ -1,0 +1,31 @@
+﻿create table U1.MO_RFOL_CLIENT_CONTACT
+(
+  conta_id              NUMBER not null,
+  clien_id              NUMBER not null,
+  conta_numb            VARCHAR2(300),
+  conta_activ           VARCHAR2(3),
+  conta_affirmed        VARCHAR2(3),
+  conta_kas_verificated VARCHAR2(3),
+  ownco_id              NUMBER,
+  ownco_code            VARCHAR2(48),
+  ownco_value           VARCHAR2(48),
+  commu_id              NUMBER,
+  commu_code            VARCHAR2(48),
+  commu_name            VARCHAR2(210)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO_RFOL_CLIENT_CONTACT to LOADDB;
+grant select on U1.MO_RFOL_CLIENT_CONTACT to LOADER;
+

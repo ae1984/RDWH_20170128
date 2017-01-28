@@ -1,0 +1,66 @@
+﻿create materialized view U1.M_CRED_ACTIVE_KN_TK
+build deferred
+refresh complete on demand
+as
+select cd.id                     as con_num,
+       cd.c_client_ref           as client_id,
+       fld.id                    as folder_id,
+       cd.c_info_cred#summa_cred cred_sum,
+       cd.c_date_begin,
+       sd.c_code                 as st_dog_code,
+       cmpt.c_code               as cm_point_code,
+       cmpt.c_priority           as cm_point_pri,
+       pr.c_code                 as cr_program_code,
+       cmch.c_date_create        as folder_date_create,
+       cd.c_info_cred#type_cred#0 as type_cred
+  from u1.V_RFO_Z#CREDIT_DOG cd
+  join u1.V_RFO_Z#CRED_SCHEME cs
+    on cs.id = cd.c_cred_scheme
+  join u1.V_RFO_Z#PROPERTIES p
+    on cs.c_add_prop = p.collection_id
+  join u1.V_RFO_z#PROD_PROPERTY pr
+    on p.c_prop = pr.id
+  join u1.V_RFO_Z#FDOC fd
+    on fd.id = cd.id
+  join u1.V_RFO_Z#STATUS_DOG sd
+    on sd.id = fd.c_status_doc
+  join u1.V_RFO_Z#FDOC fd
+    on fd.id = cd.id
+  join u1.V_RFO_Z#RDOC rd
+    on rd.c_doc = fd.id
+  join u1.V_RFO_Z#FOLDERS fld
+    on fld.c_docs = rd.collection_id
+  join V_RFO_Z#CM_CHECKPOINT cmch
+    on cmch.ID = fld.ID
+  join u1.V_RFO_Z#CM_POINT cmpt
+    on cmpt.ID = cmch.C_POINT
+ where cd.c_info_cred#type_cred#0 in (1, 2) -- КН ,ТК(оффлайн+онлайн)
+   and pr.c_code not in ('GU_AVTO_REF', 'PC_REFIN_RESTR')
+   and ((sd.c_code = 'PREPARE' and cmpt.c_code not like '%CANCEL%' and
+       cmpt.c_code not like '%FAILED%' and
+       cmpt.c_code not like '%EXPIRE%' and cmpt.c_code != 'CL_FAIL' and
+       cmpt.c_code not like '%ERR_CREATE_CLIENT_B%' and
+       cmpt.c_code not like '%ERR_CREATE_DOG_B%') or
+       (upper(sd.c_code) not in ('TO_CLOSE',
+                                  'PAID_IC',
+                                  'REDUMPED',
+                                  'CLOSED',
+                                  'CANCEL',
+                                  'RFO_CLOSE') and
+       (cmpt.c_code in ('EXECUTE',
+                          'CREDIT_EXEC',
+                          'KAS_CHK_DOC_PACK',
+                          'TO_RECLAMATION',
+                          'ARCHIVE',
+                          'ERR_ARCHIVE',
+                          'KAS_SENT_PKD',
+                          'KAS_WITHDRAWN1',
+                          'KAS_WITHDRAWN2',
+                          'KAS_PKD_CONTROL',
+                          'KAS_PKD_REV',
+                          'TR_CHANGED',
+                          'TAKE_DEPART') or cmpt.c_priority >= 80)));
+grant select on U1.M_CRED_ACTIVE_KN_TK to LOADDB;
+grant select on U1.M_CRED_ACTIVE_KN_TK to LOAD_MO;
+
+

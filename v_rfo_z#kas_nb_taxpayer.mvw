@@ -1,0 +1,31 @@
+﻿create materialized view U1.V_RFO_Z#KAS_NB_TAXPAYER
+refresh complete on demand
+as
+select
+  id,
+  c_rnn,
+  c_iin_bin,
+  c_taxpayer_type,
+  c_resident,
+  c_regular_office,
+  c_indiv_business,
+        translate(upper(c_name),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  c_name,
+  c_date_remov_reg,
+  c_cause_remov_reg,
+  c_sign_notary_lawy,
+  c_sign_inactive,
+  c_tax_code,
+  c_tax_name,
+  c_date_last_upd,
+  c_name_jur
+from IBS.Z#KAS_NB_TAXPAYER@RFO_SNAP;
+grant select on U1.V_RFO_Z#KAS_NB_TAXPAYER to LOADDB;
+grant select on U1.V_RFO_Z#KAS_NB_TAXPAYER to LOADER;
+grant select on U1.V_RFO_Z#KAS_NB_TAXPAYER to LOAD_MO;
+
+

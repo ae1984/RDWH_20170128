@@ -1,0 +1,27 @@
+﻿create table U1.NT_DBA_DEPENDENCIES
+(
+  sdt                  DATE,
+  owner                VARCHAR2(128) not null,
+  name                 VARCHAR2(128) not null,
+  type                 VARCHAR2(18),
+  referenced_owner     VARCHAR2(128),
+  referenced_name      VARCHAR2(128),
+  referenced_type      VARCHAR2(18),
+  referenced_link_name VARCHAR2(128),
+  dependency_type      VARCHAR2(4)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_DBA_DEPENDENCIES to LOADDB;
+

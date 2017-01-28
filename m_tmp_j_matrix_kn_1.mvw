@@ -1,0 +1,135 @@
+﻿create materialized view U1.M_TMP_J_MATRIX_KN_1
+refresh complete on demand
+as
+select td.yyyy, td.text_yyyy_mm, td.yyyy_mm_dd, f.cr_program_name,
+       case when f.is_categ_a = 1 then 'КАТЕГОРИЯ А' when f.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+       case when f.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when f.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+       case when f.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when f.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+       case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+--       round(g.salary / 10000) * 10000 as gcvp_salary,
+         case when g.salary is null then 'NA'
+            when g.salary < 2500 then  '0'
+            when g.salary < 10000 then '<010К'
+            when g.salary < 20000 then '<020К'
+            when g.salary < 30000 then '<030К'
+            when g.salary < 40000 then '<040К'
+            when g.salary < 50000 then '<050К'
+            when g.salary < 60000 then '<060К'
+            when g.salary < 70000 then '<070К'
+            when g.salary < 80000 then '<080К'
+            when g.salary < 90000 then '<090К'
+            when g.salary < 100000 then '<100К'
+            when g.salary < 110000 then '<110К'
+            when g.salary < 120000 then '<120К'
+            when g.salary < 140000 then '<140К'
+            when g.salary < 160000 then '<160К'
+            when g.salary < 180000 then '<180К'
+            when g.salary < 200000 then '<200К'
+            when g.salary < 250000 then '<250К'
+            when g.salary < 300000 then '<300К'
+            when g.salary < 350000 then '<350К'
+            when g.salary < 400000 then '<400К'
+            when g.salary < 500000 then '<500К'
+            when g.salary >= 500000 then '>500К' end as gcvp_salary,
+/*       case when g.salary is null then 'ГЦВП NA'
+            when g.salary < 2500 then  'ГЦВП ЗП = 0'
+            when g.salary < 20000 then 'ГЦВП ЗП < 20К'
+            when g.salary >= 20000 then 'ГЦВП ЗП > 20К' end as gcvp_salary, */
+--       p.report_status as pkb_rep_status,
+--       floor(fc.age_full_years / 10) * 10 as client_age,
+--       substr(trim(fc.patronymic),-2) as client_patronymic_type,
+       round(f.contract_amount / 50000) * 50000 as amount_requested,
+       case when k.kdn_form_salary_max >= 200 then '200 и более'
+            when k.kdn_form_salary_max >= 150 then '150-199'
+            when k.kdn_form_salary_max >= 100 then '100-149'
+            when k.kdn_form_salary_max >= 90 then '090-099'
+            when k.kdn_form_salary_max >= 80 then '080-089'
+            when k.kdn_form_salary_max >= 70 then '070-079'
+            when k.kdn_form_salary_max >= 60 then '060-069'
+            when k.kdn_form_salary_max >= 50 then '050-059'
+            when k.kdn_form_salary_max >= 40 then '040-049'
+            when k.kdn_form_salary_max >= 30 then '030-039'
+            when k.kdn_form_salary_max >= 20 then '020-029'
+            when k.kdn_form_salary_max >= 10 then '010-019'
+            when k.kdn_form_salary_max >= 0 then '001-009' end as kdn_form_salary_max,
+       k.is_kdn_regulated_sal_max,
+       ---
+       count(*) as cnt, count(distinct f.rfo_contract_id) as rfo_con_cnt,
+       count(distinct c.deal_number) as con_cnt,
+       sum(c.amount) / 1000000 as sales_mln,
+       sum(f.contract_amount) / 1000000 as amount_requested_mln,
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_mln
+from M_FOLDER_CON_CANCEL f
+join V_TIME_DAYS td on td.yyyy_mm_dd = trunc(f.folder_date_create_mi)
+left join V_DWH_PORTFOLIO_CURRENT c on c.folder_id_first = f.folder_id and c.deal_number = f.contract_number
+left join M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+left join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = f.form_client_id
+left join V_PKB_REPORT p on p.folder_id = f.folder_id
+left join (select fcc.rfo_contract_id, max(v.gcvp_rep_id) as gcvp_max_id
+          from V_GCVP_REPORT v
+          join M_FOLDER_CON_CANCEL fcc on fcc.iin = v.client_iin and
+               (v.rep_date >= trunc(fcc.folder_date_create_mi) - 60 and v.rep_date <= trunc(fcc.folder_date_create_mi))
+          where v.error_code = 0
+          group by fcc.rfo_contract_id
+) gm on gm.rfo_contract_id = f.rfo_contract_id
+left join (select v.gcvp_rep_id, max(v.salary) as salary,
+                  max(v.pmts_count_from_rep) as gcvp_pmts_count_from_rep
+          from V_GCVP_REPORT v
+          group by v.gcvp_rep_id
+) g on g.gcvp_rep_id = gm.gcvp_max_id
+left join M_CONTRACT_PARAM_KDN5 k on k.deal_number = c.deal_number
+where f.product_type = 'ДЕНЬГИ' and
+      f.folder_date_create_mi >= to_date('2014-01-01','yyyy-mm-dd')
+group by td.yyyy, td.text_yyyy_mm, td.yyyy_mm_dd, f.cr_program_name,
+         case when f.is_categ_a = 1 then 'КАТЕГОРИЯ А' when f.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end,
+         case when f.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when f.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end,
+         case when f.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when f.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end,
+         case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end,
+--         round(g.salary / 10000) * 10000,
+         case when g.salary is null then 'NA'
+            when g.salary < 2500 then  '0'
+            when g.salary < 10000 then '<010К'
+            when g.salary < 20000 then '<020К'
+            when g.salary < 30000 then '<030К'
+            when g.salary < 40000 then '<040К'
+            when g.salary < 50000 then '<050К'
+            when g.salary < 60000 then '<060К'
+            when g.salary < 70000 then '<070К'
+            when g.salary < 80000 then '<080К'
+            when g.salary < 90000 then '<090К'
+            when g.salary < 100000 then '<100К'
+            when g.salary < 110000 then '<110К'
+            when g.salary < 120000 then '<120К'
+            when g.salary < 140000 then '<140К'
+            when g.salary < 160000 then '<160К'
+            when g.salary < 180000 then '<180К'
+            when g.salary < 200000 then '<200К'
+            when g.salary < 250000 then '<250К'
+            when g.salary < 300000 then '<300К'
+            when g.salary < 350000 then '<350К'
+            when g.salary < 400000 then '<400К'
+            when g.salary < 500000 then '<500К'
+            when g.salary >= 500000 then '>500К' end,
+--         p.report_status,
+--         floor(fc.age_full_years / 10) * 10,
+--         substr(trim(fc.patronymic),-2),
+         round(f.contract_amount / 50000) * 50000,
+         case when k.kdn_form_salary_max >= 200 then '200 и более'
+              when k.kdn_form_salary_max >= 150 then '150-199'
+              when k.kdn_form_salary_max >= 100 then '100-149'
+              when k.kdn_form_salary_max >= 90 then '090-099'
+              when k.kdn_form_salary_max >= 80 then '080-089'
+              when k.kdn_form_salary_max >= 70 then '070-079'
+              when k.kdn_form_salary_max >= 60 then '060-069'
+              when k.kdn_form_salary_max >= 50 then '050-059'
+              when k.kdn_form_salary_max >= 40 then '040-049'
+              when k.kdn_form_salary_max >= 30 then '030-039'
+              when k.kdn_form_salary_max >= 20 then '020-029'
+              when k.kdn_form_salary_max >= 10 then '010-019'
+              when k.kdn_form_salary_max >= 0 then '001-009' end,
+         k.is_kdn_regulated_sal_max;
+grant select on U1.M_TMP_J_MATRIX_KN_1 to LOADDB;
+grant select on U1.M_TMP_J_MATRIX_KN_1 to LOADER;
+
+

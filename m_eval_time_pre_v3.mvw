@@ -1,0 +1,104 @@
+﻿create materialized view U1.M_EVAL_TIME_PRE_V3
+build deferred
+refresh complete on demand
+as
+select
+  a.bprocess,
+  case when c.x_id=2 then a.line_name||' (ожидание)' else a.line_name end as line_name,
+  a.folder_id,
+  b.c_brand,
+  b.c_model,
+  b.c_year,
+  b.c_vin,
+  case when c.x_id=1 then c.c_beg_time else a.line_time_start end as line_time_start,
+  case when c.x_id=2 then c.c_beg_time else a.line_time_end end as line_time_end,
+  trunc(case when c.x_id=1 then c.c_beg_time else a.line_time_start end) as date_start,
+  round((case when c.x_id=2 then c.c_beg_time else a.line_time_end end-case when c.x_id=1 then c.c_beg_time else a.line_time_start end)*24*60,0) as dur_minutes,
+  max(a.line_time_end) over (partition by a.folder_id) as max_end,
+  b.user_name,
+  a.h_id,
+  a.near_h_id,
+  a.last_h_id,
+  dense_rank() over (partition by a.folder_id order by a.near_h_id) as num_estim
+from (
+  select
+    f.id as folder_id,
+    cp.c_date_create as folder_create,
+    l.c_code as line_code,
+    l.c_name as line_name,
+    bp.id as bp_id,
+    bp.c_name as bprocess,
+    bp.c_code as bcode,
+    h.c_user as h_user,
+    nvl(lag(h.c_line_time) over (partition by f.id order by h.id),cp.c_date_create) line_time_start,
+    h.c_line_time line_time_end,
+    h.id as h_id,
+    min(case when substr(l.c_code,1,16) = 'KAS_ZAL_ESTIMATE' then h.id end) over (partition by f.id order by h.id rows between current row and unbounded following ) as near_h_id,
+    max(case when l.c_code in ('KAS_ZAL_ESTIMATE->CREATE_DOG_B','KAS_ZAL_ESTIMATE->REG_ZALOG') then h.id end) over (partition by f.id) as last_h_id
+  from u1.V_RFO_Z#BUS_PROCESS bp
+  join u1.V_RFO_Z#FOLDERS f on bp.id = f.c_business
+  join u1.V_RFO_Z#CM_CHECKPOINT cp on cp.id = f.id
+  join u1.V_RFO_Z#CM_HISTORY h on cp.c_history=h.collection_id
+  join u1.V_RFO_Z#CM_LINE    l on l.id = h.c_line
+  where bp.c_code in ('KAS_ZAL_EST','KAS_AUTO_CRED_PRIV_PC')
+  --and f.id=46891805043
+) a
+left join (
+  select
+    f.id as folder_id,
+    tb.c_name as c_brand,
+    tm.c_name as c_model,
+    ia.c_year as c_year,
+    ia.c_body_num as c_vin,
+    u.c_name as user_name
+  from u1.V_RFO_Z#FOLDERS f
+  join u1.V_RFO_Z#BUS_PROCESS bp   on bp.id = f.c_business
+  join u1.V_RFO_Z#RDOC        rd   on rd.collection_id = f.c_docs
+  join u1.V_RFO_Z#FDOC        fd   on fd.id = rd.c_doc and fd.class_id = 'KAS_AUTO_ESTIM'
+  join u1.V_RFO_Z#KAS_AUTO_ESTIM oe on oe.id = fd.id
+  join u1.V_RFO_Z#USER       u on oe.c_estim_user = u.id
+  join u1.V_RFO_Z#KAS_INFO_AUTO ia  on ia.id = oe.c_kas_inf_auto_ref
+  join u1.V_RFO_Z#TRANSPORT_MODEL tm on tm.id = ia.c_ts_model
+  join u1.V_RFO_Z#TRANSPORT_BRAND tb on tb.id = tm.c_brand
+  where bp.c_code = 'KAS_ZAL_EST'
+union all
+  select
+    f.id as folder_id,
+    tb.c_name as c_brand,
+    tm.c_name as c_model,
+    ia.c_year as c_year,
+    ia.c_body_num as c_vin,
+    u.c_name as user_name
+  from u1.V_RFO_Z#FOLDERS f
+  join u1.V_RFO_Z#BUS_PROCESS bp   on bp.id = f.c_business
+  join u1.V_RFO_Z#RDOC        rd   on rd.collection_id = f.c_docs
+  join u1.V_RFO_Z#FDOC        fd   on fd.id = rd.c_doc and fd.class_id = 'CREDIT_DOG'
+  join u1.V_RFO_Z#CREDIT_DOG cd    on cd.id = fd.id
+  join u1.V_RFO_Z#KAS_INFO_AUTO ia on ia.collection_id = cd.c_red#kas_auto#kas_info_auto20
+  join u1.V_RFO_Z#KAS_AUTO_ESTIM oe on oe.c_kas_inf_auto_ref = ia.id
+  join u1.V_RFO_Z#USER            u on oe.c_estim_user = u.id
+  join u1.V_RFO_Z#TRANSPORT_MODEL tm on tm.id = ia.c_ts_model
+  join u1.V_RFO_Z#TRANSPORT_BRAND tb on tb.id = tm.c_brand
+  where bp.c_code = 'KAS_AUTO_CRED_PRIV_PC'
+) b on b.folder_id=a.folder_id
+left join(
+  select folder_id, c_beg_time, role_name, id as x_id
+  from(
+    select
+      f.id as folder_id,
+      u.c_beg_time,
+      r.c_name role_name
+    from u1.V_RFO_Z#BUS_PROCESS bp
+    join u1.V_RFO_Z#FOLDERS f on bp.id = f.c_business
+    join u1.V_RFO_Z#CM_CHECKPOINT cp on cp.id = f.id
+    left join u1.v_rfo_z#cm_user u on u.collection_id=cp.c_users
+    join u1.v_rfo_z#cm_role_list rl on rl.collection_id=u.c_roles and rl.c_role=19671499859
+    join u1.v_rfo_z#cm_role r on r.id=rl.c_role
+    where bp.c_code in ('KAS_ZAL_EST','KAS_AUTO_CRED_PRIV_PC')
+  ) x1
+  join (select 1 as id from dual union select 2 as id from dual) x2 on 1=1
+) c on c.folder_id=a.folder_id and c.c_beg_time between a.line_time_start and a.line_time_end
+where a.last_h_id is not null and a.h_id<=a.last_h_id;
+grant select on U1.M_EVAL_TIME_PRE_V3 to LOADDB;
+
+

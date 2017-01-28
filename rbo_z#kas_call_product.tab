@@ -1,0 +1,53 @@
+﻿create table U1.RBO_Z#KAS_CALL_PRODUCT
+(
+  id                 NUMBER,
+  c_product_id       NUMBER,
+  c_class_id         VARCHAR2(30),
+  c_num_dog          VARCHAR2(22),
+  c_state_code       VARCHAR2(128),
+  c_state_name       VARCHAR2(128),
+  c_client_id        NUMBER,
+  c_sign_defer_pmnts VARCHAR2(1),
+  c_debt_days        NUMBER,
+  c_date_defer_pmnts DATE,
+  c_date_plan        DATE,
+  c_date_overdue     DATE,
+  c_date_payment     DATE,
+  c_sum_plan         NUMBER(17,2),
+  c_sum_unpaid       NUMBER(17,2),
+  c_sum_payment      NUMBER(17,2),
+  c_sum_overdue      NUMBER(17,2),
+  c_sum_fine         NUMBER(17,2),
+  c_sum_current_debt NUMBER(17,2),
+  c_sum_full_debt    NUMBER(17,2),
+  c_sum_advance      NUMBER(17,2),
+  c_sum_optimal      NUMBER(17,2),
+  c_rest_cred_limit  NUMBER(17,2),
+  c_sum_custom       NUMBER(17,2),
+  c_rest_available   NUMBER(17,2),
+  c_rest_bound       NUMBER(17,2),
+  c_sum_min          NUMBER(17,2),
+  c_last_date        DATE,
+  c_last_user        VARCHAR2(128),
+  c_last_call        VARCHAR2(128),
+  c_last_note        VARCHAR2(128),
+  c_work_offer       VARCHAR2(1),
+  c_declare_offer    VARCHAR2(1)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select, insert, update, delete on U1.RBO_Z#KAS_CALL_PRODUCT to ETLSAS;
+grant select on U1.RBO_Z#KAS_CALL_PRODUCT to LOADDB;
+grant select on U1.RBO_Z#KAS_CALL_PRODUCT to LOADER;
+

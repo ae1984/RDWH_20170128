@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_TMP_IAD_KASPI
+using no index
+refresh complete on demand
+as
+select /*+ no_parallel*/
+distinct f.expert_name,
+         f.expert_login,
+         case when substr(k.login_val, 1, 1) = 'X' then substr(k.login_val, 2, 10) else k.login_val end as mob_num,
+         trunc(f.folder_date_create) as fld_date,
+         k.change_date as reg_date
+        -- max(bb.id) keep (dense_rank first order by bb.start_time),
+        -- max()
+from
+M_CLIENT_PHONE_MOBILE_TST t
+join v_folder_all_rfo f on f.rfo_client_id = t.rfo_client_id and t.folder_id = f.folder_id
+join m_kaspikz_logins k on case when substr(k.login_val, 1, 1) = 'X' then substr(k.login_val, 2, 10) else k.login_val end = substr(t.phone_number_cur, 2, 10) --= k.login_val
+and k.change_date > f.folder_date_create and k.change_date <= f.folder_date_create+30
+--left join m_kaspikz_sessions bb on k.user_id = bb.user_id and trunc(bb.start_time) = trunc(k.change_date)
+--left join t_kaspikz_log_http_request cc on bb.id = cc.session_id
+where t.client_phone_cnt >1
+and trunc(f.folder_date_create) >= to_date('01.01.2013', 'dd.mm.yyyy')
+and (phone_number_cur <> phone_number_prev
+or phone_number_prev is null);
+grant select on U1.M_TMP_IAD_KASPI to LOADDB;
+grant select on U1.M_TMP_IAD_KASPI to LOADER;
+
+

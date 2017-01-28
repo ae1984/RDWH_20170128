@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_KASPIKZ_EMONEY_TRANSACTION
+build deferred
+refresh force on demand
+as
+select "Id" as Id,
+      "QueueMessageId" as Queue_Message_Id,
+      "TransactionTmId" as Transact_Tm_Id,
+      "Amount" as Amount,
+      "PreviousTmBalance" as Prev_Tm_Balance,
+      "ActualTmBalance" as Actual_Tm_Balance,
+      "TransactionType" as Transact_Type,
+      "TransactionTmType" as Transact_Tm_Type,
+      "WalletId" as wallet_id,
+      to_date(to_char(t."TransactionTmDatetime", 'dd.mm.yyyy'), 'dd.mm.yyyy') as transact_tm_dt_time,
+      to_date(to_char(t."SaveDateTime", 'dd.mm.yyyy'), 'dd.mm.yyyy') as Save_Date_Time,
+      "OrderId" as Order_Id,
+      "TransactionTmDate" as Transact_Tm_Dt,
+      "RowNumber" as Row_Num,
+      "PreviousTmBalance2" as Prev_Tm_Balance2,
+      "ActualTmBalance2" as Actual_Tm_Balance2
+
+
+--select *
+from "dbo"."tb_EMoney_Transaction"@"db_kr2" t;
+grant select on U1.M_KASPIKZ_EMONEY_TRANSACTION to LOADDB;
+
+

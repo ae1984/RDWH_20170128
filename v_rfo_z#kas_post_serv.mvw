@@ -1,0 +1,17 @@
+﻿create materialized view U1.V_RFO_Z#KAS_POST_SERV
+refresh force on demand
+as
+select id,
+       c_manag_ref,
+       c_struct_depart,
+       c_date,
+       c_client_ref,
+       c_service,
+       sn,
+       su
+  from ibs.Z#KAS_POST_SERV@rfo_snap;
+grant select on U1.V_RFO_Z#KAS_POST_SERV to LOADDB;
+grant select on U1.V_RFO_Z#KAS_POST_SERV to LOADER;
+grant select on U1.V_RFO_Z#KAS_POST_SERV to LOAD_MO;
+
+

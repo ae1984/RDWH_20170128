@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_UPD_INTERNET_INDEX
+build deferred
+refresh force on demand
+as
+select distinct coalesce(clnt_inn, clnt_iin) as client_iin,
+       max(innet_index) as innet_index,
+       --max(innet_index_not_kaspikz)
+       0 as innet_index_not_kaspikz
+       from
+            (
+            select to_char(client_dwh_id) as client_dwh_id,
+                   pc.rfo_client_id,
+                   pc.rbo_client_id,
+                   pc.clnt_iin,
+                   pc.clnt_inn,
+                   ii.internet_index as innet_index
+                   --, innet_index_not_kaspikz
+             from u1.T_LOAD_INTERNET_INDEX_20160711 ii
+              join u1.V_DWH_CLIENT_PHYS_CURRENT pc on pc.clnt_gid = ii.client_dwh_id
+            )
+where coalesce(clnt_inn, clnt_iin) is not null
+group by coalesce(clnt_inn, clnt_iin);
+grant select on U1.M_UPD_INTERNET_INDEX to LOADDB;
+grant select on U1.M_UPD_INTERNET_INDEX to LOAD_MO;
+
+

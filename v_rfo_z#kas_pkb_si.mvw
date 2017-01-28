@@ -1,0 +1,35 @@
+﻿CREATE MATERIALIZED VIEW U1.V_RFO_Z#KAS_PKB_SI
+REFRESH COMPLETE ON DEMAND
+AS
+SELECT id,
+        collection_id,
+        c_noec#total,
+        c_noec#instalment_cr,
+        c_noec#cards,
+        c_noec#noninstalment_cr,
+        c_notc#total,
+        c_notc#instalment_cr,
+        c_notc#cards,
+        c_notc#noninstalment_cr,
+        c_nora#total,
+        c_nora#instalment_cr,
+        c_nora#cards,
+        c_nora#noninstalment_cr,
+        c_tod#total,
+        c_tod#instalment_cr,
+        c_tod#cards,
+        c_tod#noninstalment_cr,
+        c_tdo#total,
+        c_tdo#instalment_cr,
+        c_tdo#cards,
+        c_tdo#noninstalment_cr,
+        c_noi,
+        c_noi_1,
+        c_noi_2,
+        c_noi_3,
+        c_subj_role
+from ibs.Z#KAS_PKB_SI@rfo_snap;
+grant select on U1.V_RFO_Z#KAS_PKB_SI to LOADDB;
+grant select on U1.V_RFO_Z#KAS_PKB_SI to LOADER;
+
+

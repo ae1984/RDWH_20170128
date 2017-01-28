@@ -1,0 +1,30 @@
+﻿create materialized view U1.V_JAN_TMP_PC_HOME_ALL
+refresh force on demand
+as
+select /*+ leading(d p fpc) index(fpc V_FOLDER_PHONE_CALC_PK_IND) parallel(30) parallel_index(30) */
+--    lpad(fpc.ph_home_all_order,4,0) || ' - ' || lpad(fpc.ph_home_all_age,4,0) as home_all_order_age,
+--    fpc.ph_home_all_order, fpc.ph_home_all_age,
+    fpc.ph_home_all_order_cat || ' # ' || fpc.ph_home_all_age_cat as home_all_order_age,
+    fpc.ph_home_all_order_cat, fpc.ph_home_all_age_cat,
+    count(p.contract_number) as s_contract_count,
+    count(distinct p.contract_number) as s_contract_count_distinct,
+    round(sum(case when p.delinq_days > 0 and p.delinq_days < 8 then p.total_debt * 0.45
+                   when p.delinq_days > 7 then p.total_debt
+                   else 0 end) / sum(p.max_debt_used) * 100, 2) as s_deling_rate,
+    round(sum(case when p1.delinq_days > 0 and p1.delinq_days < 8 then p1.total_debt * 0.45
+                   when p1.delinq_days > 7 then p1.total_debt
+                   else 0 end) / sum(p.max_debt_used) * 100, 2) as del_rate_pmt_1,
+    round(sum(p.max_debt_used) / 1000000, 2) as s_sales_mln
+from V_PORTFOLIO p
+join V_FOLDER_PHONE_CALC fpc on fpc.folder_id = p.folder_id_first
+left join V_PORTFOLIO p1 on p1.contract_number = p.contract_number and p1.planned_pmt_month_new = 1
+where p.report_month_all_contracts = (select max(d.yy_mm_report) from v_data_all d) and
+      fpc.folder_date_day >= to_date('2013-01-01','yyyy-mm-dd') and
+      fpc.folder_date_day < to_date('2013-07-01','yyyy-mm-dd')
+--group by fpc.ph_home_all_order, fpc.ph_home_all_age
+group by fpc.ph_home_all_order_cat, fpc.ph_home_all_age_cat
+having sum(p.max_debt_used) > 0 --and count(distinct p.contract_number) = count(*);
+grant select on U1.V_JAN_TMP_PC_HOME_ALL to LOADDB;
+grant select on U1.V_JAN_TMP_PC_HOME_ALL to LOADER;
+
+

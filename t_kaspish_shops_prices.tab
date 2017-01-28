@@ -1,0 +1,30 @@
+﻿create table U1.T_KASPISH_SHOPS_PRICES
+(
+  rep_date          DATE,
+  m_uid             VARCHAR2(255),
+  m_name            VARCHAR2(255),
+  m_rfo_id          VARCHAR2(100),
+  p_mas_code        VARCHAR2(255),
+  p_mas_name        VARCHAR2(255),
+  p_mer_code        VARCHAR2(255),
+  p_mer_name        VARCHAR2(255),
+  pr_mer_city_id    VARCHAR2(255),
+  pr_mer_city_name  VARCHAR2(255),
+  pr_mer_price      NUMBER(30,8),
+  pr_mer_start_time TIMESTAMP(3)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_KASPISH_SHOPS_PRICES to LOADDB;
+

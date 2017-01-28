@@ -1,0 +1,67 @@
+﻿create materialized view U1.M_ONLINE_CRED_PRE_APPR
+refresh force on demand
+as
+select /*+ parallel 30 */
+       f.c_client rfo_client_id,
+       f.id rfo_folder_id,
+       cp.c_date_create folder_date_create,
+       --upper(cmp.c_name) folder_state_name,
+       cmp.c_code folder_state_code,
+       s.c_code online_buy_status_code,
+       --upper(s.c_name) online_buy_status_name,
+       count(case when p1.c_code = 'CALL_CUSTOMER' then p1.c_code end) call_cnt,
+
+       n.c_name tov_name,
+       i.c_price tov_price,
+
+       case when ((s.c_code = 'ORDER_CANCELED') -- если статус покупки Заказ отменен
+                 or (s.c_code = 'CREDIT_REJECTED' and (cmp.c_code = 'CLOSE_CANCELED'  --'ОТМЕНЕНО'      --CLOSE_CANCELED
+                                         or cmp.c_code = 'ORDER_CANCELED'             --'ЗАКАЗ ОТМЕНЕН' --ORDER_CANCELED
+                                         or cmp.c_code = 'EXPIRE'                     --'ПРОСРОЧЕННАЯ'  --EXPIRE
+                                          ))) then 1 else 0 end is_goods_not_exists,
+
+       case when s.c_code = 'ORDER_COMPLETE' then 1 else 0 end is_goods_issued
+from V_RFO_Z#FOLDERS f
+join V_RFO_Z#CM_CHECKPOINT cp on cp.id = f.id
+join V_RFO_Z#CM_WAY cmw on cmw.id = cp.c_way
+join V_RFO_Z#CM_POINT cmp on cmp.id = cp.c_point
+
+join V_RFO_Z#KAS_ONLINE_CLAIM c on c.c_folder_ref = f.id       --на папку выходим через заявку на онлайн
+join V_RFO_Z#KAS_ONLINE_BUY b on c.c_buy_ref = b.id            --а статус смотрим на покупке!!!!!!!!!!!!
+join V_RFO_Z#STATUS_DOG s on s.id = b.c_state_id
+join V_RFO_Z#PROD_INFO i on i.collection_id = b.c_prod_info
+join V_RFO_Z#KAS_TOV_NAME n on n.id = i.c_name_ref
+
+join V_RFO_Z#CM_HISTORY h on h.collection_id = cp.c_history
+join V_RFO_Z#CM_LINE l on l.id = h.c_line
+join V_RFO_Z#CM_POINT p1 on p1.id = l.c_from_p                   --ищем точку CALL_CUSTOMER в c_from_p
+
+/*join V_CLIENT_RFO_BY_ID cl on cl.rfo_client_id = t.rfo_client_id --ИИН клиента*/
+
+/*where (s.c_code = 'ORDER_CANCELED') -- если статус покупки Заказ отменен
+      or (s.c_code = 'CREDIT_REJECTED' and (t.folder_state = 'ОТМЕНЕНО'      --CLOSE_CANCELED
+                                         or t.folder_state = 'ЗАКАЗ ОТМЕНЕН' --ORDER_CANCELED
+                                         or t.folder_state = 'ПРОСРОЧЕННАЯ'  --EXPIRE
+                                          ))*/
+and trunc(cp.c_date_create) >= to_date('26-12-2014', 'dd-mm-yyyy')
+group by f.c_client,
+         f.id,
+         cp.c_date_create,
+         --cmp.c_name,
+         cmp.c_code,
+         s.c_code,
+         --s.c_name,
+         n.c_name,
+         i.c_price/*,
+         ((s.c_code = 'ORDER_CANCELED') -- если статус покупки Заказ отменен
+                 or (s.c_code = 'CREDIT_REJECTED' and (t.folder_state = 'ОТМЕНЕНО'      --CLOSE_CANCELED
+                                         or t.folder_state = 'ЗАКАЗ ОТМЕНЕН' --ORDER_CANCELED
+                                         or t.folder_state = 'ПРОСРОЧЕННАЯ'  --EXPIRE
+                                          ))*/
+--having count(case when p1.c_code = 'CALL_CUSTOMER' then p1.c_code end) > 0  -- должен быть звонок клиенту
+--order by trunc(t.folder_date_create);
+grant select on U1.M_ONLINE_CRED_PRE_APPR to LOADDB;
+grant select on U1.M_ONLINE_CRED_PRE_APPR to LOADER;
+grant select on U1.M_ONLINE_CRED_PRE_APPR to LOAD_MO;
+
+

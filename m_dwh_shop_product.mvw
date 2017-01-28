@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_DWH_SHOP_PRODUCT
+refresh force on demand
+as
+select /*+ parallel 15 */
+       product_id as shop_product_id,
+       merchant_id as shop_merchant_id,
+       article_number,
+       catalog_version,
+       approval as approved,
+       ean as eur_product_number,
+       manufacturer as product_producer,
+       content_unit,
+       manufacturer_aid,
+       delivery_time,
+       package_quantity,
+       currency_id,
+       price,
+       city_id,
+       identifier as  name_product
+  from dwh_stage.S43_PRODUCT@dwh_prod2;
+grant select on U1.M_DWH_SHOP_PRODUCT to LOADDB;
+
+

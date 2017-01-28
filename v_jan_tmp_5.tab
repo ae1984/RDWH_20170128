@@ -1,0 +1,27 @@
+﻿create table U1.V_JAN_TMP_5
+(
+  rfo_res_from_mo_id NUMBER,
+  c_res_mo_id        NUMBER,
+  res_date_time      DATE,
+  res_date           DATE,
+  c_client_ref       NUMBER,
+  res_par_code       VARCHAR2(18),
+  res_par_value      VARCHAR2(4000),
+  route_after_cnt    NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.V_JAN_TMP_5 to LOADDB;
+grant select on U1.V_JAN_TMP_5 to LOADER;
+

@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_TMP_DEL_DAILY_PMT_ABOVE_1
+using no index
+refresh complete on demand
+as
+select
+  x.rep_date,
+  count(*) as vsego,
+  sum(case when x.delinq_days > 0 then 1 else 0 end) as prosr,
+  sum(x.total_debt) as summa,
+  sum(case when x.delinq_days > 0 then x.total_debt else 0 end) as prosr_summa
+from (
+select /*+ parallel(30) */
+  --lag(por.delinq_days,1,0) over (partition by por.deal_number order by por.rep_date) as dealinq,
+  por.*
+from DWH_PORT por
+join (-- получаем плановые платежи по договору
+select a.date_plan_pay+nvl(we.day_weekends,0) as date_plan_pay, a.contract_number, a.planr_number from (
+select distinct ca.date_plan_pay,ca.dcard_number as contract_number,ca.cardplanr_number as planr_number
+from M_DWH_PLAN_OPER_CARD ca
+union all
+select distinct cr.crdtplanr_date_plan_pay as date_plan_pay, cr.crdt_number as contract_number, cr.crdtplanr_number as planr_number
+from M_DWH_PLAN_OPER_CREDIT cr
+) a
+left join T_HOLIDAYS we on we.data = a.date_plan_pay
+) b on b.contract_number = por.deal_number and b.date_plan_pay+7 = por.rep_date and b.planr_number > 1
+) x --where x.dealinq < 30 or x.dealinq is null
+group by x.rep_date;
+grant select on U1.M_TMP_DEL_DAILY_PMT_ABOVE_1 to LOADDB;
+grant select on U1.M_TMP_DEL_DAILY_PMT_ABOVE_1 to LOADER;
+
+

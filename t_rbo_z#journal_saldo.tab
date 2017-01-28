@@ -1,0 +1,61 @@
+﻿create table U1.T_RBO_Z#JOURNAL_SALDO
+(
+  id               NUMBER not null,
+  collection_id    NUMBER,
+  c_saldo          NUMBER(17,2),
+  c_date           DATE,
+  c_saldo_nt       NUMBER(17,2),
+  c_turn_day_dt    NUMBER(17,2),
+  c_turn_day_dt_nt NUMBER(17,2),
+  c_turn_day_ct    NUMBER(17,2),
+  c_turn_day_ct_nt NUMBER(17,2)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RBO_Z#JOURNAL_SALDO
+  is 'Журнал остатков';
+comment on column U1.T_RBO_Z#JOURNAL_SALDO.id
+  is 'Идентификатор таблицы остаков';
+comment on column U1.T_RBO_Z#JOURNAL_SALDO.collection_id
+  is 'collection на Z#AC_FIN.C_JOURNAL_SALD_ARR';
+comment on column U1.T_RBO_Z#JOURNAL_SALDO.c_saldo
+  is 'Входящий остаток в валюте счета';
+comment on column U1.T_RBO_Z#JOURNAL_SALDO.c_date
+  is 'Дата';
+comment on column U1.T_RBO_Z#JOURNAL_SALDO.c_saldo_nt
+  is 'Входящий остаток в ОП';
+comment on column U1.T_RBO_Z#JOURNAL_SALDO.c_turn_day_dt
+  is 'Оборот Дебет за день в валюте счета';
+comment on column U1.T_RBO_Z#JOURNAL_SALDO.c_turn_day_dt_nt
+  is 'Оборот Дебет за день в ОП';
+comment on column U1.T_RBO_Z#JOURNAL_SALDO.c_turn_day_ct
+  is 'Оборот Кредит за день в валюте счета';
+comment on column U1.T_RBO_Z#JOURNAL_SALDO.c_turn_day_ct_nt
+  is 'Оборот Кредит за день в ОП';
+create index U1.T_RBO_Z#JOURNAL_SALDO_IND1 on U1.T_RBO_Z#JOURNAL_SALDO (COLLECTION_ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_RBO_Z#JOURNAL_SALDO to LOADDB;
+grant select on U1.T_RBO_Z#JOURNAL_SALDO to LOADER;
+

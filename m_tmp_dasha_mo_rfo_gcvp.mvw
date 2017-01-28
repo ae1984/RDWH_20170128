@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_TMP_DASHA_MO_RFO_GCVP
+refresh force on demand
+as
+select trunc(t.date_create) as date_create,
+       g.gcvp_find_type,
+       round(t.sco_gcvp_salary, -3) as sco_gcvp_salary_gr,
+       round((round(t.sco_gcvp_salary) - round(g.salary)), -3) as diff,
+
+       count(*) cnt,
+       count(distinct t.folder_id) fld_cnt
+
+
+from (select tt.folder_id,
+             max(tt.date_create) as date_create,
+             max(tt.sco_gcvp_salary) keep (dense_rank last order by tt.date_create) as sco_gcvp_salary
+      from V_FOLDER_MO_GCVP tt
+      group by tt.folder_id) t
+left join (select gg.folder_id,
+                  max(gg.gcvp_find_type) keep (dense_rank last order by gg.folder_date_create_mi) as gcvp_find_type,
+                  max(gg.folder_date_create_mi) as folder_date_create_mi,
+                  max(gg.salary) keep (dense_rank last order by gg.folder_date_create_mi) as salary
+           from M_TMP_DASHA_FOLDER_RFO_GCVP gg
+           group by gg.folder_id) g on g.folder_id = t.folder_id
+
+group by trunc(t.date_create),
+         g.gcvp_find_type,
+         round(t.sco_gcvp_salary, -3),
+         round((round(t.sco_gcvp_salary) - round(g.salary)), -3);
+grant select on U1.M_TMP_DASHA_MO_RFO_GCVP to LOADDB;
+grant select on U1.M_TMP_DASHA_MO_RFO_GCVP to LOADER;
+
+

@@ -1,0 +1,15 @@
+﻿create materialized view U1.V_DWH_PORT_FPD_SPD_FPD7_PRE1
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */ add_months(t.start_date,+1) as fpd, t.rep_date,
+ t.START_DATE, t.DELINQ_DAYS, sum(t.TOTAL_DEBT) as debt,
+  count(distinct t.CLIENT_ID) as count_client,
+  count(distinct t.deal_number) as count_deal_number
+  from v_DWH_PORT t
+  left join v_dwh_port_cards_credits c on c.deal_number = t.DEAL_NUMBER
+  where t.START_DATE > to_date('01.08.2013','dd.mm.yyyy') and (t.prod_type <> 'РЕФИНАНСИРОВАНИЕ/РЕСТРУКТУРИЗАЦИЯ' or c.prod_name is null)
+  group by t.rep_date, t.START_DATE, t.DELINQ_DAYS;
+grant select on U1.V_DWH_PORT_FPD_SPD_FPD7_PRE1 to LOADDB;
+
+

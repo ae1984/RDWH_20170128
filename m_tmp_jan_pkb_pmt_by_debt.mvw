@@ -1,0 +1,45 @@
+﻿create materialized view U1.M_TMP_JAN_PKB_PMT_BY_DEBT
+refresh force on demand
+as
+with px as (
+    select distinct p.report_id, p.total_debt, p.pmt_active_all_sum from V_PKB_REPORT p
+    where p.report_type in ('РАСШИРЕННЫЙ','СТАНДАРТНЫЙ') and p.report_status != 'БЕКИ' and
+          p.is_from_cache = 0 and p.pmt_active_all_sum > 0 and p.total_debt > 0 and
+          p.rfo_report_date >= trunc(sysdate) - 365 * 3
+)
+select z1.*, z2.pmt_avg, z2.pmt_med, z2.rep_count as rep_count_all from (
+    select y.total_debt as total_debt_group,
+           min(case when perc_cumm >= 75 then pmt end) as pmt_75_perc,
+           min(case when perc_cumm >= 80 then pmt end) as pmt_80_perc,
+           min(case when perc_cumm >= 85 then pmt end) as pmt_85_perc,
+           min(case when perc_cumm >= 90 then pmt end) as pmt_90_perc,
+           min(case when perc_cumm >= 95 then pmt end) as pmt_95_perc
+    from (
+        select x.*, sum(perc) over (partition by total_debt order by pmt
+                         range unbounded preceding) as perc_cumm
+        from (
+            select round(px.total_debt,-5) as total_debt,
+                   round(px.pmt_active_all_sum,-3) as pmt,
+                   count(*) as rep_count,
+                   max(d.rep_count) as rep_count_all,
+                   count(*) / max(d.rep_count) * 100 as perc
+            from px
+            join (select round(px.total_debt,-5) as total_debt, count(*) as rep_count
+                  from px group by round(px.total_debt,-5)
+            ) d on d.total_debt = round(px.total_debt,-5)
+            group by round(px.total_debt,-5), round(px.pmt_active_all_sum,-3)
+        ) x
+    ) y
+--    where total_debt < 5000000
+    group by total_debt
+) z1 join (
+select round(px.total_debt,-5) as total_debt, count(*) as rep_count,
+         round(avg(px.pmt_active_all_sum)) as pmt_avg,
+         round(median(px.pmt_active_all_sum)) as pmt_med
+from px
+group by round(px.total_debt,-5)
+) z2 on z2.total_debt = z1.total_debt_group;
+grant select on U1.M_TMP_JAN_PKB_PMT_BY_DEBT to LOADDB;
+grant select on U1.M_TMP_JAN_PKB_PMT_BY_DEBT to LOADER;
+
+

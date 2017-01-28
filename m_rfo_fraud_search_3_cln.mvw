@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_3_CLN
+build deferred
+refresh force on demand
+as
+select /*+ parallel(80)*/
+         t.rfo_client_id
+         ,max(a.COUNT_FAIL_ONL_DAY) as MAX_COUNT_FAIL_ONL_DAY
+    from V_CLIENT_RFO_BY_ID t
+    join M_RFO_FRAUD_SEARCH_3_1_CLN a  on a.rfo_client_id = t.rfo_client_id --and a.date_create >= sysdate-30 and a.date_create < trunc(sysdate)
+    group by
+         t.rfo_client_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_3_CLN to LOADDB;
+
+

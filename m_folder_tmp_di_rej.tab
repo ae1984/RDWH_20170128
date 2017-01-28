@@ -1,0 +1,22 @@
+﻿create table U1.M_FOLDER_TMP_DI_REJ
+(
+  folder_id           NUMBER not null,
+  rej_another_check   NUMBER,
+  rej_antifraud_check NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.M_FOLDER_TMP_DI_REJ to LOADDB;
+grant select on U1.M_FOLDER_TMP_DI_REJ to LOADER;
+

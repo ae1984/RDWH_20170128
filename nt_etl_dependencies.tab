@@ -1,0 +1,24 @@
+﻿create table U1.NT_ETL_DEPENDENCIES
+(
+  owner           VARCHAR2(128) not null,
+  name            VARCHAR2(128) not null,
+  referenced_name VARCHAR2(128),
+  sdt             DATE default sysdate
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_ETL_DEPENDENCIES
+  is 'RDWH2.0 зависимости объектов для пересчета';
+grant select on U1.NT_ETL_DEPENDENCIES to LOADDB;
+

@@ -1,0 +1,9 @@
+﻿create materialized view U1.V_RBO_Z#CASH_DOCUMENT
+refresh complete on demand
+as
+select /*+ driving_site */*
+from V_RBO_Z#CASH_DOCUMENT@RDWH11;
+grant select on U1.V_RBO_Z#CASH_DOCUMENT to LOADDB;
+grant select on U1.V_RBO_Z#CASH_DOCUMENT to LOADER;
+
+

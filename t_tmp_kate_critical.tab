@@ -1,0 +1,26 @@
+﻿create table U1.T_TMP_KATE_CRITICAL
+(
+  type_load     VARCHAR2(50),
+  proc_name     VARCHAR2(50),
+  object_name   VARCHAR2(50),
+  priority      NUMBER,
+  object_type   VARCHAR2(50),
+  proc_priority VARCHAR2(50),
+  is_critical   NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_KATE_CRITICAL to LOADDB;
+grant select on U1.T_TMP_KATE_CRITICAL to LOADER;
+

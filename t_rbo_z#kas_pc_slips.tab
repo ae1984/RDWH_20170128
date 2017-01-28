@@ -1,0 +1,225 @@
+﻿create table U1.T_RBO_Z#KAS_PC_SLIPS
+(
+  id                NUMBER not null,
+  class_id          VARCHAR2(16 CHAR),
+  state_id          VARCHAR2(16 CHAR),
+  c_error_msg       VARCHAR2(2000 CHAR),
+  c_rec_date        DATE,
+  c_batch_nr        VARCHAR2(7 CHAR),
+  c_slip_nr         VARCHAR2(8 CHAR),
+  c_bank_c          VARCHAR2(2 CHAR),
+  c_groupc          VARCHAR2(2 CHAR),
+  c_tran_amt        NUMBER(20),
+  c_tran_date_time  DATE,
+  c_tran_ccy        VARCHAR2(3 CHAR),
+  c_tran_type       VARCHAR2(3 CHAR),
+  c_sb_amount       NUMBER(20),
+  c_sb_ccy          VARCHAR2(3 CHAR),
+  c_sb_fee          NUMBER(20),
+  c_i_amount        NUMBER(20),
+  c_i_fee           NUMBER(20),
+  c_ibnk_ccy        VARCHAR2(3 CHAR),
+  c_mcc_code        VARCHAR2(4 CHAR),
+  c_accnt_ccy       VARCHAR2(3 CHAR),
+  c_accnt_amt       NUMBER(20),
+  c_aconv_rate      NUMBER(30,10),
+  c_amount          NUMBER(20),
+  c_post_date       DATE,
+  c_card_acct       VARCHAR2(20 CHAR),
+  c_account_no      NUMBER(20),
+  c_client          VARCHAR2(8 CHAR),
+  c_event_area      VARCHAR2(20 CHAR),
+  c_deb_cred        NUMBER(1),
+  c_tr_code         VARCHAR2(3 CHAR),
+  c_tr_fee          NUMBER(20),
+  c_tr_code2        VARCHAR2(3 CHAR),
+  c_tr_fee2         NUMBER(20),
+  c_tr_code3        VARCHAR2(3 CHAR),
+  c_tr_fee3         NUMBER(20),
+  c_card            VARCHAR2(16 CHAR),
+  c_ref_number      VARCHAR2(12 CHAR),
+  c_apr_code        VARCHAR2(6 CHAR),
+  c_internal_no     NUMBER(20),
+  c_is_debug        VARCHAR2(1 CHAR),
+  c_date_time       DATE,
+  c_merchant        VARCHAR2(100 CHAR),
+  c_terminal        VARCHAR2(100 CHAR),
+  c_abvr_name       VARCHAR2(250 CHAR),
+  c_city            VARCHAR2(250 CHAR),
+  c_country         VARCHAR2(250 CHAR),
+  c_point_code      VARCHAR2(100 CHAR),
+  c_acqref_nr       VARCHAR2(30 CHAR),
+  c_parent_ref      NUMBER,
+  c_slip_source_ref NUMBER,
+  c_user_ref        NUMBER,
+  c_fo_cr_ref       NUMBER,
+  c_fo_fx_ref       NUMBER,
+  c_card_num_crypt  VARCHAR2(20 CHAR),
+  c_tran_id         VARCHAR2(40 CHAR),
+  c_device_info     VARCHAR2(100 CHAR),
+  c_term_id         VARCHAR2(20 CHAR),
+  c_fld_098         VARCHAR2(25 CHAR),
+  c_na_doc_ref      NUMBER,
+  c_na_reg_doc_ref  NUMBER,
+  c_dog_ref         NUMBER,
+  sn                NUMBER,
+  su                NUMBER,
+  c_proc_code       VARCHAR2(80),
+  c_msg_type        VARCHAR2(80),
+  c_send_cmi        VARCHAR2(100 CHAR)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RBO_Z#KAS_PC_SLIPS
+  is 'KAS. PC. Слипы';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_error_msg
+  is 'error_msg';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_rec_date
+  is 'rec_date';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_batch_nr
+  is 'batch_nr';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_slip_nr
+  is 'slip_nr';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_bank_c
+  is 'bank_c';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_groupc
+  is 'groupc';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_tran_amt
+  is 'tran_amt';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_tran_date_time
+  is 'tran_date_time';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_tran_ccy
+  is 'tran_ccy';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_tran_type
+  is 'tran_type';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_sb_amount
+  is 'sb_amount';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_sb_ccy
+  is 'sb_ccy';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_sb_fee
+  is 'sb_fee';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_i_amount
+  is 'i_amount';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_i_fee
+  is 'i_fee';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_ibnk_ccy
+  is 'ibnk_ccy';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_mcc_code
+  is 'mcc_code';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_accnt_ccy
+  is 'accnt_ccy';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_accnt_amt
+  is 'accnt_amt';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_aconv_rate
+  is 'aconv_rate';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_amount
+  is 'amount';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_post_date
+  is 'post_date';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_card_acct
+  is 'card_acct';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_account_no
+  is 'account_no';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_client
+  is 'client';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_event_area
+  is 'event_area';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_deb_cred
+  is 'deb_cred';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_tr_code
+  is 'tr_code';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_tr_fee
+  is 'tr_fee';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_tr_code2
+  is 'tr_code2';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_tr_fee2
+  is 'tr_fee2';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_tr_code3
+  is 'tr_code3';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_tr_fee3
+  is 'tr_fee3';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_card
+  is 'card';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_ref_number
+  is 'ref_number';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_apr_code
+  is 'apr_code';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_internal_no
+  is 'internal_no';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_is_debug
+  is 'Отладка';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_date_time
+  is 'Дата и время загрузки слипа в РБО';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_merchant
+  is 'merchant';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_terminal
+  is 'terminal';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_abvr_name
+  is 'abvr_name';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_city
+  is 'city';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_country
+  is 'country';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_point_code
+  is 'point_code';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_acqref_nr
+  is 'acqref_nr';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_parent_ref
+  is 'Родительский слип(FK на Z#KAS_PC_SLIPS)';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_slip_source_ref
+  is 'Источник слипа(FK на Z#KAS_DIC)';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_user_ref
+  is 'Пользователь внесший слип(FK на Z#USER)';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_fo_cr_ref
+  is 'Ссылка на ФО CashBack по кредиту(FK на Z#KAS_PC_FO)';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_fo_fx_ref
+  is 'Ссылка на ФО CashBack по основным средствам(FK на Z#KAS_PC_FO)';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_card_num_crypt
+  is 'Номер карты (шифр)';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_tran_id
+  is 'ID транзакции';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_device_info
+  is 'Информация об устройстве';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_term_id
+  is 'ID Терминала';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_fld_098
+  is 'FLD_098';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_na_doc_ref
+  is 'Документ невыясненных сумм(FK на Z#MAIN_DOCUM)';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_na_reg_doc_ref
+  is 'Документ урегулирования невыясненных сумм(FK на Z#MAIN_DOCUM)';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_dog_ref
+  is 'Договор карты(FK на Z#KAS_PC_DOG)';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_proc_code
+  is 'Processing code (PROC_CODE)';
+comment on column U1.T_RBO_Z#KAS_PC_SLIPS.c_msg_type
+  is 'Transaction message type (MSG_TYPE)';
+alter table U1.T_RBO_Z#KAS_PC_SLIPS
+  add constraint T_RBO_Z#KAS_PC_SLIPS_PK primary key (ID)
+  using index 
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.T_RBO_Z#KAS_PC_SLIPS_PK nologging;
+grant select on U1.T_RBO_Z#KAS_PC_SLIPS to LOADDB;
+grant select on U1.T_RBO_Z#KAS_PC_SLIPS to LOADER;
+

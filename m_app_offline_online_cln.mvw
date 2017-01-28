@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_APP_OFFLINE_ONLINE_CLN
+build deferred
+refresh force on demand
+as
+select
+       t.rfo_client_id                                                                                                  as rfo_client_id,
+       count(t2.app_id)                                                                                                 as cnt_cl_offline,
+       count(case when t2.is_credit_issued = 0 then t2.app_id end)                                                      as cnt_cl_offline_cancel
+  from u1.V_CLIENT_RFO_BY_ID t
+       left  join u1.m_app_miner_bas  t2 on                t2.rfo_client_id = t.rfo_client_id
+                                        and trunc(t2.folder_date_create_mi) >= trunc(sysdate) - 30
+                                        and        t2.folder_date_create_mi < sysdate
+                                        and                 t2.product_type = 'ТОВАРЫ'
+ group by t.rfo_client_id;
+grant select on U1.M_APP_OFFLINE_ONLINE_CLN to LOADDB;
+
+

@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_KASPIKZ_PAY_SERVICE_ASSOCIAT
+refresh force on demand
+as
+select t."Id" id,
+       t."intMasterServiceId" master_service_id,
+       t."intServiceAssociateId" service_associate_id
+
+
+from "dbo"."tb_Payments_ServiceAssociates"@"db_kr2" t;
+grant select on U1.M_KASPIKZ_PAY_SERVICE_ASSOCIAT to LOADDB;
+grant select on U1.M_KASPIKZ_PAY_SERVICE_ASSOCIAT to LOADER;
+
+

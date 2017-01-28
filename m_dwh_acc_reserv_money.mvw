@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_DWH_ACC_RESERV_MONEY
+build deferred
+refresh force on demand
+as
+select
+      rsvmny_gid,
+      rsvmny$change_date,
+      rsvmny$row_status,
+      rsvmny$audit_id,
+      rsvmny$hash,
+      rsvmny$source,
+      rsvmny$provider,
+      rsvmny$source_pk,
+      rsvmny_reserv_date,
+      rsvmny_create_date,
+      rsvmny_clnt_gid,
+      rsvmny_empl_gid,
+      rsvmny_cntc_empl_gid,
+      rsvmny_number,
+      rsvmny_amount,
+      rsvmny_crnc_gid,
+      rsvmny_city,
+      rrsvmny_city_name,
+      rsvmny_dept_gid,
+      rsvmny_clnt_cont_status_cd
+from DWH_MAIN.ACC_RESERV_MONEY@RDWH_EXD;
+

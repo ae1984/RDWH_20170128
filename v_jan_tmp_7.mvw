@@ -1,0 +1,43 @@
+﻿create materialized view U1.V_JAN_TMP_7
+refresh force on demand
+as
+select /* leading(p c) index(c V_CONTRACT_CAL_IND12) index(p V_PORTFOLIO_IND6) use_hash(p c)*/ /* parallel(30) parallel_index(30) */
+    c.yms, --c.product_refin_last, -- 8
+--    ca.cr_scheme_name, f.is_credit_issued,
+--    cc.is_edit_cli_fld_five_days_aft, -- 6
+--    c.product_refin_last, cc.is_edit_cli_fld_five_days_aft, -- 7
+--    count(c.contract_number) as con_cnt, --count(distinct p.contract_number) as s_con_cnt_distinct,
+    round(sum(case when p.delinq_days > 0 and p.delinq_days < 8 then p.total_debt * 0.45
+                   when p.delinq_days > 7 then p.total_debt
+                   else 0 end) / sum(p.max_debt_used) * 100, 2) as del_rate,
+    round(sum(case when p1.delinq_days > 0 and p1.delinq_days < 8 then p1.total_debt * 0.45
+                   when p1.delinq_days > 7 then p1.total_debt
+                   else 0 end) / sum(p.max_debt_used) * 100, 2) as del_rate_pmt_1,
+    round(sum(p.max_debt_used) / 1000000) as sales_mln
+from V_CONTRACT_CAL c
+join V_PORTFOLIO p on c.contract_id = p.contract_id and p.report_month_all_contracts = '2013 - 12'
+left join V_PORTFOLIO p1 on c.contract_id = p1.contract_id and p1.planned_pmt_month_new = 1
+join V_PKB_REPORT pr on pr.folder_id = c.folder_id_first
+join V_POS vp on vp.pos_code = c.pos_code_first
+--join V_FOLDER_ALL_RFO f on f.folder_id = c.folder_id_first
+--left join V_CONTRACT_ALL_RFO ca on ca.rfo_contract_id = f.card_contract_id
+join V_TMP_CON_EDIT_CL_PRIV_BEF_AFT cc on cc.contract_number = c.contract_number
+where --c.yms = '2013 - 10' and
+      c.yms like '2013 - %' --and c.product_refin_last = 'ЛК И ПК'
+--      and pr.report_status = 'БЕКИ'
+      and c.contract_amount_last < 100000
+      and is_edit_cli_fld_five_days_aft = 1
+      --and c.product_refin_last = 'КН-15'
+      and vp.x_dnp_name = 'АЛМАТЫ'
+--group by c.yms, cc.is_edit_cli_fld_five_days_aft -- 6
+--group by c.yms, c.product_refin_last, cc.is_edit_cli_fld_five_days_aft -- 7
+group by c.yms -- 8
+
+--group by c.yms,/*, c.product_refin_last,*/ cc.is_edit_cli_fld_same_day_bef--, cc.is_edit_cli_fld_same_day_aft
+--group by c.yms, c.product_refin_last
+--group by ca.cr_scheme_name, f.is_credit_issued
+having sum(p.max_debt_used) > 0 and count(c.contract_number) = count(distinct p.contract_number);
+grant select on U1.V_JAN_TMP_7 to LOADDB;
+grant select on U1.V_JAN_TMP_7 to LOADER;
+
+

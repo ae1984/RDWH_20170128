@@ -1,0 +1,18 @@
+﻿create table U1.T_RBO_Z#KAS_EDIT_OBJ_TMP_2
+(
+  c_class_object  VARCHAR2(100) not null,
+  c_date_edit     DATE not null,
+  c_id_object     NUMBER(20) not null,
+  c_str           VARCHAR2(4000) not null,
+  c_sys_date      DATE not null,
+  c_id_collection NUMBER(20),
+  c_status        NUMBER(1) not null
+)
+tablespace USERS_ARC
+  pctfree 10
+  initrans 1
+  maxtrans 255
+nologging;
+grant select on U1.T_RBO_Z#KAS_EDIT_OBJ_TMP_2 to LOADDB;
+grant select on U1.T_RBO_Z#KAS_EDIT_OBJ_TMP_2 to LOADER;
+

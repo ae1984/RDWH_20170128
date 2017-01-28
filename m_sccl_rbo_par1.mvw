@@ -1,0 +1,33 @@
+﻿create materialized view U1.M_SCCL_RBO_PAR1
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       cl.rfo_client_id
+
+       ,trunc(min(least(coalesce(t1.begin_date, t2.begin_date),
+                        coalesce(t2.begin_date, t1.begin_date)))) as life_length_date
+
+       ,trunc(min(t2.begin_date)) as deposit_life_length_date
+
+       ,trunc(min(case when t2.currency != 'KZT' then t2.begin_date end)) as deposit_life_usd_date
+
+       ,case when sum(case when t2.currency != 'KZT'
+                                  and t2.closed_date is null
+                      then 1 else 0 end) > 0
+             then 1
+        else 0 end as deposit_usd_active
+
+       ,case when sum(case when t2.closed_date is null then 1 else 0 end) > 0 then 1
+        else 0 end as deposit_active
+
+from u1.V_CLIENT_RFO_BY_ID cl
+left join U1.M_RBO_CONTRACT_BAS t1 on t1.rfo_client_id = cl.rfo_client_id
+left join U1.M_RBO_CONTRACT_DEPOSIT_BAS t2 on t2.is_has_timeout = 1
+                                              and t2.rfo_client_id = cl.rfo_client_id
+group by cl.rfo_client_id;
+grant select on U1.M_SCCL_RBO_PAR1 to LOADDB;
+grant select on U1.M_SCCL_RBO_PAR1 to LOAD_MO;
+grant select on U1.M_SCCL_RBO_PAR1 to RTS_RDWH;
+
+

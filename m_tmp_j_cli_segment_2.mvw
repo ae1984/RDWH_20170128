@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_TMP_J_CLI_SEGMENT_2
+refresh complete on demand
+as
+select --t.client_id,
+       cc.client_iin_last,
+       max(t.total_fact_pmts) as fact_pmts_all,
+       count(distinct case when t.fact_pmts_in_month > 0 and t.yyyy_mm_num > 201412 then t.yyyy_mm_num end) as fact_pmts_03_mon,
+       count(distinct case when t.fact_pmts_in_month > 0 and t.yyyy_mm_num > 201409 then t.yyyy_mm_num end) as fact_pmts_06_mon,
+       count(distinct case when t.fact_pmts_in_month > 0 and t.yyyy_mm_num > 201403 then t.yyyy_mm_num end) as fact_pmts_12_mon,
+       count(distinct case when t.fact_pmts_in_month > 0 and t.yyyy_mm_num > 201303 then t.yyyy_mm_num end) as fact_pmts_24_mon,
+       case when max(t.delinq_days_in_month) >  7 then 1 else 0 end as is_del_07plus,
+       case when max(t.delinq_days_in_month) > 15 then 1 else 0 end as is_del_15plus,
+       case when max(t.delinq_days_in_month) > 30 then 1 else 0 end as is_del_30plus,
+       case when max(t.delinq_days_in_month) > 60 then 1 else 0 end as is_del_60plus,
+       case when max(t.delinq_days_in_month) > 90 then 1 else 0 end as is_del_90plus
+from V_CLIENT_HISTORY t
+join V_CLIENT_CAL cc on cc.client_id = t.client_id
+where cc.client_iin_last is not null
+group by cc.client_iin_last;
+grant select on U1.M_TMP_J_CLI_SEGMENT_2 to LOADDB;
+grant select on U1.M_TMP_J_CLI_SEGMENT_2 to LOADER;
+
+

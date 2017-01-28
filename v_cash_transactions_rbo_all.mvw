@@ -1,0 +1,70 @@
+﻿create materialized view U1.V_CASH_TRANSACTIONS_RBO_ALL
+build deferred
+refresh complete on demand
+as
+select distinct
+r.main_doc_state,
+r.main_doc_type_name,
+r.main_doc_date,
+r.main_doc_sum_kzt,
+r.debit_acc_num,
+r.debit_acc_client_class_id,
+r.debit_acc_client_iin,
+r.debit_acc_client_rnn,
+r.debit_product_id,
+r.debit_product_class_id,
+r.debit_product_state,
+r.debit_product_card_num as debit_product_card_num_pc,
+r.debit_product_card_num_cr,
+r.debit_product_account_num,
+coalesce(c.contract_number,c1.contract_number) as contract_number,
+coalesce(c.product_start_last,c1.product_start_last) as product_start_last,
+coalesce(c.contract_amount_first,c1.contract_amount_first) as contract_amount_first,
+coalesce(c.start_date_last, c1.start_date_last) as start_date_last,
+coalesce(c.client_iin_last,c1.client_iin_last) as client_iin_last,
+r.pc_id,
+coalesce(c.pmt,c1.pmt) as pmt,
+coalesce(c.pmt_nom_rate,c1.pmt_nom_rate) as pmt_nom_rate,
+r.cr_id
+from V_CASH_TRANSACTIONS_RBO r
+left join V_CONTRACT_CAL c on c.contract_number = r.debit_product_card_num_cr/*like t.debit_product_card_num||'%' */  and
+                              c.start_date_last = r.main_doc_date /*and c.contract_amount_first = r.main_doc_sum_kzt */
+left join V_CONTRACT_CAL c1 on c1.contract_number like r.debit_product_card_num||'%'   and
+                              c1.start_date_last = r.main_doc_date and /*c1.contract_amount_first = r.main_doc_sum_kzt and*/
+                              r.debit_product_card_num_cr is null
+where r.cash_doc_type_name = 'РАСХОДНЫЙ КАССОВЫЙ ОРДЕР' and r.debit_product_class_id = 'KAS_PC_DOG' and
+      r.main_doc_state != 'DELETED' and coalesce(c.product_start_last,c1.product_start_last) != 'ТК'
+--group by t.cash_doc_date, t.main_doc_client_iin
+
+union all
+
+select distinct
+t.main_doc_state,
+t.main_doc_type_name,
+t.main_doc_date,
+t.main_doc_sum_kzt,
+t.debit_acc_num,
+t.debit_acc_client_class_id,
+t.debit_acc_client_iin,
+t.debit_acc_client_rnn,
+t.debit_product_id,
+t.debit_product_class_id,
+t.debit_product_state,
+t.debit_product_card_num_pc,
+t.debit_product_card_num_cr,
+t.debit_product_account_num,
+t.contract_number,
+t.product_start_last,
+t.contract_amount_first,
+t.start_date_last,
+t.client_iin_last,
+t.pc_id,
+t.pmt,
+t.pmt_nom_rate,
+t.cr_id
+--t.c_kas_pc_dog_ref
+from V_CASH_TRANSACTIONS_RBO_TK t;
+grant select on U1.V_CASH_TRANSACTIONS_RBO_ALL to LOADDB;
+grant select on U1.V_CASH_TRANSACTIONS_RBO_ALL to LOADER;
+
+

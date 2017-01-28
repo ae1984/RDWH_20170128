@@ -1,0 +1,49 @@
+﻿create materialized view U1.M_RBO_CONTR_AFTER_REF_PERCENT_
+refresh complete on demand
+as
+select --рефинансированные договора в период рефинансирования
+       rlp.refin_rbo_contract_id as rbo_contract_id,
+       rlp.rbo_contract_id_to,
+       rlp.date_change,
+       case when rlp.date_change_end = to_date('01-01-3000','dd-mm-yyyy') then trunc(sysdate) else  rlp.date_change_end end as date_change_end,
+       rlp.part_percent/100 as part_percent,
+       rlp.min_refin_date
+  from u1.M_RBO_CONTR_REFIN_LINK_PERCENT rlp
+ where rlp.date_change < to_date('01-01-3000','dd-mm-yyyy')
+ union all
+select ----результирующие и рефинансированные договора в пострефинансированный период
+       rlp.rbo_contract_id,
+       rlp.rbo_contract_id_to,
+       rlp.date_change,
+       case when rlp.date_change_end = to_date('01-01-3000','dd-mm-yyyy') then trunc(sysdate) else  rlp.date_change_end end as date_change_end,
+       1 as part_percent,
+       rlp.min_refin_date
+  from (select p.refin_rbo_contract_id as rbo_contract_id,
+               p.refin_rbo_contract_id as rbo_contract_id_to,
+               p.refin_date_end + 1 as date_change,
+               lead(p.refin_date-1) over (partition by p.refin_rbo_contract_id order by p.refin_date) as date_change_end,
+               min_refin_date
+         from (select distinct refin_rbo_contract_id, refin_date, refin_date_end, min_refin_date, refin_rbo_contract_id as rbo_contract_id_to
+                 from M_RBO_CONTR_REFIN_LINK_PERCENT
+                 union all
+                select distinct rbo_contract_id_to, refin_date_to, refin_end_to, min_refin_date_to,rbo_contract_id_to
+                from M_RBO_CONTR_REFIN_LINK_PERCENT) p
+      ) rlp
+    where rlp.date_change < to_date('01-01-3000','dd-mm-yyyy')
+      and rlp.date_change <= coalesce(rlp.date_change_end,to_date('01-01-3000','dd-mm-yyyy'))
+   union all
+ select --результирующие договора в период рефинансирования
+        rlp.rbo_contract_id_to as rbo_contract_id,
+        rlp.rbo_contract_id_to,
+        rlp.date_change,
+       case when rlp.date_change_end = to_date('01-01-3000','dd-mm-yyyy') then trunc(sysdate) else  rlp.date_change_end end as date_change_end,
+        rlp.card_gu_percent/100 as part_percent,
+        rlp.min_refin_date_to
+   from (select distinct rbo_contract_id_to, date_change, date_change_end, p.card_gu_percent, p.min_refin_date_to
+           from M_RBO_CONTR_REFIN_LINK_PERCENT p
+         ) rlp
+   where rlp.date_change < to_date('01-01-3000','dd-mm-yyyy');
+grant select on U1.M_RBO_CONTR_AFTER_REF_PERCENT_ to LOADDB;
+grant select on U1.M_RBO_CONTR_AFTER_REF_PERCENT_ to LOADER;
+
+

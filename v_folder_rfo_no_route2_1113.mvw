@@ -1,0 +1,43 @@
+﻿create materialized view U1.V_FOLDER_RFO_NO_ROUTE2_1113
+using no index
+refresh complete on demand
+as
+select x.folder_id, x.rfo_client_id, x.mo_process_id_min, x.mo_start_min mo_start_min, x.mo_process_id, x.mo_start mo_start_max, x.mo_count,
+prd.folder_id rfo_folder_id, prd.folder_date_create,
+(extract(day from (prd.folder_date_create - x.mo_start_min))*24*60*60 +
+ extract(hour from (prd.folder_date_create - x.mo_start_min))*60*60 +
+ extract(minute from (prd.folder_date_create - x.mo_start_min))*60 +
+ extract(second from (prd.folder_date_create - x.mo_start_min))) between_min,
+(extract(day from (prd.folder_date_create - x.mo_start))*24*60*60 +
+ extract(hour from (prd.folder_date_create - x.mo_start))*60*60 +
+ extract(minute from (prd.folder_date_create - x.mo_start))*60 +
+ extract(second from (prd.folder_date_create - x.mo_start))) between_max
+from
+(select
+t.folder_id, t.rfo_client_id,
+min(mo.id) mo_process_id_min, min(mo.date_start) mo_start_min,
+max(mo.id) mo_process_id, max(mo.date_start) mo_start,
+count(mo.id) mo_count
+
+from v_folder_RFO_NO_ROUTE_1113 t
+left join v_mo_process_par_value ppv on ppv.value_number = t.rfo_client_id and ppv.d_par_id = 14
+left join v_mo_process mo on mo.id = ppv.process_id and mo.d_process_id = 6 and mo.date_start >= to_date('2013-11-04', 'yyyy-mm-dd')
+                                                                            and mo.date_start < to_date('2013-11-11', 'yyyy-mm-dd')
+where t.folder_date_create >= to_date('2013-11-04', 'yyyy-mm-dd')
+  and t.folder_date_create < to_date('2013-11-11', 'yyyy-mm-dd')
+group by t.folder_id, t.rfo_client_id
+
+
+) x
+join (select * from v_folder_RFO_NO_ROUTE_1113 t
+where t.folder_id in (select tt.c_id_object
+                      from V_RFO_Z#KAS_EDIT_PRD tt
+                      where (tt.c_class_prd = 'CM_CHECKPOINT' or tt.c_class_prd = 'FOLDERS')
+                       and tt.c_date_edit_astr < to_date('01122013', 'ddmmyyyy'))) prd
+on prd.folder_id = x.folder_id
+--) xx
+--order by extract(day from (prd.folder_date_create - x.mo_start)) desc;
+grant select on U1.V_FOLDER_RFO_NO_ROUTE2_1113 to LOADDB;
+grant select on U1.V_FOLDER_RFO_NO_ROUTE2_1113 to LOADER;
+
+

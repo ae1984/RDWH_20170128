@@ -1,0 +1,56 @@
+﻿create materialized view U1.M_FLD_CON_CNL_ONL_IAD
+refresh force on demand
+as
+select b.rfo_client_id,
+       b.folder_id,
+       b.folder_date_create,
+       case when trim(lower(c_cl_req_old#last_name)) <> trim(lower(c_cl_req_new#last_name)) then 1 else 0 end as last_name,
+       case when trim(lower(c_cl_req_old#first_name)) <> trim(lower(c_cl_req_new#first_name)) then 1 else 0 end as first_name,
+       case when trim(lower(c_Cl_Req_Old#sur_Name)) <> trim(lower(c_Cl_Req_new#sur_Name)) then 1 else 0 end as sur_Name,
+       case when c_cl_req_old#pasport#type <> c_cl_req_new#pasport#type then 1 else 0 end as passport_type,
+       case when c_Cl_Req_Old#pasport#num<>c_Cl_Req_new#pasport#num then 1 else 0 end as passport_num,
+       case when c_cl_req_old#pasport#date_doc <> c_cl_req_new#pasport#date_doc then 1 else 0 end as passport_date_doc,
+       case when c_cl_req_old#pasport#date_end <> c_cl_req_new#pasport#date_end then 1 else 0 end as passport_date_end,
+       case when c_cl_req_old#inn <> c_cl_req_new#inn then 1 else 0 end as iin,
+       --case when c_cl_req_old#contacts <> c_cl_req_new#contacts then 1 else 0 end as contacts,
+       case when c_cl_req_old#date_pers <> c_cl_req_new#date_pers then 1 else 0 end as date_pers,
+
+       case when (c_cl_req_old#pasport#type <> c_cl_req_new#pasport#type or
+                  c_Cl_Req_Old#pasport#num<>c_Cl_Req_new#pasport#num or
+                  c_cl_req_old#pasport#date_doc <> c_cl_req_new#pasport#date_doc or
+                  c_cl_req_old#pasport#date_end <> c_cl_req_new#pasport#date_end) then 1 else 0 end as passport_data,
+
+       case when (trim(lower(c_cl_req_old#last_name)) <> trim(lower(c_cl_req_new#last_name)) or
+                  trim(lower(c_cl_req_old#first_name)) <> trim(lower(c_cl_req_new#first_name)) or
+                  trim(lower(c_Cl_Req_Old#sur_Name)) <> trim(lower(c_Cl_Req_new#sur_Name))) then 1 else 0 end as FIO,
+
+       case when (trim(lower(c_cl_req_old#last_name)) <> trim(lower(c_cl_req_new#last_name)) or
+                  trim(lower(c_cl_req_old#first_name)) <> trim(lower(c_cl_req_new#first_name)) or
+                  trim(lower(c_Cl_Req_Old#sur_Name)) <> trim(lower(c_Cl_Req_new#sur_Name)) or
+                  c_cl_req_old#pasport#type <> c_cl_req_new#pasport#type or
+                  c_Cl_Req_Old#pasport#num<>c_Cl_Req_new#pasport#num or
+                  c_cl_req_old#pasport#date_doc <> c_cl_req_new#pasport#date_doc or
+                  c_cl_req_old#pasport#date_end <> c_cl_req_new#pasport#date_end) then 1 else 0 end as FIO_Passport
+
+        --, case when p. <> c_cl_req_new#pasport#date_end then 1 else 0 end as passport_date_end,
+
+        , case when p.c_cl_req_old#sex#0 is null then 0 else 1 end as is_sex_exists
+
+from (
+        select *
+        from V_RFO_Z#KAS_ONLINE_CLAIM c1
+        join V_RFO_Z#KAS_UNIVERSA_REF s1 on s1.collection_id = c1.c_mng_vis_scen
+        join V_RFO_Z#KAS_UNIVERSAL_D kd1 on kd1.id = s1.c_value
+        join V_RFO_Z#KAS_ONLINE_BUY f on c1.c_buy_ref = f.id
+        where kd1.c_name = 'Подойти к менеджеру для изменения анкетных данных') a--16 280
+join v_folder_all_rfo b on a.c_client_ref = b.rfo_client_id and
+                           b.process_name = 'ИЗМЕНЕНИЕ АНКЕТНЫХ ДАННЫХ КЛИЕНТА' and
+                           b.folder_date_create > a.c_date_create and
+                           b.folder_date_create <= a.c_date_create + 3
+join u1.V_RFO_Z#RDOC rd on rd.collection_id = b.fld_c_docs
+join u1.V_RFO_Z#FDOC fd on fd.id = rd.c_doc
+join u1.V_RFO_Z#REQ_EDIT_CL_PRIV p on p.id = fd.id;
+grant select on U1.M_FLD_CON_CNL_ONL_IAD to LOADDB;
+grant select on U1.M_FLD_CON_CNL_ONL_IAD to LOADER;
+
+

@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_STRUCT_DEP_ADDR
+build deferred
+refresh force on demand
+as
+select t.c_code as code,a.city_name
+from V_RFO_Z#STRUCT_DEPART t
+join V_BRANCH a on a.dep_code = substr(t.c_code,1,7);
+grant select on U1.M_STRUCT_DEP_ADDR to LOADDB;
+grant select on U1.M_STRUCT_DEP_ADDR to LOAD_MO;
+
+

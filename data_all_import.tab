@@ -1,0 +1,69 @@
+﻿create table U1.DATA_ALL_IMPORT
+(
+  id                       NUMBER not null,
+  pos_code                 VARCHAR2(11),
+  branch_name              VARCHAR2(31),
+  client_name              VARCHAR2(100),
+  rnn                      VARCHAR2(12),
+  contract_no              VARCHAR2(20) not null,
+  product_programm         VARCHAR2(68),
+  start_date               DATE,
+  end_date                 DATE,
+  delinq_days              NUMBER(38),
+  contract_amount          NUMBER(38),
+  expert_name              VARCHAR2(87),
+  yy_mm_report             VARCHAR2(9),
+  product                  VARCHAR2(8),
+  yy_mm_start              VARCHAR2(9),
+  total_debt               NUMBER(38),
+  closed_open              VARCHAR2(8),
+  el_principal             NUMBER(38),
+  el_interest              NUMBER(38),
+  el_principal_del         NUMBER(38),
+  el_interest_del          NUMBER(38),
+  cc_credit_limit          NUMBER(38),
+  cc_available_balance_old NUMBER(38),
+  is_card                  NUMBER(1),
+  cc_total_debt_old        NUMBER(38),
+  cc_principal             NUMBER(38),
+  cc_principal_del         NUMBER(38),
+  cc_overlimit             NUMBER(38),
+  cc_overdraft             NUMBER(38),
+  cc_overlimit_del         NUMBER(38),
+  cc_overdraft_del         NUMBER(38),
+  cc_interest              NUMBER(38),
+  cc_interest_del          NUMBER(38),
+  cc_contract_start_date   DATE,
+  iin                      VARCHAR2(12)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 4096M
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+alter table U1.DATA_ALL_IMPORT
+  add constraint DATA_ALL_IMPORT_PK primary key (ID)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.DATA_ALL_IMPORT_PK nologging;
+grant select on U1.DATA_ALL_IMPORT to LOADDB;
+grant select on U1.DATA_ALL_IMPORT to LOADER;
+

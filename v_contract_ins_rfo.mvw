@@ -1,0 +1,45 @@
+﻿create materialized view U1.V_CONTRACT_INS_RFO
+using no index
+refresh complete on demand
+as
+select f.id as rfo_contract_ins_id,
+       decode(f.class_id,'KAS_CONT_INS_GPO','GPO','KAS_KASKO_INS','KASKO') as contract_ins_type,
+       decode(f.class_id,'KAS_CONT_INS_GPO',ig.c_num_reg,'KAS_KASKO_INS',ci.c_policy#num) as policy_num_for_link,
+       upper(s.c_name) as contract_status,
+       fo.id as folder_id, cp.c_date_create as folder_date, --fo.c_client as rfo_client_id_folder,
+       c.c_inn as client_iin,
+       uf.c_name as folder_create_user,
+       ui.c_name as insurance_agent,
+       ci.c_policy#num as policy_number, ci.c_policy#date_beg as policy_date_begin,
+       ci.c_policy#date_end as policy_date_end,
+       co.c_num_dog, co.c_client as rfo_client_id,
+       co.c_summ as contract_amount,
+       co.c_date_begin as contract_date_begin, co.c_end_date as contract_date_end,
+       co.c_period,
+       ci.c_insurance_com as ins_premium,
+--       f.c_num as contract_num,
+       ki.c_kas_kasko_shed as kasko_schedule_id,
+       ig.c_num_reg as gpo_reg_num, ig.c_available_sum as gpo_available_sum,
+       ig.c_pay_type as gpo_pay_type, ig.c_transports as gpo_transports_id,
+       ig.c_drivers as gpo_drivers_id,
+       ig.c_esbd_client_id as gpo_esbd_client_id,
+       ig.c_esbd_polis_id as gpo_esbd_policy_id
+from V_RFO_Z#FDOC f
+left join V_RFO_Z#CONT_INSUR ci on ci.id = f.id --and ci.c_policy#num is not null
+left join V_RFO_Z#STATUS_DOG s on s.id = f.c_status_doc
+left join V_RFO_Z#RDOC rd on rd.c_doc = f.id
+left join V_RFO_Z#FOLDERS fo on fo.c_docs = rd.collection_id
+left join V_RFO_Z#CM_CHECKPOINT cp on cp.id = fo.id
+left join V_RFO_Z#CONTRACT co on co.id = f.id
+left join V_RFO_Z#KAS_KASKO_INS ki on ki.id = f.id and f.class_id = 'KAS_KASKO_INS'
+left join V_RFO_Z#KAS_CONT_INS_GPO ig on ig.id = f.id and f.class_id = 'KAS_CONT_INS_GPO'
+left join V_RFO_Z#CLIENT c on c.id = co.c_client
+left join V_RFO_Z#USER ui on ui.id = ci.c_insurance_man
+left join V_RFO_Z#USER uf on uf.id = cp.c_create_user
+--left join V_RFO_Z#TYPE_INSURANCE ti on ti.id = ci.c_type_insurance
+where f.class_id in (/*'CONT_INSUR',*/'KAS_CONT_INS_GPO','KAS_KASKO_INS'/*,'KAS_FORM_CL_GPO'*/) --and
+--trunc(f.c_doc_date,'mm') = to_date('2013-11-01','yyyy-mm-dd');
+grant select on U1.V_CONTRACT_INS_RFO to LOADDB;
+grant select on U1.V_CONTRACT_INS_RFO to LOADER;
+
+

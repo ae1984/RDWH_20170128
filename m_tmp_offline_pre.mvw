@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_TMP_OFFLINE_PRE
+refresh force on demand
+as
+select z1.rfo_client_id,                                                                               -- данные ГЦВП, ПКБ
+                  max(g1.salary) keep (dense_rank last order by g1.rep_date) g_salary,
+                  max(pa.report_status) keep (dense_rank last order by pa.report_date_time) report_status
+            from risk_derbol.M_TMP_OFFLINE_CLI z1
+            join u1.V_CLIENT_RFO_BY_IIN ri on ri.rfo_client_id = z1.rfo_client_id
+            join u1.V_GCVP_REPORT g1 on g1.client_iin = ri.iin and g1.rep_date <= z1.a_date and g1.rep_date > z1.a_date - 60
+            join u1.V_PKB_ALL pa on pa.folder_id = z1.folder_id--pa.iin_rnn = ri.iin and pa.report_date_time <= z.a_date_time and pa.report_date > z.a_date - 1
+            group by z1.rfo_client_id;
+grant select on U1.M_TMP_OFFLINE_PRE to LOADDB;
+grant select on U1.M_TMP_OFFLINE_PRE to LOADER;
+
+

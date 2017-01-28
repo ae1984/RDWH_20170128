@@ -1,0 +1,46 @@
+﻿create materialized view U1.V_CONTRACT_FOLDER_ALL_LINK_RFO
+refresh complete on demand
+as
+select /*+parallel(15) parallel_index(15) */ c1.*, c11.c_num_dog as contract_number
+from (
+select
+      max(c.id) as rfo_contract_id,
+      fld.id as folder_id,
+      1 as is_card
+  from
+      V_RFO_Z#KAS_PC_DOG c,
+      V_RFO_Z#FOLDERS fld,
+      V_RFO_Z#FDOC fd,
+      V_RFO_Z#RDOC rd
+  where
+      c.id = fd.id
+      and fd.class_id = 'KAS_PC_DOG'
+      and rd.c_doc = fd.id
+      and rd.collection_id = fld.c_docs
+  group by fld.id
+) c1, V_RFO_Z#KAS_PC_DOG c11
+where c11.id = c1.rfo_contract_id
+union
+select c2.*, c22.c_num_dog as contract_number
+from (
+select
+      max(c.id) as rfo_contract_id,
+      fld.id as folder_id,
+      0 as is_card
+  from
+      V_RFO_Z#CREDIT_DOG c,
+      V_RFO_Z#FOLDERS fld,
+      V_RFO_Z#FDOC fd,
+      V_RFO_Z#RDOC rd
+  where
+      c.id = fd.id
+      and fd.class_id = 'CREDIT_DOG'
+      and rd.c_doc = fd.id
+      and rd.collection_id = fld.c_docs
+  group by fld.id
+) c2, V_RFO_Z#CREDIT_DOG c22
+where c22.id = c2.rfo_contract_id;
+grant select on U1.V_CONTRACT_FOLDER_ALL_LINK_RFO to LOADDB;
+grant select on U1.V_CONTRACT_FOLDER_ALL_LINK_RFO to LOADER;
+
+

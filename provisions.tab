@@ -1,0 +1,49 @@
+﻿create table U1.PROVISIONS
+(
+  rep_month      DATE,
+  not_delinquent NUMBER,
+  p_30           NUMBER,
+  p_031_060      NUMBER,
+  p_061_090      NUMBER,
+  p_091_120      NUMBER,
+  p_121_150      NUMBER,
+  p_151_180      NUMBER,
+  p_181_210      NUMBER,
+  p_211_240      NUMBER,
+  p_241_270      NUMBER,
+  p_271_300      NUMBER,
+  p_301_330      NUMBER,
+  p_331_360      NUMBER,
+  p_361_390      NUMBER,
+  p_391_420      NUMBER,
+  p_421_450      NUMBER,
+  p_451_480      NUMBER,
+  p_481_510      NUMBER,
+  p_511_540      NUMBER,
+  p_541_570      NUMBER,
+  p_571_600      NUMBER,
+  p_601_630      NUMBER,
+  p_631_660      NUMBER,
+  p_661_690      NUMBER,
+  p_691_720      NUMBER,
+  p_721_750      NUMBER,
+  p_750          NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.PROVISIONS to LOADDB;
+grant select on U1.PROVISIONS to LOADER;
+grant select on U1.PROVISIONS to LOAD_RDWH_PROD;
+grant select on U1.PROVISIONS to RISK_GTANYA;
+

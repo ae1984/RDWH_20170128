@@ -1,0 +1,76 @@
+﻿create table U1.T_DWH_ACC_RESERV_MONEY
+(
+  rsvmny_gid                 NUMBER not null,
+  rsvmny$change_date         DATE not null,
+  rsvmny$row_status          VARCHAR2(1 CHAR) not null,
+  rsvmny$audit_id            NUMBER not null,
+  rsvmny$hash                NUMBER,
+  rsvmny$source              VARCHAR2(4 CHAR) not null,
+  rsvmny$provider            VARCHAR2(80 CHAR) not null,
+  rsvmny$source_pk           VARCHAR2(2000 CHAR),
+  rsvmny_reserv_date         DATE,
+  rsvmny_create_date         DATE,
+  rsvmny_clnt_gid            NUMBER,
+  rsvmny_empl_gid            NUMBER,
+  rsvmny_cntc_empl_gid       NUMBER,
+  rsvmny_number              VARCHAR2(80 CHAR),
+  rsvmny_amount              NUMBER,
+  rsvmny_crnc_gid            VARCHAR2(3 CHAR),
+  rsvmny_city                VARCHAR2(250 CHAR),
+  rrsvmny_city_name          VARCHAR2(250 CHAR),
+  rsvmny_dept_gid            VARCHAR2(250 CHAR),
+  rsvmny_clnt_cont_status_cd NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on column U1.T_DWH_ACC_RESERV_MONEY.rsvmny_gid
+  is 'Идентификатор';
+comment on column U1.T_DWH_ACC_RESERV_MONEY.rsvmny_reserv_date
+  is 'Дата заказа';
+comment on column U1.T_DWH_ACC_RESERV_MONEY.rsvmny_create_date
+  is 'Дата создания';
+comment on column U1.T_DWH_ACC_RESERV_MONEY.rsvmny_clnt_gid
+  is 'Ссылка на сущность клиент';
+comment on column U1.T_DWH_ACC_RESERV_MONEY.rsvmny_empl_gid
+  is 'Ссылка на сущность сотрудник банка, который  зарегистрировал заказ';
+comment on column U1.T_DWH_ACC_RESERV_MONEY.rsvmny_cntc_empl_gid
+  is 'Ссылка на сущность сотрудник банка, который  обслужил клиента';
+comment on column U1.T_DWH_ACC_RESERV_MONEY.rsvmny_amount
+  is 'Сумма';
+comment on column U1.T_DWH_ACC_RESERV_MONEY.rsvmny_crnc_gid
+  is 'Ссылка на справочник валют';
+comment on column U1.T_DWH_ACC_RESERV_MONEY.rsvmny_city
+  is 'Город';
+comment on column U1.T_DWH_ACC_RESERV_MONEY.rrsvmny_city_name
+  is 'Город';
+comment on column U1.T_DWH_ACC_RESERV_MONEY.rsvmny_dept_gid
+  is 'Ссылка на сущность департамент';
+comment on column U1.T_DWH_ACC_RESERV_MONEY.rsvmny_clnt_cont_status_cd
+  is 'Ссылка на справочник статус контакта с клиентом';
+alter table U1.T_DWH_ACC_RESERV_MONEY
+  add primary key (RSVMNY_GID)
+  using index 
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.SYS_C0033741 nologging;
+

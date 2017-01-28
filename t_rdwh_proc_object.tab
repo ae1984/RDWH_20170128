@@ -1,0 +1,101 @@
+﻿create table U1.T_RDWH_PROC_OBJECT
+(
+  type_load            VARCHAR2(12) not null,
+  proc_name            VARCHAR2(50) not null,
+  object_name          VARCHAR2(250) not null,
+  priority             NUMBER(5,2) not null,
+  object_type          VARCHAR2(15) not null,
+  proc_priority        NUMBER(5),
+  is_critical          NUMBER(1),
+  is_used              NUMBER(1) not null,
+  comments             VARCHAR2(2000),
+  is_main_object       VARCHAR2(1),
+  id                   NUMBER(32) not null,
+  load_group           VARCHAR2(50),
+  reference_from_event VARCHAR2(50),
+  check_proc           VARCHAR2(50)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RDWH_PROC_OBJECT
+  is 'Объекты пересчета в разрезе процессов';
+comment on column U1.T_RDWH_PROC_OBJECT.type_load
+  is 'Тип загрузки DAILY-ежедневно, MONTHLY-ежемесячно';
+comment on column U1.T_RDWH_PROC_OBJECT.proc_name
+  is 'Имя процесса';
+comment on column U1.T_RDWH_PROC_OBJECT.object_name
+  is 'Наименование объекта';
+comment on column U1.T_RDWH_PROC_OBJECT.priority
+  is 'Приоритетность';
+comment on column U1.T_RDWH_PROC_OBJECT.object_type
+  is 'Тип объекта';
+comment on column U1.T_RDWH_PROC_OBJECT.is_main_object
+  is '(1-основной объект, 2-объект для МО, 3-объект для внешних пользователей)';
+comment on column U1.T_RDWH_PROC_OBJECT.check_proc
+  is 'Процедура проверки объекта';
+create index U1.T_RDWH_PROC_OBJECT_IND1 on U1.T_RDWH_PROC_OBJECT (PROC_NAME)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RDWH_PROC_OBJECT
+  add primary key (ID)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.SYS_C0015586 nologging;
+alter table U1.T_RDWH_PROC_OBJECT
+  add constraint T_RDWH_PROC_OBJECT_UK1 unique (TYPE_LOAD, PROC_NAME, PRIORITY)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.T_RDWH_PROC_OBJECT_UK1 nologging;
+alter table U1.T_RDWH_PROC_OBJECT
+  add constraint T_RDWH_PROC_OBJECT_CHK1
+  check (type_load in ('DAILY','MONTHLY','ONCE','MANUAL','TEMPORARY','WEEKLY','VIEW','SYSTEM','IN_TEST','ONLINE','ETL','WEEKLY_NEW','MONTHLY_NEW'));
+alter table U1.T_RDWH_PROC_OBJECT
+  add constraint T_RDWH_PROC_OBJECT_CHK2
+  check (object_type in ('TABLE','MVIEW','VIEW','MVIEW_TRUNC','MVIEW_ATOMIC'));
+alter table U1.T_RDWH_PROC_OBJECT
+  add constraint T_RDWH_PROC_OBJECT_NN
+  check (is_critical is not null);
+grant select on U1.T_RDWH_PROC_OBJECT to LOADDB;
+grant select on U1.T_RDWH_PROC_OBJECT to LOADER;
+

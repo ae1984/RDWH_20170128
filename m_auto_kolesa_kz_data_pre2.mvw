@@ -1,0 +1,422 @@
+﻿create materialized view U1.M_AUTO_KOLESA_KZ_DATA_PRE2
+refresh complete on demand
+as
+selecT v1.akk_brend,
+       v1.akk_model,
+       v1.akk_year_car,
+       v1.akk_drive,
+       v1.akk_engine_volume,
+       v1.akk_kpp_type,
+       v1.akk_body_type,
+       (v1.akk_price),
+       (v1.median),
+       (v1.std),
+       (v1.count_price_confidence),
+       (v1.advert_cnt),
+       (v1.avg_price),
+       (case
+         when ((v1.avg_price / v3.avg_price - 1) >= 0) and
+              ((v1.avg_price / v2.avg_price - 1) <= 0) then
+          1
+         when ((v1.avg_price / v3.avg_price - 1) >= 0) and
+              ((v1.avg_price / v2.avg_price - 1) is null) then
+          1
+         when ((v1.avg_price / v3.avg_price - 1) is null) and
+              ((v1.avg_price / v2.avg_price - 1) <= 0) then
+          1
+         else
+          0
+       end) as year_price_confidence,
+       (case
+         when (case
+                when v1.akk_kpp_type = 'АКПП' then
+                 (v1.avg_price / v4.avg_price - 1)
+                when v1.akk_kpp_type = 'МКПП' then
+                 (v4.avg_price / v1.avg_price - 1)
+              end) >= 0 then
+          1
+         when (case
+                when v1.akk_kpp_type = 'АКПП' then
+                 (v1.avg_price / v4.avg_price - 1)
+                when v1.akk_kpp_type = 'МКПП' then
+                 (v4.avg_price / v1.avg_price - 1)
+              end) is null then
+          1
+         else
+          0
+       end) as transmission_price_confidence,
+       (case
+         when v1.count_price_confidence + (case
+                when ((v1.avg_price / v3.avg_price - 1) >= 0) and
+                     ((v1.avg_price / v2.avg_price - 1) <= 0) then
+                 1
+                when ((v1.avg_price / v3.avg_price - 1) >= 0) and
+                     ((v1.avg_price / v2.avg_price - 1) is null) then
+                 1
+                when ((v1.avg_price / v3.avg_price - 1) is null) and
+                     ((v1.avg_price / v2.avg_price - 1) <= 0) then
+                 1
+                else
+                 0
+              end) + (case
+                when (case
+                       when v1.akk_kpp_type = 'АКПП' then
+                        (v1.avg_price / v4.avg_price - 1)
+                       when v1.akk_kpp_type = 'МКПП' then
+                        (v4.avg_price / v1.avg_price - 1)
+                     end) >= 0 then
+                 1
+                when (case
+                       when v1.akk_kpp_type = 'АКПП' then
+                        (v1.avg_price / v4.avg_price - 1)
+                       when v1.akk_kpp_type = 'МКПП' then
+                        (v4.avg_price / v1.avg_price - 1)
+                     end) is null then
+                 1
+                else
+                 0
+              end) = 3 then
+          1
+         else
+          0
+       end) as confidence_level,
+       v4.avg_price as price_other_kpp,
+       v3.avg_price as price_year_down,
+       v2.avg_price as price_year_up
+  from (selecT s.akk_brend,
+               s.akk_model,
+               s.akk_year_car,
+               s.akk_drive,
+               s.akk_engine_volume,
+               s.akk_kpp_type,
+               s.akk_body_type,
+               s.akk_price,
+               s.median,
+               round(s.std, 2) as std,
+               s.count_price_confidence,
+               advert_cnt, --кол-во объявлений по комбинации
+               round(avg(s.akk_price) over(partition by s.akk_brend,
+                          s.akk_model,
+                          s.akk_year_car,
+                          s.akk_drive,
+                          s.akk_engine_volume,
+                          s.akk_kpp_type,
+                          s.akk_body_type),
+                     2) as avg_price
+          from (selecT f.akk_brend,
+                       f.akk_model,
+                       f.akk_year_car,
+                       f.akk_drive,
+                       f.akk_engine_volume,
+                       f.akk_kpp_type,
+                       f.akk_body_type,
+                       f.akk_price,
+                       median(f.akk_price) over(partition by f.akk_brend, f.akk_model, f.akk_year_car, f.akk_drive, f.akk_engine_volume, f.akk_kpp_type, f.akk_body_type) as median,
+                       stddev(f.akk_price) over(partition by f.akk_brend, f.akk_model, f.akk_year_car, f.akk_drive, f.akk_engine_volume, f.akk_kpp_type, f.akk_body_type) as std,
+                       (case
+                         when count(f.akk_price)
+                          over(partition by f.akk_brend,
+                                   f.akk_model,
+                                   f.akk_year_car,
+                                   f.akk_drive,
+                                   f.akk_engine_volume,
+                                   f.akk_kpp_type,
+                                   f.akk_body_type) >= 10 then
+                          1
+                         else
+                          0
+                       end) as count_price_confidence,
+                       count(f.akk_price) over(partition by f.akk_brend, f.akk_model, f.akk_year_car, f.akk_drive, f.akk_engine_volume, f.akk_kpp_type, f.akk_body_type) as advert_cnt
+                  from (selecT d.akk_brend,
+                               d.akk_model,
+                               d.akk_year_car,
+                               d.akk_drive,
+                               d.akk_engine_volume,
+                               d.akk_kpp_type,
+                               d.akk_body_type,
+                               d.akk_price
+                          from (select t.akk_brend,
+                                       t.akk_model,
+                                       t.akk_year_car,
+                                       t.akk_drive,
+                                       t.akk_engine_volume,
+                                       t.akk_kpp_type,
+                                       t.akk_body_type,
+                                       t.akk_price,
+                                       median(t.akk_price) over(partition by t.akk_brend, t.akk_model, t.akk_year_car, t.akk_drive, t.akk_engine_volume, t.akk_kpp_type, t.akk_body_type) as median1
+                                  from M_AUTO_KOLESA_KZ_DATA_PRE t
+                                 group by t.akk_brend,
+                                          t.akk_model,
+                                          t.akk_year_car,
+                                          t.akk_drive,
+                                          t.akk_engine_volume,
+                                          t.akk_kpp_type,
+                                          t.akk_body_type,
+                                          t.akk_price) d
+                         where (abs(d.akk_price - d.median1) = 0 or
+                               (abs(d.akk_price - d.median1) / d.median1) * 100 <= 50)) f) s
+         where abs(s.akk_price - s.median) < s.std) v1
+
+  left join (selecT s.akk_brend,
+                    s.akk_model,
+                    s.akk_year_car,
+                    s.akk_drive,
+                    s.akk_engine_volume,
+                    s.akk_kpp_type,
+                    s.akk_body_type,
+                    s.akk_price,
+                    s.median,
+                    round(s.std, 2) as std,
+                    s.count_price_confidence,
+                    advert_cnt, --кол-во объявлений по комбинации
+                    round(avg(s.akk_price) over(partition by s.akk_brend,
+                               s.akk_model,
+                               s.akk_year_car,
+                               s.akk_drive,
+                               s.akk_engine_volume,
+                               s.akk_kpp_type,
+                               s.akk_body_type),
+                          2) as avg_price
+               from (selecT f.akk_brend,
+                            f.akk_model,
+                            f.akk_year_car,
+                            f.akk_drive,
+                            f.akk_engine_volume,
+                            f.akk_kpp_type,
+                            f.akk_body_type,
+                            f.akk_price,
+                            median(f.akk_price) over(partition by f.akk_brend, f.akk_model, f.akk_year_car, f.akk_drive, f.akk_engine_volume, f.akk_kpp_type, f.akk_body_type) as median,
+                            stddev(f.akk_price) over(partition by f.akk_brend, f.akk_model, f.akk_year_car, f.akk_drive, f.akk_engine_volume, f.akk_kpp_type, f.akk_body_type) as std,
+                            (case
+                              when count(f.akk_price)
+                               over(partition by f.akk_brend,
+                                        f.akk_model,
+                                        f.akk_year_car,
+                                        f.akk_drive,
+                                        f.akk_engine_volume,
+                                        f.akk_kpp_type,
+                                        f.akk_body_type) >= 10 then
+                               1
+                              else
+                               0
+                            end) as count_price_confidence,
+                            count(f.akk_price) over(partition by f.akk_brend, f.akk_model, f.akk_year_car, f.akk_drive, f.akk_engine_volume, f.akk_kpp_type, f.akk_body_type) as advert_cnt
+                       from (selecT d.akk_brend,
+                                    d.akk_model,
+                                    d.akk_year_car,
+                                    d.akk_drive,
+                                    d.akk_engine_volume,
+                                    d.akk_kpp_type,
+                                    d.akk_body_type,
+                                    d.akk_price
+                               from (select t.akk_brend,
+                                            t.akk_model,
+                                            t.akk_year_car,
+                                            t.akk_drive,
+                                            t.akk_engine_volume,
+                                            t.akk_kpp_type,
+                                            t.akk_body_type,
+                                            t.akk_price,
+                                            median(t.akk_price) over(partition by t.akk_brend, t.akk_model, t.akk_year_car, t.akk_drive, t.akk_engine_volume, t.akk_kpp_type, t.akk_body_type) as median1
+                                       from M_AUTO_KOLESA_KZ_DATA_PRE t
+                                      group by t.akk_brend,
+                                               t.akk_model,
+                                               t.akk_year_car,
+                                               t.akk_drive,
+                                               t.akk_engine_volume,
+                                               t.akk_kpp_type,
+                                               t.akk_body_type,
+                                               t.akk_price) d
+                              where (abs(d.akk_price - d.median1) = 0 or
+                                    (abs(d.akk_price - d.median1) / d.median1) * 100 <= 50)) f) s
+              where abs(s.akk_price - s.median) < s.std) v2
+    on v1.akk_brend = v2.akk_brend
+   and v1.akk_model = v2.akk_model
+   and v1.akk_drive = v2.akk_drive
+   and v1.akk_engine_volume = v2.akk_engine_volume
+   and v1.akk_kpp_type = v2.akk_kpp_type
+   and v1.akk_body_type = v2.akk_body_type
+   and v1.akk_year_car = v2.akk_year_car - 1
+
+  left join (selecT s.akk_brend,
+                    s.akk_model,
+                    s.akk_year_car,
+                    s.akk_drive,
+                    s.akk_engine_volume,
+                    s.akk_kpp_type,
+                    s.akk_body_type,
+                    s.akk_price,
+                    s.median,
+                    round(s.std, 2) as std,
+                    s.count_price_confidence,
+                    advert_cnt, --кол-во объявлений по комбинации
+                    round(avg(s.akk_price) over(partition by s.akk_brend,
+                               s.akk_model,
+                               s.akk_year_car,
+                               s.akk_drive,
+                               s.akk_engine_volume,
+                               s.akk_kpp_type,
+                               s.akk_body_type),
+                          2) as avg_price
+               from (selecT f.akk_brend,
+                            f.akk_model,
+                            f.akk_year_car,
+                            f.akk_drive,
+                            f.akk_engine_volume,
+                            f.akk_kpp_type,
+                            f.akk_body_type,
+                            f.akk_price,
+                            median(f.akk_price) over(partition by f.akk_brend, f.akk_model, f.akk_year_car, f.akk_drive, f.akk_engine_volume, f.akk_kpp_type, f.akk_body_type) as median,
+                            stddev(f.akk_price) over(partition by f.akk_brend, f.akk_model, f.akk_year_car, f.akk_drive, f.akk_engine_volume, f.akk_kpp_type, f.akk_body_type) as std,
+                            (case
+                              when count(f.akk_price)
+                               over(partition by f.akk_brend,
+                                        f.akk_model,
+                                        f.akk_year_car,
+                                        f.akk_drive,
+                                        f.akk_engine_volume,
+                                        f.akk_kpp_type,
+                                        f.akk_body_type) >= 10 then
+                               1
+                              else
+                               0
+                            end) as count_price_confidence,
+                            count(f.akk_price) over(partition by f.akk_brend, f.akk_model, f.akk_year_car, f.akk_drive, f.akk_engine_volume, f.akk_kpp_type, f.akk_body_type) as advert_cnt
+                       from (selecT d.akk_brend,
+                                    d.akk_model,
+                                    d.akk_year_car,
+                                    d.akk_drive,
+                                    d.akk_engine_volume,
+                                    d.akk_kpp_type,
+                                    d.akk_body_type,
+                                    d.akk_price
+                               from (select t.akk_brend,
+                                            t.akk_model,
+                                            t.akk_year_car,
+                                            t.akk_drive,
+                                            t.akk_engine_volume,
+                                            t.akk_kpp_type,
+                                            t.akk_body_type,
+                                            t.akk_price,
+                                            median(t.akk_price) over(partition by t.akk_brend, t.akk_model, t.akk_year_car, t.akk_drive, t.akk_engine_volume, t.akk_kpp_type, t.akk_body_type) as median1
+                                       from M_AUTO_KOLESA_KZ_DATA_PRE t
+                                      group by t.akk_brend,
+                                               t.akk_model,
+                                               t.akk_year_car,
+                                               t.akk_drive,
+                                               t.akk_engine_volume,
+                                               t.akk_kpp_type,
+                                               t.akk_body_type,
+                                               t.akk_price) d
+                              where (abs(d.akk_price - d.median1) = 0 or
+                                    (abs(d.akk_price - d.median1) / d.median1) * 100 <= 50)) f) s
+              where abs(s.akk_price - s.median) < s.std) v3
+
+    on v1.akk_brend = v3.akk_brend
+   and v1.akk_model = v3.akk_model
+   and v1.akk_drive = v3.akk_drive
+   and v1.akk_engine_volume = v3.akk_engine_volume
+   and v1.akk_kpp_type = v3.akk_kpp_type
+   and v1.akk_body_type = v3.akk_body_type
+   and v1.akk_year_car = v3.akk_year_car + 1
+
+  left join (selecT s.akk_brend,
+                    s.akk_model,
+                    s.akk_year_car,
+                    s.akk_drive,
+                    s.akk_engine_volume,
+                    s.akk_kpp_type,
+                    s.akk_body_type,
+                    s.akk_price,
+                    s.median,
+                    round(s.std, 2) as std,
+                    s.count_price_confidence,
+                    advert_cnt, --кол-во объявлений по комбинации
+                    round(avg(s.akk_price) over(partition by s.akk_brend,
+                               s.akk_model,
+                               s.akk_year_car,
+                               s.akk_drive,
+                               s.akk_engine_volume,
+                               s.akk_kpp_type,
+                               s.akk_body_type),
+                          2) as avg_price
+               from (selecT f.akk_brend,
+                            f.akk_model,
+                            f.akk_year_car,
+                            f.akk_drive,
+                            f.akk_engine_volume,
+                            f.akk_kpp_type,
+                            f.akk_body_type,
+                            f.akk_price,
+                            median(f.akk_price) over(partition by f.akk_brend, f.akk_model, f.akk_year_car, f.akk_drive, f.akk_engine_volume, f.akk_kpp_type, f.akk_body_type) as median,
+                            stddev(f.akk_price) over(partition by f.akk_brend, f.akk_model, f.akk_year_car, f.akk_drive, f.akk_engine_volume, f.akk_kpp_type, f.akk_body_type) as std,
+                            (case
+                              when count(f.akk_price)
+                               over(partition by f.akk_brend,
+                                        f.akk_model,
+                                        f.akk_year_car,
+                                        f.akk_drive,
+                                        f.akk_engine_volume,
+                                        f.akk_kpp_type,
+                                        f.akk_body_type) >= 10 then
+                               1
+                              else
+                               0
+                            end) as count_price_confidence,
+                            count(f.akk_price) over(partition by f.akk_brend, f.akk_model, f.akk_year_car, f.akk_drive, f.akk_engine_volume, f.akk_kpp_type, f.akk_body_type) as advert_cnt
+                       from (selecT d.akk_brend,
+                                    d.akk_model,
+                                    d.akk_year_car,
+                                    d.akk_drive,
+                                    d.akk_engine_volume,
+                                    d.akk_kpp_type,
+                                    d.akk_body_type,
+                                    d.akk_price
+                               from (select t.akk_brend,
+                                            t.akk_model,
+                                            t.akk_year_car,
+                                            t.akk_drive,
+                                            t.akk_engine_volume,
+                                            t.akk_kpp_type,
+                                            t.akk_body_type,
+                                            t.akk_price,
+                                            median(t.akk_price) over(partition by t.akk_brend, t.akk_model, t.akk_year_car, t.akk_drive, t.akk_engine_volume, t.akk_kpp_type, t.akk_body_type) as median1
+                                       from M_AUTO_KOLESA_KZ_DATA_PRE t
+                                      group by t.akk_brend,
+                                               t.akk_model,
+                                               t.akk_year_car,
+                                               t.akk_drive,
+                                               t.akk_engine_volume,
+                                               t.akk_kpp_type,
+                                               t.akk_body_type,
+                                               t.akk_price) d
+                              where (abs(d.akk_price - d.median1) = 0 or
+                                    (abs(d.akk_price - d.median1) / d.median1) * 100 <= 50)) f) s
+              where abs(s.akk_price - s.median) < s.std) v4
+    on v1.akk_brend = v4.akk_brend
+   and v1.akk_model = v4.akk_model
+   and v1.akk_drive = v4.akk_drive
+   and v1.akk_engine_volume = v4.akk_engine_volume
+   and v1.akk_kpp_type != v4.akk_kpp_type
+   and v1.akk_body_type = v4.akk_body_type
+   and v1.akk_year_car = v4.akk_year_car
+ group by v1.akk_brend,
+          v1.akk_model,
+          v1.akk_year_car,
+          v1.akk_drive,
+          v1.akk_engine_volume,
+          v1.akk_kpp_type,
+          v1.akk_body_type,
+          (v1.akk_price),
+          (v1.median),
+          (v1.std),
+          (v1.count_price_confidence),
+          (v1.advert_cnt),
+          (v1.avg_price),
+          (v3.avg_price),
+          (v2.avg_price),
+          v4.avg_price;
+grant select on U1.M_AUTO_KOLESA_KZ_DATA_PRE2 to LOADDB;
+grant select on U1.M_AUTO_KOLESA_KZ_DATA_PRE2 to LOADER;
+
+

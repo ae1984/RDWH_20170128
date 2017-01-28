@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_STAGE_Z#CREDIT_DOG_2D
+refresh force on demand
+as
+select * from rdwh.V_STAGE_CREDIT_DOG_2D@rdwh_exd t;
+grant select on U1.M_STAGE_Z#CREDIT_DOG_2D to LOADDB;
+grant select on U1.M_STAGE_Z#CREDIT_DOG_2D to LOADER;
+
+

@@ -1,0 +1,34 @@
+﻿create table U1.T_EVENT_ELECTRONIC_QUEUE
+(
+  id               VARCHAR2(40 CHAR),
+  source_system_id VARCHAR2(4 CHAR),
+  office_name      VARCHAR2(10 CHAR),
+  queue_type       VARCHAR2(50 CHAR),
+  ticket           VARCHAR2(10 CHAR),
+  servicetype_name VARCHAR2(10 CHAR),
+  event_date       DATE,
+  cashier          VARCHAR2(40 CHAR),
+  arrived          DATE,
+  start_serving    DATE,
+  end_of_service   DATE,
+  waiting_time     NUMBER,
+  serving_time     NUMBER,
+  user_name        VARCHAR2(40 CHAR)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select, insert, update, delete on U1.T_EVENT_ELECTRONIC_QUEUE to ETL;
+grant select on U1.T_EVENT_ELECTRONIC_QUEUE to LOADDB;
+grant select on U1.T_EVENT_ELECTRONIC_QUEUE to RTDM_USER;
+

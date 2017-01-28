@@ -1,0 +1,30 @@
+﻿create table U1.MO_RFOL_CANCEL
+(
+  cmchp_id        NUMBER,
+  foldr_client    NUMBER,
+  kcanc_id        NUMBER not null,
+  kcanc_date      DATE,
+  kcanc_type      NUMBER,
+  kcanc_note      VARCHAR2(4000),
+  kcant_id        NUMBER,
+  kcant_code      VARCHAR2(60),
+  kcant_type      VARCHAR2(60),
+  kcant_name      VARCHAR2(750),
+  kcant_err_level VARCHAR2(30)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO_RFOL_CANCEL to LOADDB;
+grant select on U1.MO_RFOL_CANCEL to LOADER;
+

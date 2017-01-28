@@ -1,0 +1,52 @@
+﻿create materialized view U1.M_RBO_PLAN_OPER_CARD
+build deferred
+refresh complete on demand
+as
+select x.rbo_contract_id,
+       x.contract_number,
+       x.plan_date,
+       coalesce(h.first_work_day,x.plan_date) as plan_date_x,
+       x.total_plan_summa,
+       x.cnt_pmt_plan,
+       dense_rank() over (partition by x.rbo_contract_id order by x.plan_date) as cnt_pmt,
+       x.day_pmt,
+       x.is_decl_early_p,
+       x.state_id
+from (
+select pd.id as rbo_contract_id,
+       pd.c_num_dog as contract_number,
+       ps.c_plan_pay_off_dat as plan_date,
+       ps.c_summa_plan as total_plan_summa,
+       dense_rank() over (partition by pd.id order by ps.c_plan_pay_off_dat) as cnt_pmt_plan,
+       pd.c_day_rp as day_pmt,
+       case when kd.c_code = 'END' then 4 end as is_decl_early_p,  --дата окончания договора (последний платеж)
+       ps.state_id
+  from U1.V_RBO_Z#KAS_PC_DOG  pd
+  join U1.V_RBO_Z#KAS_PC_STMT ps  on ps.collection_id = pd.c_stmt_arr
+                                 and ps.state_id != 'CANCELED'
+                                 and ps.c_summa_plan != 0
+                                 and ps.c_plan_pay_off_dat >= coalesce(pd.c_date_set_revolv,pd.c_date_begin)
+  join V_RBO_Z#KAS_DIC        kd  on kd.id = ps.c_vid_stmt_ref
+ union all
+ select pd.id as rbo_contract_id,
+       pd.c_num_dog as contract_number,
+       ps.c_plan_pay_off_dat as plan_date,
+       ps.c_summa_plan as total_plan_summa,
+       null as cnt_pmt_plan,
+       pd.c_day_rp as day_pmt,
+       case when kd.c_code = 'END' then 4 end as is_decl_early_p,  --дата окончания договора (последний платеж)
+       ps.state_id
+  from U1.V_RBO_Z#KAS_PC_DOG  pd
+  join u1.M_RBO_CONTRACT_BAS  cb  on cb.rbo_contract_id = pd.id
+                                 and cb.start_date_actual is not null
+  join U1.V_RBO_Z#KAS_PC_STMT ps  on ps.collection_id = pd.c_stmt_arr
+                                 and ps.state_id != 'CANCELED'
+                                 and ps.c_summa_plan = 0
+                                 and ps.c_plan_pay_off_dat >= cb.start_date_actual
+  join V_RBO_Z#KAS_DIC        kd  on kd.id = ps.c_vid_stmt_ref
+ ) x
+ left join V_TIME_HOLIDAYS h on h.holiday = x.plan_date;
+grant select on U1.M_RBO_PLAN_OPER_CARD to LOADDB;
+grant select on U1.M_RBO_PLAN_OPER_CARD to LOADER;
+
+

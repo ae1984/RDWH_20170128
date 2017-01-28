@@ -1,0 +1,27 @@
+﻿create table U1.M_RBO_REFIN_PORT_SNAP20170116
+(
+  rep_date              DATE,
+  rbo_contract_id       NUMBER(21),
+  rbo_client_id         NUMBER(32),
+  total_debt_plus       NUMBER,
+  del_days_plus         NUMBER,
+  del_days_cli_plus     NUMBER,
+  total_debt_max_plus   NUMBER,
+  del_days_max_plus     NUMBER,
+  del_days_cli_max_plus NUMBER,
+  min_refin_date        DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+

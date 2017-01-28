@@ -1,0 +1,67 @@
+﻿create materialized view U1.V_DWH_DEBT
+refresh complete on demand
+as
+(select to_char(c.cdld_rep_date, 'yyyy - mm') as yy_mm_report,
+       c.cdld_deal_number as contract_number,
+       (nvl(c.cdld_pc_cred,0) +
+       nvl(c.cdld_pc_prc,0) +
+       nvl(c.cdld_pc_overlimit,0) +
+       nvl(c.cdld_pc_overdraft,0) +
+       nvl(c.cdld_pc_ovrd_cred,0) +
+       nvl(c.cdld_pc_ovrd_prc,0) +
+       nvl(c.cdld_pc_ovrd_overlimit,0) +
+       nvl(c.cdld_pc_ovrd_overdraft,0)) as total_debt,
+       nvl(c.cdld_pc_ovrd_cred,0) +
+       nvl(c.cdld_pc_ovrd_prc,0) +
+       nvl(c.cdld_pc_ovrd_overlimit,0) +
+       nvl(c.cdld_pc_ovrd_overdraft,0) as delinq_debt
+
+from DM_CARDSDAILY_LD c
+join (select to_char(c.cdld_rep_date,'yyyy-mm') as yy_mm_report,
+             substr(ltrim(c.cdld_deal_number,'R'),1,7) as client_id,
+             max(c.cdld_cl_ovrd_days) as deling_days_max_client
+      from DM_CARDSDAILY_LD c
+      group by to_char(c.cdld_rep_date,'yyyy-mm'),
+               substr(ltrim(c.cdld_deal_number,'R'),1,7)
+      ) dc on dc.yy_mm_report = to_char(c.cdld_rep_date,'yyyy-mm') and
+              dc.client_id =  substr(ltrim(c.cdld_deal_number,'R'),1,7)
+where extract(year from c.cdld_rep_date) = 2013 and
+      (nvl(c.cdld_pc_cred,0) +
+       nvl(c.cdld_pc_prc,0) +
+       nvl(c.cdld_pc_overlimit,0) +
+       nvl(c.cdld_pc_overdraft,0) +
+       nvl(c.cdld_pc_ovrd_cred,0) +
+       nvl(c.cdld_pc_ovrd_prc,0) +
+       nvl(c.cdld_pc_ovrd_overlimit,0) +
+       nvl(c.cdld_pc_ovrd_overdraft,0)) > 0 and
+       dc.deling_days_max_client > 5 and dc.deling_days_max_client < 31
+
+union all
+
+select to_char(s.exld_rep_date, 'yyyy - mm') as yy_mm_report,
+       s.exld_deal_number as contract_number,
+       (nvl(s.exld_fgu_cred,0) +
+       nvl(s.exld_fgu_prc,0) +
+       nvl(s. exld_fgu_ovrd_cred,0) +
+       nvl(s.exld_fgu_ovrd_prc,0)) as total_debt,
+      (nvl(s. exld_fgu_ovrd_cred,0) +
+       nvl(s.exld_fgu_ovrd_prc,0)) as delinq_debt
+from DM_SPGU_LD s
+join (select to_char(s.exld_rep_date,'yyyy-mm') as yy_mm_report,
+             substr(ltrim(s.exld_deal_number,'R'),1,7) as client_id,
+             max(s.exld_cl_ovrd_days) as deling_days_max_client
+             from DM_SPGU_LD s
+      group by to_char(s.exld_rep_date,'yyyy-mm'),
+               substr(ltrim(s.exld_deal_number,'R'),1,7)
+      ) ds on ds.yy_mm_report = to_char(s.exld_rep_date,'yyyy-mm') and
+              ds.client_id = substr(ltrim(s.exld_deal_number,'R'),1,7)
+where extract(year from s.exld_rep_date) = 2013 and
+      (nvl(s.exld_fgu_cred,0) +
+       nvl(s.exld_fgu_prc,0) +
+       nvl(s. exld_fgu_ovrd_cred,0) +
+       nvl(s.exld_fgu_ovrd_prc,0)) > 0 and
+       ds.deling_days_max_client > 5 and ds.deling_days_max_client < 31);
+grant select on U1.V_DWH_DEBT to LOADDB;
+grant select on U1.V_DWH_DEBT to LOADER;
+
+

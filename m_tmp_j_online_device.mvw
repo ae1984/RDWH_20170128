@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_TMP_J_ONLINE_DEVICE
+refresh complete on demand
+as
+select coalesce(o.p_gaclientid, 'NO_GOOGLE_ID') as google_id,
+       case when regexp_like(o.p_gaclientid,'[0123456789.]') then 1 else 0 end as is_google_id_exists,
+       --
+       count(*) as cnt,
+       count(distinct c.id) as claim_cnt,
+       count(distinct case when f.is_credit_issued = 'КРЕДИТ ВЫДАН' then c.id end) as claim_approved_cnt,
+       count(distinct f.rfo_client_id) as rfo_client_cnt,
+       count(distinct case when f.is_credit_issued = 'КРЕДИТ ВЫДАН' then f.rfo_client_id end) as rfo_client_approved_cnt,
+       sum(case when f.is_credit_issued = 'КРЕДИТ ВЫДАН' then f.contract_amount end) / 1000000 as sales_mln,
+       count(distinct o.pk) as kaspish_order_cnt,
+       count(distinct u.uniqueid) as kaspish_mobile_cnt,
+       count(distinct c.c_form_client_st#mobile#numb) as rfo_mobile_cnt,
+       count(distinct f.shop_code) as shop_cnt,
+       round(months_between(sysdate, min(b.c_date_create))) as date_min_months_ago,
+       round(months_between(sysdate, max(b.c_date_create))) as date_max_months_ago
+from V_RFO_Z#KAS_ONLINE_CLAIM c
+join V_RFO_Z#KAS_ONLINE_BUY b on c.c_buy_ref = b.id
+join M_MATRIX_BASE f on f.claim_id = c.id
+left join M_KASPISH_ORDERS o on o.code = b.c_process_id
+left join M_KASPISH_USERS u on u.pk = o.userpk
+where b.c_date_create < to_date('2016-07-04','yyyy-mm-dd') and
+      b.c_date_create > to_date('2016-04-01','yyyy-mm-dd')
+group by coalesce(o.p_gaclientid, 'NO_GOOGLE_ID'),
+         case when regexp_like(o.p_gaclientid,'[0123456789.]') then 1 else 0 end;
+grant select on U1.M_TMP_J_ONLINE_DEVICE to LOADDB;
+
+

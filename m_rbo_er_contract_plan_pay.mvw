@@ -1,0 +1,67 @@
+﻿create materialized view U1.M_RBO_ER_CONTRACT_PLAN_PAY
+refresh complete on demand
+as
+select /*+ parallel 30*/
+       c.c_num_dog as contract_number,
+       max(c.c_date_begin) as contract_date_begin,
+       p.c_date as plan_oper_date,
+       rank() over (partition by c.c_num_dog order by p.c_date) as pmt_order,
+       null as credit_amount,
+       null as commissions_amount,
+       sum(case when o.c_code = 'ГАШЕНИЕ_КРЕД' then p.c_summa end) as pmt_principal,
+       sum(case when o.c_code = 'ГАШЕНИЕ_ПРОЦ' then p.c_summa end) as pmt_interest,
+       null as commission_type
+from v_rbo_Z#PR_CRED c
+join v_rbo_Z#PLAN_OPER p on p.collection_id = c.c_list_plan_pay
+join v_rbo_Z#VID_OPER_DOG o on o.id = p.c_oper and
+           o.c_code in ('ГАШЕНИЕ_КРЕД','ГАШЕНИЕ_ПРОЦ')
+--where c.c_num_dog = 'R3261445-001/CRD-3'
+group by c.c_num_dog, p.c_date
+union
+select  /*+ parallel 30*/c.c_num_dog as contract_number,
+       max(c.c_date_begin) as contract_date_begin,
+       p.c_date as plan_oper_date,
+       0 as pmt_order,
+       sum(case when o.c_code = 'ВЫДАЧА_КРЕДИТА' then p.c_summa end) as credit_amount,
+       max(nvl(co.commissions_amount, so.commissions_amount)) as commissions_amount,
+       null as pmt_principal,
+       null as pmt_interest,
+
+       max(case when co.commissions_amount > 0 then 1
+                when so.commissions_amount > 0 then 2
+                else 0 end) commission_type
+
+from v_rbo_Z#PR_CRED c
+join v_rbo_Z#PLAN_OPER p on p.collection_id = c.c_list_plan_pay
+join v_rbo_Z#VID_OPER_DOG o on o.id = p.c_oper and o.c_code in ('ВЫДАЧА_КРЕДИТА')
+left join (
+    select c.c_num_dog as contract_number,
+           sum(pp.c_pay_summa) as commissions_amount
+    from v_rbo_Z#PR_CRED c
+    left join v_rbo_Z#PARAM_FOR_PLAN pp on pp.collection_id = c.c_param_for_plan
+    left join v_rbo_Z#VID_OPER_DOG o on o.id = pp.c_oper
+    where --o.c_code like 'КОМ%'
+          o.id in (
+                   105168497031,
+                   105168503585,
+                    71161327942,
+                     2260464461,
+                   126855856749,
+                    64220404153
+                   )
+          --and c.c_num_dog = 'R3261445-001/CRD-3'
+    group by c.c_num_dog
+) co on co.contract_number = c.c_num_dog-- and p.c_date = c.c_date_begin
+left join (
+     select t.c_num_dog,
+            min(s.c_sum_total) keep (dense_rank first order by s.id) commissions_amount
+     from V_RBO_Z#PR_CRED t
+     join V_RBO_Z#KAS_AMORT_SUM s on s.c_dog_ref = t.id
+     group by t.c_num_dog
+) so on c.c_num_dog = so.c_num_dog
+--where c.c_num_dog = 'R3261445-001/CRD-3'
+group by c.c_num_dog, p.c_date;
+grant select on U1.M_RBO_ER_CONTRACT_PLAN_PAY to LOADDB;
+grant select on U1.M_RBO_ER_CONTRACT_PLAN_PAY to LOADER;
+
+

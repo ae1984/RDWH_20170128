@@ -1,0 +1,21 @@
+﻿create table U1.FLD_039_DISCRIPTION
+(
+  code      VARCHAR2(10),
+  mssg      VARCHAR2(255),
+  full_mssg VARCHAR2(255)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.FLD_039_DISCRIPTION to LOADDB;
+

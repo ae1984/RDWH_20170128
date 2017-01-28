@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_KASPIKZ_LOG_SECURITYTAG
+refresh force on demand
+as
+select t."Id" as id,
+       to_date(to_char(t."DateTime",'dd.mm.yyyy hh24:mi:ss'), 'dd.mm.yyyy hh24:mi:ss')as date_time,
+       cast(t."Tag" as varchar2(512)) as tag,
+       t."UserId" as user_id,
+       cast(t."DeviceId" as NVARCHAR2(256)) as device_id
+from "dbo"."log_SecurityTag"@"db_kr2" t;
+grant select on U1.M_KASPIKZ_LOG_SECURITYTAG to LOADDB;
+grant select on U1.M_KASPIKZ_LOG_SECURITYTAG to LOADER;
+
+

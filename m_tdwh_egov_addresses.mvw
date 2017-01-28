@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_TDWH_EGOV_ADDRESSES
+using no index
+refresh complete on demand
+as
+select id ,
+      iin,
+      error_msg,
+      country,
+      oblast_city,
+      district,
+      settlement,
+      street,
+      corpus,
+      building,
+      flat,
+      client_dwh_id,
+      idcard,
+      account_id,
+      idate,
+      hash_address,
+      count_hash_address
+ from MAIN.EGOV_ADDRESSES@TDWH2 T;
+grant select on U1.M_TDWH_EGOV_ADDRESSES to LOADDB;
+grant select on U1.M_TDWH_EGOV_ADDRESSES to LOADER;
+
+

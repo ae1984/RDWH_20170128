@@ -1,0 +1,28 @@
+﻿create materialized view U1.V_BL_MO_REMOVAL_201202_TMP
+never refresh
+as
+select tt.contractid, tt.creditinfoid, tt.iin_merged,
+       tt.accountingdate, tt.contract_phase, tt.contractstatus_name,
+       tt.overdueamount, tt.overdueamount_cur,
+       tt.startdate, tt.enddate, tt.realpaymentdate
+from V_BIG_CONTRACTS_ALL tt
+--     join V_BL_RFO_REMOVAL_201109_BEFORE r on r.c_inn = tt.iin_merged -- проставить нужное
+--     join v_bl_rfo_removal_201109_bef_fx r on r.c_inn = tt.iin_merged -- проставить нужное
+     join V_BL_MO_REMOVAL_201202_BEFORE r on r.iin = tt.iin_merged -- проставить нужное
+where /*tt.iin_merged not in (
+            select distinct t.iin_merged from V_CONTRACTS_ALL t
+            join V_BL_RFO_IIN_20130125_AFTER_V3 r on r.c_inn = t.iin_merged
+            where t.contract_phase = 'ДЕЙСТВУЮЩИЙ') and -- действующих на конец июля 2012 для удаления из ЧС не рассматриваем до июля 2014
+                                                        -- тогда весь ЧС надо будет очистить*/
+    tt.contractstatus_name in ('ПРОСРОЧЕННАЯ ЗАДОЛЖЕННОСТЬ СВЫШЕ 90 ДНЕЙ') and
+      (nvl(tt.overdueamount,0) = 0 or
+             (case when tt.overdueamount_cur = 'USD' then tt.overdueamount * 150
+                   when tt.overdueamount_cur = 'EUR' then tt.overdueamount * 200
+                   else tt.overdueamount end) > 4500
+       ) and
+     tt.client_relation in ('ЗАЁМЩИК',
+            'СОЗАЕМЩИК (ПРИСОЕДИНИВШЕЕСЯ ЛИЦО) С СОЛИДАРНЫМИ ОБЯЗАТЕЛЬСТВАМИ');
+grant select on U1.V_BL_MO_REMOVAL_201202_TMP to LOADDB;
+grant select on U1.V_BL_MO_REMOVAL_201202_TMP to LOADER;
+
+

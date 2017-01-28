@@ -1,0 +1,73 @@
+﻿create materialized view U1.V_RBO_Z#NOTRADE
+refresh complete on demand
+as
+select
+id,
+c_num_pk,
+c_num_dog,
+c_date_begin,
+c_date_begining,
+c_date_close,
+c_date_ending,
+c_create_user,
+translate(upper(c_name_pk),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+c_name_pk,
+c_notes,
+c_com_status,
+c_array_sum_dog,
+c_array_dog_acc,
+c_pk_cash,
+c_filial,
+c_rate_oper,
+c_array_oper_dog,
+c_depart,
+c_jour_rate_oper,
+c_arr_kassa_v,
+c_num_dog_client,
+c_arr_group,
+c_gr_tunings,
+translate(upper(c_address),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+c_address,
+c_prorerty_arr,
+c_reg_number,
+c_jour_input,
+c_kas_op,
+c_last_op_num,
+c_last_cert_num#ser,
+c_last_cert_num#numb,
+c_work_svod,
+c_history_op,
+c_num_pvn,
+c_accounts,
+c_control_ost#0,
+c_limits,
+c_no_refl_blank,
+c_virtual_kassir,
+c_with_20209,
+c_safe_default,
+c_is_punkt,
+c_is_lock_oper,
+c_kass_dep,
+c_arr_register,
+c_list_oper_cash,
+c_ch_medal#0,
+c_terminals,
+c_ch_by_cashier,
+c_far_exchg_point#0,
+c_reg_bks_num,
+c_cash_windows,
+c_kas_rnm,
+c_kas_sign_pf
+from V_RBO_Z#NOTRADE@RDWH11;
+grant select on U1.V_RBO_Z#NOTRADE to LOADDB;
+grant select on U1.V_RBO_Z#NOTRADE to LOADER;
+
+

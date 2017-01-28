@@ -1,0 +1,40 @@
+﻿create materialized view U1.M_OUT_CLIENT_ORG_BANK_LAST
+refresh force on demand
+as
+select /*+ parallel 30 */
+       t.client_iin_last iin,
+       t.client_id,
+       t.delinq_days_max,
+       case when t.delinq_days_max > 0 then 1 else 0 end is_delinq,
+       ptp.ptp_date_mm,
+       case when ptp.client_id is null then 0 else 1 end is_ptp,
+
+       org.*
+
+from V_CLIENT_CAL t
+left join (select c.client_id,
+                  max(to_date(ptp2.date_load, 'mm - yyyy')) ptp_date_mm
+           from T_PTP_CONTRACT_LOAD ptp2
+           join V_CONTRACT_CAL c on c.contract_number = ptp2.contract_number
+           group by c.client_id) ptp on ptp.client_id = t.client_id
+
+left join M_GX_CLIENT_ORG_BANK_LAST_2 tt on tt.iin = t.client_iin_last
+left join (select distinct org2.*
+           from M_GX_ORG_2_ALL org2) org on org.bin = tt.bin /*and
+                                org.bin not in ('730529301214',
+'840619450062',
+'741208301243',
+'770619302378',
+'670116302471',
+'721012302619',
+'480705301326',
+'541217300381'
+)*/
+where t.delinq_days_max > 7 or
+      ptp.client_id is not null
+--1410183;
+grant select on U1.M_OUT_CLIENT_ORG_BANK_LAST to IT6_USER;
+grant select on U1.M_OUT_CLIENT_ORG_BANK_LAST to LOADDB;
+grant select on U1.M_OUT_CLIENT_ORG_BANK_LAST to LOADER;
+
+

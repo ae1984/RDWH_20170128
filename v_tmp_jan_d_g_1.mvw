@@ -1,0 +1,42 @@
+﻿create materialized view U1.V_TMP_JAN_D_G_1
+refresh force on demand
+as
+select
+    c.yms,
+--    g.pmts_per_day_max,
+--    pkb.active_contracts,
+--    g.pmts_per_day_max, g.rep_date - g.pmts_per_day_max_date as days_ago,
+    --g.pmts_per_day_max ||'#'|| (g.rep_date - g.pmts_per_day_max_date) as pmt_max_days_ago,
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate,
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1,
+    round(sum(c.max_debt_used) / 1000000, 1) as sales_mln,
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt
+from V_TMP_CONTRACT_CAL_DEL c
+join V_CONTRACT_CAL cc on cc.contract_id = c.contract_id
+join V_GCVP_REPORT g on g.folder_id = c.folder_id_first --and nvl(g.salary,0) = 0
+join V_PKB_REPORT pkb on pkb.folder_id = c.folder_id_first
+      -- pkb.report_status = 'БЕКИ'--(pkb.active_contracts = 0 or
+         --pkb.pmt_active_all_sum > 100000
+where --(c.yms like '2013 - %' or c.yms in ('2014 - 01', '2014 - 02'))
+        (c.yms in ('2013 - 07','2013 - 08','2013 - 09','2013 - 10','2013 - 11',
+                   '2013 - 12','2014 - 01','2014 - 02','2014 - 03')) --and
+      --and g.pmts_per_day_max_date - g.min_org_pmt_date = 0
+/*      and ((g.pmts_per_day_max = 5 and g.rep_date - g.pmts_per_day_max_date < 11) or
+          (g.pmts_per_day_max = 6 and g.rep_date - g.pmts_per_day_max_date < 9) or
+          (g.pmts_per_day_max = 7 and g.rep_date - g.pmts_per_day_max_date < 5)
+      )*/
+      and g.pmts_per_day_max in (6,7,8)
+      and g.rep_date - g.pmts_per_day_max_date < 20
+      --and g.pmts_count_from_rep < 7
+--      and g.pmts_per_day_max in (6)
+      --and g.org_count > 1
+      and g.salary >= 20000
+      --and pkb.pmt_active_all_sum > 100000
+      and (pkb.report_status = 'БЕКИ' or (pkb.active_contracts = 1 and nvl(pkb.closed_contracts,0) = 0))
+      --and cc.contract_amount_first >= 500000
+--group by pkb.active_contracts having sum(c.max_debt_used) > 0;
+group by c.yms having sum(c.max_debt_used) > 0;
+grant select on U1.V_TMP_JAN_D_G_1 to LOADDB;
+grant select on U1.V_TMP_JAN_D_G_1 to LOADER;
+
+

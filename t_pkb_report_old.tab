@@ -1,0 +1,165 @@
+﻿create table U1.T_PKB_REPORT_OLD
+(
+  report_id              NUMBER not null,
+  report_date            DATE,
+  report_date_time       DATE,
+  iin_rnn                VARCHAR2(36),
+  pkb_merged_contract_id NUMBER,
+  report_type            VARCHAR2(100),
+  report_status          VARCHAR2(60),
+  is_from_cache          NUMBER(1),
+  active_contracts_raw   VARCHAR2(300),
+  active_contracts       VARCHAR2(300),
+  closed_contracts_raw   VARCHAR2(300),
+  closed_contracts       VARCHAR2(300),
+  total_debt_raw         VARCHAR2(300),
+  total_debt             NUMBER,
+  delinq_amount_raw      VARCHAR2(300),
+  delinq_amount          NUMBER,
+  pkb_contract_status    VARCHAR2(100),
+  contract_status        VARCHAR2(4000),
+  contract_status_clean  VARCHAR2(750),
+  monthly_payment_raw    VARCHAR2(60),
+  monthly_payment        NUMBER,
+  last_update            VARCHAR2(36),
+  currency               VARCHAR2(30),
+  appl_date              VARCHAR2(36),
+  date_begin             VARCHAR2(36),
+  date_end               VARCHAR2(36),
+  fact_gash_date         VARCHAR2(36),
+  outstanding_sum_raw    VARCHAR2(120),
+  outstanding_sum        NUMBER,
+  overdue_sum_raw        VARCHAR2(120),
+  overdue_sum            NUMBER,
+  subj_role              VARCHAR2(300),
+  fin_inst               VARCHAR2(600),
+  amount_raw             VARCHAR2(120),
+  amount                 NUMBER,
+  credit_usage           VARCHAR2(300),
+  residual_amount        VARCHAR2(120),
+  credit_limit_raw       VARCHAR2(120),
+  credit_limit           NUMBER,
+  ovrd_instalments       VARCHAR2(30),
+  pkb_pc_id              NUMBER,
+  total_amount_raw       VARCHAR2(60),
+  total_amount           NUMBER,
+  guarantee_val_raw      VARCHAR2(60),
+  guarantee_val          NUMBER,
+  id_doc_arr             NUMBER,
+  si_subj_role           NUMBER,
+  pledge_type_val        NUMBER,
+  report_source          VARCHAR2(6)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_PKB_REPORT_OLD
+  is 'Отчет ПКБ. Информация по договорам из отчета ПКБ';
+comment on column U1.T_PKB_REPORT_OLD.report_id
+  is 'Идентификатор отчета ПКБ';
+comment on column U1.T_PKB_REPORT_OLD.report_date
+  is 'Дата отчета(dd-mm-yyyy)';
+comment on column U1.T_PKB_REPORT_OLD.report_date_time
+  is 'Дата отчета(dd-mm-yyyy hh24:mi:ss)';
+comment on column U1.T_PKB_REPORT_OLD.iin_rnn
+  is 'РНН/ИНН клиента';
+comment on column U1.T_PKB_REPORT_OLD.pkb_merged_contract_id
+  is 'Идентификатор информации по договорам';
+comment on column U1.T_PKB_REPORT_OLD.report_type
+  is 'Тип отчета';
+comment on column U1.T_PKB_REPORT_OLD.report_status
+  is 'Статус отчета';
+comment on column U1.T_PKB_REPORT_OLD.is_from_cache
+  is 'Признак ссылки на оригинал ПКБ(1-есть,0-нет)';
+comment on column U1.T_PKB_REPORT_OLD.active_contracts_raw
+  is 'Кол-во действующих договоров';
+comment on column U1.T_PKB_REPORT_OLD.active_contracts
+  is 'Отформатированное кол-во действующих договоров';
+comment on column U1.T_PKB_REPORT_OLD.closed_contracts_raw
+  is 'Кол-во зaвepшeнных договоров';
+comment on column U1.T_PKB_REPORT_OLD.closed_contracts
+  is 'Отформатированное кол-во зaвepшeнных договоров';
+comment on column U1.T_PKB_REPORT_OLD.total_debt_raw
+  is 'Общая непогашенная сумма';
+comment on column U1.T_PKB_REPORT_OLD.total_debt
+  is 'Общая непогашенная сумма(числовое значение, с учетом валют)';
+comment on column U1.T_PKB_REPORT_OLD.delinq_amount_raw
+  is 'Сумма просроченных взносов по всем договорам';
+comment on column U1.T_PKB_REPORT_OLD.delinq_amount
+  is 'Сумма просроченных взносов по всем договорам(числовое значение, с учетом валют)';
+comment on column U1.T_PKB_REPORT_OLD.pkb_contract_status
+  is 'Статус контракта';
+comment on column U1.T_PKB_REPORT_OLD.contract_status
+  is 'Статус договора из отчета';
+comment on column U1.T_PKB_REPORT_OLD.contract_status_clean
+  is 'Отформатированный статус договора';
+comment on column U1.T_PKB_REPORT_OLD.monthly_payment_raw
+  is 'Сумма ежемесячного платежа';
+comment on column U1.T_PKB_REPORT_OLD.monthly_payment
+  is 'Сумма ежемесячного платежа(числовое значение, с учетом валют)';
+comment on column U1.T_PKB_REPORT_OLD.last_update
+  is 'Дата последнего обновления';
+comment on column U1.T_PKB_REPORT_OLD.currency
+  is 'Код валюты';
+comment on column U1.T_PKB_REPORT_OLD.appl_date
+  is 'Дата заявки';
+comment on column U1.T_PKB_REPORT_OLD.date_begin
+  is 'Фактическая дата выдачи кредита';
+comment on column U1.T_PKB_REPORT_OLD.date_end
+  is 'Дата завершения срока действия договора';
+comment on column U1.T_PKB_REPORT_OLD.fact_gash_date
+  is 'Фактическая дата погашения';
+comment on column U1.T_PKB_REPORT_OLD.outstanding_sum_raw
+  is 'Непогашенная сумма по кредиту';
+comment on column U1.T_PKB_REPORT_OLD.outstanding_sum
+  is 'Непогашенная сумма по кредиту(числовое значение, с учетом валют)';
+comment on column U1.T_PKB_REPORT_OLD.overdue_sum_raw
+  is 'Сумма просроченных взносов';
+comment on column U1.T_PKB_REPORT_OLD.overdue_sum
+  is 'Сумма просроченных взносов(числовое значение, с учетом валют)';
+comment on column U1.T_PKB_REPORT_OLD.subj_role
+  is 'Роль субъекта';
+comment on column U1.T_PKB_REPORT_OLD.fin_inst
+  is 'Источник информации (Кредитор)';
+comment on column U1.T_PKB_REPORT_OLD.amount
+  is 'Использованная сумма(числовое значение, с учетом валют)';
+comment on column U1.T_PKB_REPORT_OLD.credit_usage
+  is 'ID использования кредита';
+comment on column U1.T_PKB_REPORT_OLD.residual_amount
+  is 'Oстаточнaя cумма';
+comment on column U1.T_PKB_REPORT_OLD.credit_limit_raw
+  is 'Kредитный лимит';
+comment on column U1.T_PKB_REPORT_OLD.credit_limit
+  is 'Kредитный лимит(числовое значение, с учетом валют)';
+comment on column U1.T_PKB_REPORT_OLD.ovrd_instalments
+  is 'Кол-во дней просрочки';
+comment on column U1.T_PKB_REPORT_OLD.pkb_pc_id
+  is 'календарь платежей(collection в z#kas_pkb_pc) ';
+comment on column U1.T_PKB_REPORT_OLD.total_amount_raw
+  is 'общая сумма ';
+comment on column U1.T_PKB_REPORT_OLD.total_amount
+  is 'общая сумма(числовое значение, с учетом валют)';
+comment on column U1.T_PKB_REPORT_OLD.guarantee_val_raw
+  is 'стоимость обеспечения ';
+comment on column U1.T_PKB_REPORT_OLD.guarantee_val
+  is 'стоимость обеспечения(числовое значение, с учетом валют)';
+comment on column U1.T_PKB_REPORT_OLD.id_doc_arr
+  is 'документы удостоверяющие личность(collection в z#kas_pkb_id_doc) ';
+comment on column U1.T_PKB_REPORT_OLD.si_subj_role
+  is 'общая информация по роли(collection в z#kas_pkb_si) ';
+comment on column U1.T_PKB_REPORT_OLD.pledge_type_val
+  is 'виды обеспечения(collection в z#kas_pled_val) ';
+comment on column U1.T_PKB_REPORT_OLD.report_source
+  is 'Источник отчета(ПКБ, ГКБ)';
+grant select on U1.T_PKB_REPORT_OLD to LOADDB;
+

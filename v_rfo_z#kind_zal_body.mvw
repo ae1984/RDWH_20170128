@@ -1,0 +1,12 @@
+﻿CREATE MATERIALIZED VIEW U1.V_RFO_Z#KIND_ZAL_BODY
+REFRESH COMPLETE ON DEMAND
+AS
+SELECT  kzb.id,kzb.c_code,kzb.c_name,kzb.sn,kzb.su,kzb.c_kas_type_catalog,
+ kzb.c_parent_ref,kzb.c_kind,kzb.c_service_ref,kzb.c_active
+  ,ud.c_name as kind_name
+FROM IBS.Z#KIND_ZAL_BODY@RFO_SNAP kzb, IBS.Z#KAS_UNIVERSAL_D@RFO_SNAP ud
+WHERE ud.id = kzb.c_kind;
+grant select on U1.V_RFO_Z#KIND_ZAL_BODY to LOADDB;
+grant select on U1.V_RFO_Z#KIND_ZAL_BODY to LOADER;
+
+

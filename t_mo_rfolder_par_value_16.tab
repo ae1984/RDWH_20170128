@@ -1,0 +1,262 @@
+﻿create table U1.T_MO_RFOLDER_PAR_VALUE_16
+(
+  id                     NUMBER not null,
+  rfolder_id             NUMBER not null,
+  d_par_id               NUMBER not null,
+  value_text             VARCHAR2(2048),
+  value_date             DATE,
+  value_number           NUMBER,
+  date_create            TIMESTAMP(6) default systimestamp not null,
+  date_update            TIMESTAMP(6),
+  d_par_datatype_id      NUMBER default 1 not null,
+  calc_par_value_last_id NUMBER,
+  value_index            NUMBER,
+  d_par_object_id        NUMBER,
+  d_system_id            NUMBER,
+  value_index2           NUMBER
+)
+partition by range (DATE_CREATE) interval (NUMTOYMINTERVAL(1, 'MONTH'))
+subpartition by hash (RFOLDER_ID)
+(
+  partition P0 values less than (TIMESTAMP' 2016-02-01 00:00:00')
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP22671 tablespace USERS,
+    subpartition SYS_SUBP22672 tablespace USERS,
+    subpartition SYS_SUBP22673 tablespace USERS,
+    subpartition SYS_SUBP22674 tablespace USERS,
+    subpartition SYS_SUBP22675 tablespace USERS,
+    subpartition SYS_SUBP22676 tablespace USERS,
+    subpartition SYS_SUBP22677 tablespace USERS,
+    subpartition SYS_SUBP22678 tablespace USERS,
+    subpartition SYS_SUBP22679 tablespace USERS,
+    subpartition SYS_SUBP22680 tablespace USERS,
+    subpartition SYS_SUBP22681 tablespace USERS,
+    subpartition SYS_SUBP22682 tablespace USERS,
+    subpartition SYS_SUBP22683 tablespace USERS,
+    subpartition SYS_SUBP22684 tablespace USERS,
+    subpartition SYS_SUBP22685 tablespace USERS,
+    subpartition SYS_SUBP22686 tablespace USERS,
+    subpartition SYS_SUBP22687 tablespace USERS,
+    subpartition SYS_SUBP22688 tablespace USERS,
+    subpartition SYS_SUBP22689 tablespace USERS,
+    subpartition SYS_SUBP22690 tablespace USERS,
+    subpartition SYS_SUBP22691 tablespace USERS,
+    subpartition SYS_SUBP22692 tablespace USERS,
+    subpartition SYS_SUBP22693 tablespace USERS,
+    subpartition SYS_SUBP22694 tablespace USERS,
+    subpartition SYS_SUBP22695 tablespace USERS,
+    subpartition SYS_SUBP22696 tablespace USERS,
+    subpartition SYS_SUBP22697 tablespace USERS,
+    subpartition SYS_SUBP22698 tablespace USERS,
+    subpartition SYS_SUBP22699 tablespace USERS,
+    subpartition SYS_SUBP22700 tablespace USERS,
+    subpartition SYS_SUBP22701 tablespace USERS,
+    subpartition SYS_SUBP22702 tablespace USERS
+  ),
+  partition SYS_P3519 values less than (TIMESTAMP' 2016-03-01 00:00:00')
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP3487 tablespace USERS,
+    subpartition SYS_SUBP3488 tablespace USERS,
+    subpartition SYS_SUBP3489 tablespace USERS,
+    subpartition SYS_SUBP3490 tablespace USERS,
+    subpartition SYS_SUBP3491 tablespace USERS,
+    subpartition SYS_SUBP3492 tablespace USERS,
+    subpartition SYS_SUBP3493 tablespace USERS,
+    subpartition SYS_SUBP3494 tablespace USERS,
+    subpartition SYS_SUBP3495 tablespace USERS,
+    subpartition SYS_SUBP3496 tablespace USERS,
+    subpartition SYS_SUBP3497 tablespace USERS,
+    subpartition SYS_SUBP3498 tablespace USERS,
+    subpartition SYS_SUBP3499 tablespace USERS,
+    subpartition SYS_SUBP3500 tablespace USERS,
+    subpartition SYS_SUBP3501 tablespace USERS,
+    subpartition SYS_SUBP3502 tablespace USERS,
+    subpartition SYS_SUBP3503 tablespace USERS,
+    subpartition SYS_SUBP3504 tablespace USERS,
+    subpartition SYS_SUBP3505 tablespace USERS,
+    subpartition SYS_SUBP3506 tablespace USERS,
+    subpartition SYS_SUBP3507 tablespace USERS,
+    subpartition SYS_SUBP3508 tablespace USERS,
+    subpartition SYS_SUBP3509 tablespace USERS,
+    subpartition SYS_SUBP3510 tablespace USERS,
+    subpartition SYS_SUBP3511 tablespace USERS,
+    subpartition SYS_SUBP3512 tablespace USERS,
+    subpartition SYS_SUBP3513 tablespace USERS,
+    subpartition SYS_SUBP3514 tablespace USERS,
+    subpartition SYS_SUBP3515 tablespace USERS,
+    subpartition SYS_SUBP3516 tablespace USERS,
+    subpartition SYS_SUBP3517 tablespace USERS,
+    subpartition SYS_SUBP3518 tablespace USERS
+  ),
+  partition SYS_P3552 values less than (TIMESTAMP' 2016-04-01 00:00:00')
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP3520 tablespace USERS,
+    subpartition SYS_SUBP3521 tablespace USERS,
+    subpartition SYS_SUBP3522 tablespace USERS,
+    subpartition SYS_SUBP3523 tablespace USERS,
+    subpartition SYS_SUBP3524 tablespace USERS,
+    subpartition SYS_SUBP3525 tablespace USERS,
+    subpartition SYS_SUBP3526 tablespace USERS,
+    subpartition SYS_SUBP3527 tablespace USERS,
+    subpartition SYS_SUBP3528 tablespace USERS,
+    subpartition SYS_SUBP3529 tablespace USERS,
+    subpartition SYS_SUBP3530 tablespace USERS,
+    subpartition SYS_SUBP3531 tablespace USERS,
+    subpartition SYS_SUBP3532 tablespace USERS,
+    subpartition SYS_SUBP3533 tablespace USERS,
+    subpartition SYS_SUBP3534 tablespace USERS,
+    subpartition SYS_SUBP3535 tablespace USERS,
+    subpartition SYS_SUBP3536 tablespace USERS,
+    subpartition SYS_SUBP3537 tablespace USERS,
+    subpartition SYS_SUBP3538 tablespace USERS,
+    subpartition SYS_SUBP3539 tablespace USERS,
+    subpartition SYS_SUBP3540 tablespace USERS,
+    subpartition SYS_SUBP3541 tablespace USERS,
+    subpartition SYS_SUBP3542 tablespace USERS,
+    subpartition SYS_SUBP3543 tablespace USERS,
+    subpartition SYS_SUBP3544 tablespace USERS,
+    subpartition SYS_SUBP3545 tablespace USERS,
+    subpartition SYS_SUBP3546 tablespace USERS,
+    subpartition SYS_SUBP3547 tablespace USERS,
+    subpartition SYS_SUBP3548 tablespace USERS,
+    subpartition SYS_SUBP3549 tablespace USERS,
+    subpartition SYS_SUBP3550 tablespace USERS,
+    subpartition SYS_SUBP3551 tablespace USERS
+  ),
+  partition SYS_P3585 values less than (TIMESTAMP' 2016-05-01 00:00:00')
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP3553 tablespace USERS,
+    subpartition SYS_SUBP3554 tablespace USERS,
+    subpartition SYS_SUBP3555 tablespace USERS,
+    subpartition SYS_SUBP3556 tablespace USERS,
+    subpartition SYS_SUBP3557 tablespace USERS,
+    subpartition SYS_SUBP3558 tablespace USERS,
+    subpartition SYS_SUBP3559 tablespace USERS,
+    subpartition SYS_SUBP3560 tablespace USERS,
+    subpartition SYS_SUBP3561 tablespace USERS,
+    subpartition SYS_SUBP3562 tablespace USERS,
+    subpartition SYS_SUBP3563 tablespace USERS,
+    subpartition SYS_SUBP3564 tablespace USERS,
+    subpartition SYS_SUBP3565 tablespace USERS,
+    subpartition SYS_SUBP3566 tablespace USERS,
+    subpartition SYS_SUBP3567 tablespace USERS,
+    subpartition SYS_SUBP3568 tablespace USERS,
+    subpartition SYS_SUBP3569 tablespace USERS,
+    subpartition SYS_SUBP3570 tablespace USERS,
+    subpartition SYS_SUBP3571 tablespace USERS,
+    subpartition SYS_SUBP3572 tablespace USERS,
+    subpartition SYS_SUBP3573 tablespace USERS,
+    subpartition SYS_SUBP3574 tablespace USERS,
+    subpartition SYS_SUBP3575 tablespace USERS,
+    subpartition SYS_SUBP3576 tablespace USERS,
+    subpartition SYS_SUBP3577 tablespace USERS,
+    subpartition SYS_SUBP3578 tablespace USERS,
+    subpartition SYS_SUBP3579 tablespace USERS,
+    subpartition SYS_SUBP3580 tablespace USERS,
+    subpartition SYS_SUBP3581 tablespace USERS,
+    subpartition SYS_SUBP3582 tablespace USERS,
+    subpartition SYS_SUBP3583 tablespace USERS,
+    subpartition SYS_SUBP3584 tablespace USERS
+  ),
+  partition SYS_P3618 values less than (TIMESTAMP' 2016-06-01 00:00:00')
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP3586 tablespace USERS,
+    subpartition SYS_SUBP3587 tablespace USERS,
+    subpartition SYS_SUBP3588 tablespace USERS,
+    subpartition SYS_SUBP3589 tablespace USERS,
+    subpartition SYS_SUBP3590 tablespace USERS,
+    subpartition SYS_SUBP3591 tablespace USERS,
+    subpartition SYS_SUBP3592 tablespace USERS,
+    subpartition SYS_SUBP3593 tablespace USERS,
+    subpartition SYS_SUBP3594 tablespace USERS,
+    subpartition SYS_SUBP3595 tablespace USERS,
+    subpartition SYS_SUBP3596 tablespace USERS,
+    subpartition SYS_SUBP3597 tablespace USERS,
+    subpartition SYS_SUBP3598 tablespace USERS,
+    subpartition SYS_SUBP3599 tablespace USERS,
+    subpartition SYS_SUBP3600 tablespace USERS,
+    subpartition SYS_SUBP3601 tablespace USERS,
+    subpartition SYS_SUBP3602 tablespace USERS,
+    subpartition SYS_SUBP3603 tablespace USERS,
+    subpartition SYS_SUBP3604 tablespace USERS,
+    subpartition SYS_SUBP3605 tablespace USERS,
+    subpartition SYS_SUBP3606 tablespace USERS,
+    subpartition SYS_SUBP3607 tablespace USERS,
+    subpartition SYS_SUBP3608 tablespace USERS,
+    subpartition SYS_SUBP3609 tablespace USERS,
+    subpartition SYS_SUBP3610 tablespace USERS,
+    subpartition SYS_SUBP3611 tablespace USERS,
+    subpartition SYS_SUBP3612 tablespace USERS,
+    subpartition SYS_SUBP3613 tablespace USERS,
+    subpartition SYS_SUBP3614 tablespace USERS,
+    subpartition SYS_SUBP3615 tablespace USERS,
+    subpartition SYS_SUBP3616 tablespace USERS,
+    subpartition SYS_SUBP3617 tablespace USERS
+  ),
+  partition SYS_P3260 values less than (TIMESTAMP' 2016-07-01 00:00:00')
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP3228 tablespace USERS,
+    subpartition SYS_SUBP3229 tablespace USERS,
+    subpartition SYS_SUBP3230 tablespace USERS,
+    subpartition SYS_SUBP3231 tablespace USERS,
+    subpartition SYS_SUBP3232 tablespace USERS,
+    subpartition SYS_SUBP3233 tablespace USERS,
+    subpartition SYS_SUBP3234 tablespace USERS,
+    subpartition SYS_SUBP3235 tablespace USERS,
+    subpartition SYS_SUBP3236 tablespace USERS,
+    subpartition SYS_SUBP3237 tablespace USERS,
+    subpartition SYS_SUBP3238 tablespace USERS,
+    subpartition SYS_SUBP3239 tablespace USERS,
+    subpartition SYS_SUBP3240 tablespace USERS,
+    subpartition SYS_SUBP3241 tablespace USERS,
+    subpartition SYS_SUBP3242 tablespace USERS,
+    subpartition SYS_SUBP3243 tablespace USERS,
+    subpartition SYS_SUBP3244 tablespace USERS,
+    subpartition SYS_SUBP3245 tablespace USERS,
+    subpartition SYS_SUBP3246 tablespace USERS,
+    subpartition SYS_SUBP3247 tablespace USERS,
+    subpartition SYS_SUBP3248 tablespace USERS,
+    subpartition SYS_SUBP3249 tablespace USERS,
+    subpartition SYS_SUBP3250 tablespace USERS,
+    subpartition SYS_SUBP3251 tablespace USERS,
+    subpartition SYS_SUBP3252 tablespace USERS,
+    subpartition SYS_SUBP3253 tablespace USERS,
+    subpartition SYS_SUBP3254 tablespace USERS,
+    subpartition SYS_SUBP3255 tablespace USERS,
+    subpartition SYS_SUBP3256 tablespace USERS,
+    subpartition SYS_SUBP3257 tablespace USERS,
+    subpartition SYS_SUBP3258 tablespace USERS,
+    subpartition SYS_SUBP3259 tablespace USERS
+  )
+);
+create index U1.T_MO_RFOLDER_PAR_VAL_16_IDX1 on U1.T_MO_RFOLDER_PAR_VALUE_16 (RFOLDER_ID)
+  nologging  local;
+create index U1.T_MO_RFOLDER_PAR_VAL_16_IDX2 on U1.T_MO_RFOLDER_PAR_VALUE_16 (DATE_CREATE)
+  nologging  local;
+grant select on U1.T_MO_RFOLDER_PAR_VALUE_16 to LOADDB;
+grant select on U1.T_MO_RFOLDER_PAR_VALUE_16 to LOADER;
+

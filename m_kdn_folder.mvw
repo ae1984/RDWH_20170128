@@ -1,0 +1,55 @@
+﻿create materialized view U1.M_KDN_FOLDER
+using no index
+refresh complete on demand
+as
+select /*+ parallel(15) */ round(y.pmt/r.income*100,2) as KDN_from_form_for_6_months,
+       round(y.pmt/r2.income*100,2) as KDN_from_current_form,
+       round(y.pmt/r1.salary*100,2) as KDN_from_gcvp,
+       round(y.pmt/(case when nvl(r1.salary,0) >= nvl(r2.inc_sal,0) then r1.salary
+            when nvl(r1.salary,0) < nvl(r2.inc_sal,0) then r2.inc_sal end + nvl(r2.inc_sal_add,0) + nvl(r2.inc_sal_spouse,0) + nvl(r2.inc_rent,0) +
+       nvl(r2.inc_pension_benefits,0) + nvl(r2.inc_interest,0))*100,2) as KDN_min,
+       r2.inc_sal,
+       r2.inc_sal_add,
+       r2.inc_sal_spouse,
+       r2.inc_rent,
+       r2.inc_pension_benefits,
+       r2.inc_interest,
+       r1.salary,
+       r.inc_sal as current_inc_sal,
+       r.inc_sal_add as current_inc_sal_add,
+       r.inc_sal_spouse as current_inc_sal_spouse,
+       r.inc_rent as current_inc_rent,
+       r.inc_pension_benefits as current_inc_pension_benefits,
+       r.inc_interest as current_inc_interest,
+       y.pmt_in_kaspi,
+       y.pmt_in_other as dealinq_pmt_all,
+
+       y.folder_id_first from (
+        select (sum(nvl(x.pmt_in_kaspi,0))+sum(nvl(x.pmt_in_kaspi_written,0))+sum(nvl(x.pmt_in_other,0))+sum(nvl(x.DELINQ_del,0))+sum(nvl(x.pmt_in_kaspi_all,0))) as PMT,
+               sum(nvl(x.pmt_in_kaspi,0))+sum(nvl(x.DELINQ_del,0))+sum(nvl(x.pmt_in_kaspi_all,0))+sum(nvl(x.pmt_in_kaspi_written,0)) as pmt_in_kaspi,
+               sum(nvl(x.pmt_in_other,0)) as pmt_in_other,
+               x.folder_id_first  from M_KDN_FOLDER_PRE_1 x
+                group by x.folder_id_first
+        ) y
+left join M_average_salary_on_folder r on r.folder_id = y.folder_id_first
+left join (
+            select nvl(rr.inc_sal,0) + nvl(rr.inc_sal_add,0) + nvl(rr.inc_sal_spouse,0) + nvl(rr.inc_rent,0) +
+                   nvl(rr.inc_pension_benefits,0) + nvl(rr.inc_interest,0) as income,
+                   rr.inc_sal,
+                   rr.inc_sal_add,
+                   rr.inc_sal_spouse,
+                   rr.inc_rent,
+                   rr.inc_pension_benefits,
+                   rr.inc_interest,
+                   f.folder_id
+            from V_FORM_CLIENT_ALL_RFO rr
+            join v_folder_all_rfo f on f.form_client_id = rr.form_client_id
+            where nvl(rr.inc_sal,0) + nvl(rr.inc_sal_add,0) + nvl(rr.inc_sal_spouse,0) + nvl(rr.inc_rent,0) +
+                  nvl(rr.inc_pension_benefits,0) + nvl(rr.inc_interest,0) >0
+)r2 on r2.folder_id = y.folder_id_first
+left join v_gcvp_report r1 on r1.folder_id = y.folder_id_first
+where y.folder_id_first is not null;
+grant select on U1.M_KDN_FOLDER to LOADDB;
+grant select on U1.M_KDN_FOLDER to LOADER;
+
+

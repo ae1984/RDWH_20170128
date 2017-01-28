@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_TMP_J_SEG_CAT_A
+refresh complete on demand
+as
+select fcc.rfo_contract_id
+from M_FOLDER_CON_CANCEL fcc
+where fcc.folder_date_create_mi >= to_date('2012','yyyy') and
+      fcc.folder_date_create_mi < trunc(sysdate,'mm') and-- d.x_start_date_actual is not null and
+      fcc.is_categ_a = 1;
+grant select on U1.M_TMP_J_SEG_CAT_A to LOADDB;
+grant select on U1.M_TMP_J_SEG_CAT_A to LOADER;
+
+

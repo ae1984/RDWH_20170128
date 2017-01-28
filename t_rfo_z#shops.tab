@@ -1,0 +1,54 @@
+﻿create table U1.T_RFO_Z#SHOPS
+(
+  id                     NUMBER not null,
+  c_code                 VARCHAR2(50 CHAR),
+  c_name                 VARCHAR2(100 CHAR),
+  c_address#post_ind     VARCHAR2(6 CHAR),
+  c_address#place        VARCHAR2(170 CHAR),
+  c_address#adr_type     NUMBER,
+  c_address#date_begin   DATE,
+  c_address#date_end     DATE,
+  c_address#house        VARCHAR2(10 CHAR),
+  c_address#frame        VARCHAR2(10 CHAR),
+  c_address#flat         VARCHAR2(10 CHAR),
+  c_address#street       VARCHAR2(100 CHAR),
+  c_address#region       VARCHAR2(100 CHAR),
+  c_address#district     VARCHAR2(100 CHAR),
+  c_address#region_ref   NUMBER,
+  c_address#district_ref NUMBER,
+  c_org                  NUMBER,
+  c_active               VARCHAR2(1 CHAR),
+  class_id               VARCHAR2(16 CHAR),
+  c_address#city         NUMBER,
+  c_address#place_ref    NUMBER,
+  c_kas_dpt_fx           NUMBER,
+  c_address#country      NUMBER,
+  c_kas_use_barc         VARCHAR2(1 CHAR),
+  c_address#date_audit   TIMESTAMP(9),
+  c_address#affirmed     VARCHAR2(1 CHAR),
+  c_address#activ        VARCHAR2(1 CHAR),
+  c_address#houses_ref   NUMBER,
+  c_kas_distr_net        NUMBER,
+  c_kas_independ         VARCHAR2(1 CHAR),
+  sn                     NUMBER,
+  su                     NUMBER,
+  c_kas_grp_partners     NUMBER,
+  c_kas_clc_sngl_ks      VARCHAR2(1 CHAR),
+  c_kas_attr_ref         NUMBER,
+  c_kas_props            NUMBER,
+  c_accounts             NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.T_RFO_Z#SHOPS to LOADDB;
+

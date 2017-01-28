@@ -1,0 +1,87 @@
+﻿create materialized view U1.M_TMP_RENAT_REG
+refresh force on demand
+as
+select /*+ noparallel */ -- менеджер и клиент
+       t.folder_id,
+       c.cancel_type_name as "ВИД_ОТКАЗА",
+       f.manager_result_note as "КОММЕНТАРИЙ"
+from M_FOLDER_CON_CANCEL t
+join V_CANCEL c on c.folder_id = t.folder_id
+join V_FOLDER_ALL_RFO f on f.folder_id = t.folder_id
+where t.is_credit_issued = 0 and t.is_refin = 0 and
+      t.folder_date_create_mi >=add_months(trunc(sysdate, 'month'),-6) and
+      t.cr_program_name in  ('АВТОКРЕДИТОВАНИЕ', 'АВТОКРЕДИТОВАНИЕ БУ') and
+      t.cancel_manager is not null and
+      (c.cancel_type_group in ('MANAGER') or (c.cancel_type_group in ('CLIENT_PC_TO_EKT') and
+                                                upper(c.cancel_notes) like '%ОТКАЗАЛСЯ%'))
+union
+---------------- Прескоринг
+select /*+ noparallel */
+       t.folder_id,
+       c.cancel_type_name as "ВИД_ОТКАЗА",
+       null as "КОММЕНТАРИЙ"
+from M_FOLDER_CON_CANCEL t
+join V_CANCEL c on c.folder_id = t.folder_id
+where t.is_credit_issued = 0 and t.is_refin = 0 and
+     t.folder_date_create_mi >= add_months(trunc(sysdate, 'month'),-6) and
+     t.cr_program_name in  ('АВТОКРЕДИТОВАНИЕ', 'АВТОКРЕДИТОВАНИЕ БУ') and
+     t.cancel_prescoring is not null and
+     c.cancel_type_code not in ('VERIFICATION_CONTACT','VERIFICATION_PHOTO') and
+--     c.cancel_type_code not in ('MO_SCO_REJECT','BL_REJECT_ASOKR') and
+     (c.cancel_type_group in ('GCVP'/*,'NIGHT_PRS_PKB','NIGHT_PRS_FC'*/) or
+         (c.cancel_type_group = 'AUTO' and c.cancel_type_code <> 'AA_CALC_4_3RD_LOAN'))
+union
+----------------Отказы ЦПР
+select /*+ noparallel */
+       t.folder_id,
+       c.cancel_type_name as "ВИД_ОТКАЗА",
+       null as "КОММЕНТАРИЙ"
+from M_FOLDER_CON_CANCEL t
+join V_CANCEL c on c.folder_id = t.folder_id
+where t.is_credit_issued = 0 and t.is_refin = 0 and
+      t.folder_date_create_mi >=add_months(trunc(sysdate, 'month'),-6) and
+      t.cr_program_name in  ('АВТОКРЕДИТОВАНИЕ', 'АВТОКРЕДИТОВАНИЕ БУ') and
+      (c.cancel_type_group = 'CPR'/* or (c.cancel_type_group = 'AUTO' and c.cancel_type_code = 'AA_CALC_4_3RD_LOAN')*/)
+union
+--------------------------- АА
+select /*+ noparallel */
+       t.folder_id,
+       'ОТКАЗ АВТОАНДЕРРАЙТИНГА' as "ВИД_ОТКАЗА",
+       ca.auto_calc_result as "КОММЕНТАРИЙ"
+from M_FOLDER_CON_CANCEL t
+join V_CONTRACT_ALL_RFO ca on ca.rfo_contract_id = t.rfo_contract_id
+where t.is_credit_issued = 0 and t.is_refin = 0 and
+      t.folder_date_create_mi >=add_months(trunc(sysdate, 'month'),-6) and
+      t.cr_program_name in  ('АВТОКРЕДИТОВАНИЕ', 'АВТОКРЕДИТОВАНИЕ БУ') and
+      ca.is_aa_approved = 0
+union
+--------------------------- АА 2
+select /*+ noparallel */
+       t.folder_id,
+       c.cancel_type_name as "ВИД_ОТКАЗА",
+       ca.auto_calc_result as "КОММЕНТАРИЙ"
+from M_FOLDER_CON_CANCEL t
+left join V_CONTRACT_ALL_RFO ca on ca.rfo_contract_id = t.rfo_contract_id
+join V_CANCEL c on c.folder_id = t.folder_id
+where t.is_credit_issued = 0 and t.is_refin = 0 and
+      t.folder_date_create_mi >=add_months(trunc(sysdate, 'month'),-6) and
+      t.cr_program_name in  ('АВТОКРЕДИТОВАНИЕ', 'АВТОКРЕДИТОВАНИЕ БУ') and
+      c.cancel_type_group = 'AUTO' and
+      c.cancel_type_code = 'AA_CALC_4_3RD_LOAN'
+union
+--------------------------- Верификаторы
+select /*+ noparallel */
+       t.folder_id,
+       c.cancel_type_name as "ВИД_ОТКАЗА",
+       v.verif_comment as "КОММЕНТАРИЙ"
+from M_FOLDER_CON_CANCEL t
+join V_VERIFICATION V on v.folder_id = t.folder_id
+join V_CANCEL c on c.folder_id = t.folder_id
+where t.is_credit_issued = 0 and t.is_refin = 0 and
+      t.folder_date_create_mi >=add_months(trunc(sysdate, 'month'),-6) and
+      t.cr_program_name in  ('АВТОКРЕДИТОВАНИЕ', 'АВТОКРЕДИТОВАНИЕ БУ') and
+      c.cancel_type_code in ('VERIFICATION_CONTACT','VERIFICATION_PHOTO');
+grant select on U1.M_TMP_RENAT_REG to LOADDB;
+grant select on U1.M_TMP_RENAT_REG to LOADER;
+
+

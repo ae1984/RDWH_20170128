@@ -1,0 +1,37 @@
+﻿create table U1.MO_RFOL_PKB_REPORT
+(
+  pkbrp_id             NUMBER not null,
+  foldr_id             NUMBER,
+  foldr_client         NUMBER,
+  fdocx_doc_date       DATE,
+  pkbrp_rnn            VARCHAR2(36),
+  pkbrp_surname        VARCHAR2(300),
+  pkbrp_name           VARCHAR2(300),
+  pkbrp_fathersname    VARCHAR2(300),
+  pkbrp_si_noec        VARCHAR2(300),
+  pkbrp_si_notc        VARCHAR2(300),
+  pkbrp_si_tdo         VARCHAR2(300),
+  pkbrp_nsoc           VARCHAR2(750),
+  pkbrp_nsoa           VARCHAR2(750),
+  pkbrp_dateofrptissue VARCHAR2(30),
+  pkbrp_status         VARCHAR2(60),
+  pkbrp_rpt_type       NUMBER(2),
+  pkbrp_pkb_report_ref NUMBER,
+  clien_id             NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO_RFOL_PKB_REPORT to LOADDB;
+grant select on U1.MO_RFOL_PKB_REPORT to LOADER;
+

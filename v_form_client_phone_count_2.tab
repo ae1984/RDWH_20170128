@@ -1,0 +1,35 @@
+﻿create table U1.V_FORM_CLIENT_PHONE_COUNT_2
+(
+  form_client_id              NUMBER,
+  folder_id                   NUMBER,
+  folder_date                 DATE,
+  form_client_date            DATE,
+  rfo_client_id               NUMBER,
+  phone_number                VARCHAR2(4000),
+  phone_type                  VARCHAR2(37),
+  contact_relation            VARCHAR2(300),
+  contact_surname             VARCHAR2(400),
+  contact_first_name          VARCHAR2(400),
+  contact_patronymic          VARCHAR2(400),
+  other_cli_same_ph_type_365d NUMBER,
+  is_rfo_must_be_rejected     NUMBER,
+  is_rfo_must_be_rejected_hom NUMBER,
+  is_rfo_must_be_rejected_mob NUMBER,
+  is_rfo_must_be_rejected_con NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.V_FORM_CLIENT_PHONE_COUNT_2 to LOADDB;
+grant select on U1.V_FORM_CLIENT_PHONE_COUNT_2 to LOADER;
+

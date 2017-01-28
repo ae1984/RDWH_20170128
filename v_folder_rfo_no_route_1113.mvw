@@ -1,0 +1,29 @@
+﻿create materialized view U1.V_FOLDER_RFO_NO_ROUTE_1113
+using no index
+refresh complete on demand
+as
+select /*+ parallel(20) */
+ff.*
+    from V_FOLDER_ALL_RFO ff
+    where ff.folder_id in (
+          select f.folder_id
+          from (
+               select t.folder_id, count(mo.id)
+                from V_FOLDER_ALL_RFO t
+                left join V_MO_PROCESS_IN_PAR_1113 ip on ip.param_code_int = 'IN_CLIENT_ID'
+                                                 and ip.value_number = t.rfo_client_id
+                left join V_MO_PROCESS_1113 mo on ip.v_mo_process_id = mo.id
+                                            --and mo.date_start >= to_date('2013-11-01', 'yyyy-mm-dd')
+                                            --and mo.date_start < to_date('2013-12-01', 'yyyy-mm-dd')
+                                            --and mo.d_process_id = 7
+                                            --and mo.params_in like '%[IN_CLIENT_ID#' || t.rfo_client_id || ']%'
+                where t.folder_date_create >= to_date('2013-11-04', 'yyyy-mm-dd')
+                  and t.folder_date_create < to_date('2013-11-11', 'yyyy-mm-dd')
+                  and t.is_credit_process = 1
+                  and t.is_daytime_decision_folder = 1
+                group by t.folder_id
+                having count(mo.id) < 1) f);
+grant select on U1.V_FOLDER_RFO_NO_ROUTE_1113 to LOADDB;
+grant select on U1.V_FOLDER_RFO_NO_ROUTE_1113 to LOADER;
+
+

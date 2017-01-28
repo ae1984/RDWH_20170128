@@ -1,0 +1,52 @@
+﻿create materialized view U1.M_TMP_FOLDER_CLIENT_BL_30D_DD
+build deferred
+using no index
+refresh force on demand
+as
+select /*+ parallel 30 */
+       *
+from (
+    select /*+ parallel 30 */
+           r.id rfolder_id,
+           r.date_create,
+           dp.code_int,
+           case when dp.code_int = 'IN_SCO_SYSTEM_SOURCE' then
+                case when t.value_text = 'KASPI_SHOPPING' then 1 else 0 end
+           else t.value_number end as value_number
+
+    from u1.T_MO_RFOLDER_DD r
+    join u1.T_MO_RFOLDER_PAR_VALUE_DD t on t.rfolder_id = r.id and t.date_create >= trunc(sysdate)
+/*    join u1.T_MO_RFOLDER_PAR_VALUE_DD t2 on t2.rfolder_id = r.id and
+                                              t2.d_par_id = 1327 and
+                                              t2.value_text = 'KASPI_SHOPPING' and
+                                              t2.date_create >= trunc(sysdate)*/
+    join u1.V_MO_D_PAR dp on dp.id = t.d_par_id
+                          and dp.code_int in ('IN_SCO_CLIENT_ID',
+                                              'IN_SCO_FOLDER_ID',
+
+                                              'IN_SCO_NUM_SCORING',
+                                              --'IN_SCO_SYSTEM_SOURCE',
+
+                                              'SC_CLIENT_SEGMENT_RULE_BL',
+
+                                              'MO_SCO_REJECT_KN',
+                                              'MO_SCO_REJECT'
+                                              )
+    where r.date_create >= trunc(sysdate)
+          /*and r.id = 35894176*/
+) pivot (
+    max(value_number)
+    for code_int in ( 'IN_SCO_CLIENT_ID' as rfo_client_id,
+                      'IN_SCO_FOLDER_ID' as rfo_folder_id,
+
+                      'IN_SCO_NUM_SCORING' as in_sco_num_scoring,
+                      --'IN_SCO_SYSTEM_SOURCE' in_sco_system_source,
+
+                      'SC_CLIENT_SEGMENT_RULE_BL' as sc_client_segment_rule_bl,
+
+                      'MO_SCO_REJECT_KN' as mo_sco_reject_kn,
+                      'MO_SCO_REJECT' as mo_sco_reject)
+);
+grant select on U1.M_TMP_FOLDER_CLIENT_BL_30D_DD to LOADDB;
+
+

@@ -1,0 +1,10 @@
+﻿create materialized view U1.M_DWH_REF_SHOP_PRODUCT
+build deferred
+refresh force on demand
+as
+select *
+  from DWH_MAIN.REF_SHOP_PRODUCT@RDWH_EXD
+ where shpro_modifiedtime > trunc(sysdate) - 31;
+grant select on U1.M_DWH_REF_SHOP_PRODUCT to LOADDB;
+
+

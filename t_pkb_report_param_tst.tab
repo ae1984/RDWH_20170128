@@ -1,0 +1,58 @@
+﻿create table U1.T_PKB_REPORT_PARAM_TST
+(
+  report_id              NUMBER,
+  report_date            DATE,
+  report_date_time       DATE,
+  iin_rnn                VARCHAR2(60),
+  pkb_merged_contract_id NUMBER,
+  report_type            VARCHAR2(200),
+  report_status          VARCHAR2(60),
+  is_from_cache          NUMBER(1),
+  active_contracts_raw   VARCHAR2(400),
+  active_contracts       VARCHAR2(400),
+  closed_contracts_raw   VARCHAR2(400),
+  closed_contracts       VARCHAR2(400),
+  total_debt_raw         VARCHAR2(400),
+  total_debt             NUMBER,
+  delinq_amount_raw      VARCHAR2(400),
+  delinq_amount          NUMBER,
+  pkb_contract_status    VARCHAR2(400),
+  contract_status        VARCHAR2(4000),
+  contract_status_clean  VARCHAR2(4000),
+  monthly_payment_raw    VARCHAR2(60),
+  monthly_payment        NUMBER,
+  c_last_update          VARCHAR2(36),
+  c_currency             VARCHAR2(30),
+  c_appl_date            VARCHAR2(36),
+  c_date_begin           VARCHAR2(36),
+  c_date_end             VARCHAR2(36),
+  c_fact_gash_date       VARCHAR2(36),
+  outstanding_sum_raw    VARCHAR2(120),
+  outstanding_sum        NUMBER,
+  overdue_sum_raw        VARCHAR2(120),
+  overdue_sum            NUMBER,
+  c_subj_role            VARCHAR2(300),
+  c_fin_inst             VARCHAR2(600),
+  c_amount               VARCHAR2(120),
+  amount                 NUMBER,
+  c_credit_usage         VARCHAR2(300),
+  c_residual_amount      VARCHAR2(120),
+  credit_limit_raw       VARCHAR2(120),
+  credit_limit           NUMBER,
+  c_ovrd_instalments     VARCHAR2(30)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_PKB_REPORT_PARAM_TST to LOADDB;
+

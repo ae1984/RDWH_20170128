@@ -1,0 +1,144 @@
+﻿create table U1.T_MO_RFOLDER_PAR_VAL_RBP_2016
+(
+  id           NUMBER not null,
+  rfolder_id   NUMBER not null,
+  date_create  DATE not null,
+  date_update  DATE,
+  d_calc_code  VARCHAR2(100) not null,
+  kdn_gr       NUMBER,
+  term_gr      NUMBER,
+  score_bal    NUMBER,
+  rule_result  NUMBER,
+  pmt          NUMBER,
+  amount       NUMBER,
+  product_code VARCHAR2(100)
+)
+partition by range (DATE_CREATE) interval (NUMTOYMINTERVAL(1, 'MONTH'))
+subpartition by hash (RFOLDER_ID)
+(
+  partition P0 values less than (TO_DATE(' 2016-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP22831 tablespace USERS,
+    subpartition SYS_SUBP22832 tablespace USERS,
+    subpartition SYS_SUBP22833 tablespace USERS,
+    subpartition SYS_SUBP22834 tablespace USERS,
+    subpartition SYS_SUBP22835 tablespace USERS,
+    subpartition SYS_SUBP22836 tablespace USERS,
+    subpartition SYS_SUBP22837 tablespace USERS,
+    subpartition SYS_SUBP22838 tablespace USERS,
+    subpartition SYS_SUBP22839 tablespace USERS,
+    subpartition SYS_SUBP22840 tablespace USERS,
+    subpartition SYS_SUBP22841 tablespace USERS,
+    subpartition SYS_SUBP22842 tablespace USERS,
+    subpartition SYS_SUBP22843 tablespace USERS,
+    subpartition SYS_SUBP22844 tablespace USERS,
+    subpartition SYS_SUBP22845 tablespace USERS,
+    subpartition SYS_SUBP22846 tablespace USERS,
+    subpartition SYS_SUBP22847 tablespace USERS,
+    subpartition SYS_SUBP22848 tablespace USERS,
+    subpartition SYS_SUBP22849 tablespace USERS,
+    subpartition SYS_SUBP22850 tablespace USERS,
+    subpartition SYS_SUBP22851 tablespace USERS,
+    subpartition SYS_SUBP22852 tablespace USERS,
+    subpartition SYS_SUBP22853 tablespace USERS,
+    subpartition SYS_SUBP22854 tablespace USERS,
+    subpartition SYS_SUBP22855 tablespace USERS,
+    subpartition SYS_SUBP22856 tablespace USERS,
+    subpartition SYS_SUBP22857 tablespace USERS,
+    subpartition SYS_SUBP22858 tablespace USERS,
+    subpartition SYS_SUBP22859 tablespace USERS,
+    subpartition SYS_SUBP22860 tablespace USERS,
+    subpartition SYS_SUBP22861 tablespace USERS,
+    subpartition SYS_SUBP22862 tablespace USERS
+  ),
+  partition SYS_P22895 values less than (TO_DATE(' 2016-02-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP22863 tablespace USERS,
+    subpartition SYS_SUBP22864 tablespace USERS,
+    subpartition SYS_SUBP22865 tablespace USERS,
+    subpartition SYS_SUBP22866 tablespace USERS,
+    subpartition SYS_SUBP22867 tablespace USERS,
+    subpartition SYS_SUBP22868 tablespace USERS,
+    subpartition SYS_SUBP22869 tablespace USERS,
+    subpartition SYS_SUBP22870 tablespace USERS,
+    subpartition SYS_SUBP22871 tablespace USERS,
+    subpartition SYS_SUBP22872 tablespace USERS,
+    subpartition SYS_SUBP22873 tablespace USERS,
+    subpartition SYS_SUBP22874 tablespace USERS,
+    subpartition SYS_SUBP22875 tablespace USERS,
+    subpartition SYS_SUBP22876 tablespace USERS,
+    subpartition SYS_SUBP22877 tablespace USERS,
+    subpartition SYS_SUBP22878 tablespace USERS,
+    subpartition SYS_SUBP22879 tablespace USERS,
+    subpartition SYS_SUBP22880 tablespace USERS,
+    subpartition SYS_SUBP22881 tablespace USERS,
+    subpartition SYS_SUBP22882 tablespace USERS,
+    subpartition SYS_SUBP22883 tablespace USERS,
+    subpartition SYS_SUBP22884 tablespace USERS,
+    subpartition SYS_SUBP22885 tablespace USERS,
+    subpartition SYS_SUBP22886 tablespace USERS,
+    subpartition SYS_SUBP22887 tablespace USERS,
+    subpartition SYS_SUBP22888 tablespace USERS,
+    subpartition SYS_SUBP22889 tablespace USERS,
+    subpartition SYS_SUBP22890 tablespace USERS,
+    subpartition SYS_SUBP22891 tablespace USERS,
+    subpartition SYS_SUBP22892 tablespace USERS,
+    subpartition SYS_SUBP22893 tablespace USERS,
+    subpartition SYS_SUBP22894 tablespace USERS
+  ),
+  partition SYS_P616 values less than (TO_DATE(' 2016-03-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP584 tablespace USERS,
+    subpartition SYS_SUBP585 tablespace USERS,
+    subpartition SYS_SUBP586 tablespace USERS,
+    subpartition SYS_SUBP587 tablespace USERS,
+    subpartition SYS_SUBP588 tablespace USERS,
+    subpartition SYS_SUBP589 tablespace USERS,
+    subpartition SYS_SUBP590 tablespace USERS,
+    subpartition SYS_SUBP591 tablespace USERS,
+    subpartition SYS_SUBP592 tablespace USERS,
+    subpartition SYS_SUBP593 tablespace USERS,
+    subpartition SYS_SUBP594 tablespace USERS,
+    subpartition SYS_SUBP595 tablespace USERS,
+    subpartition SYS_SUBP596 tablespace USERS,
+    subpartition SYS_SUBP597 tablespace USERS,
+    subpartition SYS_SUBP598 tablespace USERS,
+    subpartition SYS_SUBP599 tablespace USERS,
+    subpartition SYS_SUBP600 tablespace USERS,
+    subpartition SYS_SUBP601 tablespace USERS,
+    subpartition SYS_SUBP602 tablespace USERS,
+    subpartition SYS_SUBP603 tablespace USERS,
+    subpartition SYS_SUBP604 tablespace USERS,
+    subpartition SYS_SUBP605 tablespace USERS,
+    subpartition SYS_SUBP606 tablespace USERS,
+    subpartition SYS_SUBP607 tablespace USERS,
+    subpartition SYS_SUBP608 tablespace USERS,
+    subpartition SYS_SUBP609 tablespace USERS,
+    subpartition SYS_SUBP610 tablespace USERS,
+    subpartition SYS_SUBP611 tablespace USERS,
+    subpartition SYS_SUBP612 tablespace USERS,
+    subpartition SYS_SUBP613 tablespace USERS,
+    subpartition SYS_SUBP614 tablespace USERS,
+    subpartition SYS_SUBP615 tablespace USERS
+  )
+);
+create index U1.T_MO_RFOLD_PAR_VAL_RBP_16_IDX1 on U1.T_MO_RFOLDER_PAR_VAL_RBP_2016 (RFOLDER_ID)
+  nologging  local;
+create index U1.T_MO_RFOLD_PAR_VAL_RBP_16_IDX2 on U1.T_MO_RFOLDER_PAR_VAL_RBP_2016 (DATE_CREATE)
+  nologging  local;
+grant select on U1.T_MO_RFOLDER_PAR_VAL_RBP_2016 to LOADDB;
+grant select on U1.T_MO_RFOLDER_PAR_VAL_RBP_2016 to LOADER;
+grant select on U1.T_MO_RFOLDER_PAR_VAL_RBP_2016 to LOAD_MO;
+

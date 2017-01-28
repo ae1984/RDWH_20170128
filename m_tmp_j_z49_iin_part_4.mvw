@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_TMP_J_Z49_IIN_PART_4
+refresh force on demand
+as
+select distinct t.*, coalesce(get_birth_date_from_iin(t.iin), pc.clnt_birth_date,
+                         c.birth_date) as birth_date_iin_dwh_rfo,
+       coalesce(pc.clnt_birth_date, c.birth_date,
+                         get_birth_date_from_iin(t.iin)) as birth_date_dwh_rfo_iin
+from TMP_JAN_PART4_20141002 t
+left join V_DWH_PORTFOLIO_CURRENT d on d.deal_number = t.contract_number
+left join V_DWH_CLIENT_PHYS_CURRENT pc on pc.clnt_gid = d.clnt_gid
+left join V_CLIENT_RFO_BY_IIN c on c.iin = t.iin and c.number_of_entries = 1;
+grant select on U1.M_TMP_J_Z49_IIN_PART_4 to LOADDB;
+grant select on U1.M_TMP_J_Z49_IIN_PART_4 to LOADER;
+
+

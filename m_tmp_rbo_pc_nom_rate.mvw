@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_TMP_RBO_PC_NOM_RATE
+refresh force on demand
+as
+select --+ parallel 30
+       t.c_num_dog, tr.c_value
+from V_RBO_Z#KAS_PC_DOG t
+join v_rbo_z#tarif_plan p on p.id = t.c_tarif_plan_ref
+join v_rbo_z#tarif_bo bo on bo.collection_id = p.c_tarifs
+join v_rbo_z#tariffs_commiss c on c.id = bo.c_tarif and c.c_code = 'PRC_BASE'
+join v_rbo_z#tarif tr on tr.collection_id = c.c_tariffs
+
+
+
+/*group by t.c_num_dog, p.c_code, p.c_tarifs
+having count(*) > 1*/;
+grant select on U1.M_TMP_RBO_PC_NOM_RATE to LOADDB;
+grant select on U1.M_TMP_RBO_PC_NOM_RATE to LOADER;
+
+

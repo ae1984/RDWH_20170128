@@ -1,0 +1,35 @@
+﻿create materialized view U1.M_TMP_OFFLINE
+refresh force on demand
+as
+select /*+ parallel(20) */ --count(*), count(distinct z.rfo_client_id), count(distinct fc.form_client_id), count(distinct k5.folder_id_first), count(g.report_status), count(case when g.report_status = 'ОК' then 1 end) ok, count(case when g.report_status = 'БЕКИ' then 1 end) beki, count(case when g.report_status is null then 1 end) nul
+       z.rfo_client_id,
+       z.form_client_id,
+       z.is_categ_a,
+       z.is_credit_issued,
+       /*z.is_sign_require,*/
+       fc.age_full_years,
+       fc.sex,
+       fc.education,
+       fc.marital_status,
+       fc.children,
+       fc.inc_sal,
+       fc.amount,
+       g.g_salary,
+       g.report_status,
+       k5.kdn_form_salary_max,
+       k5.kdn_gcvp_salary,
+       k5.kdn_form,
+       k5.kdn_kaspi,
+       k5.kdn_other,
+       dc.x_delinq_days,
+       case when dc.x_delinq_days > 7 then dc.x_total_debt end as total_debt_del_7,
+       dc.x_amount as sales
+from risk_derbol.M_TMP_OFFLINE_CLI z                                                                              -- клиенты Оффлайн, катег.А
+join u1.V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = z.form_client_id                                          -- данные по анкетам
+left join u1.V_DWH_PORTFOLIO_CURRENT dc on dc.rfo_client_id = z.rfo_client_id and dc.is_credit_active = 1         -- клиенты просрочники ?
+left join u1.M_CONTRACT_PARAM_KDN5 k5 on k5.folder_id_first = z.folder_id                                         -- данные по КДН
+left join u1.M_TMP_OFFLINE_PRE g on g.rfo_client_id = z.rfo_client_id;
+grant select on U1.M_TMP_OFFLINE to LOADDB;
+grant select on U1.M_TMP_OFFLINE to LOADER;
+
+

@@ -1,0 +1,40 @@
+﻿create table U1.T_DEPART_IMPORT
+(
+  region         VARCHAR2(2000),
+  city           VARCHAR2(2000),
+  subregion      VARCHAR2(2000),
+  depart_code    VARCHAR2(200),
+  depart_address VARCHAR2(4000),
+  date_close     DATE,
+  comments       VARCHAR2(4000)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_DEPART_IMPORT
+  is 'Список закрытых подразделений';
+comment on column U1.T_DEPART_IMPORT.region
+  is 'регион';
+comment on column U1.T_DEPART_IMPORT.city
+  is 'город';
+comment on column U1.T_DEPART_IMPORT.subregion
+  is 'населенный пункт';
+comment on column U1.T_DEPART_IMPORT.depart_code
+  is 'код подразделения';
+comment on column U1.T_DEPART_IMPORT.depart_address
+  is 'отделение';
+comment on column U1.T_DEPART_IMPORT.date_close
+  is 'дата закрытия';
+comment on column U1.T_DEPART_IMPORT.comments
+  is 'примечание';
+grant select on U1.T_DEPART_IMPORT to LOADDB;
+

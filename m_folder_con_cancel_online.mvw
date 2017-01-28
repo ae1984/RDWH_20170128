@@ -1,0 +1,79 @@
+﻿create materialized view U1.M_FOLDER_CON_CANCEL_ONLINE
+build deferred
+using no index
+refresh force on demand
+as
+select /*+ parallel(10)*/
+       r.date_create as folder_date_create_mi,
+       cast(null as number) as rfo_contract_id,
+       cast(null as number) as folder_id,
+       cast(null as varchar2(100)) as folder_number,
+       r.rfo_client_id,
+       coalesce(c.iin, r.claim_client_iin) iin,
+       --r.claim_client_iin,
+       cast(null as varchar2(100)) as x_dnp_region,
+       r.city_name as x_dnp_name,
+       cast(null as varchar2(100)) as pos_code,
+       cast(null as varchar2(100)) as pos_name,
+       cast(null as char(100)) as pos_type,
+       r.shop_code,
+       r.shop_name,
+       cast(null as varchar2(100)) as expert_name,
+       cast(null as varchar2(100)) as expert_position,
+       0 as is_card,
+       'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР' as cr_program_name,
+       'ТОВАРЫ' as product_type,
+       0 as is_point_active,
+       0 as is_credit_issued,
+       0 as is_credit_issued_new,
+       0 as is_credit_issued_mix,
+       cast(null as varchar2(100)) as contract_status_code,
+       cast(null as varchar2(100)) as contract_status_name,
+       cast(null as varchar2(100)) as CONTRACT_NUMBER,
+       r.total_amount as contract_amount,
+       1 as  cancel_prescoring,
+       cast(null as number) as  cancel_middle_office,
+       cast(null as number) as cancel_controller,
+       cast(null as number) as cancel_client,
+       cast(null as number) as  cancel_manager,
+       cast(null as number) as  cancel_cpr_aa,
+       cast(null as number) as  cancel_verificator,
+       cast(null as number) as  cancel_undefined,
+       0 as is_aa_reject,
+       'ОНЛАЙН КРЕДИТ' as process_name,
+       'ВЫДАЧА ОНЛАЙН КРЕДИТА' as route_name,
+       cast(null as varchar2(100)) as route_point_code,
+       cast(null as varchar2(100)) as folder_state,
+       0 as is_daytime_decision_folder,
+       'ОНЛАЙН КРЕДИТ. KASPI SHOPPING' as source_system,
+       cast(null as varchar2(100)) as delivery_type,
+       0 as is_refin,
+       cast(null as date) as contract_date_begin,
+       cast(null as date)  as contract_set_revolving_date,
+       cast(null as varchar2(100)) as cr_scheme_name,
+       cast(null as varchar2(100)) as tariff_plan_name,
+       r.form_client_ref as form_client_id,
+
+       r2.prev_con_cnt as prev_con_cnt,
+       r2.prev_con_closed_cnt as prev_con_closed_cnt,
+       r2.amount_max_before as  amount_max_before,
+       r2.prior_optim_count as  prior_optim_count,
+       r2.is_client_new_by_con as is_client_new_by_con,
+       r.is_sign_require,
+       r2.prev_con_del_days_max as prev_con_del_days_max ,
+       r2.fact_pmt_mon_before as fact_pmt_mon_before,
+       r2.fact_pmt_mon_before_12_mon as fact_pmt_mon_before_12_mon ,
+       r2.is_categ_a,
+       r.is_credit_rejected,
+       r.claim_id,
+       r2.is_categ_b,
+       r.monthly_pay
+
+from u1.M_FOLDER_CON_CANCEL_ONLINE_1 r
+left join u1.V_CLIENT_RFO_BY_ID c on c.rfo_client_id = r.rfo_client_id
+left join u1.M_FOLDER_CON_CANCEL_ONLINE_2 r2 on r2.claim_id = r.claim_id
+where r.folder_id is null
+  and r.date_create < trunc(sysdate);
+grant select on U1.M_FOLDER_CON_CANCEL_ONLINE to LOADDB;
+
+

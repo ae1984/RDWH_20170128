@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_GBQ_ECOMMERCE_ACTION
+build deferred
+refresh force on demand
+as
+select id,
+      hit_id,
+      action_type,
+      action_option,
+      action_step,
+      action_list,
+      idate
+from GBQ.GBQ_ECOMMERCE_ACTION@KSVISIT;
+grant select on U1.M_GBQ_ECOMMERCE_ACTION to LOADDB;
+
+

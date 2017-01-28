@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_CLIENT_TWIN
+build deferred
+refresh force on demand
+as
+select a.rfo_client_id,
+       a.iin as client_iin,
+       max(a2.rfo_client_id) as twin_rfo_client_id,
+       ct.iin as twin_client_iin,
+
+       count(distinct ct.iin) twin_cnt
+from U1.V_CLIENT_RFO_BY_ID a
+join U1.V_CLIENT_TAX ct on a.iin <> ct.iin
+                        and substr(ct.c_name, 1, INSTR(ct.c_name, ' ', 1, 1)-1) = a.name_last
+                        and case when INSTR(ct.c_name, ' ', 1, 2) = 0 then null else substr(ct.c_name,INSTR(ct.c_name,' ', 1, 2)+1,length(ct.c_name)) end = a.name_patronymic
+                        and substr(a.iin, 1, 10) = substr(ct.iin, 1, 10)
+left join U1.V_CLIENT_RFO_BY_ID a2 on a2.iin = ct.iin or a2.rnn = ct.rnn
+--where a.iin = '890725301142'
+group by a.rfo_client_id,
+         a.iin,
+         --a2.rfo_client_id,
+         ct.iin;
+grant select on U1.M_CLIENT_TWIN to LOADDB;
+
+

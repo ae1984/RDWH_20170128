@@ -1,0 +1,22 @@
+﻿create materialized view U1.V_RBO_Z#RATE_REGULATION
+refresh complete on demand
+as
+select id,
+      c_document_date,
+      c_depart,
+      c_op,
+      c_num_exchequer,
+      c_num_depart,
+      c_beginning_action,
+      c_user,
+      c_rates,
+      c_pk_cash,
+      c_type_regulation,
+      c_parent_rate_regu,
+      c_group_depart,
+      c_kas_end_action
+from s02.Z#RATE_REGULATION@rdwh_exd;
+grant select on U1.V_RBO_Z#RATE_REGULATION to LOADDB;
+grant select on U1.V_RBO_Z#RATE_REGULATION to LOADER;
+
+

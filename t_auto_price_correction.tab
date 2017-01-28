@@ -1,0 +1,50 @@
+﻿create table U1.T_AUTO_PRICE_CORRECTION
+(
+  id       VARCHAR2(256),
+  brend    VARCHAR2(128),
+  model    VARCHAR2(128),
+  year_car NUMBER,
+  percent  NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+create index U1.T_AUTO_PRICE_CORRECTION_IND1 on U1.T_AUTO_PRICE_CORRECTION (ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create unique index U1.T_AUTO_PRICE_CORRECTION_IND2 on U1.T_AUTO_PRICE_CORRECTION (ID, YEAR_CAR)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_AUTO_PRICE_CORRECTION to LOADDB;
+grant select on U1.T_AUTO_PRICE_CORRECTION to LOADER;
+grant select, insert, update, delete on U1.T_AUTO_PRICE_CORRECTION to RISK_NALMAZ;
+

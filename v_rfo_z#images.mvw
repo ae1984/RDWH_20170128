@@ -1,0 +1,10 @@
+﻿create materialized view U1.V_RFO_Z#IMAGES
+using no index
+refresh complete on demand
+as
+select id, collection_id, c_name, c_date, c_fold_id, c_uid, c_load_date
+from IBS.Z#IMAGES@RFO_SNAP;
+grant select on U1.V_RFO_Z#IMAGES to LOADDB;
+grant select on U1.V_RFO_Z#IMAGES to LOADER;
+
+

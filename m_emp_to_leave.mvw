@@ -1,0 +1,139 @@
+﻿create materialized view U1.M_EMP_TO_LEAVE
+build deferred
+refresh force on demand
+as
+select t.PRODUCT_TYPE,
+       t.DATE_CREATE,
+       t.expert_id,
+       t.EXPERT_NAME,
+       t.POS_INFO,
+       t.CLIENT_CATEGORY,
+       t.APPL_COUNT,
+       t.CLIENT_COUNT,
+       t.CONTR_COUNT,
+       t.CONTR_AMOUNT,
+       t.BEKI_CNT,
+       t.VERIF_PHOTO_NEGATIVE,
+       t.ACTUAL_DEF0,
+       t.HIST_DEF60,
+       RATIO_TO_REPORT(t.CONTR_AMOUNT) OVER(PARTITION BY t.DATE_CREATE, t.POS_INFO) AS SALES_SHARE_IN_POS,
+       RATIO_TO_REPORT(t.ACTUAL_DEF0) OVER(PARTITION BY t.DATE_CREATE, t.POS_INFO) AS DEF_SHARE_IN_POS,
+       COUNT(distinct EXPERT_NAME) OVER(PARTITION BY t.DATE_CREATE, t.POS_INFO) as EMP_COUNT_IN_POS,
+       n.iad_folder_cnt,
+       n.iad_client_cnt,
+       u.cnt_folder
+
+  from (select /*+parallel(cc,20),parallel(b,20),parallel(d,20)*/
+         cc.expert_id,
+         cc.product_type,
+         to_char(cc.folder_date_create_mi, 'yyyy-mm') as date_create,
+         cc.expert_name,
+         cc.pos_code || ' ' || cc.pos_name as pos_info,
+         case
+           when cc.is_categ_a = 1 then
+            'A'
+           when cc.is_categ_b = 1 then
+            'B'
+           when cc.is_client_new_by_con = 1 then
+            'New'
+           else
+            'C'
+         end as client_category,
+         count(distinct cc.folder_id) as appl_count,
+         count(distinct cc.rfo_client_id) as client_count,
+         sum(case
+               when cc.is_credit_issued = 1 then
+                1
+               else
+                0
+             end) as contr_count,
+         sum(case
+               when cc.is_credit_issued = 1 then
+                cc.contract_amount
+               else
+                0
+             end) as contr_amount,
+         sum(case
+               when p.report_status = 'БЕКИ' then
+                1
+               else
+                0
+             end) as beki_cnt,
+         sum(case
+               when nf.demand_folder_id is not null then
+                1
+               else
+                0
+             end) as verif_photo_negative,
+         sum(case
+               when d.del_days_x > 0 then
+                1
+               else
+                0
+             end) as actual_def0,
+         sum(case
+               when d.del_days_max_x > 60 then
+                1
+               else
+                0
+             end) as hist_def60
+
+          from u1.M_FOLDER_CON_CANCEL cc
+          left join u1.M_RBO_CONTRACT_BAS b
+            on b.folder_id_first = cc.folder_id
+           and b.contract_number = cc.contract_number
+          left join u1.M_RBO_CONTRACT_DEL d
+            on d.rbo_contract_id = b.rbo_contract_id
+          left join u1.m_verif_reject_1 nf
+            on cc.folder_id = nf.demand_folder_id
+          left join u1.V_PKB_REPORT p
+            on p.folder_id = cc.folder_id
+
+         where to_char(folder_date_create_mi, 'yyyy-mm') >=
+               to_char((sysdate - 360), 'yyyy-mm')
+           and cc.expert_id not in ('305437784', '1381958681')
+
+
+         group by cc.expert_id,
+                  cc.product_type,
+                  to_char(cc.folder_date_create_mi, 'yyyy-mm'),
+                  cc.expert_name,
+                  case
+                    when cc.is_categ_a = 1 then
+                     'A'
+                    when cc.is_categ_b = 1 then
+                     'B'
+                    when cc.is_client_new_by_con = 1 then
+                     'New'
+                    else
+                     'C'
+                  end,
+                  cc.pos_code || ' ' || cc.pos_name
+
+        ) t
+
+  left join
+
+ (select /*parallel(b,20)*/
+   b.expert_id,
+   to_char(b.folder_date_create, 'yyyy-mm') as month_create,
+   count(distinct b.folder_id) as iad_folder_cnt,
+   count(distinct b.rfo_client_id) as iad_client_cnt
+
+    from u1.v_folder_all_rfo b
+   where b.process_name = 'ИЗМЕНЕНИЕ АНКЕТНЫХ ДАННЫХ КЛИЕНТА'
+     and to_char(folder_date_create, 'yyyy-mm') >=
+         to_char((sysdate - 360), 'yyyy-mm')
+   group by b.expert_id, to_char(b.folder_date_create, 'yyyy-mm')) n
+    on n.expert_id = t.expert_id
+   and n.month_create = t.DATE_CREATE
+
+   left join
+(select /*+parallel(12)*/
+    f.expert_id
+    ,count(*) as cnt_folder
+from v_folder_all_rfo f
+where f.folder_state = 'НА РЕКЛАМАЦИЮ'
+group by
+   f.expert_id)u  on u.expert_id=t.expert_id;
+

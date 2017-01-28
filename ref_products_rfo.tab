@@ -1,0 +1,36 @@
+﻿create table U1.REF_PRODUCTS_RFO
+(
+  cred_program VARCHAR2(100) not null,
+  product      VARCHAR2(20)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create unique index U1.REF_PRODUCTS_RFO_PK_IND on U1.REF_PRODUCTS_RFO (CRED_PROGRAM)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.REF_PRODUCTS_RFO
+  add constraint REF_PRODUCTS_RFO_PK primary key (CRED_PROGRAM);
+grant select on U1.REF_PRODUCTS_RFO to LOADDB;
+grant select on U1.REF_PRODUCTS_RFO to LOADER;
+

@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_TMP_J_TK_PROC_TIMES_TEST
+refresh complete on demand
+as
+select f.folder_id, h.history_id, h.line_name, h.line_time,
+       lead(h.line_time,1) over (partition by f.folder_id order by h.history_id) as line_time_next,
+       (lead(h.line_time,1) over (partition by f.folder_id order by h.history_id) - h.line_time) * 24 * 3600 as line_duration_sec
+from M_FOLDER_CON_CANCEL f
+join V_FOLDER_ALL_HISTORY h on h.folder_id = f.folder_id
+where f.cr_program_name = 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР' and
+      f.folder_date_create_mi > trunc(sysdate) - 30 and
+      f.folder_id = 57110238685;
+grant select on U1.M_TMP_J_TK_PROC_TIMES_TEST to LOADDB;
+grant select on U1.M_TMP_J_TK_PROC_TIMES_TEST to LOADER;
+
+

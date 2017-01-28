@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_STAGE_Z#KAS_GCVP_REPORT
+build deferred
+refresh force on demand
+as
+select id,
+       c_cik,
+       c_rnn,
+       c_surname,
+       c_name,
+       c_middlename,
+       c_dateofbirth,
+       c_statement_id,
+       c_statement_date,
+       c_query_type,
+       c_avg_gcvp_payment,
+       c_error_code,
+       c_query_id,
+       c_payments_arr,
+       c_sal_stable,
+       c_sal,
+       c_payment_qty,
+       c_iin,
+       c_gcvp_report_ref,
+       sn,
+       su,
+       c_add_prop
+  from S01.Z#KAS_GCVP_REPORT@RDWH_EXD
+ where trunc(c_statement_date) >= trunc(sysdate) - 1;
+grant select on U1.M_STAGE_Z#KAS_GCVP_REPORT to LOADDB;
+
+

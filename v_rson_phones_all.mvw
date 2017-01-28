@@ -1,0 +1,43 @@
+﻿create materialized view U1.V_RSON_PHONES_ALL
+using no index
+refresh complete on demand
+as
+with c as (
+    select cl.rfo_client_id, max(cl.iin) as iin,
+           case when count(distinct co.contract_number) = 0 then 'BLUE'
+              when max(co.delinq_days_max) > 90 then 'RED'
+              when max(co.delinq_days_last_rep) > 0 then 'BLACK'
+              when max(co.delinq_days_last_rep) = 0 then 'GREY' end as client_color
+    from V_CLIENT_RFO_BY_ID cl
+    left join V_CONTRACT_CAL co on co.rfo_client_id = cl.rfo_client_id --and co.contract_amount_max > 0
+    group by cl.rfo_client_id
+) select /*+parallel(15) parallel_index(15) */ x.*, ph.client_count as clients_on_phone from (
+select max(c.iin) as client,
+       max(c.client_color) as client_color,
+       t.phone_number as phone,
+--       case when t.phone_type = 'РАБОЧИЙ' then 'ОРГАНИЗАЦИЯ' else t.phone_type end as link_type,
+       decode(t.phone_type,'МОБИЛЬНЫЙ','M','ДОМАШНИЙ','H','КОНТАКТ','C',
+                              'РАБОЧИЙ','O','ОРГАНИЗАЦИЯ','O') as link_type,
+       count(distinct t.form_client_id) as link_count,
+       max(t.contact_relation) keep (dense_rank last order by t.form_client_id) as link_info,
+       trunc(min(t.form_client_date) keep (dense_rank first order by t.form_client_id)) as link_date_create
+from V_FORM_CLIENT_CONTACT_PHONE t
+join c on c.rfo_client_id = t.rfo_client_id
+where t.phone_type in ('МОБИЛЬНЫЙ','ДОМАШНИЙ','КОНТАКТ','РАБОЧИЙ','ОРГАНИЗАЦИЯ') /*and
+      t.phone_number in (
+            select t.phone_number
+            from V_FORM_CLIENT_CONTACT_PHONE t
+            where t.phone_type in ('МОБИЛЬНЫЙ','ДОМАШНИЙ','КОНТАКТ','РАБОЧИЙ','ОРГАНИЗАЦИЯ') and
+                  t.rfo_client_id = (select max(cl1.rfo_client_id) from V_CLIENT_RFO_BY_ID cl1
+                           where cl1.iin = '890823300820')) -- центральный узел ИИН 890823300820*/
+group by c.rfo_client_id,
+--         case when t.phone_type = 'РАБОЧИЙ' then 'ОРГАНИЗАЦИЯ' else t.phone_type end,
+         decode(t.phone_type,'МОБИЛЬНЫЙ','M','ДОМАШНИЙ','H','КОНТАКТ','C',
+                              'РАБОЧИЙ','O','ОРГАНИЗАЦИЯ','O'),
+         t.phone_number
+) x
+left join V_PHONE ph on ph.phone_number = phone;
+grant select on U1.V_RSON_PHONES_ALL to LOADDB;
+grant select on U1.V_RSON_PHONES_ALL to LOADER;
+
+

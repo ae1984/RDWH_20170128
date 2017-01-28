@@ -1,0 +1,41 @@
+﻿create table U1.T_KASPIKZ_LOG_USER_AGENT
+(
+  id                    NUMBER,
+  user_agent            VARCHAR2(4000),
+  hash                  VARCHAR2(4000),
+  length_col            NUMBER,
+  device_model          VARCHAR2(200),
+  os                    VARCHAR2(200),
+  os_major_version      NUMBER,
+  os_minor_version      NUMBER,
+  browser               VARCHAR2(200),
+  browser_major_version NUMBER,
+  browser_minor_version NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_KASPIKZ_LOG_USER_AGENT
+  is 'Справочник юзерагент браузера';
+comment on column U1.T_KASPIKZ_LOG_USER_AGENT.id
+  is 'Идентификатор таблицы';
+comment on column U1.T_KASPIKZ_LOG_USER_AGENT.length_col
+  is ' ';
+comment on column U1.T_KASPIKZ_LOG_USER_AGENT.device_model
+  is ' ';
+comment on column U1.T_KASPIKZ_LOG_USER_AGENT.os_minor_version
+  is ' ';
+comment on column U1.T_KASPIKZ_LOG_USER_AGENT.browser
+  is ' ';
+grant select on U1.T_KASPIKZ_LOG_USER_AGENT to LOADDB;
+grant select on U1.T_KASPIKZ_LOG_USER_AGENT to LOADER;
+

@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_OUT_DWH_SEGMENT
+build deferred
+refresh force on demand
+as
+select id,
+       name,
+       priority,
+       creditprogram_id,
+       group_id,
+       verifygroup_id,
+       groupcontact_id,
+       groupphoto_id,
+       priority_contact,
+       priority_photo
+  from verificator.H_SEGMENT@verifais;
+grant select on U1.M_OUT_DWH_SEGMENT to LOADDB;
+grant select on U1.M_OUT_DWH_SEGMENT to LOADER;
+
+

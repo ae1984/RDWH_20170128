@@ -1,0 +1,29 @@
+﻿create table U1.T_NBRK_CON_201610
+(
+  is_individ         NUMBER,
+  num                NUMBER,
+  num_con            NUMBER,
+  client_fio         VARCHAR2(200),
+  iin                VARCHAR2(30),
+  product_name       VARCHAR2(100),
+  contract_number_gu VARCHAR2(30),
+  date_start         DATE,
+  contract_number    VARCHAR2(30),
+  product            VARCHAR2(100),
+  is_kdn_need        NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_NBRK_CON_201610 to LOADDB;
+

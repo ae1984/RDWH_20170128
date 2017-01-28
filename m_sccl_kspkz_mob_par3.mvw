@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_SCCL_KSPKZ_MOB_PAR3
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       t.rfo_client_id,
+       t.pay_param_clear as mobile_phone,
+
+       min(t.pay_date) as kspkz_mob_pay_date_180d_min,
+       count(distinct t.pay_info_id) as kspkz_mob_pay_180d_cnt,
+       sum(t.pay_amount) as kspkz_mob_pay_180d_sum,
+       round(avg(t.pay_amount)) as kspkz_mob_pay_180d_avg
+
+from u1.M_KASPIKZ_PAY t
+where t.is_prov = 1
+      and t.category_name = 'MOBILE'
+      and t.pay_date >= trunc(sysdate) - 180
+group by t.rfo_client_id,
+         t.pay_param_clear;
+grant select on U1.M_SCCL_KSPKZ_MOB_PAR3 to LOADDB;
+grant select on U1.M_SCCL_KSPKZ_MOB_PAR3 to LOAD_MO;
+
+

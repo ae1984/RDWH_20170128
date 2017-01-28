@@ -1,0 +1,134 @@
+﻿create materialized view U1.M_TMP_J_IAD_STAT_1
+refresh complete on demand
+as
+select to_char(t.folder_date_create,'yyyy') as year,
+       to_char(t.folder_date_create,'yyyy-mm') as mon,
+       t.folder_state,
+       case when t.folder_state in ('АРХИВ','ОТПРАВЛЕНО В ЦА','ПРОВЕРКА ДОСЬЕ','НА РЕКЛАМАЦИЮ','АРХИВ С ОШИБКАМИ','НА КОНТРОЛЬ') then
+            'ДОБРО' else 'ОТКАЗ' end as is_approved,
+       case when coalesce(cn.c_numb,'X') != coalesce(co.old_mob_num_conf_last,'X') then
+            'MOB CH' else 'MOB NO CH' end as is_mob_tel_changed,
+       case when co.old_mob_num_conf_cnt > 1 then
+            'MOB CH TO 1' else 'MOB NO CH TO 1' end as is_mob_tel_changed_to_one,
+       case when coalesce(cn.c_numb,'X') != coalesce(co.old_mob_num_conf_last,'X') or
+             co.old_mob_num_conf_cnt > 1 then
+            'MOB CH OR TO 1' else 'MOB NO CH OR TO 1' end as is_mob_tel_changed_or_to_one,
+       case when coalesce(p.c_cl_req_new#pasport#num,'X') != coalesce(p.c_cl_req_old#pasport#num,'X') then
+            'DOC NUM CH' else 'DOC NUM NO CH' end as is_doc_num_changed,
+       case when coalesce(p.c_cl_req_new#pasport#type,0) != coalesce(p.c_cl_req_old#pasport#type,0) then
+            'DOC TYPE CH' else 'DOC TYPE NO CH' end as is_doc_type_changed,
+       case when coalesce(p.c_cl_req_new#pasport#num,'X') != coalesce(p.c_cl_req_old#pasport#num,'X') or
+                 coalesce(p.c_cl_req_new#pasport#type,0) != coalesce(p.c_cl_req_old#pasport#type,0)
+            then 'DOC CH' else 'DOC NO CH' end as is_doc_changed,
+       case when coalesce(p.c_cl_req_new#last_name,'X') != coalesce(p.c_cl_req_old#last_name,'X') then
+            'NAME LAST CH' else 'NAME LAST NO CH' end as is_name_last_changed,
+       case when coalesce(p.c_cl_req_new#first_name,'X') != coalesce(p.c_cl_req_old#first_name,'X') then
+            'NAME FIRST CH' else 'NAME FIRST NO CH' end as is_name_first_changed,
+       case when coalesce(p.c_cl_req_new#sur_name,'X') != coalesce(p.c_cl_req_old#sur_name,'X') then
+            'NAME PATR CH' else 'NAME PATR NO CH' end as is_name_patr_changed,
+       case when coalesce(p.c_cl_req_new#last_name,'X') != coalesce(p.c_cl_req_old#last_name,'X') or
+                 coalesce(p.c_cl_req_new#first_name,'X') != coalesce(p.c_cl_req_old#first_name,'X') or
+                 coalesce(p.c_cl_req_new#sur_name,'X') != coalesce(p.c_cl_req_old#sur_name,'X')
+             then 'NAME CH' else 'NAME NO CH' end as is_name_changed,
+       case when p.c_cl_req_new#date_pers is null and p.c_cl_req_old#date_pers is null then 'BIRTH DATE NO CH'
+            when p.c_cl_req_new#date_pers is null or p.c_cl_req_old#date_pers is null then 'BIRTH DATE CH'
+            when to_char(p.c_cl_req_new#date_pers,'yyyy-mm-dd') = to_char(p.c_cl_req_old#date_pers,'yyyy-mm-dd') then 'BIRTH DATE NO CH'
+            else 'BIRTH DATE CH' end as is_birth_date_changed,
+       case when coalesce(p.c_cl_req_new#inn,'X') != coalesce(p.c_cl_req_old#inn,'X') then
+            'IIN CH' else 'IIN NO CH' end as is_iin_changed,
+       case when k.rfo_client_id is not null then 'KASPI.KZ USER' else 'NOT KASPI.KZ USER' end as is_kaspikz_user,
+       case when p.c_cl_req_new#inn is not null then 'IIN NEW EXISTS' else 'IIN NEW NOT EXISTS' end as is_iin_new_exists,
+       case when p.c_cl_req_old#inn is not null then 'IIN OLD EXISTS' else 'IIN OLD NOT EXISTS' end as is_iin_old_exists,
+       case when p.c_cl_req_new#last_name = cc.f then 'NAME LAST TAX OK' else 'NAME LAST TAX NOK' end as is_name_last_tax_ok,
+       case when p.c_cl_req_new#first_name = cc.i then 'NAME FIRST TAX OK' else 'NAME FIRST TAX NOK' end as is_name_first_tax_ok,
+       case when p.c_cl_req_new#sur_name = cc.o then 'NAME PATR TAX OK' else 'NAME PATR TAX NOK' end as is_name_patr_tax_ok,
+       case when p.c_cl_req_new#date_pers = cc.bd then 'BIRTH DATE TAX OK' else 'BIRTH DATE TAX NOK' end as is_birth_date_tax_ok,
+       --
+       count(*) as cnt, count(distinct t.folder_id) as fld_cnt
+from V_FOLDER_ALL_RFO t
+join V_RFO_Z#RDOC rd on rd.collection_id = t.fld_c_docs
+join V_RFO_Z#REQ_EDIT_CL_PRIV p on p.id = rd.c_doc
+left join V_RFO_Z#CONTACTS cn on cn.collection_id = p.c_cl_req_new#contacts and cn.c_affirmed = 1 and cn.c_private = 690120
+left join (
+    select c2.collection_id,
+           max(c2.c_numb) keep (dense_rank last order by c2.id) as old_mob_num_conf_last,
+           count(*) as old_mob_num_conf_cnt
+    from V_RFO_Z#CONTACTS c2
+    where c2.c_affirmed = 1 and c2.c_private = 690120
+    group by c2.collection_id
+) co on co.collection_id = p.c_cl_req_old#contacts
+left join (
+    select kua.rfo_id as rfo_client_id,
+           max(ku.reg_date) keep (dense_rank last order by ku.id) as reg_date
+    from M_KASPIKZ_USERS ku
+    join M_KASPIKZ_USERS_ALL kua on kua.user_id = ku.id
+    where kua.rfo_id is not null
+    group by kua.rfo_id
+) k on k.rfo_client_id = t.rfo_client_id and trunc(k.reg_date) < trunc(t.folder_date_create)
+left join (
+    select ct.iin,
+           substr(ct.c_name,1,INSTR(ct.c_name,' ', 1, 1)-1) as f,
+           substr(ct.c_name,INSTR(ct.c_name,' ', 1, 1)+1,
+                  case when INSTR(ct.c_name,' ', 1, 2) = 0 then length(ct.c_name) else
+                  INSTR(ct.c_name,' ', 1, 2)-INSTR(ct.c_name,' ', 1, 1)-1 end
+                  ) as i,
+           case when INSTR(ct.c_name,' ', 1, 2) = 0 then null else
+                  substr(ct.c_name,INSTR(ct.c_name,' ', 1, 2)+1,length(ct.c_name)) end as o,
+           case when to_number(substr(ct.iin,5,2)) > 0 and to_number(substr(ct.iin,5,2)) < 32 and
+                     to_number(substr(ct.iin,7,1)) in (1,2,3,4,5,6)
+                then
+                 to_date(case when substr(ct.iin,7,1) in ('5','6') then '20'
+                              when substr(ct.iin,7,1) in ('3','4') then '19'
+                              when substr(ct.iin,7,1) in ('1','2') then '18' end ||
+                         substr(ct.iin,1,2) || '-' ||
+                         substr(ct.iin,3,2) || '-' || substr(ct.iin,5,2),
+                         'yyyy-mm-dd') end as bd
+    from V_CLIENT_TAX ct
+    where ct.iin is not null and
+          ct.is_remove_tax_reg = 0
+) cc on cc.iin = p.c_cl_req_new#inn
+where t.route_code = 'EDIT_CL_PRIV' and
+      to_char(t.folder_date_create,'yyyy') in ('2014','2015')
+group by to_char(t.folder_date_create,'yyyy'),
+         to_char(t.folder_date_create,'yyyy-mm'),
+         t.folder_state,
+         case when t.folder_state in ('АРХИВ','ОТПРАВЛЕНО В ЦА','ПРОВЕРКА ДОСЬЕ','НА РЕКЛАМАЦИЮ','АРХИВ С ОШИБКАМИ','НА КОНТРОЛЬ') then
+              'ДОБРО' else 'ОТКАЗ' end,
+         case when coalesce(cn.c_numb,'X') != coalesce(co.old_mob_num_conf_last,'X') then 'MOB CH' else 'MOB NO CH' end,
+         case when co.old_mob_num_conf_cnt > 1 then 'MOB CH TO 1' else 'MOB NO CH TO 1' end,
+         case when coalesce(cn.c_numb,'X') != coalesce(co.old_mob_num_conf_last,'X') or co.old_mob_num_conf_cnt > 1 then
+              'MOB CH OR TO 1' else 'MOB NO CH OR TO 1' end,
+         case when coalesce(p.c_cl_req_new#pasport#num,'X') != coalesce(p.c_cl_req_old#pasport#num,'X') then
+              'DOC NUM CH' else 'DOC NUM NO CH' end,
+         case when coalesce(p.c_cl_req_new#pasport#type,0) != coalesce(p.c_cl_req_old#pasport#type,0) then
+              'DOC TYPE CH' else 'DOC TYPE NO CH' end,
+       case when coalesce(p.c_cl_req_new#pasport#num,'X') != coalesce(p.c_cl_req_old#pasport#num,'X') or
+                 coalesce(p.c_cl_req_new#pasport#type,0) != coalesce(p.c_cl_req_old#pasport#type,0)
+            then 'DOC CH' else 'DOC NO CH' end,
+         case when coalesce(p.c_cl_req_new#last_name,'X') != coalesce(p.c_cl_req_old#last_name,'X') then
+              'NAME LAST CH' else 'NAME LAST NO CH' end,
+         case when coalesce(p.c_cl_req_new#first_name,'X') != coalesce(p.c_cl_req_old#first_name,'X') then
+              'NAME FIRST CH' else 'NAME FIRST NO CH' end,
+         case when coalesce(p.c_cl_req_new#sur_name,'X') != coalesce(p.c_cl_req_old#sur_name,'X') then
+              'NAME PATR CH' else 'NAME PATR NO CH' end,
+         case when coalesce(p.c_cl_req_new#last_name,'X') != coalesce(p.c_cl_req_old#last_name,'X') or
+                   coalesce(p.c_cl_req_new#first_name,'X') != coalesce(p.c_cl_req_old#first_name,'X') or
+                   coalesce(p.c_cl_req_new#sur_name,'X') != coalesce(p.c_cl_req_old#sur_name,'X')
+             then 'NAME CH' else 'NAME NO CH' end,
+       case when p.c_cl_req_new#date_pers is null and p.c_cl_req_old#date_pers is null then 'BIRTH DATE NO CH'
+            when p.c_cl_req_new#date_pers is null or p.c_cl_req_old#date_pers is null then 'BIRTH DATE CH'
+            when to_char(p.c_cl_req_new#date_pers,'yyyy-mm-dd') = to_char(p.c_cl_req_old#date_pers,'yyyy-mm-dd') then 'BIRTH DATE NO CH'
+            else 'BIRTH DATE CH' end,
+       case when coalesce(p.c_cl_req_new#inn,'X') != coalesce(p.c_cl_req_old#inn,'X') then
+            'IIN CH' else 'IIN NO CH' end,
+       case when k.rfo_client_id is not null then 'KASPI.KZ USER' else 'NOT KASPI.KZ USER' end,
+       case when p.c_cl_req_new#inn is not null then 'IIN NEW EXISTS' else 'IIN NEW NOT EXISTS' end,
+       case when p.c_cl_req_old#inn is not null then 'IIN OLD EXISTS' else 'IIN OLD NOT EXISTS' end,
+       case when p.c_cl_req_new#last_name = cc.f then 'NAME LAST TAX OK' else 'NAME LAST TAX NOK' end,
+       case when p.c_cl_req_new#first_name = cc.i then 'NAME FIRST TAX OK' else 'NAME FIRST TAX NOK' end,
+       case when p.c_cl_req_new#sur_name = cc.o then 'NAME PATR TAX OK' else 'NAME PATR TAX NOK' end,
+       case when p.c_cl_req_new#date_pers = cc.bd then 'BIRTH DATE TAX OK' else 'BIRTH DATE TAX NOK' end;
+grant select on U1.M_TMP_J_IAD_STAT_1 to LOADDB;
+grant select on U1.M_TMP_J_IAD_STAT_1 to LOADER;
+
+

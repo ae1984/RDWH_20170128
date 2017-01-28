@@ -1,0 +1,52 @@
+﻿create table U1.T_GBQ_PRODUCT
+(
+  id              NUMBER,
+  hit_id          VARCHAR2(200),
+  is_impression   NUMBER,
+  impression_list VARCHAR2(160),
+  brand           VARCHAR2(160),
+  price           NUMBER,
+  quantity        NUMBER,
+  sku             VARCHAR2(120),
+  variant         VARCHAR2(160),
+  category        VARCHAR2(160),
+  name            VARCHAR2(600),
+  position        NUMBER,
+  coupon          VARCHAR2(400),
+  idate           TIMESTAMP(6)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_GBQ_PRODUCT
+  is 'Информация о товарах';
+comment on column U1.T_GBQ_PRODUCT.id
+  is 'Идентификатор';
+comment on column U1.T_GBQ_PRODUCT.hit_id
+  is 'ID посещения страницы';
+comment on column U1.T_GBQ_PRODUCT.brand
+  is 'Брэнд';
+comment on column U1.T_GBQ_PRODUCT.price
+  is 'Цена';
+comment on column U1.T_GBQ_PRODUCT.quantity
+  is 'Количество';
+comment on column U1.T_GBQ_PRODUCT.variant
+  is 'Вариант';
+comment on column U1.T_GBQ_PRODUCT.category
+  is 'Категория';
+comment on column U1.T_GBQ_PRODUCT.name
+  is 'Название товара';
+comment on column U1.T_GBQ_PRODUCT.position
+  is 'Позиция';
+grant select on U1.T_GBQ_PRODUCT to LOADDB;
+

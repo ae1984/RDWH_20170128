@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_TMP_J_1003
+refresh force on demand
+as
+select c.folder_id, c.par_code, c.par_name from M_TMP_J_1002 c
+    union all
+    select f.folder_id, 'SC_MIXED_RES_PRE' as par_code, 'СМЕШАННАЯ ПРОВЕРКА' as par_name
+    from M_FOLDER_CON_CANCEL f
+    join M_TMP_J_1002 t on t.folder_id = f.folder_id
+    where f.cr_program_name = 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР' and
+          extract(year from f.folder_date_create_mi) in (2013, 2014)
+          and not exists (select null from M_TMP_J_1002 tt where tt.folder_id = f.folder_id and tt.par_code = 'SC_MIXED_RES_PRE')
+    group by f.folder_id
+    having sum(case when t.par_name in ('РИСКОВЫЕ НЕ БЕКИ (СКОРИНГ)',
+                              'РИСК. ТОВАРЫ - РЕЗУЛЬТАТ (ДО КГ)',
+                              'КОМБИНИР. ПРОВЕРКА - РЕЗУЛЬТАТ (ДО КГ)',
+                              'ПРОВЕРКА ПО СУММЕ И СВЕЖЕСТИ КЛИЕНТА (ДО КГ)',
+                              'РИСК ЭКТ БЕКИ 350 (ДО КГ)') then 1 end) >= 2;
+grant select on U1.M_TMP_J_1003 to LOADDB;
+grant select on U1.M_TMP_J_1003 to LOADER;
+
+

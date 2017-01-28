@@ -1,0 +1,33 @@
+﻿create table U1.MO_RFOL_GCVP_REPORT
+(
+  gcvpr_id               NUMBER not null,
+  foldr_id               NUMBER,
+  foldr_client           NUMBER,
+  gcvpr_iin              VARCHAR2(60),
+  gcvpr_surname          VARCHAR2(150),
+  gcvpr_name             VARCHAR2(75),
+  gcvpr_middlename       VARCHAR2(105),
+  gcvpr_statement_date   DATE,
+  gcvpr_avg_gcvp_payment NUMBER(17,2),
+  gcvpr_sal              NUMBER(17,2),
+  gcvpr_error_code       NUMBER(2),
+  clien_id               NUMBER,
+  fdocx_doc_date         DATE,
+  gcvpr_gcvp_report_ref  NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO_RFOL_GCVP_REPORT to LOADDB;
+grant select on U1.MO_RFOL_GCVP_REPORT to LOADER;
+

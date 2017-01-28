@@ -1,0 +1,21 @@
+﻿create materialized view U1.V_TMP_JAN_D2_WS_2
+refresh force on demand
+as
+select c.yms,
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate,
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1,
+    round(sum(c.max_debt_used) / 1000000, 1) as sales_mln,
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt
+from V_TMP_CONTRACT_CAL_DEL c
+join V_FOLDER_PHONE_CALC fpc on fpc.folder_id = c.folder_id_first
+where c.yms in  ('2013 - 07', '2013 - 08', '2013 - 09', '2013 - 10', '2013 - 11', '2013 - 12',
+                 '2014 - 01', '2014 - 02', '2014 - 03') and
+      exists (select null from V_TMP_JAN_D2_ws_1 a -- !
+          where fpc.ph_work_same_order_min >= a.ord_from and fpc.ph_work_same_order_min < a.ord_to and -- !
+                fpc.ph_work_same_age_min <= a.age_max) -- !
+      and nvl(c.start_total_fact_pmts_by_cli,0) < 4
+group by c.yms having sum(c.max_debt_used) > 0;
+grant select on U1.V_TMP_JAN_D2_WS_2 to LOADDB;
+grant select on U1.V_TMP_JAN_D2_WS_2 to LOADER;
+
+

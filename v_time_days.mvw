@@ -1,0 +1,101 @@
+﻿create materialized view U1.V_TIME_DAYS
+refresh complete on demand
+as
+select
+    x.*,
+
+    x.text_yyyy_mm_dd || ' ' || x.week_day_short_ru as text_yyyy_mm_dd_week_day,
+    x.month_short_ru || ' ' || to_char(x.yyyy_mm_dd,'dd') || ' ' || x.week_day_short_ru as text_month_dd_week_day,
+
+    count(*) over (partition by x.yyyy_mm) as month_time_span,
+    max(yyyy_mm_dd) over (partition by x.yyyy_mm) as month_end_date,
+    count(*) over (partition by x.quarter) as quarter_time_span,
+    max(yyyy_mm_dd) over (partition by x.quarter) as quarter_end_date,
+    count(*) over (partition by x.half_of_year) as half_year_time_span,
+    max(yyyy_mm_dd) over (partition by x.half_of_year) as half_year_end_date,
+    count(*) over (partition by x.yyyy) as year_time_span,
+    max(yyyy_mm_dd) over (partition by x.yyyy) as year_end_date,
+
+    text_yyyy_mm || ' ' || to_char(
+            case when day_num_of_month >= 1 and day_num_of_month < 8 then 1
+                 when day_num_of_month >= 8 and day_num_of_month< 15 then 2
+                 when day_num_of_month >= 15 and day_num_of_month < 22 then 3
+                 else 4 end) as text_yyyy_mm_week_num,
+
+    to_char(week_date_first,'yyyy-mm-dd') ||' w'||
+                 trim(to_char(x.week_num,'00')) as week_text,
+    /*to_char(week_date_first_online_credit,'yyyy-mm-dd') ||' w'||
+                 trim(to_char(x.week_num_online_credit,'00')) as week_text_online_credit*/
+    to_char(case when x.week_num_online_credit != 1 then
+                       min(x.yyyy_mm_dd) over (partition by x.yyyy, x.week_num_online_credit)
+                   else
+                       case when mm = 12 then min(x.yyyy_mm_dd) over (partition by x.yyyy, x.mm, x.week_num_online_credit)
+                            else max(x.yyyy_mm_dd) over (partition by x.yyyy, x.mm, x.week_num_online_credit) - 6
+                            end
+                   end,
+              'yyyy-mm-dd') ||' w'|| trim(to_char(x.week_num_online_credit,'00')) as week_text_online_credit
+
+from (
+select
+    currdate                     as yyyy_mm_dd,
+    trunc(currdate,'mm')         as yyyy_mm,
+    extract(year from currdate)  as yyyy,
+    extract(month from currdate) as mm,
+
+    to_char(currdate,'yyyy-mm-dd') as text_yyyy_mm_dd,
+    to_char(currdate,'yyyy - mm')  as text_yyyy_mm,
+    to_char(currdate,'yyyy')       as text_yyyy,
+
+    to_number(to_char(currdate,'yyyymm')) as num_yyyy_mm,
+    MONTHS_BETWEEN(trunc(currdate,'mm'), to_date('2002 - 12','yyyy - mm')) as report_month,
+
+    to_char(currdate,'DY','NLS_DATE_LANGUAGE = Russian') as week_day_short_ru,
+    to_char(currdate,'DY','NLS_DATE_LANGUAGE = English') as week_day_short_en,
+    to_char(currdate,'DAY','NLS_DATE_LANGUAGE = Russian') as week_day_long_ru,
+    to_char(currdate,'DAY','NLS_DATE_LANGUAGE = English') as week_day_long_en,
+
+--    to_number(to_char(currdate,'WW')) as week_num,
+    to_number(to_char(currdate,'iw')) as week_num,
+    to_number(to_char(currdate + 3,'iw')) as week_num_online_credit,
+
+    trunc(currdate,'iw') as week_date_first,
+    trunc(currdate + 3,'iw') as week_date_first_online_credit,
+
+    case when to_char(currdate,'d') = '1' then 7 else
+            to_number(trim(leading '0' from to_char(currdate,'d'))) - 1 end as
+    day_num_of_week,
+    to_number(trim(leading '0' from to_char(currdate,'dd'))) as day_num_of_month,
+    to_number(trim(leading '0' from to_char(currdate,'ddd'))) as day_num_of_year,
+--    upper(to_char(currdate,'mon') || '-' || to_char(currdate,'yyyy')) as month_id,
+--    to_char(currdate,'mon') || ' ' || to_char(currdate,'yyyy') as month_short_desc,
+--    rtrim(to_char(currdate,'month')) || ' ' || to_char(currdate,'yyyy') as month_long_desc,
+    to_char(currdate,'MON','NLS_DATE_LANGUAGE = Russian') as month_short_ru,
+    to_char(currdate,'MON','NLS_DATE_LANGUAGE = English') as month_short_en,
+    to_char(currdate,'MONTH','NLS_DATE_LANGUAGE = Russian') as month_long_ru,
+    to_char(currdate,'MONTH','NLS_DATE_LANGUAGE = English') as month_long_en,
+    to_number(trim(leading '0' from to_char(currdate,'mm'))) as month_num_of_year,
+          MONTHS_BETWEEN(to_date(to_char(currdate,'yyyy - mm'),'yyyy - mm'), to_date('2002 - 12','yyyy - mm')) as
+    month_num,
+    to_char(currdate,'yyyy') || '-Q' || upper(to_char(currdate,'q')) as quarter,
+    to_number(to_char(currdate,'q')) as quarter_num_of_year,
+        case when to_number(to_char(currdate,'q')) <= 2 then 1 else 2 end as
+    half_num_of_year,
+        case when to_number(to_char(currdate,'q')) <= 2
+            then to_char(currdate,'yyyy')|| '-H1'
+            else to_char(currdate,'yyyy')|| '-H2' end as
+    half_of_year
+  from
+    (select level n,
+-- calendar starts at the day after this date.
+--      to_date('31/12/2010','dd/mm/yyyy') + numtodsinterval(level,'day') currdate
+      to_date('1900-01-01','yyyy-mm-dd') - 1 + numtodsinterval(level,'day') as currdate
+    from dual
+-- change for the number of days to be added to the table.
+--      connect by level <= 365
+      connect by rownum < to_date('2100-01-01','yyyy-mm-dd') - to_date('1900-01-01','yyyy-mm-dd') + 1
+    )
+) x;
+grant select on U1.V_TIME_DAYS to LOADDB;
+grant select on U1.V_TIME_DAYS to LOADER;
+
+

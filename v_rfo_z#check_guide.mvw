@@ -1,0 +1,19 @@
+﻿create materialized view U1.V_RFO_Z#CHECK_GUIDE
+refresh complete on demand
+as
+select id,
+      upper(c_code) as c_code,
+      upper(c_name) as c_name,
+      c_to_product,
+      c_bus_process,
+      c_check_level#0,
+      c_mess,
+      upper(c_name_control) as c_name_control,
+      c_color_control,
+      sn,
+      su
+ from IBS.Z#CHECK_GUIDE@RFO_SNAP;
+grant select on U1.V_RFO_Z#CHECK_GUIDE to LOADDB;
+grant select on U1.V_RFO_Z#CHECK_GUIDE to LOADER;
+
+

@@ -1,0 +1,30 @@
+﻿create materialized view U1.V_FOR_SCORING_JAN_P3
+refresh complete on demand
+as
+select p1.yy_mm_report, p1.rfo_client_id,
+      max(coalesce(pk1.total_debt, pk2.total_debt)) keep (dense_rank last
+          order by coalesce(pk1.rfo_report_date, pk1.pkb_report_date,pk2.rfo_report_date,pk2.pkb_report_date)) as port_pkb_total_debt,
+      max(coalesce(pk1.pmt_active_all_sum, pk2.pmt_active_all_sum)) keep (dense_rank last
+          order by coalesce(pk1.rfo_report_date, pk1.pkb_report_date,pk2.rfo_report_date,pk2.pkb_report_date)) as port_pkb_pmt_active_all_sum,
+
+      max(coalesce(gr1.salary, gr2.salary)) keep (dense_rank last
+          order by coalesce(gr1.rep_date, gr2.rep_date)) as port_gcvp_sal,
+     /* min(coalesce(gr1.salary, gr2.salary)) keep (dense_rank last
+          order by coalesce(gr1.rep_date, gr2.rep_date)) as port_gcvp_sal_min,  */
+
+      (max(coalesce(gr1.salary, gr2.salary) ) keep (dense_rank last
+          order by coalesce(gr1.rep_date, gr2.rep_date))) /max(p1.con_start_pmt_max_by_cli) as gcvp_sal_to_start_pmt
+      /*min(coalesce(gr1.salary, gr2.salary) / p1.con_start_pmt_max_by_cli) keep (dense_rank last
+          order by coalesce(gr1.rep_date, gr2.rep_date)) as gcvp_sal_to_start_pmt_min*/
+
+from V_FOR_SCORING_JAN_P1 p1
+left join V_CLIENT cl on cl.rfo_client_id = p1.rfo_client_id
+left join V_PKB_REPORT pk1 on pk1.report_iin_rnn = cl.iin and coalesce(pk1.rfo_report_date, pk1.pkb_report_date) < p1.yy_mm_end_date
+left join V_PKB_REPORT pk2 on pk2.report_iin_rnn = cl.rnn and coalesce(pk2.rfo_report_date, pk2.pkb_report_date) < p1.yy_mm_end_date
+left join V_GCVP_REPORT gr1 on gr1.client_rnn = cl.rnn and gr1.rep_date < p1.yy_mm_end_date
+left join V_GCVP_REPORT gr2 on gr2.client_iin = cl.iin and gr2.rep_date < p1.yy_mm_end_date
+group by p1.yy_mm_report, p1.rfo_client_id;
+grant select on U1.V_FOR_SCORING_JAN_P3 to LOADDB;
+grant select on U1.V_FOR_SCORING_JAN_P3 to LOADER;
+
+

@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_TMP_J2_FOLDER_CON_BAS_PRE_1
+build deferred
+refresh complete on demand
+as
+select /*+parallel(2)*/ oc.id as rfo_con_or_claim_id,
+         'CLAIM' as rfo_con_claim_type,
+         trunc(b.c_date_create) as folder_con_date,
+         b.c_date_create as folder_con_date_time,
+         c.id as rfo_client_id,
+         c.x_iin as iin,
+         c.x_rnn as rnn,
+         oc.c_folder_ref as folder_id,
+         'ONLINE_CRED' as process_code,
+         'ОНЛАЙН КРЕДИТ' as process_name
+from u1.V_RFO_Z#KAS_ONLINE_CLAIM oc
+join u1.V_RFO_Z#KAS_ONLINE_BUY b on b.id = oc.c_buy_ref
+join u1.V_RFO_Z#CLIENT c on c.id = oc.c_client_ref
+where oc.c_folder_ref is null;
+grant select on U1.M_TMP_J2_FOLDER_CON_BAS_PRE_1 to LOADDB;
+
+

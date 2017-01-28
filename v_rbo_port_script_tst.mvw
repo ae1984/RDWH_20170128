@@ -1,0 +1,31 @@
+﻿create materialized view U1.V_RBO_PORT_SCRIPT_TST
+refresh complete on demand
+as
+select min(t.rep_date) keep (dense_rank first order by t.rep_date) rep_date,
+       t.rbo_contract_id,
+       min(max_del_1_m) keep (dense_rank first order by t.rep_date) as max_del_1_m,
+       min(max_del_3_m) keep (dense_rank first order by t.rep_date) as max_del_3_m,
+       min(max_del_6_m)  keep (dense_rank first order by t.rep_date) as  max_del_6_m,
+       min(max_del_1_y)  keep (dense_rank first order by t.rep_date) as max_del_1_y
+from (
+select  v.rep_date,
+        v.rbo_contract_id,
+        v.rbo_client_id,
+        max(v.delinq_days_cli) over (partition by v.rbo_client_id ORDER BY v.rep_date range between interval  '1' month preceding and current row) max_del_1_m,
+        max(v.delinq_days_cli) over (partition by v.rbo_client_id ORDER BY v.rep_date range between interval  '3' month preceding and current row) max_del_3_m,
+        max(v.delinq_days_cli) over (partition by v.rbo_client_id ORDER BY v.rep_date range between interval  '6' month preceding and current row) max_del_6_m,
+        max(v.delinq_days_cli) over (partition by v.rbo_client_id ORDER BY v.rep_date range between interval  '12' month preceding and current row) max_del_1_y
+      /* case when nvl(v.delinq_days,0) > 0  and dense_rank() over (partition by v.rbo_client_id,to_char(v.rep_date,'mm-yyyy') order by v.rep_date) = 1 then
+       count( distinct to_char(v.rep_date,'mm-yyyy')) over (partition by v.rbo_client_id ORDER BY v.rep_date range between interval '1' month preceding and current row)
+       end as cnt_del_month, */
+       --,dense_rank() over (partition by v.rbo_contract_id order by v.rep_date) rank_by_con
+from v_rbo_port v
+--where v.rbo_contract_id = 23841236548
+) t
+--join m_rbo_contract_bas b on b.rbo_contract_id = t.rbo_contract_id
+/*where t.rank_by_con = 1*/
+group by t.rbo_contract_id;
+grant select on U1.V_RBO_PORT_SCRIPT_TST to LOADDB;
+grant select on U1.V_RBO_PORT_SCRIPT_TST to LOADER;
+
+

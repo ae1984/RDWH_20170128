@@ -1,0 +1,26 @@
+﻿create table U1.MO_PRD_OBJECT_LOG
+(
+  id               NUMBER not null,
+  prd_object_id    NUMBER not null,
+  prd_object       VARCHAR2(32),
+  prd_object_field VARCHAR2(32),
+  date_create      TIMESTAMP(6) not null,
+  is_processed     NUMBER(1) not null,
+  async_process_id NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO_PRD_OBJECT_LOG to LOADDB;
+grant select on U1.MO_PRD_OBJECT_LOG to LOADER;
+

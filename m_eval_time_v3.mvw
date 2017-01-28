@@ -1,0 +1,43 @@
+﻿create materialized view U1.M_EVAL_TIME_V3
+build deferred
+refresh force on demand
+as
+select /*+parallel(1)*/
+    t.folder_id,
+    t.h_id,
+    td.yyyy_mm_dd,
+    td.text_yyyy_mm,
+    td.week_text,
+    td.week_day_long_ru,
+    t.dur_minutes as dur_minutes_all,
+    round(sum(least(t.line_time_end,tw.workday_end)-greatest(t.line_time_start,tw.workday_start))*24*60,0) as dur_minutes,
+    t.line_name,
+    t.line_time_start,
+    t.line_time_end,
+    t.bprocess,
+    t.user_name,
+    t.num_estim
+  from m_eval_time_pre_v3 t
+  join u1.v_time_days td on td.yyyy_mm_dd=trunc(t.line_time_end)
+  join u1.t_workdays tw on t.line_time_start between tw.workday_start and tw.workday_end
+                                or t.line_time_end between tw.workday_start and tw.workday_end
+                                or tw.workday_start between t.line_time_start and t.line_time_end
+                                or tw.workday_end between t.line_time_start and t.line_time_end
+  where trunc(t.max_end)>=to_date('04.01.2016', 'dd.mm.yyyy')
+  group by
+    t.folder_id,
+    t.h_id,
+    td.yyyy_mm_dd,
+    td.text_yyyy_mm,
+    td.week_text,
+    td.week_day_long_ru,
+    t.dur_minutes,
+    t.line_name,
+    t.line_time_start,
+    t.line_time_end,
+    t.bprocess,
+    t.user_name,
+    t.num_estim;
+grant select on U1.M_EVAL_TIME_V3 to LOADDB;
+
+

@@ -1,0 +1,74 @@
+﻿create materialized view U1.M_TMP_J_MINER_KN_TK_GOOD
+using no index
+refresh complete on demand
+as
+select --+parallel(10)
+
+           t.deal_number as v1_deal_number,
+
+           t.folder_id_first as v1_folder_id_first,
+
+           cdp.is_del_60_plus,
+
+           kt.prev_con_cnt,
+           kt.is_client_new,
+           kt.first_con_start_mon_ago,
+           kt.last_con_start_mon_ago,
+
+           p1.good_months_before_cnt,
+           p1.bad_months_before_cnt,
+           p1.delinq_days_max_before,
+           p1.contract_amount_min_del,
+
+           t.x_start_date_actual,
+
+           t.amount,
+           t.pmt,
+
+           ACTIV_credit_num,
+           MONTHS_LIVED,
+           num_refin,
+           cm.gcvp_salary,
+           cm.education,
+           cm.marital_status,
+           cm.children,
+           kdn.kdn_form_salary_max,
+           dep.is_cli_new_to_depn,
+
+           kaspi.num_pmts as num_pmts_kaspi_kz,
+
+   --        dohod.dohod,
+           cm.sal_gcvp_to_sal_form_prc_floor,
+           cm.pkb_closed_contracts,
+           cm.gcvp_pmts_count_from_rep,
+           cm.gcvp_first_pmt_days_ago_floor,
+           cm.work_expr_last_place_mon_floor,
+           cm.age_full_years
+
+
+
+
+    from u1.V_DWH_PORTFOLIO_CURRENT t
+    left join u1.V_CONTRACT_CAL c on c.contract_number = t.deal_number
+    left join u1.M_CONTRACT_CAL_DEL cd on cd.contract_number = c.contract_number
+    left join u1.M_CONTRACT_CAL_DEL_PLUS cdp on cdp.contract_number = c.contract_number
+    left join M_TMP_J_CON_PREV_CON_KN_TK_NC kt on kt.deal_number = t.deal_number
+    left join M_TMP_J_MINER_KN_TK_GOOD_PRE_1 p1 on p1.deal_number = t.deal_number
+    left join u1.m_folder_con_miner cm on t.deal_number = cm.contract_number
+    left join u1.m_contract_param_kdn5c kdn on kdn.deal_number = t.deal_number
+    left join KASPI_kz kaspi on kaspi.deal_number = t.deal_number
+    left join dep_cli dep on dep.deal_number = t.deal_number
+  --  left join DOHOD_PREV dohod on dohod.deal_number = t.deal_number
+
+
+
+    where t.x_is_credit_issued = 1 and -- выданные
+          t.x_start_date_actual is not null and -- настоящие кредиты
+          t.client_iin is not null and
+          t.x_product_type in ('ДЕНЬГИ','ТОВАРЫ') and t.x_is_card = 0 and -- не карты (не УК)
+          t.x_start_date_actual < to_date('2014-07','yyyy-mm') and
+          t.x_start_date_actual >= to_date('2013-01','yyyy-mm');
+grant select on U1.M_TMP_J_MINER_KN_TK_GOOD to LOADDB;
+grant select on U1.M_TMP_J_MINER_KN_TK_GOOD to LOADER;
+
+

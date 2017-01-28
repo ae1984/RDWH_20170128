@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_TMP_R_ADDRESS_BY_IIN_0515
+refresh force on demand
+as
+select q.iin, q.oblast_city||'/'||q.settlement||'/'||q.street||'/'||q.corpus||'/'||q.building||'/'||q.flat as address,
+       q.oblast_city as region_city, q.settlement as city , q.street, q.corpus, q.building as building_number, q.flat as flat_number
+from (
+    select /*+ noparallel */
+    row_number() over (partition by iin order by idate desc ) nn, t.*
+    from M_TDWH_EGOV_ADDRESSES t
+    where t.error_msg is null-- озапросы без ошибок
+    ) q
+where q.nn=1;
+grant select on U1.M_TMP_R_ADDRESS_BY_IIN_0515 to LOADDB;
+grant select on U1.M_TMP_R_ADDRESS_BY_IIN_0515 to LOADER;
+
+

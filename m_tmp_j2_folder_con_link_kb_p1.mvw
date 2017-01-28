@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_TMP_J2_FOLDER_CON_LINK_KB_P1
+build deferred
+refresh complete on demand
+as
+select /*+parallel(2)*/
+       f.rfo_con_or_claim_id,
+       coalesce(max(p1.report_id), min(p2.report_id)) as pkb_pri_report_id
+from u1.M_TMP_J2_FOLDER_CON_BAS f
+left join u1.M_TMP_J2_KB_REPORT p1 on p1.iin_rnn = f.iin and
+                   (p1.report_date >= f.folder_con_date - 60 and p1.report_date <= f.folder_con_date) and
+                   p1.report_source = 'PKB' and p1.report_type = 'PRIMARY'
+left join u1.M_TMP_J2_KB_REPORT p2 on p2.iin_rnn = f.iin and
+                   f.process_name = 'ОНЛАЙН КРЕДИТ' and
+                   (p2.report_date > f.folder_con_date and p2.report_date <= f.folder_con_date + 5) and
+                   p2.report_source = 'PKB' and p2.report_type = 'PRIMARY'
+group by f.rfo_con_or_claim_id;
+grant select on U1.M_TMP_J2_FOLDER_CON_LINK_KB_P1 to LOADDB;
+
+

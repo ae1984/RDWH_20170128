@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_KN_T
+refresh complete on demand
+as
+select t2.contract_number,
+       max(t2.yy_mm_report_date) yy_mm_report_date,
+       max(t2.is_bad) keep (DENSE_RANK LAST ORDER BY t2.yy_mm_report_date) is_bad
+          from (
+            select /*+ parallel(5) */ t.*,
+            to_date(t.yy_mm_start, 'yyyy - mm') yy_mm_start_date,
+            to_date(t.yy_mm_report, 'yyyy - mm') yy_mm_report_date,
+            case when t.client_status in ('B','W') then 1 else 0 end is_bad
+            from v_portfolio t
+          ) t2
+          join m_folder_con_miner m on m.contract_number = t2.contract_number
+                                       and m."CR_PROGRAM_NAME" like 'КРЕДИТ НАЛИЧНЫМИ'
+          where (t2.yy_mm_start_date >= to_date('20100101', 'yyyymmdd')
+              and t2.yy_mm_start_date < to_date('20140501', 'yyyymmdd'))
+            and (
+                t2.yy_mm_report_date >= to_date('20120501', 'yyyymmdd') and
+                t2.yy_mm_report_date < to_date('20130101', 'yyyymmdd'))
+group by t2.contract_number;
+grant select on U1.M_FOLDER_CON_MINER_KN_T to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER_KN_T to LOADER;
+
+

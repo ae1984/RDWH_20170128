@@ -1,0 +1,229 @@
+﻿create materialized view U1.M_TMP_J_CLI_SEGMENT_XLS
+refresh complete on demand
+as
+select
+    coalesce(s1.first_con_start_mon_ago,0) as first_con_start_mon_ago,
+    coalesce(s1.last_con_start_mon_ago,0) as last_con_start_mon_ago,--
+    coalesce(s1.contract_all_cnt,0) as contract_all_cnt,
+    coalesce(s1.contract_active_cnt,0) as contract_active_cnt,
+    coalesce(s1.contract_closed_cnt,0) as contract_closed_cnt,--
+
+    coalesce(s1.contract_no_opt_all_cnt,0) as contract_no_opt_all_cnt,--
+    coalesce(s1.contract_no_opt_active_cnt,0) as contract_no_opt_active_cnt,--
+    coalesce(s1.contract_no_opt_closed_cnt,0) as contract_no_opt_closed_cnt,--
+    coalesce(s1.contract_no_card_opt_all_cnt,0) as contract_no_card_opt_all_cnt,--
+    coalesce(s1.contract_no_card_opt_activ_cnt,0) as contract_no_card_opt_activ_cnt,--
+    coalesce(s1.contract_no_card_opt_close_cnt,0) as contract_no_card_opt_close_cnt,--
+
+    coalesce(s1.contract_cash_all_cnt,0) as contract_cash_all_cnt,
+    coalesce(s1.contract_cash_active_cnt,0) as contract_cash_active_cnt,
+    coalesce(s1.contract_cash_closed_cnt,0) as contract_cash_closed_cnt,--
+    coalesce(s1.contract_goods_all_cnt,0) as contract_goods_all_cnt,
+    coalesce(s1.contract_goods_active_cnt,0) as contract_goods_active_cnt,
+    coalesce(s1.contract_goods_closed_cnt,0) as contract_goods_closed_cnt,--
+    coalesce(s1.contract_auto_all_cnt,0) as contract_auto_all_cnt,
+    coalesce(s1.contract_auto_active_cnt,0) as contract_auto_active_cnt,
+    coalesce(s1.contract_auto_closed_cnt,0) as contract_auto_closed_cnt,--
+    coalesce(s1.contract_card_all_cnt,0) as contract_card_all_cnt,--
+    coalesce(s1.contract_card_active_cnt,0) as contract_card_active_cnt,--
+    coalesce(s1.contract_card_closed_cnt,0) as contract_card_closed_cnt,--
+    coalesce(s1.contract_opt_all_cnt,0) as contract_opt_all_cnt,--
+    coalesce(s1.contract_opt_active_cnt,0) as contract_opt_active_cnt,--
+    coalesce(s1.contract_opt_closed_cnt,0) as contract_opt_closed_cnt,--
+    coalesce(s1.is_del_01_plus_now,0) as is_del_01_plus_now,
+    coalesce(s1.is_del_15_plus_now,0) as is_del_15_plus_now,--
+    coalesce(s1.is_del_30_plus_now,0) as is_del_30_plus_now,
+    coalesce(s1.is_del_60_plus_now,0) as is_del_60_plus_now,
+    coalesce(s1.is_del_90_plus_now,0) as is_del_90_plus_now,
+
+    coalesce(s2.fact_pmts_all,0) as fact_pmts_all,
+    coalesce(s2.fact_pmts_03_mon,0) as fact_pmts_03_mon,
+    coalesce(s2.fact_pmts_06_mon,0) as fact_pmts_06_mon,
+    coalesce(s2.fact_pmts_12_mon,0) as fact_pmts_12_mon,
+    coalesce(s2.fact_pmts_24_mon,0) as fact_pmts_24_mon,
+    coalesce(s2.is_del_07plus,0) as is_del_07plus,--
+    coalesce(s2.is_del_15plus,0) as is_del_15plus,--
+    coalesce(s2.is_del_30plus,0) as is_del_30plus,
+    coalesce(s2.is_del_60plus,0) as is_del_60plus,
+    coalesce(s2.is_del_90plus,0) as is_del_90plus,
+
+    coalesce(s3.active_months_cnt,0) as active_months_cnt,
+    coalesce(s3.good_months_cnt,0) as good_months_cnt,
+    coalesce(s3.bad_months_cnt,0) as bad_months_cnt,
+    coalesce(s3.bad_months_del15_cnt,0) as bad_months_del15_cnt,--
+    coalesce(s3.bad_months_del30_cnt,0) as bad_months_del30_cnt,
+    coalesce(s3.bad_months_del60_cnt,0) as bad_months_del60_cnt,
+    coalesce(s3.bad_months_del90_cnt,0) as bad_months_del90_cnt,
+    coalesce(s3.delinq_days_max,0) as delinq_days_max,--
+    coalesce(s3.min_contract_amount_with_del7,0) as min_contract_amount_with_del7,--
+    coalesce(s3.min_contract_amount_with_del15,0) as min_contract_amount_with_del15,--
+    coalesce(s3.min_contract_amount_with_del30,0) as min_contract_amount_with_del30,--
+    coalesce(s3.min_contract_amount_with_del60,0) as min_contract_amount_with_del60,--
+    coalesce(s3.last_del7_month_mon_ago,0) as last_del7_month_mon_ago,--
+    coalesce(s3.last_del15_month_mon_ago,0) as last_del15_month_mon_ago,--
+    coalesce(s3.last_del30_month_mon_ago,0) as last_del30_month_mon_ago,--
+    coalesce(s3.last_del60_month_mon_ago,0) as last_del60_month_mon_ago,--
+
+    coalesce(s4.folder_all_cnt,0) as folder_all_cnt,
+    coalesce(s4.folder_all_approved_cnt,0) as folder_all_approved_cnt,
+    coalesce(s4.folder_kn_tk_auto_card_cnt,0) as folder_kn_tk_auto_card_cnt,--
+    coalesce(s4.folder_kn_tk_auto_card_apr_cnt,0) as folder_kn_tk_auto_card_apr_cnt,--
+    coalesce(s4.folder_kn_tk_auto_cnt,0) as folder_kn_tk_auto_cnt,
+    coalesce(s4.folder_kn_tk_auto_approved_cnt,0) as folder_kn_tk_auto_approved_cnt,
+    coalesce(s4.folder_kn_cnt,0) as folder_kn_cnt,
+    coalesce(s4.folder_tk_cnt,0) as folder_tk_cnt,
+    coalesce(s4.folder_auto_cnt,0) as folder_auto_cnt,
+    coalesce(s4.folder_card_cnt,0) as folder_card_cnt,--
+    coalesce(s4.folder_kn_approved_cnt,0) as folder_kn_approved_cnt,
+    coalesce(s4.folder_tk_approved_cnt,0) as folder_tk_approved_cnt,
+    coalesce(s4.folder_auto_approved_cnt,0) as folder_auto_approved_cnt,
+    coalesce(s4.folder_card_approved_cnt,0) as folder_card_approved_cnt,--
+    coalesce(s4.fld_kn_tk_auto_crd_3m_cnt,0) as fld_kn_tk_auto_crd_3m_cnt,--
+    coalesce(s4.fld_kn_tk_auto_crd_6m_cnt,0) as fld_kn_tk_auto_crd_6m_cnt,--
+    coalesce(s4.fld_kn_tk_auto_crd_12m_cnt,0) as fld_kn_tk_auto_crd_12m_cnt,--
+    coalesce(s4.fld_kn_tk_auto_crd_3m_apr_cnt,0) as fld_kn_tk_auto_crd_3m_apr_cnt,--
+    coalesce(s4.fld_kn_tk_auto_crd_6m_apr_cnt,0) as fld_kn_tk_auto_crd_6m_apr_cnt,--
+    coalesce(s4.fld_kn_tk_aut_crd_12m_apr_cnt,0) as fld_kn_tk_aut_crd_12m_apr_cnt,--
+    coalesce(s4.folder_kn_tk_auto_3m_cnt,0) as folder_kn_tk_auto_3m_cnt,
+    coalesce(s4.folder_kn_tk_auto_6m_cnt,0) as folder_kn_tk_auto_6m_cnt,
+    coalesce(s4.folder_kn_tk_auto_12m_cnt,0) as folder_kn_tk_auto_12m_cnt,
+    coalesce(s4.folder_kn_tk_auto_3m_appr_cnt,0) as folder_kn_tk_auto_3m_appr_cnt,
+    coalesce(s4.folder_kn_tk_auto_6m_appr_cnt,0) as folder_kn_tk_auto_6m_appr_cnt,
+    coalesce(s4.folder_kn_tk_auto_12m_appr_cnt,0) as folder_kn_tk_auto_12m_appr_cnt,
+
+    coalesce(s5.is_kaspi_kz_ever,0) as is_kaspi_kz_ever,
+    coalesce(s5.pmt_amount_sum,0) as pmt_amount_sum,--
+    coalesce(s5.pmt_amount_max,0) as pmt_amount_max,--
+    coalesce(s5.first_kaspikz_pmt_mon_ago,0) as first_kaspikz_pmt_mon_ago,
+    coalesce(s5.last_kaspikz_pmt_mon_ago,0) as last_kaspikz_pmt_mon_ago,--
+
+    coalesce(s6.is_depo_client_now,0) as is_depo_client_now,
+    coalesce(s7.is_depo_client_ever,0) as is_depo_client_ever,
+    coalesce(s8.is_terminal_client_ever,0) as is_terminal_client_ever,
+    coalesce(s8.is_terminal_client_3_mon,0) as is_terminal_client_3_mon,
+
+    coalesce(pr.prev_con_cnt,0) as last_fld_start_con_cnt,
+    coalesce(pr.prev_active_con_cnt,0) as last_fld_start_active_con_cnt,
+
+    count(distinct s1.client_iin) as client_cnt
+from M_TMP_J_CLI_SEGMENT_1 s1
+left join M_TMP_J_CLI_SEGMENT_2 s2 on s2.client_iin_last = s1.client_iin
+left join M_TMP_J_CLI_SEGMENT_3 s3 on s3.client_iin = s1.client_iin
+left join M_TMP_J_CLI_SEGMENT_4 s4 on s4.iin = s1.client_iin
+left join M_TMP_J_CLI_SEGMENT_5 s5 on s5.iin = s1.client_iin
+left join M_TMP_J_CLI_SEGMENT_6 s6 on s6.clnt_inn = s1.client_iin
+left join M_TMP_J_CLI_SEGMENT_7 s7 on s7.clnt_inn = s1.client_iin
+left join M_TMP_J_CLI_SEGMENT_8 s8 on s8.iin = s1.client_iin
+left join M_TMP_J_FLD_PREV_CON pr on pr.rfo_contract_id = s4.rfo_contract_id_last
+group by
+    coalesce(s1.first_con_start_mon_ago,0),
+    coalesce(s1.last_con_start_mon_ago,0),--
+    coalesce(s1.contract_all_cnt,0),
+    coalesce(s1.contract_active_cnt,0),
+    coalesce(s1.contract_closed_cnt,0),--
+
+    coalesce(s1.contract_no_opt_all_cnt,0),--
+    coalesce(s1.contract_no_opt_active_cnt,0),--
+    coalesce(s1.contract_no_opt_closed_cnt,0),--
+    coalesce(s1.contract_no_card_opt_all_cnt,0),--
+    coalesce(s1.contract_no_card_opt_activ_cnt,0),--
+    coalesce(s1.contract_no_card_opt_close_cnt,0),--
+
+    coalesce(s1.contract_cash_all_cnt,0),
+    coalesce(s1.contract_cash_active_cnt,0),
+    coalesce(s1.contract_cash_closed_cnt,0),--
+
+    coalesce(s1.contract_goods_all_cnt,0),
+    coalesce(s1.contract_goods_active_cnt,0),
+    coalesce(s1.contract_goods_closed_cnt,0),--
+
+    coalesce(s1.contract_auto_all_cnt,0),
+    coalesce(s1.contract_auto_active_cnt,0),
+    coalesce(s1.contract_auto_closed_cnt,0),--
+
+    coalesce(s1.contract_card_all_cnt,0),--
+    coalesce(s1.contract_card_active_cnt,0),--
+    coalesce(s1.contract_card_closed_cnt,0),--
+
+    coalesce(s1.contract_opt_all_cnt,0),--
+    coalesce(s1.contract_opt_active_cnt,0),--
+    coalesce(s1.contract_opt_closed_cnt,0),--
+
+    coalesce(s1.is_del_01_plus_now,0),
+    coalesce(s1.is_del_15_plus_now,0),--
+    coalesce(s1.is_del_30_plus_now,0),
+    coalesce(s1.is_del_60_plus_now,0),
+    coalesce(s1.is_del_90_plus_now,0),
+
+    coalesce(s2.fact_pmts_all,0),
+    coalesce(s2.fact_pmts_03_mon,0),
+    coalesce(s2.fact_pmts_06_mon,0),
+    coalesce(s2.fact_pmts_12_mon,0),
+    coalesce(s2.fact_pmts_24_mon,0),
+    coalesce(s2.is_del_07plus,0),--
+    coalesce(s2.is_del_15plus,0),--
+    coalesce(s2.is_del_30plus,0),
+    coalesce(s2.is_del_60plus,0),
+    coalesce(s2.is_del_90plus,0),
+
+    coalesce(s3.active_months_cnt,0),
+    coalesce(s3.good_months_cnt,0),
+    coalesce(s3.bad_months_cnt,0),
+    coalesce(s3.bad_months_del15_cnt,0),--
+    coalesce(s3.bad_months_del30_cnt,0),
+    coalesce(s3.bad_months_del60_cnt,0),
+    coalesce(s3.bad_months_del90_cnt,0),
+    coalesce(s3.delinq_days_max,0),--
+    coalesce(s3.min_contract_amount_with_del7,0),--
+    coalesce(s3.min_contract_amount_with_del15,0),--
+    coalesce(s3.min_contract_amount_with_del30,0),--
+    coalesce(s3.min_contract_amount_with_del60,0),--
+    coalesce(s3.last_del7_month_mon_ago,0),--
+    coalesce(s3.last_del15_month_mon_ago,0),--
+    coalesce(s3.last_del30_month_mon_ago,0),--
+    coalesce(s3.last_del60_month_mon_ago,0),--
+
+    coalesce(s4.folder_all_cnt,0),
+    coalesce(s4.folder_all_approved_cnt,0),
+    coalesce(s4.folder_kn_tk_auto_card_cnt,0),--
+    coalesce(s4.folder_kn_tk_auto_card_apr_cnt,0),--
+    coalesce(s4.folder_kn_tk_auto_cnt,0),
+    coalesce(s4.folder_kn_tk_auto_approved_cnt,0),
+    coalesce(s4.folder_kn_cnt,0),
+    coalesce(s4.folder_tk_cnt,0),
+    coalesce(s4.folder_auto_cnt,0),
+    coalesce(s4.folder_card_cnt,0),--
+    coalesce(s4.folder_kn_approved_cnt,0),
+    coalesce(s4.folder_tk_approved_cnt,0),
+    coalesce(s4.folder_auto_approved_cnt,0),
+    coalesce(s4.folder_card_approved_cnt,0),--
+    coalesce(s4.fld_kn_tk_auto_crd_3m_cnt,0),--
+    coalesce(s4.fld_kn_tk_auto_crd_6m_cnt,0),--
+    coalesce(s4.fld_kn_tk_auto_crd_12m_cnt,0),--
+    coalesce(s4.fld_kn_tk_auto_crd_3m_apr_cnt,0),--
+    coalesce(s4.fld_kn_tk_auto_crd_6m_apr_cnt,0),--
+    coalesce(s4.fld_kn_tk_aut_crd_12m_apr_cnt,0),--
+    coalesce(s4.folder_kn_tk_auto_3m_cnt,0),
+    coalesce(s4.folder_kn_tk_auto_6m_cnt,0),
+    coalesce(s4.folder_kn_tk_auto_12m_cnt,0),
+    coalesce(s4.folder_kn_tk_auto_3m_appr_cnt,0),
+    coalesce(s4.folder_kn_tk_auto_6m_appr_cnt,0),
+    coalesce(s4.folder_kn_tk_auto_12m_appr_cnt,0),
+
+    coalesce(s5.is_kaspi_kz_ever,0),
+    coalesce(s5.pmt_amount_sum,0),--
+    coalesce(s5.pmt_amount_max,0),--
+    coalesce(s5.first_kaspikz_pmt_mon_ago,0),
+    coalesce(s5.last_kaspikz_pmt_mon_ago,0),--
+
+    coalesce(s6.is_depo_client_now,0),
+    coalesce(s7.is_depo_client_ever,0),
+    coalesce(s8.is_terminal_client_ever,0),
+    coalesce(s8.is_terminal_client_3_mon,0),
+
+    coalesce(pr.prev_con_cnt,0), --
+    coalesce(pr.prev_active_con_cnt,0);
+grant select on U1.M_TMP_J_CLI_SEGMENT_XLS to LOADDB;
+grant select on U1.M_TMP_J_CLI_SEGMENT_XLS to LOADER;
+
+

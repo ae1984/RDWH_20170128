@@ -1,0 +1,54 @@
+﻿create table U1.T_CONTRACT_INCOME_PRE
+(
+  rbo_contract_id NUMBER not null,
+  date_oper       DATE not null,
+  principal       NUMBER(21,2),
+  interest        NUMBER(21,2),
+  commiss         NUMBER(21,2),
+  fine            NUMBER(21,2),
+  is_card         NUMBER(1) not null
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_CONTRACT_INCOME_PRE
+  is 'Информация по всем погашениям по кредитам';
+comment on column U1.T_CONTRACT_INCOME_PRE.rbo_contract_id
+  is 'Идентификатор договора в РБО';
+comment on column U1.T_CONTRACT_INCOME_PRE.date_oper
+  is 'Дата проведения операции по балансу';
+comment on column U1.T_CONTRACT_INCOME_PRE.principal
+  is 'Сумма погашенной задолженности по ОД';
+comment on column U1.T_CONTRACT_INCOME_PRE.interest
+  is 'Сумма погашенной задолженности по процентам';
+comment on column U1.T_CONTRACT_INCOME_PRE.commiss
+  is 'Сумма погашенной задолженности по комиссиям';
+comment on column U1.T_CONTRACT_INCOME_PRE.fine
+  is 'Сумма погашенной задолженности по пене';
+comment on column U1.T_CONTRACT_INCOME_PRE.is_card
+  is 'Признак: 1 - карта, 0 - кредит';
+create index U1.T_CONTRACT_INCOME_PRE_IND1 on U1.T_CONTRACT_INCOME_PRE (RBO_CONTRACT_ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_CONTRACT_INCOME_PRE to LOADDB;
+grant select on U1.T_CONTRACT_INCOME_PRE to LOADER;
+

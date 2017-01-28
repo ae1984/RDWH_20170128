@@ -1,0 +1,92 @@
+﻿create materialized view U1.M_CONTRACT_PAYMENTS
+refresh complete on demand
+as
+select /*+ parallel(30)*/
+        aq.x_client_id,
+        aq.contract_number,
+        aq.contract_status,
+        aq.prod_type,
+        aq.amount,
+        aq.pmt,
+        aq.begin_date,
+        aq.x_start_date_actual,
+        aq.plan_end_date,
+        aq.actual_end_date,
+        aq.expert_name,
+        aq.dcard_number,
+        aq.as_of_date,
+        aq.operation_type_name,
+        cast(case when lower(aq.operation_type_name) like '%касс%'
+                  then 'КАССА'
+                  else 'ДРУГОЕ'
+             end as varchar2(100)) as oper_type,
+        aq.amount_eq,
+        aq.yy_mm_start_last,
+        aq.max_debt_used,
+        aq.cnt_active_contracts,
+        aq.sum_of_pmts,
+        cast(case when aq.cnt_active_contracts = 0 then
+                       case when floor(aq.amount_eq/aq.pmt) >= 3
+                       then 1
+                       else 0 end
+                  else
+                       case when floor(aq.amount_eq/(aq.pmt*3+aq.sum_of_pmts)) >= 1
+                            then 1
+                            else 0 end
+             end as number) as payment,
+        cast(case when floor(aq.amount_eq/aq.pmt) = 3
+                  then 1
+                  else 0
+             end as number) as payment_1,
+        aq.amount_eq/aq.pmt as cnt_pmts
+   from (
+         select /*+ parallel(30)*/
+                a.x_client_id,
+                a.contract_number,
+                a.contract_status,
+                a.prod_type,
+                a.amount,
+                a.pmt,
+                a.begin_date,
+                a.x_start_date_actual,
+                a.plan_end_date,
+                a.actual_end_date,
+                max(aq1.expert_name) keep (dense_rank last order by a.x_start_date_actual) as expert_name,
+                a.dcard_number,
+                a.as_of_date,
+                a.operation_type_name,
+                a.amount_eq,
+                b.yy_mm_start_last,
+                b.max_debt_used,
+                count(distinct c.deal_number) as cnt_active_contracts,
+                nvl(sum(case when c.deal_number is not null then c.pmt else 0 end), 0) as sum_of_pmts
+           from M_CONTRACT_PAYMENT_DAYOPEN a
+           join u1.M_CONTRACT_CAL_DEL           b on a.contract_number = b.contract_number
+           left join u1.V_DWH_PORTFOLIO_CURRENT c on c.x_client_id = a.x_client_id
+                                                 and c.x_is_credit_issued = 1
+                                                 and (c.x_start_date_actual < a.x_start_date_actual
+                                                      and nvl(c.actual_end_date, to_date('01.01.3000', 'dd.mm.yyyy')) >= a.x_start_date_actual)
+           left join u1.M_FOLDER_CON_CANCEL   aq1 on a.contract_number = aq1.contract_number
+                                                 and aq1.is_credit_issued = 1
+          group by a.x_client_id,
+                a.contract_number,
+                a.contract_status,
+                a.prod_type,
+                a.amount,
+                a.pmt,
+                a.begin_date,
+                a.x_start_date_actual,
+                a.plan_end_date,
+                a.actual_end_date,
+                a.dcard_number,
+                a.as_of_date,
+                a.operation_type_name,
+                a.amount_eq,
+                b.yy_mm_start_last,
+                b.contract_number,
+                b.max_debt_used
+     ) aq;
+grant select on U1.M_CONTRACT_PAYMENTS to LOADDB;
+grant select on U1.M_CONTRACT_PAYMENTS to LOADER;
+
+

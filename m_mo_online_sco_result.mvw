@@ -1,0 +1,79 @@
+﻿create materialized view U1.M_MO_ONLINE_SCO_RESULT
+build deferred
+refresh force on demand
+as
+select x.*
+from (
+
+select
+       f.rfolder_id,
+       f.date_create,
+       dp.code_int,
+       case /*when dp.code_int = 'SC_PRESCORING' then
+                 case when d.value_text = 'ОТКАЗ' then 1 else 0 end*/
+
+            when dp.code_int = 'IN_SCO_PKB_STATUS' then
+                 case when d.value_text = 'SUBJECTNOTFOUND' then 0
+                      when d.value_text = 'OK' then 1 end
+
+            when dp.d_par_datatype_code = 'NUMBER' then d.value_number
+
+            when dp.d_par_datatype_code = 'VARCHAR2' then to_number(d.value_text)
+
+
+       end value_number
+from T_MO_RFOLDER_PAR_VALUE_DD f
+join T_MO_RFOLDER_PAR_VALUE_DD dd on dd.rfolder_id = f.rfolder_id
+                         and dd.d_par_id = 1327 --IN_SCO_SYSTEM_SOURCE
+                             --1340 --FAST_APPR
+                         --and (dd.value_text is null or dd.value_text !=  'KASPI_SHOPPING')
+                         and (dd.value_text = 'KASPI_SHOPPING')
+join T_MO_RFOLDER_PAR_VALUE_DD d on d.rfolder_id = dd.rfolder_id
+/*                         and d.d_par_id = 1344 --SC_CONTRACT_TERM_KDN_REGUL_RES_PRE
+                             --1340 --FAST_APPR
+                         and d.value_number = 1*/
+join V_MO_D_PAR dp on dp.id = d.d_par_id
+              and dp.code_int in ('IN_SCO_CLIENT_ID',
+                                  'IN_SCO_FOLDER_ID',
+                                  'MO_SCO_REJECT',
+
+                                  'IN_SCO_PKB_STATUS',
+                                  'IS_CLIENT_NEW',
+
+                                  'IN_SCO_TERM_CRED',
+
+                                  'SC_GENERAL_CONTRACT_AMOUNT')
+                                  and dp.status = 1
+where f.date_create > trunc(sysdate)
+--      and f.date_create < trunc(sysdate)
+     and f.d_par_id = 1030
+     and f.value_number = 8
+     )
+pivot (
+      max(value_number)
+      for code_int in ('IN_SCO_CLIENT_ID' rfo_client_id,
+                       'IN_SCO_FOLDER_ID' rfo_folder_id,
+                       'MO_SCO_REJECT' MO_SCO_REJECT,
+
+                       'IN_SCO_PKB_STATUS' IN_SCO_PKB_STATUS,
+                       'IS_CLIENT_NEW' IS_CLIENT_NEW,
+
+                       'IN_SCO_TERM_CRED' IN_SCO_TERM_CRED,
+
+                       'SC_GENERAL_CONTRACT_AMOUNT' SC_GENERAL_CONTRACT_AMOUNT)
+
+) x
+
+group by  x.rfolder_id,
+          x.date_create,
+          x.rfo_client_id,
+          x.rfo_folder_id,
+          x.MO_SCO_REJECT,
+          x.IN_SCO_PKB_STATUS,
+          x.IS_CLIENT_NEW,
+
+          x.IN_SCO_TERM_CRED,
+          x.SC_GENERAL_CONTRACT_AMOUNT;
+grant select on U1.M_MO_ONLINE_SCO_RESULT to LOADDB;
+
+

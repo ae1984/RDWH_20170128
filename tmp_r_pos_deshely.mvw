@@ -1,0 +1,34 @@
+﻿create materialized view U1.TMP_R_POS_DESHELY
+refresh force on demand
+as
+select /*+ noparallel */ t.pos_code as deshely
+from v_pos t
+where t.pos_code in ('001-104-725',
+                    '001-103-349',
+                    '001-115-458',
+                    '001-110-703',
+                    '001-110-703',
+                    '001-109-728',
+                    '001-109-728',
+                    '001-105-706',
+                    '001-131-520',
+                    '001-131-520',
+                    '001-112-740',
+                    '001-111-640',
+                    '001-113-298',
+                    '001-102-449',
+                    '001-102-469',
+                    '001-900-407',
+                    '001-900-422',
+                    '001-101-301',
+                    '001-107-398',
+                    '001-114-750',
+                    '001-116-510',
+                    '001-140-717',
+                    '001-108-543',
+                    '001-108-543',
+                    '001-107-419');
+grant select on U1.TMP_R_POS_DESHELY to LOADDB;
+grant select on U1.TMP_R_POS_DESHELY to LOADER;
+
+

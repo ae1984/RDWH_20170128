@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_TMP_J_KASPI_USERS
+refresh complete on demand
+as
+select u.inn as iin,
+       min(p.reg_date) as pmt_date_min,
+       max(p.reg_date) as pmt_date_max,
+       1 as is_pmt_done_ever,
+       sum(p.amount) as pmt_amount_sum,
+       max(p.amount) as pmt_amount_max
+from M_KASPIKZ_PAY_PAY_INFO p
+join M_KASPIKZ_USERS u on u.id = p.user_id
+where u.inn is not null
+group by u.inn;
+grant select on U1.M_TMP_J_KASPI_USERS to LOADDB;
+grant select on U1.M_TMP_J_KASPI_USERS to LOADER;
+
+

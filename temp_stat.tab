@@ -1,0 +1,58 @@
+﻿create table U1.TEMP_STAT
+(
+  statid  VARCHAR2(30),
+  type    CHAR(1),
+  version NUMBER,
+  flags   NUMBER,
+  c1      VARCHAR2(30),
+  c2      VARCHAR2(30),
+  c3      VARCHAR2(30),
+  c4      VARCHAR2(30),
+  c5      VARCHAR2(30),
+  n1      NUMBER,
+  n2      NUMBER,
+  n3      NUMBER,
+  n4      NUMBER,
+  n5      NUMBER,
+  n6      NUMBER,
+  n7      NUMBER,
+  n8      NUMBER,
+  n9      NUMBER,
+  n10     NUMBER,
+  n11     NUMBER,
+  n12     NUMBER,
+  d1      DATE,
+  r1      RAW(32),
+  r2      RAW(32),
+  ch1     VARCHAR2(1000),
+  cl1     CLOB
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.TEMP_STAT on U1.TEMP_STAT (STATID, TYPE, C5, C1, C2, C3, C4, VERSION)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.TEMP_STAT to LOADDB;
+grant select on U1.TEMP_STAT to LOADER;
+

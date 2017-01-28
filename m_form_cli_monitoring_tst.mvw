@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_FORM_CLI_MONITORING_TST
+refresh force on demand
+as
+select * from (
+select  date_create,
+        product_type,
+        field_name,
+        ff.field_perc_now,
+        case when field_name in ('AMOUNT','TERM_DURATION')  then
+          0.95
+        else
+          round(max(ff.field_perc_now)  over (partition by  ff.field_name,ff.product_type order by ff.date_create range between interval '6' month preceding and interval '1' day preceding),2)
+        end as max_6_month,
+        round(avg(ff.field_perc_now)  over (partition by  ff.field_name,ff.product_type order by ff.date_create range between interval '6' month preceding and interval '1' day preceding),2) as avg_6_month
+from  m_form_cli_fill_tst ff
+where ff.date_create >= add_months(trunc(sysdate),-7)
+   and ff.product_type != 'ОПТИМИЗАЦИЯ'
+) where  date_create between trunc(sysdate)-15 and trunc(sysdate)-1;
+grant select on U1.M_FORM_CLI_MONITORING_TST to LOADDB;
+grant select on U1.M_FORM_CLI_MONITORING_TST to LOADER;
+
+

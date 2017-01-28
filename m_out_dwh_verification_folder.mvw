@@ -1,0 +1,50 @@
+﻿create materialized view U1.M_OUT_DWH_VERIFICATION_FOLDER
+build deferred
+refresh force on demand
+as
+select /*+ parallel 5 */
+       ID,
+       ACTUAL,
+       CONTACT_ARR_ID,
+       CREATE_DATE,
+       FOLDERS_DATE,
+       FOLDERS_ID,
+       LAST_EDIT_DATE,
+       MANAGER_BRANCH,
+       NEED_VERIFY_CONTACT,
+       NEED_VERIFY_MODIFIED_DATA,
+       PHOTO_ARR_ID,
+       PKB_IS_EMPTY,
+       RFO_COLLECTION_ID,
+       RFO_VERIFICATION_ID,
+       STATUS,
+       CONTACTVERIFYPROCESS_ID,
+       OWNER_ID,
+       PHOTOVERIFYPROCESS_ID,
+       VERIFYCREDITPROGRAM_ID,
+       VERIFYGROUP_ID,
+       INSERTED_DATE,
+       ACCEPT_DATE,
+       FOLDER_NUMBER,
+       FOLDER_STATUS,
+       SEGMENT_ID,
+       IS_COPIED,
+       SCRIPT_ID,
+       IS_COPIED_TO_DWH,
+       ONLY_CONTACT,
+       UNTREATED_DATE,
+       DOC_DATE_END,
+       DOC_DATE_ISSUE,
+       DOC_NUM,
+       DOC_WHO,
+       PLACE_BIRTH,
+       POINT_TYPE,
+       SCRIPT_PHOTO_ID,
+       SEGMENT_PHOTO_ID,
+       HAS_PHOTO_RESULT,
+       LAST_MVERIFICATION
+  from VERIFICATOR.H_VERIFICATION@VERIFAIS;
+grant select on U1.M_OUT_DWH_VERIFICATION_FOLDER to LOADDB;
+grant select on U1.M_OUT_DWH_VERIFICATION_FOLDER to LOADER;
+
+

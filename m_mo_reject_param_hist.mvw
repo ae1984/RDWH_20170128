@@ -1,0 +1,96 @@
+﻿create materialized view U1.M_MO_REJECT_PARAM_HIST
+build deferred
+refresh force on demand
+as
+select *
+from (
+    select x.reject_code,
+           /*case when x.param_code = 'PRSC_REJECT_PRE_81' then tt.param_code else*/ x.param_code /*end*/ as param_code,
+           x.lv,
+           x.batch_id,
+           x.batch_date,
+           x.prior_add,
+           --tt.reject_prior as rn,
+           /*case when x.param_code = 'PRSC_REJECT_PRE_81' then
+             x.prior_add * dense_rank() over (partition by x.reject_code, x.batch_id, x.batch_date order by x.lv desc)
+             + dense_rank() over (partition by tt.reject_code, tt.batch_id, tt.batch_date order by tt.lv desc)
+           else*/ x.prior_add * dense_rank() over (partition by x.reject_code, x.batch_id, x.batch_date order by x.lv desc)
+           /*end*/                               as reject_prior,
+
+           --x.prior_add * dense_rank() over (partition by x.reject_code, x.batch_id, x.batch_date order by x.lv desc)  as rj,
+
+           dense_rank() over (partition by x.reject_code
+                              order by x.batch_date) as reject_ver,
+
+           case when x.param_code in ('CLIENT_WL_EXISTS',
+                                      'SC_CATEG_KDN_REGUL_RES_PRE',
+                                      'SC_CATEG_B_KDN_REGUL_RES_PRE',
+                                      'SC_FAST_APPROVAL_81',
+                                      'SC_PRE_APPROVED_81_RES_PRE',
+                                      'SC_CLIENT_DEPN_APPR_RES_PRE',
+                                      'SC_CARD_CATEG_B_RES_PRE',
+                                      'SC_ONL_APPR_CD',
+                                      'SC_ONL_APPR_CHEAP_GOODS',
+                                      'SC_ONL_BY_PKB') then 0
+
+               when x.param_code in ('SC_ROUTE_RFO_VER_ONLINE_NEED',
+                                     'IN_SCO_VER',
+                                     'SC_IS_CATEG_A',
+                                     'SC_IS_DEPART_RBP',
+
+                                     'SC_REJECT_KN',
+                                     'SC_RBP_REJECT_KN',
+                                     'SC_REJECT_KN')
+                    or x.param_code like 'MO_SCO_IS_CTRL_GR_%'
+                    or x.param_code like 'MO_SCO_REJECT_PRE_%'
+                    or x.param_code like 'MO_SCO_REJECT_%'
+                    or x.param_code like 'SC_AA_REJECT_%' then 2
+           else 1 end as is_rejecting
+    from  (select t.reject_code,
+                  t.param_code,
+                  min(t.lv) as lv,
+                  t.batch_id,
+                  t.batch_date,
+                  case when t.reject_code = 'C_MO_SCO_REJECT_KN' then 1000000000000000  -- Добавил 000 в приортитет
+
+                       when t.reject_code = 'C_MO_SCO_REJECT' or
+                            t.reject_code = 'C_SC_REJECT_KN' then 1000000000000
+
+                       when t.reject_code = 'C_MO_SCO_REJECT_81' then 1000000000
+
+                       when t.reject_code = 'C_PRSC_REJECT_PRE_81' then 1
+
+                  else 1000 end as prior_add
+          from u1.T_MO_REJECT_PARAM t
+          where not (t.batch_id = 30216 and t.reject_code = 'C_SC_REJECT_KN')
+          group by t.reject_code,
+                   t.param_code,
+                   t.batch_id,
+                   t.batch_date
+    ) x
+/*  left join ( select x.*,
+                     x.prior_add * dense_rank() over (partition by x.reject_code, x.batch_id, x.batch_date order by x.lv desc) as reject_prior,
+                     dense_rank() over (partition by x.reject_code order by x.batch_date) as reject_ver
+                from (
+                      select t.reject_code,
+                             t.param_code,
+                             min(t.lv) as lv,
+                             t.batch_id,
+                             t.batch_date,
+                             1 as prior_add
+                        from T_MO_REJECT_PARAM t
+                       where t.reject_code in (
+                                               select 'C_' || tt.param_code as param_code
+                                                 from T_MO_REJECT_PARAM tt
+                                                where \*tt.reject_code = 'C_MO_SCO_REJECT' and*\ tt.param_code = 'PRSC_REJECT_PRE_81'
+                                              )
+                       group by t.reject_code,
+                                t.param_code,
+                                t.batch_id,
+                                t.batch_date
+                     ) x
+            ) tt on tt.reject_code = 'C_' || x.param_code*/
+) y;
+grant select on U1.M_MO_REJECT_PARAM_HIST to LOADDB;
+
+

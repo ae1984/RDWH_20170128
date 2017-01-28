@@ -1,0 +1,54 @@
+﻿create materialized view U1.M_OUT_CONTRACT_ADD_PROP
+build deferred
+refresh complete on demand
+as
+select /*+ parallel(20)*/
+       mf.contract_number,
+       mf.contract_amount,
+       fa.folder_id,
+       fa.folder_date_create,
+       mf.contract_status_name,
+       mf.is_credit_issued,
+       fca.org_name,
+       gp.salary,
+       gp.list_organization,
+       mf.cr_program_name,
+       fca.age_full_years,
+       v.verif_doc_id,
+       v.vector_group_name,
+       xx.cnt_active_contracts,
+       xx.cnt_closed_contracts,
+       xx.cnd_delinq_contracts,
+       fca.marital_status,
+       ceil(months_between(cd.c_date_end,cd.c_date_begin)) as period,
+       v.verif_phone_result,
+       x.cnt_contact_phone
+  from u1.M_FOLDER_CON_CANCEL mf
+  left join u1.V_RFO_Z#CREDIT_DOG     cd on cd.id = mf.rfo_contract_id
+  left join u1.V_FORM_CLIENT_ALL_RFO fca on fca.folder_id = mf.folder_id
+  left join u1.V_VERIFICATION          v on v.folder_id = mf.folder_id
+  left join u1.V_GCVP_REPORT          gp on gp.folder_id = mf.folder_id
+  left join u1.V_FOLDER_ALL_RFO       fa on fa.folder_id = mf.folder_id
+  left join (select pp.folder_id,
+                    max(pp.active_contracts) as cnt_active_contracts,
+                    max(pp.closed_contracts) as cnt_closed_contracts,
+                    sum(case when pp.pkb_contract_status = 'АКТИВНЫЙ'
+                              and pp.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ')
+                              and (pp.contract_status like 'ССУДНАЯ ЗАДОЛЖЕННОСТЬ СПИСАНА ЗА БАЛАНС%' or
+                                   pp.contract_status like '%ЗАДОЛЖЕННОСТЬ СПИСАНА НА УБЫТКИ%'    or
+                                   pp.contract_status like 'ССУДА ПЕРЕВЕДЕНА В РАЗРЯД УБЫТКОВ%'   or
+                                   pp.contract_status_clean like 'ПРОСР%ЧЕННАЯ ЗАДОЛЖЕННОСТЬ%')
+                              then 1
+                              else 0
+                         end) as cnd_delinq_contracts
+               from u1.M_PKB_REPORT_PARAM1 pp
+              group by pp.folder_id) xx on xx.folder_id = mf.folder_id
+   left join (select form_client_id, count(1) as cnt_contact_phone
+                from u1.V_FORM_CLIENT_CONTACT_PHONE
+               group by form_client_id) x on x.form_client_id = fca.form_client_id
+ where mf.is_card = 0;
+grant select on U1.M_OUT_CONTRACT_ADD_PROP to LOADDB;
+grant select on U1.M_OUT_CONTRACT_ADD_PROP to LOADER;
+grant select on U1.M_OUT_CONTRACT_ADD_PROP to RISK_VERIF;
+
+

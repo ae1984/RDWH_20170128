@@ -1,0 +1,8 @@
+﻿create materialized view U1.V_RFO_BLACK_LIST_20130928_AD
+never refresh
+as
+select * from V_RFO_BLACK_LIST t;
+grant select on U1.V_RFO_BLACK_LIST_20130928_AD to LOADDB;
+grant select on U1.V_RFO_BLACK_LIST_20130928_AD to LOADER;
+
+

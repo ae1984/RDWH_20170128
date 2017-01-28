@@ -1,0 +1,21 @@
+﻿create materialized view U1.TMP_KN_KK
+refresh force on demand
+as
+select --+ first_rows
+      b.rep_date+1 as payment_day,b.deal_number,b.client_iin,b.total_debt,b.delinq_days,b.rep_date_future,b.total_debt_future,
+      c1.prod_type as prod_type_from,
+      c.deal_number as deal_number_to, c.prod_type as prod_type_to,
+      c.begin_date as begin_date_to
+from V_TMP_J_X3 b
+join V_DWH_PORTFOLIO_CURRENT c1 on c1.deal_number = b.deal_number
+join V_DWH_PORTFOLIO_CURRENT c on c.client_iin = b.client_iin and c.x_product_type = 'ДЕНЬГИ' and
+               c.begin_date = b.rep_date +1 --and b.rep_date_prev - c.begin_date <= 30
+where --b.debt_increase_perc < -95 and
+      --c.begin_date <= b.rep_date_prev
+--      b.delinq_days_prev > 0 and
+    --  b.rep_date_prev >= trunc(sysdate) - 30 and
+   b.total_debt >= 50000;
+grant select on U1.TMP_KN_KK to LOADDB;
+grant select on U1.TMP_KN_KK to LOADER;
+
+

@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_OUT_DWH_VERIFICATION_ADD
+build deferred
+refresh force on demand
+as
+select /*+ parallel 5 */
+       ID,
+       INSERTED_DATE,
+       RFO_VERIFICATION_ID,
+       VERIFICATION_ID,
+       SEGMENT_ID,
+       SCRIPT_ID,
+       SEGMENT_PHOTO_ID,
+       SCRIPT_PHOTO_ID,
+       FOLDERS_ID,
+       DOC_DATE_END,
+       DOC_DATE_ISSUE,
+       DOC_NUM,
+       DOC_WHO,
+       PLACE_BIRTH,
+       POINT_TYPE
+  from verificator.m_verification@verifais;
+grant select on U1.M_OUT_DWH_VERIFICATION_ADD to LOADDB;
+grant select on U1.M_OUT_DWH_VERIFICATION_ADD to LOADER;
+
+

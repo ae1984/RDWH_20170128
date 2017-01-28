@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_KDN_FOLDER_PRE_1_TEST
+using no index
+refresh complete on demand
+as
+select /*+ parallel(15) */distinct max(p.pmt) as pmt_in_kaspi,sum(nvl(c.pp,c1.pp)) as pmt_in_other, p.folder_id_first,
+  -- если у нас карта, считаем не использованный лимит
+  sum(case when p2.x_is_card = 1 and p.folder_id_first <> p2.folder_id_first then p2.card_limit*0.07
+           when p2.x_is_card = 0 and p.folder_id_first <> p2.folder_id_first then p2.pmt end) as pmt_in_kaspi_all,
+  sum(case when nvl(p1.IS_ON_BALANCE,'N') <> 'W' then p1.DELINQ_AMOUNT end) as DELINQ_del,
+  sum(case when p1.IS_ON_BALANCE = 'W' then p1.TOTAL_DEBT end) as pmt_in_kaspi_written-- платежи списанные в каспи
+  from v_dwh_portfolio_current p
+  left join M_PP_IIN c on c.iin_rnn = p.client_iin and c.report_date_time >= to_date('01.04.2014','dd.mm.yyyy') and trunc(c.report_date_time) = p.x_start_date
+  left join M_PP_IIN c1 on c1.folder_id = p.folder_id_first and c1.report_date_time < to_date('01.04.2014','dd.mm.yyyy')
+  -- смотрим просроченный долг на текущий момент(DELINQ_AMOUNT), но не смотрим списанные договора и
+  --платежи списанные в каспи
+  left join v_dwh_port p1 on p1.CLIENT_ID = p.x_client_id and p1.REP_DATE = p.x_start_date
+
+  -- все платежи договоров не списанных в каспи
+  left join V_DWH_PORTFOLIO_CURRENT p2 on p2.deal_number = p1.DEAL_NUMBER and nvl(p1.IS_ON_BALANCE,'N') <> 'W'
+  where p.x_is_credit_issued = 1 and p.x_amount > 0 and p.x_start_date >= to_date('01.08.2013','dd.mm.yyyy')
+  group by /*p.pmt, c.pp, c1.pp, */p.folder_id_first;
+grant select on U1.M_KDN_FOLDER_PRE_1_TEST to LOADDB;
+grant select on U1.M_KDN_FOLDER_PRE_1_TEST to LOADER;
+
+

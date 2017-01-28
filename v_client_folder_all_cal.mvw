@@ -1,0 +1,78 @@
+﻿create materialized view U1.V_CLIENT_FOLDER_ALL_CAL
+refresh complete on demand
+as
+select
+  x.*,
+  case when phone_home_count = 0 then 0 else phone_home_count - 1 end as phone_home_changes,
+  case when phone_mobile_count = 0 then 0 else phone_mobile_count - 1 end as phone_mobile_changes,
+  case when phone_work_count = 0 then 0 else phone_work_count - 1 end as phone_work_changes,
+  case when phone_org_count = 0 then 0 else phone_org_count - 1 end as phone_org_changes,
+  (case when phone_home_count = 0 then 0 else phone_home_count - 1 end) +
+        (case when phone_mobile_count = 0 then 0 else phone_mobile_count - 1 end) +
+        (case when phone_work_count = 0 then 0 else phone_work_count - 1 end) +
+        (case when phone_org_count = 0 then 0 else phone_org_count - 1 end) as phone_all_changes,
+  case when birth_date_count = 0 then 0 else birth_date_count - 1 end as birth_date_changes,
+  case when org_name_count = 0 then 0 else org_name_count - 1 end as org_name_changes,
+  case when expert_name_count = 0 then 0 else expert_name_count - 1 end as expert_name_changes,
+  case when pos_code_count = 0 then 0 else pos_code_count - 1 end as pos_code_changes,
+  case when amount_count = 0 then 0 else amount_count - 1 end as amount_changes,
+  case when inc_sal_count = 0 then 0 else inc_sal_count - 1 end as inc_sal_changes,
+  case when inc_sal_with_add_count = 0 then 0 else inc_sal_with_add_count - 1 end as inc_sal_with_add_changes,
+--  case when inc_total_count = 0 then 0 else inc_total_count - 1 end as inc_total_changes,
+--  case when exp_total_count = 0 then 0 else exp_total_count - 1 end as exp_total_changes
+  nvl(x.number_of_folders_total,0) - nvl(x.number_of_credits_issued,0) as number_of_rejections_total,
+  nvl(x.number_of_folders_1_m,0) - nvl(x.number_of_credits_issued_1_m,0) as number_of_rejections_1_month,
+  nvl(x.number_of_folders_1_w,0) - nvl(x.number_of_credits_issued_1_w,0) as number_of_rejections_1_week
+from (
+select
+       f.client_iin,
+       max(f.client_id) as client_id,
+--       to_char(f.folder_create_date, 'yyyy-mm') as folder_month,
+       count(f.folder_id) as number_of_folders_total,
+       sum(case when months_between(sysdate, f.folder_create_date) <= 1 then 1 else 0 end) as number_of_folders_1_month,
+       sum(case when months_between(sysdate, f.folder_create_date) <= 2 then 1 else 0 end) as number_of_folders_2_months,
+       sum(case when months_between(sysdate, f.folder_create_date) <= 3 then 1 else 0 end) as number_of_folders_3_months,
+       sum(case when months_between(sysdate, f.folder_create_date) <= 6 then 1 else 0 end) as number_of_folders_6_months,
+       sum(case when months_between(sysdate, f.folder_create_date) <= 1 then 1 else 0 end) as number_of_folders_1_m,
+       sum(case when months_between(sysdate, f.folder_create_date) <= 1 then f.is_credit_issued else 0 end) as number_of_credits_issued_1_m,
+       --кол-во папок за 1 неделю
+       sum(case when (trunc(sysdate) - trunc(f.folder_create_date)) <= 7 then 1 else 0 end) as number_of_folders_1_w,
+       sum(case when (trunc(sysdate) - trunc(f.folder_create_date)) <= 7 then f.is_credit_issued else 0 end) as number_of_credits_issued_1_w,
+
+       sum(f.is_credit_issued) as number_of_credits_issued,
+       min(f.folder_create_date) as folder_create_date_min,
+       max(f.folder_create_date) as folder_create_date_max,
+       count(distinct f.phone_home) as phone_home_count,
+       count(distinct f.phone_mobile) as phone_mobile_count,
+       count(distinct f.phone_work) as phone_work_count,
+       count(distinct f.phone_org) as phone_org_count,
+       count(distinct f.birth_date) as birth_date_count,
+       count(distinct f.org_name) as org_name_count,
+       count(distinct f.expert_name) as expert_name_count,
+       count(distinct f.pos_code) as pos_code_count,
+       count(distinct f.amount) as amount_count,
+       count(distinct f.inc_sal) as inc_sal_count,
+       count(distinct f.inc_sal + f.inc_sal_add) as inc_sal_with_add_count,
+--       count(distinct f.inc_total) as inc_total_count,
+--       count(distinct f.exp_total) as exp_total_count,
+       max(f.inc_sal) as inc_sal_max,
+       min(f.inc_sal) as inc_sal_min,
+       avg(f.inc_sal) as inc_sal_avg,
+       max(f.inc_sal + f.inc_sal_add) as inc_sal_with_add_max,
+       min(f.inc_sal + f.inc_sal_add) as inc_sal_with_add_min,
+       avg(f.inc_sal + f.inc_sal_add) as inc_sal_with_add_avg,
+       max(f.birth_date) as birth_date_max,
+       min(f.birth_date) as birth_date_min,
+       max(f.amount) as amount_max,
+       min(f.amount) as amount_min,
+       avg(f.amount) as amount_avg,
+       max(f.birth_date_client) as birth_date_client,
+       max(f.birth_place_client) as birth_place_client
+from V_FOLDER_ALL f
+where f.client_iin is not null
+group by f.client_iin
+) x;
+grant select on U1.V_CLIENT_FOLDER_ALL_CAL to LOADDB;
+grant select on U1.V_CLIENT_FOLDER_ALL_CAL to LOADER;
+
+

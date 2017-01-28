@@ -1,0 +1,38 @@
+﻿create table U1.MOGW_1_PROCESS_MO1
+(
+  id                 NUMBER not null,
+  date_start         TIMESTAMP(6) not null,
+  process_request_id NUMBER,
+  date_end           TIMESTAMP(6) not null,
+  proc_param_out     VARCHAR2(2048),
+  process_type       NUMBER(1) not null,
+  error_msg          VARCHAR2(2048),
+  process_id         NUMBER,
+  rfolder_id         NUMBER,
+  rfo_client_id      NUMBER,
+  rfo_folder_id      NUMBER,
+  rclient_id         NUMBER,
+  esb_xml            VARCHAR2(256),
+  esb_result         VARCHAR2(128),
+  esb_record_id      VARCHAR2(128),
+  esb_date_start     TIMESTAMP(6),
+  esb_date_end       TIMESTAMP(6),
+  process_code       VARCHAR2(64),
+  send_cnt           NUMBER not null,
+  esb_rep_date_start TIMESTAMP(6)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.MOGW_1_PROCESS_MO1 to LOADDB;
+grant select on U1.MOGW_1_PROCESS_MO1 to LOADER;
+

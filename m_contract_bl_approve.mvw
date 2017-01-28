@@ -1,0 +1,113 @@
+﻿create materialized view U1.M_CONTRACT_BL_APPROVE
+using no index
+refresh complete on demand
+as
+selecT c.iin,
+        to_date(t.date_add_text,'dd.mm.yyyy') as add_date,
+        c.folder_date_create_mi,
+        c.cr_program_name,
+        c.contract_status_name,
+        c.contract_number,
+        c.contract_amount,
+        c.source_system,
+        'RFO_BLACK_LIST' BLACK_LIST_NAME
+   from m_folder_con_cancel c
+   join V_RFO_BLACK_LIST t
+     on t.iin = c.iin
+  where trunc(c.folder_date_create_mi) = trunc(sysdate - 1)
+    and c.is_credit_issued = 1
+    and c.cr_program_name not in ('РЕФИНАНСИРОВАНИЕ/РЕСТРУКТУРИЗАЦИЯ')
+union all
+ selecT c.iin,
+        t.add_date,
+        c.folder_date_create_mi,
+        c.cr_program_name,
+        c.contract_status_name,
+        c.contract_number,
+        c.contract_amount,
+        c.source_system,
+        'CLIENT_BL' BLACK_LIST_NAME
+   from m_folder_con_cancel c
+   join V_MO_CLIENT_BL t
+     on t.iin = c.iin
+  where trunc(c.folder_date_create_mi) = trunc(sysdate - 1)
+    and c.is_credit_issued = 1
+    and c.cr_program_name not in ('РЕФИНАНСИРОВАНИЕ/РЕСТРУКТУРИЗАЦИЯ')
+union all
+selecT c.iin,
+       t.add_date,
+       c.folder_date_create_mi,
+       c.cr_program_name,
+       c.contract_status_name,
+       c.contract_number,
+       c.contract_amount,
+       c.source_system,
+        'CLIENT_DOC_BL' BLACK_LIST_NAME
+  from m_folder_con_cancel c
+  join (selecT cl.c_inn, cp.c_pasport#num, bl.add_date
+          from v_rfo_z#client cl
+          join v_rfo_z#cl_priv cp
+            on cp.id = cl.id
+          join M_MO_CLIENT_DOC_BL bl
+            on bl.doc_number = cp.c_pasport#num) t
+    on t.c_inn = c.iin
+ where trunc(c.folder_date_create_mi) = trunc(sysdate - 1)
+   and c.is_credit_issued = 1
+   and c.cr_program_name not in ('РЕФИНАНСИРОВАНИЕ/РЕСТРУКТУРИЗАЦИЯ')
+union all
+ selecT c.iin,
+        t.add_date,
+        c.folder_date_create_mi,
+        c.cr_program_name,
+        c.contract_status_name,
+        c.contract_number,
+        c.contract_amount,
+        c.source_system,
+        'T_ORG_BL' BLACK_LIST_NAME
+   from m_folder_con_cancel c
+   join (select bl.add_date, max(g.rep_date), g.client_iin
+           from M_MO_T_ORG_BL bl
+           join V_GCVP_REPORT g
+             on g.org_bin_last = bl.bin
+          where trunc(g.rep_date) > trunc(bl.add_date)
+          group by bl.add_date, g.client_iin) t
+     on t.client_iin = c.iin
+  where trunc(c.folder_date_create_mi) = trunc(sysdate - 1)
+    and c.is_credit_issued = 1
+    and c.cr_program_name not in ('РЕФИНАНСИРОВАНИЕ/РЕСТРУКТУРИЗАЦИЯ')
+union all
+   selecT c.iin,
+          t.add_date,
+          c.folder_date_create_mi,
+          c.cr_program_name,
+          c.contract_status_name,
+          c.contract_number,
+          c.contract_amount,
+          c.source_system,
+          'T_RFO_SHOP_BL' BLACK_LIST_NAME
+     from m_folder_con_cancel c
+     join M_MO_T_RFO_SHOP_BL t
+       on t.shop_code = c.shop_code
+    where trunc(c.folder_date_create_mi) = trunc(sysdate - 1)
+      and c.is_credit_issued = 1
+      and c.cr_program_name not in ('РЕФИНАНСИРОВАНИЕ/РЕСТРУКТУРИЗАЦИЯ')
+union all
+   selecT c.iin,
+          t.add_date,
+          c.folder_date_create_mi,
+          c.cr_program_name,
+          c.contract_status_name,
+          c.contract_number,
+          c.contract_amount,
+          c.source_system,
+          'T_RFO_STRUCT_DEPART_BL' BLACK_LIST_NAME
+     from m_folder_con_cancel c
+     join M_MO_T_RFO_STRUCT_DEPART_BL t
+       on t.pos_code = c.pos_code
+    where trunc(c.folder_date_create_mi) = trunc(sysdate - 1)
+      and c.is_credit_issued = 1
+      and c.cr_program_name not in ('РЕФИНАНСИРОВАНИЕ/РЕСТРУКТУРИЗАЦИЯ');
+grant select on U1.M_CONTRACT_BL_APPROVE to LOADDB;
+grant select on U1.M_CONTRACT_BL_APPROVE to LOADER;
+
+

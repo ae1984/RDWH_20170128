@@ -1,0 +1,48 @@
+﻿create materialized view U1.V_RFO_Z#KAS_INFO_AUTO
+refresh complete on demand
+as
+select t.id,
+       t.c_reg_num,
+       t.c_year,
+       t.c_engine,
+       t.c_ts_model,
+       t.c_pasport,
+       t.c_chassis,
+       t.c_body_num,
+       t.c_pasport_date,
+       t.c_eng_size,
+       t.collection_id,
+       t.c_color,
+       t.c_fuel_type,
+       t.c_dealer_fio,
+       t.c_state_numb,
+       t.c_vin,
+       t.c_reg_org,
+       t.c_num_agr,
+       t.c_date_agr,
+       t.c_cert_reg_num,
+       t.c_cert_reg_zal,
+       t.c_gpo_sum,
+       t.c_tax_sum,
+       t.c_tax_pay_org,
+       t.c_tax_pay_date,
+       t.c_autocred_type#0,
+       t.sn,
+       t.su,
+       t.c_prev_owner,
+       t.c_prev_owner_acc,
+       t.c_curr_owner_acc,
+       t.c_prev_state_numb,
+       t.c_type_of_drive,
+       t.c_transmission,
+       t.c_seller_type#0,
+       t.c_num_kolesa,
+       t.c_model_fact,
+       t.c_options,
+       t.c_type_body,
+       t.c_type_salon
+  from ibs.Z#KAS_INFO_AUTO@rfo_snap t;
+grant select on U1.V_RFO_Z#KAS_INFO_AUTO to LOADDB;
+grant select on U1.V_RFO_Z#KAS_INFO_AUTO to LOADER;
+
+

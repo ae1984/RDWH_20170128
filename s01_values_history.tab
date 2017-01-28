@@ -1,0 +1,31 @@
+﻿create table U1.S01_VALUES_HISTORY
+(
+  audit_id    NUMBER,
+  change_date DATE,
+  id          NUMBER,
+  time        TIMESTAMP(6),
+  obj_id      VARCHAR2(128 CHAR),
+  class_id    VARCHAR2(16 CHAR),
+  audsid      NUMBER,
+  user_id     VARCHAR2(70 CHAR),
+  qual        VARCHAR2(700 CHAR),
+  base_id     VARCHAR2(16 CHAR),
+  value       VARCHAR2(4000 CHAR)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select, insert, update, delete, references, alter, index on U1.S01_VALUES_HISTORY to ETL;
+grant select on U1.S01_VALUES_HISTORY to LOADDB;
+grant select on U1.S01_VALUES_HISTORY to LOADER;
+

@@ -1,0 +1,42 @@
+﻿create materialized view U1.M_PROD_APPR_RATE
+build deferred
+refresh force on demand
+as
+select  td.yyyy as a_year,
+        td.text_yyyy_mm as a_month,
+        td.week_text as a_week,
+        td.text_yyyy_mm_dd as a_day,
+        f.product_type,
+        count(distinct b.rbo_contract_id) as cnt_rbo_contr_id,
+        count(distinct f.rfo_contract_id) as cnt_rfo_cont_id,
+        count(distinct b.rbo_client_id) as cnt_rbo_client_id,
+        count(distinct f.rfo_client_id) as cnt_rfo_client_id,
+        f.shop_code,
+        f.shop_name,
+        f.x_dnp_name,
+        f.x_dnp_region,
+        f.pos_code,
+        f.pos_name
+from u1.M_FOLDER_CON_CANCEL f
+join u1.V_TIME_DAYS td on td.yyyy_mm_dd = trunc(f.folder_date_create_mi)
+left join u1.M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+left join u1.V_TIME_DAYS tdc on tdc.yyyy_mm_dd = b.start_date
+where f.product_type = 'ТОВАРЫ' and
+      trunc(f.folder_date_create_mi) >= add_months(trunc(sysdate, 'month'),-12) and
+      f.process_name != 'ОНЛАЙН КРЕДИТ' and
+      f.folder_date_create_mi >= to_date('2013-01-01','yyyy-mm-dd')
+group by td.yyyy,
+        td.text_yyyy_mm,
+        td.week_text,
+        f.product_type,
+        td.text_yyyy_mm_dd,
+        f.shop_code,
+        f.shop_name,
+        f.x_dnp_name,
+        f.x_dnp_region,
+        f.pos_code,
+        f.pos_name;
+grant select on U1.M_PROD_APPR_RATE to DTS_USER;
+grant select on U1.M_PROD_APPR_RATE to LOADDB;
+
+

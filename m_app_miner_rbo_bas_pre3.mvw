@@ -1,0 +1,48 @@
+﻿create materialized view U1.M_APP_MINER_RBO_BAS_PRE3
+build deferred
+refresh force on demand
+as
+select f.app_id
+
+       ,sum(case when p.date_oper >= trunc(f.folder_date_create_mi) - 90
+                      and p.date_oper < trunc(f.folder_date_create_mi)
+                 then coalesce(p.principal, 0) +
+                      coalesce(p.interest, 0) +
+                      coalesce(p.commiss, 0) +
+                      coalesce(p.fine, 0)
+             end) as cl_incom_90d_sum
+
+       ,round(avg(case when p.date_oper >= trunc(f.folder_date_create_mi) - 90
+                            and p.date_oper < trunc(f.folder_date_create_mi)
+                       then coalesce(p.principal, 0) +
+                            coalesce(p.interest, 0) +
+                            coalesce(p.commiss, 0) +
+                            coalesce(p.fine, 0)
+                   end)) as cl_incom_90d_avg
+
+       --30 days
+       ,sum(case when p.date_oper >= trunc(f.folder_date_create_mi) - 30
+                      and p.date_oper < trunc(f.folder_date_create_mi)
+                 then coalesce(p.principal, 0) +
+                      coalesce(p.interest, 0) +
+                      coalesce(p.commiss, 0) +
+                      coalesce(p.fine, 0)
+             end) as cl_incom_30d_sum
+
+       ,round(avg(case when p.date_oper >= trunc(f.folder_date_create_mi) - 30
+                            and p.date_oper < trunc(f.folder_date_create_mi)
+                       then coalesce(p.principal, 0) +
+                            coalesce(p.interest, 0) +
+                            coalesce(p.commiss, 0) +
+                            coalesce(p.fine, 0)
+                   end)) as cl_incom_30d_avg
+
+from u1.M_APP_MINER_BAS f
+join u1.M_RBO_CONTRACT_BAS b on b.rfo_client_id = f.rfo_client_id
+join u1.T_CONTRACT_INCOME_PRE p on p.rbo_contract_id = b.rbo_contract_id
+                                   and p.date_oper >= trunc(f.folder_date_create_mi) - 90
+                                   and p.date_oper < trunc(f.folder_date_create_mi)
+group by f.app_id;
+grant select on U1.M_APP_MINER_RBO_BAS_PRE3 to LOADDB;
+
+

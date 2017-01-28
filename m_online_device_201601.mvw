@@ -1,0 +1,88 @@
+﻿create materialized view U1.M_ONLINE_DEVICE_201601
+build deferred
+refresh force on demand
+as
+with a30 as
+(select/*+ parallel 30 */
+  a.yyyy_mm_dd,
+  a.ga_id,
+  a.ga_client_id,
+  a.cnt_order_30d,
+  a.sum_order_30d,
+  max(a.share_shop_30d) as max_share_shop_30d,
+  a.cnt_client_30d,
+  a.cnt_phone_30d,
+  a.cnt_shop_30d
+from (
+  select distinct
+    td.yyyy_mm_dd,
+    t30.ga_id,
+    t30.ga_client_id,
+    t30.shop_id,
+    count(distinct t30.order_id) over(partition by td.yyyy_mm_dd,t30.ga_id,t30.ga_client_id)             as cnt_order_30d,
+    sum(t30.total_amount) over(partition by td.yyyy_mm_dd,t30.ga_id,t30.ga_client_id)                    as sum_order_30d,
+    count(distinct t30.order_id) over(partition by td.yyyy_mm_dd,t30.ga_id,t30.ga_client_id,t30.shop_id)/
+    count(distinct t30.order_id) over(partition by td.yyyy_mm_dd,t30.ga_id,t30.ga_client_id)             as share_shop_30d,
+    count(distinct t30.rfo_client_id) over(partition by td.yyyy_mm_dd,t30.ga_id,t30.ga_client_id)        as cnt_client_30d,
+    count(distinct t30.phone_id) over(partition by td.yyyy_mm_dd,t30.ga_id,t30.ga_client_id)             as cnt_phone_30d,
+    count(distinct t30.shop_id) over(partition by td.yyyy_mm_dd,t30.ga_id,t30.ga_client_id)              as cnt_shop_30d
+  from u1.V_TIME_DAYS td
+  join u1.M_ONLINE_DEVICE_201601_PRE t30 on t30.order_date <= td.yyyy_mm_dd and t30.order_date >= td.yyyy_mm_dd - 30
+  where td.yyyy_mm_dd>=to_date('01.01.2016','dd.mm.yyyy') and td.yyyy_mm_dd < trunc(sysdate)
+  order by t30.ga_id, t30.shop_id
+) a
+group by
+  a.yyyy_mm_dd,
+  a.ga_id,
+  a.ga_client_id,
+  a.cnt_order_30d,
+  a.sum_order_30d,
+  a.cnt_client_30d,
+  a.cnt_phone_30d,
+  a.cnt_shop_30d)
+select/*+ parallel 30 */
+  t.yyyy_mm_dd,
+  t.ga_client_id,
+  t.cnt_order_30d,
+  t.sum_order_30d,
+  t.max_share_shop_30d,
+  t.cnt_client_30d,
+  t.cnt_phone_30d,
+  t.cnt_shop_30d,
+----
+  t.device_cat_by_phone_30d,
+  case when t.device_subcat_by_phone_30d='other' and ntile(5) over (partition by t.yyyy_mm_dd,t.device_subcat_by_phone_30d order by t.sum_order_30d)=5 then 'SuperAgent'
+    else t.device_subcat_by_phone_30d
+  end as device_subcat_by_phone_30d
+from (
+  select
+    a30.yyyy_mm_dd,
+    a30.ga_client_id,
+    a30.cnt_order_30d,
+    a30.sum_order_30d,
+    a30.max_share_shop_30d,
+    a30.cnt_client_30d,
+    a30.cnt_phone_30d,
+    a30.cnt_shop_30d,
+    case
+      when a30.cnt_shop_30d>1 and a30.cnt_phone_30d>2 then 'AgentDevice'
+      when a30.cnt_shop_30d=1 and a30.cnt_phone_30d>2 then 'MerchantDevice'
+      else /*when a30.cnt_shop_30d>=1 and a30.cnt_phone_30d<=2 then*/ 'UserDevice'
+    end as device_cat_by_phone_30d,
+    case
+      when a30.cnt_shop_30d>1 and a30.cnt_phone_30d>2 then
+        case
+          when a30.ga_client_id='null' then 'Нет ID устройства'
+          when a30.cnt_order_30d<=5 then 'Family'
+          when a30.max_share_shop_30d>0.9 then '1 to 1'
+          else 'other'
+        end
+      when a30.cnt_shop_30d=1 and a30.cnt_phone_30d>2 then 'MerchantDevice'
+      when a30.cnt_shop_30d>=1 and a30.cnt_phone_30d<=2 then 'UserDevice'
+    end as device_subcat_by_phone_30d
+
+  from a30
+) t;
+grant select on U1.M_ONLINE_DEVICE_201601 to LOADDB;
+
+

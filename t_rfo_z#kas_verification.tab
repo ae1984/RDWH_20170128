@@ -1,0 +1,381 @@
+﻿create table U1.T_RFO_Z#KAS_VERIFICATION
+(
+  id                             NUMBER not null,
+  c_client_ref                   NUMBER,
+  c_eq_cont_arr                  NUMBER not null,
+  c_verify_contacts              NUMBER not null,
+  c_form_client_ref              NUMBER,
+  c_verify_result                VARCHAR2(3),
+  c_date_last_edit               DATE,
+  c_comment                      VARCHAR2(4000),
+  c_folder_ref                   NUMBER,
+  c_bp_ref                       NUMBER,
+  c_form_client_st#num           VARCHAR2(150),
+  c_form_client_st#doc_date      DATE,
+  c_form_client_st#prior_fio     VARCHAR2(750),
+  c_form_client_st#parent_fdoc   NUMBER,
+  c_form_client_st#sex#0         NUMBER,
+  c_form_client_st#sex#male      VARCHAR2(3),
+  c_form_client_st#sex#female    VARCHAR2(3),
+  c_form_client_st#date_birth    DATE,
+  c_form_client_st#status_doc    NUMBER,
+  c_form_client_st#place_birth   VARCHAR2(750),
+  c_form_client_st#country       NUMBER,
+  c_form_client_st#main_doc#type NUMBER,
+  c_form_client_st#main_doc#num  VARCHAR2(60),
+  c_m_client_st#main_doc#seria23 VARCHAR2(48),
+  c_form_client_st#main_doc#who  VARCHAR2(384),
+  c_lient_st#main_doc#date_doc25 DATE,
+  c_m_client_st#main_doc#place26 VARCHAR2(384),
+  c_lient_st#main_doc#date_end27 DATE,
+  c_nt_st#main_doc#depart_code28 VARCHAR2(45),
+  c_form_client_st#add_doc#type  NUMBER,
+  c_form_client_st#add_doc#num   VARCHAR2(60),
+  c_form_client_st#add_doc#seria VARCHAR2(48),
+  c_form_client_st#add_doc#who   VARCHAR2(384),
+  c_client_st#add_doc#date_doc33 DATE,
+  c_form_client_st#add_doc#place VARCHAR2(384),
+  c_client_st#add_doc#date_end35 DATE,
+  c_ent_st#add_doc#depart_code36 VARCHAR2(45),
+  c_t_st#address_fact#post_ind37 VARCHAR2(18),
+  c_ient_st#address_fact#place38 VARCHAR2(510),
+  c_t_st#address_fact#adr_type39 NUMBER,
+  c_st#address_fact#date_begin40 DATE,
+  c_t_st#address_fact#date_end41 DATE,
+  c_ient_st#address_fact#house42 VARCHAR2(30),
+  c_ient_st#address_fact#frame43 VARCHAR2(30),
+  c_lient_st#address_fact#flat44 VARCHAR2(30),
+  c_ent_st#address_fact#street45 VARCHAR2(300),
+  c_ent_st#address_fact#region46 VARCHAR2(300),
+  c_t_st#address_fact#district47 VARCHAR2(300),
+  c_st#address_fact#region_ref48 NUMBER,
+  c_#address_fact#district_ref49 NUMBER,
+  c__st#address_fact#place_ref50 NUMBER,
+  c_lient_st#address_fact#city51 NUMBER,
+  c_nt_st#address_fact#country52 NUMBER,
+  c_nt_st#address_reg#post_ind53 VARCHAR2(18),
+  c_lient_st#address_reg#place54 VARCHAR2(510),
+  c_nt_st#address_reg#adr_type55 NUMBER,
+  c__st#address_reg#date_begin56 DATE,
+  c_nt_st#address_reg#date_end57 DATE,
+  c_lient_st#address_reg#house58 VARCHAR2(30),
+  c_lient_st#address_reg#frame59 VARCHAR2(30),
+  c_client_st#address_reg#flat60 VARCHAR2(30),
+  c_ient_st#address_reg#street61 VARCHAR2(300),
+  c_ient_st#address_reg#region62 VARCHAR2(300),
+  c_nt_st#address_reg#district63 VARCHAR2(300),
+  c__st#address_reg#region_ref64 NUMBER,
+  c_t#address_reg#district_ref65 NUMBER,
+  c_t_st#address_reg#place_ref66 NUMBER,
+  c_client_st#address_reg#city67 NUMBER,
+  c_ent_st#address_reg#country68 NUMBER,
+  c_form_client_st#education     NUMBER,
+  c_form_client_st#social_status NUMBER,
+  c_form_client_st#seniority     NUMBER(17,2),
+  c_form_client_st#forma_org     NUMBER,
+  c_form_client_st#family        NUMBER,
+  c_form_client_st#quant_depend  NUMBER,
+  c_nt_st#address_org#post_ind75 VARCHAR2(18),
+  c_lient_st#address_org#place76 VARCHAR2(510),
+  c_nt_st#address_org#adr_type77 NUMBER,
+  c__st#address_org#date_begin78 DATE,
+  c_nt_st#address_org#date_end79 DATE,
+  c_lient_st#address_org#house80 VARCHAR2(30),
+  c_lient_st#address_org#frame81 VARCHAR2(30),
+  c_client_st#address_org#flat82 VARCHAR2(30),
+  c_ient_st#address_org#street83 VARCHAR2(300),
+  c_ient_st#address_org#region84 VARCHAR2(300),
+  c_nt_st#address_org#district85 VARCHAR2(300),
+  c__st#address_org#region_ref86 NUMBER,
+  c_t#address_org#district_ref87 NUMBER,
+  c_t_st#address_org#place_ref88 NUMBER,
+  c_client_st#address_org#city89 NUMBER,
+  c_ent_st#address_org#country90 NUMBER,
+  c_form_client_st#phone_org     VARCHAR2(60),
+  c_form_client_st#casta         VARCHAR2(300),
+  c_client_st#social_stat_wife93 NUMBER,
+  c_form_client_st#name_org_wife VARCHAR2(300),
+  c_form_client_st#name_org      VARCHAR2(300),
+  c_#address_org_wife#post_ind96 VARCHAR2(18),
+  c__st#address_org_wife#place97 VARCHAR2(510),
+  c_#address_org_wife#adr_type98 NUMBER,
+  c_ddress_org_wife#date_begin99 DATE,
+  c_address_org_wife#date_end100 DATE,
+  c_st#address_org_wife#house101 VARCHAR2(30),
+  c_st#address_org_wife#frame102 VARCHAR2(30),
+  c__st#address_org_wife#flat103 VARCHAR2(30),
+  c_t#address_org_wife#street104 VARCHAR2(300),
+  c_t#address_org_wife#region105 VARCHAR2(300),
+  c_address_org_wife#district106 VARCHAR2(300),
+  c_dress_org_wife#region_ref107 NUMBER,
+  c_ess_org_wife#district_ref108 NUMBER,
+  c_ddress_org_wife#place_ref109 NUMBER,
+  c__st#address_org_wife#city110 NUMBER,
+  c_#address_org_wife#country111 NUMBER,
+  c__client_st#phone_org_wife112 VARCHAR2(60),
+  c_form_client_st#casta_wife    VARCHAR2(300),
+  c_form_client_st#address_flat  VARCHAR2(510),
+  c_form_client_st#address_equal VARCHAR2(3),
+  c_form_client_st#note          VARCHAR2(4000),
+  c_form_client_st#date_create   DATE,
+  c_form_client_st#prev_exp      NUMBER(10,1),
+  c_form_client_st#id_req        VARCHAR2(384),
+  c_form_client_st#last_name     VARCHAR2(300),
+  c_form_client_st#first_name    VARCHAR2(300),
+  c_form_client_st#sur_name      VARCHAR2(300),
+  c_lient_st#phone_home#activ123 VARCHAR2(3),
+  c_client_st#phone_home#numb124 VARCHAR2(300),
+  c_ent_st#phone_home#private125 NUMBER,
+  c_client_st#phone_home#type126 NUMBER,
+  c_nt_st#phone_home#affirmed127 VARCHAR2(3),
+  c_one_home#allow_collection128 VARCHAR2(3),
+  c_ent_st#phone_home#id_deal129 VARCHAR2(384),
+  c_ient_st#phone_home#id_rbo130 VARCHAR2(384),
+  c_ent_st#phone_home#cid_rbo131 VARCHAR2(384),
+  c_lient_st#phone_work#activ132 VARCHAR2(3),
+  c_client_st#phone_work#numb133 VARCHAR2(300),
+  c_ent_st#phone_work#private134 NUMBER,
+  c_client_st#phone_work#type135 NUMBER,
+  c_nt_st#phone_work#affirmed136 VARCHAR2(3),
+  c_one_work#allow_collection137 VARCHAR2(3),
+  c_ent_st#phone_work#id_deal138 VARCHAR2(384),
+  c_ient_st#phone_work#id_rbo139 VARCHAR2(384),
+  c_ent_st#phone_work#cid_rbo140 VARCHAR2(384),
+  c_form_client_st#mobile#activ  VARCHAR2(3),
+  c_form_client_st#mobile#numb   VARCHAR2(300),
+  c__client_st#mobile#private143 NUMBER,
+  c_form_client_st#mobile#type   NUMBER,
+  c_client_st#mobile#affirmed145 VARCHAR2(3),
+  c_t#mobile#allow_collection146 VARCHAR2(3),
+  c__client_st#mobile#id_deal147 VARCHAR2(384),
+  c_form_client_st#mobile#id_rbo VARCHAR2(384),
+  c__client_st#mobile#cid_rbo149 VARCHAR2(384),
+  c_client_st#phone_add#activ150 VARCHAR2(3),
+  c__client_st#phone_add#numb151 VARCHAR2(300),
+  c_ient_st#phone_add#private152 NUMBER,
+  c__client_st#phone_add#type153 NUMBER,
+  c_ent_st#phone_add#affirmed154 VARCHAR2(3),
+  c_hone_add#allow_collection155 VARCHAR2(3),
+  c_ient_st#phone_add#id_deal156 VARCHAR2(384),
+  c_lient_st#phone_add#id_rbo157 VARCHAR2(384),
+  c_ient_st#phone_add#cid_rbo158 VARCHAR2(384),
+  c_form_client_st#email#activ   VARCHAR2(3),
+  c_form_client_st#email#numb    VARCHAR2(300),
+  c_form_client_st#email#private NUMBER,
+  c_form_client_st#email#type    NUMBER,
+  c__client_st#email#affirmed163 VARCHAR2(3),
+  c_st#email#allow_collection164 VARCHAR2(3),
+  c_form_client_st#email#id_deal VARCHAR2(384),
+  c_form_client_st#email#id_rbo  VARCHAR2(384),
+  c_form_client_st#email#cid_rbo VARCHAR2(384),
+  c_form_client_st#rclient_doc   VARCHAR2(3),
+  c_form_client_st#images        NUMBER not null,
+  c_form_client_st#inn           VARCHAR2(36),
+  c_form_client_st#sik           VARCHAR2(48),
+  c_form_client_st#rnn_org       VARCHAR2(36),
+  c_form_client_st#num_cert_org  VARCHAR2(300),
+  c_lient_st#date_end_cer_org174 DATE,
+  c_form_client_st#type_org      NUMBER,
+  c_form_client_st#quant_child   NUMBER,
+  c_form_client_st#password      VARCHAR2(750),
+  c_form_client_st#add_prop      NUMBER not null,
+  c_form_client_st#education_str VARCHAR2(750),
+  c_form_client_st#quant_infant  NUMBER,
+  c_form_client_st#relation_law  NUMBER,
+  c_form_client_st#categ_client  NUMBER,
+  c_form_client_st#note_client   VARCHAR2(4000),
+  c__st#address_wife#post_ind184 VARCHAR2(18),
+  c_ent_st#address_wife#place185 VARCHAR2(510),
+  c__st#address_wife#adr_type186 NUMBER,
+  c_t#address_wife#date_begin187 DATE,
+  c__st#address_wife#date_end188 DATE,
+  c_ent_st#address_wife#house189 VARCHAR2(30),
+  c_ent_st#address_wife#frame190 VARCHAR2(30),
+  c_ient_st#address_wife#flat191 VARCHAR2(30),
+  c_nt_st#address_wife#street192 VARCHAR2(300),
+  c_nt_st#address_wife#region193 VARCHAR2(300),
+  c__st#address_wife#district194 VARCHAR2(300),
+  c_t#address_wife#region_ref195 NUMBER,
+  c_address_wife#district_ref196 NUMBER,
+  c_st#address_wife#place_ref197 NUMBER,
+  c_ient_st#address_wife#city198 NUMBER,
+  c_t_st#address_wife#country199 NUMBER,
+  c_form_client_st#phone_wife    VARCHAR2(150),
+  c_form_client_st#any_cred      NUMBER not null,
+  c_form_client_st#info_dt_cr    NUMBER not null,
+  c_nt_st#result_scoring#rate203 NUMBER,
+  c_#result_scoring#max_summa204 NUMBER(17,2),
+  c__scoring#max_period#quant205 NUMBER(10),
+  c_t_scoring#max_period#unit206 NUMBER,
+  c_t_scoring#max_monthly_pay207 NUMBER(17,2),
+  c_form_client_st#summa         NUMBER(17,2),
+  c_form_client_st#period#quant  NUMBER(10),
+  c_form_client_st#period#unit   NUMBER,
+  c_form_client_st#list_estate   NUMBER not null,
+  c_form_client_st#call_comment  VARCHAR2(4000),
+  c_form_client_st#prev_exp_scor NUMBER,
+  c_form_client_st#month_profit  NUMBER,
+  c_client_st#contact_persons215 NUMBER not null,
+  c_form_client_st#resident      VARCHAR2(3),
+  c__client_st#last_name_wife217 VARCHAR2(300),
+  c_client_st#first_name_wife218 VARCHAR2(300),
+  c_form_client_st#sur_name_wife VARCHAR2(300),
+  c__client_st#org_department220 VARCHAR2(300),
+  c__client_st#transfer_bki#0221 NUMBER,
+  c_form_client_st#bki_code_subj VARCHAR2(750),
+  c_flag_verify_use              VARCHAR2(3),
+  c_hone_home#kas_verificated132 VARCHAR2(3),
+  c_hone_work#kas_verificated142 VARCHAR2(3),
+  c_st#mobile#kas_verificated152 VARCHAR2(3),
+  c_phone_add#kas_verificated162 VARCHAR2(3),
+  c__st#email#kas_verificated172 VARCHAR2(3),
+  c_is_pkb_virgin                VARCHAR2(3),
+  c_photover_result              VARCHAR2(3),
+  c_add_prop                     NUMBER not null,
+  c_comment_photo                VARCHAR2(4000),
+  c_check_results                NUMBER not null,
+  c_proc_status                  VARCHAR2(60),
+  c_recall_time                  DATE,
+  c_type_prod                    NUMBER,
+  c_st#address_fact#date_audit53 TIMESTAMP(9),
+  c_t_st#address_fact#affirmed54 VARCHAR2(3),
+  c_ient_st#address_fact#activ55 VARCHAR2(3),
+  c__st#address_reg#date_audit72 TIMESTAMP(9),
+  c_nt_st#address_reg#affirmed73 VARCHAR2(3),
+  c_lient_st#address_reg#activ74 VARCHAR2(3),
+  c__st#address_org#date_audit97 TIMESTAMP(9),
+  c_nt_st#address_org#affirmed98 VARCHAR2(3),
+  c_lient_st#address_org#activ99 VARCHAR2(3),
+  c_dress_org_wife#date_audit121 TIMESTAMP(9),
+  c_address_org_wife#affirmed122 VARCHAR2(3),
+  c_st#address_org_wife#activ123 VARCHAR2(3),
+  c__st#phone_home#date_audit145 TIMESTAMP(9),
+  c__st#phone_work#date_audit156 TIMESTAMP(9),
+  c_ient_st#mobile#date_audit167 TIMESTAMP(9),
+  c_t_st#phone_add#date_audit178 TIMESTAMP(9),
+  c_lient_st#email#date_audit189 TIMESTAMP(9),
+  c_t#address_wife#date_audit222 TIMESTAMP(9),
+  c__st#address_wife#affirmed223 VARCHAR2(3),
+  c_ent_st#address_wife#activ224 VARCHAR2(3),
+  c__st#phone_home#allow_cc_2146 VARCHAR2(3),
+  c__st#phone_work#allow_cc_2158 VARCHAR2(3),
+  c_ient_st#mobile#allow_cc_2170 VARCHAR2(3),
+  c_t_st#phone_add#allow_cc_2182 VARCHAR2(3),
+  c_lient_st#email#allow_cc_2194 VARCHAR2(3),
+  c_form_client_st#date_audit    DATE,
+  c_st#address_fact#houses_ref57 NUMBER,
+  c__st#address_reg#houses_ref77 NUMBER,
+  c_st#address_org#houses_ref103 NUMBER,
+  c_dress_org_wife#houses_ref128 NUMBER,
+  c_t#address_wife#houses_ref235 NUMBER,
+  c_transfer_dir                 VARCHAR2(150),
+  c_repeat_photo                 VARCHAR2(150),
+  c_photover_work                NUMBER,
+  c_reason_process               NUMBER,
+  c_form_client_st#kas_client_id NUMBER,
+  sn                             NUMBER,
+  su                             NUMBER,
+  c_auto_send_date               DATE,
+  c_auto_rec_date                DATE,
+  c_auto_res                     NUMBER,
+  c_auto_res_desc                VARCHAR2(81)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RFO_Z#KAS_VERIFICATION
+  is 'KAS. Верификация';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_client_ref
+  is 'Клиент(FK на Z#CLIENT)';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_eq_cont_arr
+  is 'Совпадающие контакты других клиентов(COLLECTION в Z#KAS_EQUAL_CONTAC)';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_verify_contacts
+  is 'Контакты для верификации(COLLECTION в Z#KAS_VER_CON_GRID)';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_form_client_ref
+  is 'Ссылка на Анкету клиента(FK на Z#FORM_CLIENT)';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_verify_result
+  is 'Результат верификации';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_date_last_edit
+  is 'Дата последнего изменения';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_comment
+  is 'Комментарий';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_folder_ref
+  is 'Папка(FK на Z#FOLDERS)';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_bp_ref
+  is 'Ссылка на Бизнес-процессы(FK на Z#BUS_PROCESS)';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_flag_verify_use
+  is 'Признак использования верификации';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_is_pkb_virgin
+  is 'Отчёт ПКБ пустой';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_photover_result
+  is 'Результат фотоверификации';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_add_prop
+  is 'Дополнительные свойства(COLLECTION в Z#PROPERTIES)';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_comment_photo
+  is 'Комментарии к проверке фото';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_check_results
+  is 'Результаты проверок фото(COLLECTION в Z#KAS_CHECK_PHOTO)';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_proc_status
+  is 'Статус обработки';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_recall_time
+  is 'Время перезвона';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_type_prod
+  is 'Тип продукта(FK на Z#KAS_UNIVERSAL_D)';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_transfer_dir
+  is 'Направление передачи';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_repeat_photo
+  is 'Повторное фотографирование';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_photover_work
+  is 'Работа с фотоверификацией(COLLECTION в Z#KAS_UNIVERSAL_S)';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_reason_process
+  is 'Причина обработки(FK на Z#KAS_UNIVERSAL_D)';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_auto_send_date
+  is 'Дата начала автосверки';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_auto_rec_date
+  is 'Дата окончания автосверки';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_auto_res
+  is 'Результат автосверки';
+comment on column U1.T_RFO_Z#KAS_VERIFICATION.c_auto_res_desc
+  is 'Причина ошибки автосверки';
+create index U1.T_RFO_Z#KAS_VERIFICATION_IND1 on U1.T_RFO_Z#KAS_VERIFICATION (C_VERIFY_CONTACTS)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create unique index U1.T_RFO_Z#KAS_VERIFICAT_PK_IND on U1.T_RFO_Z#KAS_VERIFICATION (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#KAS_VERIFICATION
+  add constraint T_RFO_Z#KAS_VERIFICATION_PK primary key (ID);
+grant select on U1.T_RFO_Z#KAS_VERIFICATION to LOADDB;
+grant select on U1.T_RFO_Z#KAS_VERIFICATION to LOADER;
+grant select on U1.T_RFO_Z#KAS_VERIFICATION to RISK_VERIF;
+

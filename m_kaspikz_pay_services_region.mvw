@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_KASPIKZ_PAY_SERVICES_REGION
+refresh force on demand
+as
+select t."intId" id,
+       t."intServiceId" service_id,
+       t."intRegionId" region_id,
+       cast(t."bitIsFavourite" as int) is_favorite,
+       cast(t."bitIsPromo" as int) is_promo,
+       t."intUtilityType" util_type
+
+from "dbo"."tb_Payments_ServicesInRegion"@"db_kr2" t;
+grant select on U1.M_KASPIKZ_PAY_SERVICES_REGION to LOADDB;
+grant select on U1.M_KASPIKZ_PAY_SERVICES_REGION to LOADER;
+
+

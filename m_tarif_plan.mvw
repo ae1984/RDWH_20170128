@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_TARIF_PLAN
+refresh complete on demand
+as
+select /*+ parallel(30)*/
+       cp.c_code as credit_programm_code,
+       cp.c_name as credit_program_name,
+       tp.c_code as tarifplan_code,
+       tp.c_name as tarifplan_name,
+       tpb.c_code as tarifplan_bas_code,
+       tpb.c_name as tarifplan_bas_name,
+       tc.c_code as tarif_code,
+       tc.c_text as tarif_text,
+       t.c_name as tarif_name,
+       t.c_it_proc as it_proc,
+       t.c_value as tarif_value,
+       t.c_minimum as tarif_minimum,
+       t.c_maximum as tarif_maximum,
+       ft.c_cur_short as tarif_valuta,
+       t.c_date_begin as tarif_date_begin,
+       t.c_kas_date_begin as tarif_kas_date_begin,
+       t.c_date_end as tarif_date_end,
+       t.c_kas_date_end as tarif_kas_date_end,
+       kd.c_code as calc_method_code,
+       kd.c_name as calc_method_name,
+       kd.c_text as calc_method_text
+  from u1.V_RBO_Z#TARIF_PLAN tp
+  left join u1.V_RBO_Z#CRED_PROGRAM    cp on cp.id = tp.c_kas_cr_prog_ref
+  left join u1.V_RBO_Z#TARIF_PLAN     tpb on tpb.id = tp.c_kas_parent_ref
+  left join u1.V_RBO_Z#TARIF_BO        tb on tb.collection_id = tp.c_tarifs
+  left join u1.V_RBO_Z#TARIFFS_COMMISS tc on tc.id = tb.c_tarif
+  left join u1.V_RBO_Z#TARIF            t on t.collection_id = tc.c_tariffs
+  left join u1.V_RBO_Z#KAS_DIC         kd on kd.id = t.c_kas_calc_mtd_ref
+  left join u1.V_RBO_Z#FT_MONEY        ft on ft.id = t.c_valuta;
+grant select on U1.M_TARIF_PLAN to LOADDB;
+grant select on U1.M_TARIF_PLAN to LOADER;
+
+

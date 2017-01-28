@@ -1,0 +1,76 @@
+﻿create materialized view U1.M_TMP_J_K6
+refresh force on demand
+as
+select x.*
+       , case when x.is_kdn_regulated_sal_max = 1 and x.kdn_form_salary_max >= 50 then
+           case when x.inc_pred5 > 0 then
+             round((coalesce(x.contract_pmt,0) + coalesce(x.other_deal_pmt,0) + coalesce(x.pkb_pmt,0)) /
+                      x.inc_pred5 * 100, 2)
+           else 99999999 end
+         else x.kdn_form_salary_max end as kdn_pred5
+
+       , case when x.is_kdn_regulated_sal_max = 1 and x.kdn_form_salary_max >= 50 then
+              case when x.inc_pred5 < 2 *
+                                decode(x.yy_mm_start,
+                                '2014 - 09', 126500,
+                                '2014 - 08', 126500,
+                                '2014 - 07', 126500,
+                                '2014 - 06', 124780,
+                                '2014 - 05', 120479,
+                                '2014 - 04', 116927,
+                                '2014 - 03', 116768,
+                                '2014 - 02', 104949,
+                                '2014 - 01', 104654,
+                                '2013 - 12', 137043,
+                                '2013 - 11', 107317,
+                                '2013 - 10', 105948,
+                                '2013 - 09', 105905,
+                                '2013 - 08', 110020,
+                                '2013 - 07', 112792,
+                                '2013 - 06', 109970,
+                                '2013 - 05', 106286,
+                                '2013 - 04', 105289,
+                                '2013 - 03', 108836,
+                                '2013 - 02', 98736,
+                                '2013 - 01', 99152,
+                                99999999) then 1 else 0 end
+         else x.is_kdn_regulated_sal_max end is_kdn_regulated_pred5
+
+         , case when x.form_income_gcvp_salary_max <= 0 then 0 else round((x.inc_pred5-x.form_income_gcvp_salary_max)/x.form_income_gcvp_salary_max*100, 2) end inc_rise_prc_pre
+from (
+    select t.*
+           , case when t.is_kdn_regulated_sal_max = 1 and t.kdn_form_salary_max >= 50 then
+               case when round(((t.avg_salary_limit+1000) - t.form_income_gcvp_salary_max), -3) > (round((round(coalesce(t.contract_pmt,0) + coalesce(t.other_deal_pmt,0) + coalesce(t.pkb_pmt,0))/0.49), -3)-t.form_income_gcvp_salary_max) then
+                 case when (round((round(coalesce(t.contract_pmt,0) + coalesce(t.other_deal_pmt,0) + coalesce(t.pkb_pmt,0))/0.49), -3)-t.form_income_gcvp_salary_max) <= t.form_income_gcvp_salary_max then
+                   t.form_income_gcvp_salary_max + (round((round(coalesce(t.contract_pmt,0) + coalesce(t.other_deal_pmt,0) + coalesce(t.pkb_pmt,0))/0.49), -3)-t.form_income_gcvp_salary_max)
+                 else t.form_income_gcvp_salary_max end
+               else
+                 case when round(((t.avg_salary_limit+1000) - t.form_income_gcvp_salary_max), -3) <= t.form_income_gcvp_salary_max then
+                   t.form_income_gcvp_salary_max + round(((t.avg_salary_limit+1000) - t.form_income_gcvp_salary_max), -3)
+                 else t.form_income_gcvp_salary_max end
+               end
+             else
+               t.form_income_gcvp_salary_max
+             end inc_pred5
+
+          , c.pmt as dwh_pmt, c.pmt_nom_rate as dwh_pmt_nom_rate,
+           case when t.form_income_gcvp_salary_max > 0 then
+               round((coalesce(c.pmt,0) + /*coalesce(c.pmt_nom_rate,0)*/ + coalesce(t.other_deal_pmt,0)) /
+                           coalesce(t.form_income_gcvp_salary_max,0) * 100, 2)
+           else 99999999 end as kdn_simple_rbo,
+
+           case when t.form_income_gcvp_salary_max > 0 then
+               round((/*coalesce(c.pmt,0) +*/ coalesce(c.pmt_nom_rate,0) + coalesce(t.other_deal_pmt,0)) /
+                           coalesce(t.form_income_gcvp_salary_max,0) * 100, 2)
+           else 99999999 end as kdn_simple_nom_rate
+
+
+
+    from M_TMP_J_K5 t
+    join V_DWH_PORTFOLIO_CURRENT c on c.deal_number = t.deal_number
+    --where t.is_dwh_open_after_x = 1
+    ) x;
+grant select on U1.M_TMP_J_K6 to LOADDB;
+grant select on U1.M_TMP_J_K6 to LOADER;
+
+

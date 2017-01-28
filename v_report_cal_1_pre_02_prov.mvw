@@ -1,0 +1,16 @@
+﻿create materialized view U1.V_REPORT_CAL_1_PRE_02_PROV
+build deferred
+refresh complete on demand
+as
+select /*+ parallel 20*/
+       da.yy_mm_report,
+       nvl(max(rp1.a_date),
+       min(rpm.date_min)) as ref_prov_date
+ from (select distinct da1.yy_mm_report from V_DATA_ALL da1) da
+ left join REF_PROVISIONS rp1 on rp1.a_date < add_months(to_date(da.yy_mm_report,'yyyy - mm'),1)
+ cross join (select min(a_date) as date_min from REF_PROVISIONS) rpm
+ group by da.yy_mm_report;
+grant select on U1.V_REPORT_CAL_1_PRE_02_PROV to LOADDB;
+grant select on U1.V_REPORT_CAL_1_PRE_02_PROV to LOADER;
+
+

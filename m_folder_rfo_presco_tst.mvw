@@ -1,0 +1,50 @@
+﻿create materialized view U1.M_FOLDER_RFO_PRESCO_TST
+refresh force on demand
+as
+select t.folder_id,
+       max(t.folder_date_create_mi) as folder_date_create_mi,
+
+       max(decode(c.cancel_type_code, 'VERIFICATION_RATING', 1, null)) as VERIFICATION_RATING,
+       max(decode(c.cancel_type_code, 'ВОЗРАСТ_НЕДОПУСТИМ', 1, null)) as PRSC_CLIENT_AGE_RES_PRE,
+       max(decode(c.cancel_type_code, 'GCVP_PKB_CRD_OVD_CUR', 1, null)) as GCVP_PKB_CRD_OVD_CUR,
+       max(decode(c.cancel_type_code, 'PKB_CRD_OVERDUE_CUR', 1, null)) as PKB_CRD_OVERDUE_CUR,
+       max(decode(c.cancel_type_code, 'GCVP_PKB_CRD_STATUS', 1, null)) as GCVP_PKB_CRD_STATUS,
+       max(decode(c.cancel_type_code, 'GCVP_PKB_ACT_CRD_CNT', 1, null)) as GCVP_PKB_ACT_CRD_CNT,
+       max(decode(c.cancel_type_code, 'GCVP_DAYS_ELAPS_OVER', 1, null)) as GCVP_DAYS_ELAPS_OVER,
+       max(decode(c.cancel_type_code, 'НЕ_РЕЗИДЕНТ', 1, null)) as PRSC_RESIDENT_RES_PRE,
+       max(decode(c.cancel_type_code, 'GCVP_SAL_LESS', 1, null)) as GCVP_SAL_LESS,
+       max(decode(c.cancel_type_code, 'ПОПЫТОК_БОЛЕЕ_4Д8М30', 1, null)) as PRSC_CLN_4D8M_RES_PRE,
+       max(decode(c.cancel_type_code, 'КОЛ_СТАЦ_ТЕЛЕФОНОВ', 1, null)) as contact_phone_counter,
+       max(decode(c.cancel_type_code, 'CLN_MAX_DELAY', 1, null)) as CLN_MAX_DELAY,
+       max(decode(c.cancel_type_code, 'REFUSAL_PART_IN_ACT', 1, null)) as REFUSAL_PART_IN_ACT,
+       max(decode(c.cancel_type_code, 'PKB_CRD_STATUS_1', 1, null)) as PKB_CRD_STATUS_1,
+       max(decode(c.cancel_type_code, 'PKB_CRD_STATUS_3', 1, null)) as PKB_CRD_STATUS_3,
+       max(decode(c.cancel_type_code, 'PKB_ACT_CRD_CNT1', 1, null)) as PKB_ACT_CRD_CNT1,
+       max(decode(c.cancel_type_code, 'CLN_MONEY_CRED_EXIST', 1, null)) as CLN_MONEY_CRED_EXIST
+
+
+from U1.M_FOLDER_CON_CANCEL t
+left join u1.M_cancel_alm_tst c on c.folder_id = t.folder_id and
+                           c.cancel_type_code in ('VERIFICATION_RATING',
+                                                  'ВОЗРАСТ_НЕДОПУСТИМ',
+                                                  'GCVP_PKB_CRD_OVD_CUR',
+                                                  'PKB_CRD_OVERDUE_CUR',
+                                                  'GCVP_PKB_CRD_STATUS',
+                                                  'GCVP_PKB_ACT_CRD_CNT',
+                                                  'GCVP_DAYS_ELAPS_OVER',
+                                                  'НЕ_РЕЗИДЕНТ',
+                                                  'GCVP_SAL_LESS',
+                                                  'ПОПЫТОК_БОЛЕЕ_4Д8М30',
+                                                  'КОЛ_СТАЦ_ТЕЛЕФОНОВ',
+                                                  'CLN_MAX_DELAY',
+                                                  'REFUSAL_PART_IN_ACT',
+                                                  'PKB_CRD_STATUS_1',
+                                                  'PKB_CRD_STATUS_3',
+                                                  'PKB_ACT_CRD_CNT1',
+                                                  'CLN_MONEY_CRED_EXIST')
+
+where t.folder_date_create_mi > to_date('01092016', 'ddmmyyyy')
+group by t.folder_id;
+grant select on U1.M_FOLDER_RFO_PRESCO_TST to LOADDB;
+
+

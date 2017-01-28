@@ -1,0 +1,38 @@
+﻿create materialized view U1.M_RFO_FOLDERS_RECLAM
+build deferred
+refresh force on demand
+as
+select /*+ parallel(15)*/
+   --начало
+   --от начала и до конца для получения уникальности необходимо сгруппировать
+   t.folder_id --id папки
+   ,t.folder_date_create --дата создания папки
+   ,t.rfo_client_id
+   ,cast(trim(nvl(a.c_last_name,' ') || ' ' ||nvl(a.c_first_name,' ')||' ' ||nvl(a.c_sur_name,' ')) as varchar2(300)) as client_name --ФИО клиента
+   ,a.c_inn --иин клиента
+   ,t.expert_name --фио менеджера
+   ,t.dnp_name --город
+   ,t.pos_code --код отделения
+   ,b.pos_name --название отделения
+   ,t.folder_state --состояние папки
+   ,t.process_name --бизнес процесс
+   ,t.folder_number --номер папки
+   ,arc.to_arch_date --дата попадания в архив
+   ,arc.to_arch_err_date --дата попадания в архив с ошибками
+   --конец
+   ,recl.kas_recl_hist_id --уникальный id рекламации
+   ,recl.c_date_create --дата выставления рекламации
+   ,recl.recl_cr_user --кем выставлена рекламация
+   ,recl.doc_type --тип документа
+   ,recl.type_recl_name --причина рекламации
+   ,recl.c_date_repair --дата исправления рекламации
+   ,recl.recl_rep_user --менеджер исправивший рекламацию
+   ,recl.c_note --примечание по рекламации
+from U1.V_FOLDER_ALL_RFO t
+left join U1.V_RFO_Z#FORM_CLIENT a on a.id = t.form_client_id
+left join U1.V_POS b on b.pos_code = t.pos_code
+left join M_RFO_FOLDERS_RECLAM_PRE1 arc on arc.folder_id = t.folder_id
+left join M_RFO_FOLDERS_RECLAM_PRE2 recl on recl.folder_id = t.folder_id;
+grant select on U1.M_RFO_FOLDERS_RECLAM to LOADDB;
+
+

@@ -1,0 +1,84 @@
+﻿create materialized view U1.M_FOLDER_CANCEL_TYPE
+build deferred
+refresh force on demand
+as
+select  tm.text_yyyy_mm_dd ||' '|| tm.week_day_short_ru as day, tm.yyyy_mm_dd, tm.yyyy, tm.yyyy_mm_num,
+        tt.folder_date_create_mi,
+        tt.rfo_contract_id,
+        tt.folder_id,
+        tt.folder_number,
+        tt.rfo_client_id,
+        tt.iin,
+        tt.x_dnp_region,
+        tt.x_dnp_name,
+        tt.pos_code,
+        tt.pos_name,
+        tt.pos_type,
+        tt.shop_code,
+        tt.shop_name,
+        tt.expert_name,
+        tt.expert_position,
+        tt.is_card,
+        tt.cr_program_name,
+        tt.product_type,
+        tt.is_point_active,
+        tt.is_credit_issued,
+        tt.is_credit_issued_new,
+        tt.is_credit_issued_mix,
+        tt.contract_status_code,
+        tt.contract_status_name,
+        tt.contract_number,
+        tt.contract_amount,
+        tt.cancel_prescoring,
+        tt.cancel_middle_office,
+        tt.cancel_controller,
+        tt.cancel_client,
+        tt.cancel_manager,
+        tt.cancel_cpr_aa,
+        tt.cancel_verificator,
+        tt.cancel_undefined,
+        tt.is_aa_reject,
+        tt.process_name,
+        tt.route_name,
+        tt.route_point_code,
+        tt.folder_state,
+        tt.is_daytime_decision_folder,
+        tt.source_system,
+        tt.delivery_type,
+        tt.is_refin,
+        tt.contract_date_begin,
+        tt.contract_set_revolving_date,
+        tt.cr_scheme_name,
+        tt.tariff_plan_name,
+        tt.prev_con_cnt,
+        tt.prev_con_closed_cnt,
+        tt.amount_max_before,
+        tt.prior_optim_count,
+        tt.is_client_new_by_con,
+        tt.is_sign_require,
+        tt.prev_con_del_days_max,
+        tt.fact_pmt_mon_before,
+        tt.fact_pmt_mon_before_12_mon,
+        tt.is_categ_a,
+        x.cancel_type_group, x.cancel_type_code, x.cancel_type_name,
+        case when tt.contract_amount > 1000000 then '1000-...'
+            when tt.contract_amount > 500000 then '500-1000'
+            when tt.contract_amount > 300000 then '300-500'
+            when tt.contract_amount > 200000 then '200-300'
+            when tt.contract_amount > 150000 then '150-200'
+                 else '000-150' end as amount_categ
+from M_FOLDER_CON_CANCEL tt
+join V_TIME_MINUTES tm on tm.yyyy_mm_dd_hh_mi = tt.folder_date_create_mi
+left join (
+      select distinct t.folder_id,
+                      c.cancel_type_group,
+                      c.cancel_type_code,
+                      c.cancel_type_name
+      from M_FOLDER_CON_CANCEL t
+      join T_CANCEL c on c.folder_id = t.folder_id
+                     and c.cancel_level = 1
+           ) x on x.folder_id = tt.folder_id;
+grant select on U1.M_FOLDER_CANCEL_TYPE to LOADDB;
+grant select on U1.M_FOLDER_CANCEL_TYPE to LOADER;
+
+

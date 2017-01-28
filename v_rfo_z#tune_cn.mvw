@@ -1,0 +1,9 @@
+﻿create materialized view U1.V_RFO_Z#TUNE_CN
+refresh complete on demand
+as
+select id,collection_id, c_canon_class,c_priority ,c_add_code, c_hierarchy_attr,sn,su
+from ibs.Z#TUNE_CN@rfo_snap;
+grant select on U1.V_RFO_Z#TUNE_CN to LOADDB;
+grant select on U1.V_RFO_Z#TUNE_CN to LOADER;
+
+

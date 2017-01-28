@@ -1,0 +1,76 @@
+﻿create materialized view U1.M_TMP_D_DEFAULTS4
+refresh force on demand
+as
+select
+
+c.yy_mm_start_last,
+count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt,
+round(sum(c.max_debt_used)/1000000) as sales_mln, -- продажи
+sum(c.delinq_rate_pmt_1 * c.max_debt_used) as debt_pmt1,
+sum(c.total_debt_last_rep_new_b_w) as debt_b_w,
+sum(c.total_debt_last_rep_new_b) as debt_b,
+sum(c.total_debt_last_rep_new_npl) as debt_npl,
+sum(c.delinq_rate * c.max_debt_used) as del_rate,
+sum(c.max_debt_used) as total_sum,
+goods_all_count,
+goods_count_distinct,
+risky_check_exist,
+case when contract_amount=0 then '0'
+     when contract_amount>0 and contract_amount<=50000 then '<=50 000'
+     when contract_amount>50000 and contract_amount<=100000 then '50 001 - 100 000'
+     when contract_amount>100000 and contract_amount<=150000 then '100 001 - 150 000'
+     when contract_amount>150000 and contract_amount<=200000 then '150 001 - 200 000'
+     when contract_amount>200000 and contract_amount<=250000 then '200 001 - 250 000'
+     when contract_amount>250000 and contract_amount<=300000 then '250 001 - 300 000'
+     when contract_amount>300000 and contract_amount<=350000 then '300 001 - 350 000'
+     when contract_amount>350000 and contract_amount<=400000 then '350 001 - 400 000'
+     when contract_amount>400000 and contract_amount<=450000 then '400 001 - 450 000'
+     when contract_amount>450000 and contract_amount<=500000 then '450 001 - 500 000'
+     when contract_amount>500000 and contract_amount<=600000 then '500 001 - 600 000'
+     when contract_amount>600000 and contract_amount<=700000 then '600 001 - 700 000'
+     when contract_amount>700000 and contract_amount<=800000 then '700 001 - 800 000'
+     when contract_amount>800000 and contract_amount<=900000 then '800 001 - 900 000'
+     when contract_amount>900000 and contract_amount<=1000000 then '900 001 - 1 000 000'
+     when contract_amount>1000000 and contract_amount<=1500000 then '1 000 001 - 1 500 000'
+     when contract_amount>1500000 and contract_amount<=2000000 then '1 500 001 - 2 000 000'
+     when contract_amount>2000000 and contract_amount<=2500000 then '2 000 001 - 2 500 000'
+     when contract_amount>2500000 and contract_amount<=3000000 then '2 500 001 - 300 000'
+     when contract_amount>3000000 then '>3 000 001' else 'Other' end as contract_amount_cat
+,check_criterias
+from M_CONTRACT_CAL_DEL c
+join m_tmp_d_risky_goods4 d1 on c.contract_number=d1.contract_number
+left join V_CONTRACT_CAL cc on cc.contract_number = c.contract_number and
+     cc.is_refin_restruct_first != 1
+where not exists (select null from M_FOLDER_CON_CANCEL f
+                  where f.folder_id = c.folder_id_first and f.is_refin = 1)
+group by c.yy_mm_start_last,
+goods_all_count,
+goods_count_distinct,
+risky_check_exist,
+case when contract_amount=0 then '0'
+     when contract_amount>0 and contract_amount<=50000 then '<=50 000'
+     when contract_amount>50000 and contract_amount<=100000 then '50 001 - 100 000'
+     when contract_amount>100000 and contract_amount<=150000 then '100 001 - 150 000'
+     when contract_amount>150000 and contract_amount<=200000 then '150 001 - 200 000'
+     when contract_amount>200000 and contract_amount<=250000 then '200 001 - 250 000'
+     when contract_amount>250000 and contract_amount<=300000 then '250 001 - 300 000'
+     when contract_amount>300000 and contract_amount<=350000 then '300 001 - 350 000'
+     when contract_amount>350000 and contract_amount<=400000 then '350 001 - 400 000'
+     when contract_amount>400000 and contract_amount<=450000 then '400 001 - 450 000'
+     when contract_amount>450000 and contract_amount<=500000 then '450 001 - 500 000'
+     when contract_amount>500000 and contract_amount<=600000 then '500 001 - 600 000'
+     when contract_amount>600000 and contract_amount<=700000 then '600 001 - 700 000'
+     when contract_amount>700000 and contract_amount<=800000 then '700 001 - 800 000'
+     when contract_amount>800000 and contract_amount<=900000 then '800 001 - 900 000'
+     when contract_amount>900000 and contract_amount<=1000000 then '900 001 - 1 000 000'
+     when contract_amount>1000000 and contract_amount<=1500000 then '1 000 001 - 1 500 000'
+     when contract_amount>1500000 and contract_amount<=2000000 then '1 500 001 - 2 000 000'
+     when contract_amount>2000000 and contract_amount<=2500000 then '2 000 001 - 2 500 000'
+     when contract_amount>2500000 and contract_amount<=3000000 then '2 500 001 - 300 000'
+     when contract_amount>3000000 then '>3 000 001' else 'Other' end
+       ,check_criterias
+having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_D_DEFAULTS4 to LOADDB;
+grant select on U1.M_TMP_D_DEFAULTS4 to LOADER;
+
+

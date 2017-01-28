@@ -1,0 +1,47 @@
+﻿create materialized view U1.V_RFO_Z#KAS_PKB_CI
+using no index
+refresh complete on demand
+as
+select id,
+      collection_id,
+      c_dog_type,
+      c_num_dog,
+      c_cr_purpose,
+      c_contr_status,
+      c_guarantee_type,
+      c_guarantee_val,
+      c_dog_class,
+      c_total_ammount,
+      c_instalments_num,
+      c_payments_period,
+      c_payments_method,
+      c_monthly_payment,
+      c_last_update,
+      c_type_of_founding,
+      c_currency,
+      c_appl_date,
+      c_date_begin,
+      c_date_end,
+      c_fact_gash_date,
+      c_oustanding_num,
+      c_outstanding_sum,
+      c_overdue_sum,
+      c_subj_role,
+      c_fin_inst,
+      c_pc,
+      c_add_info,
+      c_amount,
+      c_credit_usage,
+      c_residual_amount,
+      c_credit_limit,
+      c_ovrd_instalments,
+      c_dop_field,
+      sn,
+      su,
+      c_cr_object ,
+      c_pledge_type_val
+from IBS.Z#KAS_PKB_CI@RFO_SNAP;
+grant select on U1.V_RFO_Z#KAS_PKB_CI to LOADDB;
+grant select on U1.V_RFO_Z#KAS_PKB_CI to LOADER;
+
+

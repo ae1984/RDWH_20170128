@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_RDWH_VERIF_CANCEL_DAY
+refresh force on demand
+as
+select t.id,
+       t.folder_id,
+       t.is_copied,
+       cast(t.verification_date as date) as verification_date,
+       t.verification_id,
+       upper(trim(t.question)) as question
+from verificator.H_OUT_RDWH@verifais t
+where t.verification_date > trunc(sysdate)-1 and t.verification_date < trunc(sysdate);
+grant select on U1.M_RDWH_VERIF_CANCEL_DAY to LOADDB;
+grant select on U1.M_RDWH_VERIF_CANCEL_DAY to LOADER;
+
+

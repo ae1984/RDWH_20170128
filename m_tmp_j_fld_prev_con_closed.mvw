@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_TMP_J_FLD_PREV_CON_CLOSED
+refresh complete on demand
+as
+select t.rfo_contract_id,
+       count(distinct d.deal_number) as prev_con_closed_cnt,
+       max(d.x_amount) as amount_max_before
+from M_FOLDER_CON_CANCEL t
+left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = t.iin and
+                                       d.actual_end_date < trunc(t.folder_date_create_mi) and
+                                       d.x_is_credit_issued = 1 and
+                                       d.x_product_type != 'ОПТИМИЗАЦИЯ'
+group by t.rfo_contract_id;
+grant select on U1.M_TMP_J_FLD_PREV_CON_CLOSED to LOADDB;
+grant select on U1.M_TMP_J_FLD_PREV_CON_CLOSED to LOADER;
+
+

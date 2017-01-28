@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_EFF_RATE
+build deferred
+refresh complete on demand
+as
+select /*+ parallel(2)*/ pc.c_num_dog as contract_number,
+     t.c_code as property_type,
+     pt.c_str_value as rate_value ,
+     cp.c_code as cr_programm_code,
+     to_number(replace('0,'||regexp_substr(pt.c_str_value,'[0-9]{6,}'),',','.')) as  rate_number,
+     trunc(pt.c_date_begin) as rep_date
+from
+v_rbo_Z#PR_CRED pc
+join v_rbo_Z#PROPERTY pt on pt.collection_id = pc.c_prorerty_arr
+join v_rbo_z#property_type t on t.id = pt.c_property_type
+join v_rbo_Z#KIND_CREDITS kc on pc.c_kind_credit = kc.id
+join v_rbo_Z#CRED_PROGRAM cp on kc.c_cred_program = cp.id
+where t.c_code = 'KAS_EPS'
+--and cp.c_code in ('GU_AVTO_BU','GU_AVTO_REF','AUTO','GU_AVTO','GU_AVTO_ZALOG');
+grant select on U1.M_EFF_RATE to LOADDB;
+
+

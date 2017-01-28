@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_TMP_J_RFO_MON_CON
+refresh complete on demand
+as
+select /*+ driving_site(x) first_rows*/
+*
+from (
+    select /*+ driving_site(rd) no_merge*/
+             cd.id as rfo_contract_id,
+             rd.collection_id, p.C_PROP as cr_program_id, sd.c_code,
+             cd.c_summa_full, cd.c_info_cred#summa_cred,
+             cd.c_info_cred#summa_cred_com
+    from IBS.Z#RDOC@RFO rd
+    join IBS.Z#FDOC@RFO fd on fd.id = rd.c_doc and fd.class_id = 'CREDIT_DOG'
+    join IBS.Z#CREDIT_DOG@RFO cd on cd.id = rd.c_doc
+    join IBS.Z#STATUS_DOG@RFO sd on sd.id = fd.c_status_doc
+    join IBS.Z#CRED_SCHEME@RFO cs on cs.id = cd.c_cred_scheme
+    join IBS.Z#PROPERTIES@RFO p on p.COLLECTION_ID = cs.c_add_prop
+    join IBS.Z#PROD_PROPERTY@RFO pr on pr.id = p.C_PROP
+    where fd.c_doc_date > trunc(sysdate) - 3 -- - 2 / 24
+) x;
+grant select on U1.M_TMP_J_RFO_MON_CON to LOADDB;
+grant select on U1.M_TMP_J_RFO_MON_CON to LOADER;
+
+

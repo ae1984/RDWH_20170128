@@ -1,0 +1,57 @@
+﻿create materialized view U1.M_RBO_CONTRACT_AUTO
+refresh complete on demand
+as
+with dat as ( select /*+parallel(2)*/ rbo_contract_id, kas_pc_dog_ref,
+                      case when date_begin between date_begin_prev and date_close_prev and date_close > date_close_prev then date_close_prev+1
+                           when date_close <= date_close_prev then date_close+1
+                            else date_begin end as date_begin,
+                      date_close
+               from
+                 (
+                    select pc.id as rbo_contract_id,
+                         pc.c_date_begin as date_begin,
+                         nvl(pc.c_date_close,to_date('01-01-9999','dd-mm-yyyy')) as date_close,
+                         nvl(pc.c_kas_pc_dog_ref,pc.c_kas_pc_dog_t_ref) as kas_pc_dog_ref,
+                         lag(pc.c_date_begin,1,null) over (partition by  nvl(pc.c_kas_pc_dog_ref,pc.c_kas_pc_dog_t_ref) order by pc.c_date_begin) date_begin_prev,
+                         lag(nvl(pc.c_date_close,to_date('01-01-9999','dd-mm-yyyy')),1,null) over (partition by  nvl(pc.c_kas_pc_dog_ref,pc.c_kas_pc_dog_t_ref) order by pc.c_date_begin) as date_close_prev
+                    from V_RBO_Z#PR_CRED pc
+                      join V_RBO_Z#COM_STATUS_PRD csp on csp.id = pc.c_com_status
+                      join V_RBO_Z#KIND_CREDITS kc    on pc.c_kind_credit = kc.id
+                      join V_RBO_Z#CRED_PROGRAM cp    on kc.c_cred_program = cp.id
+                    where cp.c_code in ('GU_AVTO_BU','GU_AVTO','GU_AVTO_REF','AUTO','GU_AVTO_ZALOG')
+                     and csp.c_code not in ('EDIT','CANCEL','SIGNED')
+                     and pc.c_client is not null
+                     and pc.c_kind_credit is not null
+                )
+          )
+select /*+parallel(2)*/ distinct pc2.id as rbo_contract_id,
+       pc2.c_num_dog as contract_number,
+       greatest(pc2.c_date_begin, pc.date_begin) as date_begin,
+       least(nvl(pc2.c_date_close,to_date('01-01-9999','dd-mm-yyyy')),pc.date_close) as date_close,
+       pc.kas_pc_dog_ref
+  from dat pc
+  join V_RBO_Z#PR_CRED pc2        on (pc2.c_kas_pc_dog_ref = pc.kas_pc_dog_ref
+                                      or pc2.c_kas_pc_dog_t_ref = pc.kas_pc_dog_ref)
+                                 and pc2.c_client is not null
+                                 and pc2.c_kind_credit is not null
+                                 and pc2.c_date_begin <= pc.date_close
+                                 and nvl(pc2.c_date_close,to_date('01-01-9999','dd-mm-yyyy')) >= pc.date_begin
+  join V_RBO_Z#COM_STATUS_PRD csp2 on csp2.id = pc2.c_com_status
+                                 and csp2.c_code not in ('EDIT','CANCEL','SIGNED')
+where pc.date_begin <= pc.date_close
+ union all
+select /*+parallel(2)*/ distinct pcd.id  as rbo_contract_id,
+       pcd.c_num_dog as contract_number,
+       greatest(pcd.c_date_begin, pc.date_begin) as date_begin,
+       least(nvl(pcd.c_date_close,to_date('01-01-9999','dd-mm-yyyy')),pc.date_close) as date_close,
+       pc.kas_pc_dog_ref
+  from dat pc
+  join V_RBO_Z#KAS_PC_DOG  pcd on pcd.id = pc.kas_pc_dog_ref
+                              and pcd.c_client_ref is not null
+                              and pcd.c_tarif_plan_ref is not null
+                              and pcd.state_id is not null
+  where pc.date_begin <= pc.date_close;
+grant select on U1.M_RBO_CONTRACT_AUTO to LOADDB;
+grant select on U1.M_RBO_CONTRACT_AUTO to LOADER;
+
+

@@ -1,0 +1,35 @@
+﻿create materialized view U1.M_TMP_DI_ONLINE1
+refresh complete on demand
+as
+select
+
+onl.claim_id,
+onl.rfo_client_id,
+onl.folder_id,
+onl.month_ratif,
+onl.is_sign_reason,
+onl.is_sign_require,
+onl.is_categ_a,
+onl.is_client_new_by_con,
+onl.is_approved,
+onl.is_credit_issued,
+onl.is_verification_reject,
+
+case when onl.is_verification = 1 then
+  case when mn.is_verif_manager = 1 then 'У клиента есть прошлые фрод отказы'
+       when mn.is_verif_manager_by_purse = 1 then 'Проверка по кошельку' else 'Other' end
+         end as is_verif_reason,
+
+case when onl.is_iad = 1 then
+ case when iad1.fio_passport = 1 then 'ИАД по ФИО/Паспортным данным'
+      when iad2.is_mob_change = 1 then 'ИАД по номеру моб.тел.' else 'Other' end
+        end as is_iad_reason
+
+from M_TMP_DI_ONLINE0 onl
+left join M_TMP_GK_FOLDER_MANAGER2 mn on mn.folder_id = onl.folder_id
+left join m_tmp_gk_iad iad1 on iad1.rfo_client_id = onl.rfo_client_id and trunc(iad1.folder_date_create)> = trunc(onl.folder_date_create_mi)
+left join m_tmp_gk_iad_mobile iad2 on iad2.rfo_client_id = onl.rfo_client_id and trunc(iad2.folder_date_create)> = trunc(onl.folder_date_create_mi);
+grant select on U1.M_TMP_DI_ONLINE1 to LOADDB;
+grant select on U1.M_TMP_DI_ONLINE1 to LOADER;
+
+

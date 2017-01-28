@@ -1,0 +1,37 @@
+﻿create materialized view U1.V_RBO_Z#KAS_PLAN_EPS
+refresh complete on demand
+as
+select id,
+      collection_id,
+      c_date,
+      c_days,
+      c_debt_od_plan,
+      c_sum_prc_pln_date,
+      c_sum_od_plan,
+      c_sum_prc_plan,
+      c_sum_plan_pay,
+      c_profit_eps,
+      c_amort_cost,
+      c_amort_comiss,
+      c_debt_od,
+      c_debt_prc,
+      c_debt_ovrd_od,
+      c_debt_ovrd_prc,
+      c_debt_prc_od,
+      c_saldo_1434,
+      c_saldo_1435,
+      c_rate_prc_provis,
+      c_sum_provis,
+      c_sum_def_profit,
+      c_amort_cost_r,
+      c_profit_eps_r,
+      c_profit_fact,
+      c_amort_cost_3,
+      c_amort_com_calc,
+      c_amort_com_dif,
+      c_sum_1773
+from s02.Z#KAS_PLAN_EPS@rdwh_exd;
+grant select on U1.V_RBO_Z#KAS_PLAN_EPS to LOADDB;
+grant select on U1.V_RBO_Z#KAS_PLAN_EPS to LOADER;
+
+

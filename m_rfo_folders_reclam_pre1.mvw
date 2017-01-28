@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_RFO_FOLDERS_RECLAM_PRE1
+build deferred
+refresh force on demand
+as
+select /*+ parallel(10)*/
+                folder_id
+                ,min(arch_date) as to_arch_date
+                ,min(arch_err_date) as to_arch_err_date
+           from (
+                 select
+                     d.id as folder_id
+                     ,case when c.c_code = 'ARCHIVE' then t.c_line_time end as arch_date --Архив
+                     ,case when c.c_name in ('ARCHIVE_ERROR','ERR_ARCHIVE') then t.c_line_time end as arch_err_date --Архив с ошибками
+                 from U1.V_RFO_Z#CM_HISTORY t
+                 left join U1.V_RFO_Z#CM_LINE a on a.id = t.c_line
+                 left join U1.V_RFO_Z#CM_POINT c on c.id = a.c_to_p
+                 left join U1.V_RFO_Z#CM_CHECKPOINT d on d.c_history = t.collection_id
+                 where c.c_code in ('ARCHIVE','ARCHIVE_ERROR','ERR_ARCHIVE')  --c.c_name in ('Архив','Архив с ошибками')
+                )
+           group by  folder_id;
+

@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_TMP_INTELLINX_PARAM2
+build deferred
+refresh force on demand
+as
+select distinct rfo_client_id as client_id
+  from U1.M_CLIENT_DEPN_SMS_SERVICE a
+ where is_rbo_mobile_affirmed = 0
+    or (is_active_sms_service = 0 and is_has_timeout = 1)
+ group by rfo_client_id
+ having count(1) = 1;
+grant select on U1.M_TMP_INTELLINX_PARAM2 to INTELLINX_USER;
+grant select on U1.M_TMP_INTELLINX_PARAM2 to LOADDB;
+grant select on U1.M_TMP_INTELLINX_PARAM2 to LOADER;
+grant select on U1.M_TMP_INTELLINX_PARAM2 to RTDM_USER;
+
+

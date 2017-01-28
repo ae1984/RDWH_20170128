@@ -1,0 +1,294 @@
+﻿create materialized view U1.M_AUTO_KOLESA_KZ_DATA
+build deferred
+refresh complete on demand
+as
+selecT /*+ parallel 20 */
+ v1.akk_brend,
+ v1.akk_model,
+ v1.akk_year_car,
+ v1.akk_drive,
+ v1.akk_engine_volume,
+ v1.akk_kpp_type,
+ v1.akk_body_type,
+ v1.akk_price,
+ v1.median,
+ v1.std,
+ v1.count_price_confidence,
+ v1.advert_cnt,
+ (case
+   when v1.advert_cnt > 50 then
+    1
+   else
+    0
+ end) as count_price_confidence_50,
+ v1.avg_price,
+ v3.avg_price as price_year_down,
+ v2.avg_price as price_year_up,
+ (case
+   when ((v1.avg_price / v3.avg_price - 1) >= 0) and
+        ((v1.avg_price / v2.avg_price - 1) <= 0) then
+    1
+   when ((v1.avg_price / v3.avg_price - 1) >= 0) and
+        ((v1.avg_price / v2.avg_price - 1) is null) then
+    1
+   when ((v1.avg_price / v3.avg_price - 1) is null) and
+        ((v1.avg_price / v2.avg_price - 1) <= 0) then
+    1
+    when ((v1.avg_price / v3.avg_price - 1) is null) and
+        ((v1.avg_price / v2.avg_price - 1) is null) then
+    1
+   else
+    0
+ end) as year_price_confidence,
+ (case
+   when (case
+          when v1.akk_kpp_type = 'АКПП' then
+           (v1.avg_price / v4.avg_price - 1)
+          when v1.akk_kpp_type = 'МКПП' then
+           (v4.avg_price / v1.avg_price - 1)
+        end) >= 0 then
+    1
+   when (case
+          when v1.akk_kpp_type = 'АКПП' then
+           (v1.avg_price / v4.avg_price - 1)
+          when v1.akk_kpp_type = 'МКПП' then
+           (v4.avg_price / v1.avg_price - 1)
+        end) is null then
+    1
+   else
+    0
+ end) as transmission_price_confidence,
+ v4.avg_price as price_other_kpp,
+ (case
+   when v1.count_price_confidence + (case
+          when ((v1.avg_price / v3.avg_price - 1) >= 0) and
+               ((v1.avg_price / v2.avg_price - 1) <= 0) then
+           1
+          when ((v1.avg_price / v3.avg_price - 1) >= 0) and
+               ((v1.avg_price / v2.avg_price - 1) is null) then
+           1
+          when ((v1.avg_price / v3.avg_price - 1) is null) and
+               ((v1.avg_price / v2.avg_price - 1) <= 0) then
+           1
+           when ((v1.avg_price / v3.avg_price - 1) is null) and
+                ((v1.avg_price / v2.avg_price - 1) is null) then
+           1
+          else
+           0
+        end) + (case
+          when (case
+                 when v1.akk_kpp_type = 'АКПП' then
+                  (v1.avg_price / v4.avg_price - 1)
+                 when v1.akk_kpp_type = 'МКПП' then
+                  (v4.avg_price / v1.avg_price - 1)
+               end) >= 0 then
+           1
+          when (case
+                 when v1.akk_kpp_type = 'АКПП' then
+                  (v1.avg_price / v4.avg_price - 1)
+                 when v1.akk_kpp_type = 'МКПП' then
+                  (v4.avg_price / v1.avg_price - 1)
+               end) is null then
+           1
+          else
+           0
+        end) = 3 then
+    1
+   when (case
+          when v1.advert_cnt > 50 then
+           1
+          else
+           0
+        end) = 1 then
+    1
+   when v1.count_price_confidence = 1 and (case
+          when ((v1.avg_price / v3.avg_price - 1) >= 0) and
+               ((v1.avg_price / v2.avg_price - 1) <= 0) then
+           1
+          when ((v1.avg_price / v3.avg_price - 1) >= 0) and
+               ((v1.avg_price / v2.avg_price - 1) is null) then
+           1
+          when ((v1.avg_price / v3.avg_price - 1) is null) and
+               ((v1.avg_price / v2.avg_price - 1) <= 0) then
+           1
+          when ((v1.avg_price / v3.avg_price - 1) is null) and
+               ((v1.avg_price / v2.avg_price - 1) is null) then
+           1
+          else
+           0
+        end) = 1 and (case
+          when (case
+                 when v1.akk_kpp_type = 'АКПП' then
+                  (v1.avg_price / v4.avg_price - 1)
+                 when v1.akk_kpp_type = 'МКПП' then
+                  (v4.avg_price / v1.avg_price - 1)
+               end) >= 0 then
+           1
+          when (case
+                 when v1.akk_kpp_type = 'АКПП' then
+                  (v1.avg_price / v4.avg_price - 1)
+                 when v1.akk_kpp_type = 'МКПП' then
+                  (v4.avg_price / v1.avg_price - 1)
+               end) is null then
+           1
+          else
+           0
+        end) = 0 and ABS((case
+                           when v1.akk_kpp_type = 'АКПП' then
+                            (v1.avg_price / v4.avg_price - 1)
+                           when v1.akk_kpp_type = 'МКПП' then
+                            (v4.avg_price / v1.avg_price - 1)
+                         end)) <= 0.02 then
+    1
+   when v1.count_price_confidence = 1 and (case
+          when ((v1.avg_price / v3.avg_price - 1) >= 0) and
+               ((v1.avg_price / v2.avg_price - 1) <= 0) then
+           1
+          when ((v1.avg_price / v3.avg_price - 1) >= 0) and
+               ((v1.avg_price / v2.avg_price - 1) is null) then
+           1
+          when ((v1.avg_price / v3.avg_price - 1) is null) and
+               ((v1.avg_price / v2.avg_price - 1) <= 0) then
+           1
+           when ((v1.avg_price / v3.avg_price - 1) is null) and
+                ((v1.avg_price / v2.avg_price - 1) is null) then
+           1
+          else
+           0
+        end) = 0 and (case
+          when (case
+                 when v1.akk_kpp_type = 'АКПП' then
+                  (v1.avg_price / v4.avg_price - 1)
+                 when v1.akk_kpp_type = 'МКПП' then
+                  (v4.avg_price / v1.avg_price - 1)
+               end) >= 0 then
+           1
+          when (case
+                 when v1.akk_kpp_type = 'АКПП' then
+                  (v1.avg_price / v4.avg_price - 1)
+                 when v1.akk_kpp_type = 'МКПП' then
+                  (v4.avg_price / v1.avg_price - 1)
+               end) is null then
+           1
+          else
+           0
+        end) = 1 and
+        abs(v1.avg_price / v2.avg_price - 1) <= 0.02 and
+        ((v1.avg_price  / v3.avg_price - 1) is null or
+        (v1.avg_price / v3.avg_price - 1) >= 0) then
+    1
+   when v1.count_price_confidence = 1 and (case
+          when ((v1.avg_price / v3.avg_price - 1) >= 0) and
+               ((v1.avg_price / v2.avg_price - 1) <= 0) then
+           1
+          when ((v1.avg_price / v3.avg_price - 1) >= 0) and
+               ((v1.avg_price / v2.avg_price - 1) is null) then
+           1
+          when ((v1.avg_price / v3.avg_price - 1) is null) and
+               ((v1.avg_price / v2.avg_price - 1) <= 0) then
+           1
+          when ((v1.avg_price / v3.avg_price - 1) is null) and
+               ((v1.avg_price / v2.avg_price - 1) is null) then
+           1
+          else
+           0
+        end) = 0 and (case
+          when (case
+                 when v1.akk_kpp_type = 'АКПП' then
+                  (v1.avg_price / v4.avg_price - 1)
+                 when v1.akk_kpp_type = 'МКПП' then
+                  (v4.avg_price / v1.avg_price - 1)
+               end) >= 0 then
+           1
+          when (case
+                 when v1.akk_kpp_type = 'АКПП' then
+                  (v1.avg_price / v4.avg_price - 1)
+                 when v1.akk_kpp_type = 'МКПП' then
+                  (v4.avg_price / v1.avg_price - 1)
+               end) is null then
+           1
+          else
+           0
+        end) = 1 and
+        abs(v1.avg_price  / v3.avg_price - 1) <= 0.02 and
+        ((v1.avg_price  / v2.avg_price - 1) is null or
+        (v1.avg_price / v2.avg_price - 1) >= 0) then
+    1
+   else
+    0
+ end) as confidence_level,
+ (case
+   when cor.percent is null then
+    (case
+      when v1.akk_year_car between 2001 and 2013 then
+       -0.25
+      when v1.akk_year_car = 2014 then
+       -0.20
+      when v1.akk_year_car = 2015 then
+       -0.15
+    end)
+   else
+    cor.percent
+ end) as PRICE_CORRECTION
+  from (u1.M_AUTO_KOLESA_KZ_DATA_SUB) v1
+
+  left join(u1.M_AUTO_KOLESA_KZ_DATA_SUB) v2
+    on v1.akk_brend = v2.akk_brend
+   and v1.akk_model = v2.akk_model
+   and v1.akk_drive = v2.akk_drive
+   and v1.akk_engine_volume = v2.akk_engine_volume
+   and v1.akk_kpp_type = v2.akk_kpp_type
+   and v1.akk_body_type = v2.akk_body_type
+   and v1.akk_year_car = v2.akk_year_car - 1
+   and v1.count_price_confidence = 1
+   and v2.count_price_confidence = 1
+
+  left join(u1.M_AUTO_KOLESA_KZ_DATA_SUB) v3
+
+    on v1.akk_brend = v3.akk_brend
+   and v1.akk_model = v3.akk_model
+   and v1.akk_drive = v3.akk_drive
+   and v1.akk_engine_volume = v3.akk_engine_volume
+   and v1.akk_kpp_type = v3.akk_kpp_type
+   and v1.akk_body_type = v3.akk_body_type
+   and v1.akk_year_car = v3.akk_year_car + 1
+   and v1.count_price_confidence = 1
+   and v3.count_price_confidence = 1
+
+  left join(u1.M_AUTO_KOLESA_KZ_DATA_SUB) v4
+    on v1.akk_brend = v4.akk_brend
+   and v1.akk_model = v4.akk_model
+   and v1.akk_drive = v4.akk_drive
+   and v1.akk_engine_volume = v4.akk_engine_volume
+   and v1.akk_kpp_type != v4.akk_kpp_type
+   and v1.akk_body_type = v4.akk_body_type
+   and v1.akk_year_car = v4.akk_year_car
+   and v1.count_price_confidence = 1
+   and v4.count_price_confidence = 1
+---Корректировка на торг
+  left join u1.T_AUTO_PRICE_CORRECTION cor
+    on v1.akk_brend = cor.brend
+   and v1.akk_model = cor.model
+   and v1.akk_year_car = cor.year_car
+
+ group by v1.akk_brend,
+          v1.akk_model,
+          v1.akk_year_car,
+          v1.akk_drive,
+          v1.akk_engine_volume,
+          v1.akk_kpp_type,
+          v1.akk_body_type,
+          (v1.akk_price),
+          (v1.median),
+          (v1.std),
+          (v1.count_price_confidence),
+          (v1.advert_cnt),
+          (v1.avg_price),
+          (v3.avg_price),
+          (v2.avg_price),
+          v4.avg_price,
+          cor.percent;
+grant select on U1.M_AUTO_KOLESA_KZ_DATA to LOADDB;
+grant select on U1.M_AUTO_KOLESA_KZ_DATA to LOAD_MO;
+
+

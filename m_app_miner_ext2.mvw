@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_APP_MINER_EXT2
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       am.app_id
+
+       ,max(onl.ip_flag) keep (dense_rank last order by onl.sdt) as ip_flag
+
+from U1.M_APP_MINER_BAS am
+left join u1.V_CLIENT_RFO_BY_ID cl on cl.rfo_client_id = am.rfo_client_id
+left join U1.T_IIN_IP onl on onl.iin = cl.iin
+                             and onl.sdt < trunc(am.folder_date_create)
+where am.folder_date_create_mi >= to_date('2015-01-01','yyyy-mm-dd')
+group by am.app_id;
+grant select on U1.M_APP_MINER_EXT2 to LOADDB;
+
+

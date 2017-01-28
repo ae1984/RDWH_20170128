@@ -1,0 +1,29 @@
+﻿create table U1.SNAPSHOT_T_MO_LUNA_CHECK
+(
+  request_id        NUMBER not null,
+  date_create       DATE,
+  status            VARCHAR2(64),
+  candidate_luna_id NUMBER,
+  compare_type      VARCHAR2(64),
+  compare_list      VARCHAR2(1000),
+  date_send         DATE,
+  verif_id          NUMBER,
+  photo_type_id     VARCHAR2(70)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.SNAPSHOT_T_MO_LUNA_CHECK
+  is 'копия таблицы T_MO_LUNA_CHECK на  7/06/2016';
+grant select on U1.SNAPSHOT_T_MO_LUNA_CHECK to LOADDB;
+

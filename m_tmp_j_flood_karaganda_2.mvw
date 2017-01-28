@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_TMP_J_FLOOD_KARAGANDA_2
+refresh complete on demand
+as
+select distinct cl.iin
+from V_FOLDER_ALL_RFO f
+join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = f.form_client_id
+join V_CLIENT_RFO_BY_ID cl on cl.rfo_client_id = f.rfo_client_id
+join V_RFO_Z#CLIENT rc on rc.id = cl.rfo_client_id
+left join V_RFO_Z#ADRESSES a on a.collection_id = rc.c_addresses
+where cl.iin is not null and (
+      (fc.fact_address_region = 'КАРАГАНДИНСКАЯ' and
+            fc.fact_address_district in ('КАРКАРАЛИНСКИЙ','АБАЙСКИЙ','ЖАНА-АРКИНСКИЙ','ШЕТСКИЙ','БУХАР-ЖЫРАУСКИЙ')) or
+      (fc.reg_address_region = 'КАРАГАНДИНСКАЯ' and
+            fc.reg_address_district in ('КАРКАРАЛИНСКИЙ','АБАЙСКИЙ','ЖАНА-АРКИНСКИЙ','ШЕТСКИЙ','БУХАР-ЖЫРАУСКИЙ')) or
+      (trim(upper(a.c_region)) = 'КАРАГАНДИНСКАЯ' and
+            trim(upper(a.c_district)) in ('КАРКАРАЛИНСКИЙ','АБАЙСКИЙ','ЖАНА-АРКИНСКИЙ','ШЕТСКИЙ','БУХАР-ЖЫРАУСКИЙ'))
+      );
+grant select on U1.M_TMP_J_FLOOD_KARAGANDA_2 to LOADDB;
+grant select on U1.M_TMP_J_FLOOD_KARAGANDA_2 to LOADER;
+
+

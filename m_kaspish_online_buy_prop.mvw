@@ -1,0 +1,94 @@
+﻿create materialized view U1.M_KASPISH_ONLINE_BUY_PROP
+build deferred
+refresh force on demand
+as
+select
+       x.pk,
+       x.totalprice,
+       x.code, --код заявки z#kas_online_buy.c_process_id
+       x.userpk, --id user in kaspishop m_kaspish_users.pk
+       x.statuspk,
+       x.statusinfo,
+
+       x.p_cancellationreason,
+       x.order_cnl_reas_status_code,
+       x.order_cnl_reas_status_name,
+
+       x.cred_type, --кредит или оплата наличными
+       x.order_status_code,
+       x.order_status_name,
+       x.order_status_pk
+
+       , x.createdts,
+       x.modifiedts,
+       x.p_description,
+
+       --x.p_message,
+
+       x.order_hist_status_pk,
+
+       x.order_hist_status_code,
+       x.order_hist_status_name,
+
+       upper(substr(x.p_mes_aspnet_ses_id, instr(x.p_mes_aspnet_ses_id, '''', 1, 3)+1, instr(x.p_mes_aspnet_ses_id, '}', 1, 1) - instr(x.p_mes_aspnet_ses_id, '''', 1, 3) -2)) as aspnet_session_id/*,
+       substr(x.p_mes_user_agent, instr(x.p_mes_user_agent, '''', 1, 3)+1, instr(x.p_mes_user_agent, '}', 1, 1) - instr(x.p_mes_user_agent, '''', 1, 3) -2) as user_agent,
+       substr(x.p_mes_nsclient_ip, instr(x.p_mes_nsclient_ip, '''', 1, 3)+1, instr(x.p_mes_nsclient_ip, '}', 1, 1) - instr(x.p_mes_nsclient_ip, '''', 1, 3) -2) as nsclient_ip*/
+from (
+    select o.pk,
+           o.totalprice,
+           o.code, --код заявки z#kas_online_buy.c_process_id
+           o.userpk, --id user in kaspishop m_kaspish_users.pk
+           o.statuspk,
+           o.statusinfo,
+
+           o.p_cancellationreason,
+           st3.code as order_cnl_reas_status_code,
+           stp3.p_name as order_cnl_reas_status_name,
+
+           pm.code as cred_type, --кредит или оплата наличными
+           st.code as order_status_code,
+           stp.p_name as order_status_name,
+           st.pk as order_status_pk
+
+           , e.createdts,
+           e.modifiedts,
+           e.p_description,
+
+           e.p_message,
+
+           e.statuspk as order_hist_status_pk,
+
+           st2.code as order_hist_status_code,
+           stp2.p_name as order_hist_status_name,
+
+           regexp_substr(e.p_message, '(\{code=''ASPNET_SESSIONID'', value=''.*?\})', 1, 1) as p_mes_aspnet_ses_id/*,
+           regexp_substr(e.p_message, '(\{code=''USER_AGENT'', value=''.*?\})', 1, 1) as p_mes_user_agent,
+           regexp_substr(e.p_message, '(\{code=''NSCLIENT_IP'', value=''.*?\})', 1, 1) as p_mes_nsclient_ip*/
+
+
+    from u1.M_KASPISH_ORDERS o
+    left join u1.M_KASPISH_PAYMENTMODES pm on pm.pk = o.paymentmodepk
+    --order status code
+    left join u1.M_KASPISH_ENUMERATIONVALUES st on st.pk = o.statuspk
+    left join u1.M_KASPISH_ENUMERATIONVALUESLP stp on stp.itempk = st.pk and
+                                                      stp.langpk = 8796093317152 --M_KASPISH_LANGUAGES.pk наименования на русском
+    --order cancel reasons code
+    left join u1.M_KASPISH_ENUMERATIONVALUES st3 on st3.pk = o.p_cancellationreason
+    left join u1.M_KASPISH_ENUMERATIONVALUESLP stp3 on stp3.itempk = st3.pk and
+                                                       stp3.langpk = 8796093317152 --M_KASPISH_LANGUAGES.pk наименования на русском
+    --order status history
+    left join u1.M_KASPISH_ORDERHISTORYENTRIES e on e.p_order = o.pk and
+                                                    upper(e.p_description) = 'LOAN REQUESTED'
+    --order status history status code
+    left join u1.M_KASPISH_ENUMERATIONVALUES st2 on st2.pk = e.statuspk
+    left join u1.M_KASPISH_ENUMERATIONVALUESLP stp2 on stp2.itempk = st2.pk and
+                                                       stp2.langpk = 8796093317152--M_KASPISH_LANGUAGES.pk наименования на русском
+/*    where --e.p_message like '%SESSION%'
+    o.pk = 8822909730861*/
+
+--and st.typepkstring = '8796111863890'
+--order by e.createdts
+) x;
+grant select on U1.M_KASPISH_ONLINE_BUY_PROP to LOADDB;
+
+

@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_TMP_J_Z49_TO_ASOKR
+refresh force on demand
+as
+select distinct th.folder_id -- заявки, отправленные на АСОКР
+from M_FOLDER_CON_CANCEL ff
+join V_FOLDER_ALL_HISTORY th on th.folder_id = ff.folder_id
+where th.point_to_name = 'ПРОВЕРКА АСОКР' and
+      extract(year from th.line_time) = 2013 and
+      ff.is_refin = 0 and ff.is_point_active = 0;
+grant select on U1.M_TMP_J_Z49_TO_ASOKR to LOADDB;
+grant select on U1.M_TMP_J_Z49_TO_ASOKR to LOADER;
+
+

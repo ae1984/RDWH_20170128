@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_STAGE_Z#KAS_ONLINE_CLAIM_1D
+refresh force on demand
+as
+select * from rdwh.v_rfo_z#kas_online_claim_1d@rdwh_exd t;
+grant select on U1.M_STAGE_Z#KAS_ONLINE_CLAIM_1D to LOADDB;
+grant select on U1.M_STAGE_Z#KAS_ONLINE_CLAIM_1D to LOADER;
+
+

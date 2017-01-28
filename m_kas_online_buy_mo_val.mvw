@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_KAS_ONLINE_BUY_MO_VAL
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30)*/ *
+  from (
+        select b.*, value, field_code
+          from U1.V_RFO_Z#KAS_ONLINE_BUY b
+          join U1.V_RFO_Z#KAS_ONLINE_CLAIM c on       c.c_buy_ref = b.id
+          join U1.MO_SCO_REQUEST           t on       t.folder_id = c.c_folder_ref
+          join U1.MO_SCO_REQUEST_STR      tt on tt.sco_request_id = t.id
+                                            and tt.field_code in ( 'USER_AGENT',
+                                                                   'CLIENT_IP',
+                                                                   'ASPNET_SESSIONID',
+                                                                   'NSCLIENT_IP',
+                                                                   'REGISTERED',
+                                                                   'ANONYMOUS')
+        )
+
+ pivot (
+    max(value)
+    for field_code in ( 'USER_AGENT'       as USER_AGENT,
+                           'CLIENT_IP'        as CLIENT_IP,
+                           'ASPNET_SESSIONID' as ASPNET_SESSIONID,
+                           'NSCLIENT_IP'      as NSCLIENT_IP,
+                           'REGISTERED'       as REGISTERED,
+                           'ANONYMOUS'        as ANONYMOUS )
+        );
+grant select on U1.M_KAS_ONLINE_BUY_MO_VAL to DEK_USER;
+grant select on U1.M_KAS_ONLINE_BUY_MO_VAL to LOADDB;
+
+

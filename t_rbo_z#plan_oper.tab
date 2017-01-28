@@ -1,0 +1,112 @@
+﻿create table U1.T_RBO_Z#PLAN_OPER
+(
+  id                 NUMBER not null,
+  collection_id      NUMBER,
+  c_date             DATE,
+  c_oper             NUMBER,
+  c_summa            NUMBER(17,2),
+  c_valuta           NUMBER,
+  c_doc              NUMBER,
+  c_summa_exec       NUMBER(17,2),
+  c_num_oper         VARCHAR2(5 CHAR),
+  c_fact_opers       NUMBER,
+  c_fix_below_border VARCHAR2(1 CHAR),
+  c_date_begin       DATE,
+  c_reg_currency_sum NUMBER(17,2),
+  c_date_end         DATE,
+  c_reg_cur_sum_exec NUMBER(17,2),
+  c_is_executed      VARCHAR2(1 CHAR),
+  c_param            NUMBER,
+  c_outtime_sum      NUMBER(17,2),
+  class_id           VARCHAR2(16 CHAR),
+  c_prc_dig          NUMBER(10,6),
+  c_change           NUMBER(2),
+  c_full_exec        VARCHAR2(1 CHAR),
+  c_audit            NUMBER,
+  sn                 NUMBER,
+  su                 NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RBO_Z#PLAN_OPER
+  is 'Плановая операция по договору';
+comment on column U1.T_RBO_Z#PLAN_OPER.id
+  is 'Идентификатор плановой операции';
+comment on column U1.T_RBO_Z#PLAN_OPER.collection_id
+  is 'Ссылочное поле';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_date
+  is 'Дата';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_oper
+  is 'Операция(FK на Z#VID_OPER_DOG)';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_summa
+  is 'Сумма';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_valuta
+  is 'Валюта операции(FK на Z#FT_MONEY)';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_doc
+  is 'Ссылка на документ(FK на Z#DOCUMENT)';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_summa_exec
+  is 'Исполненная сумма';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_num_oper
+  is 'Уникальный номер операции';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_fix_below_border
+  is 'Признак фиксации нижней границы автоматического переформирования';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_date_begin
+  is 'Начало периода начисления';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_reg_currency_sum
+  is 'Сумма в валюте учёта';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_date_end
+  is 'Окончание периода начисления';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_reg_cur_sum_exec
+  is 'Исполненная сумма в валюте учёта';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_is_executed
+  is 'Признак выполнения операции';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_param
+  is 'Параметр планирования(FK на Z#PARAM_FOR_PLAN)';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_outtime_sum
+  is 'Сумма на просрочке';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_change
+  is 'Вариант изменения планового графика';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_full_exec
+  is 'Требует полного исполнения';
+comment on column U1.T_RBO_Z#PLAN_OPER.c_audit
+  is 'Аудит(COLLECTION в Z#AUDIT_LOG)';
+create index U1.T_RBO_Z#PLAN_OPER_IND1 on U1.T_RBO_Z#PLAN_OPER (COLLECTION_ID, C_DATE, C_OPER)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RBO_Z#PLAN_OPER_IND2 on U1.T_RBO_Z#PLAN_OPER (COLLECTION_ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_RBO_Z#PLAN_OPER to LOADDB;
+grant select on U1.T_RBO_Z#PLAN_OPER to LOADER;
+

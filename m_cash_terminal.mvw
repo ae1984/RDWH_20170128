@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_CASH_TERMINAL
+build deferred
+refresh complete on demand
+as
+select
+       cr.c_code as cash_reg_code,
+       cr.c_name as cash_reg_name,
+       kd.c_name   as cash_reg_group,
+       nc.c_name   as cash_reg_city,
+       pa.c_street as cash_reg_address,
+       p.class_id  as product,
+       p.id        as product_id,
+       vd.sys_name as cash_oper_name,
+       ad.c_amount as amount,
+       ad.c_document_date as document_date,
+       ad.c_date_prov     as prov_date,
+       cl.id              as rbo_client_id,
+       cl.c_name          as client_name,
+       cl.c_inn           as client_iin,
+       coalesce(dp.c_num_dog, pc.c_num_dog, rc.c_num_dog) as contract_number,
+       case when nvl(dd.c_has_timeout,0) = 1 and dp.id is not null then 'СБЕРЕГАТЕЛЬНЫЙ СЧЕТ'
+            when nvl(dd.c_has_timeout,0) = 0 and dp.id is not null then 'ТЕКУЩИЙ СЧЕТ'
+            when nvl(pc.c_is_purse,0) = 1    and pc.id is not null then 'КОШЕЛЕК'
+       end as type_contract,
+       ad.c_nazn          as nasn_pay,
+       ad.c_quit_doc_ref  as main_docum_id,
+       ad.id              as acash_doc_id
+  from u1.V_RBO_Z#KAS_CASH_REG          cr
+  join u1.V_RBO_Z#KAS_DIC               kd on kd.id = cr.c_group_ref
+  left join u1.V_RBO_Z#PERSONAL_ADDRESS pa on pa.id = cr.c_address_ref
+  left join u1.V_RBO_Z#NAMES_CITY       nc on nc.id = pa.c_city
+  join u1.T_RBO_Z#KAS_ACASH_DOC         ad on ad.c_device = cr.id
+  join u1.V_RBO_Z#VID_OPER_DOG          vd on vd.id = ad.c_oper_ref
+  left join u1.V_RBO_Z#PRODUCT           p on p.id = ad.c_product_ref
+  left join u1.V_RBO_Z#DEPN             dp on dp.id = ad.c_product_ref
+  left join u1.V_RBO_Z#VID_DEPOSIT      dd on dd.id = dp.c_vid_dog
+  left join u1.V_RBO_Z#KAS_PC_DOG       pc on pc.id = ad.c_product_ref
+  left join u1.V_RBO_Z#PR_CRED          rc on rc.id = ad.c_product_ref
+  left join u1.V_RBO_Z#CLIENT           cl on cl.id = coalesce(dp.c_client,pc.c_client_ref,rc.c_client)
+ where ad.state_id  = 'PROV';
+grant select on U1.M_CASH_TERMINAL to LOADDB;
+grant select on U1.M_CASH_TERMINAL to LOADER;
+
+

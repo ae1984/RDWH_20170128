@@ -1,0 +1,62 @@
+﻿create table U1.NT_SQL_PLAN_HIST
+(
+  sdt                  DATE,
+  address              RAW(8),
+  hash_value           NUMBER,
+  sql_id               VARCHAR2(13),
+  plan_hash_value      NUMBER,
+  full_plan_hash_value NUMBER,
+  child_address        RAW(8),
+  child_number         NUMBER,
+  timestamp            DATE,
+  operation            VARCHAR2(120),
+  options              VARCHAR2(120),
+  object_node          VARCHAR2(160),
+  object#              NUMBER,
+  object_owner         VARCHAR2(30),
+  object_name          VARCHAR2(30),
+  object_alias         VARCHAR2(65),
+  object_type          VARCHAR2(80),
+  optimizer            VARCHAR2(80),
+  id                   NUMBER,
+  parent_id            NUMBER,
+  depth                NUMBER,
+  position             NUMBER,
+  search_columns       NUMBER,
+  cost                 NUMBER,
+  cardinality          NUMBER,
+  bytes                NUMBER,
+  other_tag            VARCHAR2(140),
+  partition_start      VARCHAR2(256),
+  partition_stop       VARCHAR2(256),
+  partition_id         NUMBER,
+  other                VARCHAR2(4000),
+  distribution         VARCHAR2(80),
+  cpu_cost             NUMBER,
+  io_cost              NUMBER,
+  temp_space           NUMBER,
+  access_predicates    VARCHAR2(4000),
+  filter_predicates    VARCHAR2(4000),
+  projection           VARCHAR2(4000),
+  time                 NUMBER,
+  qblock_name          VARCHAR2(30),
+  remarks              VARCHAR2(4000),
+  con_id               NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_SQL_PLAN_HIST
+  is 'rdwh2.0 История планов запросов V$SQL_PLAN';
+grant select on U1.NT_SQL_PLAN_HIST to LOADDB;
+

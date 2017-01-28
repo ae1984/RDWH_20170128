@@ -1,0 +1,16 @@
+﻿create materialized view U1.V_RFO_Z#KAS_TUNE_COMS
+build deferred
+refresh complete on demand
+as
+select id,
+       sn,
+       su,
+       c_code,
+       c_name,
+       c_categs_arr,
+       c_grp_shops_arr
+  from ibs.Z#KAS_TUNE_COMS@rfo_snap;
+grant select on U1.V_RFO_Z#KAS_TUNE_COMS to LOADDB;
+grant select on U1.V_RFO_Z#KAS_TUNE_COMS to LOADER;
+
+

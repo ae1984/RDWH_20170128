@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_2
+refresh force on demand
+as
+select t.folder_id, --t.folder_date_create_mi, t.rfo_client_id,
+             count(case when is_credit_issued = 0 then t.folder_id end) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 1 preceding and current row) as cancel_fld_count_in_24h,
+             count(case when is_credit_issued = 0 then t.folder_id end) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 2 preceding and current row) as cancel_fld_count_in_48h,
+             count(case when is_credit_issued = 0 then t.folder_id end) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 7 preceding and current row) as cancel_fld_count_in_1w,
+             count(case when is_credit_issued = 0 then t.folder_id end) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 30 preceding and current row) as cancel_fld_count_in_1m
+      from (select folder_id, folder_date_create_mi, max(rfo_client_id) as rfo_client_id, max(is_credit_issued) as is_credit_issued
+           from M_FOLDER_CON_CANCEL
+           group by folder_id, folder_date_create_mi) t;
+grant select on U1.M_FOLDER_CON_MINER_2 to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER_2 to LOADER;
+
+

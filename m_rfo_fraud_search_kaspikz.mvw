@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_KASPIKZ
+build deferred
+refresh complete on demand
+as
+select fo.rfo_client_id,
+       fo.date_create,
+       fo.claim_id,
+       sum(case when trunc(kp.pay_date) >= trunc(fo.date_create) - 30 and kp.pay_date < trunc(fo.date_create)
+                then kp.pay_amount end) as sum_pay_kspkz_30_d,
+       (count(distinct case when trunc(kp.pay_date) >= trunc(fo.date_create) - 180 and kp.pay_date < trunc(fo.date_create)
+                            then trunc(kp.pay_date, 'mm') end)/6)*100 as share_month_kaspikz_6_m,
+       count(distinct case when trunc(kp.pay_date) >= add_months(trunc(fo.date_create),-24) and kp.pay_date < trunc(fo.date_create)
+                            and kp.category_name = 'MOBILE'
+                           then kp.pay_param_clear end) as count_mob_kspkz
+  from u1.M_FOLDER_CON_CANCEL_ONLINE_1 fo
+  left join u1.M_KASPIKZ_PAY           kp on kp.rfo_client_id = fo.rfo_client_id
+                                         and kp.pay_date <= fo.date_create
+                                         and kp.is_prov = 1
+ group by fo.rfo_client_id,
+       fo.date_create,
+       fo.claim_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_KASPIKZ to LOADDB;
+
+

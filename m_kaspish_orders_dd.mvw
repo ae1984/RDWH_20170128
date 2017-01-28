@@ -1,0 +1,78 @@
+﻿create materialized view U1.M_KASPISH_ORDERS_DD
+build deferred
+refresh force on demand
+as
+select
+  hjmpts,
+  typepkstring,
+  ownerpkstring,
+  modifiedts,
+  createdts,
+  pk,
+  discountonpayment,
+  currencypk,
+  totalprice,
+  deliverycost,
+  totaltax,
+  p_exportstatus,
+  code,
+  netflag,
+  deliverystatuspk,
+  --totaltaxvalues
+  paymentmodepk,
+  paymentstatuspk,
+  discountondelivery,
+  --globaldiscountvalues
+  deliveryaddresspk,
+  paymentaddresspk,
+  userpk,
+  paymentcost,
+  subtotal,
+  totaldiscounts,
+  paymentinfopk,
+  statuspk,
+  calculatedflag,
+  deliverymodepk,
+  statusinfo,
+  p_previousdeliverymode,
+  p_store,
+  p_site,
+  p_guid,
+  p_originalversion,
+  p_versionid,
+  p_fraudulent,
+  p_potentiallyfraudulent,
+  p_salesapplication,
+  p_language,
+  p_cancellationreason,
+  p_loanapplicationform,
+  p_invalidpersonalidentificatio,
+  p_securitycodeconfirmed,
+  p_documentidconfirmed,
+  p_signatureforloanrequired,
+  p_personalidentificationdocume,
+  p_invalidsmscodeattempts,
+  aclts,
+  propts,
+  p_notes,
+  p_fulfilmentstatus,
+  p_customernotificationemail,
+  p_returnenabled,
+  p_gaclientid,
+  p_guestcheckoutname,
+  p_orderstatuschangedate,
+  p_kaspibuttonproduct,
+  p_kaspibuttonmerchant,
+  p_kaspideliverycost,
+  p_signatureforloanrequiredfirs,
+  p_deliverydate,
+  p_deliverytimeoutdate,
+  p_signaturedate,
+  p_orderdeliverypostponeddays,
+  p_customernotificationwassent
+from kaspi.orders@ks_std t
+where rownum >=0
+      and createdts >= trunc(sysdate);
+grant select on U1.M_KASPISH_ORDERS_DD to LOADDB;
+
+

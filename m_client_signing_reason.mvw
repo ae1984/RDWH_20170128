@@ -1,0 +1,34 @@
+﻿create materialized view U1.M_CLIENT_SIGNING_REASON
+refresh force on demand
+as
+select client_iin, min(no_signing_reason) as no_signing_reason
+    from (
+        select dd.client_iin, 1 as no_signing_reason -- клиенты с активными договорами с версией ГУ 2 и выше
+        from u1.V_DWH_PORTFOLIO_CURRENT dd
+        join (
+            select dd.client_iin, max(c.gu_version) as gu_version
+            from u1.V_CONTRACT_ALL_RFO c
+            join u1.V_DWH_PORTFOLIO_CURRENT dd on dd.deal_number = c.contract_number
+            where dd.client_iin is not null and dd.x_is_credit_issued = 1 and
+                  dd.x_is_card = 1 and dd.is_credit_active = 1
+            group by dd.client_iin
+        ) g on g.client_iin = dd.client_iin
+        where dd.client_iin is not null and dd.x_is_credit_issued = 1 and
+              dd.is_credit_active = 1 and
+              g.gu_version >= 2
+        union
+        select dd.client_iin, 2 as no_signing_reason -- клиенты, которые получали кредиты с 1 февраля 2012
+        from u1.V_DWH_PORTFOLIO_CURRENT dd
+        where dd.client_iin is not null and dd.x_is_credit_issued = 1 and
+              dd.begin_date >= to_date('2012-02-01','yyyy-mm-dd')
+        union
+        select f.iin as client_iin, 3 as no_signing_reason -- отказные досье с августа 2014
+        from u1.M_FOLDER_CON_CANCEL f
+        where f.iin is not null and f.is_credit_issued = 0 and
+              f.folder_date_create_mi >= to_date('2014-08-01','yyyy-mm-dd')
+    ) x
+    group by client_iin;
+grant select on U1.M_CLIENT_SIGNING_REASON to LOADDB;
+grant select on U1.M_CLIENT_SIGNING_REASON to LOADER;
+
+

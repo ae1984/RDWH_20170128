@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_TMP_J_G_OPT
+refresh complete on demand
+as
+select * from V_TMP_J_G_OPT;
+grant select on U1.M_TMP_J_G_OPT to LOADDB;
+grant select on U1.M_TMP_J_G_OPT to LOADER;
+
+

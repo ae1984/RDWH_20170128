@@ -1,0 +1,17 @@
+﻿create materialized view U1.V_REPORT_CAL_1_PRE_01_CON
+build deferred
+refresh complete on demand
+as
+select /*+ parallel(30)*/
+       dd.contract_no,
+       max(dd.yy_mm_report) as contract_last_yy_mm_report,
+       nvl2(min(dd.start_date), to_char(min(dd.start_date), 'yyyy - mm'), null) as start_date_first,
+       nvl2(max(dd.start_date), to_char(max(dd.start_date), 'yyyy - mm'), null) as start_date_last,
+       max(rp.is_refin_restruct) as is_refin_restruct_ever
+  from V_DATA_ALL dd
+  left join REF_PRODUCTS rp on rp.product_program = dd.product_programm
+ group by dd.contract_no;
+grant select on U1.V_REPORT_CAL_1_PRE_01_CON to LOADDB;
+grant select on U1.V_REPORT_CAL_1_PRE_01_CON to LOADER;
+
+

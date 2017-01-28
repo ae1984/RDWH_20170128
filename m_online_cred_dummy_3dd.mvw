@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_ONLINE_CRED_DUMMY_3DD
+build deferred
+refresh force on demand
+as
+select /*+parallel(5)*/ *
+from M_ONLINE_CRED_DUMMY_3DD_PRE
+pivot (
+  max(param_value) val
+  for param_code in ('MO_SCO_IS_CTRL_GR_8' as is_dummy_8,
+                     'MO_SCO_IS_CTRL_GR_81' as is_dummy_81,
+                     'MO_SCO_REJECT_PRE_8' as is_reject_8,
+                     'MO_SCO_REJECT_PRE_81' as is_reject_81,
+                     'IN_SCO_FOLDER_ID' as rfo_folder_id)
+);
+grant select on U1.M_ONLINE_CRED_DUMMY_3DD to LOADDB;
+grant select on U1.M_ONLINE_CRED_DUMMY_3DD to LOAD_MO;
+
+

@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_OUT_DWH_SEGMENT_GROUP
+build deferred
+refresh force on demand
+as
+select
+id,
+name,
+group_type,
+actual,
+contact_any_count,
+contact_deactive_count,
+photo_min_result_count,
+photo_ver_count,
+schema_type,
+biggroup_id
+FROM VERIFICATOR.H_SEGMENT_GROUP@VERIFAIS;
+grant select on U1.M_OUT_DWH_SEGMENT_GROUP to LOADDB;
+grant select on U1.M_OUT_DWH_SEGMENT_GROUP to LOADER;
+
+

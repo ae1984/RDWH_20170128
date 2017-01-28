@@ -1,0 +1,9 @@
+﻿create materialized view U1.MV_TEST_ETL
+build deferred
+refresh force on demand
+as
+select *
+    from dual;
+grant select on U1.MV_TEST_ETL to LOADDB;
+
+

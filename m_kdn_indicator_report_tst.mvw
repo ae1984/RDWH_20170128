@@ -1,0 +1,456 @@
+﻿create materialized view U1.M_KDN_INDICATOR_REPORT_TST
+build deferred
+refresh complete on demand
+as
+select /*+ parallel(30)*/ count(distinct c.folder_id)   as dist_cnt,
+       c.is_credit_issued            as is_credit_issued,
+       c.cr_program_name             as cr_program_name,
+       case
+         when b.kdn >45 and c.is_Credit_issued = 1 then
+           45
+         else
+           b.kdn
+       end                           as kdn_new,
+       case
+         when round(kdn.kdn_form_gcvp_max)>=100 then
+           100
+         else
+           round(kdn.kdn_form_gcvp_max)
+       end as kdn_form,
+       case
+         when round(kdn.kdn_gcvp)>= 100 then
+           100
+         else
+           round(kdn.kdn_gcvp)
+       end                           as kdn_gcvp,
+       c.mon_                        as mon_
+  from ( select /*+ parallel(30)*/
+                cc.folder_id                           as folder_id,
+                cc.is_credit_issued                    as is_credit_issued,
+                c.client_fresh_ar1                     as client_fresh_ar1,
+                c.contract_amount_ar1                  as contract_amount_ar1,
+                c.contract_term_months                 as contract_term_months,
+                c.sc_dnp_name                          as sc_dnp_name,
+                c.gcvp_sal_to_sal_grp_ar1              as gcvp_sal_to_sal_grp_ar1,
+                to_char(date_create,'yyyy - mm')       as mon_,
+                cr_program_name                        as cr_program_name,
+                case
+                  when cl.folder_id is not null then
+                    1
+                  else
+                    0
+                end                                    as is_appr_rule,
+                case
+                  when cd.del_days_max_x >= 60 or cd.is_ever_refin_contract is not null then
+                    total_debt_x * -1
+                  else
+                    0.4 * max_debt_used_x
+                end                                    as profit,
+                cc.contract_amount                     as con_amt_mln,
+                cc.rfo_contract_id                     as rfo_contract_id,
+                /*case
+                  when b.sc_client_fresh_ar1 is not null then
+                    1
+                  else
+                    0
+                end                                    as is_cut_off,*/
+                cd.total_debt_x_pmt_1_0                as debt_fpd_0,
+                cd.max_debt_used_x_pmt_1_0             as max_debt_used_fpd_0,
+                cd.total_debt_x_pmt_1_7                as debt_fpd_7,
+                cd.max_debt_used_x_pmt_1_7             as max_debt_used_fpd_7,
+                cd.total_debt_x_pmt_1_30               as debt_fpd_30,
+                cd.max_debt_used_x_pmt_1_30            as max_debt_used_fpd_30,
+                case
+                  when cd.del_days_max_x >= 60 then
+                    cd.total_debt_x
+                end as debt_del_60_ever,
+                cd.max_debt_used_x                     as max_debt_used
+          from (select /*+ parallel(30)*/ *
+                   from (
+                        select /*+ parallel(30)*/ a.*,
+                               row_number () over (partition by folder_id order by date_create desc) as rn
+                          from U1.M_AR_KN_LKN a
+                         where a.gcvp_sal_to_sal_grp_ar1 is not null
+                        )
+                  where rn = 1 )  c
+/*               left join RISK_AKNAZAR.T_CUT_OFF_LKN_KN15 b on     to_char(c.contract_amount_ar1) = b.sc_contract_amount_ar1
+                                                          and        to_char(c.client_fresh_ar1) = b.sc_client_fresh_ar1
+                                                          and to_char(c.gcvp_sal_to_sal_grp_ar1) = b.sc_gcvp_sal_to_sal_grp_ar1
+                                                          and    to_char(c.contract_term_months) = b.sc_contract_term_months
+                                                          and             to_char(c.sc_dnp_name) = b.sc_dnp_name*/
+               left join U1.M_FOLDER_CON_CANCEL         cc on                        c.folder_id = cc.folder_id
+               left join U1.M_RBO_CONTRACT_BAS          b1 on                 cc.contract_number = b1.contract_number
+                                                          and                       cc.folder_id = b1.folder_id_first
+               left join U1.M_RBO_CONTRACT_DEL          cd on                 b1.rbo_contract_id = cd.rbo_contract_id
+               left join (select distinct folder_id
+                            from U1.M_FOLDER_MO_CANCEL_LAST cl
+                           where is_rejecting = 0 )     cl on                        c.folder_id = cl.folder_id
+
+         where cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ','ЛУЧШИЙ КЛИЕНТ – НАЛИЧНЫЕ')
+           and trunc(c.date_create) >= to_Date('01.01.2014','dd.mm.yyyy')
+           and c.client_fresh_ar1 is not null ) c
+       left  join U1.M_MATRIX_KDN_2 kdn on                        c.folder_id = kdn.folder_id
+       left  join ( select q.*,
+                           case
+                             when rn > 395 then
+                               round(rn / 395, 0)
+                             else
+                               0
+                           end        as kdn
+                      from ( select q.*,
+                                    row_number () over (order by avg_profit_per_con desc) as rn
+                               from (
+                                     select c.client_fresh_ar1,c.contract_amount_ar1,c.contract_term_months,c.sc_dnp_name,c.gcvp_sal_to_sal_grp_ar1,
+                                     sum(c.profit) as grp_profit,
+                                     count(c.rfo_contract_id) cnt_in_grp,
+                                     sum(c.profit)/count(distinct c.rfo_contract_id) as avg_profit_per_con
+                                from --risk_aaman.new_kdn_small_kn c
+                                     ( select /*+ parallel(30)*/
+                                              cc.folder_id                           as folder_id,
+                                              cc.is_credit_issued                    as is_credit_issued,
+                                              c.client_fresh_ar1                     as client_fresh_ar1,
+                                              c.contract_amount_ar1                  as contract_amount_ar1,
+                                              c.contract_term_months                 as contract_term_months,
+                                              c.sc_dnp_name                          as sc_dnp_name,
+                                              c.gcvp_sal_to_sal_grp_ar1              as gcvp_sal_to_sal_grp_ar1,
+                                              to_char(date_create,'yyyy - mm')       as mon_,
+                                              cr_program_name                        as cr_program_name,
+                                              case
+                                                when cl.folder_id is not null then
+                                                  1
+                                                else
+                                                  0
+                                              end                                    as is_appr_rule,
+                                              case
+                                                when cd.del_days_max_x >= 60 or cd.is_ever_refin_contract is not null then
+                                                  total_debt_x * -1
+                                                else
+                                                  0.4 * max_debt_used_x
+                                              end                                    as profit,
+                                              cc.contract_amount                     as con_amt_mln,
+                                              cc.rfo_contract_id                     as rfo_contract_id,
+                                              /*case
+                                                when b.sc_client_fresh_ar1 is not null then
+                                                  1
+                                                else
+                                                  0
+                                              end                                    as is_cut_off,*/
+                                              cd.total_debt_x_pmt_1_0                as debt_fpd_0,
+                                              cd.max_debt_used_x_pmt_1_0             as max_debt_used_fpd_0,
+                                              cd.total_debt_x_pmt_1_7                as debt_fpd_7,
+                                              cd.max_debt_used_x_pmt_1_7             as max_debt_used_fpd_7,
+                                              cd.total_debt_x_pmt_1_30               as debt_fpd_30,
+                                              cd.max_debt_used_x_pmt_1_30            as max_debt_used_fpd_30,
+                                              case
+                                                when cd.del_days_max_x >= 60 then
+                                                  cd.total_debt_x
+                                              end as debt_del_60_ever,
+                                              cd.max_debt_used_x                     as max_debt_used
+                                        from (select /*+ parallel(30)*/ *
+                                                 from (
+                                                      select /*+ parallel(30)*/ a.*,
+                                                             row_number () over (partition by folder_id order by date_create desc) as rn
+                                                        from U1.M_AR_KN_LKN a
+                                                       where a.gcvp_sal_to_sal_grp_ar1 is not null
+                                                      )
+                                                where rn = 1 )  c
+                                             /*left join RISK_AKNAZAR.T_CUT_OFF_LKN_KN15 b on     to_char(c.contract_amount_ar1) = b.sc_contract_amount_ar1
+                                                                                        and        to_char(c.client_fresh_ar1) = b.sc_client_fresh_ar1
+                                                                                        and to_char(c.gcvp_sal_to_sal_grp_ar1) = b.sc_gcvp_sal_to_sal_grp_ar1
+                                                                                        and    to_char(c.contract_term_months) = b.sc_contract_term_months
+                                                                                        and             to_char(c.sc_dnp_name) = b.sc_dnp_name*/
+                                             left join U1.M_FOLDER_CON_CANCEL         cc on                        c.folder_id = cc.folder_id
+                                             left join U1.M_RBO_CONTRACT_BAS          b1 on                 cc.contract_number = b1.contract_number
+                                                                                        and                       cc.folder_id = b1.folder_id_first
+                                             left join U1.M_RBO_CONTRACT_DEL          cd on                 b1.rbo_contract_id = cd.rbo_contract_id
+                                             left join (select distinct folder_id
+                                                          from U1.M_FOLDER_MO_CANCEL_LAST cl
+                                                         where is_rejecting = 0 )     cl on                        c.folder_id = cl.folder_id
+
+                                       where cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ','ЛУЧШИЙ КЛИЕНТ – НАЛИЧНЫЕ')
+                                         and trunc(c.date_create) >= to_Date('01.01.2014','dd.mm.yyyy')
+                                         and c.client_fresh_ar1 is not null ) c
+                                     left join U1.T_CUT_OFF_LKN_KN15 b on     to_char(c.contract_amount_ar1) = b.sc_contract_amount_ar1
+                                                                                and        to_char(c.client_fresh_ar1) = b.sc_client_fresh_ar1
+                                                                                and to_char(c.gcvp_sal_to_sal_grp_ar1) = b.sc_gcvp_sal_to_sal_grp_ar1
+                                                                                and    to_char(c.contract_term_months) = b.sc_contract_term_months
+                                                                                and             to_char(c.sc_dnp_name) = b.sc_dnp_name
+
+                               where c.mon_ < to_char(sysdate - 365, 'yyyy - mm')
+                                 and b.sc_client_fresh_ar1 is null
+                                 and profit is not null
+                                 and is_credit_issued = 1
+                               group by c.client_fresh_ar1,
+                                        c.contract_amount_ar1,
+                                        c.contract_term_months,
+                                        c.sc_dnp_name,
+                                        c.gcvp_sal_to_sal_grp_ar1 ) q
+                           ) q
+
+                     union all
+
+                    select q.*,
+                           rn + 45  as kdn
+                      from (
+                            select q.*,
+                                   row_number () over (order by avg_profit_per_con desc) as rn
+                              from (
+                                    select c.client_fresh_ar1,c.contract_amount_ar1,c.contract_term_months,c.sc_dnp_name,c.gcvp_sal_to_sal_grp_ar1,
+                                           sum(c.profit) as grp_profit,
+                                           sum(c.dist_cnt) cnt_in_grp,
+                                           sum(c.profit)/sum(c.dist_cnt) as avg_profit_per_con
+
+                                      from --risk_aaman.new_kdn_small_kn c
+                                           ( select /*+ parallel(30)*/
+                                                    cc.folder_id                           as folder_id,
+                                                    cc.is_credit_issued                    as is_credit_issued,
+                                                    c.client_fresh_ar1                     as client_fresh_ar1,
+                                                    c.contract_amount_ar1                  as contract_amount_ar1,
+                                                    c.contract_term_months                 as contract_term_months,
+                                                    c.sc_dnp_name                          as sc_dnp_name,
+                                                    c.gcvp_sal_to_sal_grp_ar1              as gcvp_sal_to_sal_grp_ar1,
+                                                    to_char(date_create,'yyyy - mm')       as mon_,
+                                                    cr_program_name                        as cr_program_name,
+                                                    case
+                                                      when cl.folder_id is not null then
+                                                        1
+                                                      else
+                                                        0
+                                                    end                                    as is_appr_rule,
+                                                    case
+                                                      when cd.del_days_max_x >= 60 or cd.is_ever_refin_contract is not null then
+                                                        total_debt_x * -1
+                                                      else
+                                                        0.4 * max_debt_used_x
+                                                    end                                    as profit,
+                                                    cc.contract_amount                     as con_amt_mln,
+                                                    cc.rfo_contract_id                     as dist_cnt,
+                                                    case
+                                                      when b.sc_client_fresh_ar1 is not null then
+                                                        1
+                                                      else
+                                                        0
+                                                    end                                    as is_cut_off,
+                                                    cd.total_debt_x_pmt_1_0                as debt_fpd_0,
+                                                    cd.max_debt_used_x_pmt_1_0             as max_debt_used_fpd_0,
+                                                    cd.total_debt_x_pmt_1_7                as debt_fpd_7,
+                                                    cd.max_debt_used_x_pmt_1_7             as max_debt_used_fpd_7,
+                                                    cd.total_debt_x_pmt_1_30               as debt_fpd_30,
+                                                    cd.max_debt_used_x_pmt_1_30            as max_debt_used_fpd_30,
+                                                    case
+                                                      when cd.del_days_max_x >= 60 then
+                                                        cd.total_debt_x
+                                                    end as debt_del_60_ever,
+                                                    cd.max_debt_used_x                     as max_debt_used
+                                              from ( select /*+ parallel(30)*/ *
+                                                       from (
+                                                            select /*+ parallel(30)*/ a.*,
+                                                                   row_number () over (partition by folder_id order by date_create desc) as rn
+                                                              from U1.M_AR_KN_LKN a
+                                                             where a.gcvp_sal_to_sal_grp_ar1 is not null
+                                                            )
+                                                      where rn = 1 )  c
+                                                   left join U1.T_CUT_OFF_LKN_KN15 b on     to_char(c.contract_amount_ar1) = b.sc_contract_amount_ar1
+                                                                                              and        to_char(c.client_fresh_ar1) = b.sc_client_fresh_ar1
+                                                                                              and to_char(c.gcvp_sal_to_sal_grp_ar1) = b.sc_gcvp_sal_to_sal_grp_ar1
+                                                                                              and    to_char(c.contract_term_months) = b.sc_contract_term_months
+                                                                                              and             to_char(c.sc_dnp_name) = b.sc_dnp_name
+                                                   left join U1.M_FOLDER_CON_CANCEL         cc on                        c.folder_id = cc.folder_id
+                                                   left join U1.M_RBO_CONTRACT_BAS          b1 on                 cc.contract_number = b1.contract_number
+                                                                                              and                       cc.folder_id = b1.folder_id_first
+                                                   left join U1.M_RBO_CONTRACT_DEL          cd on                 b1.rbo_contract_id = cd.rbo_contract_id
+                                                   left join (select distinct folder_id
+                                                                from U1.M_FOLDER_MO_CANCEL_LAST cl
+                                                               where is_rejecting = 0 )     cl on                        c.folder_id = cl.folder_id
+
+                                             where cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ','ЛУЧШИЙ КЛИЕНТ – НАЛИЧНЫЕ')
+                                               and trunc(c.date_create) >= to_Date('01.01.2014','dd.mm.yyyy')
+                                               and c.client_fresh_ar1 is not null
+                                           ) c
+                                           inner join U1.T_CUT_OFF_LKN_KN15 b on     to_char(c.contract_amount_ar1) = b.sc_contract_amount_ar1
+                                                                                       and        to_char(c.client_fresh_ar1) = b.sc_client_fresh_ar1
+                                                                                       and to_char(c.gcvp_sal_to_sal_grp_ar1) = b.sc_gcvp_sal_to_sal_grp_ar1
+                                                                                       and    to_char(c.contract_term_months) = b.sc_contract_term_months
+                                                                                       and             to_char(c.sc_dnp_name) = b.sc_dnp_name
+
+                             where c.mon_ < to_char(sysdate - 365, 'yyyy - mm')
+                             group by c.client_fresh_ar1,
+                                      c.contract_amount_ar1,
+                                      c.contract_term_months,
+                                      c.sc_dnp_name,
+                                      c.gcvp_sal_to_sal_grp_ar1 ) q
+                           ) q
+                       ) b on     to_char(c.contract_amount_ar1) = b.contract_amount_ar1
+                          and        to_char(c.client_fresh_ar1) = b.client_fresh_ar1
+                          and to_char(c.gcvp_sal_to_sal_grp_ar1) = b.gcvp_sal_to_sal_grp_ar1
+                          and    to_char(c.contract_term_months) = b.contract_term_months
+                          and             to_char(c.sc_dnp_name) = b.sc_dnp_name
+-- where c.mon_ =  '2016 - 04'
+ group by c.is_credit_issued,
+          case
+            when b.kdn >45 and c.is_Credit_issued = 1 then
+              45
+            else
+              b.kdn
+          end,
+          case
+            when round(kdn.kdn_form_gcvp_max) >= 100 then
+              100
+            else
+              round(kdn.kdn_form_gcvp_max)
+          end,
+          case
+            when round(kdn.kdn_gcvp) >= 100 then
+              100
+            else
+              round(kdn.kdn_gcvp)
+          end,
+          cr_program_name, c.mon_
+
+ union all
+
+select count(distinct cq.rfo_contract_id)     as dist_cnt,
+       cq.is_credit_issued  as is_credit_issued,
+       cq.product           as cr_program_name,
+       cq.new_kdn           as new_kdn,
+       case
+         when round(cq.kdn_form)>=100 then
+           100
+         else
+           round(cq.kdn_form)
+       end as kdn_form,
+       case
+         when round(cq.kdn_gcvp)>= 100 then
+           100
+         else
+           round(cq.kdn_gcvp)
+       end                  as kdn_gcvp,
+       cq.mon_              as mon_
+  from --risk_aaman.new_kdn_analysis cq
+       ( select cc.is_credit_issued                           as is_credit_issued,
+                to_char(cc.folder_date_create_mi,'yyyy - mm') as mon_,
+                case
+                  when process_name like '%ОНЛАЙН%' then
+                    'ONLINE'
+                  else
+                    cr_program_name
+                end                                           as product,
+                cc.product_type,
+                case
+                  when cc.is_Categ_a = 1 then
+                    'Category A'
+                  when cc.is_Categ_b = 1 then
+                    'Category B'
+                  when cc.is_categ_b = 0 and cc.is_Client_new_by_con = 0 then
+                    'Category C'
+                  when cc.is_categ_b = 0 and cc.is_Client_new_by_con = 1 then
+                    'New client'
+                end                                           as client_categ,
+                case
+                  when cl.folder_id is null then
+                    0
+                  else
+                    1
+                end                                           as is_appr_rule,
+                cc.contract_amount                            as con_amt_mln,
+                cc.rfo_contract_id                            as rfo_contract_id,
+                cd.total_debt_x_pmt_1_0                       as debt_fpd_0,
+                cd.max_debt_used_x_pmt_1_0                    as max_debt_used_fpd_0,
+                cd.total_debt_x_pmt_1_7                       as debt_fpd_7,
+                cd.max_debt_used_x_pmt_1_7                    as max_debt_used_fpd_7,
+                cd.total_debt_x_pmt_1_30                      as debt_fpd_30,
+                cd.max_debt_used_x_pmt_1_30                   as max_debt_used_fpd_30,
+                case
+                  when cd.del_days_max_x >= 60 then
+                    cd.total_debt_x
+                end                                           as debt_del_60_ever,
+                cd.max_debt_used_x                            as max_debt_used,
+                round(sc_card_ekt_8_fraud, 0)                 as sc_8_fr_old,
+                case
+                  when cc.cr_program_name = 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР' and cl.folder_id is not null and round(sc_card_ekt_8_fraud,0)<140 then
+                    round(sc_card_ekt_8_fraud, 0) + 140
+                  else
+                    round(sc_card_ekt_8_fraud,0)
+                end                                           as sc_8_fr,
+                case
+                  when cc.cr_program_name in ( 'КРЕДИТ НАЛИЧНЫМИ',
+                                               'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ',
+                                               'ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)'
+                                             ) and cl.folder_id is not null then
+                    round(sc_card_2_18_22 / 4,0)
+                  else
+                    round(sc_card_2_18_22,0)
+                end                                           as sc_knp_kn,
+                round(sc_card_2_18_22,0) sc_knp_old,
+                case
+                  when round(kdn.kdn_form_gcvp_max) >= 100 then
+                    100
+                  else
+                    round(kdn.kdn_form_gcvp_max)
+                end                                           as kdn_form,
+                case
+                  when round(kdn.kdn_gcvp) >= 100 then
+                    100
+                  else
+                    round(kdn.kdn_gcvp)
+                end                                           as kdn_gcvp,
+                case
+                  when cc.cr_program_name in ( 'КРЕДИТ НАЛИЧНЫМИ',
+                                               'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ',
+                                               'ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)'
+                                             ) then
+                    case
+                      when (10 - 10 * exp(15 * round(sc_card_2_18_22, 0) / 100) / exp(4)) < 0 and cc.is_credit_issued = 1 then
+                        45
+                      when (10 - 10 * exp(15 * round(sc_card_2_18_22, 0) / 100) / exp(4)) < 0 and cc.is_credit_issued = 0 then
+                        round(sc_card_2_18_22,0)/5*9
+                      else round(sc_card_2_18_22, 0) / 5 * 9 + (10 - 10 * exp(15 * round(sc_card_2_18_22, 0) / 100)/ exp(4))
+                    end
+                  when cr_program_name in ('ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР') then
+                    case
+                      when round(sc_card_ekt_8_fraud,0)<140 and cc.is_credit_issued = 1 then
+                        45
+                      when round(sc_card_ekt_8_fraud,0)<131 and cc.is_credit_issued = 0 then
+                        10480 / round(sc_card_ekt_8_fraud,0)
+                      when round(sc_card_ekt_8_fraud,0)>=131  then
+                        45-13.6 * LN((round(sc_card_ekt_8_fraud, 0) - 140 + 10) / 10)
+                    end
+                end                                           as new_kdn
+           from U1.M_FOLDER_CON_CANCEL cc
+                left join ( select folder_id, sc_card_2_18_22, c.sc_card_ekt_8_fraud, c.sc_card_ekt_8_bw, date_create from U1.M_FOLDER_MO_SC_BAL_2014 c
+                             union all
+                            select folder_id, sc_card_2_18_22, c.sc_card_ekt_8_fraud, c.sc_card_ekt_8_bw, date_create from U1.M_FOLDER_MO_SC_BAL_2015 c
+                             union all
+                            select folder_id, sc_card_2_18_22, c.sc_card_ekt_8_fraud, c.sc_card_ekt_8_bw, date_create from U1.M_FOLDER_MO_SC_BAL_2016 c
+                           ) c on c.folder_id = cc.folder_id
+                left join ( select distinct folder_id from U1.M_FOLDER_MO_CANCEL_LAST cl where is_rejecting = 0) cl on cc.folder_id = cl.folder_id
+                left join u1.m_rbo_contract_bas  b on cc.contract_number  = b.contract_number
+                                                  and        cc.folder_id = b.folder_id_first
+                left join U1.M_RBO_CONTRACT_DEL cd on   b.rbo_contract_id = cd.rbo_contract_id
+                left join U1.M_MATRIX_KDN_2    kdn on        cc.folder_id = kdn.folder_id
+          where cc.product_type in ('ДЕНЬГИ','ТОВАРЫ')
+            and cc.cr_program_name in ( 'КРЕДИТ НАЛИЧНЫМИ',
+                                        'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ',
+                                        'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР',
+                                        'ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)'  )
+            and trunc(cc.folder_date_create_mi)>= to_date('01.08.2014','dd.mm.yyyy')
+       ) cq
+-- where cq.mon_ = '2016 - 04'
+ group by product,
+          is_credit_issued,
+          cq.new_kdn, cq.mon_,
+          case
+            when round(cq.kdn_form) >= 100 then
+              100
+            else
+              round(cq.kdn_form)
+          end,
+          case
+            when round(cq.kdn_gcvp)>= 100 then
+              100
+            else
+              round(cq.kdn_gcvp)
+          end;
+grant select on U1.M_KDN_INDICATOR_REPORT_TST to LOADDB;
+
+

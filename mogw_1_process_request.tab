@@ -1,0 +1,30 @@
+﻿create table U1.MOGW_1_PROCESS_REQUEST
+(
+  id                  NUMBER not null,
+  date_create         TIMESTAMP(6) not null,
+  is_async            NUMBER(1) not null,
+  date_prepared       TIMESTAMP(6),
+  date_mo_call        TIMESTAMP(6),
+  kas_prd_count       NUMBER,
+  date_queue_add      TIMESTAMP(6),
+  date_queue_start    TIMESTAMP(6),
+  kas_prd_count_queue NUMBER,
+  date_mo2_call       TIMESTAMP(6),
+  date_end            TIMESTAMP(6)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MOGW_1_PROCESS_REQUEST to LOADDB;
+grant select on U1.MOGW_1_PROCESS_REQUEST to LOADER;
+

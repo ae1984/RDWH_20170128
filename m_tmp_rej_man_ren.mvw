@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_TMP_REJ_MAN_REN
+refresh force on demand
+as
+select a.folder_date_create_mi,
+         a.yyyy_mm_dd,
+         a.folder_id,
+         listagg(upper(a.cancel_type_name),';')within group (order by a.cancel_type_name) as cancel_type_name
+  from (
+      select /*+ parallel(15) */  distinct
+           t.folder_date_create_mi,
+           to_char(t.folder_date_create_mi,'yyyy-mm-dd') as yyyy_mm_dd,
+           t.folder_id,
+           c.cancel_type_name
+           --f.manager_result_note
+      from M_FOLDER_CON_CANCEL t
+      join V_CANCEL c on c.folder_id = t.folder_id
+      join V_FOLDER_ALL_RFO f on f.folder_id = t.folder_id
+      where t.is_credit_issued = 0 and t.is_refin = 0 and
+          t.folder_date_create_mi >=add_months(trunc(sysdate)-1,-13)
+                                  and t.folder_date_create_mi < trunc(sysdate) and-- период
+          t.cancel_manager is not null and
+          (c.cancel_type_group in ('MANAGER') or (c.cancel_type_group in ('CLIENT_PC_TO_EKT') and
+                                                upper(c.cancel_notes) like '%ОТКАЗАЛСЯ%'))and
+          --t.cancel_controller is null and
+          t.cancel_client is null and t.cancel_controller is null and
+          t.cr_program_name not in('РЕВОЛЬВЕРНЫЕ КАРТЫ', 'ОСОБЕННЫЙ КЛИЕНТ - КК', 'PC.ПОСТОЯННЫЙ КЛИЕНТ','PC. ЛУЧШИЙ КЛИЕНТ' )
+    ) a group by a.folder_date_create_mi, a.yyyy_mm_dd, a.folder_id;
+grant select on U1.M_TMP_REJ_MAN_REN to LOADDB;
+grant select on U1.M_TMP_REJ_MAN_REN to LOADER;
+
+

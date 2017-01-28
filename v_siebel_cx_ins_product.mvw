@@ -1,0 +1,12 @@
+﻿create materialized view U1.V_SIEBEL_CX_INS_PRODUCT
+using no index
+refresh complete on demand
+as
+select t.row_id, t.created, t.code, t.date_start, t.name, t.bank_account_flg,
+       t.percent, t.percent_max, t.percent_min, t.prolongation_flag,
+       t.rate_calc_flag, t.product_abr, t.exp_notification
+from SIEBEL.CX_INS_PRODUCT@AMSG_PROD t;
+grant select on U1.V_SIEBEL_CX_INS_PRODUCT to LOADDB;
+grant select on U1.V_SIEBEL_CX_INS_PRODUCT to LOADER;
+
+

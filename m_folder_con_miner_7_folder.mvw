@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_7_FOLDER
+refresh force on demand
+as
+select f2.folder_id,
+      max(c2.start_total_fact_pmts_by_cli) keep (dense_rank last order by c2.start_date_last) start_total_fact_pmts_by_cli,
+      max(c2.start_con_del_days_max_by_cli) keep (dense_rank last order by c2.start_date_last) start_con_del_days_max_by_cli,
+      max(c2.start_num_of_con_by_cli) keep (dense_rank last order by c2.start_date_last) start_num_of_con_by_cli,
+      max(c2.start_num_of_con_by_cli_pr_rep) keep (dense_rank last order by c2.start_date_last) start_num_of_con_by_cli_pr_rep,
+      max(c2.start_con_amount_max_by_cli) keep (dense_rank last order by c2.start_date_last) start_con_amount_max_by_cli,
+      max(c2.start_pmt_max_by_cli) keep (dense_rank last order by c2.start_date_last) start_pmt_max_by_cli
+from M_FOLDER_CON_CANCEL f2
+left join V_CONTRACT_CAL c2 on c2.client_iin_last = f2.iin and
+                              c2.start_date_last < f2.folder_date_create_mi
+where f2.folder_date_create_mi > to_date('2010-01-01','yyyy-mm-dd')
+ and f2.is_credit_issued = 0
+group by  f2.folder_id;
+grant select on U1.M_FOLDER_CON_MINER_7_FOLDER to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER_7_FOLDER to LOADER;
+
+

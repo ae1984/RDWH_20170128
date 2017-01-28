@@ -1,0 +1,7 @@
+﻿create sequence U1.DAILY_UPDATE_EVENT_SEQ
+minvalue 1
+maxvalue 9999999999999999999999999999
+start with 62865
+increment by 1
+nocache;
+

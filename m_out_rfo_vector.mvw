@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_OUT_RFO_VECTOR
+build deferred
+refresh force on demand
+as
+select t.c_code as vector_code,
+       t.c_name as vector_name
+from u1.v_rfo_z#kas_universal_d t
+where t.c_grouping = 'VECTOR_GROUP';
+grant select on U1.M_OUT_RFO_VECTOR to ESB_USER;
+grant select on U1.M_OUT_RFO_VECTOR to LOADDB;
+
+

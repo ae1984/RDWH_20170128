@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_FORM_CLIENT_180D_AGO
+refresh force on demand
+as
+select fc.rfo_client_id,
+     max(coalesce(e.c_code,'INDEX_QUANT_CHILD_1')) keep (dense_rank last order by fc.form_date_create) as form_children_180d,
+     max(coalesce(m.c_code,'NA')) keep (dense_rank last order by fc.form_date_create) as form_marital_stat_180d,
+     max(coalesce(fc.phone_mobile,'NA')) keep (dense_rank last order by fc.form_date_create) as form_phone_mob_180d,
+
+    max(coalesce(fc.inc_sal,0)) keep (dense_rank last order by fc.form_date_create) +
+    max(coalesce(fc.inc_sal_add,0)) keep (dense_rank last order by fc.form_date_create) +
+    max(coalesce(fc.inc_sal_spouse,0)) keep (dense_rank last order by fc.form_date_create) +
+    max(coalesce(fc.inc_pension_benefits,0)) keep (dense_rank last order by fc.form_date_create)  as inc_form_180d
+
+from u1.M_FOLDER_CON_CANCEL cc
+join u1.V_FORM_CLIENT_ALL_RFO fc on cc.folder_id = fc.folder_id and cc.rfo_client_id =fc.rfo_client_id
+left join u1.V_RFO_Z#CLIENT_INDEX e on e.c_value = fc.children and e.c_parent_idx = 3630776
+left join u1.V_RFO_Z#CLIENT_INDEX m on m.c_value = fc.marital_status and m.c_parent_idx = 48934
+where cc.folder_date_create_mi < trunc(sysdate) - 180
+group by fc.rfo_client_id;
+grant select on U1.M_FORM_CLIENT_180D_AGO to LOADDB;
+grant select on U1.M_FORM_CLIENT_180D_AGO to LOAD_MO;
+
+

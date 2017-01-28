@@ -1,0 +1,47 @@
+﻿create table U1.DAILY_UPDATE_EVENT
+(
+  id          NUMBER(32) not null,
+  event       VARCHAR2(50) not null,
+  e_detail    VARCHAR2(500),
+  e_date      DATE not null,
+  e_timestamp TIMESTAMP(6) default SYSTIMESTAMP not null
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on column U1.DAILY_UPDATE_EVENT.event
+  is 'Наименование события';
+comment on column U1.DAILY_UPDATE_EVENT.e_detail
+  is 'Детальное описание события';
+comment on column U1.DAILY_UPDATE_EVENT.e_date
+  is 'Дата события (день!)';
+comment on column U1.DAILY_UPDATE_EVENT.e_timestamp
+  is 'время записи';
+alter table U1.DAILY_UPDATE_EVENT
+  add constraint DAILY_UPDATE_EVENT_PK primary key (ID)
+  using index 
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.DAILY_UPDATE_EVENT_PK nologging;
+grant select on U1.DAILY_UPDATE_EVENT to LOADDB;
+grant select on U1.DAILY_UPDATE_EVENT to LOADER;
+grant select on U1.DAILY_UPDATE_EVENT to LOAD_MO;
+

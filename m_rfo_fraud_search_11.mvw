@@ -1,0 +1,42 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_11
+build deferred
+refresh force on demand
+as
+select /*+parallel(10)*/
+         t.rfo_client_id
+         ,t.date_create
+         ,t.claim_id
+         ,count(distinct trunc(a.c_oper_date,'mm')) as COUNT_SALARY_6_M
+         ,count(distinct trunc(a1.c_oper_date,'mm')) as COUNT_SALARY_6_M_t1
+    from M_FOLDER_CON_CANCEL_ONLINE_1 t
+    join (
+        select
+             t.rfo_client_id
+             ,fo.c_oper_date
+             ,fo.c_summa
+        from m_rbo_contract_bas t
+        join V_RBO_Z#KAS_PC_DOG a on a.id = t.rbo_contract_id
+        join T_RBO_Z#KAS_PC_FO fo on fo.collection_id = a.c_fo_arr and fo.c_is_storno = 0 and fo.c_doc_state = 'PROV'
+        join V_RBO_Z#VID_OPER_DOG vod on vod.id = fo.c_vid_oper_ref and vod.c_code = 'PC_TO_CARD_ZP'
+        where /*t.rbo_client_id = 535812478 and */ t.cred_program_code = 'ZP_KASPI_GOLD'
+    ) a on a.rfo_client_id = t.rfo_client_id and a.c_oper_date between add_months(t.date_create,-6) and t.date_create
+
+    left join (
+        select
+             t.rfo_client_id
+             ,fo.c_oper_date
+             ,fo.c_summa
+        from m_rbo_contract_bas t
+        join V_RBO_Z#KAS_PC_DOG a on a.id = t.rbo_contract_id
+        join T_RBO_Z#KAS_PC_FO fo on fo.collection_id = a.c_fo_arr and fo.c_is_storno = 0 and fo.c_doc_state = 'PROV'
+        join V_RBO_Z#VID_OPER_DOG vod on vod.id = fo.c_vid_oper_ref and vod.c_code = 'PC_TO_CARD_ZP'
+        where /*t.rbo_client_id = 535812478 and */ t.cred_program_code = 'ZP_KASPI_GOLD'
+    ) a1 on a1.rfo_client_id = t.rfo_client_id and a1.c_oper_date between add_months(t.date_create,-6) and trunc(t.date_create)-1
+
+    group by
+          t.rfo_client_id
+         ,t.date_create
+         ,t.claim_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_11 to LOADDB;
+
+

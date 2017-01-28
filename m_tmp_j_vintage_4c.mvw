@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_TMP_J_VINTAGE_4C
+refresh complete on demand
+as
+select x.*, cli_cnt_del90_4m / cli_cnt as cli_cnt_del90_4m_rate
+from (
+select --t.yy_mm_start_last,
+       tm.quarter,
+       count(*) as con_cnt,
+       count(case when p.delinq_days > 90 then t.contract_number end) as con_cnt_del90_4m,
+       count(distinct t.client_id) as cli_cnt,
+       count(distinct case when p.delinq_days > 90 then t.client_id end) as cli_cnt_del90_4m
+from V_PORTFOLIO p
+join V_CONTRACT_CAL t on t.contract_number = p.contract_number and
+          to_char(add_months(trunc(t.start_date_last,'mm'),4),'yyyy - mm') = p.yy_mm_report
+--join M_TMP_J_CON_DEL_PLUS cp on cp.contract_number = t.contract_number
+join V_TIME_MONTHS tm on tm.text_yyyy_mm = t.yy_mm_start_last
+/*left join V_PORTFOLIO p on p.contract_number = cp.contract_number_to and
+                           p.yy_mm_report = to_char(add_months(trunc(t.start_date_last,'mm'),4),'yyyy - mm')
+*/
+where not exists (select null from M_TMP_J_CON_DEL_PLUS cd where cd.contract_number_to = p.contract_number and
+                           to_char(trunc(cd.spec_offer_date,'mm'),'yyyy - mm') <= p.yy_mm_report and
+                           cd.restr_type = 'HARD') -- убираем из отчетного месяца карты, на которые сделали
+                                                   -- хард рефинанс
+--where t.product_first != 'ХК'
+--where t.product_refin_last != 'ХК'
+--group by t.yy_mm_start_last
+group by tm.quarter
+) x;
+grant select on U1.M_TMP_J_VINTAGE_4C to LOADDB;
+grant select on U1.M_TMP_J_VINTAGE_4C to LOADER;
+
+

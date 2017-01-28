@@ -1,0 +1,10 @@
+﻿create materialized view U1.M_TST_RBP_SCO_REQUEST_DICT
+refresh force on demand
+as
+select  str.*
+  from m_tst_RBP_SCO_REQUEST s
+  join MO_SCO_REQUEST_DICT str on str.sco_request_id=s.id;
+grant select on U1.M_TST_RBP_SCO_REQUEST_DICT to LOADDB;
+grant select on U1.M_TST_RBP_SCO_REQUEST_DICT to LOAD_MO;
+
+

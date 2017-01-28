@@ -1,0 +1,36 @@
+﻿create materialized view U1.M_TMP_J_CLIENT_KDN
+refresh complete on demand
+as
+select cl.client_iin,
+       k.kdn_form_salary_max_kaspi
+from (
+    select t.client_iin,
+           max(t.deal_number) keep (dense_rank last order by t.x_start_date) as deal_number_last
+    from M_CONTRACT_PARAM_KDN5 t
+    group by t.client_iin
+) cl left join (
+    select t.deal_number,
+           case when t.form_income_gcvp_salary_max > 0 then
+                    round((coalesce(d1.pmt,0) + coalesce(p1.pmt_other,0)) /
+                              t.form_income_gcvp_salary_max * 100, 2)
+                else 99999999 end as kdn_form_salary_max_kaspi
+    from M_CONTRACT_PARAM_KDN5 t
+    -- платеж по договору, если не закрылся
+    left join V_DWH_PORTFOLIO_CURRENT d1 on d1.deal_number = t.deal_number and
+                                            d1.actual_end_date is null and
+                                            d1.x_is_credit_issued = 1
+    left join (
+        -- платеж по другим договорам на момент выдачи договора, если они не закрылись
+        select t.deal_number, sum(d.pmt) as pmt_other
+        from M_CONTRACT_PARAM_KDN5 t
+        join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = t.client_iin and
+                                          d.x_start_date < t.x_start_date and
+                                          d.actual_end_date is null and
+                                          d.x_is_credit_issued = 1
+        group by t.deal_number
+    ) p1 on p1.deal_number = t.deal_number
+) k on k.deal_number = deal_number_last;
+grant select on U1.M_TMP_J_CLIENT_KDN to LOADDB;
+grant select on U1.M_TMP_J_CLIENT_KDN to LOADER;
+
+

@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_KASPIKZ_EMONEY_WALLET
+build deferred
+refresh force on demand
+as
+select "Id" as Id,
+        "CardNumber" as Card_Number,
+        "MaskedCardNumber" as Masked_Card_Number,
+        "TmAccountNumber" as Tm_Account_Number,
+        "RboAccountNumber" as Rbo_Account_Number,
+        "AgreementNumber" as Agreement_Number,
+        "CardType" as Card_Type,
+        "ActualBalance" as Actual_Balance,
+        "SaveDateTime" as Save_Date_Time,
+        "UpdateDateTime" as Update_Date_Time,
+        "Version" as version_num,
+        "MaxOrderId" as Max_Order_Id,
+        "IIN" as IIN
+
+from "dbo"."tb_EMoney_Wallet"@"db_kr2";
+grant select on U1.M_KASPIKZ_EMONEY_WALLET to LOADDB;
+
+

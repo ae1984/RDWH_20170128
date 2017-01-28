@@ -1,0 +1,62 @@
+﻿create table U1.T_TMP_CL_PRIV
+(
+  id                            NUMBER not null,
+  c_date_pers                   DATE,
+  c_sex#0                       NUMBER,
+  c_sex#male                    VARCHAR2(3),
+  c_sex#female                  VARCHAR2(3),
+  c_certificates                NUMBER not null,
+  c_pasport#type                NUMBER,
+  c_pasport#num                 VARCHAR2(60),
+  c_pasport#seria               VARCHAR2(48),
+  c_pasport#who                 VARCHAR2(512),
+  c_pasport#date_doc            DATE,
+  c_pasport#place               VARCHAR2(512),
+  c_pasport#date_end            DATE,
+  c_last_name                   VARCHAR2(1000),
+  c_first_name                  VARCHAR2(1000),
+  c_sur_name                    VARCHAR2(1000),
+  c_add_props                   NUMBER not null,
+  c_work#org#name               VARCHAR2(400),
+  c_work#org#rnn                VARCHAR2(36),
+  c_work#org#address#post_ind   VARCHAR2(18),
+  c_work#org#address#place      VARCHAR2(680),
+  c_work#org#address#adr_type   NUMBER,
+  c_work#org#address#date_begin DATE,
+  c_work#org#address#date_end   DATE,
+  c_work#org#address#house      VARCHAR2(30),
+  c_work#org#address#frame      VARCHAR2(30),
+  c_work#org#address#flat       VARCHAR2(30),
+  c_work#org#address#street     VARCHAR2(400),
+  c_work#org#address#region     VARCHAR2(400),
+  c_work#org#address#district   VARCHAR2(300),
+  c_work#org#add_props          NUMBER not null,
+  c_work#prev_exp               NUMBER(10,1),
+  c_work#month_profit           NUMBER(17,2),
+  c_work#add_props              NUMBER not null,
+  c_work#org#address#region_ref NUMBER,
+  c_resident                    VARCHAR2(3),
+  c_work#department             VARCHAR2(400),
+  c_client_categ                NUMBER not null,
+  c_pasport#depart_code         VARCHAR2(45),
+  c_work#org#address#city       NUMBER,
+  c_place_birth                 VARCHAR2(1000),
+  c_work#org#address#place_ref  NUMBER,
+  c_work#org#address#country    NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_CL_PRIV to LOADDB;
+grant select on U1.T_TMP_CL_PRIV to LOADER;
+

@@ -1,0 +1,59 @@
+﻿create materialized view U1.V_DWH_PORT_CREDITS
+build deferred
+using no index
+refresh complete on demand
+as
+select distinct  s.exhd$change_date,
+       s.exhd$audit_id,
+       s.exhd_clnt_gid,
+       s.exhd_dcard_gid,
+       s.exhd_rep_date,
+       s.exhd_client_name,
+       s.exhd_client_iin,
+       s.exhd_client_rnn,
+       s.exhd_client_rfo_id,
+       s.exhd_deal_number,
+       s.exhd_currency,
+       s.exhd_begin_date,
+       s.exhd_plan_end_date,
+       s.exhd_actual_end_date,
+       s.exhd_amount,
+       s.exhd_deal_status,
+       s.exhd_rate_value,
+       s.exhd_prod_name,
+       s.exhd_prod_type,
+       s.exhd_old_ovd_scheme,
+       s.exhd_dept_name,
+       s.exhd_dept_number,
+       s.exhd_unp_name,
+       s.exhd_unp_number,
+       s.exhd_fil_name,
+       s.exhd_fil_number,
+       s.exhd_create_empl_name,
+       s.exhd_create_empl_number,
+       s.exhd_sign_empl_name,
+       s.exhd_sign_empl_number,
+       s.exhd_fgu_as_of_date,
+       s.exhd_fgu_cred,
+       s.exhd_fgu_prc,
+       s.exhd_fgu_ovrd_cred,
+       s.exhd_fgu_ovrd_prc,
+       s.exhd_to_ovrd_date,
+       s.exhd_ovrd_days,
+       s.exhd_cl_to_ovrd_date,
+       s.exhd_cl_ovrd_days,
+       s.exhd_vnb_ovrd_cred,
+       s.exhd_vnb_ovrd_prc,
+       s.exhd_vnb_comm,
+       s.exhd_vnb_flag,
+       s.exhd_vnb_date,
+       s.exhd_pay_sale_type,
+       s.exhd_pay_goods_price,
+       s.exhd_goods_count,
+       s.exhd_pay_comm_amount,
+       s.exhd_company_name
+  from DWH_SAN.DM_SPGU_HD@DWH_PROD2 s  --DWH_RAN.DM_SPGU_HD_V@DWH_PROD2 s
+ where s.exhd_rep_date = trunc(sysdate) - 1;
+grant select on U1.V_DWH_PORT_CREDITS to LOADDB;
+
+

@@ -1,0 +1,67 @@
+﻿create materialized view U1.M_RBO_CONTRACT_PORTFOLIO_V2
+build deferred
+refresh complete on demand
+as
+select /*+ parallel (30) parallel_index (30)*/
+       cp.rep_date_prev,
+      p.rep_date,
+      p.yy_mm_report,
+      cp.yy_mm_report_last,
+      p.rbo_client_id,
+      p.rbo_contract_id,
+      p.rfo_contract_id,
+      p.rfo_client_id,
+      p.contract_number,
+      p.start_date_actual,
+      p.yy_mm_start_date_act,
+      p.start_date,
+      p.yy_mm_start_date,
+      p.debt_begin_date,
+      p.cred_program_code,
+      p.cred_program_name,
+      p.cred_program_code_x,
+      p.cred_program_name_x,
+      p.x_dnp_name,
+      p.is_card,
+      p.is_refin_contract,
+      p.is_ever_refin_contract,
+      p.rbo_contract_id_to,
+      p.refin_date,
+      p.refin_date_first,
+      p.refin_percent,
+      p.ppm,
+      p.num_stmt,
+      p.total_debt,
+      p.total_debt_x,
+      p.del_days,
+      p.del_days_x,
+      p.max_debt_used,
+      p.max_debt_used_x,
+      p.del_days_max,
+      p.del_days_max_x,
+      p.del_days_cli_max,
+      p.del_days_cli_max_x,
+      cp.pmt_full_code_3,
+      cp.client_categ,
+      cp.is_ind_enterpreneur_clear,
+      cp.is_ind_enterpreneur,
+      p.is_on_balance,
+       case when coalesce(a1.prev_con_closed_cnt, 0) >= 2 and     --Закрыл несколько кредитов
+             coalesce(a1.prior_optim_count, 0) = 0 and        --Не было оптимизации
+             coalesce(a2.prev_con_del_days_max, 0) <= 15 and  --Не допускал просрочку > 15
+             coalesce(a2.fact_pmt_mon_before, 0) >= 12 and    --Кол-во платежей
+             coalesce(a2.fact_pmt_mon_before_12_mon, 0) > 0 then  --Платил в течении последних 12 мес
+                'КАТЕГОРИЯ А'
+            when coalesce(a1.prev_con_closed_cnt, 0) >= 1 and     --Закрыл несколько кредитов
+             coalesce(a2.prev_con_del_days_max, 0) < 31 and  --Не допускал просрочку > 30
+             coalesce(a2.fact_pmt_mon_before, 0) >= 6 then    --Кол-во платежей
+                'КАТЕГОРИЯ Б'
+        end as client_categ_on_date
+  from T_RBO_CONTRACT_PORTFOLIO p
+  left join u1.M_RBO_CONTRACT_PORTFOLIO_BASV2 cp on  cp.rep_date = p.rep_date and cp.rbo_contract_id = p.rbo_contract_id
+  left join u1.M_RBO_CONTRACT_PORTFOLIO_ADD_1 a1 on a1.rbo_contract_id = cp.rbo_contract_id and a1.rep_date = cp.rep_date
+  left join U1.M_RBO_CONTRACT_PORTFOLIO_ADD_2 a2 on a2.rbo_contract_id = cp.rbo_contract_id and a2.rep_date = cp.rep_date;
+grant select on U1.M_RBO_CONTRACT_PORTFOLIO_V2 to LOADDB;
+grant select on U1.M_RBO_CONTRACT_PORTFOLIO_V2 to LOADER;
+
+

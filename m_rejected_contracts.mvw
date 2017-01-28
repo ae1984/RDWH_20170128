@@ -1,0 +1,87 @@
+﻿create materialized view U1.M_REJECTED_CONTRACTS
+refresh complete on demand
+as
+select /*+ parallel 30 */
+       *
+from (
+        -- проверка Арчила по КН, КНП, КН15, ЛКН, ПКН
+        select a1.contract_number, 1 rule_id from M_REJ_KN_J1 a1
+
+        -- проверка по КН J1
+        union all
+        select a2.contract_number, 2 rule_id from M_REJ_KN_ALL_AR a2
+
+        -- скоркарта Гриши по КН
+        union all
+        select a3.contract_number, 3 rule_id from T_REJ_SCORE_KN_BW40_2_1 a3
+
+        --Правила Рената 052014
+        union all
+        select a4.contract_number, 4 rule_id from  T_REJ_RULE_KNP_052014 a4
+        union all
+        select a5.contract_number, 5 rule_id from T_REJ_RULE_TK_052014 a5
+
+        -- скоркарта Ербола по КНП
+        union all
+        select a6.contract_number, 6 rule_id from T_REJ_SCORE_KNP_BW_22_1 a6
+
+        --Правила Рената 062014
+        union all
+        select a7.contract_number as contract_number, 7 rule_id from T_REJ_RULE_KN15_SC_17_062014 a7
+
+        --AUTO 2014 1
+        union all
+        select a8.contract_number, 8 rule_id from T_REJ_SCORE_AUTO_2014_1 a8
+
+        --AUTO 2014 2
+        union all
+        select a9.contract_number, 9 rule_id from T_REJ_SCORE_AUTO_2014_2 a9
+
+        --EKT fraud 8
+        union all
+        select a10.contract_number, 10 rule_id from M_REJ_SCORE_EKT_FRAUD_8 a10
+
+        --EKT BW 8
+        union all
+        select a11.contract_number, 11 rule_id from M_REJ_SCORE_EKT_BW_8 a11
+
+        --EKT BW 2 2
+        union all
+        select a12.contract_number, 12 rule_id from M_REJ_SCORE_KN_BW_2_2 a12
+
+        --AUTO_GAI_010814
+        union all
+        select a13.contract_number, 13 rule_id from M_REJ_AUTO_GAI_010814 a13
+
+        --KNP_YOUNG_MALE_090914
+        union all
+        select a14.contract_number, 14 rule_id from M_REJ_KNP_YOUNG_MALE_090914 a14
+
+        --M_REJ_KN_ALL_STAFF_271014
+        union all
+        select a15.contract_number, 15 rule_id from M_REJ_KN_ALL_STAFF_271014 a15
+
+        --M_REJ_EKT_GCVP_300115_1
+        union all
+        select a16.contract_number, 16 rule_id from M_REJ_EKT_GCVP_300115_1 a16
+
+        --M_REJ_EKT_GCVP_300115_2
+        union all
+        select a17.contract_number, 17 rule_id from M_REJ_EKT_GCVP_300115_2 a17
+
+        --M_REJ_KN15_M_UNMAR_05022015
+        union all
+        select a18.contract_number, 18 rule_id from M_REJ_KN15_M_UNMAR_05022015 a18
+
+        --M_REJ_ONLINE_FR_BL_170215
+        union all
+        select a19.contract_number, 19 rule_id from M_REJ_ONLINE_FR_BL_170215 a19
+) pivot (
+  count(rule_id)
+  for rule_id in ( 1, 2, 3, 4, 5, 6, 7, 8, 9,10,
+                  11,12,13,14,15,16,17,18,19)
+);
+grant select on U1.M_REJECTED_CONTRACTS to LOADDB;
+grant select on U1.M_REJECTED_CONTRACTS to LOADER;
+
+

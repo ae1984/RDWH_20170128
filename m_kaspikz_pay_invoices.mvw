@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_KASPIKZ_PAY_INVOICES
+refresh force on demand
+as
+select t."bintId" id,
+        t."bintUserId" user_id,
+        t."bintSubscriptionId" subscription_id,
+        t."vchInvoiceId" invoice_id,
+        to_date(to_char(t."dtFormedDate", 'dd.mm.yyyy hh24:mi:ss'), 'dd.mm.yyyy hh24:mi:ss') formed_date,
+        to_date(to_char(t."dtPeriodDate", 'dd.mm.yyyy hh24:mi:ss'), 'dd.mm.yyyy hh24:mi:ss') period_date,
+        to_date(to_char(t."dtExpireDate", 'dd.mm.yyyy hh24:mi:ss'), 'dd.mm.yyyy hh24:mi:ss') expire_date,
+        to_date(to_char(t."dtRegDate", 'dd.mm.yyyy hh24:mi:ss'), 'dd.mm.yyyy hh24:mi:ss') reg_date,
+        t."dcmTotal" total_amount,
+        t."intStatus" status,
+        --t."xmlInvoice",
+        t."LastPaymentInfoId" last_payment_info_id,
+        --t."xmlOriginallInvoice",
+        t."bitIsActive" is_active
+
+from "dbo"."tb_Payments_Invoices"@"db_kr2" t;
+grant select on U1.M_KASPIKZ_PAY_INVOICES to LOADDB;
+grant select on U1.M_KASPIKZ_PAY_INVOICES to LOADER;
+
+

@@ -1,0 +1,49 @@
+﻿create materialized view U1.V_FOLDER_ALL_RFO_AUTO_STATE
+refresh force on demand
+as
+select t.folder_id,
+       t.contract_id,
+       t.folder_date_create,
+       t.is_credit_issued,
+       c.is_point_active,
+       min(h.c_line_time) date_fld_state,
+       min(case when (p2.c_code in ('EXECUTE','CREDIT_EXEC','KAS_CHK_DOC_PACK','TO_RECLAMATION',
+                                    'ARCHIVE','ERR_ARCHIVE','KAS_SENT_PKD','KAS_WITHDRAWN1','KAS_WITHDRAWN2',
+                                    'KAS_PKD_CONTROL','KAS_PKD_REV','TR_CHANGED',
+                                    'TAKE_DEPART') or p2.c_priority >= 80) then h.c_line_time end) date_fld_approve,
+       min(case when (rpo.way_id is not null) then h.c_line_time end) date_fld_not_active_last,
+       max(case when (rpo2.way_id is not null) then h.c_line_time end) date_fld_active_last
+from V_FOLDER_ALL_RFO t
+join m_folder_con_cancel c on c.folder_id = t.folder_id
+join V_RFO_Z#CM_CHECKPOINT cp on cp.id = t.folder_id
+join V_RFO_Z#CM_HISTORY h on h.collection_id = cp.c_history
+join V_RFO_Z#CM_LINE l on l.id = h.c_line
+--join V_RFO_Z#CM_POINT p1 on p1.id = l.c_from_p
+join V_RFO_Z#CM_POINT p2 on p2.id = l.c_to_p /*and
+                                 (p2.c_code in ('EXECUTE','CREDIT_EXEC','KAS_CHK_DOC_PACK','TO_RECLAMATION',
+                                               'ARCHIVE','ERR_ARCHIVE','KAS_SENT_PKD','KAS_WITHDRAWN1','KAS_WITHDRAWN2',
+                                               'KAS_PKD_CONTROL','KAS_PKD_REV','TR_CHANGED',
+                                               'TAKE_DEPART') or
+                                  p2.c_priority >= 80)*/
+left join V_RFO_POINTS rpo on rpo.point_code = p2.c_code and
+                              rpo.way_code = t.route_code and
+                              rpo.is_point_active = 0
+
+left join V_RFO_POINTS rpo2 on rpo2.point_code = p2.c_code and
+                              rpo2.way_code = t.route_code and
+                              rpo2.is_point_active = 1
+where t.process_code in ('KAS_AUTO_CRED_PRIV_PC',
+                         'KAS_AUTO_CRED_PRIV')
+
+--and t.folder_id = 15273794825
+--and c.is_credit_issued = 0
+
+group by t.folder_id,
+         t.contract_id,
+         t.folder_date_create,
+         t.is_credit_issued,
+         c.is_point_active;
+grant select on U1.V_FOLDER_ALL_RFO_AUTO_STATE to LOADDB;
+grant select on U1.V_FOLDER_ALL_RFO_AUTO_STATE to LOADER;
+
+

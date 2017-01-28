@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_TMP_J_SC_DEL_AFT
+refresh force on demand
+as
+select y.yms, y.del_rate as del_rate_bef, x.del_rate as del_rate_aft,
+       y.del_rate_pmt_1 as del_rate_pmt_1_bef, x.del_rate_pmt_1 as del_rate_pmt_1_aft,
+       y.sales_mln as sales_mln_bef, x.sales_mln as sales_mln_cut from (
+select c.yms,
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate,
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1,
+    round(sum(c.max_debt_used) / 1000000) as sales_mln,
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt
+from V_TMP_CONTRACT_CAL_DEL c
+join M_FOLDER_CON_MINER m on m.contract_id = c.contract_id
+join M_TMP_J_SAL_GCVP_TO_SAL_FORM p1 on p1.value = round(m.sal_gcvp_to_sal_form_prc_floor,-1) and
+                                        p1.del_rate >= 12 and p1.con_cnt >= 100
+--join M_TMP_J_CR_PROGRAM_NAME p2 on p2.value = m.cr_program_name and
+--                                        p2.del_rate >= 5 and p2.con_cnt >= 100
+join M_TMP_J_KDN_OURSEND p3 on p3.value = round(m.kdn_oursend,-1) and
+                                        p3.del_rate >= 12 and p3.con_cnt >= 100
+join M_TMP_J_MARITAL_STATUS p4 on decode(p4.value, m.marital_status, 1, 0) = 1 and
+                                        p4.del_rate >= 9 and p4.con_cnt >= 100
+where c.yms like '2013 - %' or c.yms like '2014 - %'
+group by c.yms having sum(c.max_debt_used) > 0
+) x full outer join M_TMP_J_SC_DEL_BEF y on y.yms = x.yms;
+grant select on U1.M_TMP_J_SC_DEL_AFT to LOADDB;
+grant select on U1.M_TMP_J_SC_DEL_AFT to LOADER;
+
+

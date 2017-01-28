@@ -1,0 +1,41 @@
+﻿create materialized view U1.M_NPS_KSPKZ_ONL_REGUSER_PHONES
+refresh complete on demand
+as
+select f.userid,
+       f.USERNAME,
+       f.regdate,
+       f.iin,
+       f.dateofbirth,
+       f.phonenumber,
+       f.is_bank_employee,
+       f.prod_type_list
+  from (select t.userid,
+               upper(t.USERNAMERUS) USERNAME,
+               t.regdate,
+               t.iin,
+               t.dateofbirth,
+               t.phonenumber,
+               case
+                 when pe.iin is null then
+                  'НЕТ'
+                 else
+                  'ДА'
+               end as is_bank_employee,
+               activ.prod_type_list
+          from KSPKZ_VREGISTEREDUSERS20 t
+          left join M_ZUP_1C_STAFF_OUT pe
+            on pe.iin = t.iin
+           and pe.firing_date is null
+          left join M_NPS_CL_ACTIV_PRODUCT activ
+            on activ.client_iin = t.iin
+         where t.regdate > sysdate - 2 / 24 --prod
+           and not exists (select null
+                  from T_NPS_CLIENT_PHONED_ALL k
+                 where insert_date < sysdate - 1 / 24
+                   and k.client_iin = t.iin)
+         order by t.userid) f
+ where rownum < 101;
+grant select on U1.M_NPS_KSPKZ_ONL_REGUSER_PHONES to LOADDB;
+grant select on U1.M_NPS_KSPKZ_ONL_REGUSER_PHONES to LOADER;
+
+

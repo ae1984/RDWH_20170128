@@ -1,0 +1,994 @@
+﻿create materialized view U1.M_TMP_J_SC_DEL_AFT_CONS_NEW
+refresh force on demand
+as
+select c.contract_number
+from V_TMP_CONTRACT_CAL_DEL_NEW c
+join (
+select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status is null and
+               co.cli_age_basing_on_con_mon_fl is null and
+               co.cli_age_based_on_fld_mon_fl is null and
+               co.sal_gcvp_to_sal_form is null and
+               co.start_total_fact_pmts_by_cli is null and
+               co.pkb_active_contracts is null and
+               co.pkb_closed_contracts is null and
+               co.gcvp_salary is null and
+               co.inc_total is null and
+               co.exp_total is null and
+               co.pkb_total_debt is null and
+               co.gcvp_last_pmt_days_ago_floor is null and
+               co.gcvp_pmts_per_day_max is null and
+               co.contract_term_months is null and
+               co.marital_status is null and
+               co.children is null and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl is null and
+               co.cli_age_based_on_fld_mon_fl is null and
+               co.sal_gcvp_to_sal_form is null and
+               co.start_total_fact_pmts_by_cli is null and
+               co.pkb_active_contracts is null and
+               co.pkb_closed_contracts is null and
+               co.gcvp_salary is null and
+               co.inc_total is null and
+               co.exp_total is null and
+               co.pkb_total_debt is null and
+               co.gcvp_last_pmt_days_ago_floor is null and
+               co.gcvp_pmts_per_day_max is null and
+               co.contract_term_months is null and
+               co.marital_status is null and
+               co.children is null and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl is null and
+               co.sal_gcvp_to_sal_form is null and
+               co.start_total_fact_pmts_by_cli is null and
+               co.pkb_active_contracts is null and
+               co.pkb_closed_contracts is null and
+               co.gcvp_salary is null and
+               co.inc_total is null and
+               co.exp_total is null and
+               co.pkb_total_debt is null and
+               co.gcvp_last_pmt_days_ago_floor is null and
+               co.gcvp_pmts_per_day_max is null and
+               co.contract_term_months is null and
+               co.marital_status is null and
+               co.children is null and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form is null and
+               co.start_total_fact_pmts_by_cli is null and
+               co.pkb_active_contracts is null and
+               co.pkb_closed_contracts is null and
+               co.gcvp_salary is null and
+               co.inc_total is null and
+               co.exp_total is null and
+               co.pkb_total_debt is null and
+               co.gcvp_last_pmt_days_ago_floor is null and
+               co.gcvp_pmts_per_day_max is null and
+               co.contract_term_months is null and
+               co.marital_status is null and
+               co.children is null and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli is null and
+               co.pkb_active_contracts is null and
+               co.pkb_closed_contracts is null and
+               co.gcvp_salary is null and
+               co.inc_total is null and
+               co.exp_total is null and
+               co.pkb_total_debt is null and
+               co.gcvp_last_pmt_days_ago_floor is null and
+               co.gcvp_pmts_per_day_max is null and
+               co.contract_term_months is null and
+               co.marital_status is null and
+               co.children is null and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts is null and
+               co.pkb_closed_contracts is null and
+               co.gcvp_salary is null and
+               co.inc_total is null and
+               co.exp_total is null and
+               co.pkb_total_debt is null and
+               co.gcvp_last_pmt_days_ago_floor is null and
+               co.gcvp_pmts_per_day_max is null and
+               co.contract_term_months is null and
+               co.marital_status is null and
+               co.children is null and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts is null and
+               co.gcvp_salary is null and
+               co.inc_total is null and
+               co.exp_total is null and
+               co.pkb_total_debt is null and
+               co.gcvp_last_pmt_days_ago_floor is null and
+               co.gcvp_pmts_per_day_max is null and
+               co.contract_term_months is null and
+               co.marital_status is null and
+               co.children is null and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary is null and
+               co.inc_total is null and
+               co.exp_total is null and
+               co.pkb_total_debt is null and
+               co.gcvp_last_pmt_days_ago_floor is null and
+               co.gcvp_pmts_per_day_max is null and
+               co.contract_term_months is null and
+               co.marital_status is null and
+               co.children is null and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total is null and
+               co.exp_total is null and
+               co.pkb_total_debt is null and
+               co.gcvp_last_pmt_days_ago_floor is null and
+               co.gcvp_pmts_per_day_max is null and
+               co.contract_term_months is null and
+               co.marital_status is null and
+               co.children is null and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total is null and
+               co.pkb_total_debt is null and
+               co.gcvp_last_pmt_days_ago_floor is null and
+               co.gcvp_pmts_per_day_max is null and
+               co.contract_term_months is null and
+               co.marital_status is null and
+               co.children is null and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt is null and
+               co.gcvp_last_pmt_days_ago_floor is null and
+               co.gcvp_pmts_per_day_max is null and
+               co.contract_term_months is null and
+               co.marital_status is null and
+               co.children is null and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor is null and
+               co.gcvp_pmts_per_day_max is null and
+               co.contract_term_months is null and
+               co.marital_status is null and
+               co.children is null and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max is null and
+               co.contract_term_months is null and
+               co.marital_status is null and
+               co.children is null and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max = m.gcvp_pmts_per_day_max and
+               co.contract_term_months is null and
+               co.marital_status is null and
+               co.children is null and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max = m.gcvp_pmts_per_day_max and
+               co.contract_term_months = floor(m.contract_term_months / 3) * 3 and
+               co.marital_status is null and
+               co.children is null and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max = m.gcvp_pmts_per_day_max and
+               co.contract_term_months = floor(m.contract_term_months / 3) * 3 and
+               co.marital_status = m.marital_status and
+               co.children is null and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max = m.gcvp_pmts_per_day_max and
+               co.contract_term_months = floor(m.contract_term_months / 3) * 3 and
+               co.marital_status = m.marital_status and
+               co.children = m.children and
+               co.org_sector is null and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max = m.gcvp_pmts_per_day_max and
+               co.contract_term_months = floor(m.contract_term_months / 3) * 3 and
+               co.marital_status = m.marital_status and
+               co.children = m.children and
+               co.org_sector = m.org_sector and
+               co.real_estate_relation is null and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max = m.gcvp_pmts_per_day_max and
+               co.contract_term_months = floor(m.contract_term_months / 3) * 3 and
+               co.marital_status = m.marital_status and
+               co.children = m.children and
+               co.org_sector = m.org_sector and
+               co.real_estate_relation = m.real_estate_relation and
+               co.kdn_our_this_con is null and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max = m.gcvp_pmts_per_day_max and
+               co.contract_term_months = floor(m.contract_term_months / 3) * 3 and
+               co.marital_status = m.marital_status and
+               co.children = m.children and
+               co.org_sector = m.org_sector and
+               co.real_estate_relation = m.real_estate_relation and
+               co.kdn_our_this_con = floor(m.kdn_our_this_con / 10) * 10 and
+               co.kdn_our_all_cons is null and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max = m.gcvp_pmts_per_day_max and
+               co.contract_term_months = floor(m.contract_term_months / 3) * 3 and
+               co.marital_status = m.marital_status and
+               co.children = m.children and
+               co.org_sector = m.org_sector and
+               co.real_estate_relation = m.real_estate_relation and
+               co.kdn_our_this_con = floor(m.kdn_our_this_con / 10) * 10 and
+               co.kdn_our_all_cons = floor(m.kdn_our_all_cons / 10) * 10 and
+               co.con_amount_in_rep_sum_by_cli is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max = m.gcvp_pmts_per_day_max and
+               co.contract_term_months = floor(m.contract_term_months / 3) * 3 and
+               co.marital_status = m.marital_status and
+               co.children = m.children and
+               co.org_sector = m.org_sector and
+               co.real_estate_relation = m.real_estate_relation and
+               co.kdn_our_this_con = floor(m.kdn_our_this_con / 10) * 10 and
+               co.kdn_our_all_cons = floor(m.kdn_our_all_cons / 10) * 10 and
+               co.con_amount_in_rep_sum_by_cli = floor(m.con_amount_in_rep_sum_by_cli / 100000) * 100000 and
+               co.work_expr_last_place_mon_floor is null and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max = m.gcvp_pmts_per_day_max and
+               co.contract_term_months = floor(m.contract_term_months / 3) * 3 and
+               co.marital_status = m.marital_status and
+               co.children = m.children and
+               co.org_sector = m.org_sector and
+               co.real_estate_relation = m.real_estate_relation and
+               co.kdn_our_this_con = floor(m.kdn_our_this_con / 10) * 10 and
+               co.kdn_our_all_cons = floor(m.kdn_our_all_cons / 10) * 10 and
+               co.con_amount_in_rep_sum_by_cli = floor(m.con_amount_in_rep_sum_by_cli / 100000) * 100000 and
+               co.work_expr_last_place_mon_floor = floor(work_expr_last_place_mon_floor / 3) * 3 and
+               co.age_full_years is null and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max = m.gcvp_pmts_per_day_max and
+               co.contract_term_months = floor(m.contract_term_months / 3) * 3 and
+               co.marital_status = m.marital_status and
+               co.children = m.children and
+               co.org_sector = m.org_sector and
+               co.real_estate_relation = m.real_estate_relation and
+               co.kdn_our_this_con = floor(m.kdn_our_this_con / 10) * 10 and
+               co.kdn_our_all_cons = floor(m.kdn_our_all_cons / 10) * 10 and
+               co.con_amount_in_rep_sum_by_cli = floor(m.con_amount_in_rep_sum_by_cli / 100000) * 100000 and
+               co.work_expr_last_place_mon_floor = floor(work_expr_last_place_mon_floor / 3) * 3 and
+               co.age_full_years = floor(m.age_full_years / 5) * 5 and
+               co.cancel_fld_count_in_48h is null and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max = m.gcvp_pmts_per_day_max and
+               co.contract_term_months = floor(m.contract_term_months / 3) * 3 and
+               co.marital_status = m.marital_status and
+               co.children = m.children and
+               co.org_sector = m.org_sector and
+               co.real_estate_relation = m.real_estate_relation and
+               co.kdn_our_this_con = floor(m.kdn_our_this_con / 10) * 10 and
+               co.kdn_our_all_cons = floor(m.kdn_our_all_cons / 10) * 10 and
+               co.con_amount_in_rep_sum_by_cli = floor(m.con_amount_in_rep_sum_by_cli / 100000) * 100000 and
+               co.work_expr_last_place_mon_floor = floor(work_expr_last_place_mon_floor / 3) * 3 and
+               co.age_full_years = floor(m.age_full_years / 5) * 5 and
+               co.cancel_fld_count_in_48h = m.cancel_fld_count_in_48h and
+               co.sex is null and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max = m.gcvp_pmts_per_day_max and
+               co.contract_term_months = floor(m.contract_term_months / 3) * 3 and
+               co.marital_status = m.marital_status and
+               co.children = m.children and
+               co.org_sector = m.org_sector and
+               co.real_estate_relation = m.real_estate_relation and
+               co.kdn_our_this_con = floor(m.kdn_our_this_con / 10) * 10 and
+               co.kdn_our_all_cons = floor(m.kdn_our_all_cons / 10) * 10 and
+               co.con_amount_in_rep_sum_by_cli = floor(m.con_amount_in_rep_sum_by_cli / 100000) * 100000 and
+               co.work_expr_last_place_mon_floor = floor(work_expr_last_place_mon_floor / 3) * 3 and
+               co.age_full_years = floor(m.age_full_years / 5) * 5 and
+               co.cancel_fld_count_in_48h = m.cancel_fld_count_in_48h and
+               co.sex = m.sex and
+               co.client_patronymic_type is null and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max = m.gcvp_pmts_per_day_max and
+               co.contract_term_months = floor(m.contract_term_months / 3) * 3 and
+               co.marital_status = m.marital_status and
+               co.children = m.children and
+               co.org_sector = m.org_sector and
+               co.real_estate_relation = m.real_estate_relation and
+               co.kdn_our_this_con = floor(m.kdn_our_this_con / 10) * 10 and
+               co.kdn_our_all_cons = floor(m.kdn_our_all_cons / 10) * 10 and
+               co.con_amount_in_rep_sum_by_cli = floor(m.con_amount_in_rep_sum_by_cli / 100000) * 100000 and
+               co.work_expr_last_place_mon_floor = floor(work_expr_last_place_mon_floor / 3) * 3 and
+               co.age_full_years = floor(m.age_full_years / 5) * 5 and
+               co.cancel_fld_count_in_48h = m.cancel_fld_count_in_48h and
+               co.sex = m.sex and
+               co.client_patronymic_type = m.client_patronymic_type and
+               co.education is null and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m --
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max = m.gcvp_pmts_per_day_max and
+               co.contract_term_months = floor(m.contract_term_months / 3) * 3 and
+               co.marital_status = m.marital_status and
+               co.children = m.children and
+               co.org_sector = m.org_sector and
+               co.real_estate_relation = m.real_estate_relation and
+               co.kdn_our_this_con = floor(m.kdn_our_this_con / 10) * 10 and
+               co.kdn_our_all_cons = floor(m.kdn_our_all_cons / 10) * 10 and
+               co.con_amount_in_rep_sum_by_cli = floor(m.con_amount_in_rep_sum_by_cli / 100000) * 100000 and
+               co.work_expr_last_place_mon_floor = floor(work_expr_last_place_mon_floor / 3) * 3 and
+               co.age_full_years = floor(m.age_full_years / 5) * 5 and
+               co.cancel_fld_count_in_48h = m.cancel_fld_count_in_48h and
+               co.sex = m.sex and
+               co.client_patronymic_type = m.client_patronymic_type and
+               co.education = m.education and
+               co.time_day_num_of_week is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m -- ok
+where (m.yms like '2011 - %' or m.yms like '2012 - %' or m.yms like '2013 - %' or m.yms like '2014 - %')/* and m.is_test = 1*/ and
+      exists (select null from M_TMP_J_SC_DEL_COMB co where co.del_rate_b >= 40 and co.con_cnt >= 40 and
+/*         -- 1       co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+                co.kdn_our_this_con = floor(m.kdn_our_this_con / 10) * 10 and
+                co.marital_status = m.marital_status and
+                co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+                co.pkb_report_status = m.pkb_report_status and
+                co.age_full_years = floor(m.age_full_years / 5) * 5 and
+                co.kdn_our_all_cons = floor(m.kdn_our_all_cons / 10) * 10 and
+                co.con_amount_in_rep_sum_by_cli = floor(m.con_amount_in_rep_sum_by_cli / 100000) * 100000*/
+/*          -- 2
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.marital_status = m.marital_status and
+               co.sex = m.sex and
+               co.age_full_years = floor(m.age_full_years / 5) * 5 and
+               co.kdn_our_this_con = floor(m.kdn_our_this_con / 10) * 10 and
+               co.kdn_our_all_cons = floor(m.kdn_our_all_cons / 10) * 10 and
+               co.con_amount_in_rep_sum_by_cli = floor(m.con_amount_in_rep_sum_by_cli / 100000) * 100000 and
+               co.x_dnp_region = m.x_dnp_region and
+               co.x_dnp_name = m.x_dnp_name and
+               co.education = m.education and
+               co.cr_program_name = m.cr_program_name
+*/
+
+               co.contract_amount = floor(m.contract_amount / 100000) * 100000 and
+               co.pkb_report_status = m.pkb_report_status and
+               co.cli_age_basing_on_con_mon_fl = m.cli_age_basing_on_con_mon_fl and
+               co.cli_age_based_on_fld_mon_fl = m.cli_age_based_on_fld_mon_fl and
+               co.sal_gcvp_to_sal_form = floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 and
+               co.start_total_fact_pmts_by_cli = m.start_total_fact_pmts_by_cli and
+               co.pkb_active_contracts = m.pkb_active_contracts and
+               co.pkb_closed_contracts = m.pkb_closed_contracts and
+               co.gcvp_salary = floor(m.gcvp_salary / 30000) * 30000 and
+               co.inc_total = floor(m.inc_total / 30000) * 30000 and
+               co.exp_total = floor(m.exp_total / 10000) * 10000 and
+               co.pkb_total_debt = floor(m.pkb_total_debt / 100000) * 100000 and
+               co.gcvp_last_pmt_days_ago_floor = floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 and
+               co.gcvp_pmts_per_day_max = m.gcvp_pmts_per_day_max and
+               co.contract_term_months = floor(m.contract_term_months / 3) * 3 and
+               co.marital_status = m.marital_status and
+               co.children = m.children and
+               co.org_sector = m.org_sector and
+               co.real_estate_relation = m.real_estate_relation and
+               co.kdn_our_this_con = floor(m.kdn_our_this_con / 10) * 10 and
+               co.kdn_our_all_cons = floor(m.kdn_our_all_cons / 10) * 10 and
+               co.con_amount_in_rep_sum_by_cli = floor(m.con_amount_in_rep_sum_by_cli / 100000) * 100000 and
+               co.work_expr_last_place_mon_floor = floor(work_expr_last_place_mon_floor / 3) * 3 and
+               co.age_full_years = floor(m.age_full_years / 5) * 5 and
+               co.cancel_fld_count_in_48h = m.cancel_fld_count_in_48h and
+               co.sex = m.sex and
+               co.client_patronymic_type = m.client_patronymic_type and
+               co.education = m.education and
+               co.time_day_num_of_week = m.time_day_num_of_week
+      )
+) w on w.contract_id = c.contract_id;
+grant select on U1.M_TMP_J_SC_DEL_AFT_CONS_NEW to LOADDB;
+grant select on U1.M_TMP_J_SC_DEL_AFT_CONS_NEW to LOADER;
+
+

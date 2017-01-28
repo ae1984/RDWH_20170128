@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_TMP_J_CONTRACT_INCOME
+refresh complete on demand
+as
+select pc.id, max(pc.c_num_dog) as contract_number, --trunc(fo.c_kas_date_prov) as c_kas_date_prov, --fo.collection_id, -- pc.c_date_close,
+       round(sum(case when td.c_dt = 1 then fo.c_summa else 0 end)) as income--,  --vd.c_code--, vd.c_name
+  from u1.V_RBO_Z#VID_OPER_DOG vod,
+       u1.V_RBO_Z#VID_DEBT vd,
+       u1.V_RBO_Z#TAKE_IN_DEBT td,
+       u1.T_RBO_Z#FACT_OPER fo,
+       u1.V_RBO_Z#PR_CRED pc
+ where vod.c_code_group = 'КРЕДИТЫ'
+   and vod.c_take_debt = td.collection_id
+   and td.c_debt = vd.id
+   and td.c_dt = 1
+   and vod.sys_name like '%ГАШ%' --проанализировать v_rbo_z#vid_oper_dog.c_kas_signs_arr
+   and fo.collection_id = pc.c_list_pay
+   and fo.c_oper = vod.id
+   and fo.c_kas_doc_state = 'PROV'
+   and fo.c_kas_date_prov < trunc(sysdate)
+   and vd.c_code in ('ПЛАТА_ВЕДЕНИЕ','ПЛАТА_ВЕДЕНИЕ_ПРОСРОЧ','ПЛАТА_ВЕДЕНИЕ_ПР_ВНБ',
+                     'ПРОСРОЧЕН_ПР_НА_ВНБ','ПРЦ_КРЕД_112_ВНБ',
+                     'ПРОСРОЧ_ПРОЦЕНТЫ','ПРЦ_КРЕД_112_УЧТ','УЧТЕН_ПРОЦЕНТЫ')
+   and not exists
+   (select 1 from u1.T_RBO_Z#FACT_OPER where c_reverse_fo = fo.id)
+group by pc.id;
+grant select on U1.M_TMP_J_CONTRACT_INCOME to LOADDB;
+grant select on U1.M_TMP_J_CONTRACT_INCOME to LOADER;
+
+

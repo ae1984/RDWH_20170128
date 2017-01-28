@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_SC_FRAUD_SEARCH2_PRE3
+build deferred
+refresh force on demand
+as
+select t.rfo_client_id
+       ,avg(coalesce(b.inc_sal, b2.inc_sal)) as avg_zp_h
+       ,max(coalesce(b.inc_sal, b2.inc_sal)) as max_zp_h
+       ,avg(case when coalesce(b.inc_sal, b2.inc_sal) != 0 then (p.monthly_pay/coalesce(b.inc_sal, b2.inc_sal))*100 end) as  installment_incom_avg_30d
+from u1.V_CLIENT_RFO_BY_ID t
+left join u1.M_FOLDER_CON_CANCEL_ONLINE_1 p on   p.rfo_client_id = t.rfo_client_id
+left join u1.V_FORM_CLIENT_ALL_RFO        b on   b.rfo_client_id = p.rfo_client_id
+                                           and   b.folder_id = p.folder_id
+left join u1.V_FORM_CLIENT_ALL_RFO       b2 on b2.form_client_id = p.form_client_ref
+where  p.date_create < trunc(sysdate)
+  and  p.date_create >= trunc(sysdate) - 30
+group by t.rfo_client_id;
+grant select on U1.M_SC_FRAUD_SEARCH2_PRE3 to LOADDB;
+
+

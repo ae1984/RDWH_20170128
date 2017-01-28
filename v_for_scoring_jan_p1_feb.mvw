@@ -1,0 +1,113 @@
+﻿create materialized view U1.V_FOR_SCORING_JAN_P1_FEB
+refresh complete on demand
+as
+with x as (
+     select yy_mm - interval '5' month as yy_mm_end_date, to_char(yy_mm-interval '6' month,'yyyy - mm') as yy_mm_report from
+    (select to_date(max(yy_mm_report),'yyyy - mm') as yy_mm from v_data_all) y
+    )
+select x.yy_mm_report,
+       max(x.yy_mm_end_date) as yy_mm_end_date,
+       c.rfo_client_id,
+       sum(c.contract_amount_first) as con_amount_first_sum, --сумма кредита
+
+       min(c.start_total_fact_pmts_by_cli) as con_start_fact_pmts_min, --starting_fact_pmts
+       max(c.start_total_fact_pmts_by_cli) as con_start_fact_pmts_max, --starting_fact_pmts
+
+       min(c.start_total_undone_pmts_by_cli) as con_start_undone_pmts_min, --количество неплатежей до договора
+       max(c.start_total_undone_pmts_by_cli) as con_start_undone_pmts_max, --количество неплатежей до договора
+
+       min(c.start_con_del_days_max_by_cli) as con_start_del_days_min, --макс.просрочка в днях до договора
+       max(c.start_con_del_days_max_by_cli) as con_start_del_days_max, --макс.просрочка в днях до договора
+
+       max(c.start_pmt_max_by_cli) as con_start_pmt_max_by_cli, --платеж
+
+       sum(c.pkb_total_debt) as con_pkb_total_debt, --общая задолженность в пкб
+       sum(c.pkb_pmt_active_all_sum) as con_pkb_pmt_active_all_sum, --общий платеж в пкб
+
+       sum(r1.contract_amount) as port_contract_amount_sum, --сумма кредита
+       sum(r2.max_debt_used) as port_total_debt_sum, --
+       max(r3.port_deling_days_max) as port_delinq_days_max,--максимальная просрочка до этого момента
+       max(p.delinq_days) as deling_days_on_date,--просрочка в опрделенном месяце
+
+       max(r1.pmt_in_rep_sum_by_cli) as port_pmt_by_cli_sum, -- платеж
+       sum(r1.planned_pmt_month) as port_planned_pmts_by_cli_sum, --кол-ство месяцев после выдачи
+       sum(r1.fact_pmts) as port_fact_pmts_by_cli_sum, --fact_pmts
+
+       min(p.branch_name) keep (dense_rank first order by p.start_date) as port_branch_name_first, --город
+       max(p.branch_name) keep (dense_rank last order by p.start_date) as port_branch_name_last, --город
+       min(p.product_refin) keep (dense_rank first order by p.start_date) as port_product_refin_first, --продукт
+       max(p.product_refin) keep (dense_rank last order by p.start_date) as port_product_refin_last, --продукт
+
+       case when p.yy_mm_report = '2013 - 08' and max(r1.delinq_days) > 90 then 1 else 0 end as is_high_deling,
+
+
+       min(c.first_pmt_delinq) as con_first_pmt_delinq_min,
+       max(c.first_pmt_delinq) as con_first_pmt_delinq_max,
+       sum(c.first_pmt_delinq) as con_first_pmt_deling_sum,
+       avg(c.first_pmt_delinq) as con_first_pmt_delinq_avg,
+
+       min(c.four_pmts_delinq_max) as con_four_pmts_del_max_min,
+       max(c.four_pmts_delinq_max) as con_four_pmts_del_max_max,
+       sum(c.four_pmts_delinq_max) as con_four_pmts_del_max_sum,
+       avg(c.four_pmts_delinq_max) as con_four_pmts_del_max_avg,
+
+
+       max(x4.four_pmts_undone_pmts) as four_pmts_undone_pmts,
+
+       max(x3.undone_pmts_three_months) as undone_pmts_three_months,
+       max(x6.undone_pmts_six_months) as undone_pmts_six_months,
+       max(x12.undone_pmts_twelve_months) as undone_pmts_twelve_months
+
+
+from x
+join V_DATA_ALL p on p.yy_mm_report = x.yy_mm_report
+join V_REPORT_CAL_1 r1 on r1.id = p.id
+join V_REPORT_CAL_2 r2 on r2.id = p.id
+join V_CONTRACT_CAL c on c.contract_number = p.contract_no
+left join V_REPORT_CAL_3_TMP r3 on r3.client_id = c.client_id and r3.yy_mm_report = x.yy_mm_report
+left join (select r1111.client_id,
+                  sum(r1111.monthly_client_undone_pmt) as
+              undone_pmts_three_months from  (
+                  select r111.client_id, case when max(r111.planned_pmt_bonus) > 0 and
+                         (max(r111.planned_pmt_bonus) + min(r111.pmt_penalty)) < 1 then 1 end
+                                         as monthly_client_undone_pmt
+                       from v_report_cal_1 r111
+                       where r111.yy_mm_report <= '2013 - 02' and r111.yy_mm_report >= '2012 - 12'
+                       group by r111.yy_mm_report, r111.client_id) r1111
+            group by r1111.client_id) x3 on x3.client_id = c.client_id
+left join (select r1111.client_id,
+                  sum(r1111.monthly_client_undone_pmt) as
+              undone_pmts_six_months from  (
+                  select r111.client_id, case when max(r111.planned_pmt_bonus) > 0 and
+                         (max(r111.planned_pmt_bonus) + min(r111.pmt_penalty)) < 1 then 1 end
+                                         as monthly_client_undone_pmt
+                       from v_report_cal_1 r111
+                       where r111.yy_mm_report <= '2013 - 02' and r111.yy_mm_report >= '2012 - 09'
+                       group by r111.yy_mm_report, r111.client_id) r1111
+            group by r1111.client_id) x6 on x6.client_id = c.client_id
+left join (select r1111.client_id,
+                  sum(r1111.monthly_client_undone_pmt) as
+              undone_pmts_twelve_months from  (
+                  select r111.client_id, case when max(r111.planned_pmt_bonus) > 0 and
+                         (max(r111.planned_pmt_bonus) + min(r111.pmt_penalty)) < 1 then 1 end
+                                         as monthly_client_undone_pmt
+                       from v_report_cal_1 r111
+                       where r111.yy_mm_report <= '2013 - 02' and r111.yy_mm_report >= '2012 - 03'
+                       group by r111.yy_mm_report, r111.client_id) r1111
+            group by r1111.client_id) x12 on x12.client_id = c.client_id
+left join (select r1111.client_id,
+                  sum(r1111.monthly_client_undone_pmt) as
+              four_pmts_undone_pmts from  (
+                  select r111.client_id, case when max(r111.planned_pmt_bonus) > 0 and
+                         (max(r111.planned_pmt_bonus) + min(r111.pmt_penalty)) < 1 then 1 end
+                                         as monthly_client_undone_pmt
+                       from v_report_cal_1 r111
+                       where (r111.yy_mm_report <= '2013 - 02' and r111.yy_mm_report >= '2011 - 01') and
+                             (r111.planned_pmt_month >= 1 and r111.planned_pmt_month <=4)
+                       group by r111.yy_mm_report, r111.client_id) r1111
+            group by r1111.client_id) x4 on x4.client_id = c.client_id
+group by x.yy_mm_report, c.rfo_client_id, p.yy_mm_report;
+grant select on U1.V_FOR_SCORING_JAN_P1_FEB to LOADDB;
+grant select on U1.V_FOR_SCORING_JAN_P1_FEB to LOADER;
+
+

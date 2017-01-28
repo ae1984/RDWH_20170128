@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_DWH_SHOP_USER_ORDER
+refresh force on demand
+as
+select /*+ noparallel */
+       user_order_id,
+       create_date,
+       user_id,
+       num_order,
+       date_order,
+       currency_id,
+       total_price_order,
+       base_price,
+       total_price,
+       site_id,
+       product_id,
+       purchases_cnt,
+       delivery_point_of_service_id as service_point_id,
+       merchant_id ,
+       order_status,
+       credit_term,
+       monthly_payment
+  from dwh_stage.S43_USER_ORDER@dwh_prod2;
+grant select on U1.M_DWH_SHOP_USER_ORDER to LOADDB;
+grant select on U1.M_DWH_SHOP_USER_ORDER to LOADER;
+
+

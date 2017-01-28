@@ -1,0 +1,24 @@
+﻿create materialized view U1.V_RBO_Z#NAME_PAYDOC
+refresh complete on demand
+as
+select
+        id,
+         upper(c_name) as
+        c_name,
+         upper(c_short_name) as
+        c_short_name,
+        c_type_doc,
+        c_code,
+        c_short_code,
+        c_incoming,
+        c_counter,
+        c_private_counter,
+        c_form,
+        c_default_doc,
+        c_doc_crypt,
+        c_rpt_code
+from V_RBO_Z#NAME_PAYDOC@RDWH11;
+grant select on U1.V_RBO_Z#NAME_PAYDOC to LOADDB;
+grant select on U1.V_RBO_Z#NAME_PAYDOC to LOADER;
+
+

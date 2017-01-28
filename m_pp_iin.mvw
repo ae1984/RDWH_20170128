@@ -1,0 +1,157 @@
+﻿create materialized view U1.M_PP_IIN
+using no index
+refresh complete on demand
+as
+select /*+ parallel(30) */ sum(summa) as pp, folder_id, report_date_time,a.iin_rnn from (
+select /*+ parallel(30) */ sum(case when instr(a.c_overdue_sum,'KZ',1) > 0 then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'K',1)-2)),' '),' '))
+-----U-----
+when instr(a.c_overdue_sum,'U',1) > 0 and a.report_date < to_date('01.01.2013','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'U',1)-2)),' '),' '))*149
+when instr(a.c_overdue_sum,'U',1) > 0 and a.report_date >= to_date('01.01.2013','dd.mm.yyyy') and a.report_date < to_date('01.01.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'U',1)-2)),' '),' '))*151
+when instr(a.c_overdue_sum,'U',1) > 0 and a.report_date >= to_date('01.01.2014','dd.mm.yyyy') and a.report_date < to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'U',1)-2)),' '),' '))*154
+when instr(a.c_overdue_sum,'U',1) > 0 and a.report_date >= to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'U',1)-2)),' '),' '))*183
+-----U-----
+-----E-----
+when instr(a.c_overdue_sum,'E',1) > 0 and a.report_date < to_date('01.01.2013','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'E',1)-2)),' '),' '))*184
+when instr(a.c_overdue_sum,'E',1) > 0 and a.report_date >= to_date('01.01.2013','dd.mm.yyyy') and a.report_date < to_date('01.01.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'E',1)-2)),' '),' '))*200
+when instr(a.c_overdue_sum,'E',1) > 0 and a.report_date >= to_date('01.01.2014','dd.mm.yyyy') and a.report_date < to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'E',1)-2)),' '),' '))*211
+when instr(a.c_overdue_sum,'E',1) > 0 and a.report_date >= to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'E',1)-2)),' '),' '))*250
+-----E-----
+-----R-----
+when instr(a.c_overdue_sum,'R',1) > 0 and a.report_date < to_date('01.01.2013','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'R',1)-2)),' '),' '))*4.6
+when instr(a.c_overdue_sum,'R',1) > 0 and a.report_date >= to_date('01.01.2013','dd.mm.yyyy') and a.report_date < to_date('01.01.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'R',1)-2)),' '),' '))*4.6
+when instr(a.c_overdue_sum,'R',1) > 0 and a.report_date >= to_date('01.01.2014','dd.mm.yyyy') and a.report_date < to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'R',1)-2)),' '),' '))*4.6
+when instr(a.c_overdue_sum,'R',1) > 0 and a.report_date >= to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'R',1)-2)),' '),' '))*5.3
+-----R-----
+-----R-----
+when instr(a.c_overdue_sum,'R',1) > 0 and a.report_date < to_date('01.01.2013','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'R',1)-2)),' '),' '))*4.6
+when instr(a.c_overdue_sum,'R',1) > 0 and a.report_date >= to_date('01.01.2013','dd.mm.yyyy') and a.report_date < to_date('01.01.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'R',1)-2)),' '),' '))*4.6
+when instr(a.c_overdue_sum,'R',1) > 0 and a.report_date >= to_date('01.01.2014','dd.mm.yyyy') and a.report_date < to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'R',1)-2)),' '),' '))*4.6
+when instr(a.c_overdue_sum,'R',1) > 0 and a.report_date >= to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_overdue_sum,1,instr(a.c_overdue_sum,'R',1)-2)),' '),' '))*5.3
+-----R-----
+end) as summa, a.folder_id, trunc(a.report_date_time) as report_date_time, a.iin_rnn from  V_PKB_ALL a
+where (a.contract_status not like 'ССУДНАЯ ЗАДОЛЖЕННОСТЬ СПИСАНА ЗА БАЛАНС%' and
+       a.contract_status not like '%ЗАДОЛЖЕННОСТЬ СПИСАНА НА УБЫТКИ%' and
+       a.contract_status not like 'ССУДА ПЕРЕВЕДЕНА В РАЗРЯД УБЫТКОВ%')
+ and a.c_fin_inst not like '%KASPI%' and a.c_fin_inst not like '%КАСПИ%' and a.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ')
+group by a.folder_id,trunc(a.report_date_time),a.iin_rnn
+union
+select /*+ parallel(30) */ sum(case when instr(a.monthly_payment_raw,'K',1) > 0 then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'K',1)-2)),' '),' '))
+-----U-----
+when instr(a.monthly_payment_raw,'U',1) > 0 and a.report_date < to_date('01.01.2013','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'U',1)-2)),' '),' '))*149
+when instr(a.monthly_payment_raw,'U',1) > 0 and a.report_date >= to_date('01.01.2013','dd.mm.yyyy') and a.report_date < to_date('01.01.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'U',1)-2)),' '),' '))*151
+when instr(a.monthly_payment_raw,'U',1) > 0 and a.report_date >= to_date('01.01.2014','dd.mm.yyyy') and a.report_date < to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'U',1)-2)),' '),' '))*154
+when instr(a.monthly_payment_raw,'U',1) > 0 and a.report_date >= to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'U',1)-2)),' '),' '))*183
+-----U-----
+-----E-----
+when instr(a.monthly_payment_raw,'E',1) > 0 and a.report_date < to_date('01.01.2013','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'E',1)-2)),' '),' '))*184
+when instr(a.monthly_payment_raw,'E',1) > 0 and a.report_date >= to_date('01.01.2013','dd.mm.yyyy') and a.report_date < to_date('01.01.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'E',1)-2)),' '),' '))*200
+when instr(a.monthly_payment_raw,'E',1) > 0 and a.report_date >= to_date('01.01.2014','dd.mm.yyyy') and a.report_date < to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'E',1)-2)),' '),' '))*211
+when instr(a.monthly_payment_raw,'E',1) > 0 and a.report_date >= to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'E',1)-2)),' '),' '))*250
+-----E-----
+-----R-----
+when instr(a.monthly_payment_raw,'R',1) > 0 and a.report_date < to_date('01.01.2013','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'R',1)-2)),' '),' '))*4.6
+when instr(a.monthly_payment_raw,'R',1) > 0 and a.report_date >= to_date('01.01.2013','dd.mm.yyyy') and a.report_date < to_date('01.01.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'R',1)-2)),' '),' '))*4.6
+when instr(a.monthly_payment_raw,'R',1) > 0 and a.report_date >= to_date('01.01.2014','dd.mm.yyyy') and a.report_date < to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'R',1)-2)),' '),' '))*4.6
+when instr(a.monthly_payment_raw,'R',1) > 0 and a.report_date >= to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'R',1)-2)),' '),' '))*5.3
+-----R-----
+-----R-----
+when instr(a.monthly_payment_raw,'R',1) > 0 and a.report_date < to_date('01.01.2013','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'R',1)-2)),' '),' '))*4.6
+when instr(a.monthly_payment_raw,'R',1) > 0 and a.report_date >= to_date('01.01.2013','dd.mm.yyyy') and a.report_date < to_date('01.01.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'R',1)-2)),' '),' '))*4.6
+when instr(a.monthly_payment_raw,'R',1) > 0 and a.report_date >= to_date('01.01.2014','dd.mm.yyyy') and a.report_date < to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'R',1)-2)),' '),' '))*4.6
+when instr(a.monthly_payment_raw,'R',1) > 0 and a.report_date >= to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.monthly_payment_raw,1,instr(a.monthly_payment_raw,'R',1)-2)),' '),' '))*5.3
+-----R-----
+end) as summa, a.folder_id, trunc(a.report_date_time) as report_date_time, a.iin_rnn from  V_PKB_ALL a
+where (a.contract_status not like 'ССУДНАЯ ЗАДОЛЖЕННОСТЬ СПИСАНА ЗА БАЛАНС%' and
+       a.contract_status not like '%ЗАДОЛЖЕННОСТЬ СПИСАНА НА УБЫТКИ%' and
+       a.contract_status not like 'ССУДА ПЕРЕВЕДЕНА В РАЗРЯД УБЫТКОВ%')
+       and a.c_fin_inst not like '%KASPI%' and a.c_fin_inst not like '%КАСПИ%' and a.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ')
+group by a.folder_id,trunc(a.report_date_time),a.iin_rnn
+union
+select /*+ parallel(30) */ sum(case when instr(a.c_outstanding_sum,'K',1) > 0 then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'K',1)-2)),' '),' '))
+-----U-----
+when instr(a.c_outstanding_sum,'U',1) > 0 and a.report_date < to_date('01.01.2013','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'U',1)-2)),' '),' '))*149
+when instr(a.c_outstanding_sum,'U',1) > 0 and a.report_date >= to_date('01.01.2013','dd.mm.yyyy') and a.report_date < to_date('01.01.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'U',1)-2)),' '),' '))*151
+when instr(a.c_outstanding_sum,'U',1) > 0 and a.report_date >= to_date('01.01.2014','dd.mm.yyyy') and a.report_date < to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'U',1)-2)),' '),' '))*154
+when instr(a.c_outstanding_sum,'U',1) > 0 and a.report_date >= to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'U',1)-2)),' '),' '))*183
+-----U-----
+-----E-----
+when instr(a.c_outstanding_sum,'E',1) > 0 and a.report_date < to_date('01.01.2013','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'E',1)-2)),' '),' '))*184
+when instr(a.c_outstanding_sum,'E',1) > 0 and a.report_date >= to_date('01.01.2013','dd.mm.yyyy') and a.report_date < to_date('01.01.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'E',1)-2)),' '),' '))*200
+when instr(a.c_outstanding_sum,'E',1) > 0 and a.report_date >= to_date('01.01.2014','dd.mm.yyyy') and a.report_date < to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'E',1)-2)),' '),' '))*211
+when instr(a.c_outstanding_sum,'E',1) > 0 and a.report_date >= to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'E',1)-2)),' '),' '))*250
+-----E-----
+-----R-----
+when instr(a.c_outstanding_sum,'R',1) > 0 and a.report_date < to_date('01.01.2013','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'R',1)-2)),' '),' '))*4.6
+when instr(a.c_outstanding_sum,'R',1) > 0 and a.report_date >= to_date('01.01.2013','dd.mm.yyyy') and a.report_date < to_date('01.01.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'R',1)-2)),' '),' '))*4.6
+when instr(a.c_outstanding_sum,'R',1) > 0 and a.report_date >= to_date('01.01.2014','dd.mm.yyyy') and a.report_date < to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'R',1)-2)),' '),' '))*4.6
+when instr(a.c_outstanding_sum,'R',1) > 0 and a.report_date >= to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'R',1)-2)),' '),' '))*5.3
+-----R-----
+-----R-----
+when instr(a.c_outstanding_sum,'R',1) > 0 and a.report_date < to_date('01.01.2013','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'R',1)-2)),' '),' '))*4.6
+when instr(a.c_outstanding_sum,'R',1) > 0 and a.report_date >= to_date('01.01.2013','dd.mm.yyyy') and a.report_date < to_date('01.01.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'R',1)-2)),' '),' '))*4.6
+when instr(a.c_outstanding_sum,'R',1) > 0 and a.report_date >= to_date('01.01.2014','dd.mm.yyyy') and a.report_date < to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'R',1)-2)),' '),' '))*4.6
+when instr(a.c_outstanding_sum,'R',1) > 0 and a.report_date >= to_date('11.02.2014','dd.mm.yyyy') then
+to_number(REPLACE(REPLACE((SUBSTR(a.c_outstanding_sum,1,instr(a.c_outstanding_sum,'R',1)-2)),' '),' '))*5.3
+-----R-----
+end) as summa, a.folder_id, trunc(a.report_date_time) as report_date_time, a.iin_rnn from  V_PKB_ALL a
+where (a.contract_status like 'ССУДНАЯ ЗАДОЛЖЕННОСТЬ СПИСАНА ЗА БАЛАНС%' or
+       a.contract_status like '%ЗАДОЛЖЕННОСТЬ СПИСАНА НА УБЫТКИ%' or
+       a.contract_status like 'ССУДА ПЕРЕВЕДЕНА В РАЗРЯД УБЫТКОВ%')
+       and a.c_fin_inst not like '%KASPI%' and a.c_fin_inst not like '%КАСПИ%' and a.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ')
+group by a.folder_id,trunc(a.report_date_time),a.iin_rnn
+) a
+group by a.folder_id,a.report_date_time,a.iin_rnn;
+grant select on U1.M_PP_IIN to LOADDB;
+grant select on U1.M_PP_IIN to LOADER;
+
+

@@ -1,0 +1,27 @@
+﻿create table U1.T_RFO_Z#KAS_UNIVERSAL_D
+(
+  id            NUMBER not null,
+  collection_id NUMBER,
+  c_code        VARCHAR2(120),
+  c_name        VARCHAR2(750),
+  c_grouping    VARCHAR2(384),
+  class_id      VARCHAR2(48),
+  c_is_active   VARCHAR2(3),
+  sn            NUMBER,
+  su            NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RFO_Z#KAS_UNIVERSAL_D to LOADDB;
+

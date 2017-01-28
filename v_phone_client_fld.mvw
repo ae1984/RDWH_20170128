@@ -1,0 +1,71 @@
+﻿create materialized view U1.V_PHONE_CLIENT_FLD
+refresh complete on demand
+as
+select /*+ all_rows parallel(15) parallel_index(15)*/
+    xx.*,
+        round(xx.folder_date - phone_group_date_min,4) as
+    phone_group_age_by_folder,
+        round(xx.folder_date - client_prev_p_date,4) as
+    client_prev_days_ago
+from
+(select
+    fld.id as folder_id,
+    cp.c_date_create as folder_date,
+    x.p_number as p_number_home,
+    x.phone_group_date_min,
+    x.phone_group_date_max,
+    x.rfo_client_id,
+    c.x_rnn as rnn,
+    c.x_iin as iin,
+    x.p_fld_id_min,
+    x.p_fld_date_min,
+    x.p_fld_id_max,
+    x.p_fld_date_max,
+    x.client_order_first,
+    x.client_order_last,
+    x.p_client_count, -- кол-во клиентов в в группе сейчас
+        max(cp.c_date_create) over (partition by x.p_number
+             order by cp.c_date_create rows between 1 preceding and 1 preceding) as
+    client_prev_p_date
+from V_RFO_Z#FORM_CLIENT fc, v_rfo_z#fdoc fd, V_RFO_Z#RDOC rd,
+     V_RFO_Z#FOLDERS fld, V_RFO_Z#CLIENT c, V_RFO_Z#CM_CHECKPOINT cp,
+        (select -- формируем группы по телефонам и данные по попаданию клиентов в эти группы
+               trim(fc.c_phone_home#numb) as p_number,
+               min(min(cp.c_date_create)) over (partition by trim(fc.c_phone_home#numb)) as phone_group_date_min,
+               max(max(cp.c_date_create)) over (partition by trim(fc.c_phone_home#numb)) as phone_group_date_max,
+               fld.c_client as rfo_client_id,
+               min(fld.id) as p_fld_id_min,
+               min(cp.c_date_create) as p_fld_date_min,
+               max(fld.id) as p_fld_id_max,
+               max(cp.c_date_create) as p_fld_date_max,
+                   count(fld.c_client) over (partition by trim(fc.c_phone_home#numb)
+                       order by min(cp.c_date_create) range between unbounded preceding and current row) as
+               client_order_first,
+                   count(fld.c_client) over (partition by trim(fc.c_phone_home#numb)
+                       order by max(cp.c_date_create) range between unbounded preceding and current row) as
+               client_order_last,
+                   count(fld.c_client) over (partition by trim(fc.c_phone_home#numb)) as
+               p_client_count--,
+--                   count(distinct fld.id) over (partition by fc.c_phone_home#numb) as
+--               p_fld_count
+        from V_RFO_Z#FORM_CLIENT fc, V_RFO_Z#FDOC fd,
+             V_RFO_Z#RDOC rd, V_RFO_Z#FOLDERS fld,
+             V_RFO_Z#CLIENT c, V_RFO_Z#CM_CHECKPOINT cp
+        where cp.id = fld.id and
+             fd.id = fc.id and fd.class_id = 'FORM_CLIENT' and
+             rd.c_doc = fd.id and rd.collection_id = fld.c_docs and
+             fc.c_phone_home#numb is not null and
+             c.id = fld.c_client and
+             REGEXP_LIKE(trim(fc.c_phone_home#numb),'^[0-9]+$')
+        group by trim(fc.c_phone_home#numb), fld.c_client) x
+where fd.id = fc.id and fd.class_id = 'FORM_CLIENT' and
+     rd.c_doc = fd.id and rd.collection_id = fld.c_docs and
+--     fc.c_phone_home#numb is not null and
+     c.id = fld.c_client and cp.id = fld.id and
+     trim(fc.c_phone_home#numb) = x.p_number and
+     c.id = x.rfo_client_id
+) xx;
+grant select on U1.V_PHONE_CLIENT_FLD to LOADDB;
+grant select on U1.V_PHONE_CLIENT_FLD to LOADER;
+
+

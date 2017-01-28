@@ -1,0 +1,72 @@
+﻿create materialized view U1.M_RBO_CONTRACT_DEL_MONTH2
+refresh complete on demand
+as
+select rbo_contract_id,
+       min(x.rep_month) keep (dense_rank first order by x.rep_month) as rep_month,
+       min(cnt_del_month_6m) keep (dense_rank first order by x.rep_month) as cnt_del_month_6m,
+       min(cnt_del_month_12m) keep (dense_rank first order by x.rep_month) as cnt_del_month_12m,
+       min(cnt_del_month_18m) keep (dense_rank first order by x.rep_month) as cnt_del_month_18m,
+       min(cnt_del_month_24m) keep (dense_rank first order by x.rep_month)  as cnt_del_month_24m,
+       min(x.cnt_del_month) keep (dense_rank first order by x.rep_month) as cnt_del_month_all
+from(
+    select
+           t.rbo_contract_id,
+           t.rep_month,
+           sum(cli_month_del) over (partition by rbo_client_id order by rep_month range between unbounded preceding and 1 preceding) as cnt_del_month,
+           sum(cli_month_del) over (partition by rbo_client_id order by rep_month range between interval '6' month preceding and interval '1' month preceding) as cnt_del_month_6m ,
+           sum(cli_month_del) over (partition by rbo_client_id order by rep_month range between interval '12' month preceding and interval '1' month preceding) as cnt_del_month_12m,
+           sum(cli_month_del) over (partition by rbo_client_id order by rep_month range between interval '18' month preceding and interval '1' month preceding) as cnt_del_month_18m,
+           sum(cli_month_del) over (partition by rbo_client_id order by rep_month range between interval '24' month preceding and interval '1' month preceding) as cnt_del_month_24m,
+
+           sum(cli_month_del_7) over (partition by rbo_client_id order by rep_month range between unbounded preceding and 1 preceding) as cnt_del_7_month,
+           sum(cli_month_del_7) over (partition by rbo_client_id order by rep_month range between interval '6' month preceding and interval '1' month preceding) as cnt_del_7_month_6m ,
+           sum(cli_month_del_7) over (partition by rbo_client_id order by rep_month range between interval '12' month preceding and interval '1' month preceding) as cnt_del_7_month_12m,
+           sum(cli_month_del_7) over (partition by rbo_client_id order by rep_month range between interval '18' month preceding and interval '1' month preceding) as cnt_del_7_month_18m,
+           sum(cli_month_del_7) over (partition by rbo_client_id order by rep_month range between interval '24' month preceding and interval '1' month preceding) as cnt_del_7_month_24m,
+
+           sum(cli_month_del_30) over (partition by rbo_client_id order by rep_month range between unbounded preceding and 1 preceding) as cnt_del_30_month,
+           sum(cli_month_del_30) over (partition by rbo_client_id order by rep_month range between interval '6' month preceding and interval '1' month preceding) as cnt_del_30_month_6m ,
+           sum(cli_month_del_30) over (partition by rbo_client_id order by rep_month range between interval '12' month preceding and interval '1' month preceding) as cnt_del_30_month_12m,
+           sum(cli_month_del_30) over (partition by rbo_client_id order by rep_month range between interval '18' month preceding and interval '1' month preceding) as cnt_del_30_month_18m,
+           sum(cli_month_del_30) over (partition by rbo_client_id order by rep_month range between interval '24' month preceding and interval '1' month preceding) as cnt_del_30_month_24m,
+
+           sum(cli_month_del_60) over (partition by rbo_client_id order by rep_month range between unbounded preceding and 1 preceding) as cnt_del_60_month,
+           sum(cli_month_del_60) over (partition by rbo_client_id order by rep_month range between interval '6' month preceding and interval '1' month preceding) as cnt_del_60_month_6m ,
+           sum(cli_month_del_60) over (partition by rbo_client_id order by rep_month range between interval '12' month preceding and interval '1' month preceding) as cnt_del_60_month_12m,
+           sum(cli_month_del_60) over (partition by rbo_client_id order by rep_month range between interval '18' month preceding and interval '1' month preceding) as cnt_del_60_month_18m,
+           sum(cli_month_del_60) over (partition by rbo_client_id order by rep_month range between interval '24' month preceding and interval '1' month preceding) as cnt_del_60_month_24m,
+
+           sum(cli_month_del_90) over (partition by rbo_client_id order by rep_month range between unbounded preceding and 1 preceding) as cnt_del_90_month,
+           sum(cli_month_del_90) over (partition by rbo_client_id order by rep_month range between interval '6' month preceding and interval '1' month preceding) as cnt_del_90_month_6m ,
+           sum(cli_month_del_90) over (partition by rbo_client_id order by rep_month range between interval '12' month preceding and interval '1' month preceding) as cnt_del_90_month_12m,
+           sum(cli_month_del_90) over (partition by rbo_client_id order by rep_month range between interval '18' month preceding and interval '1' month preceding) as cnt_del_90_month_18m,
+           sum(cli_month_del_90) over (partition by rbo_client_id order by rep_month range between interval '24' month preceding and interval '1' month preceding) as cnt_del_90_month_24m
+     from (
+      select v.rbo_contract_id,
+             v.rbo_client_id,
+             trunc(v.rep_date,'mm') rep_month,
+             case when dense_rank() over (partition by rbo_client_id, trunc(v.rep_date,'mm') order by v.rbo_contract_id) > 1 then 0
+             else max(case when v.delinq_days_cli > 0 then  1 else 0 end)  end as  cli_month_del,
+
+             case when dense_rank() over (partition by rbo_client_id, trunc(v.rep_date,'mm') order by v.rbo_contract_id) > 1 then 0
+             else max(case when v.delinq_days_cli > 7 then  1 else 0 end)  end as  cli_month_del_7,
+
+             case when dense_rank() over (partition by rbo_client_id, trunc(v.rep_date,'mm') order by v.rbo_contract_id) > 1 then 0
+             else max(case when v.delinq_days_cli > 30 then  1 else 0 end)  end as  cli_month_del_30,
+
+             case when dense_rank() over (partition by rbo_client_id, trunc(v.rep_date,'mm') order by v.rbo_contract_id) > 1 then 0
+             else max(case when v.delinq_days_cli > 60 then  1 else 0 end)  end as  cli_month_del_60,
+
+             case when dense_rank() over (partition by rbo_client_id, trunc(v.rep_date,'mm') order by v.rbo_contract_id) > 1 then 0
+             else max(case when v.delinq_days_cli > 90 then  1 else 0 end)  end as  cli_month_del_90
+      from v_rbo_port v
+      group by v.rbo_contract_id,
+               v.rbo_client_id,
+               trunc(v.rep_date,'mm')
+    ) t
+) x
+group by x.rbo_contract_id;
+grant select on U1.M_RBO_CONTRACT_DEL_MONTH2 to LOADDB;
+grant select on U1.M_RBO_CONTRACT_DEL_MONTH2 to LOADER;
+
+

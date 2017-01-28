@@ -1,0 +1,200 @@
+﻿create materialized view U1.M_TMP_J_MATRIX_X_3_ISSUED_С
+refresh complete on demand
+as
+select td.yyyy as d_yyyy, td.text_yyyy_mm as d_yyyy_mm,
+       f.product_type as d_product_type, --f.product, --f.is_categ_a, f.is_credit_issued,
+       f.is_client_new_by_con,
+
+       case when d.total_debt_x_pmt_1_60 > 0 then 'FRAUD' else 'NOT FRAUD' end as d_is_fraud,
+       case when d.del_days_max_x > 0 then 'DEL 1 EVER' else 'NOT DEL 1 EVER' end as d_is_del_1_ever,
+       case when p2.rfo_contract_id is not null then 'PKB STD/EXT PRESENT'
+                 else 'PKB STD/EXT ABSENT' end as is_pkb_std_ext_present,
+
+       -- параметры после группировки
+       case when coalesce(floor(months_between(f.a_date, fc.birth_date_date) / 12),0) < 30 then '00-29'
+            when coalesce(floor(months_between(f.a_date, fc.birth_date_date) / 12),0) < 40 then '30-39'
+--            when coalesce(floor(months_between(f.a_date, fc.birth_date_date) / 12),0) < 50 then '40-49'
+            else '40-XX' end as d_client_age_gr,
+       case when coalesce(g.salary,0) <  20000 then '000-019'
+            when coalesce(g.salary,0) <  40000 then '020-039'
+            when coalesce(g.salary,0) <  60000 then '040-059'
+            when coalesce(g.salary,0) <  80000 then '060-079'
+            when coalesce(g.salary,0) < 100000 then '080-099'
+            when coalesce(g.salary,0) < 120000 then '100-119'
+/*            when coalesce(g.salary,0) < 140000 then '120-139'
+            when coalesce(g.salary,0) < 160000 then '140-159'
+            when coalesce(g.salary,0) < 180000 then '160-179'
+            when coalesce(g.salary,0) < 200000 then '180-200'*/
+            else '120-XXX' end as d_gcvp_salary_gr,
+       case when coalesce(fc.inc_sal,0) <  20000 then '000-019'
+            when coalesce(fc.inc_sal,0) <  40000 then '020-039'
+            when coalesce(fc.inc_sal,0) <  60000 then '040-059'
+            when coalesce(fc.inc_sal,0) <  80000 then '060-079'
+            when coalesce(fc.inc_sal,0) < 100000 then '080-099'
+            when coalesce(fc.inc_sal,0) < 120000 then '100-119'
+/*            when coalesce(fc.inc_sal,0) < 140000 then '120-139'
+            when coalesce(fc.inc_sal,0) < 160000 then '140-159'
+            when coalesce(fc.inc_sal,0) < 180000 then '160-179'
+            when coalesce(fc.inc_sal,0) < 200000 then '180-200'*/
+            else '120-XXX' end as d_form_income_salary_gr,
+       case when (coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) +
+             coalesce(fc.inc_rent,0) + coalesce(fc.inc_pension_benefits,0) +
+             coalesce(fc.inc_interest,0)) <  20000 then '000-019'
+            when (coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) +
+             coalesce(fc.inc_rent,0) + coalesce(fc.inc_pension_benefits,0) +
+             coalesce(fc.inc_interest,0)) <  40000 then '020-039'
+            when (coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) +
+             coalesce(fc.inc_rent,0) + coalesce(fc.inc_pension_benefits,0) +
+             coalesce(fc.inc_interest,0)) <  60000 then '040-059'
+            when (coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) +
+             coalesce(fc.inc_rent,0) + coalesce(fc.inc_pension_benefits,0) +
+             coalesce(fc.inc_interest,0)) <  80000 then '060-079'
+            when (coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) +
+             coalesce(fc.inc_rent,0) + coalesce(fc.inc_pension_benefits,0) +
+             coalesce(fc.inc_interest,0)) < 100000 then '080-099'
+            when (coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) +
+             coalesce(fc.inc_rent,0) + coalesce(fc.inc_pension_benefits,0) +
+             coalesce(fc.inc_interest,0)) < 120000 then '100-119'
+/*            when (coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) +
+             coalesce(fc.inc_rent,0) + coalesce(fc.inc_pension_benefits,0) +
+             coalesce(fc.inc_interest,0)) < 140000 then '120-139'
+            when (coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) +
+             coalesce(fc.inc_rent,0) + coalesce(fc.inc_pension_benefits,0) +
+             coalesce(fc.inc_interest,0)) < 160000 then '140-159'
+            when (coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) +
+             coalesce(fc.inc_rent,0) + coalesce(fc.inc_pension_benefits,0) +
+             coalesce(fc.inc_interest,0)) < 180000 then '160-179'
+            when (coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) +
+             coalesce(fc.inc_rent,0) + coalesce(fc.inc_pension_benefits,0) +
+             coalesce(fc.inc_interest,0)) < 200000 then '180-200'*/
+            else '120-XXX' end as d_form_income_add_gr,
+       case when f.prev_con_del_days_max is null then 'NULL'
+--            when f.prev_con_del_days_max < 30 then
+--                 '>='||to_char(floor(f.prev_con_del_days_max / 10) * 10)
+            else '>=0' end as d_prev_con_del_days_max_gr,
+
+       --fc.sex, fc.marital_status, fc.children,
+       --fa.is_ind_enterpreneur_clear, fa.is_ind_enterpreneur,
+
+-----------------------------
+
+       ---/ 10000) * 10000 as form_income_total,
+--       count(*) as cnt, --count(distinct f.claim_id) as claim_cnt, count(distinct f.rfo_contract_id) as rfo_con_cnt,
+       f.rfo_con_or_claim_id, -- кол-во заявок, включая онлайн
+--       count(distinct f.folder_id) as fld_cnt,
+       f.contract_amount as amount_requested,
+--       min(f.contract_amount) as amount_requested_min,
+--       max(f.contract_amount) as amount_requested_max,
+       ---
+       b.rbo_contract_id,
+       b.contract_number,
+       b.rbo_client_id,
+       f.a_date as folder_date_create,
+       f.rfo_client_id,
+       f.rfo_contract_id,
+
+--       count(distinct b.rbo_contract_id) as contract_cnt_dist,
+
+       d.max_debt_used_x as sales,
+--       min(d.max_debt_used_x) as amount_approved_min,
+--       max(d.max_debt_used_x) as amount_approved_max,
+
+/*       sum(case when d.del_days_x > 30 then d.total_debt_x end) / 1000000 as del_debt_30d_mln,
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_mln,
+       sum(case when d.del_days_x > 90 then d.total_debt_x end) / 1000000 as del_debt_90d_mln,
+       sum(case when d.del_days_max_x > 30 then d.total_debt_x end) / 1000000 as del_debt_30d_ever_mln,
+       sum(case when d.del_days_max_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_ever_mln,
+       sum(case when d.del_days_max_x > 90 then d.total_debt_x end) / 1000000 as del_debt_90d_ever_mln,
+       sum(d.total_debt_x_pmt_1_7) / 1000000 as pmt_1_7d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_1_7) / 1000000 as pmt_1_7d_sales_mln,*/
+       -----------------------------------------
+
+       case when coalesce(greatest(kf.form_income_total, g.salary),kf.form_income_total, g.salary) <= sv.salary * 2 then 1
+                 else 0 end as is_kdn_regul_form_gcvp_max,
+       case when coalesce(greatest(kf.form_income_total, g.salary), kf.form_income_total, g.salary) > 0 then
+               (coalesce(kp.pmt_avg,0) + /*coalesce(kp.pmt_avg_07,0) +*/ coalesce(kp.pmt_avg_10,0) + -- платеж по самому кредиту (по траншу или 10% по картам)
+                         coalesce(kc.kaspi_other_cards_pmt,0) + coalesce(kr.kaspi_other_creds_pmt,0) + -- другие кредиты каспи
+                         coalesce(p2.pkb_pmt_not_kaspi,0)) / -- платежи ПКБ не каспи
+                    coalesce(greatest(kf.form_income_total, g.salary), kf.form_income_total, g.salary) * 100 -- доходы (макс с анкеты и ГЦВП)
+            end as kdn_form_gcvp_max,
+
+       -----
+       coalesce(kp.pmt_avg,0) + /*coalesce(kp.pmt_avg_07,0) +*/ coalesce(kp.pmt_avg_10,0) + -- платеж по самому кредиту (по траншу или 10% по картам)
+                         coalesce(kc.kaspi_other_cards_pmt,0) + coalesce(kr.kaspi_other_creds_pmt,0) + -- другие кредиты каспи
+                         coalesce(p2.pkb_pmt_not_kaspi,0) as pmt_all,
+       kp.pmt_avg as pmt_avg,
+       kp.pmt_avg_10 as pmt_avg_10,
+       kc.kaspi_other_cards_pmt as kaspi_other_cards_pmt,
+       kr.kaspi_other_creds_pmt as kaspi_other_creds_pmt,
+       p2.pkb_pmt_not_kaspi as pkb_pmt_not_kaspi,
+       coalesce(greatest(kf.form_income_total, g.salary), kf.form_income_total, g.salary) as income_form_gcvp_max,
+       g.salary as gcvp_salary,
+       kf.form_income_salary as form_income_salary,
+       kf.form_income_total as form_income_total,
+
+       sv.salary as salary_average
+from (
+  select 'ОНЛАЙН-КРЕДИТ' as product_type, 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(f.folder_date_create_mi) as a_date,
+--         case when f.is_categ_a = 1 then 'КАТЕГОРИЯ А' when f.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+         --case when f.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when f.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+         case when f.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when f.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+         case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+         f.rfo_contract_id as rfo_con_or_claim_id,
+         f.prev_con_del_days_max
+  from M_FOLDER_CON_CANCEL f
+  where f.process_name = 'ОНЛАЙН КРЕДИТ' and
+        f.claim_id is not null and
+        f.folder_date_create_mi >= to_date('2014-04-01','yyyy-mm-dd') --and
+--        f.folder_date_create_mi < to_date('2015-01-01','yyyy-mm-dd')
+  union all
+  select 'ОНЛАЙН-КРЕДИТ' as product_type, 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(fo.folder_date_create_mi) as a_date,
+--         case when fo.is_categ_a = 1 then 'КАТЕГОРИЯ А' when fo.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+         --case when fo.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when fo.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+         case when fo.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when fo.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+         case when fo.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when fo.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         fo.claim_id, fo.contract_number, fo.rfo_client_id, fo.contract_amount, fo.folder_id, fo.form_client_id, fo.rfo_contract_id,
+         fo.claim_id as rfo_con_or_claim_id,
+         fo.prev_con_del_days_max
+  from M_FOLDER_CON_CANCEL_ONLINE fo
+  where fo.folder_date_create_mi >= to_date('2014-04-01','yyyy-mm-dd') --and
+--        fo.folder_date_create_mi < to_date('2015-01-01','yyyy-mm-dd')
+  union all
+  select f.product_type, f.cr_program_name as product, trunc(f.folder_date_create_mi) as a_date,
+--         case when f.is_categ_a = 1 then 'КАТЕГОРИЯ А' when f.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+         --case when f.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when f.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+         case when f.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when f.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+         case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+         f.rfo_contract_id as rfo_con_or_claim_id,
+         f.prev_con_del_days_max
+  from M_FOLDER_CON_CANCEL f
+  where f.process_name != 'ОНЛАЙН КРЕДИТ' and
+        f.folder_date_create_mi >= to_date('2014-04-01','yyyy-mm-dd') --and
+--        f.folder_date_create_mi < to_date('2015-01-01','yyyy-mm-dd')
+) f
+join V_TIME_DAYS td on td.yyyy_mm_dd = f.a_date
+join M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+left join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+---
+left join V_FOLDER_ALL_RFO fa on fa.folder_id = f.folder_id
+left join M_TMP_J_MATRIX_KDN_1_FORM kf on kf.rfo_contract_id = f.rfo_contract_id
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = kf.form_client_id -- f.form_client_id
+left join M_TMP_J_MATRIX_KDN_1_GCVP kg on kg.rfo_contract_id = f.rfo_contract_id
+left join (select v.gcvp_rep_id, max(v.salary) as salary
+          from V_GCVP_REPORT v
+          group by v.gcvp_rep_id
+) g on g.gcvp_rep_id = kg.gcvp_report_id
+left join M_TMP_J_MATRIX_KDN_1_PMT kp on kp.rfo_contract_id = f.rfo_contract_id
+left join M_TMP_J_MATRIX_KDN_1_KAS_CARDS kc on kc.rfo_contract_id = f.rfo_contract_id
+left join M_TMP_J_MATRIX_KDN_1_KAS_CREDS kr on kr.rfo_contract_id = f.rfo_contract_id
+left join M_TMP_J_MATRIX_KDN_1_PKB_2 p2 on p2.rfo_contract_id = f.rfo_contract_id
+--left join V_PKB_REPORT p on p.folder_id = f.folder_id
+left join T_SALARY_AVERAGE sv on sv.ym_date = trunc(f.a_date,'mm')
+where f.product_type in ('ДЕНЬГИ','ТОВАРЫ','КАРТЫ','ОНЛАЙН-КРЕДИТ')
+
+--);
+grant select on U1.M_TMP_J_MATRIX_X_3_ISSUED_С to LOADDB;
+grant select on U1.M_TMP_J_MATRIX_X_3_ISSUED_С to LOADER;
+
+

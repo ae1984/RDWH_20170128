@@ -1,0 +1,93 @@
+﻿create materialized view U1.M_RBO_ONLINE_TERMINAL_PRE3
+refresh complete on demand
+as
+select x.id,
+       x.c_document_date,
+       x.pt,
+       x.name_object,
+       x.reg_addres,
+       x.c_inn,
+       x.c_name,
+       x.c_numb,
+       case
+         when x.class_id = 'KAS_PC_DOG' then
+          case
+            when x.c_is_purse = 1 then
+             'KОШЕЛЕК'
+            else
+             'КРЕДИТНАЯ КАРТА'
+          end
+         when x.class_id IN ('PR_CRED', 'KRED_PERS') then
+          'ПОГАШЕНИЕ КРЕДИТА'
+         when x.class_id IN ('DEPN', 'DEPOSIT_PRIV') then
+          'ПОПОЛНЕНИЕ ДЕПОЗИТА'
+       end c_nazn,
+       x.c_amount
+  from (select cl2.id,
+               cl2.c_document_date,
+               cl2.pt,
+               cl2.name_object,
+               cl2.reg_addres,
+               cl2.c_inn,
+               cl2.c_name,
+               con.c_numb,
+               cl2.c_amount,
+               cl2.class_id, --назн пл
+               cl2.c_is_purse --назн пл
+          from ((select pre.id,
+                        cl.c_contacts,
+                        pre.c_document_date,
+                        pre.pt,
+                        pre.name_object,
+                        pre.reg_addres,
+                        cl.c_inn,
+                        cl.c_name,
+                        pre.c_amount,
+                        pre.class_id, --назн пл
+                        '0' c_is_purse --назн пл
+                   from M_RBO_ONLINE_TERMINAL_PRE2 pre
+                   join v_rbo_Z#DEPN dep
+                     on dep.id = pre.prod_id
+                   join v_rbo_Z#CLIENT cl
+                     on cl.id = dep.c_client) union all
+                (select pre.id,
+                        cl.c_contacts,
+                        pre.c_document_date,
+                        pre.pt,
+                        pre.name_object,
+                        pre.reg_addres,
+                        cl.c_inn,
+                        cl.c_name,
+                        pre.c_amount,
+                        pre.class_id, --назн пл
+                        coalesce(pc.c_is_purse, '0') --назн пл
+                   from M_RBO_ONLINE_TERMINAL_PRE2 pre
+                   join v_rbo_Z#KAS_PC_DOG pc
+                     on pc.id = pre.prod_id
+                   join v_rbo_Z#CLIENT cl
+                     on cl.id = pc.c_client_ref) union all
+                (select pre.id,
+                        cl.c_contacts,
+                        pre.c_document_date,
+                        pre.pt,
+                        pre.name_object,
+                        pre.reg_addres,
+                        cl.c_inn,
+                        cl.c_name,
+                        pre.c_amount,
+                        pre.class_id, --назн пл
+                        '0' c_is_purse --назн пл
+                   from M_RBO_ONLINE_TERMINAL_PRE2 pre
+                   join v_rbo_Z#PR_CRED cred
+                     on cred.id = pre.prod_id
+                   join v_rbo_Z#CLIENT cl
+                     on cl.id = cred.c_client)) cl2
+          join v_rbo_Z#CONTACTS con
+            on cl2.C_CONTACTS = con.collection_id
+           and con.C_PRIVATE = 334677833 -- MOBILE
+           and con.C_ACTIV = '1'
+           and con.C_AFFIRMED = '1') x;
+grant select on U1.M_RBO_ONLINE_TERMINAL_PRE3 to LOADDB;
+grant select on U1.M_RBO_ONLINE_TERMINAL_PRE3 to LOADER;
+
+

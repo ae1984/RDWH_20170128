@@ -1,0 +1,55 @@
+﻿create materialized view U1.M_TMP_ER_KNP15_MINER
+refresh force on demand
+as
+select t.*,
+      t2.is_bad_pmt_1 is_bad,
+      case when t."SEX" = 'М' then t."AGE_FULL_YEARS"*-1 else t."AGE_FULL_YEARS" end "AGE_FULL_YEARS_GENDER",
+      "MARITAL_STATUS" || '_' ||
+      case
+        when "CHILDREN" is null or "CHILDREN" = 'НЕТ' then 'НЕТ'
+        else "CHILDREN" end "MARITAL_CHILDREN",
+
+      nvl("PKB_ACTIVE_CONTRACTS", 0)*100 + nvl("PKB_CLOSED_CONTRACTS", 0) PKB_AC_CONTRACTS,
+
+      case when upper(t."FACT_ADDRESS_CITY") = upper(t."REG_ADDRESS_CITY")
+            and upper(t."FACT_ADDRESS_REGION") = upper(t."REG_ADDRESS_REGION")
+        then 'YES' else 'NO' end ADDRESS_EQUALS,
+        substr(t3."PMT_HIST",-4,4) as pmt_last_4,
+        substr(t3."PMT_HIST",-6,6) as pmt_last_6,
+        t3.pmt_hist,
+        t3.pmt_up_hist,
+        t3.opt_hist,
+        t3.pmt_full_hist,
+        t3.pmt_hist_new,
+        t3.pmt_full_hist_new,
+        substr(t3.pmt_full_hist_new,-6,6) as pmt_fhn_last_4,
+        substr(t3.pmt_full_hist,-6,6) as pmt_fh_last_4,
+        substr(t3.pmt_hist_new,-6,6) as pmt_hn_last_4
+
+from (select *
+      from RISK_DERBOL.M_FOLDER_CON_MINER_FIN t
+      where not exists (select null from u1.M_REJECTED_CONTRACTS t3
+                        where t3.contract_number = t.contract_number)) t
+join (select t.*
+      from RISK_DERBOL.M_FOLDER_CON_MINER_KN15_FPD t
+      where not exists (
+          select null from u1.M_REJECTED_CONTRACTS t3
+          where t3.contract_number = t.contract_number)) t2 on t2."CONTRACT_NUMBER" = t."CONTRACT_NUMBER"
+left join (select /*+ parallel(10) */
+                 t.*,
+                 c.cli_row_rank,
+                 substr(b.pmt_code,1,c.cli_row_rank) as pmt_hist,
+                 substr(b.pmt_up_code,1,c.cli_row_rank) as pmt_up_hist,
+                 substr(b.opt_code,1,c.cli_row_rank) as opt_hist,
+                 substr(b.pmt_full_code,1,c.cli_row_rank) as pmt_full_hist,
+
+                 substr(b.pmt_code_new,1,c.cli_row_rank) as pmt_hist_new,
+                 substr(b.pmt_full_code_new,1,c.cli_row_rank) as pmt_full_hist_new
+          from u1.V_CLIENT_HISTORY t
+          join u1.M_CLIENT_HISTORY_BARCODE c on c.client_id = t.client_id and c.yyyy_mm_num = t.yyyy_mm_num
+          join u1.M_CLIENT_BARCODE b on b.client_id = t.client_id) t3 on t3."CLIENT_ID" = substr(t."CONTRACT_NUMBER",2,7)
+     and t3."YYYY_MM_NUM" = to_number(to_char(t2."YY_MM_REPORT_DATE",'yyyymm'));
+grant select on U1.M_TMP_ER_KNP15_MINER to LOADDB;
+grant select on U1.M_TMP_ER_KNP15_MINER to LOADER;
+
+

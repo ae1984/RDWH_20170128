@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_OUT_DWH_PHOTO
+refresh complete on demand
+as
+select p.id,
+       p.folder_id,
+       p.name_photo,
+       cast (p.date_create as date) as date_create,
+       p.image_new,
+       p.verification_id,
+       cast (p.portition_date as date) as portition_date
+  from verificator.OUT_DWH_PHOTO@verifais p;
+grant select on U1.M_OUT_DWH_PHOTO to LOADDB;
+grant select on U1.M_OUT_DWH_PHOTO to LOADER;
+
+

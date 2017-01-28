@@ -1,0 +1,63 @@
+﻿create materialized view U1.M_OUT_ONLINE_SIGMA_ALL
+build deferred
+refresh complete on demand
+as
+with xx as
+(
+  select
+    upper(coalesce(t.shop_code, t1.shop_code)) as shop_code,
+    upper(coalesce(t.shop_name, t1.shop_name)) as shop_name,
+    trunc(f.c_date_create) as a_date,
+    case
+      when trunc(f.c_date_create) - trunc(sysdate)>=0 then -1
+      when trunc(f.c_date_create) - trunc(sysdate)>=-7 then -7
+      when trunc(f.c_date_create) - trunc(sysdate)>=-14 then -14
+      when trunc(f.c_date_create) - trunc(sysdate)>=-21 then -21
+    end as dd,
+    count(distinct cl.id) as fld_cnt
+  from u1.V_RFO_Z#KAS_ONLINE_CLAIM cl
+  join u1.V_RFO_Z#KAS_ONLINE_BUY f on cl.c_buy_ref = f.id
+  left join u1.M_FOLDER_CON_CANCEL t on t.folder_id = cl.c_folder_ref and t.process_name = 'ОНЛАЙН КРЕДИТ'
+  left join u1.M_FOLDER_CON_CANCEL_ONLINE t1 on t1.claim_id = cl.id
+  where trunc(f.c_date_create)>=trunc(sysdate - 21)
+  group by
+    upper(coalesce(t.shop_code, t1.shop_code)),
+    upper(coalesce(t.shop_name, t1.shop_name)),
+    trunc(f.c_date_create),
+    case
+      when trunc(f.c_date_create) - trunc(sysdate)>=0 then -1
+      when trunc(f.c_date_create) - trunc(sysdate)>=-7 then -7
+      when trunc(f.c_date_create) - trunc(sysdate)>=-14 then -14
+      when trunc(f.c_date_create) - trunc(sysdate)>=-21 then -21
+    end
+)
+select
+  rownum as id,
+  f.shop_code,
+  f.shop_name,
+  f.fld_cnt_avg_1d,
+  f.fld_cnt_avg_7d,
+  f.fld_cnt_avg_14d,
+  f.fld_cnt_avg_21d
+from (
+  select
+    t.shop_code,
+    t.shop_name,
+    avg(case when t.dd in (-1) then t.fld_cnt end) as fld_cnt_avg_1d,
+    stddev(case when t.dd in (-1) then t.fld_cnt end) as fld_cnt_stddev_1d,
+    avg(case when t.dd in (-7) then t.fld_cnt end) as fld_cnt_avg_7d,
+    stddev(case when t.dd in (-7,-14) then t.fld_cnt end) as fld_cnt_stddev_7d,
+    avg(case when t.dd in (-7,-14) then t.fld_cnt end) as fld_cnt_avg_14d,
+    stddev(case when t.dd in (-7,-14) then t.fld_cnt end) as fld_cnt_stddev_14d,
+    avg(case when t.dd in (-7,-14,-21) then t.fld_cnt end) as fld_cnt_avg_21d,
+    stddev(case when t.dd in (-7,-14,-21) then t.fld_cnt end) as fld_cnt_stddev_21d
+  from xx t
+  group by t.shop_code,t.shop_name
+) f
+where f.fld_cnt_avg_1d>0 and (
+  f.fld_cnt_avg_1d - f.fld_cnt_avg_7d - 3*f.fld_cnt_stddev_7d >0 or
+  f.fld_cnt_avg_1d - f.fld_cnt_avg_14d - 3*f.fld_cnt_stddev_14d >0 or
+  f.fld_cnt_avg_1d - f.fld_cnt_avg_21d - 3*f.fld_cnt_stddev_21d >0);
+grant select on U1.M_OUT_ONLINE_SIGMA_ALL to LOADDB;
+
+

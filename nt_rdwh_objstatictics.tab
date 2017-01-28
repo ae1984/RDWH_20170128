@@ -1,0 +1,60 @@
+﻿create table U1.NT_RDWH_OBJSTATICTICS
+(
+  dt                DATE,
+  object_name       VARCHAR2(128) not null,
+  last_ddl_time     DATE not null,
+  num_rows          NUMBER,
+  last_analyzed     DATE,
+  last_refresh_date DATE,
+  is_table          NUMBER,
+  is_mview          NUMBER,
+  is_view           NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_RDWH_OBJSTATICTICS
+  is 'RDWH2.0 Статистика по объектам Оракл view/mview/table ';
+comment on column U1.NT_RDWH_OBJSTATICTICS.dt
+  is 'Дата снятия показаний ';
+comment on column U1.NT_RDWH_OBJSTATICTICS.object_name
+  is 'Название объекта';
+comment on column U1.NT_RDWH_OBJSTATICTICS.last_ddl_time
+  is 'Последнее время изменения объекта';
+comment on column U1.NT_RDWH_OBJSTATICTICS.num_rows
+  is 'Количество записей в объекте';
+comment on column U1.NT_RDWH_OBJSTATICTICS.last_analyzed
+  is 'Время в которое произвонился анализ Ораклом';
+comment on column U1.NT_RDWH_OBJSTATICTICS.last_refresh_date
+  is 'Последнее время обновления данных в объекте';
+comment on column U1.NT_RDWH_OBJSTATICTICS.is_table
+  is 'это таблица?';
+comment on column U1.NT_RDWH_OBJSTATICTICS.is_mview
+  is 'это мат.представление?';
+comment on column U1.NT_RDWH_OBJSTATICTICS.is_view
+  is 'это представление?';
+create index U1.IDX_NT_RDWH_OBJSTATICTICS_DT on U1.NT_RDWH_OBJSTATICTICS (DT)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.NT_RDWH_OBJSTATICTICS to LOADDB;
+

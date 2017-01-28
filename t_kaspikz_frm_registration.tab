@@ -1,0 +1,149 @@
+﻿create table U1.T_KASPIKZ_FRM_REGISTRATION
+(
+  id                        NUMBER not null,
+  cnt_mini_prof             NUMBER,
+  phone_number              VARCHAR2(100),
+  reg_type                  NUMBER,
+  cnt_sent_msg              NUMBER,
+  start_date                DATE,
+  ex_user_id                NUMBER,
+  is_otp_skipped            NUMBER,
+  is_otp_success            NUMBER,
+  date_otp_proc             DATE,
+  is_bd_skip                NUMBER,
+  is_bd_success             NUMBER,
+  pmp_iin                   VARCHAR2(100),
+  pmp_birthdate             DATE,
+  pmp_rboid                 VARCHAR2(100),
+  pmp_rfoid                 VARCHAR2(100),
+  pmp_siebel_id             VARCHAR2(510),
+  pmp_first_name            VARCHAR2(510),
+  pmp_last_name             VARCHAR2(510),
+  pmp_middle_name           VARCHAR2(510),
+  pmp_docnumber             VARCHAR2(100),
+  pmp_email                 VARCHAR2(510),
+  last_action_date          DATE,
+  has_authentic_otp         NUMBER,
+  has_authentic_userdata    NUMBER,
+  is_newregistration        NUMBER,
+  is_reg_products           NUMBER,
+  is_authentic_by_userdata  NUMBER,
+  is_authentic_by_otp       NUMBER,
+  mp_has_cards              NUMBER,
+  mphaswalletcards          NUMBER,
+  mphasdepositaccounts      NUMBER,
+  mphasloanaccounts         NUMBER,
+  mpiin                     VARCHAR2(100),
+  mprboid                   VARCHAR2(100),
+  mprfoid                   VARCHAR2(100),
+  is_unq_birthdate          NUMBER,
+  is_empty_or_dbl_birthdate NUMBER,
+  registered_user_id        NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_KASPIKZ_FRM_REGISTRATION
+  is 'Данные по регистрации ';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.id
+  is 'Идентификатор';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.cnt_mini_prof
+  is 'Кол-во профилей';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.phone_number
+  is 'номер телефона клиента';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.reg_type
+  is ' тип регистрации';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.cnt_sent_msg
+  is 'кол-во отправленных смс кодов';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.start_date
+  is 'Дата начала регистрации';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.ex_user_id
+  is 'присвоение [RegistrationType] к уже существующему пользователю';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.is_otp_skipped
+  is 'был ли пропущен смс код';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.is_otp_success
+  is ' успешно ли  был введен код подтверждения';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.date_otp_proc
+  is 'Дата ввода смс кода';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.is_bd_skip
+  is 'была ли пропущена дата рождения';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.is_bd_success
+  is 'верно ли была введена дата рождения';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.pmp_iin
+  is 'ИИН';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.pmp_birthdate
+  is 'Дата рождения';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.pmp_rboid
+  is 'РБО ИД';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.pmp_rfoid
+  is 'РФО ИД';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.pmp_siebel_id
+  is 'Зибель ИД';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.pmp_first_name
+  is 'Имя';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.pmp_last_name
+  is 'Фамилия';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.pmp_middle_name
+  is 'Отчество';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.pmp_docnumber
+  is 'номер документа';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.pmp_email
+  is 'email';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.last_action_date
+  is 'проставляется, если после регистрации не входили';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.has_authentic_otp
+  is 'была аутентификация по смс коду';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.has_authentic_userdata
+  is ' была ли аутентификация по клиентским данным';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.is_newregistration
+  is 'новая ли регистрация';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.is_reg_products
+  is ' есть ли продукты банка';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.is_authentic_by_userdata
+  is 'требуется ли ввод пользовательских данных';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.is_authentic_by_otp
+  is 'требуется ли ввод смс кода';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.mp_has_cards
+  is 'есть ли карты';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.mphaswalletcards
+  is 'есть ли кошелек';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.mphasdepositaccounts
+  is ' есть ли депозит';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.mphasloanaccounts
+  is 'есть ли кредит';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.mpiin
+  is 'эти поля заполняются если регистрируется клиент банка';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.mprboid
+  is 'эти поля заполняются если регистрируется клиент банка';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.mprfoid
+  is 'эти поля заполняются если регистрируется клиент банка';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.is_unq_birthdate
+  is 'уникальна ли дата рождения';
+comment on column U1.T_KASPIKZ_FRM_REGISTRATION.is_empty_or_dbl_birthdate
+  is 'пустая или задвоившаяся дата рождения';
+alter table U1.T_KASPIKZ_FRM_REGISTRATION
+  add constraint T_KASPIKZ_FRM_REGISTRATION_PK primary key (ID)
+  using index 
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.T_KASPIKZ_FRM_REGISTRATION_PK nologging;
+grant select on U1.T_KASPIKZ_FRM_REGISTRATION to LOADDB;
+

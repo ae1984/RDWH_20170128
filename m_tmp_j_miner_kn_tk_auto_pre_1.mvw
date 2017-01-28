@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_TMP_J_MINER_KN_TK_AUTO_PRE_1
+using no index
+refresh complete on demand
+as
+select --+first_rows
+           t.deal_number, t.client_iin, --t.x_client_id, t.folder_id_first, , t.x_start_date_actual,
+           count(distinct case when da.contract_amount > 0 and da.total_debt > 0
+                                    then da.yy_mm_report_date end) as active_months_before_cnt,
+           count(distinct case when da.contract_amount > 0 and da.total_debt > 0 and
+                                    coalesce(da.delinq_days,0) < 8 then da.yy_mm_report_date end) as good_months_before_cnt,
+           count(distinct case when da.contract_amount > 0 and da.total_debt > 0 and
+                                    da.delinq_days > 7 then da.yy_mm_report_date end) as bad_months_before_cnt,
+           count(distinct case when da.contract_amount > 0 and da.total_debt > 0 and
+                                    da.delinq_days > 30 then da.yy_mm_report_date end) as bad_months_del30_before_cnt,
+           count(distinct case when da.contract_amount > 0 and da.total_debt > 0 and
+                                    da.delinq_days > 60 then da.yy_mm_report_date end) as bad_months_del60_before_cnt,
+           count(distinct case when da.contract_amount > 0 and da.total_debt > 0 and
+                                    da.delinq_days > 90 then da.yy_mm_report_date end) as bad_months_del90_before_cnt,
+           max(da.delinq_days) as delinq_days_max_before,
+           min(case when da.contract_amount > 0 and da.total_debt > 0 and
+                         da.delinq_days > 7 then da.contract_amount end) as contract_amount_min_del,
+           floor(months_between(min(t.x_start_date_actual), max(
+                         case when da.contract_amount > 0 and da.total_debt > 0 and
+                                   da.delinq_days > 7 then da.yy_mm_report_date end
+                          ))) as last_bad_month_mon_ago
+    from V_DWH_PORTFOLIO_CURRENT t
+    join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = t.client_iin and
+                                       d.x_start_date_actual < t.x_start_date_actual and
+                                       d.x_is_credit_issued = 1 and
+                                       d.x_product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО') and d.x_is_card = 0
+    join V_DATA_ALL da on da.contract_no = d.deal_number and da.yy_mm_report_date < trunc(t.x_start_date_actual,'mm')
+    where t.x_is_credit_issued = 1 and -- выданные
+          t.x_start_date_actual is not null and -- настоящие кредиты
+          t.client_iin is not null and
+          t.x_product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО') and t.x_is_card = 0 --and -- не карты (не УК)
+--          t.x_start_date_actual < to_date('2014-07','yyyy-mm') and
+--          t.x_start_date_actual >= to_date('2013-01','yyyy-mm') --and
+          --da.yy_mm_report_date < trunc(t.x_start_date_actual,'mm') and
+          --t.deal_number = 'R3702106-001/CRD-3'
+group by t.deal_number, t.client_iin;
+grant select on U1.M_TMP_J_MINER_KN_TK_AUTO_PRE_1 to LOADDB;
+grant select on U1.M_TMP_J_MINER_KN_TK_AUTO_PRE_1 to LOADER;
+
+

@@ -1,0 +1,120 @@
+﻿create materialized view U1.M_NPS_KASPI_SHOP
+using no index
+refresh complete on demand
+as
+select min(folder_id) folder_id_min,
+       is_client_bank,
+       client_name,
+       client_iin,
+       phone_number,
+       birth_date,
+       min(folder_date_create) as folder_date_create_min,
+       max(date_goods_take) as date_goods_take_max,
+       LISTAGG(goods_type_name, '; ') WITHIN GROUP(order by folder_id) as goods_type_name_list,
+       LISTAGG(goods_name, '; ') WITHIN GROUP(order by folder_id) as goods_name_list,
+       LISTAGG(shop_name, '; ') WITHIN GROUP(order by folder_id) as shop_name_list,
+       LISTAGG(partner, '; ') WITHIN GROUP(order by folder_id) as partner_list,
+       LISTAGG(contract_amount, '; ') WITHIN GROUP(order by folder_id) as contract_amount_list,
+       LISTAGG(c_price, '; ') WITHIN GROUP(order by folder_id) as c_price_list,
+       prod_type_list,
+       is_bank_employee,
+       is_sign  from (select t.folder_id as folder_id,
+       case
+         when ap.prod_type_list is not null then
+          'ДА'
+         else
+          'НЕТ'
+       end as is_client_bank,
+       d.client_name as client_name,
+       d.client_iin as client_iin,
+       p.phone_number as phone_number,
+       cl.birth_date as birth_date,
+       t.folder_date_create_mi as folder_date_create,
+       max(h.line_time) as date_goods_take,
+       cd.product_type_name as goods_type_name,
+       i.c_name as goods_name,
+       t.shop_name as shop_name,
+       sp.org_name as partner,
+       t.contract_amount as contract_amount,
+       i.c_price as c_price,
+       ap.prod_type_list as prod_type_list,
+       case
+         when pe.iin is null then
+          'НЕТ'
+         else
+          'ДА'
+       end as is_bank_employee,
+      case
+         when LISTAGG(h.user_position, '; ') WITHIN GROUP(order by h.folder_id)   like '%МЕНЕДЖ%' then
+          'ДА'
+         else
+          'НЕТ'
+       end is_sign
+  from M_FOLDER_CON_CANCEL t
+  join V_DWH_PORTFOLIO_CURRENT d
+    on d.deal_number = t.contract_number
+  join V_FORM_CLIENT_CONTACT_PHONE p
+    on p.folder_id = t.folder_id
+  join v_client_rfo_by_id cl
+    on cl.rfo_client_id = t.rfo_client_id
+  join V_FOLDER_ALL_HISTORY h
+    on h.folder_id = t.folder_id
+  join V_RFO_Z#FOLDERS f
+    on f.id = t.folder_id
+  join V_RFO_Z#RDOC rd
+    on f.c_docs = rd.collection_id
+  join V_RFO_Z#FDOC fd
+    on fd.id = rd.c_doc
+   and fd.class_id = 'CREDIT_DOG'
+  join V_RFO_Z#CREDIT_DOG cd
+    on cd.id = rd.c_doc
+  join V_RFO_Z#PROD_INFO i
+    on i.collection_id = cd.c_d#type_cred#prod#prod_info11
+  left join M_NPS_CL_ACTIV_PRODUCT ap
+    on ap.client_iin = d.client_iin
+  join V_shop sp
+    on sp.shop_code = t.shop_code
+  left join v_contract_ekt_dwh cd
+    on cd.contract_number = t.contract_number
+  left join M_ZUP_1C_STAFF_OUT pe
+    on pe.iin = d.client_iin
+   and pe.firing_date is null
+ where d.begin_date = trunc(sysdate) - 1
+   and t.process_name = 'ОНЛАЙН КРЕДИТ'
+   and t.is_credit_issued = 1
+   and t.is_point_active = 0
+   and p.phone_type = 'МОБИЛЬНЫЙ'
+   and not exists
+          (select null
+             from T_NPS_CLIENT_PHONED_ALL cl_ph
+            where insert_date < sysdate - 1 / 24
+              and cl_ph.client_iin = t.iin) ---вырежим тех клиентов кому уже звонили
+ group by d.client_name,
+          d.client_iin,
+          t.folder_id,
+          cl.birth_date,
+          t.folder_date_create_mi,
+          i.c_name,
+          t.shop_name,
+          t.contract_amount,
+          i.c_price,
+          ap.prod_type_list,
+          sp.org_name,
+          cd.product_type_name,
+          pe.iin,
+          p.phone_number)
+           group by
+          is_client_bank,
+          client_name,
+          client_iin,
+          phone_number,
+          birth_date,
+         -- shop_name,
+        --  partner,
+          prod_type_list,
+          is_bank_employee,
+          is_sign;
+grant select on U1.M_NPS_KASPI_SHOP to LOADDB;
+grant select on U1.M_NPS_KASPI_SHOP to LOADER;
+
+

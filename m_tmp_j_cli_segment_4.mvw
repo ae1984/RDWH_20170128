@@ -1,0 +1,78 @@
+﻿create materialized view U1.M_TMP_J_CLI_SEGMENT_4
+refresh complete on demand
+as
+select c.iin,
+       count(distinct f.folder_id) as folder_all_cnt,
+       count(distinct case when f.is_credit_issued = 1 then f.folder_id end) as folder_all_approved_cnt,
+
+       trunc(max(case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО','КАРТЫ')
+                      then f.folder_id end)) as folder_id_last,
+       trunc(max(case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО','КАРТЫ') and f.is_credit_issued = 1
+                      then f.folder_id end)) as folder_id_approved_last,
+       trunc(max(case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО','КАРТЫ')
+                      then f.rfo_contract_id end)) as rfo_contract_id_last,
+       trunc(max(case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО','КАРТЫ') and f.is_credit_issued = 1
+                      then f.rfo_contract_id end)) as rfo_contract_id_approved_last,
+
+       count(distinct case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО','КАРТЫ') then f.folder_id end) as folder_kn_tk_auto_card_cnt,
+       count(distinct case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО','КАРТЫ') and
+                      f.is_credit_issued = 1 then f.folder_id end) as folder_kn_tk_auto_card_apr_cnt,
+
+       count(distinct case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО') then f.folder_id end) as folder_kn_tk_auto_cnt,
+       count(distinct case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО') and
+                      f.is_credit_issued = 1 then f.folder_id end) as folder_kn_tk_auto_approved_cnt,
+
+       count(distinct case when f.product_type in ('ДЕНЬГИ') then f.folder_id end) as folder_kn_cnt,
+       count(distinct case when f.product_type in ('ТОВАРЫ') then f.folder_id end) as folder_tk_cnt,
+       count(distinct case when f.product_type in ('АВТО') then f.folder_id end) as folder_auto_cnt,
+       count(distinct case when f.product_type in ('КАРТЫ') then f.folder_id end) as folder_card_cnt,
+       count(distinct case when f.product_type in ('ДЕНЬГИ') and
+                      f.is_credit_issued = 1 then f.folder_id end) as folder_kn_approved_cnt,
+       count(distinct case when f.product_type in ('ТОВАРЫ') and
+                      f.is_credit_issued = 1 then f.folder_id end) as folder_tk_approved_cnt,
+       count(distinct case when f.product_type in ('АВТО') and
+                      f.is_credit_issued = 1 then f.folder_id end) as folder_auto_approved_cnt,
+       count(distinct case when f.product_type in ('КАРТЫ') and
+                      f.is_credit_issued = 1 then f.folder_id end) as folder_card_approved_cnt,
+
+       count(distinct case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО','КАРТЫ') and
+                      f.folder_date_create_mi > to_date('2015-01','yyyy-mm') then f.folder_id end) as fld_kn_tk_auto_crd_3m_cnt,
+       count(distinct case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО','КАРТЫ') and
+                      f.folder_date_create_mi > to_date('2014-10','yyyy-mm') then f.folder_id end) as fld_kn_tk_auto_crd_6m_cnt,
+       count(distinct case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО','КАРТЫ') and
+                      f.folder_date_create_mi > to_date('2014-04','yyyy-mm') then f.folder_id end) as fld_kn_tk_auto_crd_12m_cnt,
+
+       count(distinct case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО','КАРТЫ') and
+                      f.folder_date_create_mi > to_date('2015-01','yyyy-mm') and f.is_credit_issued = 1
+                                              then f.folder_id end) as fld_kn_tk_auto_crd_3m_apr_cnt,
+       count(distinct case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО','КАРТЫ') and
+                      f.folder_date_create_mi > to_date('2014-10','yyyy-mm') and f.is_credit_issued = 1
+                                              then f.folder_id end) as fld_kn_tk_auto_crd_6m_apr_cnt,
+       count(distinct case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО','КАРТЫ') and
+                      f.folder_date_create_mi > to_date('2014-04','yyyy-mm') and f.is_credit_issued = 1
+                                              then f.folder_id end) as fld_kn_tk_aut_crd_12m_apr_cnt,
+
+       count(distinct case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО') and
+                      f.folder_date_create_mi > to_date('2015-01','yyyy-mm') then f.folder_id end) as folder_kn_tk_auto_3m_cnt,
+       count(distinct case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО') and
+                      f.folder_date_create_mi > to_date('2014-10','yyyy-mm') then f.folder_id end) as folder_kn_tk_auto_6m_cnt,
+       count(distinct case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО') and
+                      f.folder_date_create_mi > to_date('2014-04','yyyy-mm') then f.folder_id end) as folder_kn_tk_auto_12m_cnt,
+
+       count(distinct case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО') and
+                      f.folder_date_create_mi > to_date('2015-01','yyyy-mm') and f.is_credit_issued = 1
+                                              then f.folder_id end) as folder_kn_tk_auto_3m_appr_cnt,
+       count(distinct case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО') and
+                      f.folder_date_create_mi > to_date('2014-10','yyyy-mm') and f.is_credit_issued = 1
+                                              then f.folder_id end) as folder_kn_tk_auto_6m_appr_cnt,
+       count(distinct case when f.product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО') and
+                      f.folder_date_create_mi > to_date('2014-04','yyyy-mm') and f.is_credit_issued = 1
+                                              then f.folder_id end) as folder_kn_tk_auto_12m_appr_cnt
+from M_FOLDER_CON_CANCEL f
+join V_CLIENT_RFO_BY_ID c on c.rfo_client_id = f.rfo_client_id
+where c.iin is not null and f.is_refin = 0
+group by c.iin;
+grant select on U1.M_TMP_J_CLI_SEGMENT_4 to LOADDB;
+grant select on U1.M_TMP_J_CLI_SEGMENT_4 to LOADER;
+
+

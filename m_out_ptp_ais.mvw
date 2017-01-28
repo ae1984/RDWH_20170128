@@ -1,0 +1,38 @@
+﻿create materialized view U1.M_OUT_PTP_AIS
+refresh force on demand
+as
+select a.id as align_ptp_ais_dwh_id,
+       coalesce(c.dcard_contragent_clnt_gid,cred.crdt_contragent_clnt_gid, dep.dpst_contragent_clnt_gid) client_dwh_id,
+      a.contract_dwh_id,
+      a.ptp_section as subdivision_which_set_ptp,
+      a.ptp_sent_by as manager_ptp_which_set_ptp,
+      a.ptp_sent_group as group_set_ptp,
+      a.ptp_sent_at as date_set_ptp,
+      a.is_electronic as electron_ptp_sign,
+      a.ptp_created_at as date_create_ptp,
+      a.delay_sum_before as delay_amount_on_moment_set_ptp,
+      a.ptp_number as num_ptp,
+      a.ptp_sum as amount_ptp,
+      a.ptp_status as status_ptp,
+      a.ptp_done_date as date_execution_ptp,
+      a.delay_days_before as delay_days_on_moment_execute,
+      a.delay_days_after as delay_days_after_execute,
+      a.delay_sum_after as delay_amount_after_execution,
+      a.debt_sum as amount_dedts_on_moment_execute,
+      a.ptp_recalled_at as date_review_ptp,
+      a.ptp_recalled_by as manager_ptp_which_review_ptp,
+      a.ptp_recalled_group as group_review_ptp,
+      a.recall_date as date_review_electron_ptp,
+      a.ptp_id as ptp_id_dwh
+from DWH_STAGE.S55_OUT_PTP@RDWH_EXD a
+left join DWH_MAIN.REF_DEAL_CARD@rdwh_exd c on c.dcard_crt_gid = a.CONTRACT_DWH_ID and c.dcard$row_status = 'A'
+                                            AND sysdate BETWEEN c.dcard$start_date AND c.dcard$end_date
+left join DWH_MAIN.REF_DEAL_CREDIT@rdwh_exd cred on cred.crdt_crt_gid = a.CONTRACT_DWH_ID and cred.crdt$row_status = 'A'
+                                                 AND sysdate BETWEEN cred.crdt$start_date AND cred.crdt$end_date
+
+left join DWH_MAIN.REF_DEAL_DEPOSIT@rdwh_exd dep on dep.dpst_crt_gid = a.CONTRACT_DWH_ID and dep.dpst$row_status = 'A'
+                                                  AND sysdate BETWEEN dep.dpst$start_date AND dep.dpst$end_date;
+grant select on U1.M_OUT_PTP_AIS to LOADDB;
+grant select on U1.M_OUT_PTP_AIS to LOADER;
+
+

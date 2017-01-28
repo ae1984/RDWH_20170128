@@ -1,0 +1,24 @@
+﻿create materialized view U1.V_RFO_Z#COUNTRY
+refresh complete on demand
+as
+select c.id,
+       c.c_value,
+       c.c_code,
+       c.c_alfa_2,
+       c.c_alfa_3,
+       upper(c.c_name) as c_name,
+       c.c_iname,
+       c.c_have_terror,
+       c.c_oesr,
+       c.c_calendar,
+       c.c_offshare,
+       c.c_kas_is_trnsfr,
+       c.c_kas_add_prop,
+       c.sn,
+       c.su
+  from IBS.Z#COUNTRY@RFO_SNAP c;
+grant select on U1.V_RFO_Z#COUNTRY to ITS_USER;
+grant select on U1.V_RFO_Z#COUNTRY to LOADDB;
+grant select on U1.V_RFO_Z#COUNTRY to LOADER;
+
+

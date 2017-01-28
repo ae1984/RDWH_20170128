@@ -1,0 +1,9 @@
+﻿create materialized view U1.V_SIEBEL_S_CONTACT_X
+using no index
+refresh complete on demand
+as
+select * from SIEBEL.S_CONTACT_X@AMSG_PROD t;
+grant select on U1.V_SIEBEL_S_CONTACT_X to LOADDB;
+grant select on U1.V_SIEBEL_S_CONTACT_X to LOADER;
+
+

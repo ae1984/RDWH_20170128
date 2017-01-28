@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_TMP_J_FORM_CLI_1
+refresh complete on demand
+as
+select to_char(f.folder_date_create_mi,'yyyy-mm') as a_mon, trunc(f.folder_date_create_mi) as a_date,
+       f.cr_program_name, f.process_name,
+       ---
+       count(*) as cnt, count(distinct f.rfo_contract_id) as cnt_rfo_con,
+       count(distinct fc.form_client_id) as form_cli_cnt,
+       count(distinct case when trunc(fc.form_client_date) = trunc(f.folder_date_create_mi) then
+                      fc.form_client_id end) as form_cli_same_date_cnt
+from M_FOLDER_CON_CANCEL f
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = f.form_client_id
+group by to_char(f.folder_date_create_mi,'yyyy-mm'), trunc(f.folder_date_create_mi),
+         f.cr_program_name, f.process_name
+--);
+grant select on U1.M_TMP_J_FORM_CLI_1 to LOADDB;
+grant select on U1.M_TMP_J_FORM_CLI_1 to LOADER;
+
+

@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_APP_MINER_FORM_CLIENT_PMT
+build deferred
+refresh force on demand
+as
+select c.rfo_client_id
+      ,avg(case when frm.inc_sal != 0 then (coalesce(ml.monthly_pay, p1.plan_pmt_first_sum, p2.pmt_avg_07, p3.sc_pmt_rbo, p3.sc_pmt_nom_rate)/frm.inc_sal)*100 end) as install_incom_avg_30d
+
+ from u1.v_client_rfo_by_id c
+ left join U1.M_APP_MINER t on t.rfo_client_id=c.rfo_client_id
+ left join U1.M_APP_MINER_FORM_CLIENT frm on frm.app_id = t.app_id
+ left join U1.M_FOLDER_CON_CANCEL_ONLINE_1 ml on ml.claim_id = t.claim_id
+ left join U1.M_RBO_CONTRACT_CREDIT_PMT p1 on p1.rbo_client_id = c.rfo_client_id
+ left join ( select cp.rbo_contract_id,
+                    min(cp.pmt_avg_07) keep (dense_rank first order by cp.date_begin) as pmt_avg_07
+               from U1.M_RBO_CONTRACT_CARD_PMT cp
+              group by rbo_contract_id) p2 on p2.rbo_contract_id = t.rbo_contract_id
+ left join (select p32.folder_id,
+                   max(p32.sc_pmt_nom_rate) keep (dense_rank last order by p32.date_create) as sc_pmt_nom_rate,
+                   max(p32.sc_pmt_rbo) keep (dense_rank last order by p32.date_create) as sc_pmt_rbo
+              from  U1.M_FOLDER_MO_PMT_2016 p32
+             group by p32.folder_id) p3 on p3.folder_id = t.folder_id
+
+where t.folder_date_create >= trunc(sysdate-30)
+group by c.rfo_client_id;
+grant select on U1.M_APP_MINER_FORM_CLIENT_PMT to LOAD_MO;
+
+

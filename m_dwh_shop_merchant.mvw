@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_DWH_SHOP_MERCHANT
+refresh force on demand
+as
+select /*+ noparallel */
+       marchant_id,
+       create_date,
+       rfo_id,
+       marchant_name,
+       employee_id,
+       contact_person_id,
+       contact_id,
+       contact_city,
+       street_name,
+       street_number,
+       address_value_mail_index
+  from dwh_stage.S43_MERCHANT@dwh_prod2;
+grant select on U1.M_DWH_SHOP_MERCHANT to LOADDB;
+grant select on U1.M_DWH_SHOP_MERCHANT to LOADER;
+
+

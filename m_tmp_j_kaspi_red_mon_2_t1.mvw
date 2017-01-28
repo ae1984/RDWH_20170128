@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_TMP_J_KASPI_RED_MON_2_T1
+build deferred
+refresh complete on demand
+as
+select tt.folder_id,
+       max(case when instr(pp.params_out, 'MO_SCO_REJECT#1') > 0 then 1 else 0 end) keep (dense_rank last order by tt.date_create) as is_mo_reject,
+       max(case when instr(pp.params_out, 'MO_CRED_LIMIT#100000') > 0 then 100
+            when instr(pp.params_out, 'MO_CRED_LIMIT#50000') > 0 then 50
+            end) keep (dense_rank last order by tt.date_create)  as mo_cred_limit_k
+from u1.mo_sco_request tt
+join u1.mo_process pp on pp.process_request_id = tt.process_request_id
+join u1.mo_sco_request_str st on st.sco_request_id = tt.id
+where st.field_code = 'BUSINESS_PROC' and
+      st.value = 'KASPI_RED' and
+      tt.date_create < trunc(sysdate) and
+      pp.date_start < trunc(sysdate)
+group by tt.folder_id;
+grant select on U1.M_TMP_J_KASPI_RED_MON_2_T1 to LOADDB;
+
+

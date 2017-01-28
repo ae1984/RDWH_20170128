@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_CLIENT_CAL_RNN
+refresh complete on demand
+as
+select --substr(ltrim(d2.contract_no, 'R'),1,7) as client_id,
+              d2.client_id,
+              min(d2.rnn) keep (dense_rank first order by d2.yy_mm_report) as client_rnn_first,
+              min(d2.rnn) keep (dense_rank last order by d2.yy_mm_report) as client_rnn_last
+              from v_data_all d2
+              where d2.rnn is not null --and
+--                  d2.start_date is not null
+--              group by substr(ltrim(d2.contract_no, 'R'),1,7)
+              group by d2.client_id;
+grant select on U1.M_CLIENT_CAL_RNN to LOADDB;
+grant select on U1.M_CLIENT_CAL_RNN to LOADER;
+
+

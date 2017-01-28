@@ -1,0 +1,15 @@
+﻿create materialized view U1.V_RFO_Z#MAP_OBJ_IN_OUT
+refresh complete on demand
+as
+select id,
+       c_id_object,
+       c_ext_code,
+       c_class_object,
+       c_depart,
+       c_kas_comment,
+       c_date_audit
+  from IBS.Z#MAP_OBJ_IN_OUT@RFO_SNAP;
+grant select on U1.V_RFO_Z#MAP_OBJ_IN_OUT to LOADDB;
+grant select on U1.V_RFO_Z#MAP_OBJ_IN_OUT to LOADER;
+
+

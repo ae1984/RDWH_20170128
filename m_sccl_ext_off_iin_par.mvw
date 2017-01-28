@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_SCCL_EXT_OFF_IIN_PAR
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       t.iin as client_iin,
+
+       max(t.off) as is_offline
+
+from U1.T_UPD_ECO_OFF t
+where t.iin is not null
+group by t.iin;
+grant select on U1.M_SCCL_EXT_OFF_IIN_PAR to LOADDB;
+grant select on U1.M_SCCL_EXT_OFF_IIN_PAR to LOAD_MO;
+grant select on U1.M_SCCL_EXT_OFF_IIN_PAR to RTS_RDWH;
+
+

@@ -1,0 +1,43 @@
+﻿create materialized view U1.M_MO_ONL_CLI_SEGMENT_REJ
+build deferred
+using no index
+refresh force on demand
+as
+select t.rfo_client_id,
+       t.iin as client_iin,
+
+       min(t.date_create) as rej_date_min,
+       max(t.date_create) as rej_date_max
+from M_MO_ONL_CLI_SEGMENT_REJ_PRE t
+where (--since to_date('20092016', 'ddmmyyyy')
+       (t.sc_card_81_sa_2_rej_res_pre = 1 and
+        t.date_create >= to_date('20092016', 'ddmmyyyy')
+        )
+      or
+        --с момента включения, без промежутка работы sc_card_81_sa_res_pkb_gcvp (с to_date('30082016', 'ddmmyyyy') до to_date('02092016', 'ddmmyyyy'))
+        --до включения sc_card_81_sa_2_rej_res_pre (с to_date('20092016', 'ddmmyyyy'))
+        (t.sc_bad_check_only = 1 and
+         (
+          (t.date_create >= to_date('22062016', 'ddmmyyyy')
+           and t.date_create < to_date('30082016', 'ddmmyyyy'))
+         or
+          (t.date_create >= to_date('02092016', 'ddmmyyyy')
+          and t.date_create < to_date('20092016', 'ddmmyyyy'))
+         )
+         )
+      or
+        --только с to_date('30082016', 'ddmmyyyy') до to_date('02092016', 'ddmmyyyy')
+        (t.sc_card_81_sa_res_pkb_gcvp = 1 and
+          (
+            (t.date_create >= to_date('30082016', 'ddmmyyyy')
+             and t.date_create < to_date('02092016', 'ddmmyyyy'))
+           )
+        )
+      )
+      and t.mo_sco_reject = 1
+group by t.rfo_client_id,
+         t.iin;
+grant select on U1.M_MO_ONL_CLI_SEGMENT_REJ to LOADDB;
+grant select on U1.M_MO_ONL_CLI_SEGMENT_REJ to LOAD_MO;
+
+

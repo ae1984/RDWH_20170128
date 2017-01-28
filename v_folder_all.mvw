@@ -1,0 +1,271 @@
+﻿create materialized view U1.V_FOLDER_ALL
+build deferred
+refresh complete on demand
+as
+select /*+parallel(30) parallel_index(30) */ f.*,x.c_name as verificator_name
+from
+(select
+   p11.*,
+   rc.total_prior_pmts,
+   rc.total_prior_pmts_new,-----
+   rc.max_prior_delinq_days,
+       case when rc.max_prior_active_month > 0 then
+           substr(to_char(rc.max_prior_active_month),1,4) || ' - ' ||
+           substr(to_char(rc.max_prior_active_month),5,2)
+       else null end as
+   max_prior_active_month,
+       case when rc.max_prior_active_month > 0 then
+           rc.inactivity_period
+       else null end as
+   inactivity_period
+from (
+select p1.*,
+            count(*) over (partition by p1.client_iin order by p1.folder_id
+                range between unbounded preceding and 1 preceding) as
+       previous_folders_count,
+            sum(case when p1.is_credit_issued = 1 then 1 else 0 end) over
+                (partition by p1.client_iin order by p1.folder_id
+                range between unbounded preceding and 1 preceding) as
+       previous_folders_appr_count,
+       pr.client_order_first as phone_home_order_first,
+       pr.client_order_last as phone_home_order_last,
+       pr.p_client_count as phone_home_client_count,
+       pr.client_prev_p_date as phone_home_prev_p_date,
+       pr.client_prev_days_ago as phone_home_prev_days_ago
+from (
+select
+       fld.id as folder_id,
+       fld.c_n as folder_number,
+       cp.c_date_create as folder_create_date,
+       to_char(cp.c_date_create,'yyyy') as folder_create_year,
+       to_char(cp.c_date_create,'yyyy - mm') as folder_create_yy_mm,
+       cid.client_id,
+       c.x_iin as client_iin,
+       c.x_rnn as client_rnn,
+       fc.c_summa as amount,
+       fc.c_period#quant as term_duration,
+       upper(ut.c_name1) as term_unit,
+       bp.c_code as process_code,
+       upper(bp.c_name) as process_name,
+       upper(cmw.c_name) as route,
+       upper(u1.c_name) as delivery_type,
+       upper(u2.c_name) as source_system,
+           case when p.c_code in ('EXECUTE','CREDIT_EXEC','KAS_CHK_DOC_PACK','TO_RECLAMATION',
+                   'ARCHIVE','ERR_ARCHIVE','KAS_SENT_PKD','KAS_WITHDRAWN1','KAS_WITHDRAWN2',
+                   'KAS_PKD_CONTROL','KAS_PKD_REV','TR_CHANGED')
+              then 1 else 0 end as
+       is_credit_issued,
+       upper(p.c_name) as folder_status,
+       sd.c_code as pos_code,
+       upper(dnp.c_name) branch_name,
+       upper(u.c_name) as expert_name,
+       u.c_num_tab as expert_num_tab,
+--       sd.c_name as pos_name,
+--       fc.c_last_name as name_last,
+--       fc.c_first_name as name_first,
+--       fc.c_sur_name as name_patronymic,
+       to_char(fc.c_date_birth, 'dd.mm.yyyy') as birth_date,
+--       fc.c_place_birth as birth_place,
+--       fc.c_address_reg#place as address_registration,
+       upper(fc.c_name_org) as org_name,
+       trim(fc.c_phone_home#numb) as phone_home,
+       trim(fc.c_mobile#numb) as phone_mobile,
+       trim(fc.c_phone_org) as phone_org,
+       trim(fc.c_phone_work#numb) as phone_work,
+       ffg.inc_sal,
+       ffg.inc_sal_add,
+       ffg.inc_sal_spouse,
+       ffg.inc_rent,
+       ffg.inc_pension_benefits,
+       ffg.inc_interest,
+       a.prescoring_result as prescoring_result,
+       case when a.scoring_result is not null then
+           (case when (a.scoring_result = 'N' and a.scoring_status = 'Х') then 'X'
+              else 'W' end)
+           else null end as
+       scoring_test,
+       a.scoring_result,
+       a.scoring_status,
+       a.card_number as scoring_card_number,
+       ffg.gcvp_sal,
+       ffg.sal_gcvp_to_sal_form_perc,
+       ffg.sal_gcvp_to_sal_form_categ,
+       ffg.org_rnn,
+       ffg.org_bin,
+       clp.c_date_pers as birth_date_client,
+       upper(clp.c_place_birth) as birth_place_client,
+       upper(fc.c_casta) as client_position,
+       upper(fc.c_casta_wife) as client_spouse_position,
+       upper(r.c_name) as reg_address_region
+--       upper(trim(fc.c_address_fact#region)) as fact_address_region
+from
+      u1.V_RFO_Z#FORM_CLIENT fc,
+/*      (select rdx.collection_id, min(fdx.class_id) as fdoc_class_id
+             from u1.V_RFO_Z#FDOC fdx, u1.V_RFO_Z#RDOC rdx
+             where fdx.id = rdx.c_doc and
+                   fdx.class_id in ('FORM_CLIENT','KAS_PC_DOG')
+             group by rdx.collection_id) rd_fd_class,  */
+      u1.V_RFO_Z#FDOC fd,
+      u1.V_RFO_Z#RDOC rd,
+      u1.V_RFO_Z#FOLDERS fld,
+      u1.V_RFO_Z#CLIENT c,
+      u1.V_RFO_Z#CL_PRIV clp,
+      u1.V_RFO_Z#CM_POINT p,
+      u1.V_RFO_Z#CM_CHECKPOINT cp,
+      u1.V_RFO_Z#CM_WAY cmw,
+      u1.V_RFO_Z#KAS_UNIVERSAL_D u1,
+      u1.V_RFO_Z#KAS_UNIVERSAL_D u2,
+      u1.V_RFO_Z#USER u,
+      u1.V_RFO_Z#STRUCT_DEPART sd,
+      u1.V_RFO_Z#KAS_UPRAVL_DNP dnp,
+      u1.V_RFO_Z#UNITS_OF_TIME ut,
+--     (select a.id, a.c_name from u1.V_RFO_Z#BUS_PROCESS a where a.c_code in ('KAS_AUTO_CRED_PRIV_PC', 'OPEN_CRED_PRIV_CRL',
+--            'OPEN_CRED_PRIV', 'OPEN_TRANSH', 'KAS_OPEN_CRED_PRIV_MIN', 'OPEN_CRED_PRIV_OLD', 'KAS_CREDIT_CASH_PRIV_PC',
+--            'OPEN_CRED_PRIV_PC', 'OPEN_PC', 'SET_REVOLV', 'KAS_CHANGE_TR', 'KAS_PC_PURSE', 'KAS_INSURANCE_POLICY', 'KAS_SAFE_CREDIT')
+--     ) bp,
+     u1.V_RFO_Z#BUS_PROCESS bp,
+     (select da.iin, max(substr(ltrim(da.contract_no,'R'),1,7)) as client_id
+              from u1.V_DATA_ALL da where da.iin is not null
+              group by da.iin
+     ) cid,
+--     V_DATA_FORM_RFO de,
+--     DATA_ASOKR a,
+     u1.M_DATA_ASOKR_FOLDER a,
+--     V_DATA_GCVP_RFO dg,
+--     V_CONTRACT_FOLDER_1ST_LINK_RFO cfl1,
+--     REF_SAL_GCVP_TO_SAL_FORM_CATEG sgc
+     u1.V_FOLDER_FORM_AND_GCVP ffg,
+--     (select rc1.rnn, rc1.yy_mm_report, max(rc1.pr_rep_total_fact_pmts_by_cli) as prev_months_fact_pmts
+--          from V_REPORT_CAL_1 rc1
+--          group by rc1.rnn, rc1.yy_mm_report) rc
+--      V_REPORT_CAL_1 rc,
+     u1.V_RFO_Z#CODE_REGION r
+where
+      fd.class_id in ('FORM_CLIENT') and --, 'KAS_PC_DOG') and -- new
+      rd.c_doc = fd.id and
+      rd.collection_id = fld.c_docs and
+--      rd_fd_class.collection_id = rd.collection_id and -- new
+--      fd.class_id = rd_fd_class.fdoc_class_id and -- new
+      fc.id(+) = fd.id and -- new
+      c.id = clp.id and
+      c.id = fld.c_client and
+      cp.id = fld.id and
+      cp.c_point = p.id and
+      cp.c_way = cmw.id and
+      fld.c_business = bp.id and
+      bp.c_code in (
+              'OPEN_CRED_PRIV_PC',
+--              'KAS_SAFE_CREDIT',
+              'KAS_AUTO_CRED_PRIV_PC',
+              'KAS_CREDIT_CASH_PRIV_PC',
+              'SET_REVOLV',
+              'KAS_OPEN_CRED_PRIV_MIN',
+              'KAS_AUTO_CRED_PRIV',
+              'OPEN_PC',
+              'KAS_CREDIT_CASH_PRIV',
+        --      'KAS_PC_PURSE',
+              'OPEN_CRED_PRIV',
+              'OPEN_TRANSH',
+              'OPEN_CRED_PRIV_CRL',
+              'OPEN_CRED_PRIV_OLD',
+              'ONLINE_CRED',
+              'KASPI_RED'
+             ) and
+      u1.id(+) = fld.c_kas_vid_delivery and
+      u2.id(+) = fld.c_kas_sys_ref and
+      u.id = cp.c_create_user and
+      sd.id(+) = cp.c_st_depart and
+      dnp.id(+) = sd.c_upravl_dnp_ref and -- new
+      ut.id(+) = fc.c_period#unit and -- new
+      cid.iin(+) = c.x_iin and
+--      de.folder_id(+) = fld.id and
+--      fd.c_doc_date > to_date('01.05.2012', 'dd.mm.yyyy')
+      fld.id = a.folder_id(+) and
+--      fld.id = dg.folder_id(+) and
+--      fld.id = cfl1.folder_id_first(+) and
+--      (rd.days_del_from <= nvl(d.delinq_days,0) and rd.days_del_to >= nvl(d.delinq_days,0))
+      fld.id = ffg.folder_id(+) and
+      r.id(+) = fc.c_address_reg#region_ref
+) p1,
+u1.V_PHONE_CLIENT_FLD pr
+where pr.folder_id(+) = p1.folder_id
+--pr.phone_number(+) = p1.phone_home and
+--      pr.rnn(+) = p1.client_rnn
+) p11,
+(select z.iin || ' ' || z.yy_mm_report as iin_report,
+             sum(case when z.monthly_client_pmt_bonus < 0 then 0
+                    else z.monthly_client_pmt_bonus end
+                 ) over (partition by z.iin order by
+--                   to_number(substr(z.yy_mm_report,1,4)||substr(z.yy_mm_report,8,2))
+                            z.report_month
+                            range between unbounded preceding and 1 preceding) as
+       total_prior_pmts,
+             sum(case when z.monthly_client_pmt_bonus_new < 0 then 0
+                    else z.monthly_client_pmt_bonus_new end
+                 ) over (partition by z.iin order by
+--                   to_number(substr(z.yy_mm_report,1,4)||substr(z.yy_mm_report,8,2))
+                            z.report_month
+                            range between unbounded preceding and 1 preceding) as
+       total_prior_pmts_new,---------
+             max(z.monthly_client_max_delinq_days) over (partition by z.iin order by
+--                   to_number(substr(z.yy_mm_report,1,4)||substr(z.yy_mm_report,8,2))
+                            z.report_month
+                            range between unbounded preceding and 1 preceding) as
+       max_prior_delinq_days,
+             max(z.monthly_client_active_month) over (partition by z.iin order by
+--                   to_number(substr(z.yy_mm_report,1,4)||substr(z.yy_mm_report,8,2))
+                            z.report_month
+                            range between unbounded preceding and 1 preceding) as
+       max_prior_active_month,
+--             to_number(substr(z.yy_mm_report,1,4)||substr(z.yy_mm_report,8,2)) - (
+--                 max(z.monthly_client_active_month_n) over (partition by z.rnn order by to_number(
+--                                     substr(z.yy_mm_report,1,4)||substr(z.yy_mm_report,8,2))
+--                                range between unbounded preceding and 1 preceding)
+--             ) - 1 as
+--       inactivity_period
+             z.report_month - (
+                 max(z.monthly_client_active_month_n) over (partition by z.iin order by z.report_month
+                                range between unbounded preceding and 1 preceding)
+             ) - 1 as
+       inactivity_period
+   from (select  h1.iin, h1.yy_mm_report,
+                MONTHS_BETWEEN(to_date(h1.yy_mm_report,'yyyy - mm'), to_date('2002 - 12','yyyy - mm')) as
+             report_month,
+                max(r111.planned_pmt_bonus) + min(r111.pmt_penalty) as
+             monthly_client_pmt_bonus,
+                max(r111.planned_pmt_bonus_new) + min(r111.pmt_penalty_n) as
+             monthly_client_pmt_bonus_new,---------
+                max(r111.delinq_days) as
+             monthly_client_max_delinq_days,
+--                sum(r111.total_debt) as
+--             monthly_client_sum_total_debt,
+--                case when sum(r111.total_debt) > 0 then 1 else 0 end as
+--             monthly_client_is_active
+                case when sum(nvl(r111.total_debt,0)) > 0 then
+                          to_number(substr(h1.yy_mm_report,1,4)||substr(h1.yy_mm_report,8,2))
+                     else 0 end as
+             monthly_client_active_month,
+                case when sum(nvl(r111.total_debt,0)) > 0 then
+                          MONTHS_BETWEEN(to_date(h1.yy_mm_report,'yyyy - mm'), to_date('2002 - 12','yyyy - mm'))
+                     else 0 end as
+             monthly_client_active_month_n
+      from u1.v_report_cal_1 r111,
+          (select w1.iin, w2.yy_mm_report
+              from (select da1.iin from u1.v_data_all da1 where da1.iin is not null group by da1.iin) w1,
+                   (select da2.yy_mm_report from u1.v_data_all da2 group by da2.yy_mm_report) w2) h1
+      where h1.iin = r111.iin(+) and h1.yy_mm_report = r111.yy_mm_report(+)
+      group by h1.iin, h1.yy_mm_report) z
+) rc
+where rc.iin_report(+) = p11.client_iin || ' ' || p11.folder_create_yy_mm) f
+left join (select distinct fld.id as fld_id,
+           first_value(u.c_name) over (partition by fld.id order by c.id) as c_name
+from u1.T_RFO_Z#KAS_VERIFICATION v
+join u1.V_RFO_Z#KAS_VER_CONT c on c.collection_id = v.c_verify_contacts
+join u1.V_RFO_Z#USER u on u.id = c.c_result_v#user
+join u1.V_RFO_Z#FDOC fd on fd.id = v.id and fd.class_id = 'KAS_VERIFICATION'
+join u1.V_RFO_Z#RDOC rd on rd.c_doc = fd.id
+join u1.V_RFO_Z#FOLDERS fld on fld.c_docs = rd.collection_id
+join u1.V_RFO_Z#CM_CHECKPOINT cp on cp.id = fld.id) x on x.fld_id = f.folder_id;
+grant select on U1.V_FOLDER_ALL to LOADDB;
+
+

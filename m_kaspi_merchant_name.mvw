@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_KASPI_MERCHANT_NAME
+build deferred
+refresh force on demand
+as
+select r.id,m.name
+from  U1.V_RFO_Z#SHOPS r
+        inner join (
+                   select p.p_rfoid as p_rfoid, max(p.createdts) as createdts, max(p.p_merchant) as p_merchant
+                     from U1.M_KASPISH_POINTOFSERVICE p
+                    group by p.p_rfoid
+                  ) s on s.p_rfoid = r.c_code
+       inner join U1.M_KASPISH_MERCHANT        m on s.p_merchant = m.pk;
+grant select on U1.M_KASPI_MERCHANT_NAME to LOADDB;
+
+

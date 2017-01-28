@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_TMP_J_FLD_PREV_CON_DEL_CLHST
+refresh complete on demand
+as
+select t.rfo_contract_id,
+       max(ch.delinq_days_in_month) as prev_con_del_days_max,
+       count(distinct case when ch.fact_pmts_in_month > 0 then ch.yyyy_mm_num end) as fact_pmt_mon_before, ---
+       count(distinct case when ch.yyyy_mm_num >= to_number(to_char(add_months(t.folder_date_create_mi,-12),'yyyymm')) and
+                                ch.fact_pmts_in_month > 0 then ch.yyyy_mm_num end) as fact_pmt_mon_before_12_mon, ---
+       case when count(distinct case when ch.yyyy_mm_num >= to_number(to_char(add_months(t.folder_date_create_mi,-12),'yyyymm')) and
+                                ch.fact_pmts_in_month > 0 then ch.yyyy_mm_num end) > 0 then 1 else 0 end as is_active_12_mon_before
+from M_FOLDER_CON_CANCEL t
+left join V_CLIENT_CAL cc on cc.client_iin_last = t.iin
+left join V_CLIENT_HISTORY ch on ch.client_id = cc.client_id and
+                                 ch.text_yyyy_mm < to_char(t.folder_date_create_mi,'yyyy - mm')
+group by t.rfo_contract_id;
+grant select on U1.M_TMP_J_FLD_PREV_CON_DEL_CLHST to LOADDB;
+grant select on U1.M_TMP_J_FLD_PREV_CON_DEL_CLHST to LOADER;
+
+

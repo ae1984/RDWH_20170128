@@ -1,0 +1,9 @@
+﻿create materialized view U1.M_TDWH_SLANDOKZ_ADVERTS_PROPS
+using no index
+refresh complete on demand
+as
+select * from KASPISHOP.SLANDOKZ_ADVERTS_PROPS@tdwh;
+grant select on U1.M_TDWH_SLANDOKZ_ADVERTS_PROPS to LOADDB;
+grant select on U1.M_TDWH_SLANDOKZ_ADVERTS_PROPS to LOADER;
+
+

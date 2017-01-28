@@ -1,0 +1,33 @@
+﻿create materialized view U1.M_ONLINE_RULE5
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30)*/
+    fo.rfo_client_id
+    ,fo.date_create
+    ,fo.claim_id
+    ,fo.folder_id
+    ,fo.shop_code
+    ,fo.shop_name
+    ,fo.status_code
+    ,fo.status_name
+    ,fo.process_id
+
+    ,t1.request_cnt
+    ,t1.request_cnt_x
+    ,t1.mo_reject_cnt
+    ,t1.mo_reject_cnt_x
+
+    ,t5.count_fail_kn_30_d
+    ,t5.count_fail_kn_30_d_x
+
+    ,t2.active_cnt_x
+
+
+from u1.M_FOLDER_CON_CANCEL_ONLINE_1 fo
+left join u1.M_ONLINE_RULE5_PRE1 t1 on t1.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_5 t5 on t5.claim_id = fo.claim_id
+left join u1.M_ONLINE_RULE5_PRE2 t2 on t2.claim_id = fo.claim_id;
+grant select on U1.M_ONLINE_RULE5 to LOADDB;
+
+

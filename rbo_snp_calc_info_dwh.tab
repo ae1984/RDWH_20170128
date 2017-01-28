@@ -1,0 +1,57 @@
+﻿create table U1.RBO_SNP_CALC_INFO_DWH
+(
+  id              NUMBER not null,
+  c_prod_ref      NUMBER,
+  c_prod_class    VARCHAR2(100),
+  c_client_ref    NUMBER,
+  c_date_load_sb  DATE,
+  c_date_load_sas DATE,
+  c_date_calc     DATE,
+  c_date_edit     DATE,
+  c_sum_1         NUMBER(17,2),
+  c_sum_2         NUMBER(17,2),
+  c_sum_3         NUMBER(17,2),
+  c_sum_4         NUMBER(17,2),
+  c_sum_5         NUMBER(17,2),
+  c_sum_6         NUMBER(17,2),
+  c_sum_7         NUMBER(17,2),
+  c_sum_8         NUMBER(17,2),
+  c_sum_9         NUMBER(17,2),
+  c_sum_10        NUMBER(17,2),
+  c_sum_11        NUMBER(17,2),
+  c_sum_12        NUMBER(17,2),
+  c_sum_13        NUMBER(17,2),
+  c_sum_14        NUMBER(17,2),
+  c_sum_15        NUMBER(17,2),
+  c_sum_16        NUMBER(17,2),
+  c_date_1        DATE,
+  c_date_2        DATE,
+  c_date_3        DATE,
+  c_date_4        DATE,
+  c_date_5        DATE,
+  c_date_6        DATE,
+  c_cnt_1         NUMBER,
+  c_cnt_2         NUMBER,
+  c_cnt_3         NUMBER,
+  c_cnt_4         NUMBER,
+  c_str_1         VARCHAR2(50),
+  c_sgn_1         VARCHAR2(1),
+  c_sgn_2         VARCHAR2(1)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select, insert, update, delete, references, alter on U1.RBO_SNP_CALC_INFO_DWH to ETL;
+grant select on U1.RBO_SNP_CALC_INFO_DWH to LOADDB;
+grant select on U1.RBO_SNP_CALC_INFO_DWH to LOADER;
+

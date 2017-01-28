@@ -1,0 +1,54 @@
+﻿create materialized view U1.M_RFO_ONLINE_CV_PRE
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30*/ trunc(sysdate) update_date,
+       z.rfo_client_id client_ref,
+       case when (z.is_gu_match = 0) or (z.is_gu_match = 1
+                                        and (z.is_form_match = 0 or (z.is_cancel_exists = 1 and z.is_not_fraud = 0))) then 1
+            else 3 end anketa_type,
+      cast(null as varchar2(20)) mng_vis_reason,
+       z.is_cancel_exists,
+       z.is_purse_exists,
+       z.is_credit_exists,
+       z.is_credit_after_fraud
+from (
+  select /*+ parallel 30*/cl_iin.rfo_client_id,
+         cl_iin.is_gu_match,   -- наличие открытого ГУ или закрытого ГУ, но созданного после 01-02-2012
+         cl_iin.is_form_match,  --наличие анкеты клиента не ранее 9 месяв назад
+         case when (count(cnl.rfo_client_id) + count(mo_cnl.rfo_client_id)) > 0 then 1 else 0 end is_cancel_exists,
+         case when max(cc.total_pmts) >= 6 then 1 else 0 end as is_not_fraud, -- ДОБАВИЛ
+         cl_iin.is_purse_exists,
+         cl_iin.is_credit_exists,
+         (case when nvl(rfc.folder_date_create_photo,to_date('01-01-1900','dd-mm-yyyy')) >
+                greatest(nvl(cnl.folder_date_create_cancel,to_date('01-01-1900','dd-mm-yyyy')),
+                         nvl(mo_cnl.folder_date_create_cancel,to_date('01-01-1900','dd-mm-yyyy')))
+               then 1 else 0 end) as is_credit_after_fraud,
+          greatest ( nvl(cnl.folder_date_create_cancel,trunc(sysdate)) ,nvl(mo_cnl.folder_date_create_cancel,trunc(sysdate)),nvl(rfc.folder_date_create_photo,trunc(sysdate))) as max_folder_date
+   from M_RFO_ONLINE_CV_PRE_1 cl_iin
+   left join V_CLIENT_CAL cc on (cc.client_iin_last = cl_iin.iin or cc.client_rnn_last = cl_iin.rnn) -- ДОБАВИЛ
+   left join M_RFO_ONLINE_CV_PRE_2 cnl on cnl.rfo_client_id = cl_iin.rfo_client_id
+   left join M_RFO_ONLINE_CV_PRE_4 mo_cnl on mo_cnl.rfo_client_id = cl_iin.rfo_client_id
+   left join (select /*+ parallel 30*/ fa.rfo_client_id, max(trunc(fa.folder_date_create)) as folder_date_create_photo
+                 from V_FOLDER_ALL_RFO fa
+                 join V_CONTRACT_ALL_RFO ca on ca.folder_id = fa.folder_id
+                 join V_VERIFICATION v on v.folder_id = ca.folder_id
+                where ca.is_card = 0
+                  and ca.is_credit_issued = 1
+                  and v.verif_doc_status = 'ПОДТВЕРЖДЕН'
+                  and v.verif_photo_result = 'ОДОБРЕНИЕ'
+                group by fa.rfo_client_id) rfc on rfc.rfo_client_id = cl_iin.rfo_client_id
+    group by cl_iin.rfo_client_id,
+             cl_iin.is_gu_match,
+             cl_iin.is_form_match,
+             cl_iin.is_purse_exists,
+             cl_iin.is_credit_exists,
+             cnl.folder_date_create_cancel,
+             mo_cnl.folder_date_create_cancel,
+             rfc.folder_date_create_photo
+) z;
+grant select on U1.M_RFO_ONLINE_CV_PRE to LOADDB;
+grant select on U1.M_RFO_ONLINE_CV_PRE to LOADER;
+grant select on U1.M_RFO_ONLINE_CV_PRE to LOAD_MO;
+
+

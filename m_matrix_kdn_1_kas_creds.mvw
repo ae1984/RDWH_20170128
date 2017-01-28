@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_MATRIX_KDN_1_KAS_CREDS
+build deferred
+refresh complete on demand
+as
+select fcc.rfo_contract_id,
+       sum(p.pmt_avg) as kaspi_other_creds_pmt
+from M_FOLDER_CON_CANCEL fcc
+join M_RBO_CONTRACT_CREDIT_PMT p on p.rfo_client_id = fcc.rfo_client_id and
+                               p.date_begin < trunc(fcc.folder_date_create_mi) and
+                               coalesce(p.date_fact_end, p.date_plan_end) > trunc(fcc.folder_date_create_mi)
+group by fcc.rfo_contract_id;
+grant select on U1.M_MATRIX_KDN_1_KAS_CREDS to LOADDB;
+grant select on U1.M_MATRIX_KDN_1_KAS_CREDS to LOADER;
+
+

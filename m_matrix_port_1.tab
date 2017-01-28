@@ -1,0 +1,57 @@
+﻿create table U1.M_MATRIX_PORT_1
+(
+  yyyy_mm_dd               DATE,
+  yyyy                     NUMBER,
+  text_yyyy_mm             VARCHAR2(9),
+  text_yyyy_mm_dd_week_day VARCHAR2(19),
+  product_type             VARCHAR2(100),
+  product                  VARCHAR2(400),
+  city                     VARCHAR2(300),
+  is_on_balance            NUMBER(1) not null,
+  cnt                      NUMBER,
+  contract_cnt             NUMBER,
+  cli_cnt                  NUMBER,
+  debt_all_mln             NUMBER,
+  debt_del_1_7_mln         NUMBER,
+  debt_del_8_30_mln        NUMBER,
+  debt_del_31_60_mln       NUMBER,
+  debt_del_61_90_mln       NUMBER,
+  debt_del_91_xx_mln       NUMBER,
+  debt_del_0_mln           NUMBER,
+  debt_del_1_90_mln        NUMBER,
+  debt_del_8_90_mln        NUMBER,
+  debt_del_1_mln           NUMBER,
+  debt_del_8_mln           NUMBER,
+  debt_del_31_mln          NUMBER,
+  debt_del_61_mln          NUMBER,
+  debt_del_91_mln          NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.IDX_T_MATRIX_PORT_1_1 on U1.M_MATRIX_PORT_1 (YYYY_MM_DD)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.M_MATRIX_PORT_1 to LOADDB;
+grant select on U1.M_MATRIX_PORT_1 to LOADER;
+

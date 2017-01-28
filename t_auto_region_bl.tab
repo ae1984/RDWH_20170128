@@ -1,0 +1,32 @@
+﻿create table U1.T_AUTO_REGION_BL
+(
+  region VARCHAR2(128)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+create index U1.T_AUTO_REGION_BL_IND1 on U1.T_AUTO_REGION_BL (REGION)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_AUTO_REGION_BL to LOADDB;
+grant select on U1.T_AUTO_REGION_BL to LOADER;
+

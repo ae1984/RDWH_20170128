@@ -1,0 +1,179 @@
+﻿create materialized view U1.M_REJ_KN_J1
+refresh force on demand
+as
+select distinct x.contract_number
+from (
+      select m.contract_number from M_FOLDER_CON_MINER_X m -- ok
+      where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+                m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')/* and m.is_test = 1*/ and
+                m.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ','ОСОБЕННЫЙ КЛИЕНТ - КН') and
+            exists (select null from M_TMP_J_SC_DEL_COMB_A_KN_2 co where co.profit_rate < -25 and co.con_cnt >= 35 and
+               co.contract_term_months = floor(m.contract_term_months / 6) * 6 and
+               co.contract_amount_categ_first is null and
+               co.age_full_years is null and
+               co.sex is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.children is null and
+               co.real_estate_relation is null and
+               co.marital_status is null and
+               co.education is null and
+               co.client_patronymic_type is null
+            )
+      union all
+      select m.contract_number from M_FOLDER_CON_MINER_X m -- ok
+      where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+                m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')/* and m.is_test = 1*/ and
+                m.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ','ОСОБЕННЫЙ КЛИЕНТ - КН') and
+            exists (select null from M_TMP_J_SC_DEL_COMB_A_KN_2 co where co.profit_rate < -25 and co.con_cnt >= 35 and
+               co.contract_term_months = floor(m.contract_term_months / 6) * 6 and
+               co.contract_amount_categ_first = m.contract_amount_categ_first and
+               co.age_full_years is null and
+               co.sex is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.children is null and
+               co.real_estate_relation is null and
+               co.marital_status is null and
+               co.education is null and
+               co.client_patronymic_type is null
+            )
+      union all
+      select m.contract_number from M_FOLDER_CON_MINER_X m -- ok
+      where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+                m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')/* and m.is_test = 1*/ and
+                m.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ','ОСОБЕННЫЙ КЛИЕНТ - КН') and
+            exists (select null from M_TMP_J_SC_DEL_COMB_A_KN_2 co where co.profit_rate < -25 and co.con_cnt >= 35 and
+               co.contract_term_months = floor(m.contract_term_months / 6) * 6 and
+               co.contract_amount_categ_first = m.contract_amount_categ_first and
+               co.age_full_years = floor(m.age_full_years / 5) * 5 and
+               co.sex is null and
+               co.work_expr_last_place_mon_floor is null and
+               co.children is null and
+               co.real_estate_relation is null and
+               co.marital_status is null and
+               co.education is null and
+               co.client_patronymic_type is null
+            )
+      union all
+      select m.contract_number from M_FOLDER_CON_MINER_X m -- ok
+      where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+                m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')/* and m.is_test = 1*/ and
+                m.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ','ОСОБЕННЫЙ КЛИЕНТ - КН') and
+            exists (select null from M_TMP_J_SC_DEL_COMB_A_KN_2 co where co.profit_rate < -25 and co.con_cnt >= 35 and
+               co.contract_term_months = floor(m.contract_term_months / 6) * 6 and
+               co.contract_amount_categ_first = m.contract_amount_categ_first and
+               co.age_full_years = floor(m.age_full_years / 5) * 5 and
+               co.sex = m.sex and
+               co.work_expr_last_place_mon_floor is null and
+               co.children is null and
+               co.real_estate_relation is null and
+               co.marital_status is null and
+               co.education is null and
+               co.client_patronymic_type is null
+            )
+      union all
+      select m.contract_number from M_FOLDER_CON_MINER_X m -- ok
+      where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+                m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')/* and m.is_test = 1*/ and
+                m.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ','ОСОБЕННЫЙ КЛИЕНТ - КН') and
+            exists (select null from M_TMP_J_SC_DEL_COMB_A_KN_2 co where co.profit_rate < -25 and co.con_cnt >= 35 and
+               co.contract_term_months = floor(m.contract_term_months / 6) * 6 and
+               co.contract_amount_categ_first = m.contract_amount_categ_first and
+               co.age_full_years = floor(m.age_full_years / 5) * 5 and
+               co.sex = m.sex and
+               co.work_expr_last_place_mon_floor = floor(m.work_expr_last_place_mon_floor / 6) * 6 and
+               co.children is null and
+               co.real_estate_relation is null and
+               co.marital_status is null and
+               co.education is null and
+               co.client_patronymic_type is null
+            )
+      union all
+      select m.contract_number from M_FOLDER_CON_MINER_X m -- ok
+      where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+                m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')/* and m.is_test = 1*/ and
+                m.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ','ОСОБЕННЫЙ КЛИЕНТ - КН') and
+            exists (select null from M_TMP_J_SC_DEL_COMB_A_KN_2 co where co.profit_rate < -25 and co.con_cnt >= 35 and
+               co.contract_term_months = floor(m.contract_term_months / 6) * 6 and
+               co.contract_amount_categ_first = m.contract_amount_categ_first and
+               co.age_full_years = floor(m.age_full_years / 5) * 5 and
+               co.sex = m.sex and
+               co.work_expr_last_place_mon_floor = floor(m.work_expr_last_place_mon_floor / 6) * 6 and
+               co.children = m.children and
+               co.real_estate_relation is null and
+               co.marital_status is null and
+               co.education is null and
+               co.client_patronymic_type is null
+            )
+      union all
+      select m.contract_number from M_FOLDER_CON_MINER_X m -- ok
+      where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+                m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')/* and m.is_test = 1*/ and
+                m.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ','ОСОБЕННЫЙ КЛИЕНТ - КН') and
+            exists (select null from M_TMP_J_SC_DEL_COMB_A_KN_2 co where co.profit_rate < -25 and co.con_cnt >= 35 and
+               co.contract_term_months = floor(m.contract_term_months / 6) * 6 and
+               co.contract_amount_categ_first = m.contract_amount_categ_first and
+               co.age_full_years = floor(m.age_full_years / 5) * 5 and
+               co.sex = m.sex and
+               co.work_expr_last_place_mon_floor = floor(m.work_expr_last_place_mon_floor / 6) * 6 and
+               co.children = m.children and
+               co.real_estate_relation = m.real_estate_relation and
+               co.marital_status is null and
+               co.education is null and
+               co.client_patronymic_type is null
+            )
+      union all
+      select m.contract_number from M_FOLDER_CON_MINER_X m -- ok
+      where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+                m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')/* and m.is_test = 1*/ and
+                m.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ','ОСОБЕННЫЙ КЛИЕНТ - КН') and
+            exists (select null from M_TMP_J_SC_DEL_COMB_A_KN_2 co where co.profit_rate < -25 and co.con_cnt >= 35 and
+               co.contract_term_months = floor(m.contract_term_months / 6) * 6 and
+               co.contract_amount_categ_first = m.contract_amount_categ_first and
+               co.age_full_years = floor(m.age_full_years / 5) * 5 and
+               co.sex = m.sex and
+               co.work_expr_last_place_mon_floor = floor(m.work_expr_last_place_mon_floor / 6) * 6 and
+               co.children = m.children and
+               co.real_estate_relation = m.real_estate_relation and
+               co.marital_status = m.marital_status and
+               co.education is null and
+               co.client_patronymic_type is null
+            )
+      union all
+      select m.contract_number from M_FOLDER_CON_MINER_X m -- ok
+      where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+                m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')/* and m.is_test = 1*/ and
+                m.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ','ОСОБЕННЫЙ КЛИЕНТ - КН') and
+            exists (select null from M_TMP_J_SC_DEL_COMB_A_KN_2 co where co.profit_rate < -25 and co.con_cnt >= 35 and
+               co.contract_term_months = floor(m.contract_term_months / 6) * 6 and
+               co.contract_amount_categ_first = m.contract_amount_categ_first and
+               co.age_full_years = floor(m.age_full_years / 5) * 5 and
+               co.sex = m.sex and
+               co.work_expr_last_place_mon_floor = floor(m.work_expr_last_place_mon_floor / 6) * 6 and
+               co.children = m.children and
+               co.real_estate_relation = m.real_estate_relation and
+               co.marital_status = m.marital_status and
+               co.education = m.education and
+               co.client_patronymic_type is null
+            )
+      union all
+      select m.contract_number from M_FOLDER_CON_MINER_X m -- ok
+      where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+                m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')/* and m.is_test = 1*/ and
+                m.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ','ОСОБЕННЫЙ КЛИЕНТ - КН') and
+            exists (select null from M_TMP_J_SC_DEL_COMB_A_KN_2 co where co.profit_rate < -25 and co.con_cnt >= 35 and
+               co.contract_term_months = floor(m.contract_term_months / 6) * 6 and
+               co.contract_amount_categ_first = m.contract_amount_categ_first and
+               co.age_full_years = floor(m.age_full_years / 5) * 5 and
+               co.sex = m.sex and
+               co.work_expr_last_place_mon_floor = floor(m.work_expr_last_place_mon_floor / 6) * 6 and
+               co.children = m.children and
+               co.real_estate_relation = m.real_estate_relation and
+               co.marital_status = m.marital_status and
+               co.education = m.education and
+               co.client_patronymic_type = m.client_patronymic_type
+            )
+) x;
+grant select on U1.M_REJ_KN_J1 to LOADDB;
+grant select on U1.M_REJ_KN_J1 to LOADER;
+
+

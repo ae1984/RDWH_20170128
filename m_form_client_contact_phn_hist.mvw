@@ -1,0 +1,181 @@
+﻿create materialized view U1.M_FORM_CLIENT_CONTACT_PHN_HIST
+build deferred
+using no index
+refresh complete on demand
+as
+select *
+  from (select /*+parallel(30) parallel_index(30) */
+               distinct
+               form_client_id,
+               folder_id,
+               folder_date,
+               form_client_date,
+               rfo_client_id,
+               phone_number,
+               regexp_replace(phone_number,'^8','') as phone_number_clear,
+               phone_type,
+               phone_type_simple,
+               contact_relation,
+               1 as is_input,
+               contact_surname,
+               contact_first_name,
+               contact_patronymic
+          from (select
+
+                      fc.id as form_client_id,
+                      fld.id as folder_id,
+                      cp.c_date_create as folder_date,
+                      nvl(fd.c_doc_date,fc.c_date_create) as form_client_date,
+                      fld.c_client as rfo_client_id,
+
+                      trim(fc.c_mobile#numb) as phone_number_mob,
+                      'МОБИЛЬНЫЙ' as phone_type_mob,
+                      'МОБИЛЬНЫЙ' as phone_type_simple_mob,
+                      'МОБИЛЬНЫЙ' as contact_relation_mob,
+                      trim(fc.c_phone_home#numb) as phone_number_home,
+                      'ДОМАШНИЙ' as phone_type_home,
+                      'ДОМАШНИЙ' as phone_type_simple_home,
+                      'ДОМАШНИЙ' as contact_relation_home,
+                      trim(fc.c_phone_wife) as phone_number_wf,
+                      'СУПРУГА' as phone_type_wf, -- этот телефон не вводится с декабря 2013
+                      'КОНТАКТ' as phone_type_simple_wf,
+                      'СУПРУГА' as contact_relation_wf,
+                      trim(fc.c_phone_work#numb) as phone_number_work,
+                      'РАБОЧИЙ' as phone_type_work,
+                      'РАБОЧИЙ' as phone_type_simple_work,
+                      'ОРГАНИЗАЦИЯ' as contact_relation_work,
+                      trim(fc.c_phone_org) as phone_number_org,
+                      'ОРГАНИЗАЦИЯ' as phone_type_org,
+                      'РАБОЧИЙ' as phone_type_simple_org,
+                      'ОРГАНИЗАЦИЯ' as contact_relation_org,
+                      trim(fc.c_phone_org_wife) as phone_number_worg,
+                      'ОРГАНИЗАЦИЯ СУПРУГИ' as phone_type_worg,
+                      'РАБОЧИЙ' as phone_type_simple_worg,
+                      'ОРГАНИЗАЦИЯ СУПРУГИ' as contact_relation_worg,
+
+                      1 as is_input,
+                      upper(trim(fc.c_last_name)) as contact_surname_m,
+                      upper(trim(fc.c_first_name)) as contact_first_name_m,
+                      upper(trim(fc.c_sur_name)) as contact_patronymic_m,
+
+                      upper(trim(fc.c_last_name_wife)) as contact_surname_w,
+                      upper(trim(fc.c_first_name_wife)) as contact_first_name_w,
+                      upper(trim(fc.c_sur_name_wife)) as contact_patronymic_w,
+
+                      upper(trim(fc.c_name_org)) as contact_surname_org,
+                      null as contact_first_name_org,
+                      null as contact_patronymic_org,
+
+                      upper(trim(fc.c_name_org_wife)) as contact_surname_worg,
+                      null as contact_first_name_worg,
+                      null as contact_patronymic_worg
+
+               from u1.V_RFO_Z#FORM_CLIENT fc
+                    join u1.V_RFO_Z#FDOC fd on fd.id = fc.id and fd.class_id = 'FORM_CLIENT'
+                    join u1.V_RFO_Z#RDOC rd on rd.c_doc = fd.id
+                    join u1.V_RFO_Z#FOLDERS fld on rd.collection_id = fld.c_docs
+                    join u1.V_RFO_Z#CM_CHECKPOINT cp on cp.id = fld.id
+            --   where fld.id = 1050012093
+               ) tab
+
+        unpivot ((phone_number, phone_type, phone_type_simple, contact_relation, contact_surname, contact_first_name, contact_patronymic)
+                for vl in ((phone_number_mob,     phone_type_mob,     phone_type_simple_mob,     contact_relation_mob, contact_surname_m, contact_first_name_m, contact_patronymic_m) as 1,
+                           (phone_number_home,    phone_type_home,    phone_type_simple_home,    contact_relation_home, contact_surname_m, contact_first_name_m, contact_patronymic_m) as 2,
+                           (phone_number_wf,      phone_type_wf,      phone_type_simple_wf,      contact_relation_wf, contact_surname_w, contact_first_name_w, contact_patronymic_w) as 3,
+                           (phone_number_work,    phone_type_work,    phone_type_simple_work,    contact_relation_work, contact_surname_org, contact_first_name_org, contact_patronymic_org) as 4,
+                           (phone_number_org,     phone_type_org,     phone_type_simple_org,     contact_relation_org, contact_surname_org, contact_first_name_org, contact_patronymic_org) as 5,
+                           (phone_number_worg,    phone_type_worg,    phone_type_simple_worg,    contact_relation_worg, contact_surname_worg, contact_first_name_worg, contact_patronymic_worg) as 6
+                          ))
+                  ) tab1
+where REGEXP_LIKE(trim(phone_number),'^[0-9]+$')
+union all
+select /*+parallel(30) parallel_index(30) */
+       distinct
+       form_client_id,
+       folder_id,
+       folder_date,
+       form_client_date,
+       rfo_client_id,
+       phone_number,
+       regexp_replace(phone_number,'^8','') as phone_number_clear,
+       phone_type,
+       phone_type_simple,
+       contact_relation,
+       1 as is_input,
+       contact_surname,
+       contact_first_name,
+       contact_patronymic
+  from (select fc.id as form_client_id,
+               fld.id as folder_id,
+               cp.c_date_create as folder_date,
+               nvl(fd.c_doc_date,fc.c_date_create) as form_client_date,
+               fld.c_client as rfo_client_id,
+               trim(pr.c_str) as phone_number,
+               'МОБИЛЬНЫЙ СУПРУГИ' as phone_type,
+               'КОНТАКТ' as phone_type_simple,
+               'СУПРУГА' as contact_relation,
+               1 as is_input,
+               upper(trim(fc.c_last_name_wife)) as contact_surname,
+               upper(trim(fc.c_first_name_wife)) as contact_first_name,
+               upper(trim(fc.c_sur_name_wife)) as contact_patronymic
+
+        from u1.V_RFO_Z#FORM_CLIENT fc
+             join u1.V_RFO_Z#FDOC fd on fd.id = fc.id and fd.class_id = 'FORM_CLIENT'
+             join u1.V_RFO_Z#RDOC rd on rd.c_doc = fd.id
+             join u1.V_RFO_Z#FOLDERS fld on rd.collection_id = fld.c_docs
+             join u1.V_RFO_Z#CM_CHECKPOINT cp on cp.id = fld.id
+             join u1.V_RFO_Z#PROPERTIES pr on fc.c_add_prop = pr.collection_id
+             join u1.V_RFO_Z#PROPERTY_GRP pg on pr.c_group_prop = pg.id and pg.c_code = 'KAS_WIFE_PHONE_MOBILE' and REGEXP_LIKE(trim(pr.c_str),'^[0-9]+$')
+         --where fld.id = 212798587
+         )
+union all
+select *
+  from (select /*+parallel(30) parallel_index(30) */
+               distinct
+               form_client_id,
+               folder_id,
+               folder_date,
+               form_client_date,
+               rfo_client_id,
+               phone_number,
+               regexp_replace(phone_number,'^8','') as phone_number_clear,
+               phone_type,
+               phone_type_simple,
+               contact_relation,
+               1 as is_input,
+               contact_surname,
+               contact_first_name,
+               contact_patronymic
+          from (select fc.id as form_client_id,
+                       fld.id as folder_id,
+                       cp.c_date_create as folder_date,
+                       nvl(fd.c_doc_date,fc.c_date_create) as form_client_date,
+                       fld.c_client as rfo_client_id,
+
+                       trim(p.c_phone#numb) as phone_number_cont,
+                       'КОНТАКТ' as phone_type_cont,
+                       'КОНТАКТ' as phone_type_simple_cont,
+                       upper(trim(p.c_relation)) as contact_relation_cont,
+                       trim(p.c_mob_number) as phone_number_cmob,
+                       'КОНТАКТ-МОБИЛЬНЫЙ' as phone_type_cmob,
+                       'КОНТАКТ' as phone_type_simple_cmob,
+                       upper(trim(p.c_relation)) as contact_relation_cmob,
+
+                       upper(trim(p.c_last_name)) as contact_surname,
+                       upper(trim(p.c_first_name)) as contact_first_name,
+                       upper(trim(p.c_sur_name)) as contact_patronymic
+                 from u1.V_RFO_Z#FORM_CLIENT fc, u1.V_RFO_Z#FDOC fd, u1.V_RFO_Z#RDOC rd, u1.V_RFO_Z#FOLDERS fld, u1.V_RFO_Z#CONTACT_PERSON p, u1.V_RFO_Z#CM_CHECKPOINT cp
+                 where fd.id = fc.id and fd.class_id = 'FORM_CLIENT' and
+                      rd.c_doc = fd.id and rd.collection_id = fld.c_docs and
+                      p.collection_id = fc.c_contact_persons and cp.id = fld.id
+                --      and fld.id = 1050012093
+                      ) tab
+        unpivot ((phone_number, phone_type, phone_type_simple, contact_relation)
+                 for vl in ((phone_number_cont,    phone_type_cont,    phone_type_simple_cont,    contact_relation_cont) as 1,
+                            (phone_number_cmob,    phone_type_cmob,    phone_type_simple_cmob,    contact_relation_cmob) as 2
+                            ))) tab1
+where REGEXP_LIKE(trim(phone_number),'^[0-9]+$');
+grant select on U1.M_FORM_CLIENT_CONTACT_PHN_HIST to LOADDB;
+grant select on U1.M_FORM_CLIENT_CONTACT_PHN_HIST to LOADER;
+
+

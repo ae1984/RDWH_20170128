@@ -1,0 +1,51 @@
+﻿create table U1.V_PKB_REPORT_CACHE
+(
+  report_id                 NUMBER not null,
+  folder_id                 NUMBER,
+  folder_client_id          NUMBER,
+  report_iin_rnn            VARCHAR2(36),
+  name_last                 VARCHAR2(300),
+  name_first                VARCHAR2(300),
+  name_patronymic           VARCHAR2(300),
+  rfo_report_date           DATE,
+  rfo_report_date_time      DATE,
+  registration_id           VARCHAR2(45),
+  active_contracts          NUMBER,
+  closed_contracts          NUMBER,
+  active_contracts_cur      VARCHAR2(300),
+  closed_contracts_cur      VARCHAR2(300),
+  pkb_report_date           DATE,
+  report_status             VARCHAR2(60),
+  report_type               VARCHAR2(22),
+  is_from_cache             NUMBER,
+  orig_rfo_report_date      DATE,
+  orig_rfo_report_date_time DATE,
+  orig_report_days_ago      NUMBER,
+  orig_report_id            NUMBER,
+  rep_id_cache_15d          NUMBER,
+  rep_id_cache_20d          NUMBER,
+  rep_id_cache_25d          NUMBER,
+  rep_id_cache_30d          NUMBER,
+  rep_id_cache_35d          NUMBER,
+  rep_id_cache_40d          NUMBER,
+  rep_id_cache_45d          NUMBER,
+  rep_id_cache_50d          NUMBER,
+  rep_id_cache_55d          NUMBER,
+  rep_id_cache_60d          NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.V_PKB_REPORT_CACHE to LOADDB;
+grant select on U1.V_PKB_REPORT_CACHE to LOADER;
+

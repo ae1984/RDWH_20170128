@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_TMP_JAN_MO_1
+refresh force on demand
+as
+select cp.d_par_code_int, count(distinct p.id) as cancel_proc_cnt
+from V_MO_D_PAR_CRITICAL cp
+join MO_CALC_PAR_VALUE cpv on cpv.d_par_id = cp.d_par_id
+join MO_CALC c on c.id = cpv.calc_id
+join MO_PROCESS p on p.id = c.process_id
+where trunc(p.date_start) = trunc(sysdate) - 1
+group by cp.d_par_code_int;
+grant select on U1.V_TMP_JAN_MO_1 to LOADDB;
+grant select on U1.V_TMP_JAN_MO_1 to LOADER;
+
+

@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_FOLDER_ALL_RFO_CLI_AGES_TMP
+using no index
+refresh force on demand
+as
+select folder_id,
+       case when client_first_folder_age >= 0 then client_first_folder_age end as client_first_folder_age,
+       case when client_first_credit_folder_age >= 0 then client_first_credit_folder_age end as client_first_credit_folder_age,
+       case when client_first_pkb_contract_age >= 0 then client_first_pkb_contract_age end as client_first_pkb_contract_age,
+       case when client_first_contract_age >= 0 then client_first_contract_age end as client_first_contract_age,
+       case when client_first_gcvp_pmt_age >= 0 then client_first_gcvp_pmt_age end as client_first_gcvp_pmt_age
+from (
+    select f.folder_id,
+           floor(f.folder_date_create - t1.client_min_folder_date) as client_first_folder_age,
+           floor(f.folder_date_create - t1.client_min_credit_folder_date) as client_first_credit_folder_age,
+           floor(f.folder_date_create - t1.min_pkb_contract_date) as client_first_pkb_contract_age,
+           floor(f.folder_date_create - t2.client_min_contract_begin_date) as client_first_contract_age,
+           floor(f.folder_date_create - t2.client_min_gcvp_pmt_date) as client_first_gcvp_pmt_age
+    from V_FOLDER_ALL_RFO f
+    left join M_TMP_CLIENT_MIN_DATES t1 on t1.rfo_client_id = f.rfo_client_id
+    left join M_TMP_CLIENT_MIN_DATES_2 t2 on t2.rfo_client_id = f.rfo_client_id
+);
+grant select on U1.M_FOLDER_ALL_RFO_CLI_AGES_TMP to LOADDB;
+grant select on U1.M_FOLDER_ALL_RFO_CLI_AGES_TMP to LOADER;
+
+

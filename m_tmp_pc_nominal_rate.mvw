@@ -1,0 +1,35 @@
+﻿create materialized view U1.M_TMP_PC_NOMINAL_RATE
+refresh force on demand
+as
+select x.contract_number,
+       max(x.product_code) keep (dense_rank last order by x.date_begin) product_code,
+       max(x.product) keep (dense_rank last order by x.date_begin) product,
+       max(x.date_begin) keep (dense_rank last order by x.date_begin) date_begin,
+       max(x.nominal_rate) keep (dense_rank last order by x.date_begin) nominal_rate
+from (select pd.c_num_dog contract_number,
+             upper(tp.c_code) product_code,
+             upper(tp.c_name) product,
+             t.c_date_begin date_begin,
+             --tc.c_code,
+             max(to_number(t.c_value)) as nominal_rate
+        from v_rbo_z#kas_pc_dog pd,
+             v_rbo_z#tarif_plan tp,
+             v_rbo_z#tarif_bo tb,
+             v_rbo_z#tariffs_commiss tc,
+             v_rbo_z#tarif t
+      where /*pd.C_NUM_DOG = 'R1634577-001'
+         and */pd.C_TARIF_PLAN_REF = tp.ID
+         and tp.c_tarifs = tb.collection_id
+         and tb.c_tarif = tc.id
+         and tc.c_tariffs = t.collection_id
+         and tc.c_code = 'PRC_BASE'
+      group by pd.c_num_dog,
+               tp.c_code,
+               tp.c_name,
+               t.c_date_begin
+      ) x
+group by x.contract_number;
+grant select on U1.M_TMP_PC_NOMINAL_RATE to LOADDB;
+grant select on U1.M_TMP_PC_NOMINAL_RATE to LOADER;
+
+

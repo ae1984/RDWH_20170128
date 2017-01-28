@@ -1,0 +1,54 @@
+﻿create materialized view U1.V_RS_TEST_5
+refresh complete on demand
+as
+with t as (select distinct t0.rfo_client_id, to_number(t0.phone_number) as phone_number
+           from V_FORM_CLIENT_CONTACT_PHONE t0
+           --where t0.form_client_date > trunc(sysdate) - 365 * 3
+           ),
+c as (
+    select cl.rfo_client_id, --max(cl.iin) as iin,
+           case when count(distinct co.contract_number) = 0 then 0
+              when max(co.delinq_days_max) > 90 then -2
+              when max(co.delinq_days_last_rep) > 0 then -1
+              when max(co.delinq_days_last_rep) = 0 then 1 end as client_color
+    from V_CLIENT_RFO_BY_ID cl
+    left join V_CONTRACT_CAL co on co.rfo_client_id = cl.rfo_client_id --and co.contract_amount_max > 0
+    group by cl.rfo_client_id
+)
+select x.L1_rfo_client_id,
+          count(distinct case when x.L1_ph_by_L2_cli_cnt > 1 then x.rfo_client_id end) as
+      cnt_cli_L1ph_by_L2cli_above_1,
+          count(distinct case when x.L1_ph_by_L2_cli_cnt > 2 then x.rfo_client_id end) as
+      cnt_cli_L1ph_by_L2cli_above_2,
+          count(distinct case when x.L1_ph_by_L2_cli_cnt > 3 then x.rfo_client_id end) as
+      cnt_cli_L1ph_by_L2cli_above_3,
+          count(distinct case when x.L1_ph_by_L2_cli_cnt_del > 1 then x.rfo_client_id end) as
+      cnt_cli_L1ph_by_L2clid_above_1,
+          max(L2_cli_cnt_del) as
+      cnt_cli_L2_del,
+          max(L2_cli_cnt_del_high) as
+      cnt_cli_L2_del_high
+from (
+select t1.rfo_client_id as L1_rfo_client_id,
+       t2.rfo_client_id,
+           count(distinct case when t2.rfo_client_id != t1.rfo_client_id then t1.phone_number end)
+                 over (partition by t1.rfo_client_id, t2.rfo_client_id) as
+       L1_ph_by_L2_cli_cnt,
+           count(distinct case when t2.rfo_client_id != t1.rfo_client_id and c.client_color < 0 then t1.phone_number end)
+                 over (partition by t1.rfo_client_id, t2.rfo_client_id) as
+       L1_ph_by_L2_cli_cnt_del,
+           count(distinct case when t2.rfo_client_id != t1.rfo_client_id and c.client_color < 0 then t2.rfo_client_id end)
+                 over (partition by t1.rfo_client_id) as
+       L2_cli_cnt_del,
+           count(distinct case when t2.rfo_client_id != t1.rfo_client_id and c.client_color = -2 then t2.rfo_client_id end)
+                 over (partition by t1.rfo_client_id) as
+       L2_cli_cnt_del_high
+from t t1
+join t t2 on t2.phone_number = t1.phone_number
+join c on c.rfo_client_id = t2.rfo_client_id
+) x
+group by x.L1_rfo_client_id -- 9 min, 56 m rows in source table;
+grant select on U1.V_RS_TEST_5 to LOADDB;
+grant select on U1.V_RS_TEST_5 to LOADER;
+
+

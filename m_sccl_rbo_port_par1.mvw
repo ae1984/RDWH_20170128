@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_SCCL_RBO_PORT_PAR1
+build deferred
+refresh force on demand
+as
+select c.rfo_client_id,
+
+       round(sum(t.total_debt)) as active_total_debt,
+       count(distinct case when t.total_debt > 0 then t.rbo_contract_id end) as active_con_cnt,
+       max(t.del_days_cli_max) as max_del_days,
+       max(t.delinq_amount) as delinq_amount,
+
+       case when sum(t.total_debt) > 0 then 1 else 0 end is_active_debt_exists,
+       case when sum(t.total_debt) >= 50000 then 1 else 0 end is_active_debt_50K_exists,
+       case when sum(t.total_debt) >= 100000 then 1 else 0 end is_active_debt_100K_exists,
+       case when sum(t.total_debt) >= 500000 then 1 else 0 end is_active_debt_500K_exists
+
+from u1.V_CLIENT_RFO_BY_ID c
+left join u1.M_CLIENT_LINK cl on cl.rfo_client_id = c.rfo_client_id
+left join u1.T_RBO_PORT t on t.rbo_client_id = cl.rbo_client_id
+                             and t.rep_date = trunc(sysdate) - 1
+group by c.rfo_client_id;
+grant select on U1.M_SCCL_RBO_PORT_PAR1 to LOADDB;
+grant select on U1.M_SCCL_RBO_PORT_PAR1 to LOAD_MO;
+grant select on U1.M_SCCL_RBO_PORT_PAR1 to RTS_RDWH;
+
+

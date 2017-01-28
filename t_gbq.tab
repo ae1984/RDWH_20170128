@@ -1,0 +1,63 @@
+﻿create table U1.T_GBQ
+(
+  id             NUMBER,
+  hit_id         VARCHAR2(50),
+  user_id        VARCHAR2(60),
+  user_phone     VARCHAR2(60),
+  user_email     VARCHAR2(50 CHAR),
+  client_id      VARCHAR2(60),
+  tracking_id    VARCHAR2(60),
+  hit_date       VARCHAR2(10),
+  hit_hour       NUMBER(2),
+  hit_minute     NUMBER(2),
+  hit_time       TIMESTAMP(6),
+  queue_time     TIMESTAMP(6),
+  is_secure      NUMBER(1),
+  is_interaction NUMBER(1),
+  currency       VARCHAR2(20),
+  referer        VARCHAR2(4000),
+  data_source    VARCHAR2(800),
+  hit_type       VARCHAR2(100),
+  idate          TIMESTAMP(6)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_GBQ
+  is 'Активность на kaspishop';
+comment on column U1.T_GBQ.hit_id
+  is 'ID посещения страницы';
+comment on column U1.T_GBQ.user_id
+  is 'ID пользователя в M_KASPISH_USERS(PK)';
+comment on column U1.T_GBQ.user_phone
+  is 'Всегда пусто';
+comment on column U1.T_GBQ.user_email
+  is 'Всегда пусто';
+comment on column U1.T_GBQ.client_id
+  is 'GOOGLE ID (меняется при каждом входе)';
+comment on column U1.T_GBQ.hit_date
+  is 'Дата посещения страницы';
+comment on column U1.T_GBQ.hit_hour
+  is 'Час посещения страницы';
+comment on column U1.T_GBQ.hit_minute
+  is 'Минуты посещения страницы';
+comment on column U1.T_GBQ.hit_time
+  is 'Дата и время посещения страницы';
+comment on column U1.T_GBQ.is_secure
+  is 'Признак защищенного входа';
+comment on column U1.T_GBQ.currency
+  is 'Валюта';
+comment on column U1.T_GBQ.hit_type
+  is 'Тип посещения страницы';
+grant select on U1.T_GBQ to LOADDB;
+

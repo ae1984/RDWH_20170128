@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_DWH_S40_EXPORTUSERNAME
+build deferred
+refresh force on demand
+as
+select change_date,
+       audit_id,
+       officenr,
+       usernr,
+       officeguid,
+       name
+  from DWH_STAGE.S40_EXPORTUSERNAME@RDWH_EXD;
+grant select on U1.M_DWH_S40_EXPORTUSERNAME to LOADDB;
+
+

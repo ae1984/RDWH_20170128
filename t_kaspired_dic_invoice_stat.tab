@@ -1,0 +1,27 @@
+﻿create table U1.T_KASPIRED_DIC_INVOICE_STAT
+(
+  artb_invoice_status_cd         NUMBER(12) not null,
+  artb_invoice$change_date       DATE,
+  artb_invoice_status$row_status CHAR(1 CHAR),
+  artb_invoice_status$audit_id   NUMBER,
+  artb_invoice_status$hash       NUMBER,
+  artb_invoice_status$source     VARCHAR2(4 CHAR),
+  artb_invoice_status$provider   VARCHAR2(80 CHAR),
+  artb_invoice_status$source_pk  VARCHAR2(2000 CHAR),
+  artb_invoice_status_name       VARCHAR2(1000 CHAR)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_KASPIRED_DIC_INVOICE_STAT to LOADDB;
+

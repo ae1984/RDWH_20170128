@@ -1,0 +1,16 @@
+﻿create materialized view U1.V_TMP_CLIENT_CONTS_RFO
+using no index
+refresh complete on demand
+as
+select /*+ no_parallel*/
+distinct cl.id,
+         ct.c_numb_clear,
+         ct.c_affirmed,
+         ct.c_date_audit
+from v_rfo_z#client cl
+join v_rfo_z#contacts ct on cl.c_contacts = ct.collection_id
+join v_Rfo_Z#owner_Com oc on ct.c_private = oc.id and oc.id = 690120;
+grant select on U1.V_TMP_CLIENT_CONTS_RFO to LOADDB;
+grant select on U1.V_TMP_CLIENT_CONTS_RFO to LOADER;
+
+

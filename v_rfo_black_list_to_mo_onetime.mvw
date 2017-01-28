@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_RFO_BLACK_LIST_TO_MO_ONETIME
+never refresh
+as
+select bl.*, u.c_username as user_login, u.c_num_tab as user_tab_num,
+       sd.c_code as dep_code, sd.c_name as dep_name
+from V_RFO_Z#BLACK_LIST_CL bl
+join V_RFO_BLACK_LIST t on t.rfo_black_list_id = bl.id
+left join V_RFO_Z#USER u on u.id = bl.c_user_ref
+left join V_RFO_Z#STRUCT_DEPART sd on sd.id = u.c_st_depart
+where t.note_type not in ('DELINQ','LSBO');
+grant select on U1.V_RFO_BLACK_LIST_TO_MO_ONETIME to LOADDB;
+grant select on U1.V_RFO_BLACK_LIST_TO_MO_ONETIME to LOADER;
+
+

@@ -1,0 +1,79 @@
+﻿create materialized view U1.V_JAN_TMP_G1
+using no index
+refresh force on demand
+as
+select  /*+first_rows*/
+        stat.TYPE_PRD           as "Тип выдачи",
+        min(stat.DATE_CREATE)   as "Период с...",
+        max(stat.DATE_CREATE)   as "Период до...",
+        count(stat.ID_FLD)      as "Всего пров АСОКР",
+        sum(stat.CNT_GCVP)      as "ГЦВП пр вовр"
+        /* -- Проверочные поля
+        stat.ID_FLD         as "ID Папки",
+        stat.TYPE_PRD       as "Тип выдачи",
+        stat.DATE_PRS       as "Дата прескоринга",
+        stat.ID_GCVP        as "ID ГЦВП",
+        stat.DATE_GCVP      as "Дата ГЦВП",
+        stat.DATE_GCVP_GET  as "Дата получения ГЦВП",
+        stat.CNT_GCVP       as "ГЦВП пришел вовремя",
+        stat.DATE_CREATE    as "Дата создания папки"
+        */
+from (
+    select
+        --/*+ use_nl(cm,f,h,l)*/
+        cm.id as ID_FLD,
+        cm.c_date_create as DATE_CREATE,
+        case
+            when f.c_business = 1441323670 then
+                'Экспрес кредит'
+            when f.c_business = 1682828418 then
+                'карта'
+            else
+                to_char(f.c_business)
+        end as TYPE_PRD,
+        h.C_LINE_TIME as DATE_PRS,
+        g.id    as ID_GCVP,
+        g.c_doc_date    as DATE_GCVP,
+        g.c_datlast     as DATE_GCVP_GET,
+        case
+            when h.C_LINE_TIME >= g.c_datlast then 1
+            else 0
+        end CNT_GCVP
+
+    from
+            V_RFO_Z#CM_CHECKPOINT cm,
+            V_RFO_Z#CM_HISTORY h,
+            V_RFO_Z#CM_LINE l,
+            V_RFO_Z#FOLDERS f
+
+    -- Селект по ГЦВП отчетам с привязкой к папке и заявке на исполнении, что бы вытащить дату
+    left join (select   g.id,
+                        d.c_doc_date,
+                        g.c_error_code,
+                        r.collection_id,
+                        c.c_datlast
+        from    V_RFO_Z#RDOC r,
+                V_RFO_Z#KAS_GCVP_REPORT g,
+                V_RFO_Z#FDOC d,
+                V_RFO_Z#KAS_CLAIM c
+        where g.id = r.c_doc
+          and g.id = d.id
+          and g.c_error_code <> '91'
+          and c.c_rnn = g.c_rnn
+          and c.state_id = 'SUCCES'
+          --and c.c_type = 'GCVP_REP_GET' отключено для новых
+          and instr(c.c_parameters, g.id ||']' ) > 0
+          ) g on g.collection_id = f.c_docs
+    -- Селект по экспрес кредитам (ЭКТ, ЭКУ, ЭКН) и картам, где
+    where f.id = cm.id
+      and cm.c_date_create >= to_date('19/08/2013','dd/mm/yyyy')
+      and cm.c_date_create < to_date('19/09/2013','dd/mm/yyyy')
+      and f.c_business in (1441323670/*OPEN_CRED_PRIV_PC*/, 1682828418/*SET_REVOLV*/)
+      and cm.c_history = h.collection_id
+      and h.C_LINE = l.id
+      and l.c_from_p = 3416502 /*PRESCORING*/) stat
+group by stat.TYPE_PRD;
+grant select on U1.V_JAN_TMP_G1 to LOADDB;
+grant select on U1.V_JAN_TMP_G1 to LOADER;
+
+

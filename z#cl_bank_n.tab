@@ -1,0 +1,49 @@
+﻿create table U1.Z#CL_BANK_N
+(
+  id                NUMBER not null,
+  c_bic             VARCHAR2(11),
+  c_ks              VARCHAR2(25),
+  c_mfo             VARCHAR2(9),
+  c_ks_old          VARCHAR2(25),
+  c_relat_num       VARCHAR2(3),
+  c_bank_type       NUMBER,
+  c_reg_num         VARCHAR2(9),
+  c_bic_master      VARCHAR2(9),
+  c_el_pay          NUMBER,
+  c_serv_on_vc      VARCHAR2(1),
+  c_bank_state      NUMBER,
+  c_successor       VARCHAR2(9),
+  c_vkey            VARCHAR2(8),
+  c_region          VARCHAR2(1),
+  c_no_key          VARCHAR2(1),
+  c_p               VARCHAR2(1),
+  c_code_cbr        VARCHAR2(16),
+  c_code_gni        VARCHAR2(16),
+  c_date_edit       DATE,
+  c_date_in         DATE,
+  c_active          VARCHAR2(1),
+  c_processed       VARCHAR2(1),
+  c_raiona          VARCHAR2(100),
+  c_enddpp#time     DATE,
+  c_enddpp#next_day VARCHAR2(1),
+  c_head_bank       NUMBER,
+  c_bic_old         VARCHAR2(11),
+  c_code_bank_vk    VARCHAR2(3),
+  sn                NUMBER,
+  su                NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.Z#CL_BANK_N to LOADDB;
+

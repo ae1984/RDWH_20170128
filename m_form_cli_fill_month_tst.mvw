@@ -1,0 +1,66 @@
+﻿create materialized view U1.M_FORM_CLI_FILL_MONTH_TST
+refresh force on demand
+as
+select
+      trunc(fc.form_client_date,'mm') month_create,
+      count(1) cnt_all,
+      count(distinct ff.folder_id) as cnt_folder,
+      case when fa.process_code = 'ONLINE_CRED' then 'ТОВАРЫ-ОНЛАЙН'
+         else ff.product_type end as product_type,
+      round(sum(case when fc.amount is not null then 1 else 0 end)/count(distinct ff.folder_id),2) summa_grade,
+      round(sum(case when fc.term_duration is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as period_quant_grade,
+      round(sum(case when fc.term_unit is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as period_unit_grade,
+      round(sum(case when fc.sex is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as sex_grade,
+      round(sum(case when fc.reg_address_region is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as reg_addr_reg_grade,
+      round(sum(case when fc.reg_address_city is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as reg_addr_city_grade,
+      round(sum(case when fc.reg_address_date_begin is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as reg_addr_date_begin_grade,
+      round(sum(case when fc.fact_address_region is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as fact_addr_reg_grade,
+      round(sum(case when fc.fact_address_city is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as fact_addr_city_grade,
+      round(sum(case when fc.fact_address_date_begin is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as fact_addr_dt_beg_grade,
+      round(sum(case when fc.education is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as education_grade,
+      round(sum(case when fc.marital_status is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as marital_status_grade,
+      round(sum(case when fc.children is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as children_grade,
+      round(sum(case when fc.job_position is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as job_position_grade,
+      round(sum(case when fc.org_activity is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as org_activity_grade,
+      round(sum(case when fc.org_sector is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as org_sector_grade,
+      round(sum(case when fc.org_type is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as org_type_grade,
+      round(sum(case when fc.job_position_type is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as job_position_type_grade,
+      round(sum(case when fc.is_bank_account_exists is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as is_bank_acc_exists_grade,
+      round(sum(case when fc.is_auto_exists is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as is_auto_exists_grade,
+      round(sum(case when fc.real_estate_relation is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as real_estate_relat_grade,
+      round(sum(case when fc.is_garage_exists is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as is_garage_exists_grade,
+      round(sum(case when fc.work_experience_last_place is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as work_expr_last_place_grade,
+      round(sum(case when fc.age_full_years is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as age_full_years_grade,
+      round(sum(case when fc.dependants_count is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as dependants_count_grade,
+      round(sum(case when fc.inc_sal is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as inc_sal_grade,
+      round(sum(case when fc.inc_sal_add is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as inc_sal_add_grade,
+      round(sum(case when fc.inc_sal_spouse is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as inc_sal_spouse_grade,
+      round(sum(case when fc.inc_rent is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as inc_rent_grade,
+      round(sum(case when fc.inc_pension_benefits is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as inc_pension_benefits_grade,
+      round(sum(case when fc.inc_interest is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as inc_interest_grade,
+      round(sum(case when fc.exp_utilities is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as exp_utilities_grade,
+      round(sum(case when fc.exp_transport is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as exp_transport_grade,
+      round(sum(case when fc.exp_children is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as exp_children_grade,
+      round(sum(case when fc.exp_nutrition is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as exp_nutrition_grade,
+      round(sum(case when fc.exp_clothes is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as exp_clothes_grade,
+      round(sum(case when fc.exp_obligations is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as exp_obligations_grade,
+      round(sum(case when fc.exp_other is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as exp_other_grade,
+      round(sum(case when fc.term_duration is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as term_duration_grade,
+      round(sum(case when fc.patronymic is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as patronymic_grade,
+      round(sum(case when fc.fact_address_street is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as fact_addr_street_grade,
+      round(sum(case when fc.fact_address_house is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as fact_addr_house_grade,
+      round(sum(case when fc.fact_address_house_part is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as fact_addr_house_part_grade,
+      round(sum(case when fc.fact_address_flat  is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as fact_addr_flat_grade,
+      round(sum(case when fc.c_address_equal is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as addr_equal_grade,
+      round(sum(case when fc.iin is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as iin_grade
+from m_folder_con_cancel_base ff
+ join v_form_client_all_rfo fc on ff.form_client_id = fc.form_client_id
+ join v_folder_all_rfo fa on fa.folder_id = ff.folder_id
+where fc.form_client_date  is not null
+  and trunc(fa.folder_date_create) < trunc(sysdate)
+  and trunc(fa.folder_date_create) >= to_date('01-01-2013','dd-mm-yyyy')
+group by trunc(fc.form_client_date,'mm'),  case when fa.process_code = 'ONLINE_CRED' then 'ТОВАРЫ-ОНЛАЙН' else ff.product_type end;
+grant select on U1.M_FORM_CLI_FILL_MONTH_TST to LOADDB;
+grant select on U1.M_FORM_CLI_FILL_MONTH_TST to LOADER;
+
+

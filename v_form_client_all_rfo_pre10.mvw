@@ -1,0 +1,12 @@
+﻿create materialized view U1.V_FORM_CLIENT_ALL_RFO_PRE10
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/
+      distinct pr9.collection_id, pr9.c_v_date as prop_name
+             from V_RFO_Z#PROPERTIES pr9
+             join V_RFO_Z#PROPERTY_GRP pg9  on pg9.id = pr9.c_group_prop
+             where pg9.c_code = 'STAZH_DATE' --Стаж на последнем месте  работы 8836976 STAZH_DATE;
+grant select on U1.V_FORM_CLIENT_ALL_RFO_PRE10 to LOADDB;
+
+

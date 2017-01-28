@@ -1,0 +1,9 @@
+﻿create materialized view U1.V_SCO_IIN_TO_RNN
+refresh complete on demand
+as
+select "IIN" as iin, "RNN" as rnn
+from "_IIN_to_RNN"@sc18;
+grant select on U1.V_SCO_IIN_TO_RNN to LOADDB;
+grant select on U1.V_SCO_IIN_TO_RNN to LOADER;
+
+

@@ -1,0 +1,77 @@
+﻿create materialized view U1.V_DWH_PORT_FPD_SPD_FPD7
+refresh complete on demand
+as
+select /*+parallel(2)*/
+        tt.rep_date
+        ,tt.start_date
+        ,tt.delinq_days
+        ,tt.debt
+        ,tt.count_client
+        ,tt.count_deal_number
+        ,tt.fpd
+        ,tt.fpd + 30 as spd
+        ,tt.fpd + 60 as fpd60
+        ,tt.fpd + 7 as fpd7
+       -- ставим метку, если дата отчета равна дате начала действия договора
+       ,case when tt.rep_date = tt.start_date then 1
+            else  0
+       end as sales_num
+       -- ставим метку, если дата отчета равна дате первого платежа договора и просрочка больше 0, тоесть клиент не заплатил еще
+       ,case when (tt.rep_date = tt.fpd) and (tt.delinq_days>0)
+         then 1
+         else 0
+       end as fpd_num
+       -- ставим метку, если дата отчета равна дате первого платежа договора + 30 дней и просрочка больше 15 дней, тоесть клиент уже второй платеж не оплатил
+       ,case when (tt.rep_date = tt.fpd + 30) and (tt.delinq_days>15)
+         then 1
+         else 0
+       end as spd_num
+       ,case when (tt.rep_date = tt.fpd + 60) and (tt.delinq_days>45)
+         then 1
+         else 0
+       end as fpd60_num
+       -- ставим метку, если дата отчета равна дате первого платежа договора + 7 дней и просрочка больше 0 дней, тоесть клиент просрочил первый платеж
+         --и в течение недели не оплатил
+       ,case when(tt.rep_date = tt.fpd + 7) and (tt.delinq_days>0)
+         then 1
+         else 0
+       end as fpd7_num
+from (
+    select
+        rep_date
+        ,start_date
+        ,delinq_days
+        ,debt
+        ,count_client
+        ,count_deal_number
+        --,fpt
+        --,fpd7
+        --,spd
+        --,fpd60
+        --,sales_num
+        --,fpd_num
+        --,fpd7_num
+        --,spd_num
+        --,fpd60_num
+        ,nvl(/*max*/(h.data),to_date('01.01.2000','dd.mm.yyyy')) as weekends
+        ,nvl(/*max*/(h.day_weekends),0) as days
+        ,case
+           when nvl(/*max*/(h.data),to_date('01.01.2000','dd.mm.yyyy')) > to_date('01.01.2001','dd.mm.yyyy') then t.fpd+nvl(/*max*/(h.day_weekends),0)
+           else t.fpd
+         end as fpd
+    from V_DWH_PORT_FPD_SPD_FPD7_PRE1 t
+    left join T_HOLIDAYS h on h.data = t.fpd
+    /*group by
+        rep_date
+        ,start_date
+        ,delinq_days
+        ,debt
+        ,count_client
+        ,count_deal_number*/
+)tt
+
+--select * from table(dwh_port_fpd_spd_fpd7) t;
+grant select on U1.V_DWH_PORT_FPD_SPD_FPD7 to LOADDB;
+grant select on U1.V_DWH_PORT_FPD_SPD_FPD7 to LOADER;
+
+

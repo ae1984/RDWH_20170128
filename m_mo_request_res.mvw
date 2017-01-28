@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_MO_REQUEST_RES
+build deferred
+refresh force on demand
+as
+select * from u1.T_MO_REQUEST_RES@mo1_prod;
+grant select on U1.M_MO_REQUEST_RES to LOADDB;
+
+

@@ -1,0 +1,21 @@
+﻿create table U1.NTETL_DAILY_OBJ_DEPENDENCIES
+(
+  object_name  VARCHAR2(128) not null,
+  last_refresh DATE,
+  sdt          DATE default sysdate
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NTETL_DAILY_OBJ_DEPENDENCIES to LOADDB;
+

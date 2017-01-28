@@ -1,0 +1,46 @@
+﻿create materialized view U1.M_CLIENT_DEPN
+refresh complete on demand
+as
+select rfo_client_id,
+       rbo_client_id,
+       rbo_depn_id,
+       nvl(pr_date_begin,date_begin) date_begin,
+       date_close,
+       date_ending,
+       cur_short,
+       val_cource,
+       sum_depn
+from (
+select
+   cl.rfo_client_id,
+   d.c_client          rbo_client_id,
+   d.id                rbo_depn_id,
+   d.c_date_begin      date_begin,
+   pc.prol_begin       pr_date_begin ,
+   d.c_date_close      date_close,
+   d.c_date_ending     date_ending,
+   m.c_cur_short       cur_short,
+   m.c_val_cource      val_cource,
+   sum(cd.c_sum_oper_db*(-1) +cd.c_sum_oper_cr)   sum_depn
+ from V_RBO_Z#DEPN d
+  join V_RBO_Z#FT_MONEY m on m.id = d.c_fintool
+  join T_CONTRACT_DEPN_OPER cd on cd.rbo_contract_id = d.id
+  left JOIN M_CLIENT_LINK  cl on cl.rbo_client_id = d.c_client
+  left join (select  min(pc1.c_prol_begin) prol_begin ,pc1.collection_id
+                   from  V_RBO_Z#PROL_CONTRACT pc1
+                   group by pc1.collection_id  ) pc on   pc.collection_id = d.c_list_prol
+where cd.rbo_contract_id = d.id
+  and cd.rbo_contract_id like '%%'
+group by    cl.rfo_client_id,
+   d.c_client  ,
+   d.id         ,
+   d.c_date_begin,
+   pc.prol_begin,
+   d.c_date_close  ,
+   d.c_date_ending,
+   m.c_cur_short,
+   m.c_val_cource );
+grant select on U1.M_CLIENT_DEPN to LOADDB;
+grant select on U1.M_CLIENT_DEPN to LOADER;
+
+

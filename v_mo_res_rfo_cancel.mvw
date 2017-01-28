@@ -1,0 +1,26 @@
+﻿create materialized view U1.V_MO_RES_RFO_CANCEL
+using no index
+refresh complete on demand
+as
+select /*+parallel(15)*/
+  c.id as cancel_id,
+  c.c_date as cancel_date,
+  c.c_client as cancel_client,
+  c.c_folders as cancel_folder,
+  ct.c_code as cancel_type_code,
+  ct.c_type as cancel_type_type,
+  ct.c_err_level as cancel_err_level,
+  upper(c.c_note) as cancel_notes,
+  ct.id as cancel_type_id,
+  to_number(substr(c.c_note, 13, instr(c.c_note,'AND') - 20)) as cancel_rfo_res_from_mo_id,
+  ct.par_code as cancel_mo_par_code
+--  upper(ct.c_name) as cancel_type_name
+from V_RFO_Z#KAS_CANCEL c
+join V_MO_RES_RFO_CANCEL_TYPES ct on ct.id = c.c_type
+where --trunc(c.c_date) = trunc(sysdate) - 2 and
+     exists (select ct.id from V_MO_RES_RFO_CANCEL_TYPES ct
+                   where ct.id = c.c_type);
+grant select on U1.V_MO_RES_RFO_CANCEL to LOADDB;
+grant select on U1.V_MO_RES_RFO_CANCEL to LOADER;
+
+

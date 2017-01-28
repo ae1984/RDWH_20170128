@@ -1,0 +1,104 @@
+﻿create materialized view U1.M_APP_MINER_FORM_GUESS_PRE4
+build deferred
+refresh force on demand
+as
+select y.app_id,
+
+       x.inc_sal_last,
+       x.inc_sal_last_x,
+       x.inc_all_last,
+       x.inc_all_last_x,
+       x.children_last,
+       x.children_last_x,
+       x.marital_last,
+       x.marital_last_x,
+       x.phone_mob_last,
+       x.phone_mob_last_x,
+       x.phone_home_last,
+       x.phone_home_last_x,
+       x.inc_sal_last_180d,
+       x.inc_all_last_180d,
+       x.children_last_180d,
+       x.marital_last_180d,
+       x.phone_mob_last_180d,
+       x.phone_home_last_180d
+
+from U1.M_APP_MINER_BAS y
+left join (select t.app_id,
+
+             /*t.folder_date_create,
+             t.folder_date_create - 180,
+             last_value(t.folder_date_create) over (partition by t.rfo_client_id order by t.folder_date_create
+                                         range between unbounded preceding and 180 preceding) as folder_date_create_180d,
+             t.folder_date_create_mi,
+             f.inc_sal,
+             f.inc_all,
+             (t.folder_date_create_mi - trunc(t.folder_date_create_mi)),*/
+
+             --previos object values
+             --inc_sal
+             last_value(f.inc_sal) over (partition by t.rfo_client_id order by t.folder_date_create
+                                         range between unbounded preceding and 1 preceding) as inc_sal_last,
+
+             lag(f.inc_sal, 1) over (partition by t.rfo_client_id order by t.folder_date_create_mi) as inc_sal_last_x,
+
+             --inc_all
+             last_value(f.inc_all) over (partition by t.rfo_client_id order by t.folder_date_create
+                                         range between unbounded preceding and 1 preceding) as inc_all_last,
+
+             lag(f.inc_all, 1) over (partition by t.rfo_client_id order by t.folder_date_create_mi) as inc_all_last_x,
+
+             --children
+             last_value(f.children) over (partition by t.rfo_client_id order by t.folder_date_create
+                                         range between unbounded preceding and 1 preceding) as children_last,
+
+             lag(f.children, 1) over (partition by t.rfo_client_id order by t.folder_date_create_mi) as children_last_x,
+
+             --marital
+             last_value(f.marital_status) over (partition by t.rfo_client_id order by t.folder_date_create
+                                         range between unbounded preceding and 1 preceding) as marital_last,
+
+             lag(f.marital_status, 1) over (partition by t.rfo_client_id order by t.folder_date_create_mi) as marital_last_x,
+
+             --phone_mobile
+             last_value(f.phone_mobile) over (partition by t.rfo_client_id order by t.folder_date_create
+                                         range between unbounded preceding and 1 preceding) as phone_mob_last,
+
+             lag(f.phone_mobile, 1) over (partition by t.rfo_client_id order by t.folder_date_create_mi) as phone_mob_last_x,
+
+             --phone_home
+             last_value(f.phone_home) over (partition by t.rfo_client_id order by t.folder_date_create
+                                         range between unbounded preceding and 1 preceding) as phone_home_last,
+
+             lag(f.phone_home, 1) over (partition by t.rfo_client_id order by t.folder_date_create_mi) as phone_home_last_x,
+
+
+             --previos object 180 days values
+             --inc_sal
+             last_value(f.inc_sal) over (partition by t.rfo_client_id order by t.folder_date_create
+                                         range between unbounded preceding and 180 preceding) as inc_sal_last_180d,
+             --inc_all
+             last_value(f.inc_all) over (partition by t.rfo_client_id order by t.folder_date_create
+                                         range between unbounded preceding and 180 preceding) as inc_all_last_180d,
+             --children
+             last_value(f.children) over (partition by t.rfo_client_id order by t.folder_date_create
+                                         range between unbounded preceding and 180 preceding) as children_last_180d,
+             --marital
+             last_value(f.marital_status) over (partition by t.rfo_client_id order by t.folder_date_create
+                                                range between unbounded preceding and 180 preceding) as marital_last_180d,
+             --phone_mobile
+             last_value(f.phone_mobile) over (partition by t.rfo_client_id order by t.folder_date_create
+                                             range between unbounded preceding and 180 preceding) as phone_mob_last_180d,
+             --phone_home
+             last_value(f.phone_home) over (partition by t.rfo_client_id order by t.folder_date_create
+                                           range between unbounded preceding and 180 preceding) as phone_home_last_180d
+
+      from u1.M_APP_MINER_BAS t
+      left join u1.M_APP_MINER_FORM_CLIENT f on f.app_id = t.app_id
+      --where t.rfo_client_id = 22792275
+      --order by t.folder_date_create_mi
+      ) x on x.app_id = y.app_id
+where y.folder_date_create >= to_date('01012015', 'ddmmyyyy');
+grant select on U1.M_APP_MINER_FORM_GUESS_PRE4 to LOADDB;
+
+

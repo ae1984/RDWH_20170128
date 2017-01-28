@@ -1,0 +1,47 @@
+﻿create table U1.TMP_PARAMS_FOR_MODEL_21
+(
+  rfo_client_id              NUMBER,
+  dt                         DATE,
+  operator_value             NUMBER,
+  unique_sumbol_qty          NUMBER,
+  unique_contact_persons     NUMBER,
+  unique_subs_on_a_number    NUMBER,
+  unique_kaspikz_client      NUMBER,
+  application_flag           NUMBER,
+  count_application          NUMBER,
+  subs_with_delay_in_contact NUMBER,
+  delay_contacts_share       NUMBER,
+  pmt_qty                    NUMBER,
+  share_of_kaspikz_pmt       NUMBER,
+  ttl_pmt_amt                NUMBER,
+  avg_pmt                    NUMBER,
+  days_from_first_mob_pay    NUMBER,
+  unique_terminal_qty        NUMBER,
+  count_category_kspkz       NUMBER,
+  count_month_kspkz          NUMBER,
+  flag_avia_kspkz            NUMBER,
+  delay_contact_flag         NUMBER,
+  client_life_length         NUMBER,
+  bylo_ili_est_auto          NUMBER,
+  years_from_issue_ever      NUMBER,
+  actual_auto_flag           NUMBER,
+  years_from_issue           NUMBER,
+  mobile_popularity          NUMBER,
+  mobile_popularity90        NUMBER,
+  mobile_popularity30        NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.TMP_PARAMS_FOR_MODEL_21 to LOADDB;
+

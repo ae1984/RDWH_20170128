@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_OUT_DUM_FOLDER_VERIF
+using no index
+refresh complete on demand
+as
+select f.folder_id, f.process_code, f.process_name, f.folder_date_create,
+       c.iin, nvl(f.credit_contract_number, f.card_contract_number) as contract_number,
+       v.verif_doc_status,
+       case when f.is_credit_issued = 1 then min(h.line_time) else null end as line_time
+from v_folder_all_rfo f
+left join v_verification v on v.folder_id = f.folder_id
+left join v_client c on c.rfo_client_id = f.rfo_client_id
+left join v_folder_all_history h on h.folder_id = f.folder_id and (h.point_from_name in('АРХИВ','КРЕДИТ ВЫДАН','ДОСТАВЛЕНА В ПОДРАЗДЕЛЕНИЕ','КОНТРОЛЬ ПКД',
+                                                                                      'ИСПРАВЛЕНИЕ ОШИБОК','ПЕРЕВОД ОТПРАВЛЕН','ОТПРАВЛЕНО В ЦА','ПЕРЕВОД ВЫПЛАЧЕН',
+                                                                                      'ПРОВЕРКА ДОСЬЕ','ДОСЬЕ ИЗЪЯТО','ДОСЬЕ ИЗЪЯТО','НА РЕКЛАМАЦИЮ','УСЛОВИЯ ДОГОВОРА ИЗМЕНЕНЫ',
+                                                                                      'КАРТОЧНЫЙ ДОГОВОР ПОПОЛНЕН','ИСПОЛНЕНО','СРЕДСТВА С КАРТОЧНОГО ДОГОВОРА СПИСАНЫ',
+                                                                                      'ДЕПОЗИТНЫЙ ДОГОВОР ПОПОЛНЕН','ДЕПОЗИТ ОТКРЫТ','АРХИВ С ОШИБКАМИ',
+                                                                                      'СРЕДСТВА С ДЕПОЗИТНОГО ДОГОВОРА СПИСАНЫ','АРХИВ С ОШИБКАМИ') or
+                                                                   h.point_to_name in('АРХИВ','КРЕДИТ ВЫДАН','ДОСТАВЛЕНА В ПОДРАЗДЕЛЕНИЕ','КОНТРОЛЬ ПКД',
+                                                                                      'ИСПРАВЛЕНИЕ ОШИБОК','ПЕРЕВОД ОТПРАВЛЕН','ОТПРАВЛЕНО В ЦА','ПЕРЕВОД ВЫПЛАЧЕН',
+                                                                                      'ПРОВЕРКА ДОСЬЕ','ДОСЬЕ ИЗЪЯТО','ДОСЬЕ ИЗЪЯТО','НА РЕКЛАМАЦИЮ','УСЛОВИЯ ДОГОВОРА ИЗМЕНЕНЫ',
+                                                                                      'КАРТОЧНЫЙ ДОГОВОР ПОПОЛНЕН','ИСПОЛНЕНО','СРЕДСТВА С КАРТОЧНОГО ДОГОВОРА СПИСАНЫ',
+                                                                                      'ДЕПОЗИТНЫЙ ДОГОВОР ПОПОЛНЕН','ДЕПОЗИТ ОТКРЫТ','АРХИВ С ОШИБКАМИ',
+                                                                                      'СРЕДСТВА С ДЕПОЗИТНОГО ДОГОВОРА СПИСАНЫ','АРХИВ С ОШИБКАМИ'))
+where f.folder_date_create >= to_date('01.01.2014','dd.mm.yyyy') and f.folder_date_create <= to_date('31.12.2014','dd.mm.yyyy')
+group by f.folder_id, f.process_code, f.process_name, f.folder_date_create,
+         c.iin, nvl(f.credit_contract_number, f.card_contract_number),
+         v.verif_doc_status, f.is_credit_issued;
+grant select on U1.M_OUT_DUM_FOLDER_VERIF to IT6_USER;
+grant select on U1.M_OUT_DUM_FOLDER_VERIF to LOADDB;
+grant select on U1.M_OUT_DUM_FOLDER_VERIF to LOADER;
+
+

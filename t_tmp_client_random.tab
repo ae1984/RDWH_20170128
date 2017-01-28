@@ -1,0 +1,29 @@
+﻿create table U1.T_TMP_CLIENT_RANDOM
+(
+  id                     NUMBER not null,
+  c_inn                  VARCHAR2(50),
+  c_uid                  VARCHAR2(250),
+  c_date                 VARCHAR2(20),
+  prev_uid               VARCHAR2(250),
+  prev_date              VARCHAR2(20),
+  identity_percent       NUMBER,
+  one_person             NUMBER,
+  previous_photo_quality NUMBER,
+  current_photo_quality  NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_CLIENT_RANDOM to LOADDB;
+grant select on U1.T_TMP_CLIENT_RANDOM to LOADER;
+

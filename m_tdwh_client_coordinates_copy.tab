@@ -1,0 +1,30 @@
+﻿create table U1.M_TDWH_CLIENT_COORDINATES_COPY
+(
+  client_dwh_id       VARCHAR2(120) not null,
+  address_type        VARCHAR2(100 CHAR),
+  city                VARCHAR2(384),
+  street              VARCHAR2(128 CHAR),
+  house               VARCHAR2(128 CHAR),
+  building            VARCHAR2(128 CHAR),
+  flat                VARCHAR2(128 CHAR),
+  latitude            NUMBER,
+  longitude           NUMBER,
+  yandex_2gis_address VARCHAR2(4000),
+  is_correct          NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.M_TDWH_CLIENT_COORDINATES_COPY to LOADDB;
+grant select on U1.M_TDWH_CLIENT_COORDINATES_COPY to LOADER;
+

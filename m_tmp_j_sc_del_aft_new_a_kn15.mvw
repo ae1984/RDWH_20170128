@@ -1,0 +1,126 @@
+﻿create materialized view U1.M_TMP_J_SC_DEL_AFT_NEW_A_KN15
+refresh force on demand
+as
+select y.yy_mm_start_last,
+       y.del_rate as del_rate_bef, x.del_rate as del_rate_cut,
+       y.del_rate_pmt_1 as del_rate_pmt_1_bef, x.del_rate_pmt_1 as del_rate_pmt_1_cut,
+       y.sales_mln as sales_mln_bef, x.sales_mln as sales_mln_cut,
+       y.sales as sales_bef, x.sales as sales_cut,
+       round(x.sales / y.sales * 100, 1) as sales_cut_perc,
+       round(x.sales_b_w / y.sales_b_w * 100, 1) as sales_b_w_cut_perc,
+       round(x.sales_b / y.sales_b * 100, 1) as sales_b_cut_perc,
+       round(x.sales_w / y.sales_w * 100, 1) as sales_w_cut_perc,
+       round(x.sales_g / y.sales_g * 100, 1) as sales_g_cut_perc,
+       round(x.sales_npl / y.sales_npl * 100, 1) as sales_npl_cut_perc,
+       y.profit_rate as profit_rate_bef, x.profit_rate as profit_rate_cut,
+       y.del_rate_b_w as del_rate_b_w_bef, x.del_rate_b_w as del_rate_b_w_cut,
+       y.del_rate_npl as del_rate_npl_bef, x.del_rate_npl as del_rate_npl_cut,
+       y.profit_mln as profit_mln_bef, x.profit_mln as profit_mln_cut,
+       y.sales_b_w_to_sales_ratio as sales_b_w_to_sales_ratio_bef,
+       x.sales_b_w_to_sales_ratio as sales_b_w_to_sales_ratio_cut,
+       x.con_cnt as con_cnt_cut,
+       x.con_dist_cnt as con_dist_cnt_cut
+from (
+select c.yy_mm_start_last,
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate, -- просрочка всего по-старому
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1, -- USE THIS! - просрочка 1-го платежа
+    round(sum(c.max_debt_used) / 1000000) as sales_mln, -- USE THIS! - продажи, млн
+    round(sum(c.max_debt_used)) as sales, -- продажи
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt, -- проверка - если эти два поля равны, значит выборка верна
+    round(sum(c.delinq_rate_b_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b_w, -- USE THIS! - просрочка всего по-новому
+    round(sum(c.delinq_rate_npl * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_npl, -- USE THIS! - просрочка по NPL (>=90 days)
+    round(sum(c.delinq_rate_b * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b, -- просрочка по BAD клиентам
+    round(sum(c.delinq_rate_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_w, -- просрочка по WATCH клиентам
+    round(sum(c.delinq_rate_g * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_g, -- просрочка по GOOD клиентам
+    round(sum(c.income) / 1000000) as income_mln, -- доход, млн (40% от продаж по GOOD клиентам)
+    round(sum(c.expense) / 1000000) as expense_mln, -- расход, млн (текущая задолженность по BAD и WATCH клиентам)
+    round(sum(c.profit) / 1000000) as profit_mln, -- USE THIS! - прибыль, млн (доход - расход)
+    round(sum(c.income)) as income, -- доход
+    round(sum(c.expense)) as expense, -- расход
+    round(sum(c.profit)) as profit, -- прибыль
+    round(sum(c.profit)/sum(c.max_debt_used) * 100, 1) as profit_rate, -- уровень прибыли
+    round(sum(c.max_debt_used_b_w) / 1000000) as sales_b_w_mln, -- продажи по BAD и WATCH клиентам, млн
+    round(sum(c.max_debt_used_b_w)) as sales_b_w, -- продажи по BAD и WATCH клиентам
+    round(sum(c.max_debt_used_b) / 1000000) as sales_b_mln, -- продажи по BAD клиентам, млн
+    round(sum(c.max_debt_used_b)) as sales_b, -- продажи по BAD клиентам
+    round(sum(c.max_debt_used_w) / 1000000) as sales_w_mln, -- продажи по WATCH клиентам, млн
+    round(sum(c.max_debt_used_w)) as sales_w, -- продажи по WATCH клиентам
+    round(sum(c.max_debt_used_g) / 1000000) as sales_g_mln, -- продажи по GOOD клиентам, млн
+    round(sum(c.max_debt_used_g)) as sales_g, -- продажи по GOOD клиентам
+    round(sum(c.max_debt_used_npl) / 1000000) as sales_npl_mln, -- продажи NPL, млн
+    round(sum(c.max_debt_used_npl)) as sales_npl, -- продажи NPL
+    round(sum(c.max_debt_used_b_w) / sum(c.max_debt_used) * 100, 1) as sales_b_w_to_sales_ratio
+from M_CONTRACT_CAL_DEL c
+join (
+/*select m.contract_id from M_FOLDER_CON_MINER_X m -- ok
+where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+          m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')\* and m.is_test = 1*\ and
+          m.cr_program_name in ('ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР') and--,'КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ') and
+      exists (select null from M_TMP_J_SC_DEL_COMB_A co where co.profit < 0 and
+           co.contract_term_months = floor(m.contract_term_months / 12) * 12 and
+           co.sal_gcvp_to_sal_form is null and
+--           co.pkb_report_status is null and
+           co.client_new_fresh_old is null and
+           co.contract_amount_categ_first is null and
+           co.x_dnp_name is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m -- ok
+where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+          m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')\* and m.is_test = 1*\ and
+          m.cr_program_name in ('ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР') and--,'КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ') and
+      exists (select null from M_TMP_J_SC_DEL_COMB_A co where co.profit < 0 and
+           co.contract_term_months = floor(m.contract_term_months / 12) * 12 and
+           co.sal_gcvp_to_sal_form = floor(case when m.sal_gcvp_to_sal_form_prc_floor >= 100 then 100
+                      else sal_gcvp_to_sal_form_prc_floor end / 5) * 5 and
+--           co.pkb_report_status is null and
+           co.client_new_fresh_old is null and
+           co.contract_amount_categ_first is null and
+           co.x_dnp_name is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m -- ok
+where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+          m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')\* and m.is_test = 1*\ and
+          m.cr_program_name in ('ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР') and--,'КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ') and
+      exists (select null from M_TMP_J_SC_DEL_COMB_A co where co.profit < 0 and
+           co.contract_term_months = floor(m.contract_term_months / 12) * 12 and
+           co.sal_gcvp_to_sal_form = floor(case when m.sal_gcvp_to_sal_form_prc_floor >= 100 then 100
+                      else sal_gcvp_to_sal_form_prc_floor end / 5) * 5 and
+--           co.pkb_report_status = m.pkb_report_status and
+           co.client_new_fresh_old = m.client_new_fresh_old and
+           co.contract_amount_categ_first is null and
+           co.x_dnp_name is null
+      )
+union select m.contract_id from M_FOLDER_CON_MINER_X m -- ok
+where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+          m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')\* and m.is_test = 1*\ and
+          m.cr_program_name in ('ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР') and--,'КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ') and
+      exists (select null from M_TMP_J_SC_DEL_COMB_A co where co.profit < 0 and
+           co.contract_term_months = floor(m.contract_term_months / 12) * 12 and
+           co.sal_gcvp_to_sal_form = floor(case when m.sal_gcvp_to_sal_form_prc_floor >= 100 then 100
+                      else sal_gcvp_to_sal_form_prc_floor end / 5) * 5 and
+--           co.pkb_report_status = m.pkb_report_status and
+           co.client_new_fresh_old = m.client_new_fresh_old and
+           co.contract_amount_categ_first = m.contract_amount_categ_first and
+           co.x_dnp_name is null
+      )
+union */select m.contract_id from M_FOLDER_CON_MINER_X m -- ok
+where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+          m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')/* and m.is_test = 1*/ and
+          m.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ','ЛУЧШИЙ КЛИЕНТ – НАЛИЧНЫЕ','ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ') and
+      exists (select null from M_TMP_J_SC_DEL_COMB_A_KN15 co where co.profit < 0 and
+                                    co.profit_rate < -10 and co.sales >= 15000000 and
+           co.contract_term_months = floor(m.contract_term_months / 12) * 12 and
+           co.sal_gcvp_to_sal_form = floor(case when m.sal_gcvp_to_sal_form_prc_floor >= 100 then 100
+                      else sal_gcvp_to_sal_form_prc_floor end / 5) * 5 and
+--           co.pkb_report_status = m.pkb_report_status and
+           co.client_new_fresh_old = m.client_new_fresh_old and
+           co.contract_amount_categ_first = m.contract_amount_categ_first and
+           co.x_dnp_name = m.x_dnp_name
+      )
+) w on w.contract_id = c.contract_id
+group by c.yy_mm_start_last having sum(c.max_debt_used) > 0
+) x full outer join M_TMP_J_SC_DEL_BEF_A_KN15 y on y.yy_mm_start_last = x.yy_mm_start_last;
+grant select on U1.M_TMP_J_SC_DEL_AFT_NEW_A_KN15 to LOADDB;
+grant select on U1.M_TMP_J_SC_DEL_AFT_NEW_A_KN15 to LOADER;
+
+

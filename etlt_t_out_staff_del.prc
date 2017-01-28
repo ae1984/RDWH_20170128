@@ -1,0 +1,101 @@
+﻿create or replace procedure u1.ETLT_T_OUT_STAFF_DEL
+  is
+   s_mview_name     varchar2(30) := 'T_OUT_STAFF_DEL';
+   vStrDate         date := sysdate;
+   d_date_start_ins date; --дата логирования инсерта
+
+   d_src_commit_date_last date; --дата последней загруженной строки
+   d_src_commit_date_load date; --дата, по которую делаем загрузку
+
+begin
+  delete from T_OUT_STAFF_DEL t
+   where t.REP_DATE < trunc(sysdate-7);
+
+  insert into u1.T_OUT_STAFF_DEL
+  select x.department,
+         x.position,
+         x.name,
+         x.iin, -- подразделение, должность, ФИО, ИИН сотрудника
+         --count as cnt,
+         --count(distinct contract_number) as con_cnt,-- количество договоров
+         max(delinq_days) as delinq_days, --максимальное количество дней просрочки
+         sum(delinq_amount) as delinq_amount, -- сумма просрочки
+         --sum(total_debt) as total_debt, --общая задолженность
+         sum(x.fine) as fine_sum,-- общая пеня
+         max(product) keep (dense_rank last order by total_debt) as product,-- тип продукта по договору, имеющему максимальную задолженность
+         --min(begin_date) keep (dense_rank last order by total_debt) as begin_date, -- дата начала по договору, имеющему максимальную задолженность
+         sum(amount) as amount, -- сумма договора
+         sum(pmt) as pmt, -- ежемесячный платеж
+         trunc(sysdate) as rep_date
+    from (
+          select trim(upper(s.direct_name || ' ' || s.depart_name || ' ' || s.office_name || ' ' || s.divis_name)) as department,
+                 trim(upper(s.position_name)) as position,
+                 c.client_name as name,
+                 c.client_iin as iin,
+                 c.deal_number as contract_number,
+                 c.x_delinq_days as delinq_days,
+                 c.x_delinq_amount as delinq_amount,
+                 c.x_total_debt as total_debt,
+                 c.prod_type as product,
+                 c.begin_date,
+                 c.x_amount as amount,
+                 c.pmt,
+                 b.rbo_contract_id,
+                 case
+                   when substr(c.deal_number, 1, instr(c.deal_number, '/') -1) is null then
+                     p.c_sum_4 else 0
+                 end   as fine
+            from (
+                  select tt.tax_id as tax_id,
+                         tt.direct_name as  direct_name,
+                         tt.depart_name as depart_name,
+                         tt.office_name as office_name,
+                         tt.divis_name as divis_name,
+                         tt.position_name as position_name
+                   from  m_zup_1c_staff tt
+                   join (
+                         select max(t.hiring_date_txt) as max_d,t.tax_id
+                           from m_zup_1c_staff t
+                          where t.firing_date_txt is null
+                            and t.tax_id not in (
+                                                 select distinct tax_id
+                                                   from (
+                                                         select count(1) over (partition by t.tax_id, t.hiring_date_txt) as cnt,
+                                                                t.*
+                                                           from m_zup_1c_staff t
+                                                          where t.tax_id is not null
+                                                            and t.firing_date_txt is null
+                                                        )
+                                                  where cnt > 1
+                                                 )
+                          group by t.tax_id ) t on t.tax_id=tt.tax_id and t.max_d=tt.hiring_date_txt
+
+                   union
+
+                  select distinct tax_id,
+                         direct_name,
+                         depart_name,
+                         office_name,
+                         divis_name,
+                         position_name
+                   from (
+                         select count(1) over (partition by t.tax_id, t.hiring_date_txt) as cnt,
+                                t.*
+                           from m_zup_1c_staff t
+                          where t.tax_id is not null
+                            and t.firing_date_txt is null
+                        )
+                  where cnt > 1
+                 ) s
+           join u1.V_DWH_PORTFOLIO_CURRENT c on c.client_iin = s.tax_id
+           join m_rbo_contract_bas         b on b.contract_number = c.deal_number
+           join RBO_SNP_CALC_INFO_DWH      p on p.c_prod_ref=b.rbo_contract_id
+          where c.x_is_credit_issued = 1    and c.is_credit_active = 1
+                                            and c.x_delinq_days > 0
+        ) x
+   group by x.department, x.position, x.name, x.iin;
+  commit;
+
+end ETLT_T_OUT_STAFF_DEL;
+/
+

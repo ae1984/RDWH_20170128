@@ -1,0 +1,88 @@
+﻿create table U1.T_DWH_PORT_AUTO
+(
+  rep_date              DATE,
+  deal_number           VARCHAR2(250),
+  prod_type             VARCHAR2(255),
+  total_debt            NUMBER,
+  delinq_days           NUMBER,
+  delinq_days_old       NUMBER,
+  discount              NUMBER,
+  eff_rate              NUMBER,
+  reduced_cost          NUMBER,
+  market_cost           NUMBER,
+  total_ts_cost         NUMBER,
+  total_set_cost        NUMBER,
+  zalog_cost            NUMBER,
+  is_on_balance         VARCHAR2(20),
+  is_gu_sale            NUMBER,
+  sale_amount           NUMBER,
+  sale_date             DATE,
+  zalog_contract_number VARCHAR2(22 CHAR)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_DWH_PORT_AUTO
+  is 'Информация по договорам АВТО по задолженности и стоимости залогово';
+comment on column U1.T_DWH_PORT_AUTO.rep_date
+  is 'Отчетная дата';
+comment on column U1.T_DWH_PORT_AUTO.deal_number
+  is 'Номер договора';
+comment on column U1.T_DWH_PORT_AUTO.prod_type
+  is 'Тип продукта';
+comment on column U1.T_DWH_PORT_AUTO.total_debt
+  is 'Сумма общей задолженности';
+comment on column U1.T_DWH_PORT_AUTO.delinq_days
+  is 'Количество дней на просрочке по клиенту';
+comment on column U1.T_DWH_PORT_AUTO.delinq_days_old
+  is 'Количество дней на просрочке по договору';
+comment on column U1.T_DWH_PORT_AUTO.discount
+  is 'Сумма дисконта';
+comment on column U1.T_DWH_PORT_AUTO.eff_rate
+  is 'Эффективная ставка договора';
+comment on column U1.T_DWH_PORT_AUTO.reduced_cost
+  is 'восстановленная стоимость ';
+comment on column U1.T_DWH_PORT_AUTO.market_cost
+  is 'рыночная стоимость ';
+comment on column U1.T_DWH_PORT_AUTO.total_ts_cost
+  is 'итоговая оценочная стоимость (автомат) ';
+comment on column U1.T_DWH_PORT_AUTO.total_set_cost
+  is 'итоговая оценочная стоимость (поз) ';
+comment on column U1.T_DWH_PORT_AUTO.zalog_cost
+  is 'залоговая стоимость ';
+comment on column U1.T_DWH_PORT_AUTO.is_on_balance
+  is 'признак: Y-вся задолженность на балансе, W - вся задолженность на внебалансе, I - задолженность не числится на балансе(7999), списывается за счет страховой компании(старая схема по кредитам) ';
+comment on column U1.T_DWH_PORT_AUTO.is_gu_sale
+  is 'Признак что авто по этому ГУ продано';
+comment on column U1.T_DWH_PORT_AUTO.sale_amount
+  is 'Сумма продажи авто';
+comment on column U1.T_DWH_PORT_AUTO.sale_date
+  is 'Дата продажи авто';
+comment on column U1.T_DWH_PORT_AUTO.zalog_contract_number
+  is 'Номер договора залога';
+alter table U1.T_DWH_PORT_AUTO
+  add constraint T_DWH_PORT_AUTO_UK1 unique (REP_DATE, DEAL_NUMBER)
+  using index 
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.T_DWH_PORT_AUTO_UK1 nologging;
+grant select on U1.T_DWH_PORT_AUTO to LOADDB;
+

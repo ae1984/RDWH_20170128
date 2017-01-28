@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_DWH_PLAN_OPER_CREDIT_PRE1
+build deferred
+refresh force on demand
+as
+select /*+parallel(1)*/ c.* from dwh_ran.deal_credit_plan_oper_rsk_v@DWH_PROD2 c;
+grant select on U1.M_DWH_PLAN_OPER_CREDIT_PRE1 to LOADDB;
+
+

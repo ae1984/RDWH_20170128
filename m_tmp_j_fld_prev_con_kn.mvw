@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_TMP_J_FLD_PREV_CON_KN
+refresh complete on demand
+as
+select f.rfo_contract_id,
+       count(distinct d.deal_number) as prev_con_kn_cnt,
+       case when count(distinct d.deal_number) > 0 then 0 else 1 end as is_client_kn_new
+from M_FOLDER_CON_CANCEL f
+left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = f.iin and
+                                       d.x_start_date_actual < trunc(f.folder_date_create_mi) and
+                                       d.x_is_credit_issued = 1 and
+                                       d.prod_type in (
+                                          'КРЕДИТ НАЛИЧНЫМИ',
+                                          'КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ',
+                                          'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ',
+                                          'ЛУЧШИЙ КЛИЕНТ НАЛИЧНЫМИ',
+                                          'ОСОБЕННЫЙ КЛИЕНТ - КН',
+                                          'ОСОБЕННЫЙ КЛИЕНТ -КН 15',
+                                          'ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ',
+                                          'ЭКСПРЕСС-КРЕДИТЫ (ДЕНЬГИ)'
+                                       )
+--where f.rfo_contract_id = 20648899226
+group by f.rfo_contract_id;
+grant select on U1.M_TMP_J_FLD_PREV_CON_KN to LOADDB;
+grant select on U1.M_TMP_J_FLD_PREV_CON_KN to LOADER;
+
+

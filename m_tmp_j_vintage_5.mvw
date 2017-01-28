@@ -1,0 +1,34 @@
+﻿create materialized view U1.M_TMP_J_VINTAGE_5
+refresh complete on demand
+as
+select t.yy_mm_start_date, t.yy_mm_report, t.cred_program_name,
+       round(months_between(t.rep_date, t.start_date)) as month_num,
+
+       count(*) as cnt, count(distinct t.rbo_contract_id) as con_cnt,
+
+       sum(c.max_debt_used_x) / 1000000 as max_debt_used_x_mln,
+       sum(r.c_summa_dog) / 1000000 as amount_mln,
+
+       sum(t.total_debt_x) / 1000000 as total_debt_x_mln,
+       sum(case when t.del_days_x > 7 then t.total_debt_x end) / 1000000 as total_debt_x_del_7_mln,
+       sum(case when t.del_days_x > 30 then t.total_debt_x end) / 1000000 as total_debt_x_del_30_mln,
+       sum(case when t.del_days_x > 60 then t.total_debt_x end) / 1000000 as total_debt_x_del_60_mln,
+       sum(case when t.del_days_x > 90 then t.total_debt_x end) / 1000000 as total_debt_x_del_90_mln,
+
+       sum(case when t.del_days_x >  7 and t.del_days_x <= 30 then t.total_debt_x end) / 1000000 as total_debt_x_del_08_30_mln,
+       sum(case when t.del_days_x > 30 and t.del_days_x <= 60 then t.total_debt_x end) / 1000000 as total_debt_x_del_31_60_mln,
+       sum(case when t.del_days_x > 60 and t.del_days_x <= 90 then t.total_debt_x end) / 1000000 as total_debt_x_del_61_90_mln
+from M_RBO_CONTRACT_PORTFOLIO t
+join V_TIME_MONTHS tm on tm.text_yyyy_mm = t.yy_mm_report
+join RISK_MVERA.M_RBO_CONTRACT_DEL c on c.rbo_contract_id = t.rbo_contract_id
+left join V_RBO_Z#PR_CRED r on r.id = t.rbo_contract_id
+group by t.yy_mm_start_date, t.yy_mm_report, t.cred_program_name,
+         round(months_between(t.rep_date, t.start_date))
+
+
+
+--select round(months_between(to_date('2015-02-28','yyyy-mm-dd'),to_date('2015-01-30','yyyy-mm-dd'))) from dual;
+grant select on U1.M_TMP_J_VINTAGE_5 to LOADDB;
+grant select on U1.M_TMP_J_VINTAGE_5 to LOADER;
+
+

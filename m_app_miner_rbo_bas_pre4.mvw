@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_APP_MINER_RBO_BAS_PRE4
+build deferred
+refresh force on demand
+as
+select
+       t.app_id
+
+       ,count(distinct trunc(a.c_oper_date, 'mm')) as kspgl_pay_month_6m_cnt
+
+from u1.M_APP_MINER_BAS t
+join (  select t.rfo_client_id
+               ,fo.c_oper_date
+               ,fo.c_summa
+        from u1.M_RBO_CONTRACT_BAS t
+        join u1.V_RBO_Z#KAS_PC_DOG a on a.id = t.rbo_contract_id
+        join u1.T_RBO_Z#KAS_PC_FO fo on fo.collection_id = a.c_fo_arr
+                                        and fo.c_is_storno = 0
+                                        and fo.c_doc_state = 'PROV'
+        join u1.V_RBO_Z#VID_OPER_DOG vod on vod.id = fo.c_vid_oper_ref
+                                            and vod.c_code = 'PC_TO_CARD_ZP'
+        where t.cred_program_code = 'ZP_KASPI_GOLD'
+
+    ) a on a.rfo_client_id = t.rfo_client_id
+           and a.c_oper_date >= add_months(trunc(t.folder_date_create_mi), -6)
+           and a.c_oper_date < trunc(t.folder_date_create_mi)
+
+where t.folder_date_create_mi >= to_date('01-01-2015','dd-mm-yyyy')
+group by t.app_id;
+grant select on U1.M_APP_MINER_RBO_BAS_PRE4 to LOADDB;
+
+

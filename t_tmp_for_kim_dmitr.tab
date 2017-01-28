@@ -1,0 +1,23 @@
+﻿create table U1.T_TMP_FOR_KIM_DMITR
+(
+  rnn            VARCHAR2(50),
+  client_dwh_id  VARCHAR2(50),
+  profile_status VARCHAR2(50),
+  create_date    DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_FOR_KIM_DMITR to LOADDB;
+grant select on U1.T_TMP_FOR_KIM_DMITR to LOADER;
+

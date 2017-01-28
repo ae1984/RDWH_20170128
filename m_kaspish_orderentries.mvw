@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_KASPISH_ORDERENTRIES
+build deferred
+refresh force on demand
+as
+select HJMPTS,
+       TYPEPKSTRING,
+       OWNERPKSTRING,
+       MODIFIEDTS,
+       CREATEDTS,
+       PK,
+       PRODUCTPK,
+       BASEPRICE,
+       REJECTEDFLAG,
+       UNITPK,
+       TOTALPRICE,
+       ORDERPK,
+       CALCULATEDFLAG,
+       TAXVALUES,
+       INFO,
+       GIVEAWAYFLAG,
+       --DISCOUNTVALUES,
+       ENTRYNUMBER,
+       QUANTITY,
+       P_QUANTITYSTATUS,
+       P_DELIVERYMODE,
+       P_CHOSENVENDOR,
+       P_DELIVERYADDRESS,
+       P_NAMEDDELIVERYDATE,
+       P_DELIVERYPOINTOFSERVICE,
+       P_INSTALLMENTDURATION,
+       P_MERCHANT,
+       P_INSTALLMENTMONTHLYPAYMENT,
+       ACLTS,
+       PROPTS,
+       P_ORDERREGIONALDELIVERYDAYS
+  from KASPI.ORDERENTRIES@KS_STD;
+

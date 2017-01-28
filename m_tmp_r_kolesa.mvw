@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_TMP_R_KOLESA
+refresh force on demand
+as
+select to_number(k.akk_price) as price_num,
+(case when LENGTH(TRIM(TRANSLATE(k.akk_engine_volume, ' +-.0123456789',' '))) is null then
+      case when to_number(k.akk_engine_volume)<1 then '<1'
+           when to_number(k.akk_engine_volume)>1 and to_number(k.akk_engine_volume)<=1.6 then '1.6'
+           when to_number(k.akk_engine_volume)>1.6 and to_number(k.akk_engine_volume)<=1.8 then '1.8'
+           when to_number(k.akk_engine_volume)>1.8 and to_number(k.akk_engine_volume)<=2 then '2'
+           when to_number(k.akk_engine_volume)>2 and to_number(k.akk_engine_volume)<=2.2 then '2.2'
+           when to_number(k.akk_engine_volume)>2.2 and to_number(k.akk_engine_volume)<=2.5 then '2.5'
+           when to_number(k.akk_engine_volume)>2.5 and to_number(k.akk_engine_volume)<=3 then '3.0'
+           when to_number(k.akk_engine_volume)>3 and to_number(k.akk_engine_volume)<=3.5 then '3.5'
+           when to_number(k.akk_engine_volume)>3.5 and to_number(k.akk_engine_volume)<=4 then '4.0'
+           when to_number(k.akk_engine_volume)>4 then '>4' else 'null' end
+else 'unknown' end) as engine_volume_cat,
+     k.*
+from M_dwh_kolesa_kz k;
+grant select on U1.M_TMP_R_KOLESA to LOADDB;
+grant select on U1.M_TMP_R_KOLESA to LOADER;
+
+

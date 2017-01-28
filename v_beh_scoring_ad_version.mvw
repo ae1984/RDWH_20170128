@@ -1,0 +1,38 @@
+﻿create materialized view U1.V_BEH_SCORING_AD_VERSION
+refresh complete on demand
+as
+select p.CLIENT_ID,
+
+max (case when p.YY_MM_REPORT < '2013 - 09' then p.DELINQ_DAYS end) as Max_Delinq_t0,
+sum (case when p.YY_MM_REPORT = '2013 - 08' then p.TOTAL_DEBT end) as Debt_t0,
+max (case when p.YY_MM_REPORT = '2013 - 08' then p.DELINQ_DAYS end) as Delinq_t0,
+
+max (case when p.YY_MM_REPORT < '2013 - 06' then p.DELINQ_DAYS end) as Max_Delinq_3,
+sum (case when p.YY_MM_REPORT = '2013 - 05' then p.TOTAL_DEBT end) as Debt_3,
+max (case when p.YY_MM_REPORT = '2013 - 05' then p.DELINQ_DAYS end) as Delinq_3,
+
+max (case when p.YY_MM_REPORT < '2013 - 03' then p.DELINQ_DAYS end) as Max_Delinq_6,
+sum (case when p.YY_MM_REPORT = '2013 - 02' then p.TOTAL_DEBT end) as Debt_6,
+max (case when p.YY_MM_REPORT = '2013 - 02' then p.DELINQ_DAYS end) as Delinq_6,
+
+max (case when p.YY_MM_REPORT < '2013 - 12' then p.DELINQ_DAYS end) as Max_Delinq_nov,
+max (case when p.YY_MM_REPORT = '2013 - 11' then p.DELINQ_DAYS end) as Delinq_nov,
+sum (case when p.YY_MM_REPORT = '2013 - 11' then p.TOTAL_DEBT end) as Debt_nov,
+
+max (case when p.PLANNED_PMT_MONTH = 1 then p.DELINQ_DAYS end) as FPD,
+
+max (case when p.PLANNED_PMT_MONTH < 5 then p.DELINQ_DAYS end) as max_delinq_4PD,
+
+count (distinct case when p.TOTAL_DEBT > 4500 then  p.YY_MM_REPORT end) as Planned_PMTs
+
+from V_PORTFOLIO p
+
+where p.yy_mm_start < '2013 - 06'
+
+group by p.CLIENT_ID
+
+having max (case when p.YY_MM_REPORT < '2013 - 09' then p.DELINQ_DAYS end) < 31;
+grant select on U1.V_BEH_SCORING_AD_VERSION to LOADDB;
+grant select on U1.V_BEH_SCORING_AD_VERSION to LOADER;
+
+

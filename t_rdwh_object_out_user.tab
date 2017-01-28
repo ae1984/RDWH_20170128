@@ -1,0 +1,25 @@
+﻿create table U1.T_RDWH_OBJECT_OUT_USER
+(
+  id          NUMBER,
+  username    VARCHAR2(50),
+  object_name VARCHAR2(50),
+  is_used     NUMBER(1) default 0
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RDWH_OBJECT_OUT_USER
+  is 'Объекты используемые внешними пользователями';
+grant select on U1.T_RDWH_OBJECT_OUT_USER to LOADDB;
+grant select on U1.T_RDWH_OBJECT_OUT_USER to LOADER;
+

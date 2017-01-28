@@ -1,0 +1,116 @@
+﻿create table U1.T_RFO_Z#CLIENT
+(
+  id                  NUMBER not null,
+  class_id            VARCHAR2(16 CHAR),
+  c_inn               VARCHAR2(12 CHAR),
+  c_registr_num       NUMBER(9),
+  c_contacts          NUMBER,
+  c_notes             VARCHAR2(2000 CHAR),
+  c_kpp               VARCHAR2(9 CHAR),
+  c_date_cl           DATE,
+  c_date_op           DATE,
+  c_date_ank          DATE,
+  c_date_form_upd     DATE,
+  c_country           NUMBER,
+  c_internal_code     VARCHAR2(25 CHAR),
+  c_is_suspect        NUMBER,
+  c_addresses         NUMBER,
+  c_i_name            VARCHAR2(255 CHAR),
+  c_name              VARCHAR2(255 CHAR),
+  c_audit#rcv_file    VARCHAR2(128 CHAR),
+  c_audit#create      NUMBER,
+  c_audit#edit        NUMBER,
+  c_audit#date_create DATE,
+  c_audit#date_edit   DATE,
+  c_audit#from_rout   VARCHAR2(1 CHAR),
+  c_audit#op_date     DATE,
+  c_audit#key_valid   VARCHAR2(1 CHAR),
+  c_decl_fio          NUMBER,
+  c_rnn               NUMBER(12),
+  c_sik               VARCHAR2(250 CHAR),
+  c_dig_ac            NUMBER(5),
+  c_images            NUMBER,
+  c_products_arr      NUMBER,
+  c_kas_props         NUMBER,
+  c_kas_rnn           VARCHAR2(12 CHAR),
+  c_links_other       NUMBER,
+  sn                  NUMBER,
+  su                  NUMBER,
+  x_iin               VARCHAR2(36),
+  x_rnn               VARCHAR2(36)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RFO_Z#CLIENT
+  is 'Клиенты';
+comment on column U1.T_RFO_Z#CLIENT.c_inn
+  is 'ИНН';
+comment on column U1.T_RFO_Z#CLIENT.c_registr_num
+  is 'Регистрационный номер';
+comment on column U1.T_RFO_Z#CLIENT.c_contacts
+  is 'Контакты для связи(COLLECTION в Z#CONTACTS)';
+comment on column U1.T_RFO_Z#CLIENT.c_notes
+  is 'Примечание';
+comment on column U1.T_RFO_Z#CLIENT.c_kpp
+  is 'КПП';
+comment on column U1.T_RFO_Z#CLIENT.c_date_cl
+  is 'Дата закрытия';
+comment on column U1.T_RFO_Z#CLIENT.c_date_op
+  is 'Дата открытия';
+comment on column U1.T_RFO_Z#CLIENT.c_date_form_upd
+  is 'Дата обновления анкеты';
+comment on column U1.T_RFO_Z#CLIENT.c_country
+  is 'Юрисдикция / Гражданство(FK на Z#COUNTRY)';
+comment on column U1.T_RFO_Z#CLIENT.c_internal_code
+  is 'Внутренний код для импорта (служебный)';
+comment on column U1.T_RFO_Z#CLIENT.c_is_suspect
+  is '207-П. Признак причастности к терроризму(FK на Z#P207_TERROR_FLAG)';
+comment on column U1.T_RFO_Z#CLIENT.c_addresses
+  is 'Адреса(COLLECTION в Z#ADRESSES)';
+comment on column U1.T_RFO_Z#CLIENT.c_i_name
+  is 'Интернациональное наименование';
+comment on column U1.T_RFO_Z#CLIENT.c_name
+  is 'Наименование';
+comment on column U1.T_RFO_Z#CLIENT.c_decl_fio
+  is 'Склонения наименований(COLLECTION в Z#DECLENSION)';
+comment on column U1.T_RFO_Z#CLIENT.c_sik
+  is 'СИК';
+comment on column U1.T_RFO_Z#CLIENT.c_dig_ac
+  is 'Цифровой код доступа (не светить в представлениях)';
+comment on column U1.T_RFO_Z#CLIENT.c_images
+  is 'Изображения(COLLECTION в Z#IMAGES)';
+comment on column U1.T_RFO_Z#CLIENT.c_products_arr
+  is 'Продукты(COLLECTION в Z#KAS_CLN_PRD)';
+comment on column U1.T_RFO_Z#CLIENT.c_kas_props
+  is 'KAS. Дополнительные свойства(COLLECTION в Z#PROPERTIES)';
+comment on column U1.T_RFO_Z#CLIENT.c_kas_rnn
+  is 'РНН';
+comment on column U1.T_RFO_Z#CLIENT.c_links_other
+  is 'Связи с другими клиентами(COLLECTION в Z#KAS_LINKS_CL)';
+create unique index U1.T_RFO_Z#CLIENT_IND1 on U1.T_RFO_Z#CLIENT (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#CLIENT
+  add constraint T_RFO_Z#CLIENT_PK primary key (ID);
+grant select on U1.T_RFO_Z#CLIENT to LOADDB;
+

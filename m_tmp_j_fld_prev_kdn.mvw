@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_TMP_J_FLD_PREV_KDN
+refresh complete on demand
+as
+select t.rfo_contract_id,
+       max(k2.kdn_form_salary_max) as prior_kdn_max
+from M_FOLDER_CON_CANCEL t
+left join M_CONTRACT_PARAM_KDN5C k2 on k2.client_iin = t.iin and -- kdn contracts
+                                       k2.x_start_date < add_months(trunc(t.folder_date_create_mi),-4) -- 4 мес должно пройти после выдачи
+group by t.rfo_contract_id;
+grant select on U1.M_TMP_J_FLD_PREV_KDN to LOADDB;
+grant select on U1.M_TMP_J_FLD_PREV_KDN to LOADER;
+
+

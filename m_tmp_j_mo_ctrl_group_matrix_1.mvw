@@ -1,0 +1,64 @@
+﻿create materialized view U1.M_TMP_J_MO_CTRL_GROUP_MATRIX_1
+refresh complete on demand
+as
+select td.text_yyyy_mm, f.a_date, f.is_categ_a, f.is_client_new_by_con, f.is_credit_issued, f.is_sign_require,
+       mr.mo_rej, ma.mo_rej_override,
+       ---
+       count(*) as cnt, count(distinct f.claim_id) as rfo_con_cnt, --count(distinct f.rfo_contract_id) as rfo_con_cnt,
+       count(distinct f.folder_id) as fld_cnt,
+       count(distinct f.rfo_client_id) as cli_cnt,
+       sum(f.contract_amount) / 1000000 as amount_requested_mln,
+       avg(f.contract_amount) as amount_requested_avg,
+       min(f.contract_amount) as amount_requested_min,
+       max(f.contract_amount) as amount_requested_max,
+       ---
+       count(distinct c.deal_number) as con_cnt,
+       sum(d.max_debt_used_x) / 1000000 as sales_mln,
+       avg(d.max_debt_used_x) as amount_approved_avg,
+       min(d.max_debt_used_x) as amount_approved_min,
+       max(d.max_debt_used_x) as amount_approved_max,
+       sum(case when d.del_days_x > 7  then d.total_debt_x end) / 1000000 as debt_del_7_mln,
+       sum(case when d.del_days_x > 30 then d.total_debt_x end) / 1000000 as debt_del_30_mln,
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as debt_del_60_mln,
+       sum(case when d.del_days_x > 90 then d.total_debt_x end) / 1000000 as debt_del_90_mln
+from (
+  select trunc(f.folder_date_create_mi) as a_date, f.is_categ_a, f.is_client_new_by_con,
+         f.is_credit_issued, f.is_sign_require,
+         f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id
+  from M_FOLDER_CON_CANCEL f
+  where f.process_name = 'ОНЛАЙН КРЕДИТ' and
+        f.claim_id is not null and
+        f.folder_date_create_mi >= to_date('2014-12-08','yyyy-mm-dd')
+  union all
+  select trunc(fo.folder_date_create_mi) as a_date, fo.is_categ_a, fo.is_client_new_by_con,
+         fo.is_credit_issued, fo.is_sign_require,
+         fo.claim_id, fo.contract_number, fo.rfo_client_id, fo.contract_amount, fo.folder_id
+  from M_FOLDER_CON_CANCEL_ONLINE fo
+  where fo.folder_date_create_mi >= to_date('2014-12-08','yyyy-mm-dd')
+) f
+join V_TIME_DAYS td on td.yyyy_mm_dd = f.a_date
+left join V_DWH_PORTFOLIO_CURRENT c on c.folder_id_first = f.folder_id and c.deal_number = f.contract_number and
+                                       c.x_is_credit_issued = 1
+left join M_RBO_CONTRACT_BAS b on b.contract_number = c.deal_number
+left join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+left join (
+  select t.folder_id,
+         listagg(t.par_name, ';') within group (order by t.par_name) as mo_rej
+  from M_FOLDER_MO_CANCEL_LAST t
+  where t.is_rejecting = 1
+  group by t.folder_id
+) mr on mr.folder_id = f.folder_id
+left join (
+  select t.folder_id,
+         listagg(t.par_name, ';') within group (order by t.par_name) as mo_rej_override
+  from M_FOLDER_MO_CANCEL_LAST t
+  where t.is_rejecting = 0
+  group by t.folder_id
+) ma on ma.folder_id = f.folder_id
+group by td.text_yyyy_mm, f.a_date, f.is_categ_a, f.is_client_new_by_con, f.is_credit_issued, f.is_sign_require,
+         mr.mo_rej, ma.mo_rej_override
+--);
+grant select on U1.M_TMP_J_MO_CTRL_GROUP_MATRIX_1 to LOADDB;
+grant select on U1.M_TMP_J_MO_CTRL_GROUP_MATRIX_1 to LOADER;
+
+

@@ -1,0 +1,527 @@
+﻿create table U1.DWH_DM_CARDSDAILY_HD_H
+(
+  cdhd_rep_date              DATE,
+  cdhd_deal_number           VARCHAR2(250 CHAR),
+  cdhd_begin_date            DATE,
+  cdhd_set_revolving_date    DATE,
+  cdhd_prod_type             VARCHAR2(255 CHAR),
+  cdhd_pc_cred               NUMBER,
+  cdhd_pc_overlimit          NUMBER,
+  cdhd_pc_overdraft          NUMBER,
+  cdhd_pc_prc                NUMBER,
+  cdhd_pc_ovrd_cred          NUMBER,
+  cdhd_pc_ovrd_overlimit     NUMBER,
+  cdhd_pc_ovrd_overdraft     NUMBER,
+  cdhd_pc_ovrd_prc           NUMBER,
+  cdhd_ovrd_days             NUMBER,
+  date_load                  DATE,
+  cdhd_pc_vnb_ovrd_cred      NUMBER,
+  cdhd_pc_vnb_ovrd_overdraft NUMBER,
+  cdhd_pc_vnb_ovrd_overlimit NUMBER,
+  cdhd_pc_vnb_ovrd_prc_cred  NUMBER,
+  cdhd_restruct_type         VARCHAR2(100),
+  cdhd_restruct_count        NUMBER
+)
+partition by range (CDHD_REP_DATE) interval (NUMTOYMINTERVAL(1,'MONTH'))
+(
+  partition P0 values less than (TO_DATE(' 2010-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255,
+  partition SYS_P1608 values less than (TO_DATE(' 2013-10-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1609 values less than (TO_DATE(' 2013-11-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1610 values less than (TO_DATE(' 2013-12-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1611 values less than (TO_DATE(' 2014-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1738 values less than (TO_DATE(' 2014-02-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P2088 values less than (TO_DATE(' 2014-03-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P2550 values less than (TO_DATE(' 2014-04-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P3077 values less than (TO_DATE(' 2014-05-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P3698 values less than (TO_DATE(' 2014-06-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P4318 values less than (TO_DATE(' 2014-07-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P4832 values less than (TO_DATE(' 2014-08-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P5378 values less than (TO_DATE(' 2014-09-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P5977 values less than (TO_DATE(' 2014-10-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P6614 values less than (TO_DATE(' 2014-11-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P7207 values less than (TO_DATE(' 2014-12-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P7638 values less than (TO_DATE(' 2015-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P8141 values less than (TO_DATE(' 2015-02-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P8465 values less than (TO_DATE(' 2015-03-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P8775 values less than (TO_DATE(' 2015-04-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P9346 values less than (TO_DATE(' 2015-05-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P9999 values less than (TO_DATE(' 2015-06-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P10879 values less than (TO_DATE(' 2015-07-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P12854 values less than (TO_DATE(' 2015-08-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P19982 values less than (TO_DATE(' 2015-09-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P20644 values less than (TO_DATE(' 2015-10-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P21117 values less than (TO_DATE(' 2015-11-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P21688 values less than (TO_DATE(' 2015-12-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P22155 values less than (TO_DATE(' 2016-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P22596 values less than (TO_DATE(' 2016-02-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P364 values less than (TO_DATE(' 2016-03-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1055 values less than (TO_DATE(' 2016-04-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1717 values less than (TO_DATE(' 2016-05-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P2459 values less than (TO_DATE(' 2016-06-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P3297 values less than (TO_DATE(' 2016-07-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P5187 values less than (TO_DATE(' 2016-08-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P6017 values less than (TO_DATE(' 2016-09-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P6732 values less than (TO_DATE(' 2016-10-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P7436 values less than (TO_DATE(' 2016-11-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P10009 values less than (TO_DATE(' 2016-12-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P10956 values less than (TO_DATE(' 2017-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P18941 values less than (TO_DATE(' 2017-02-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    )
+);
+grant select on U1.DWH_DM_CARDSDAILY_HD_H to LOADDB;
+grant select on U1.DWH_DM_CARDSDAILY_HD_H to LOADER;
+

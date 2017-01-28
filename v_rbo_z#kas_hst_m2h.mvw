@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_RBO_Z#KAS_HST_M2H
+build deferred
+refresh force on demand
+as
+select id,
+       c_id_product,
+       c_kas_m2h_date,
+       c_kas_back_date,
+       sn,
+       su
+  from s02.Z#KAS_HST_M2H@rdwh_exd;
+grant select on U1.V_RBO_Z#KAS_HST_M2H to LOADDB;
+
+

@@ -1,0 +1,20 @@
+﻿create materialized view U1.V_MO_D_CALC_DEC
+build deferred
+refresh complete on demand
+as
+select id,
+       d_calc_code,
+       d_par_code,
+       value_text,
+       value_number,
+       row_id,
+       status,
+       status_new,
+       version_num,
+       batch_id,
+       is_out,
+       is_na
+  from D_CALC_DEC@mo1_prod;
+grant select on U1.V_MO_D_CALC_DEC to LOADDB;
+
+

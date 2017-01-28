@@ -1,0 +1,40 @@
+﻿create table U1.T_S02_Z#FACT_OPER
+(
+  id                 NUMBER,
+  collection_id      NUMBER,
+  c_date             DATE,
+  c_oper             NUMBER,
+  c_summa            NUMBER(17,2),
+  c_valuta           NUMBER,
+  c_doc              NUMBER,
+  c_beg_date         DATE,
+  c_end_date         DATE,
+  c_order_num        NUMBER(20),
+  c_reg_currency_sum NUMBER(17,2),
+  class_id           VARCHAR2(16),
+  c_obj_ref          VARCHAR2(128),
+  c_obj_class        VARCHAR2(128),
+  c_sum_next_cap     NUMBER(17,2),
+  c_cash             VARCHAR2(1),
+  c_print_sk         VARCHAR2(1),
+  c_tmp_oper         NUMBER,
+  c_tmp_date         DATE,
+  c_is_storno        VARCHAR2(1),
+  c_summa_add        NUMBER(17,2),
+  c_not_paid_sum     NUMBER(17,2),
+  c_out_memo_sum     VARCHAR2(1),
+  c_not_set_depend   VARCHAR2(1),
+  c_reverse_fo       NUMBER,
+  c_audit            NUMBER not null,
+  c_kas_date_prov    DATE,
+  c_kas_doc_state    VARCHAR2(20)
+)
+tablespace USERS_ARC
+  pctfree 10
+  initrans 1
+  maxtrans 255
+nologging;
+grant select, insert, update, delete on U1.T_S02_Z#FACT_OPER to ETL;
+grant select on U1.T_S02_Z#FACT_OPER to LOADDB;
+grant select on U1.T_S02_Z#FACT_OPER to LOADER;
+

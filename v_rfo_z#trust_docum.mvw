@@ -1,0 +1,15 @@
+﻿create materialized view U1.V_RFO_Z#TRUST_DOCUM
+build deferred
+refresh complete on demand
+as
+select id,
+       c_dep_dogs,
+       c_client,
+       c_operations,
+       c_kas_st_depart,
+       sn,
+       su
+  from ibs.Z#TRUST_DOCUM@rfo_snap;
+grant select on U1.V_RFO_Z#TRUST_DOCUM to LOADDB;
+
+

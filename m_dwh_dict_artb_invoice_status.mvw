@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_DWH_DICT_ARTB_INVOICE_STATUS
+build deferred
+refresh force on demand
+as
+select artb_invoice_status_cd,
+       artb_invoice$change_date,
+       artb_invoice_status$row_status,
+       artb_invoice_status$audit_id,
+       artb_invoice_status$hash,
+       artb_invoice_status$source,
+       artb_invoice_status$provider,
+       artb_invoice_status$source_pk,
+       artb_invoice_status_name
+  from DWH_MAIN.DICT_ARTB_INVOICE_STATUS@RDWH_EXD;
+grant select on U1.M_DWH_DICT_ARTB_INVOICE_STATUS to LOADDB;
+
+

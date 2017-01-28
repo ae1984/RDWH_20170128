@@ -1,0 +1,67 @@
+﻿create table U1.T_OUT_DWH_QUESTION
+(
+  id             NUMBER(19) not null,
+  code           VARCHAR2(255),
+  name           VARCHAR2(255),
+  text           VARCHAR2(4000),
+  schema_id      NUMBER(19),
+  portition_date TIMESTAMP(6)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_OUT_DWH_QUESTION
+  is 'Вопрос для верификации';
+comment on column U1.T_OUT_DWH_QUESTION.id
+  is 'Идентификатор вопроса';
+comment on column U1.T_OUT_DWH_QUESTION.code
+  is 'Код вопроса';
+comment on column U1.T_OUT_DWH_QUESTION.name
+  is 'Наименование вопроса';
+comment on column U1.T_OUT_DWH_QUESTION.text
+  is 'Вопрос';
+comment on column U1.T_OUT_DWH_QUESTION.schema_id
+  is 'Идентификатор схемы верификации(FK на M_OUT_DWH_SCHEMA.id)';
+comment on column U1.T_OUT_DWH_QUESTION.portition_date
+  is 'Дата создания записи';
+create unique index U1.T_OUT_DWH_QUESTION_IND1 on U1.T_OUT_DWH_QUESTION (ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_OUT_DWH_QUESTION_IND2 on U1.T_OUT_DWH_QUESTION (SCHEMA_ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_OUT_DWH_QUESTION
+  add constraint T_OUT_DWH_QUESTION_PK primary key (ID);
+grant select on U1.T_OUT_DWH_QUESTION to LOADDB;
+grant select on U1.T_OUT_DWH_QUESTION to LOADER;
+grant select on U1.T_OUT_DWH_QUESTION to RISK_VERIF;
+

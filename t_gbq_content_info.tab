@@ -1,0 +1,22 @@
+﻿create table U1.T_GBQ_CONTENT_INFO
+(
+  id          NUMBER,
+  hit_id      VARCHAR2(50),
+  description VARCHAR2(300 CHAR),
+  idate       TIMESTAMP(6)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_GBQ_CONTENT_INFO to LOADDB;
+

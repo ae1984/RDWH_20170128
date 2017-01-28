@@ -1,0 +1,24 @@
+﻿create table U1.T_TMP_RDWH_DDL_MVIEW_VIEW0519
+(
+  dt            DATE,
+  object_name   VARCHAR2(128),
+  object_type   VARCHAR2(23),
+  created       DATE not null,
+  last_ddl_time DATE not null,
+  ddl#          CLOB
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_RDWH_DDL_MVIEW_VIEW0519 to LOADDB;
+

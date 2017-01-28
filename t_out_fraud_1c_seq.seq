@@ -1,0 +1,7 @@
+﻿create sequence U1.T_OUT_FRAUD_1C_SEQ
+minvalue 1
+maxvalue 9999999999999999999999999999
+start with 11514
+increment by 1
+nocache;
+

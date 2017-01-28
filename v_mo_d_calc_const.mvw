@@ -1,0 +1,8 @@
+﻿create materialized view U1.V_MO_D_CALC_CONST
+refresh force on demand
+as
+select t.* from D_CALC_CONST@MO1_PROD t;
+grant select on U1.V_MO_D_CALC_CONST to LOADDB;
+grant select on U1.V_MO_D_CALC_CONST to LOADER;
+
+

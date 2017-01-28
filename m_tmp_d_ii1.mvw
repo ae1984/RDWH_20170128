@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_TMP_D_II1
+refresh force on demand
+as
+select
+distinct gr.folder_id
+from V_GCVP_REPORT gr
+join V_RFO_Z#KAS_GCVP_REPORT g on g.id = gr.gcvp_rep_id
+join V_RFO_Z#KAS_GCVP_PAYMENT p on p.collection_id = g.c_payments_arr and p.c_org_rnn = g.c_rnn
+where not exists (select null from V_RFO_Z#KAS_GCVP_PAYMENT pp
+          where pp.collection_id = g.c_payments_arr and pp.c_org_rnn != g.c_rnn);
+grant select on U1.M_TMP_D_II1 to LOADDB;
+grant select on U1.M_TMP_D_II1 to LOADER;
+
+

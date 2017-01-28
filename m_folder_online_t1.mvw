@@ -1,0 +1,86 @@
+﻿create materialized view U1.M_FOLDER_ONLINE_T1
+build deferred
+refresh force on demand
+as
+select /*--DRIVING_SITE(c,b,cp,s,sd,k,i,kzb,ud,kzu,tn,c1,s1,kd1,cl_man,kz)*/
+     c.id as claim_id,
+     b.c_process_id as buy_process_id,
+     trunc(b.c_date_create) as claim_date,
+     b.c_date_create as claim_date_time,
+     c.c_form_client_st#mobile#numb as mobile_phone,
+     cast(c.c_form_client_st#inn as varchar2(20)) as iin,
+     upper(cp.c_last_name) || ' ' || upper(cp.c_first_name) || ' ' || upper(cp.c_sur_name) as client_name,
+     cp.c_date_pers as birth_date,
+
+     s.c_name as shop_name,
+     case when k.c_code in ('CANCEL_ONL','CANCEL_ONL_ALT') then 1 else 0 end as is_credit_rejected,
+     b.c_prod_info as prod_info,
+
+     upper( i.c_producer) as producer,
+     upper(i.c_name) as product_name,
+     upper(i.c_model) as product_model,
+     i.c_quant as quantity,
+     i.c_cost as goods_cost,
+     i.c_bill_summ as bill_sum,
+     i.c_price as goods_price,
+     kzu.c_name as kind_name,
+     kz.c_code as tov_categ_code,
+     kz.c_name as tov_categ_name,
+     tn.c_code as tov_name_code,
+     tn.c_name as tov_name_name,
+--     cast(null as number) as contract_amount,
+     kz.c_name as product_type_name,
+
+       c.c_client_ref as rfo_client_id, -- Клиент(FK на Z#CLIENT)
+
+       c.C_FORM_CLIENT_REF   as FORM_CLIENT_REF, -- Последняя анкета клиента(FK на Z#FORM_CLIENT)
+       s.c_code as shop_code,       --Код магазина (V_RFO_Z#SHOPS)
+       c.c_limit_sum as limit_sum, -- Сумма лимита. Отправить в поле CONTRACT_AMOUNT?
+       c.c_monthly_pay as monthly_pay, --Выбранный размер платежа
+       c.c_term_period as term_period, --Выбранный срок
+       c.c_stage as stage,       -- Текущий этап проверки(FK на Z#KAS_UNIVERSAL_D)
+       c.c_check_route as check_route, --Маршрут проверок(FK на Z#KAS_UNIVERSAL_D)
+       c.c_exec_comment as exec_comment, --Комментарий выполнения проверок
+       c.c_mng_vis_scen as mng_vis_scen, --Сценарий действий у менеджера(COLLECTION в Z#KAS_UNIVERSA_REF)
+       c.c_check_result as check_result, --Результат проверок(FK на Z#KAS_UNIVERSAL_D)
+       c.c_ver_date as ver_date,      --Дата проведения верификации
+       sd.c_code as status_code,         --Статус код
+       sd.c_name as status_name,         --Статус
+       b.c_total_amount as total_amount,
+       c_folder_ref as folder_id,
+       case when coalesce(cl_man.count_req,0)>0 then 1 else 0 end is_sign_require,
+
+        s.id as rfo_shop_id,
+        upper(s.c_address#place) as city_name
+--        g.c_sal as gcvp_salary
+      /* 0 as is_card,
+       'ТОВАРЫ' as product_type,
+       0 as is_point_active,
+       0 as is_credit_issued,
+       0 as is_credit_issued_new,
+       0 as is_credit_issued_mix,
+       'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР' as cr_program_name ,
+       (select iin from v_client_rfo_by_id where id = c.c_client_ref) iin
+       */
+from V_RFO_Z#KAS_ONLINE_CLAIM c
+left join V_RFO_Z#KAS_ONLINE_BUY b  on b.id = c.c_buy_ref
+left join V_RFO_Z#CL_PRIV cp on cp.id = c.c_client_ref
+left join V_RFO_Z#SHOPS s on s.id = b.c_shop
+left join V_RFO_Z#STATUS_DOG sd on sd.id = b.c_state_id
+left join V_RFO_Z#KAS_UNIVERSAL_D k on k.id = c.c_check_result
+left join V_RFO_Z#PROD_INFO i on i.collection_id = b.c_prod_info
+left join V_RFO_Z#KIND_ZAL_BODY kz on kz.id = i.c_type_tov
+left join V_RFO_Z#KAS_UNIVERSAL_D kzu on kzu.id = kz.c_kind
+left join V_RFO_Z#KAS_TOV_NAME tn on i.c_name_ref = tn.id
+left join (select c1.id,count(kd1.id) as count_req
+           from V_RFO_Z#KAS_ONLINE_CLAIM c1
+            join V_RFO_Z#KAS_UNIVERSA_REF s1 on s1.collection_id = c1.c_mng_vis_scen
+            join V_RFO_Z#KAS_UNIVERSAL_D kd1 on kd1.id = s1.c_value
+            group by c1.id
+            )  cl_man on cl_man.id = c.id
+/*left join V_RFO_Z#KAS_GCVP_REPORT g on g.c_rnn = c.c_form_client_st#inn and
+                                  trunc(g.c_statement_date) > trunc(sysdate) - 60*/
+where b.c_date_create <= trunc(sysdate);
+grant select on U1.M_FOLDER_ONLINE_T1 to LOADDB;
+
+

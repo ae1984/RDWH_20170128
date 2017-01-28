@@ -1,0 +1,17 @@
+﻿create materialized view U1.V_TMP_CON_EDIT_CL_PRIV_X
+refresh force on demand
+as
+select c.contract_number,
+       max(c.start_date_first) as start_date_first,
+       max(c.start_date_last) as start_date_last,
+       max(fc.rfo_client_id) as rfo_client_id,
+       count(distinct f.folder_id) as cli_data_change_count
+from V_CONTRACT_CAL c
+join V_FOLDER_ALL_RFO fc on fc.folder_id = c.folder_id_first
+join V_FOLDER_ALL_RFO f on f.rfo_client_id = fc.rfo_client_id and f.process_code = 'EDIT_CL_PRIV' and
+      trunc(f.folder_date_create) = trunc(fc.folder_date_create)
+group by c.contract_number;
+grant select on U1.V_TMP_CON_EDIT_CL_PRIV_X to LOADDB;
+grant select on U1.V_TMP_CON_EDIT_CL_PRIV_X to LOADER;
+
+

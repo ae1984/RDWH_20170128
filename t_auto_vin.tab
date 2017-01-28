@@ -1,0 +1,210 @@
+﻿create table U1.T_AUTO_VIN
+(
+  autovin_id                     NUMBER not null,
+  autovin_gid                    VARCHAR2(255 CHAR) not null,
+  autovin$start_date             DATE not null,
+  autovin$end_date               DATE not null,
+  autovin$change_date            DATE not null,
+  autovin$row_status             CHAR(1 CHAR) not null,
+  autovin$audit_id               NUMBER not null,
+  autovin$hash                   NUMBER not null,
+  autovin$source                 VARCHAR2(4 CHAR) not null,
+  autovin$provider               VARCHAR2(80 CHAR) not null,
+  autovin$source_pk              VARCHAR2(2000 CHAR),
+  autovin_mvd_id                 NUMBER,
+  autovin_mvd_date               DATE,
+  autovin_mvd_status_id          VARCHAR2(255 CHAR),
+  autovin_mvd_iin                VARCHAR2(255 CHAR),
+  autovin_mvd_status_date        DATE,
+  autovin_ar_purpose             VARCHAR2(255),
+  autovin_ar_fuel                VARCHAR2(255 CHAR),
+  autovin_ar_engine_purpose      VARCHAR2(255 CHAR),
+  autovin_ar_drive               VARCHAR2(255 CHAR),
+  autovin_ar_kpp_type            VARCHAR2(255 CHAR),
+  autovin_ar_engine_type         VARCHAR2(255 CHAR),
+  autovin_ar_market              VARCHAR2(255 CHAR),
+  autovin_ar_car_type            VARCHAR2(255 CHAR),
+  autovin_ar_origin_country      VARCHAR2(255 CHAR),
+  autovin_ar_manufacturer        VARCHAR2(255 CHAR),
+  autovin_ar_manufacture_date    VARCHAR2(10),
+  autovin_ar_engine_volume       VARCHAR2(255 CHAR),
+  autovin_ar_assemblage_countr   VARCHAR2(255 CHAR),
+  autovin_ar_body_type           VARCHAR2(255 CHAR),
+  autovin_ar_mark                VARCHAR2(255 CHAR),
+  autovin_ar_manufacture_factory VARCHAR2(255 CHAR),
+  autovin_ar_model               VARCHAR2(255 CHAR),
+  autovin_ar_model_year          NUMBER,
+  autovin_ar_parsed              NUMBER,
+  autovin_esbd_parsed            NUMBER,
+  autovin_esbd_mark              VARCHAR2(255 CHAR),
+  autovin_esbd_engine_volume     VARCHAR2(255 CHAR),
+  autovin_esbd_engine_number     VARCHAR2(255 CHAR),
+  autovin_esbd_engine_power      VARCHAR2(255 CHAR),
+  autovin_esbd_is_right_drive_fl CHAR(1 CHAR) not null,
+  autovin_esbd_color             VARCHAR2(255 CHAR),
+  autovin_esbd_type              VARCHAR2(255 CHAR),
+  autovin_esbd_issue_year        VARCHAR2(255 CHAR),
+  autovin_esbd_issue_month       VARCHAR2(255 CHAR),
+  autovin_esbd_model             VARCHAR2(255 CHAR),
+  autovin_vin                    VARCHAR2(255 CHAR),
+  autovin_sas_client_id          VARCHAR2(40),
+  autovin_dwh_client_id          NUMBER not null,
+  autovin_rbo_client_id          NUMBER,
+  autovin_valid                  NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_AUTO_VIN
+  is 'Информация об автомобиле по VIN';
+comment on column U1.T_AUTO_VIN.autovin_gid
+  is 'Информация об автомобиле по VIN. Идентификатор';
+comment on column U1.T_AUTO_VIN.autovin$start_date
+  is 'Служебное поле. Дата начала действия записи';
+comment on column U1.T_AUTO_VIN.autovin$end_date
+  is 'Служебное поле. Дата окончания действия записи';
+comment on column U1.T_AUTO_VIN.autovin$change_date
+  is 'Служебное поле. Дата изменения';
+comment on column U1.T_AUTO_VIN.autovin$row_status
+  is 'Служебное поле. Состояние записи (А-активная, D-неактивная)';
+comment on column U1.T_AUTO_VIN.autovin$audit_id
+  is 'Служебное поле. Метка изменения';
+comment on column U1.T_AUTO_VIN.autovin$hash
+  is 'Служебное поле. Хэш записи в хранилище';
+comment on column U1.T_AUTO_VIN.autovin$source
+  is 'Служебное поле. Код системы-источника';
+comment on column U1.T_AUTO_VIN.autovin$provider
+  is 'Служебное поле. Код поставщика данных';
+comment on column U1.T_AUTO_VIN.autovin$source_pk
+  is 'Служебное поле. Первичный ключ источника (Для составного ключа разделитель ";")';
+comment on column U1.T_AUTO_VIN.autovin_mvd_id
+  is 'Информация об автомобиле по VIN.  Идентификатор истории';
+comment on column U1.T_AUTO_VIN.autovin_mvd_date
+  is 'Информация об автомобиле по VIN. Дата вставки БД(МВД)';
+comment on column U1.T_AUTO_VIN.autovin_mvd_status_id
+  is 'Информация об автомобиле по VIN. МВД статусы (постановка/снятие с учета)';
+comment on column U1.T_AUTO_VIN.autovin_mvd_iin
+  is 'Информация об автомобиле по VIN. ИИН';
+comment on column U1.T_AUTO_VIN.autovin_mvd_status_date
+  is 'Информация об автомобиле по VIN. Дата постановки(снятия) на (с) учет(а)';
+comment on column U1.T_AUTO_VIN.autovin_ar_purpose
+  is 'Информация об автомобиле по VIN. Назначение';
+comment on column U1.T_AUTO_VIN.autovin_ar_fuel
+  is 'Информация об автомобиле по VIN. Топливо';
+comment on column U1.T_AUTO_VIN.autovin_ar_engine_purpose
+  is 'Информация об автомобиле по VIN. Назначение двигателя';
+comment on column U1.T_AUTO_VIN.autovin_ar_drive
+  is 'Информация об автомобиле по VIN. Привод AR';
+comment on column U1.T_AUTO_VIN.autovin_ar_kpp_type
+  is 'Информация об автомобиле по VIN. Тип КПП AR';
+comment on column U1.T_AUTO_VIN.autovin_ar_engine_type
+  is 'Информация об автомобиле по VIN. Тип двигателя AR';
+comment on column U1.T_AUTO_VIN.autovin_ar_market
+  is 'Информация об автомобиле по VIN. Рынок сбыта';
+comment on column U1.T_AUTO_VIN.autovin_ar_car_type
+  is 'Информация об автомобиле по VIN. Тип транспортного средства';
+comment on column U1.T_AUTO_VIN.autovin_ar_origin_country
+  is 'Информация об автомобиле по VIN. Страна происхождения';
+comment on column U1.T_AUTO_VIN.autovin_ar_manufacturer
+  is 'Информация об автомобиле по VIN. Производитель';
+comment on column U1.T_AUTO_VIN.autovin_ar_manufacture_date
+  is 'Информация об автомобиле по VIN. Дата производства';
+comment on column U1.T_AUTO_VIN.autovin_ar_engine_volume
+  is 'Информация об автомобиле по VIN. Объем двигателя';
+comment on column U1.T_AUTO_VIN.autovin_ar_assemblage_countr
+  is 'Информация об автомобиле по VIN. Страна сборки';
+comment on column U1.T_AUTO_VIN.autovin_ar_body_type
+  is 'Информация об автомобиле по VIN. Тип кузова';
+comment on column U1.T_AUTO_VIN.autovin_ar_mark
+  is 'Информация об автомобиле по VIN. Марка';
+comment on column U1.T_AUTO_VIN.autovin_ar_manufacture_factory
+  is 'Информация об автомобиле по VIN. Сборочный завод';
+comment on column U1.T_AUTO_VIN.autovin_ar_model
+  is 'Информация об автомобиле по VIN. Модель AR';
+comment on column U1.T_AUTO_VIN.autovin_ar_model_year
+  is 'Информация об автомобиле по VIN. Год модели';
+comment on column U1.T_AUTO_VIN.autovin_ar_parsed
+  is 'Информация об автомобиле по VIN. Расшифровали ли с AUTO.RU (0,1)';
+comment on column U1.T_AUTO_VIN.autovin_esbd_parsed
+  is 'Информация об автомобиле по VIN. Расшифровали ли с ЕСБД (0,1)';
+comment on column U1.T_AUTO_VIN.autovin_esbd_mark
+  is 'Информация об автомобиле по VIN. Идентификатор марки ESDB';
+comment on column U1.T_AUTO_VIN.autovin_esbd_engine_volume
+  is 'Информация об автомобиле по VIN. Объем двигателя (куб.см.)';
+comment on column U1.T_AUTO_VIN.autovin_esbd_engine_number
+  is 'Информация об автомобиле по VIN. Номер двигателя';
+comment on column U1.T_AUTO_VIN.autovin_esbd_engine_power
+  is 'Информация об автомобиле по VIN. Мощность двигателя (квт.)';
+comment on column U1.T_AUTO_VIN.autovin_esbd_is_right_drive_fl
+  is 'Информация об автомобиле по VIN. Признак расположения руля (N – слева, Y – справа)';
+comment on column U1.T_AUTO_VIN.autovin_esbd_color
+  is 'Информация об автомобиле по VIN. Цвет';
+comment on column U1.T_AUTO_VIN.autovin_esbd_type
+  is 'Информация об автомобиле по VIN. Тип ТС ESBD';
+comment on column U1.T_AUTO_VIN.autovin_esbd_issue_year
+  is 'Информация об автомобиле по VIN. Год выпуска ТС';
+comment on column U1.T_AUTO_VIN.autovin_esbd_issue_month
+  is 'Информация об автомобиле по VIN. Месяц выпуска ТС';
+comment on column U1.T_AUTO_VIN.autovin_esbd_model
+  is 'Информация об автомобиле по VIN. Модель ESBD';
+comment on column U1.T_AUTO_VIN.autovin_vin
+  is 'Информация об автомобиле по VIN. VIN код';
+comment on column U1.T_AUTO_VIN.autovin_sas_client_id
+  is 'Информация об автомобиле по VIN. SAS ID клиента';
+comment on column U1.T_AUTO_VIN.autovin_dwh_client_id
+  is 'Информация об автомобиле по VIN. DWH_ID клиента';
+comment on column U1.T_AUTO_VIN.autovin_rbo_client_id
+  is 'Информация об автомобиле по VIN. RBO_ID клиента';
+comment on column U1.T_AUTO_VIN.autovin_valid
+  is 'Информация об автомобиле по VIN. VIN-код правилен (1 - да; 0 - нет)';
+create index U1.IDX_AUTO_VIN_1 on U1.T_AUTO_VIN (AUTOVIN_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_AUTO_VIN_2 on U1.T_AUTO_VIN (AUTOVIN$CHANGE_DATE)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_AUTO_VIN_3 on U1.T_AUTO_VIN (AUTOVIN_MVD_IIN)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_AUTO_VIN to LOADDB;
+

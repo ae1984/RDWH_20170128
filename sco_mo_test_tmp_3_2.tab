@@ -1,0 +1,30 @@
+﻿create table U1.SCO_MO_TEST_TMP_3_2
+(
+  id_system   VARCHAR2(10),
+  id_request  NUMBER,
+  id_param    VARCHAR2(100),
+  param_name  VARCHAR2(500),
+  formula     VARCHAR2(4000),
+  calculation VARCHAR2(4000),
+  id_card     NUMBER,
+  coefficient NUMBER,
+  weight      NUMBER,
+  rules       VARCHAR2(4000),
+  val         VARCHAR2(500)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.SCO_MO_TEST_TMP_3_2 to LOADDB;
+grant select on U1.SCO_MO_TEST_TMP_3_2 to LOADER;
+

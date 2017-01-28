@@ -1,0 +1,60 @@
+﻿create materialized view U1.M_CONTRACT_OPTIM_NEW2
+build deferred
+refresh force on demand
+as
+select b.rbo_contract_id,
+       b.contract_number,
+       b.rbo_client_id,
+       b.date_fact_end,
+       so1.spof_start_date as date_new_opt,
+       so1.spof_end_date,
+       so1.restr_name,
+       case when restr_name in ('Изменение условий договора',
+                                'Изменение условий договора (не на просрочке)',
+                                'Оптимизация',
+                                'Отсрочка платежа',
+                                'Рефинансирование',
+                                'Рефинансирование договора (не на просрочке)',
+                                'Рефинансирование/реструктуризация с остановкой начисления процентов и комиссий',
+                                'Рефинансирование/реструктуризация со скидкой на банковское обслуживание')
+             then 'SOFT'
+       when restr_name in ( 'Новое рефинансирование договоров Хард',
+                            'Рефинансирование автокредита',
+                            'Отсрочка платежа (ДХК)',
+                            'Отсрочка платежа (проблемных)')  then 'HARD' end as restr_source,
+       spis_restr,
+       spof_cancel_date   ,
+       spis_date
+from u1.M_RBO_CONTRACT_BAS b
+join (select so.contract_number,
+             min(so.spec_offer_date_end) as spof_end_date,
+             min(so.spec_offer_date_begin) as spof_start_date,
+             count(1) as cnt_spof,
+             max(so.spec_offer_name) keep (dense_rank first order by so.spec_offer_date_end)  as restr_name,
+             listagg(so.spec_offer_name,';') within group (order by so.spec_offer_date_end) as spis_restr,
+             listagg(to_char(so.spec_offer_date_begin,'dd-mm-yyyy'),';') within group (order by so.spec_offer_date_end) as spis_date,
+             min(so.spec_offer_date_cancel) as spof_cancel_date
+
+      from M_RBO_CONTRACT_SPEC_OFFER so
+      where so.spec_offer_code in ('REFIN_NEW_DHK', -- Новое рефинансирование договоров Хард
+                                  'RESTRUCT_AUTO_DHK', -- Рефинансирование автокредита
+                                  'DELAY_PAY_DHK', -- Отсрочка платежа (ДХК)
+                                  'REFIN_KARAMELKA', -- Оптимизация
+                                  'REFIN_PROBLEM_WORK_D', -- Рефинансирование договора (не на просрочке)
+                                  'RESTRUCT_WORK_DOG', -- Изменение условий договора (не на просрочке)
+                                  'REFIN_DISCOUNT_BSERV', -- Рефинансирование/реструктуризация со скидкой на банковское обслуживание
+                                  'REFIN_STOP_CALC', -- Рефинансирование/реструктуризация с остановкой начисления процентов и комиссий
+                                  'DELAY_PAY_PROBLEM', -- Отсрочка платежа (проблемных)
+                                  'DELAY_PAY', -- Отсрочка платежа
+                                  'REFIN_PROBLEM', -- Рефинансирование
+                                  'RESTRUCT' -- Изменение условий договора
+      )
+      group by so.contract_number
+            having min(so.spec_offer_date_end) >= to_date('01-04-2015','dd-mm-yyyy')
+   ) so1 on so1.contract_number = b.contract_number --and pb.rep_date >= so.spof_start_date
+where not exists (select 1
+                from u1.T_OP_FIX x
+                where x.contract_number = b.contract_number);
+grant select on U1.M_CONTRACT_OPTIM_NEW2 to LOADDB;
+
+

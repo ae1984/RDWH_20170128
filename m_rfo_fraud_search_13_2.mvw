@@ -1,0 +1,33 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_13_2
+build deferred
+refresh force on demand
+as
+select t2.claim_id
+
+       ,max(t2.tov_categ_cnt) as count_category_3_m
+       ,max(t2.tov_categ_cnt_x) as count_category_3_m_x
+
+from (
+      select ol.claim_id,
+             trunc(ol2.date_create) as date_create_dd,
+
+             ed.tov_categ_code
+
+             ,count(distinct case when ol2.date_create >= trunc(ol.date_create) - 90 and ol2.date_create < trunc(ol.date_create) then ol2.claim_id end) tov_categ_cnt
+             ,count(distinct case when ol2.date_create >= trunc(ol.date_create) - 90 then ol2.claim_id end) tov_categ_cnt_x
+
+
+      from u1.M_FOLDER_CON_CANCEL_ONLINE_1 ol
+      left join u1.M_FOLDER_CON_CANCEL_ONLINE_1 ol2 on ol2.rfo_client_id = ol.rfo_client_id and
+                                                       ol2.claim_id != ol.claim_id and
+                                                       ol2.date_create < ol.date_create
+      left join v_contract_ekt_dwh_online ed on ed.claim_id = ol2.claim_id
+      --where ol.rfo_client_id = 31393192
+      group by ol.claim_id,
+             trunc(ol2.date_create),
+             ed.tov_categ_code
+) t2
+group by t2.claim_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_13_2 to LOADDB;
+
+

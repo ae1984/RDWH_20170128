@@ -1,0 +1,83 @@
+﻿create table U1.NT_RDWH_SCHEMA_CHANGES
+(
+  id          NUMBER,
+  obj_type    VARCHAR2(100),
+  obj_name    VARCHAR2(100),
+  old_code    CLOB,
+  change_date DATE,
+  sh_user     VARCHAR2(100),
+  os_user     VARCHAR2(100),
+  user_host   VARCHAR2(100),
+  user_ip     VARCHAR2(100),
+  new_code    CLOB,
+  ora_event   VARCHAR2(100),
+  program     VARCHAR2(100),
+  err         VARCHAR2(100)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_RDWH_SCHEMA_CHANGES
+  is 'RDWH2.0 Аудит изменений исходных кодов';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES.obj_type
+  is 'Тип объекта';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES.obj_name
+  is 'Название объекта';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES.old_code
+  is 'Исходный код объекта до компиляции';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES.change_date
+  is 'Дата/время компиляции';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES.sh_user
+  is 'Имя пользователя';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES.os_user
+  is 'Имя пользователя в домене';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES.user_host
+  is 'Имя локальной машины';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES.user_ip
+  is 'IP адрес';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES.new_code
+  is 'Компилируемый код ';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES.ora_event
+  is 'Событие';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES.program
+  is 'Название программы, из которой произвелась компиляция';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES.err
+  is 'Возможно возникшие ошибочные события';
+create index U1.IDX_RDWH_SCHEMA_CHANGES_1 on U1.NT_RDWH_SCHEMA_CHANGES (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_RDWH_SCHEMA_CHANGES_2 on U1.NT_RDWH_SCHEMA_CHANGES (CHANGE_DATE)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.NT_RDWH_SCHEMA_CHANGES to LOADDB;
+

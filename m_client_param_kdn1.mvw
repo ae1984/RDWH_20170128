@@ -1,0 +1,149 @@
+﻿create materialized view U1.M_CLIENT_PARAM_KDN1
+refresh force on demand
+as
+select --+ parallel(30) parallel_index(30)
+  distinct -- т.к. строки множатся из-за связок
+  c.client_iin_last iin,
+  c.client_id,
+  c.client_status,
+  c.client_pmt_max,
+
+  trunc(sysdate) kdn_rep_date,
+
+  c.product_first,
+  c.product_last,
+  c.product_refin_first,
+  c.product_refin_last,
+  c.product_program_last,
+
+  c.start_date_first,
+  c.start_date_last,
+
+  c.end_date_first,
+  c.end_date_last,
+
+  --анкета
+  fc.form_client_id,
+  fc_link.form_client_found_type,
+  case when fc_link.form_client_age_days = 99999999 then null
+       else fc_link.form_client_age_days end form_client_age_days,
+  fc_link.form_client_date,
+
+  g.gcvp_rep_id,
+  gcvp_link.gcvp_rep_found_type,
+  gcvp_link.gcvp_age_days,
+  gcvp_link.gcvp_rep_date,
+
+  p.report_id as pkb_rep_id,
+  pkb_link.pkb_rep_found_type,
+  pkb_link.pkb_age_days,
+  pkb_link.pkb_report_date,
+
+  case when fc.form_client_id is null or -- не нашли анкету
+            --coalesce(c.pmt, c.pmt_old) is null or -- нет платежа по выдаваемому договору
+            (pkb_link.pkb_rep_found_type in (4,5,6) and -- или нашли только первичный
+                 not (pkb_link.pkb_rep_found_type in (4,5) and -- за исключением случаев, когда нашли первичный недавно
+                      p.report_type = 'ПЕРВИЧНЫЙ' )) -- и кол-во действующих договоров = 0 или 1
+       then 1 else 0 end as
+  is_error, -- ошибки, которые препятсвуют расчету КДН
+
+  -- доходы с анкеты
+  coalesce(fc.inc_sal,0) + coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) + coalesce(fc.inc_rent,0) +
+       coalesce(fc.inc_pension_benefits,0) + coalesce(fc.inc_interest,0) as form_income_total,
+  coalesce(fc.inc_sal,0) as form_inc_sal,
+  coalesce(fc.inc_sal_add,0) as form_inc_sal_add,
+  coalesce(fc.inc_sal_spouse,0) as form_inc_sal_spouse,
+  coalesce(fc.inc_rent,0) as form_inc_rent,
+  coalesce(fc.inc_pension_benefits,0) as form_inc_pension_benefits,
+  coalesce(fc.inc_interest,0) as form_inc_interest,
+
+  case when coalesce(g.salary,0) > coalesce(fc.inc_sal,0) then
+                 coalesce(g.salary,0) + coalesce(fc.inc_sal_spouse,0) + coalesce(fc.inc_rent,0) +
+                 coalesce(fc.inc_pension_benefits,0) + coalesce(fc.inc_interest,0) + coalesce(fc.inc_sal_add,0)
+            else
+                 coalesce(fc.inc_sal,0) + coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) + coalesce(fc.inc_rent,0) +
+                 coalesce(fc.inc_pension_benefits,0) + coalesce(fc.inc_interest,0)
+            end as form_income_gcvp_salary_max,
+
+/*  -- платеж по договору
+  coalesce(c.pmt, c.pmt_old) as contract_pmt, -- для 134 не указана ставка, для берем pmt_old, если есть*/
+
+  -- зарплата с ГЦВП
+  coalesce(g.salary,0) as salary_gcvp,
+
+  --данные о том, что договор был рефинансирован
+  case when re.x_client_id is not null and re.sp_date_min < to_date('01.04.2014', 'dd.mm.yyyy') then 1
+       when re.x_client_id is not null and re.sp_date_min >= to_date('01.04.2014', 'dd.mm.yyyy') then 2
+       else 0 end is_ref_res
+
+from V_CLIENT_CAL c
+-- ищем анкету
+left join (select c2.client_id,
+                  max(coalesce(fc1.form_client_id, fc2.form_client_id)) as form_client_id,
+                  max(coalesce(trunc(fc1.form_client_date), trunc(fc2.form_client_date))) as form_client_date,
+                  case when max(fc1.form_client_id) is not null then 1
+                       when max(fc2.form_client_id) is not null then 2
+                       else 0 end as form_client_found_type,
+                  case when max(fc1.form_client_id) is not null then trunc(sysdate) - max(trunc(fc1.form_client_date))
+                       when max(fc2.form_client_id) is not null then trunc(sysdate) - max(trunc(fc2.form_client_date))
+                       else  null end as form_client_age_days
+            from V_CLIENT_CAL c2
+            left join (select cn22.iin,
+                              max(cn22.folder_id) folder_id,
+                              max(cn22.folder_date_create_mi) folder_date_create_mi
+                       from m_folder_con_cancel cn22
+                       group by cn22.iin) cn2 on cn2.iin = c2.client_iin_last
+            left join v_folder_all_rfo f2 on f2.folder_id = cn2.folder_id
+            left join V_FORM_CLIENT_ALL_RFO fc1 on fc1.form_client_id = f2.form_client_id -- ищем последнуюю анкету по кредитной заявке
+            left join V_FORM_CLIENT_ALL_RFO fc2 on fc2.iin = c2.client_iin_last           -- или ищем последнюю анкету до договора по ИИН клиента
+            group by c2.client_id
+) fc_link on fc_link.client_id = c.client_id
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = fc_link.form_client_id
+--------------------------------------------------------------------------------
+-- ищем гцвп
+left join (select c3.client_id,
+                  max(g2.gcvp_rep_id) as gcvp_rep_id,
+                  max(g2.rep_date) as gcvp_rep_date,
+                  case when max(g2.gcvp_rep_id) is not null then 2
+                       else 0 end as gcvp_rep_found_type,
+                  case when max(g2.gcvp_rep_id) is not null then trunc(sysdate) - max(trunc(g2.rep_date))
+                       else null end as gcvp_age_days
+            from V_CLIENT_CAL c3
+            left join V_GCVP_REPORT g2 on g2.client_iin = c3.client_iin_last         -- или ищем последний гцвп до договора по ИИН клиента
+            group by c3.client_id
+) gcvp_link on gcvp_link.client_id = c.client_id
+left join V_GCVP_REPORT g on g.gcvp_rep_id = gcvp_link.gcvp_rep_id
+
+-- ищем пкб
+left join (select c4.client_id,
+                  max(coalesce(p2.report_id, p6.report_id)) as pkb_rep_id,
+                  case when max(p2.report_id) is not null then max(p2.rfo_report_date)
+                       when max(p6.report_id) is not null then max(p6.rfo_report_date)
+                       else null end as pkb_report_date,
+                  case when max(p2.report_id) is not null then 2
+                       when max(p6.report_id) is not null then 6
+                       else 0 end as pkb_rep_found_type,
+                  case when max(p2.report_id) is not null then trunc(sysdate) - max(trunc(p2.rfo_report_date))
+                       when max(p6.report_id) is not null then trunc(sysdate) - max(trunc(p6.rfo_report_date))
+                       else null end as pkb_age_days
+            from V_CLIENT_CAL c4
+            left join V_PKB_REPORT p2 on p2.report_iin_rnn = c4.client_iin_last and            -- ищем любой 'СТАНДАРТНЫЙ','РАСШИРЕННЫЙ' по ИИН клиента
+                                         p2.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ')
+            left join V_PKB_REPORT p6 on p6.report_iin_rnn = c4.client_iin_last                -- или ищем любой по ИИН клиента
+            group by c4.client_id
+) pkb_link on pkb_link.client_id = c.client_id
+left join V_PKB_REPORT p on p.report_id = pkb_link.pkb_rep_id
+
+-- проверяем был ли данный договор рефинансирован
+left join (
+           select pc_to.x_client_id,
+                  max(rl.sp_date_min) sp_date_min,
+                  sum(rl.sp_cnt) sp_cnt
+           from M_CONTRACT_REFIN_LINK rl
+           join V_DWH_PORTFOLIO_CURRENT pc_to on rl.deal_number_to = pc_to.deal_number
+           group by pc_to.x_client_id
+           ) re on re.x_client_id = c.client_id;
+grant select on U1.M_CLIENT_PARAM_KDN1 to LOADDB;
+grant select on U1.M_CLIENT_PARAM_KDN1 to LOADER;
+
+

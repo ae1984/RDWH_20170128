@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_SC_FRAUD_SEARCH_PRE13
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30 */
+       rfo_client_id,
+       max(tov_categ_code) keep (dense_rank first order by cnt_claim_id desc) as max_tov_categ_code,
+       max(cnt_claim_id) keep (dense_rank first order by cnt_claim_id desc) as max_count_category_day
+from (
+      select ol.rfo_client_id,
+             ed.tov_categ_code,
+             count(ol1.claim_id) as cnt_claim_id,
+             min(ol1.date_create)
+      from u1.V_CLIENT_RFO_BY_ID ol
+      --  join v_contract_ekt_dwh_online  ed on ed.claim_id = ol.claim_id
+      left join u1.M_FOLDER_CON_CANCEL_ONLINE_1 ol1 on ol1.date_create >= trunc(sysdate) - 30 and
+                                                       ol1.rfo_client_id = ol.rfo_client_id
+      left join u1.V_CONTRACT_EKT_DWH_ONLINE  ed on ed.claim_id = ol1.claim_id
+       --where ol.rfo_client_id = 31393192
+      group by ol.rfo_client_id
+               ,ed.tov_categ_code
+       )
+group by
+       rfo_client_id;
+grant select on U1.M_SC_FRAUD_SEARCH_PRE13 to LOADDB;
+
+

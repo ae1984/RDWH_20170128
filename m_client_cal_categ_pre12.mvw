@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_CLIENT_CAL_CATEG_PRE12
+build deferred
+refresh force on demand
+as
+select /*+ parallel(3)*/ f.rfo_client_id,
+
+               count(distinct o.spof_end_date) as prior_optim_count,
+               count(distinct d3.deal_number) AS clsd_and_active_cont_cnt
+          from u1.V_CLIENT_RFO_BY_ID f
+          left join u1.V_DWH_PORTFOLIO_CURRENT d3 on d3.client_iin = f.iin
+                                                     and d3.x_is_credit_issued = 1
+                                                     and d3.x_start_date_actual is not null
+          left join u1.M_DWH_ACC_SPECIAL_OFFER_CON o on o.contract_number = d3.deal_number
+                                                        and o.spof_spec_offer_status_cd in ('EXECUTED', 'DEFAULT', 'WORK')
+          group by f.rfo_client_id;
+

@@ -1,0 +1,40 @@
+﻿create materialized view U1.M_TMP_J_D_REP_5
+refresh force on demand
+as
+select p.yy_mm_report,
+
+       sum(p.max_debt_used) as max_debt_used,
+       sum(p.total_debt) as debt_all,
+
+       sum(case when p.delinq_days > 0 then p.total_debt end) as debt_del_above_0d,
+       sum(case when p.delinq_days > 7 then p.total_debt end) as debt_del_above_7d,
+       sum(case when p.delinq_days > 90 then p.total_debt end) as debt_del_above_90d,
+---
+       sum(case when p.delinq_days > 0 then p.total_debt end) /
+                   sum(p.max_debt_used) as del_sums_above_0d,
+       sum(case when p.delinq_days > 7 then p.total_debt end) /
+                   sum(p.max_debt_used) as del_sums_above_7d,
+       sum(case when p.delinq_days > 90 then p.total_debt end) /
+                   sum(p.max_debt_used) as del_sums_above_90d,
+---
+       count(distinct case when p.delinq_days > 0 then p.contract_number end) /
+                   count(distinct p.contract_number) as del_quant_con_above_0d,
+       count(distinct case when p.delinq_days > 7 then p.contract_number end) /
+                   count(distinct p.contract_number) as del_quant_con_above_7d,
+       count(distinct case when p.delinq_days > 90 then p.contract_number end) /
+                   count(distinct p.contract_number) as del_quant_con_above_90d,
+---
+       count(distinct case when p.delinq_days > 0 then p.client_id end) /
+                   count(distinct p.client_id) as del_quant_cli_above_0d,
+       count(distinct case when p.delinq_days > 7 then p.client_id end) /
+                   count(distinct p.client_id) as del_quant_cli_above_7d,
+       count(distinct case when p.delinq_days > 90 then p.client_id end) /
+                   count(distinct p.client_id) as del_quant_cli_above_90d
+from V_PORTFOLIO p
+--join V_DATA_ALL d on d.id = p.id
+where p.report_year in (2010, 2011, 2012, 2013, 2014, 2015)-- and d.contract_amount > 0
+group by p.yy_mm_report;
+grant select on U1.M_TMP_J_D_REP_5 to LOADDB;
+grant select on U1.M_TMP_J_D_REP_5 to LOADER;
+
+

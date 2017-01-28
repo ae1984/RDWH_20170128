@@ -1,0 +1,10 @@
+﻿create materialized view U1.M_FORM_CLIENT_RFO_90D
+refresh complete on demand
+as
+select t.* , cc.product_type
+from U1.V_FORM_CLIENT_ALL_RFO t
+left join u1.M_FOLDER_CON_CANCEL cc on t.folder_id = cc.folder_id and t.rfo_client_id =cc.rfo_client_id
+where t.form_date_create >= trunc(sysdate) - 90;
+grant select on U1.M_FORM_CLIENT_RFO_90D to LOAD_MO;
+
+

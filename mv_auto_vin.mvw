@@ -1,0 +1,13 @@
+﻿create materialized view U1.MV_AUTO_VIN
+refresh complete on demand
+as
+select /*count(distinct trim(t.mvd_iin))*/
+       trim(t.mvd_iin) iin,
+       max(t.ar_mark) keep (dense_rank last order by t.ar_model_year) as model_year_max_mark
+from DWH_AUTO_VIN t
+group by trim(t.mvd_iin)
+--order by t.mvd_iin desc;
+grant select on U1.MV_AUTO_VIN to LOADDB;
+grant select on U1.MV_AUTO_VIN to LOADER;
+
+

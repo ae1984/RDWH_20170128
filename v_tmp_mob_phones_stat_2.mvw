@@ -1,0 +1,24 @@
+﻿create materialized view U1.V_TMP_MOB_PHONES_STAT_2
+refresh force on demand
+as
+select ph_by_cli, count(distinct rfo_client_id) as cli_by_ph_by_cli
+from (
+select rfo_client_id, count(distinct phone_number) as ph_by_cli
+from (
+select c.id as rfo_client_id, t.c_numb as phone_number, t.c_activ as is_active, t.c_affirmed as is_confirmed,
+       case when cc.client_id is not null then 1 else 0 end as is_credit_exists
+from V_RFO_Z#CLIENT c
+join V_RFO_Z#CL_PRIV cp on cp.id = c.id
+join V_RFO_Z#CONTACTS t on c.c_contacts = t.collection_id and
+     t.c_activ = 1 and t.c_private = 690120 -- MOBILE   and t.c_allow_cc_2 = 1
+     and t.c_affirmed = 1
+join V_RFO_Z#COMUNICATION cm on cm.id = t.c_type and cm.id = 23068 -- PHONE
+--join V_CLIENT_CAL cc on cc.client_iin_last = c.c_inn -- только повторные
+left join V_CLIENT_CAL cc on cc.client_iin_last = c.c_inn -- только повторные
+--where c.id = 120861502-- 4959428991
+) group by rfo_client_id
+) group by ph_by_cli;
+grant select on U1.V_TMP_MOB_PHONES_STAT_2 to LOADDB;
+grant select on U1.V_TMP_MOB_PHONES_STAT_2 to LOADER;
+
+

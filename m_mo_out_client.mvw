@@ -1,0 +1,38 @@
+﻿create materialized view U1.M_MO_OUT_CLIENT
+refresh force on demand
+as
+select -- данные по клиентам для МО
+       c.rfo_client_id, c.iin,
+       trunc(ff.fld_date_create_min) as fld_date_create_min,
+
+       trunc(sysdate) - trunc(ff.fld_date_create_min) as cli_age_based_on_fld,
+       floor(MONTHS_BETWEEN(trunc(sysdate), trunc(ff.fld_date_create_min))) as cli_age_based_on_fld_mon_fl,
+
+       trunc(sysdate) - trunc(ff.fld_date_create_onl_min) as cli_age_based_on_onl_fld,
+       floor(MONTHS_BETWEEN(trunc(sysdate), trunc(ff.fld_date_create_onl_min))) as cli_age_based_on_fld_mm_onl_fl,
+
+       fc.fld_rej_by_man_cnt_30d,
+       fc.fld_rej_by_man_cnt_onl_30d
+from V_CLIENT_RFO_BY_ID c
+left join (select t.rfo_client_id,
+                  min(t.folder_date_create) as fld_date_create_min,
+                  min(case when (not (t.process_code = 'ONLINE_CRED' and
+                         (t.route_point_code like '%CANCELED' or
+                          t.route_point_code like 'ERR_CREATE_%'))) then t.folder_date_create end) as fld_date_create_onl_min
+           from V_FOLDER_ALL_RFO t
+           group by t.rfo_client_id
+) ff on ff.rfo_client_id = c.rfo_client_id
+left join (select f.rfo_client_id,
+                  count(distinct case when f.folder_state in ('ОТКАЗ МЕНЕДЖЕРА ПРОДАЖ','ОТКАЗАНО')
+                                      then f.folder_id end) as fld_rej_by_man_cnt_30d,
+                  count(distinct case when f.folder_state in ('ОТКАЗ МЕНЕДЖЕРА ПРОДАЖ','ОТКАЗАНО') and f.route_point_code != 'FAILED'
+                                      then f.folder_id end) as fld_rej_by_man_cnt_onl_30d
+           from M_FOLDER_CON_CANCEL_BASE f
+           where f.folder_date_create_mi > trunc(sysdate) - 30
+           group by f.rfo_client_id
+) fc on fc.rfo_client_id = c.rfo_client_id;
+grant select on U1.M_MO_OUT_CLIENT to LOADDB;
+grant select on U1.M_MO_OUT_CLIENT to LOADER;
+grant select on U1.M_MO_OUT_CLIENT to LOAD_MO;
+
+

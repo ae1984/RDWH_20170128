@@ -1,0 +1,25 @@
+﻿create table U1.T_TMP_PROVIS
+(
+  report      VARCHAR2(50),
+  rep_f_p     VARCHAR2(50),
+  long_delinq VARCHAR2(50),
+  amount      VARCHAR2(50),
+  type        VARCHAR2(20),
+  prod        VARCHAR2(3)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_PROVIS to LOADDB;
+grant select on U1.T_TMP_PROVIS to LOADER;
+

@@ -1,0 +1,36 @@
+﻿create table U1.T_GBQ_PAGE
+(
+  id         NUMBER,
+  hit_id     VARCHAR2(50),
+  page_path  VARCHAR2(2000),
+  hostname   VARCHAR2(400),
+  page_title VARCHAR2(400),
+  idate      TIMESTAMP(6)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_GBQ_PAGE
+  is 'Страница';
+comment on column U1.T_GBQ_PAGE.id
+  is 'Идентификатор';
+comment on column U1.T_GBQ_PAGE.hit_id
+  is 'ID посещения страницы';
+comment on column U1.T_GBQ_PAGE.page_path
+  is 'Путь до страницы';
+comment on column U1.T_GBQ_PAGE.hostname
+  is 'Имя хоста';
+comment on column U1.T_GBQ_PAGE.page_title
+  is 'Заголовок страницы';
+grant select on U1.T_GBQ_PAGE to LOADDB;
+

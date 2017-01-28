@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_TMP_J_SEG_SEL_4
+refresh complete on demand
+as
+select fcc.rfo_contract_id
+from M_FOLDER_CON_CANCEL fcc
+left join M_TMP_J_K5_FOLDER k1 on k1.folder_id = fcc.folder_id and -- kdn rejected
+                                  k1.prod_type = fcc.cr_program_name
+left join M_CONTRACT_PARAM_KDN5C k2 on k2.folder_id_first = fcc.folder_id and -- kdn contracts
+                                       k2.deal_number = fcc.contract_number
+join M_TMP_J_FLD_PREV_CON_CLOSED pcc on pcc.rfo_contract_id = fcc.rfo_contract_id --- ДОБАВИТЬ!!!!!!!
+where fcc.folder_date_create_mi >= to_date('2012','yyyy') and
+      fcc.folder_date_create_mi < trunc(sysdate,'mm') and-- d.x_start_date_actual is not null and
+      fcc.is_categ_a = 1 and
+      ((k1.kdn_form_salary_max < 50 or k2.kdn_form_salary_max < 50) and -- kdn < 50
+      fcc.contract_amount <= pcc.amount_max_before * 1.2) -- 120%;
+grant select on U1.M_TMP_J_SEG_SEL_4 to LOADDB;
+grant select on U1.M_TMP_J_SEG_SEL_4 to LOADER;
+
+

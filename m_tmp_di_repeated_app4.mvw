@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_TMP_DI_REPEATED_APP4
+refresh complete on demand
+as
+select
+a.client_iin,
+a.actual_end_date,
+a.deal_number,
+a.actual_payment_num2 as term_of_first_loan_cat,
+a.contract_amount as cred_amount_of_first_loan_cat,
+a.report_status
+--min(actual_payment_num) term_of_first_loan
+from m_tmp_di_repeated_app3 a
+join (select client_iin, max(actual_end_date) actual_end_date, min(actual_payment_num) actual_payment_num from m_tmp_di_repeated_app3 group by client_iin) x on a.client_iin=x.client_iin and a.actual_end_date=x.actual_end_date and a.actual_payment_num=x.actual_payment_num
+--and a.deal_number=x.deal_number
+where a.actual_payment_num2 in
+('<=15 days',
+'16-31 days','2 months','3 months','4 months','5 months','6 months');
+grant select on U1.M_TMP_DI_REPEATED_APP4 to LOADDB;
+grant select on U1.M_TMP_DI_REPEATED_APP4 to LOADER;
+
+

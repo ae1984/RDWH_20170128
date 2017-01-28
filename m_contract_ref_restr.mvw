@@ -1,0 +1,39 @@
+﻿create materialized view U1.M_CONTRACT_REF_RESTR
+build deferred
+refresh force on demand
+as
+select cast(client_id as number) as client_id,
+       contract_number,
+       to_number(to_char(x.spof_end_date,'yyyymm')) restr_rep_month,
+       to_number(to_char(x.spof_end_date_next,'yyyymm')) restr_rep_month_next,
+       x.spof_end_date,
+       x.spof_end_date_next,
+       restr restr_type,
+       restr_prior,
+       cnt restr_cnt,
+       spof_status
+ from (
+       select --+ parallel 30
+              substr(ltrim(t.contract_number, 'R'), 1, 7) as client_id,
+              t.contract_number,
+              t.spof_end_date,
+              lead(t.spof_end_date, 1,null) over (partition by t.contract_number order by t.spof_end_date) spof_end_date_next,
+              dense_rank() over (partition by t.contract_number order by t.spof_end_date) cnt,
+              min(restr_type) KEEP (DENSE_RANK LAST ORDER BY t.spof_end_date, t.restr_prior desc) OVER (PARTITION BY t.contract_number, t.spof_end_date) restr,
+              min(t.restr_prior) KEEP (DENSE_RANK LAST ORDER BY t.spof_end_date, t.restr_prior desc) OVER (PARTITION BY t.contract_number, t.spof_end_date) restr_prior,
+              restr_type,
+              spof_status
+        from (select --+ parallel 30
+              son.contract_number,
+              trunc(son.spof_end_date, 'mm') spof_end_date,
+              son.restr_type,
+              son.restr_prior,
+              son.spof_spec_offer_status_cd as spof_status
+         from M_DWH_ACC_SPECIAL_OFFER_CON son
+        where son.spof_spec_offer_status_cd in ('EXECUTED','DEFAULT','WORK','SWITCHED')
+        group by son.contract_number, trunc(son.spof_end_date, 'mm'), son.restr_type, son.restr_prior,son.spof_spec_offer_status_cd
+             ) t
+       ) x;
+grant select on U1.M_CONTRACT_REF_RESTR to LOADDB;
+
+

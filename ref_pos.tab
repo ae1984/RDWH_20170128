@@ -1,0 +1,35 @@
+﻿create table U1.REF_POS
+(
+  pos_code VARCHAR2(50) not null,
+  partner  VARCHAR2(50)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+create unique index U1.REF_POS_PK_IND on U1.REF_POS (POS_CODE)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.REF_POS
+  add constraint REF_POS_PK primary key (POS_CODE);
+grant select on U1.REF_POS to LOADDB;
+grant select on U1.REF_POS to LOADER;
+

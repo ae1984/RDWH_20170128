@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_RBO_PORT_TMP2_PRE5
+build deferred
+refresh force on demand
+as
+select /*+parallel(20)*/ distinct rbo_client_id from M_RBO_PORT_TMP2;
+grant select on U1.M_RBO_PORT_TMP2_PRE5 to LOADDB;
+
+

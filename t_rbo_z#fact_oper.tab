@@ -1,0 +1,182 @@
+﻿create table U1.T_RBO_Z#FACT_OPER
+(
+  id                 NUMBER not null,
+  collection_id      NUMBER,
+  c_date             DATE,
+  c_oper             NUMBER,
+  c_summa            NUMBER(17,2),
+  c_valuta           NUMBER,
+  c_doc              NUMBER,
+  c_beg_date         DATE,
+  c_end_date         DATE,
+  c_order_num        NUMBER(20),
+  c_reg_currency_sum NUMBER(17,2),
+  class_id           VARCHAR2(48),
+  c_obj_ref          VARCHAR2(384),
+  c_obj_class        VARCHAR2(384),
+  c_sum_next_cap     NUMBER(17,2),
+  c_cash             VARCHAR2(3),
+  c_print_sk         VARCHAR2(3),
+  c_tmp_oper         NUMBER,
+  c_tmp_date         DATE,
+  c_is_storno        VARCHAR2(3),
+  c_summa_add        NUMBER(17,2),
+  c_not_paid_sum     NUMBER(17,2),
+  c_out_memo_sum     VARCHAR2(3),
+  c_not_set_depend   VARCHAR2(3),
+  c_reverse_fo       NUMBER,
+  c_audit            NUMBER not null,
+  c_kas_date_prov    DATE,
+  c_kas_doc_state    VARCHAR2(60)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RBO_Z#FACT_OPER
+  is 'Фактическая операция по договору';
+comment on column U1.T_RBO_Z#FACT_OPER.id
+  is 'Идентификатор операции';
+comment on column U1.T_RBO_Z#FACT_OPER.collection_id
+  is 'collection на Z#BANK.C_FACT_OPER; Z#DEPN.C_LIST_PAY; Z#FACTORING.C_LIST_PAY; Z#KAS_AGENT_PAY.C_FO_ARR; Z#KAS_CARD_DOC_IND.C_LIST_PAY_ARR; Z#MAIN_DOCUM.C_DISTR_BY_PRODUCT; Z#PR_CRED.C_LIST_PAY; Z#SIM_LOAN_PORT.C_LIST_PAY';
+comment on column U1.T_RBO_Z#FACT_OPER.c_date
+  is 'Дата';
+comment on column U1.T_RBO_Z#FACT_OPER.c_oper
+  is 'Операция(FK на Z#VID_OPER_DOG)';
+comment on column U1.T_RBO_Z#FACT_OPER.c_summa
+  is 'Сумма в валюте договора';
+comment on column U1.T_RBO_Z#FACT_OPER.c_valuta
+  is 'Валюта операции(FK на Z#FT_MONEY)';
+comment on column U1.T_RBO_Z#FACT_OPER.c_doc
+  is 'Документ(FK на Z#DOCUMENT)';
+comment on column U1.T_RBO_Z#FACT_OPER.c_beg_date
+  is 'Дата начала периода';
+comment on column U1.T_RBO_Z#FACT_OPER.c_end_date
+  is 'Дата окончания периода';
+comment on column U1.T_RBO_Z#FACT_OPER.c_order_num
+  is 'Порядковый номер';
+comment on column U1.T_RBO_Z#FACT_OPER.c_reg_currency_sum
+  is 'Сумма в валюте учёта';
+comment on column U1.T_RBO_Z#FACT_OPER.class_id
+  is 'Класс объекта';
+comment on column U1.T_RBO_Z#FACT_OPER.c_obj_ref
+  is 'Объект(FK на OBJECTS)';
+comment on column U1.T_RBO_Z#FACT_OPER.c_obj_class
+  is 'Класс объекта(FK на CLASSES)';
+comment on column U1.T_RBO_Z#FACT_OPER.c_sum_next_cap
+  is 'Сумма процентов';
+comment on column U1.T_RBO_Z#FACT_OPER.c_cash
+  is 'Наличная операция';
+comment on column U1.T_RBO_Z#FACT_OPER.c_print_sk
+  is 'Напечатана в с/к';
+comment on column U1.T_RBO_Z#FACT_OPER.c_tmp_oper
+  is 'Операция(временная)(FK на Z#VID_OPER_DOG)';
+comment on column U1.T_RBO_Z#FACT_OPER.c_tmp_date
+  is 'Дата(временная)';
+comment on column U1.T_RBO_Z#FACT_OPER.c_is_storno
+  is 'Сторнирована/ликвидирована';
+comment on column U1.T_RBO_Z#FACT_OPER.c_summa_add
+  is 'Допвзносы';
+comment on column U1.T_RBO_Z#FACT_OPER.c_not_paid_sum
+  is 'Непогашенная сумма';
+comment on column U1.T_RBO_Z#FACT_OPER.c_out_memo_sum
+  is 'Безналичные средства извне';
+comment on column U1.T_RBO_Z#FACT_OPER.c_not_set_depend
+  is 'Квитовать с планом';
+comment on column U1.T_RBO_Z#FACT_OPER.c_reverse_fo
+  is 'Обратная операция(FK на Z#FACT_OPER)';
+comment on column U1.T_RBO_Z#FACT_OPER.c_audit
+  is 'Аудит(COLLECTION в Z#AUDIT_LOG)';
+comment on column U1.T_RBO_Z#FACT_OPER.c_kas_date_prov
+  is 'KAS. Дата проводки документа';
+comment on column U1.T_RBO_Z#FACT_OPER.c_kas_doc_state
+  is 'KAS. Состояние документа';
+create index U1.T_RBO_Z#FACT_OPER_IND1 on U1.T_RBO_Z#FACT_OPER (COLLECTION_ID, C_KAS_DATE_PROV, C_OPER)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create unique index U1.T_RBO_Z#FACT_OPER_IND2 on U1.T_RBO_Z#FACT_OPER (ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RBO_Z#FACT_OPER_IND3 on U1.T_RBO_Z#FACT_OPER (C_OPER)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RBO_Z#FACT_OPER_IND4 on U1.T_RBO_Z#FACT_OPER (C_REVERSE_FO)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RBO_Z#FACT_OPER_IND5 on U1.T_RBO_Z#FACT_OPER (C_KAS_DATE_PROV)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RBO_Z#FACT_OPER_IND6 on U1.T_RBO_Z#FACT_OPER (C_DOC)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_RBO_Z#FACT_OPER to LOADDB;
+grant select on U1.T_RBO_Z#FACT_OPER to LOADER;
+

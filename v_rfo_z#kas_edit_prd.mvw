@@ -1,0 +1,10 @@
+﻿create materialized view U1.V_RFO_Z#KAS_EDIT_PRD
+refresh complete on demand
+as
+select * from IBS.Z#KAS_EDIT_PRD@RFO_SNAP
+where c_date_edit_astr > trunc(sysdate) - 10;
+grant select on U1.V_RFO_Z#KAS_EDIT_PRD to LOADDB;
+grant select on U1.V_RFO_Z#KAS_EDIT_PRD to LOADER;
+grant select on U1.V_RFO_Z#KAS_EDIT_PRD to RISK_VERIF;
+
+

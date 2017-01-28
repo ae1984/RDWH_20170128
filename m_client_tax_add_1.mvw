@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_CLIENT_TAX_ADD_1
+refresh force on demand
+as
+select * from V_DWH_CLIENT_TAX_ADD_1@ee13;
+grant select on U1.M_CLIENT_TAX_ADD_1 to LOADDB;
+grant select on U1.M_CLIENT_TAX_ADD_1 to LOADER;
+
+

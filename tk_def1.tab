@@ -1,0 +1,36 @@
+﻿create table U1.TK_DEF1
+(
+  yy_mm_start_last     VARCHAR2(9),
+  con_cnt              NUMBER,
+  con_dist_cnt         NUMBER,
+  sales_mln            NUMBER,
+  sales                NUMBER,
+  del_rate_pmt_1       NUMBER,
+  del_rate_pmt_1_45    NUMBER,
+  del_rate_pmt_1_7     NUMBER,
+  del_rate_pmt_8_30    NUMBER,
+  del_rate_pmt_2_x1    NUMBER,
+  del_rate_pmt_2_01    NUMBER,
+  total_used_sum       NUMBER,
+  pmt_1_cnt            NUMBER,
+  max_debt_used_pmt_1  NUMBER,
+  delinq_rate_pmt_2_x1 NUMBER,
+  delinq_rate_pmt_2_01 NUMBER,
+  max_debt_used_pmt_2  NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.TK_DEF1 to LOADDB;
+grant select on U1.TK_DEF1 to LOADER;
+

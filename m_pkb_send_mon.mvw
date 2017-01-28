@@ -1,0 +1,83 @@
+﻿create materialized view U1.M_PKB_SEND_MON
+refresh force on demand
+as
+select xxx.*,
+       --round((trunc(sysdate) - 1) - xxx.update_date_max) day_diff_upd_max,
+       --round((trunc(sysdate) - 1) - xxx.update_date_by_rep_cnt_max) day_diff_upd_by_rep_cnt_max,
+       u1.working_days_between(xxx.update_date_max, (trunc(sysdate) - 1)) day_diff_upd_max_w,
+       u1.working_days_between(xxx.update_date_by_rep_cnt_max, (trunc(sysdate) - 1)) day_diff_upd_by_rep_cnt_max_w
+from (
+    select xx.bank,
+           max(xx.update_date) as update_date_max,
+           max(xx.update_date) keep (dense_rank last order by xx.report_count) update_date_by_rep_cnt_max,
+           max(xx.report_count) keep (dense_rank last order by xx.report_count) rep_cnt_max,
+           sum(coalesce(xx.report_count, 0)) report_count
+    from (
+        select upper(t.bank) as bank,
+               to_date(t.c_last_update,'dd.mm.yyyy') as update_date,
+               count(distinct pr.report_id) as report_count
+        from V_RFO_Z#PKB_REPORT p
+        join V_PKB_REPORT pr on pr.report_id = p.id
+        join (select tt.*,
+                     case when upper(trim(tt.c_fin_inst)) like '%KASPI%' then 'KASPI'
+
+                          when upper(trim(tt.c_fin_inst)) like '%KASSA%' then 'KASSA NOVA'
+                          when upper(trim(tt.c_fin_inst)) like '%АЛЬФА%' then 'АЛЬФА'
+
+                          when upper(trim(tt.c_fin_inst)) like '%ALTYN%' or
+                               upper(trim(tt.c_fin_inst)) like '%HSBC%' then 'ALTYN'
+
+                          when upper(trim(tt.c_fin_inst)) like '%НАРОДНЫЙ%БАНК%' or
+                               upper(trim(tt.c_fin_inst)) like '%НАРОДНЫЙ%СБЕРЕГАТЕЛЬНЫЙ%' then 'НАРОДНЫЙ'
+
+                          when upper(trim(tt.c_fin_inst)) like '%НУРБАНК%' then 'НУРБАНК'
+                          when upper(trim(tt.c_fin_inst)) like '%АСТАНА-ФИНАНС%' then 'АСТАНА-ФИНАНС'
+                          when upper(trim(tt.c_fin_inst)) like '%ТЕМ%РБАНК%' then 'ТЕМИРБАНК'
+
+                          when upper(trim(tt.c_fin_inst)) like '%ASIA%CREDIT%' or
+                               upper(trim(tt.c_fin_inst)) like '%АЗИЯ%КРЕДИТ%' then 'ASIA CREDIT'
+
+                          when upper(trim(tt.c_fin_inst)) like '%БТА%' then 'БТА'
+                          when upper(trim(tt.c_fin_inst)) like '%AТФ%' or
+                               upper(trim(tt.c_fin_inst)) like '%АТФБАНК%' then 'AТФ'
+
+                          when upper(trim(tt.c_fin_inst)) like '%RBK%' then 'RBK'
+                          when upper(trim(tt.c_fin_inst)) like '%КАЗКОМ%' then 'КАЗКОМ'
+
+                          when upper(trim(tt.c_fin_inst)) like '%ЦЕНТРКРЕДИТ%' or
+                               upper(trim(tt.c_fin_inst)) like '%БЦК%' or
+                               upper(trim(tt.c_fin_inst)) like '%ЦЕНТР%КРЕДИТ%' then 'ЦЕНТРКРЕДИТ'
+
+                          when upper(trim(tt.c_fin_inst)) like '%АЛЬЯНС%' then 'АЛЬЯНС'
+                          when upper(trim(tt.c_fin_inst)) like '%DELTA%' then 'DELTA'
+                          when upper(trim(tt.c_fin_inst)) like '%QAZAQ%' then 'QAZAQ'
+                          when upper(trim(tt.c_fin_inst)) like '%ЦЕСНАБАНК%' then 'ЦЕСНАБАНК'
+                          when upper(trim(tt.c_fin_inst)) like '%ЕВРАЗИЙСКИ%' then 'ЕВРАЗИЙСКИЙ'
+
+                          when upper(trim(tt.c_fin_inst)) like '%СБЕРБАНК%' then 'СБЕРБАНК'
+
+                          when upper(trim(tt.c_fin_inst)) like '%СИТИБАНК%' then 'СИТИБАНК'
+                          when upper(trim(tt.c_fin_inst)) like '%ПРОСТОКРЕДИТ%' then 'ПРОСТОКРЕДИТ'
+                          when upper(trim(tt.c_fin_inst)) like '%ВТБ%' then 'ВТБ'
+
+                          when upper(trim(tt.c_fin_inst)) like '%ХОУМ%КРЕДИТ%' or
+                               upper(trim(tt.c_fin_inst)) like '%HOME%CREDIT%' or
+                               upper(trim(tt.c_fin_inst)) like '%HOMECREDIT%' then 'ХОУМ КРЕДИТ'
+
+                          else upper(trim(tt.c_fin_inst)) end bank
+
+              from V_RFO_Z#KAS_PKB_CI tt) t on t.collection_id = p.c_ci
+
+        where pr.rfo_report_date > trunc(sysdate) - 30 and
+              t.bank is not null and
+              to_number(substr(t.c_last_update,4,2)) <= 12 and
+              to_date(t.c_last_update,'dd.mm.yyyy') < trunc(sysdate)
+        group by t.bank,
+                 to_date(t.c_last_update,'dd.mm.yyyy')
+    ) xx
+    group by xx.bank
+) xxx;
+grant select on U1.M_PKB_SEND_MON to LOADDB;
+grant select on U1.M_PKB_SEND_MON to LOADER;
+
+

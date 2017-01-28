@@ -1,0 +1,34 @@
+﻿create table U1.V_GCVP_REPORT_CACHE
+(
+  folder_id        NUMBER,
+  gcvp_rep_id      NUMBER not null,
+  client_rnn       VARCHAR2(36),
+  rep_date         DATE,
+  max_pmt_date     DATE,
+  rep_id_cache_15d NUMBER,
+  rep_id_cache_20d NUMBER,
+  rep_id_cache_25d NUMBER,
+  rep_id_cache_30d NUMBER,
+  rep_id_cache_35d NUMBER,
+  rep_id_cache_40d NUMBER,
+  rep_id_cache_45d NUMBER,
+  rep_id_cache_50d NUMBER,
+  rep_id_cache_55d NUMBER,
+  rep_id_cache_60d NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.V_GCVP_REPORT_CACHE to LOADDB;
+grant select on U1.V_GCVP_REPORT_CACHE to LOADER;
+

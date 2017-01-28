@@ -1,0 +1,41 @@
+﻿create materialized view U1.M_DWH_SHOP_CONTACT_INFO
+refresh force on demand
+as
+select /*+ noparallel */
+       contact_info_id,
+       owner_contact_info_id,
+       create_date,
+       last_name,
+       first_name,
+       fathers_name,
+       middle_name,
+       middle_name_2,
+       department,
+       building,
+       appartment,
+       district,
+       region,
+       sign_shipping_address,
+       sign_billing_address,
+       sign_unloading_address,
+       sign_contact_address,
+       street_name,
+       street_number,
+       city,
+       country,
+       address_value_mail_index,
+       gender,
+       birth_date,
+       phone_1,
+       phone_2,
+       mobile_phone,
+       e_mail_address,
+       mail_address,
+       fax,
+       skype,
+       company
+  from dwh_stage.S43_CONTACT_INFO@dwh_prod2;
+grant select on U1.M_DWH_SHOP_CONTACT_INFO to LOADDB;
+grant select on U1.M_DWH_SHOP_CONTACT_INFO to LOADER;
+
+

@@ -1,0 +1,130 @@
+﻿create table U1.T_RBO_CONTRACT_PORTFOLIO_OLD
+(
+  rep_date               DATE,
+  yy_mm_report           VARCHAR2(9),
+  rbo_client_id          NUMBER,
+  rbo_contract_id        NUMBER,
+  rfo_contract_id        NUMBER,
+  rfo_client_id          NUMBER,
+  contract_number        VARCHAR2(66),
+  start_date_actual      DATE,
+  yy_mm_start_date_act   VARCHAR2(9),
+  start_date             DATE,
+  yy_mm_start_date       VARCHAR2(9),
+  debt_begin_date        DATE,
+  cred_program_code      VARCHAR2(48),
+  cred_program_name      VARCHAR2(300),
+  cred_program_code_x    VARCHAR2(48),
+  cred_program_name_x    VARCHAR2(300),
+  x_dnp_name             VARCHAR2(300),
+  is_card                NUMBER(1),
+  is_refin_contract      NUMBER,
+  is_ever_refin_contract NUMBER,
+  rbo_contract_id_to     NUMBER(21),
+  refin_date             DATE,
+  refin_date_first       DATE,
+  refin_percent          NUMBER,
+  ppm                    NUMBER,
+  num_stmt               NUMBER,
+  total_debt             NUMBER(21,2),
+  total_debt_x           NUMBER,
+  del_days               NUMBER(21),
+  del_days_x             NUMBER,
+  max_debt_used          NUMBER,
+  max_debt_used_x        NUMBER,
+  del_days_max           NUMBER,
+  del_days_max_x         NUMBER,
+  del_days_cli_max       NUMBER,
+  del_days_cli_max_x     NUMBER,
+  is_on_balance          VARCHAR2(1)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RBO_CONTRACT_PORTFOLIO_OLD
+  is 'Портфель договоров в разрезе месяцев(на последний рабочий день месяца)';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.rep_date
+  is 'Отчетная дата';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.yy_mm_report
+  is 'Отчетный месяц в char:yyyy - mm';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.rbo_client_id
+  is 'Id клиента РБО';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.rbo_contract_id
+  is 'Id договора РБО';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.rfo_contract_id
+  is 'Id договора РФО';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.rfo_client_id
+  is 'Id клиента РФО';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.contract_number
+  is 'Номер договора';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.start_date_actual
+  is 'Дата начала договора по кредитам, дата установки револьверности по картам';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.yy_mm_start_date_act
+  is 'Дата начала договора по кредитам, дата установки револьверности по картам в формате char: yyyy - mm';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.start_date
+  is 'Дата установки револьверности, если пусто, то дата начала договора';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.yy_mm_start_date
+  is 'Дата установки револьверности, если пусто, то дата начала договора в формате char: yyyy - mm';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.debt_begin_date
+  is 'Дата возникновения задолженности';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.cred_program_code
+  is 'Программа кредитования(код) на дату отчета(для кредитов не меняется, по картам берем историю)';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.cred_program_name
+  is 'Программа кредитования(наименование) на дату отчета(для кредитов не меняется, по картам берем историю)';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.cred_program_code_x
+  is 'Программа кредитования(код) на дату револьверности/начала(start_date)';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.cred_program_name_x
+  is 'Программа кредитования(наименование) на дату револьверности/начала(start_date)';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.x_dnp_name
+  is 'Наименование курирующего подразделения';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.is_card
+  is 'Тип договора: 1 - карта, 0 - кредит';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.is_refin_contract
+  is 'Признак догова: 1 - рефинансированный договор, 2 - результирующий договор на текущий день';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.is_ever_refin_contract
+  is 'Признак рефианасированного или результирующего договора когда либо: 1 -Да, 0 - Нет';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.rbo_contract_id_to
+  is 'Id результирующего договора, на котором сейчас рефиананс';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.refin_date
+  is 'Дата начала текущего рефинансирования';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.refin_date_first
+  is 'Дата первого рефинансирования';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.refin_percent
+  is 'Процент от общей задолженности по рефинансируемым и результирующем договорам';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.ppm
+  is 'Номер планового платежа в этот отчетный период';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.num_stmt
+  is 'Номер планового платежа с учетом нулевых сумм платежей(номер стейтмента)';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.total_debt
+  is 'Общая задолженность договора';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.total_debt_x
+  is 'Общая рассчитанная задолженности с учетом рефинанса';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.del_days
+  is 'Количество дней по договору';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.del_days_x
+  is 'Количество дней по договору с учетом рефинанса';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.max_debt_used
+  is 'Максимальная задолженность по договору на отчетную дату';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.max_debt_used_x
+  is 'Максимальная задолженность по договору на отчетную дату с учетом рефинанса';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.del_days_max
+  is 'Макс дней просрочки на исходном договоре';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.del_days_max_x
+  is 'Макс дней просрочки с учетом рефинанса';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.del_days_cli_max
+  is 'Макс дней просрочки по клиенту на исходном договоре';
+comment on column U1.T_RBO_CONTRACT_PORTFOLIO_OLD.del_days_cli_max_x
+  is 'Макс дней просрочки по клиенту с учетом рефинанса';
+grant select on U1.T_RBO_CONTRACT_PORTFOLIO_OLD to LOADDB;
+grant select on U1.T_RBO_CONTRACT_PORTFOLIO_OLD to LOADER;
+

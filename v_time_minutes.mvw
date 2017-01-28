@@ -1,0 +1,54 @@
+﻿create materialized view U1.V_TIME_MINUTES
+using no index
+refresh complete on demand
+as
+select
+    currdate                    as yyyy_mm_dd_hh_mi,
+    to_date(substr(to_char(currdate,'yyyy-mm-dd hh24:mi'),1,15)||'0',
+          'yyyy-mm-dd hh24:mi') as yyyy_mm_dd_hh_10mi,
+    trunc(currdate,'hh24')      as yyyy_mm_dd_hh,
+    trunc(currdate)             as yyyy_mm_dd,
+    trunc(currdate,'mm')        as yyyy_mm,
+    extract(year from currdate) as yyyy,
+
+    to_number(to_char(currdate,'yyyymm'))  as yyyy_mm_num,
+
+    to_char(currdate,'yyyy-mm-dd hh24:mi') as text_yyyy_mm_dd_hh_mi,
+    substr(to_char(currdate,'yyyy-mm-dd hh24:mi'),1,15)||'0' as text_yyyy_mm_dd_hh_10mi,
+    to_char(currdate,'yyyy-mm-dd hh24')    as text_yyyy_mm_dd_hh,
+    to_char(currdate,'yyyy-mm-dd')         as text_yyyy_mm_dd,
+    to_char(currdate,'yyyy-mm')            as text_yyyy_mm,
+    to_char(currdate,'yyyy')               as text_yyyy,
+
+    to_char(currdate,'hh24:mi') as text_hh_mi,
+    substr(to_char(currdate,'hh24:mi'),1,4)||'0' as text_hh_10mi,
+    to_char(currdate,'hh24') as text_hh,
+
+    to_char(currdate,'mm-dd hh24:mi') as text_mm_dd_hh_mi,
+    substr(to_char(currdate,'mm-dd hh24:mi'),1,10)||'0' as text_mm_dd_hh_10mi,
+    to_char(currdate,'mm-dd hh24') as text_mm_dd_hh,
+
+    to_number(to_char(currdate,'hh24')) as num_hh,
+
+    to_number(to_char(currdate,'WW')) as week_num,
+        case when to_char(currdate,'d') = '1' then 7 else
+            to_number(trim(leading '0' from to_char(currdate,'d'))) - 1 end as
+    day_num_of_week,
+        to_char(currdate,'DY','NLS_DATE_LANGUAGE = English') as
+    week_day_short_en,
+        to_char(currdate,'DY','NLS_DATE_LANGUAGE = Russian') as
+    week_day_short_ru
+  from
+    (select level n,
+-- calendar starts at the day after this date.
+--      to_date('31/12/2010','dd/mm/yyyy') + numtodsinterval(level,'day') currdate
+      to_date('2010-01-01','yyyy-mm-dd') + numtodsinterval(level,'minute') as currdate
+    from dual
+-- change for the number of days to be added to the table.
+--      connect by level <= 365
+      connect by rownum < (to_date('2020-01-01','yyyy-mm-dd') - to_date('2010-01-01','yyyy-mm-dd')) * 24 * 60
+    );
+grant select on U1.V_TIME_MINUTES to LOADDB;
+grant select on U1.V_TIME_MINUTES to LOADER;
+
+

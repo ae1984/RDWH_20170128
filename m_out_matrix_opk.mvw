@@ -1,0 +1,133 @@
+﻿create materialized view U1.M_OUT_MATRIX_OPK
+build deferred
+refresh force on demand
+as
+select td.yyyy,
+       td.quarter,
+       td.text_yyyy_mm,
+       f.folder_id,
+       f.contract_number,
+       f.contract_amount,
+       f.product,
+       f.city,
+       f.region,
+       cast(b.status_name as varchar2(200)) as status_name,
+       cast(b.create_username as varchar2(2400)) as create_username,
+       f.pos_code,
+       f.pos_name,
+       a.shop_code,
+       a.shop_place,
+       d.is_ever_refin_contract,
+       d.is_refin_contract,
+       d.max_debt_used_x,
+       d.total_debt_x,
+       d.del_days_x,
+       d.del_days_max_x,
+       a.brand,
+       a.model,
+       a.initial_payment,
+       b.begin_date,
+       b.date_plan_end,
+       trunc(months_between(b.date_plan_end,b.begin_date)) as term_months,
+       b.date_plan_end - b.begin_date as term_days,
+       count(1) as cnt,
+       count(distinct f.rfo_con_or_claim_id) as rfo_con_or_claim_cnt, -- кол-во заявок, включая онлайн
+       ---
+       sum(d.total_debt_x_pmt_1_7)  as pmt_1_7d_del_debt,
+       sum(d.max_debt_used_x_pmt_1_7)  as pmt_1_7d_sales,
+       sum(d.total_debt_x_pmt_6_7)  as pmt_6_7d_del_debt,
+       sum(d.max_debt_used_x_pmt_6_7)  as pmt_6_7d_sales,
+       sum(case when d.del_days_x > 90 then d.total_debt_x end) / 1000000 as del_debt_90d_mln
+from (
+  select 'ОНЛАЙН-КРЕДИТ' as product_type, 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(f.folder_date_create_mi) as a_date,
+         cast(case when f.is_categ_a = 1 then 'КАТЕГОРИЯ А' when f.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as varchar2(200)) as is_categ_a,
+         cast(case when f.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when f.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as varchar2(200)) as is_categ_b,
+         cast(case when f.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when f.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as varchar2(200)) as is_client_new_by_con,
+         cast(case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as varchar2(200)) as is_credit_issued,
+         cast(case when f.is_sign_require = 1 then 'С ПОДПИСАНИЕМ' when f.is_sign_require = 0 then 'БЕЗ ПОДПИСАНИЯ' end as varchar2(200)) as is_signing_required,
+         f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+         f.rfo_contract_id as rfo_con_or_claim_id,
+         f.x_dnp_name as city, f.x_dnp_region as region,
+         f.pos_name, f.pos_code,
+         f.cancel_prescoring, f.cancel_middle_office, f.cancel_controller, f.cancel_client, f.cancel_manager,
+         f.cancel_cpr_aa, f.cancel_verificator, f.cancel_undefined
+  from u1.M_FOLDER_CON_CANCEL f
+  where f.process_name = 'ОНЛАЙН КРЕДИТ' and
+        f.claim_id is not null and
+        f.folder_date_create_mi >= to_date('2013-01-01','yyyy-mm-dd') --to_date('2014-12-08','yyyy-mm-dd')
+  union all
+  select 'ОНЛАЙН-КРЕДИТ' as product_type, 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(fo.folder_date_create_mi) as a_date,
+         cast(case when fo.is_categ_a = 1 then 'КАТЕГОРИЯ А' when fo.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as varchar2(200)) as is_categ_a,
+         cast(case when fo.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when fo.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as varchar2(200)) as is_categ_b,
+         cast(case when fo.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when fo.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as varchar2(200)) as is_client_new_by_con,
+         cast(case when fo.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when fo.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as varchar2(200)) as is_credit_issued,
+         cast(case when fo.is_sign_require = 1 then 'С ПОДПИСАНИЕМ' when fo.is_sign_require = 0 then 'БЕЗ ПОДПИСАНИЯ' end as varchar2(200)) as is_signing_required,
+         fo.claim_id, fo.contract_number, fo.rfo_client_id, fo.contract_amount, fo.folder_id, fo.form_client_id, fo.rfo_contract_id,
+         fo.claim_id as rfo_con_or_claim_id,
+         fo.x_dnp_name as city, fo.x_dnp_region as region,
+         fo.pos_name, fo.pos_code,
+         fo.cancel_prescoring, fo.cancel_middle_office, fo.cancel_controller, fo.cancel_client, fo.cancel_manager,
+         fo.cancel_cpr_aa, fo.cancel_verificator, fo.cancel_undefined
+  from u1.M_FOLDER_CON_CANCEL_ONLINE fo
+  where fo.folder_date_create_mi >= to_date('2013-01-01','yyyy-mm-dd') --to_date('2014-12-08','yyyy-mm-dd')
+  union all
+  select f.product_type, f.cr_program_name as product, trunc(f.folder_date_create_mi) as a_date,
+         cast(case when f.is_categ_a = 1 then 'КАТЕГОРИЯ А' when f.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as varchar2(200)) as is_categ_a,
+         cast(case when f.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when f.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as varchar2(200)) as is_categ_b,
+         cast(case when f.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when f.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as varchar2(200)) as is_client_new_by_con,
+         cast(case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as varchar2(200)) as is_credit_issued,
+         cast(case when f.is_sign_require = 1 then 'С ПОДПИСАНИЕМ' when f.is_sign_require = 0 then 'БЕЗ ПОДПИСАНИЯ' end as varchar2(200)) as is_signing_required,
+         f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+         f.rfo_contract_id as rfo_con_or_claim_id,
+         f.x_dnp_name as city, f.x_dnp_region as region,
+         f.pos_name, f.pos_code,
+         f.cancel_prescoring, f.cancel_middle_office, f.cancel_controller, f.cancel_client, f.cancel_manager,
+         f.cancel_cpr_aa, f.cancel_verificator, f.cancel_undefined
+  from u1.M_FOLDER_CON_CANCEL f
+  where f.process_name != 'ОНЛАЙН КРЕДИТ'
+
+     ) f
+join u1.V_TIME_DAYS td on td.yyyy_mm_dd = f.a_date
+left join u1.M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+left join u1.M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+left join u1.V_CONTRACT_ALL_RFO_AUTO a on a.folder_id = f.folder_id and a.contract_number = f.contract_number
+where --f.a_date >= add_months(trunc(sysdate, 'month'),-25)
+      f.a_date >= to_date('01-01-2012','dd-mm-yyyy')
+      and f.product_type = 'АВТО' and f.is_credit_issued = 'КРЕДИТ ВЫДАН'
+group by td.yyyy,
+       td.quarter,
+       td.text_yyyy_mm,
+       f.folder_id,
+       f.contract_number,
+       f.contract_amount,
+       f.product,
+       f.city,
+       f.region,
+       b.status_name,
+       b.create_username,
+       f.pos_code,
+       f.pos_name,
+       a.shop_code,
+       a.shop_place,
+       d.is_ever_refin_contract,
+       d.is_refin_contract,
+       d.max_debt_used_x,
+       d.total_debt_x,
+       d.del_days_x,
+       d.del_days_max_x,
+       case when d.total_debt_pmt_1_7>0 then 1 else 0 end,
+       case when d.total_debt_pmt_2_7>0 then 1 else 0 end,
+       case when d.total_debt_pmt_3_7>0 then 1 else 0 end,
+       case when d.total_debt_pmt_4_7>0 then 1 else 0 end,
+       case when d.total_debt_pmt_5_7>0 then 1 else 0 end,
+       case when d.total_debt_pmt_6_7>0 then 1 else 0 end,
+       a.brand,
+       a.model,
+       a.initial_payment,
+       b.begin_date,
+       b.date_plan_end,
+       trunc(months_between(b.date_plan_end,b.begin_date));
+grant select on U1.M_OUT_MATRIX_OPK to DNP;
+grant select on U1.M_OUT_MATRIX_OPK to LOADDB;
+
+

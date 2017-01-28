@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_KASPIKZ_PAY_SERVICE_PARAMS
+build deferred
+refresh force on demand
+as
+select  cast(t.intId as number(10)) as id,
+        cast(t.intServiceId as number(10)) as service_id,
+        upper(cast(t.vchName as varchar2(200))) as name_val,
+        upper(cast(t.vchAlias as varchar2(100))) as alias_val,
+        upper(cast(t.vchDescription as varchar2(100))) as descr,
+        cast(t.vchMask as varchar2(100)) as mask_val,
+        cast(t.vchUserSample as varchar2(510)) as user_sample,
+        cast(t.vchDataType as varchar2(510)) as data_type,
+        cast(t.intLength as number(10)) as length_val,
+        cast(t.vchCheckerTemplate as varchar2(256)) as checker_template,
+        cast(t.vchDefaultValue as varchar2(510)) as default_value,
+        cast(t.vchPrefix as varchar2(510)) as prefix,
+        cast(t.vchSuffix as varchar2(510)) as suffix,
+        cast(t.intOrder as number(10)) as order_val,
+        cast(t.bitIsUid as number(3)) as is_uid,
+        cast(t.bitIsForUser as number(3)) as is_for_user,
+        cast(t.bitIsVisible as number(3)) as is_visible,
+        cast(t.bitIsForPayment as number(3)) as is_for_payment,
+        cast(t.bitIsForSubscription as number(3)) as is_for_subscription,
+        cast(t.intParentParameterId as number(10)) as parent_parameter_id,
+        cast(t.vchSanitizerTemplate as varchar(200)) sanit_temp
+   from s37.tb_Payments_ServiceParameters@rdwh_exd t;
+grant select on U1.M_KASPIKZ_PAY_SERVICE_PARAMS to LOADDB;
+grant select on U1.M_KASPIKZ_PAY_SERVICE_PARAMS to LOADER;
+
+

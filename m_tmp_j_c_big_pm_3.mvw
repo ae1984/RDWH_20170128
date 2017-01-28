@@ -1,0 +1,43 @@
+﻿create materialized view U1.M_TMP_J_C_BIG_PM_3
+refresh force on demand
+as
+select --+noparallel
+           distinct
+           t.iin_merged as iin,
+--           t.lastname_base as lastname, t.firstname_base as firstname, t.middlename_base as middlename,
+--           t.birthdate_base as birthdate,
+           t.contractid, t.contractstatus_name,
+           t.startdate, t.enddate, t.realpaymentdate, t.totalamount, t.totalamount_cur, t.instalmentamount,
+           t.bank, t.funding_type, t.credit_purpose, t.contract_phase,
+           t.payment_method, t.paymenty_period,
+           case when t.contractstatus_name in ('СТАНДАРТНЫЕ КРЕДИТЫ','СТАТУС ДОГОВОРА НЕ ЯВЛЯЕТСЯ НЕГАТИВНЫМ',
+                   'УСТУПКА/ПЕРЕУСТУПКА ПРАВА ТРЕБОВАНИЯ ПО КРЕДИТУ ДРУГОМУ ЛИЦУ',
+                   'СУБСТАНДАРТНЫЕ И СОМНИТЕЛЬНЫЕ КРЕДИТЫ','ПРОСРЕЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 7 ДО 30 ДНЕЙ') then 0
+              else 1 end as is_delinq
+    from V_BIG_CONTRACTS_ALL t
+/*    join M_GX_CLIENT_SAL_3_MON@EE13 g on g.iin = t.iin_merged and
+                                         g.sal_by_cli_3_mon_avg >= 30000*/
+    where t.client_relation in ('ЗАЁМЩИК'/*,
+                                'СОЗАЕМЩИК (ПРИСОЕДИНИВШЕЕСЯ ЛИЦО) С СОЛИДАРНЫМИ ОБЯЗАТЕЛЬСТВАМИ'*/) and
+          t.contract_phase not in ('ОТКАЗАН','ОТОЗВАН') and
+          (   (t.contract_cur = 'KZT' and t.totalamount >= 150000 and t.totalamount < 1000000) or
+              (t.contract_cur is null and t.totalamount >= 150000 and t.totalamount < 1000000) or
+              (t.contract_cur = 'USD' and t.totalamount >= 1000 and t.totalamount < 6667) or
+              (t.contract_cur = 'EUR' and t.totalamount >= 750 and t.totalamount < 5000) --or
+--              (t.contract_cur = 'RUB' and t.totalamount >= 32608 and t.totalamount < 217387) or
+--              (t.contract_cur = 'RUR' and t.totalamount >= 32608 and t.totalamount < 217387) or
+--              (t.contract_cur = 'GBR' and t.totalamount >= 636 and t.totalamount < 4240)
+          ) and
+          t.is_collateral_exists = 0 and
+          t.credit_purpose in ('НЕОТЛОЖНЫЕ НУЖДЫ','ПРОЧИЕ ЦЕЛИ','ПРОЧИЕ ПОТРЕБИТЕЛЬСКИЕ ЦЕЛИ') and
+          (t.paymenty_period is null or t.paymenty_period in (
+                    'ЕЖЕМЕСЯЧНЫЕ ПЛАТЕЖИ -30 ДНЕЙ','ПЛАТЕЖИ С НЕРЕГУЛЯРНОЙ ПЕРИОДИЧНОСТЬЮ')) and
+--          t.enddate < trunc(sysdate) and
+          t.iin_merged is not null and
+          substr(t.iin_merged,1,2) = to_char(t.birthdate_base,'yy') and
+          substr(t.iin_merged,3,2) = to_char(t.birthdate_base,'mm') and
+          substr(t.iin_merged,5,2) = to_char(t.birthdate_base,'dd');
+grant select on U1.M_TMP_J_C_BIG_PM_3 to LOADDB;
+grant select on U1.M_TMP_J_C_BIG_PM_3 to LOADER;
+
+

@@ -1,0 +1,81 @@
+﻿create materialized view U1.M_BNP_PROVISIONS_TMP
+build deferred
+refresh force on demand
+as
+select t.rbo_client_id,
+       t.c_name as name_taxp,
+       t.contract_number,
+       t.contract_start_date,
+       t.order_date,
+       t.is_client_good,
+       t.prov_sum_14,
+       t.prov_sum_0315,
+       t.prov_sum_1215,
+       t.total_debt_1214/*,
+       t.prod14,
+       t.provis_14,
+       t.prov_sum_14,
+       t.total_debt_0315,
+       t.prod_0315,
+       t.provis_0315,
+       t.prov_sum_0315 ,
+       t.total_debt_1215,
+       t.prod_1215,
+       t.provis_1215,
+       t.prov_sum_1215
+     */  ,
+       case
+         when t.order_date > to_date('31-03-2015','dd-mm-yyyy') then
+           t.prov_sum_1215 - t.prov_sum_0315
+         else
+           t.prov_sum_1215 - t.prov_sum_14
+       end as prov_diff
+from
+(
+select b.rbo_client_id ,
+      cl2.c_name,
+      i.name_taxp,
+      i.fio_taxp,
+      b.contract_number,
+      b.start_date as contract_start_date,
+      i.order_date,
+      nvl(t14.total_debt,0) as total_debt_1214,
+      t14.prod_avto as prod14,
+      case when t14.prod_avto = 'AVTO' then p_14.PROVISIONS_AUTO else p_14.PROVISIONS_MASS end as provis_14,
+      nvl(case
+        when t14.is_on_balance = 'I' then t14.total_debt*decode(t14.prod_avto,'AVTO',p_14.PROVISIONS_AUTO,p_14.PROVISIONS_MASS)
+        when t14.is_on_balance = 'W' then t14.total_debt
+      end ,0) as prov_sum_14,
+      nvl(t0315.total_debt,0) as total_debt_0315,
+      t0315.prod_avto as prod_0315,
+      case when t0315.prod_avto = 'AVTO' then p_0315.PROVISIONS_AUTO else p_0315.PROVISIONS_MASS end as provis_0315,
+      nvl(case
+        when t0315.is_on_balance = 'I' then t0315.total_debt*decode(t0315.prod_avto,'AVTO',p_0315.PROVISIONS_AUTO,p_0315.PROVISIONS_MASS)
+        when t0315.is_on_balance = 'W' then t0315.total_debt
+      end,0) as prov_sum_0315,
+
+      nvl(t1215.total_debt,0) as total_debt_1215,
+      t1215.prod_avto as prod_1215,
+      case when t1215.prod_avto = 'AVTO' then p_1215.PROVISIONS_AUTO else p_1215.PROVISIONS_MASS end as provis_1215,
+      nvl(case
+        when t1215.is_on_balance = 'I' then t1215.total_debt*decode(t1215.prod_avto,'AVTO',p_1215.PROVISIONS_AUTO,p_1215.PROVISIONS_MASS)
+        when t1215.is_on_balance = 'W' then t1215.total_debt
+      end,0) as prov_sum_1215 ,
+      case when b.start_date < i.order_date then 1 else 0 end as is_client_good
+from M_RBO_CONTRACT_BAS b
+left join dwh_port t14 on t14.deal_number = b.contract_number and t14.rep_date = to_date('31-12-2014','dd-mm-yyyy')
+left join dwh_port t0315 on t0315.deal_number = b.contract_number and t0315.rep_date = to_date('31-03-2015','dd-mm-yyyy')
+left join dwh_port t1215 on t1215.deal_number = b.contract_number and t1215.rep_date = to_date('31-12-2015','dd-mm-yyyy')
+join V_RDWH_PROVISIONS p_14 on p_14.rep_date = to_date('31-12-2014','dd-mm-yyyy')
+join V_RDWH_PROVISIONS p_0315 on p_0315.rep_date = to_date('31-03-2015','dd-mm-yyyy')
+join V_RDWH_PROVISIONS p_1215 on p_1215.rep_date = to_date('21-12-2015','dd-mm-yyyy')
+join V_RBO_Z#CLIENT cl on b.rbo_client_id = cl.id
+join V_IBSO_Z#CLIENT cl2 on cl2.class_id = 'CL_ORG' and cl2.c_inn = cl.c_inn
+--
+join RISK_BRENAT.INACTIV_TAXP_170316 i on cl2.c_inn = i.iin_bin --or cl.c_kas_rnn = i.rnn
+
+) t
+where t.prov_sum_14 != 0 or t.prov_sum_0315 != 0 or t.prov_sum_1215 != 0;
+grant select on U1.M_BNP_PROVISIONS_TMP to LOADDB;
+
+

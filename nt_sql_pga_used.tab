@@ -1,0 +1,26 @@
+﻿create table U1.NT_SQL_PGA_USED
+(
+  sdt            DATE,
+  sql_id         VARCHAR2(13),
+  sql_exec_start DATE,
+  module         VARCHAR2(64),
+  action         VARCHAR2(64),
+  osuser         VARCHAR2(30),
+  schemaname     VARCHAR2(30),
+  pga_alloc_mem  NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_SQL_PGA_USED to LOADDB;
+

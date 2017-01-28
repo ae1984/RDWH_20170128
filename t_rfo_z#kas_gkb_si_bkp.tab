@@ -1,0 +1,45 @@
+﻿create table U1.T_RFO_Z#KAS_GKB_SI_BKP
+(
+  id                      NUMBER not null,
+  collection_id           NUMBER,
+  c_noec#total            VARCHAR2(300),
+  c_noec#instalment_cr    VARCHAR2(150),
+  c_noec#cards            VARCHAR2(150),
+  c_noec#noninstalment_cr VARCHAR2(150),
+  c_notc#total            VARCHAR2(300),
+  c_notc#instalment_cr    VARCHAR2(150),
+  c_notc#cards            VARCHAR2(150),
+  c_notc#noninstalment_cr VARCHAR2(150),
+  c_nora#total            VARCHAR2(300),
+  c_nora#instalment_cr    VARCHAR2(150),
+  c_nora#cards            VARCHAR2(150),
+  c_nora#noninstalment_cr VARCHAR2(150),
+  c_tod#total             VARCHAR2(300),
+  c_tod#instalment_cr     VARCHAR2(150),
+  c_tod#cards             VARCHAR2(150),
+  c_tod#noninstalment_cr  VARCHAR2(150),
+  c_tdo#total             VARCHAR2(300),
+  c_tdo#instalment_cr     VARCHAR2(150),
+  c_tdo#cards             VARCHAR2(150),
+  c_tdo#noninstalment_cr  VARCHAR2(150),
+  c_noi                   VARCHAR2(150),
+  c_noi_1                 VARCHAR2(150),
+  c_noi_2                 VARCHAR2(150),
+  c_noi_3                 VARCHAR2(150),
+  c_subj_role             VARCHAR2(750)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RFO_Z#KAS_GKB_SI_BKP to LOADDB;
+

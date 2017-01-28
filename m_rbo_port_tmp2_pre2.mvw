@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_RBO_PORT_TMP2_PRE2
+build deferred
+refresh force on demand
+as
+select /*+ parallel(20)*/
+      rp.rbo_client_id,
+      max(rp.total_debt_cli) as total_debt_cli_max,
+      max(rp.delinq_days_cli) as del_days_cli_max,
+      max(rp.del_amount_cli) as del_amount_cli_max
+ from (select rbo_client_id, total_debt_cli, delinq_days_cli, del_amount_cli from t_rbo_port_2009
+          where rbo_client_id in (select distinct rbo_client_id from T_CONTRACT_EDIT_OBJ_TMP) union all
+       select rbo_client_id, total_debt_cli, delinq_days_cli, del_amount_cli from t_rbo_port_2010
+          where rbo_client_id in (select distinct rbo_client_id from T_CONTRACT_EDIT_OBJ_TMP) union all
+       select rbo_client_id, total_debt_cli, delinq_days_cli, del_amount_cli from t_rbo_port_2011
+          where rbo_client_id in (select distinct rbo_client_id from T_CONTRACT_EDIT_OBJ_TMP) union all
+       select rbo_client_id, total_debt_cli, delinq_days_cli, del_amount_cli from t_rbo_port_2012
+          where rbo_client_id in (select distinct rbo_client_id from T_CONTRACT_EDIT_OBJ_TMP) union all
+       select rbo_client_id, total_debt_cli, delinq_days_cli, del_amount_cli from t_rbo_port_2013
+          where rbo_client_id in (select distinct rbo_client_id from T_CONTRACT_EDIT_OBJ_TMP))rp
+group by rp.rbo_client_id;
+grant select on U1.M_RBO_PORT_TMP2_PRE2 to LOADDB;
+
+

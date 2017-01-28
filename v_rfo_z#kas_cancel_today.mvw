@@ -1,0 +1,10 @@
+﻿create materialized view U1.V_RFO_Z#KAS_CANCEL_TODAY
+refresh complete on demand
+as
+select --+ driving_site (c)
+* from IBS.Z#KAS_CANCEL@RFO c
+where c.c_date > trunc(sysdate);
+grant select on U1.V_RFO_Z#KAS_CANCEL_TODAY to LOADDB;
+grant select on U1.V_RFO_Z#KAS_CANCEL_TODAY to LOADER;
+
+

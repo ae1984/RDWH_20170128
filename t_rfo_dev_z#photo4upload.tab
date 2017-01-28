@@ -1,0 +1,45 @@
+﻿create table U1.T_RFO_DEV_Z#PHOTO4UPLOAD
+(
+  id            NUMBER not null,
+  sn            NUMBER,
+  su            NUMBER,
+  c_bin_id      NUMBER,
+  c_uid         VARCHAR2(210),
+  c_photo_type  VARCHAR2(30),
+  c_photo_date  DATE,
+  c_date_upload DATE,
+  c_client_id   NUMBER,
+  c_folder_id   NUMBER,
+  class_id      VARCHAR2(48)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RFO_DEV_Z#PHOTO4UPLOAD
+  is 'все фото клиентов до 04.10.2015 (включительно)';
+comment on column U1.T_RFO_DEV_Z#PHOTO4UPLOAD.c_bin_id
+  is 'Luna_id';
+comment on column U1.T_RFO_DEV_Z#PHOTO4UPLOAD.c_uid
+  is 'GUID фото';
+comment on column U1.T_RFO_DEV_Z#PHOTO4UPLOAD.c_photo_type
+  is 'Тип фотографии (признаки не всегда корректны)';
+comment on column U1.T_RFO_DEV_Z#PHOTO4UPLOAD.c_photo_date
+  is 'Дата и время фото';
+comment on column U1.T_RFO_DEV_Z#PHOTO4UPLOAD.c_date_upload
+  is 'Дата загрузки';
+comment on column U1.T_RFO_DEV_Z#PHOTO4UPLOAD.c_client_id
+  is 'RFO_Client_id';
+comment on column U1.T_RFO_DEV_Z#PHOTO4UPLOAD.c_folder_id
+  is 'Folder_id';
+grant select on U1.T_RFO_DEV_Z#PHOTO4UPLOAD to LOADDB;
+

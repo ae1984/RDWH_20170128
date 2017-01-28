@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_SC_CLIENT_HAS_AUTO
+build deferred
+refresh force on demand
+as
+select v.mvd_iin as client_iin, max(v.mvd_status_date) as mvd_status_date
+from u1.DWH_AUTO_VIN v
+where v.mvd_status_date >= to_date('01-01-2014', 'dd-mm-yyyy') and v.mvd_status_id != 4
+group by v.mvd_iin;
+grant select on U1.M_SC_CLIENT_HAS_AUTO to LOADDB;
+grant select on U1.M_SC_CLIENT_HAS_AUTO to LOAD_MO;
+
+

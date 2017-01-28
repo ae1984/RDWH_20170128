@@ -1,0 +1,8 @@
+﻿create sequence U1.SQ_M_TMP_G_PRODUCTS4
+minvalue 0
+maxvalue 999999999999
+start with 6233001
+increment by 1
+cache 1000
+cycle;
+

@@ -1,0 +1,22 @@
+﻿create materialized view U1.V_DWH_REFIN_2013
+using no index
+refresh complete on demand
+as
+select
+rdf_oper_id,
+rdf_rep_date,
+rdf_oper_name,
+rdf_old_deal_number,
+rdf_ovd_summ,
+rdf_lim_sum,
+rdf_res_deal_number,
+rdf_before_total_ovd,
+rdf_before_lm,
+rdf_after_total_ovd,
+rdf_after_lm
+from DWH_SAN.DM_REFIN_DEAL_FIDX@DWH_SAN_PROD
+where rdf_rep_date > to_date('31.12.2012', 'dd.mm.yyyy');
+grant select on U1.V_DWH_REFIN_2013 to LOADDB;
+grant select on U1.V_DWH_REFIN_2013 to LOADER;
+
+

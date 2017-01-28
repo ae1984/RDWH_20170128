@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_TMP_J_SN_3
+refresh complete on demand
+as
+select n.folder_id, n.rfo_client_iin_circle_1,
+       max(d.delinq_days) as del_days_max_by_cli_circle_1
+from M_TMP_J_SN_2 n
+join V_DWH_PORTFOLIO_CURRENT dw on dw.client_iin = n.rfo_client_iin_circle_1 and
+                                   dw.x_is_credit_issued = 1
+join V_DATA_ALL d on d.contract_no = dw.deal_number and
+                     d.yy_mm_report_date < trunc(n.folder_date_create,'mm') and
+                     d.yy_mm_report_date >= add_months(trunc(n.folder_date_create,'mm'), -12)
+group by n.folder_id, n.rfo_client_iin_circle_1;
+grant select on U1.M_TMP_J_SN_3 to LOADDB;
+grant select on U1.M_TMP_J_SN_3 to LOADER;
+
+

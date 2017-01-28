@@ -1,0 +1,70 @@
+﻿create table U1.T_VERIF_IN_COLLECTION_TMP
+(
+  id                        NUMBER(19) not null,
+  is_copied                 NUMBER(1) not null,
+  portition_date            TIMESTAMP(6),
+  client_id                 VARCHAR2(255),
+  verification_id           VARCHAR2(255) not null,
+  folders_id                VARCHAR2(255),
+  folders_date              TIMESTAMP(6),
+  last_name                 VARCHAR2(250),
+  first_name                VARCHAR2(250),
+  sur_name                  VARCHAR2(250),
+  iin                       VARCHAR2(255),
+  date_birth                TIMESTAMP(6),
+  adr_reg_post_ind          VARCHAR2(255),
+  adr_reg_street            VARCHAR2(255),
+  adr_reg_house             VARCHAR2(255),
+  adr_reg_frame             VARCHAR2(255),
+  adr_reg_flat              VARCHAR2(255),
+  adr_reg_date_begin        TIMESTAMP(6),
+  adr_reg_region            VARCHAR2(255),
+  adr_reg_district          VARCHAR2(255),
+  adr_reg_place             VARCHAR2(170),
+  adr_fact_post_ind         VARCHAR2(255),
+  adr_fact_street           VARCHAR2(255),
+  adr_fact_house            VARCHAR2(255),
+  adr_fact_frame            VARCHAR2(255),
+  adr_fact_flat             VARCHAR2(255),
+  adr_fact_date_begin       TIMESTAMP(6),
+  adr_fact_region           VARCHAR2(255),
+  adr_fact_district         VARCHAR2(255),
+  adr_fact_place            VARCHAR2(170),
+  org_name                  VARCHAR2(500),
+  org_casta                 VARCHAR2(500),
+  org_stazh_date            TIMESTAMP(6),
+  org_dep                   VARCHAR2(255),
+  verify_contacts_arr       VARCHAR2(255),
+  verify_images_arr         VARCHAR2(255),
+  branch_manager            VARCHAR2(255),
+  verify_status             VARCHAR2(255) not null,
+  verify_group              VARCHAR2(255),
+  verify_pr_cr              VARCHAR2(255),
+  pkb_is_empty              NUMBER(1),
+  date_last_edit            TIMESTAMP(6),
+  date_create               TIMESTAMP(6),
+  need_verify_cont          NUMBER(1),
+  need_verify_modified_data NUMBER(1),
+  only_contact              NUMBER(1),
+  doc_date_end              TIMESTAMP(6),
+  doc_date_issue            TIMESTAMP(6),
+  doc_num                   VARCHAR2(255),
+  doc_who                   VARCHAR2(255),
+  place_birth               VARCHAR2(500),
+  point_type                VARCHAR2(255)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_VERIF_IN_COLLECTION_TMP to LOADDB;
+

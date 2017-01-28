@@ -1,0 +1,27 @@
+﻿create materialized view U1.V_FOLDER_ALL_RFO_PRE5
+build deferred
+refresh complete on demand
+as
+select /*+parallel(10)*/ folder_id,
+           max(org_bin) keep (dense_rank last order by c_payment_date) as org_bin
+    from (
+        select fg.folder_id,
+               p.c_payment_date,
+               nvl(tp.c_iin_bin, 'RNN ' || tp.c_rnn) as org_bin
+        from V_RFO_Z#KAS_GCVP_REPORT r
+        join V_RFO_Z#KAS_GCVP_PAYMENT p on p.collection_id = r.c_payments_arr
+        join V_RFO_Z#KAS_NB_TAXPAYER tp on tp.c_iin_bin = p.x_org_bin or tp.c_rnn = p.x_org_rnn
+        join V_FOLDER_ALL_RFO_PRE5_1 fg on fg.kas_gcvp_report_id = r.id
+        union
+        select fg.folder_id,
+               p.c_payment_date,
+               nvl(p.x_org_bin, 'RNN ' || p.x_org_rnn) as org_bin
+        from V_RFO_Z#KAS_GCVP_REPORT r
+        join V_RFO_Z#KAS_GCVP_PAYMENT p on p.collection_id = r.c_payments_arr and
+                    not exists (select null from V_RFO_Z#KAS_NB_TAXPAYER tp where tp.c_iin_bin = p.x_org_bin) and
+                    not exists (select null from V_RFO_Z#KAS_NB_TAXPAYER tp where tp.c_rnn = p.x_org_rnn)
+        join V_FOLDER_ALL_RFO_PRE5_1 fg on fg.kas_gcvp_report_id = r.id
+    ) group by folder_id;
+grant select on U1.V_FOLDER_ALL_RFO_PRE5 to LOADDB;
+
+

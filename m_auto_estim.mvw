@@ -1,0 +1,74 @@
+﻿create materialized view U1.M_AUTO_ESTIM
+build deferred
+refresh force on demand
+as
+select /*+ parallel(20) */
+       x.*,
+       f.iin
+
+
+from (
+select *
+    from (
+        select
+
+               r.date_create,
+               dp.code_int,
+               t.value_number,
+               t.value_text
+
+        from MO_RFOLDER r
+        join MO_RFOLDER_PAR_VALUE t on t.rfolder_id = r.id and t.date_create >= to_date('01.01.2015','dd.mm.yyyy')
+        join V_MO_D_PAR dp on dp.id = t.d_par_id
+                              and dp.code_int in ('IN_AA_FOLDER_ID',
+                                                  'IN_AA_CLIENT_ID',
+                                                  'IN_AE_AKK_BREND',
+                                                  'IN_AE_AKK_MODEL',
+                                                  'IN_AE_AKK_YEAR_CAR',
+                                                  'IN_AE_AKK_ENGINE_VOLUME',
+                                                  'IN_AE_AKK_KPP_TYPE',
+                                                  'IN_AE_AKK_DRIVE',
+                                                  'IN_AE_AKK_BODY_TYPE',
+                                                  'IN_AE_AKK_SALON',
+                                                  'IN_AE_AKK_CONDITIONER',
+                                                  'IN_AE_AKK_COND_AUTO',
+                                                  'IN_AE_AKK_PRICE',
+                                                  'IN_AE_AKK_ELECTRONIC',
+                                                  'IN_AE_AKK_CHASSIS',
+                                                  'IN_AE_AKK_ENGINE',
+                                                  'IN_AE_AKK_BODY',
+                                                  'AUTO_EVAL_PRICE',
+                                                  'AUTO_EVAL_CONFIDENCE_LEVEL'
+                                                  )
+        where r.date_create >= to_date('01-01-2015', 'dd-mm-yyyy')
+              --and r.date_create < to_date('01-01-2016', 'dd-mm-yyyy')
+
+    ) pivot (
+        max(value_text||value_number)
+        for code_int in (                         'IN_AA_FOLDER_ID' as rfo_folder_id,
+                                                  'IN_AA_CLIENT_ID' as rfo_client_id,
+                                                  'IN_AE_AKK_BREND' as pr_par_IN_AE_AKK_BREND,
+                                                  'IN_AE_AKK_MODEL' as pr_par_IN_AE_AKK_MODEL,
+                                                  'IN_AE_AKK_YEAR_CAR' as pr_par_IN_AE_AKK_YEAR_CAR,
+                                                  'IN_AE_AKK_ENGINE_VOLUME' as pr_par_IN_AE_AKK_ENGINE_VOLUME,
+                                                  'IN_AE_AKK_KPP_TYPE' pr_par_IN_AE_AKK_KPP_TYPE,
+                                                  'IN_AE_AKK_DRIVE' pr_par_IN_AE_AKK_DRIVE,
+                                                  'IN_AE_AKK_BODY_TYPE' as pr_par_IN_AE_AKK_BODY_TYPE,
+                                                  'IN_AE_AKK_SALON' as pr_par_IN_AE_AKK_SALON,
+                                                  'IN_AE_AKK_CONDITIONER' as pr_par_IN_AE_AKK_CONDITIONER,
+                                                  'IN_AE_AKK_COND_AUTO' as pr_par_IN_AE_AKK_COND_AUTO,
+                                                  'IN_AE_AKK_PRICE' as pr_par_AUTO_EVAL_PRICE,
+                                                  'IN_AE_AKK_ELECTRONIC' as pr_par_IN_AE_AKK_ELECTRONIC,
+                                                  'IN_AE_AKK_CHASSIS' as pr_par_IN_AE_AKK_CHASSIS,
+                                                  'IN_AE_AKK_ENGINE' as pr_par_IN_AE_AKK_ENGINE,
+                                                  'IN_AE_AKK_BODY' as pr_par_IN_AE_AKK_BODY,
+                                                  'AUTO_EVAL_PRICE' as pr_par_IN_AE_AKK_PRICE,
+                                                  'AUTO_EVAL_CONFIDENCE_LEVEL' as pr_par_AUTO_EVAL_CONF_LEVEL)
+    )
+    where pr_par_AUTO_EVAL_PRICE>0
+
+) x
+left join v_client_rfo_by_iin f on f.rfo_client_id = x.rfo_client_id;
+grant select on U1.M_AUTO_ESTIM to LOADDB;
+
+

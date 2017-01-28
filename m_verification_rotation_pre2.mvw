@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_VERIFICATION_ROTATION_PRE2
+build deferred
+refresh force on demand
+as
+select t.verification_id
+      ,t.person_tabnum
+      ,t.verification_type
+from M_OUT_DWH_PROCESS t
+where t.verification_type = 'PHOTO'
+group by t.verification_id,t.person_tabnum,t.verification_type;
+grant select on U1.M_VERIFICATION_ROTATION_PRE2 to LOADDB;
+
+

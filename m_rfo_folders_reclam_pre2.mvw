@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_RFO_FOLDERS_RECLAM_PRE2
+build deferred
+refresh force on demand
+as
+select /*+ parallel(7)*/
+       b.id as kas_recl_hist_id --уникальный id рекламации
+      ,t.id as folder_id --id папки
+      ,b.c_date_create --дата выставления рекламации
+      ,e.c_name as recl_cr_user --кем выставлена рекламация
+      ,d.c_name as doc_type --тип документа
+      ,c.c_name as type_recl_name --причина рекламации
+      ,b.c_date_repair --дата исправления рекламации
+      ,f.c_name as recl_rep_user --менеджер исправивший рекламацию
+      ,a.c_note --примечание
+ from U1.V_RFO_Z#FOLDERS t
+ join U1.T_RFO_Z#PACK_DOC a on a.collection_id = t.c_kas_doc_pack
+ join U1.V_RFO_Z#KAS_RECL_HIST b on b.collection_id = a.c_kas_recl_his_arr
+ left join U1.V_RFO_Z#KAS_TYPE_RECL c on c.id = b.c_type_recl
+ left join U1.V_RFO_Z#VID_DOC d on d.id = b.c_doc_type
+ left join U1.V_RFO_z#USER e on e.id = b.c_recl_cr_user
+ left join U1.V_RFO_z#USER f on f.id = b.c_recl_rep_user;
+

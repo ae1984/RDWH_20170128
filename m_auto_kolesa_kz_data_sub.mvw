@@ -1,0 +1,80 @@
+﻿create materialized view U1.M_AUTO_KOLESA_KZ_DATA_SUB
+build deferred
+refresh complete on demand
+as
+selecT distinct s.akk_brend,
+               s.akk_model,
+               s.akk_year_car,
+               s.akk_drive,
+               s.akk_engine_volume,
+               s.akk_kpp_type,
+               s.akk_body_type,
+               s.akk_price,
+               s.median,
+               round(s.std, 2) as std,
+               s.count_price_confidence,
+               advert_cnt, --кол-во объявлений по комбинации
+               round(avg(s.akk_price) over(partition by s.akk_brend,
+                          s.akk_model,
+                          s.akk_year_car,
+                          s.akk_drive,
+                          s.akk_engine_volume,
+                          s.akk_kpp_type,
+                          s.akk_body_type),
+                     2) as avg_price
+          from (selecT f.akk_brend,
+                       f.akk_model,
+                       f.akk_year_car,
+                       f.akk_drive,
+                       f.akk_engine_volume,
+                       f.akk_kpp_type,
+                       f.akk_body_type,
+                       f.akk_price,
+                       median(f.akk_price) over(partition by f.akk_brend, f.akk_model, f.akk_year_car, f.akk_drive, f.akk_engine_volume, f.akk_kpp_type, f.akk_body_type) as median,
+                       stddev(f.akk_price) over(partition by f.akk_brend, f.akk_model, f.akk_year_car, f.akk_drive, f.akk_engine_volume, f.akk_kpp_type, f.akk_body_type) as std,
+                       (case
+                         when count(f.akk_price)
+                          over(partition by f.akk_brend,
+                                   f.akk_model,
+                                   f.akk_year_car,
+                                   f.akk_drive,
+                                   f.akk_engine_volume,
+                                   f.akk_kpp_type,
+                                   f.akk_body_type) >= 10 then
+                          1
+                         else
+                          0
+                       end) as count_price_confidence,
+                       count(f.akk_price) over(partition by f.akk_brend, f.akk_model, f.akk_year_car, f.akk_drive, f.akk_engine_volume, f.akk_kpp_type, f.akk_body_type) as advert_cnt
+                  from (selecT d.akk_brend,
+                               d.akk_model,
+                               d.akk_year_car,
+                               d.akk_drive,
+                               d.akk_engine_volume,
+                               d.akk_kpp_type,
+                               d.akk_body_type,
+                               d.akk_price
+                          from (select t.akk_brend,
+                                       t.akk_model,
+                                       t.akk_year_car,
+                                       t.akk_drive,
+                                       t.akk_engine_volume,
+                                       t.akk_kpp_type,
+                                       t.akk_body_type,
+                                       t.akk_price,
+                                       median(t.akk_price) over(partition by t.akk_brend, t.akk_model, t.akk_year_car, t.akk_drive, t.akk_engine_volume, t.akk_kpp_type, t.akk_body_type) as median1
+                                  from u1.M_AUTO_KOLESA_KZ_DATA_PRE t
+                                 /*group by t.akk_brend,
+                                          t.akk_model,
+                                          t.akk_year_car,
+                                          t.akk_drive,
+                                          t.akk_engine_volume,
+                                          t.akk_kpp_type,
+                                          t.akk_body_type,
+                                          t.akk_price*/) d
+                         where (abs(d.akk_price - d.median1) = 0 or
+                               (abs(d.akk_price - d.median1) / d.median1) * 100 <= 50)) f) s
+         where abs(s.akk_price - s.median) < s.std;
+grant select on U1.M_AUTO_KOLESA_KZ_DATA_SUB to LOADDB;
+
+

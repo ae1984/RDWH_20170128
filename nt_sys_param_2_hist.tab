@@ -1,0 +1,34 @@
+﻿create table U1.NT_SYS_PARAM_2_HIST
+(
+  sdt   DATE,
+  name  VARCHAR2(20),
+  value NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.IDX_SYS_PARAM_2_HIST_1 on U1.NT_SYS_PARAM_2_HIST (SDT, NAME)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.NT_SYS_PARAM_2_HIST to LOADDB;
+

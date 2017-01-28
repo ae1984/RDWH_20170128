@@ -1,0 +1,15 @@
+﻿create materialized view U1.V_RFO_Z#KAS_PKB_PLEDGE
+build deferred
+refresh force on demand
+as
+select id,
+        sn,
+        su,
+        collection_id,
+        c_pledge_value,
+        c_pledge_val_cur,
+        c_pledge_val_type
+from ibs.Z#KAS_PKB_PLEDGE@rfo_snap;
+grant select on U1.V_RFO_Z#KAS_PKB_PLEDGE to LOADDB;
+
+

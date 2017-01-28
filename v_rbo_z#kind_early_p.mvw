@@ -1,0 +1,26 @@
+﻿create materialized view U1.V_RBO_Z#KIND_EARLY_P
+build deferred
+refresh complete on demand
+as
+select
+       id,
+       c_code,
+       upper(c_name) as c_name,
+       c_recalc_plan#0,
+       c_change_prc,
+       c_plan_fact,
+       c_not_to_debt,
+       c_to_next_per,
+       c_bus_proc,
+       c_def_formula,
+       c_is_claim,
+       c_is_full,
+       c_print_doc,
+       c_adt_inc_early_p,
+       c_distr_in_ptime,
+       c_is_pay_client
+  from rdwh.V_RBO_Z#KIND_EARLY_P@rdwh_exd;
+grant select on U1.V_RBO_Z#KIND_EARLY_P to LOADDB;
+grant select on U1.V_RBO_Z#KIND_EARLY_P to LOADER;
+
+

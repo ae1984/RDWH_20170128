@@ -1,0 +1,22 @@
+﻿create materialized view U1.RISK_MV_GCVP_CLAIM_CNT
+build deferred
+refresh complete on demand
+as
+select  gc.gcvp_rep_id, gc.client_rnn, gc.client_iin, gc.id as claim_id, gc.c_type, gc.c_username,
+        count(distinct af.folder_id) as cnt_credit_folder, round(gc.c_date_create - max(af.folder_date_create)) as days,
+        count(distinct gv.gcvp_rep_id) as cnt_gcvp_folder,
+        count(distinct nn.gcvp_rep_id) as cnt_gcvp_iin
+  from RISK_MV_GCVP_CLAIM gc
+  join v_rfo_z#client cl on cl.c_inn = gc.client_iin
+                         or cl.c_rnn = gc.client_rnn
+  left join v_folder_all_rfo af on af.rfo_client_id = cl.id
+                                and trunc(af.folder_date_create) <= trunc(gc.c_date_create)
+                                and af.is_credit_process = 1
+  left join v_gcvp_report gv on gv.folder_id = af.folder_id
+  left join v_gcvp_report nn on (nn.client_rnn =  gc.client_rnn
+                            or  nn.client_iin = gc.client_iin)
+                            and nn.rep_date < trunc(gc.c_date_create)
+ group by gc.gcvp_rep_id, gc.client_rnn, gc.client_iin, gc.id , gc.c_type, gc.c_username, gc.c_date_create;
+grant select on U1.RISK_MV_GCVP_CLAIM_CNT to LOADDB;
+
+

@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_OUT_CONTRACT_3F6_PAY
+refresh force on demand
+as
+select * from (
+select /*+ parallel 30 */
+       sum(case when p.delinq_days > 0 then 1 else 0 end) as col_del_pay,
+       sum(case when p.delinq_days > 0 then 0 else 1 end) as col_fact_pay, p.deal_number from dwh_port p
+join
+(select distinct ww.crdtplanr_date_plan_pay+7 as plan_pay_date, ww.crdt_number, a.max_plan_pay_date from M_DWH_PLAN_OPER_CREDIT ww
+join
+(select ee.crdt_number, max(ee.crdtplanr_date_plan_pay)+7 as max_plan_pay_date
+from M_DWH_PLAN_OPER_CREDIT ee
+/*join v_dwh_portfolio_current p on ee.crdt_number = p.deal_number
+where p.x_product_type = 'АВТО'*/
+group by ee.crdt_number) a on ww.crdt_number = a.crdt_number
+) q on p.rep_date = q.plan_pay_date and p.deal_number = q.crdt_number
+and p.rep_date >= add_months(q.max_plan_pay_date,-5)
+group by p.deal_number) z where z.col_del_pay >= 3 /*and col_fact_pay >= 3*/;
+grant select on U1.M_OUT_CONTRACT_3F6_PAY to DNP;
+grant select on U1.M_OUT_CONTRACT_3F6_PAY to LOADDB;
+grant select on U1.M_OUT_CONTRACT_3F6_PAY to LOADER;
+
+

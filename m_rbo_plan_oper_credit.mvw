@@ -1,0 +1,87 @@
+﻿create materialized view U1.M_RBO_PLAN_OPER_CREDIT
+build deferred
+refresh force on demand
+as
+select /*+ parallel(20)*/ x.rbo_contract_id,
+        x.contract_number,
+        x.plan_date,
+        coalesce(h.first_work_day,x.plan_date) as plan_date_x,
+        x.total_plan_summa,
+        x.plan_principal,
+        x.plan_interest,
+        dense_rank() over (partition by x.rbo_contract_id order by x.plan_date,x.is_decl_early_p) as cnt_pmt,
+        case when decode(x.is_decl_early_p,2,null,4,null,3,null,4.2,null, x.is_decl_early_p) is null
+              then dense_rank() over (partition by x.rbo_contract_id, decode(x.is_decl_early_p,2,null,4,null,3,null,4.2,null,x.is_decl_early_p) order by x.plan_date)
+             else null end as cnt_pmt_plan,
+        x.day_pmt,
+        x.is_decl_early_p,
+        x.total_exec_summa,
+        x.exec_principal,
+        x.exec_interest,
+        x.date_early_p
+from (
+select
+        pc.id        as rbo_contract_id,
+        pc.c_num_dog as contract_number,
+        po.c_date    as plan_date,
+        sum(po.c_summa) as total_plan_summa,
+        sum(case when vod.c_code in ('ГАШ_ОВЕР','ГАШЕНИЕ_КРЕД','KAS_AI_GASH_OD')
+                 then po.c_summa else 0 end) as plan_principal,
+        sum(case when vod.c_code in ('ГАШЕНИЕ_ПРОЦ','КОМ_ВЕД','KAS_AI_GASH_PRC')   --исключила COM_EARLY_P комиссия за досрочное гашение
+                 then po.c_summa else 0 end) as plan_interest,
+        cast(to_number(pp.c_num_value) as number) as day_pmt,
+        case when coalesce(de1.c_cred_ref,de2.c_cred_ref,de3.c_cred_ref) is not null then 1   --частичное досрочное погашение
+             when def.date_default is not null and po.c_date = def.date_default      then 3   --дата объявления дефолта
+             when pc.c_date_ending = po.c_date and de4.c_cred_ref is not null
+                  and po.c_date >= de4.date_early_p                                   then 4.2  --дата окончания договора (последний платеж) при полном досрочном погашение
+             when pc.c_date_ending = po.c_date                                       then 4   --дата окончания договора (последний платеж)
+             when de4.c_cred_ref is not null and po.c_date >= de4.date_early_p        then 2   --полное досрочное погашение
+        end as is_decl_early_p,
+        sum(po.c_summa_exec) as total_exec_summa,
+        sum(case when vod.c_code in ('ГАШ_ОВЕР','ГАШЕНИЕ_КРЕД','KAS_AI_GASH_OD')
+                 then po.c_summa_exec else 0 end) as exec_principal,
+        sum(case when vod.c_code in ('ГАШЕНИЕ_ПРОЦ','КОМ_ВЕД','KAS_AI_GASH_PRC')   --исключила COM_EARLY_P комиссия за досрочное гашение
+                 then po.c_summa_exec else 0 end) as exec_interest,
+        max(case when de4.c_cred_ref is not null and po.c_date >= de4.date_early_p
+                 then de4.date_early_p end) as date_early_p
+   from U1.V_RBO_Z#PR_CRED pc
+   join U1.T_RBO_Z#PLAN_OPER po on po.collection_id = pc.c_list_plan_pay
+   join U1.V_RBO_Z#VID_OPER_DOG vod on vod.id = po.c_oper
+                and vod.c_code in ('ГАШ_ОВЕР','ГАШЕНИЕ_КРЕД','KAS_AI_GASH_OD',   --principal
+                       'ГАШЕНИЕ_ПРОЦ','КОМ_ВЕД','KAS_AI_GASH_PRC') --interest     --исключила COM_EARLY_P комиссия за досрочное гашение
+   left join (select p.collection_id, p.c_num_value
+                from U1.V_RBO_Z#PROPERTY p
+                join U1.V_RBO_Z#PROPERTY_TYPE pt on pt.id = p.c_property_type
+                                             and pt.c_code = 'DAY_OF_PAY') pp
+                  on pp.collection_id = pc.c_prorerty_arr
+   left join u1.V_RBO_Z#DECL_EARLY_P de1 on de1.c_plan_oper     = po.id
+                                        and de1.state_id = 'FORM'            --частичное досрочное погашение ОД
+   left join u1.V_RBO_Z#DECL_EARLY_P de2 on de2.c_plan_oper_prc = po.id
+                                        and de2.state_id = 'FORM'            --частичное досрочное погашение процентов
+   left join u1.V_RBO_Z#DECL_EARLY_P de3 on de3.c_plan_oper_com = po.id
+                                        and de3.state_id = 'FORM'            ----частичное досрочное погашение комиссий
+   left join (select de.c_cred_ref, max(de.c_plan_exec)  as date_early_p           --полное досрочное погашение(z#kind_early_p)
+                from u1.V_RBO_Z#DECL_EARLY_P  de
+                join V_RBO_Z#KIND_EARLY_P ke on ke.id = de.c_kind
+               where ke.c_code  = 'ПОЛН_ДОС_ГАШ'
+                 and de.state_id = 'FORM'
+               group by de.c_cred_ref) de4  on de4.c_cred_ref = pc.id
+   left  join (select p1.collection_id, min(to_date(p1.c_str_value,'dd-mm-yyyy')) as date_default   --дата объявления дефолта
+                 from u1.V_RBO_Z#PROPERTY p1
+                 join u1.V_RBO_Z#PROPERTY_TYPE pt1 on pt1.id = p1.c_property_type
+                                               and pt1.c_code = 'DECLARE_DEFAULT'
+                group by p1.collection_id) def
+                                         on def.collection_id = pc.c_prorerty_arr
+  group by pc.id, pc.c_num_dog, po.c_date, pp.c_num_value,
+        case when coalesce(de1.c_cred_ref,de2.c_cred_ref,de3.c_cred_ref) is not null then 1   --частичное досрочное погашение
+             when def.date_default is not null and po.c_date = def.date_default      then 3   --дата объявления дефолта
+             when pc.c_date_ending = po.c_date and de4.c_cred_ref is not null
+                  and po.c_date >= de4.date_early_p                                   then 4.2  --дата окончания договора (последний платеж) при полном досрочном погашение
+             when pc.c_date_ending = po.c_date                                        then 4   --дата окончания договора (последний платеж)
+             when de4.c_cred_ref is not null and po.c_date >= de4.date_early_p        then 2   --полное досрочное погашение
+        end
+) x
+left join V_TIME_HOLIDAYS h on h.holiday = x.plan_date;
+grant select on U1.M_RBO_PLAN_OPER_CREDIT to LOADDB;
+
+

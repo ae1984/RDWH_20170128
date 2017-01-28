@@ -1,0 +1,30 @@
+﻿create table U1.SCO_MO_TEST_TMP_3_1
+(
+  s_date    VARCHAR2(8),
+  s_time    VARCHAR2(6),
+  cardno    NUMBER,
+  iin       VARCHAR2(12),
+  idreq     NUMBER,
+  answer    VARCHAR2(10),
+  result    NUMBER,
+  status    VARCHAR2(10),
+  yn        VARCHAR2(3),
+  idle      NUMBER,
+  folder_id NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.SCO_MO_TEST_TMP_3_1 to LOADDB;
+grant select on U1.SCO_MO_TEST_TMP_3_1 to LOADER;
+

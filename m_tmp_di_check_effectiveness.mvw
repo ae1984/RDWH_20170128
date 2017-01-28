@@ -1,0 +1,54 @@
+﻿create materialized view U1.M_TMP_DI_CHECK_EFFECTIVENESS
+refresh force on demand
+as
+select
+count(1) as cnt,
+count(distinct x.contract_number) as con_cnt,
+to_char(date_ratif,'yyyy-mm') as month_ratif,
+td.week_num_online_credit,
+par_name,
+par_code,
+is_categ_a,
+is_sign_require,
+is_client_new_by_con,
+----FPDs
+sum(case when fpd0.is_fpd_0>0 then d.amount else 0 end) as del_fpd0,
+sum(case when fpd7.is_fpd_7>0 then d.amount else 0 end) as del_fpd7,
+sum(case when d.x_delinq_days > 0 then d.x_total_debt else 0 end) as is_del_0,
+sum(case when d.x_delinq_days > 7 then d.x_total_debt else 0 end) as is_del_7,
+sum(case when spd.is_spd>0 then d.amount else 0 end) as del_fpd30,
+sum(d.x_total_debt) as total_debt,
+sum(d.amount) as total_sum
+from (select
+    distinct t.contract_number,
+    t.folder_date_create_mi as date_ratif,
+    mo.par_name,
+    mo.par_code,
+    mo.folder_id,
+    t.is_categ_a,
+    t.is_sign_require,
+    t.is_client_new_by_con,
+    row_number () over (partition by mo.folder_id order by rs.min_date_start) as rn
+    from u1.m_folder_mo_cancel_last mo
+    join m_folder_con_cancel t on t.folder_id=mo.folder_id and t.process_name = 'ОНЛАЙН КРЕДИТ' and is_rejecting = 1 and is_credit_issued = 1
+    join u1.m_mo_rule_start rs on mo.par_code = rs.par_code
+
+) x
+join V_DWH_PORTFOLIO_CURRENT d on d.deal_number = x.contract_number
+join V_TIME_DAYS td on td.yyyy_mm_dd = trunc(x.date_ratif)
+left join m_tmp_contract_fpd0 fpd0 on fpd0.deal_number = x.contract_number
+left join m_tmp_contract_fpd7 fpd7 on fpd7.deal_number = x.contract_number
+left join m_tmp_contract_spd spd on spd.deal_number = x.contract_number
+where x.rn = 1
+group by
+date_ratif,
+par_name,
+par_code,
+td.week_num_online_credit,
+is_categ_a,
+is_sign_require,
+is_client_new_by_con;
+grant select on U1.M_TMP_DI_CHECK_EFFECTIVENESS to LOADDB;
+grant select on U1.M_TMP_DI_CHECK_EFFECTIVENESS to LOADER;
+
+

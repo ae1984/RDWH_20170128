@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_TMP_J_Z49_ASOKR_CTRL_GROUP
+refresh force on demand
+as
+select distinct ff.folder_id -- отказы АСОКР (скоринга) в контрольной группе - ОК!
+from M_CONTRACT_CAL_DEL c -- смотрим только выданные
+join V_CONTRACT_CAL cc on cc.contract_number = c.contract_number
+join M_TMP_J_Z49_TO_ASOKR ta on ta.folder_id = c.folder_id_first -- связываем с отправленными на АСОКР
+join (
+     select distinct fa.folder_id
+     from V_FOLDER_ALL fa
+     where fa.scoring_test = 'X' and
+           fa.folder_create_date < to_date('17.10.2013','dd.mm.yyyy')
+     union
+     select distinct t3.folder_id
+     from M_TMP_J_1003 t3
+     join V_FOLDER_ALL_RFO f2 on f2.folder_id = t3.folder_id
+     where f2.folder_date_create >= to_date('17.10.2013','dd.mm.yyyy')
+) ff on ff.folder_id = c.folder_id_first
+--where cc.product_program_first != 'ПРИВИЛЕГИРОВАННЫЙ'
+where cc.contract_amount_first > 0 and
+      cc.cr_prog_name_rbo_last != 'ОВЕРДРАФТЫ' and
+      cc.is_refin_restruct_ever = 0 and
+      not exists (select null from M_FOLDER_CON_CANCEL f
+                where f.folder_id = cc.folder_id_first and f.is_refin = 1);
+grant select on U1.M_TMP_J_Z49_ASOKR_CTRL_GROUP to LOADDB;
+grant select on U1.M_TMP_J_Z49_ASOKR_CTRL_GROUP to LOADER;
+
+

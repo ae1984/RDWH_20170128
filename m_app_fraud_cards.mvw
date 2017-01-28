@@ -1,0 +1,39 @@
+﻿create materialized view U1.M_APP_FRAUD_CARDS
+build deferred
+refresh force on demand
+as
+select c.app_id                                                                             as app_id,
+       c.folder_date_create_mi                                                              as folder_date_create_mi,
+       c.days_all                                                                           as days_all,
+       s.sum_all                                                                            as sum_all,
+       c.operations_all                                                                     as operations_all,
+       c.categories_all                                                                     as categories_all,
+       c.days_atm                                                                           as days_atm,
+       s.sum_atm                                                                            as sum_atm,
+       c.operations_atm                                                                     as operations_atm,
+       c.categories_atm                                                                     as categories_atm,
+       c.days_kspkz                                                                         as days_kspkz,
+       s.sum_kspkz                                                                          as sum_kspkz,
+       c.operation_kspkz                                                                    as operation_kspkz,
+       c.categories_kspkz                                                                   as categories_kspkz,
+       c.days_pos                                                                           as days_pos,
+       s.sum_pos                                                                            as sum_pos,
+       c.operation_pos                                                                      as operation_pos,
+       c.categories_pos                                                                     as categories_pos,
+       c.days_int                                                                           as days_int,
+       s.sum_int                                                                            as sum_int,
+       c.operation_int                                                                      as operation_int,
+       c.categories_int                                                                     as  categories_int,
+       case when nvl(s.sum_all, 0) = 0 then 0 else s.sum_atm / s.sum_all end                as sum_atm_share,
+       case when c.operations_all = 0 then 0 else c.operations_atm / c.operations_all end   as operation_atm_share,
+       case when nvl(s.sum_kspkz, 0) = 0 then 0 else s.sum_kspkz / s.sum_all end            as sum_kspkz_share,
+       case when c.operation_kspkz = 0 then 0 else c.operation_kspkz / c.operations_all end as operations_kspkz_share,
+       case when nvl(s.sum_pos, 0) = 0 then 0 else s.sum_pos / s.sum_all end                as sum_pos_share,
+       case when c.operation_pos = 0 then 0 else c.operation_pos / c.operations_all end     as operations_pos_share,
+       case when nvl(s.sum_int, 0) = 0 then 0 else s.sum_int / s.sum_all end                as sum_int_share,
+       case when c.operation_int = 0 then 0 else c.operation_int / c.operations_all end     as operations_int_share
+  from U1.M_APP_FRAUD_CARDS_CNT c
+  join U1.M_APP_FRAUD_CARDS_SUM s on s.app_id = c.app_id;
+grant select on U1.M_APP_FRAUD_CARDS to LOADDB;
+
+

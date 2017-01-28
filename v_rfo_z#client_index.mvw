@@ -1,0 +1,17 @@
+﻿create materialized view U1.V_RFO_Z#CLIENT_INDEX
+refresh complete on demand
+as
+select id,
+       upper(c_code) as c_code,
+       upper(c_value) as c_value,
+       c_use_in_form,
+       c_parent_idx,
+       sn,
+       su
+from IBS.Z#CLIENT_INDEX@RFO_SNAP;
+grant select on U1.V_RFO_Z#CLIENT_INDEX to ITS_USER;
+grant select on U1.V_RFO_Z#CLIENT_INDEX to LOADDB;
+grant select on U1.V_RFO_Z#CLIENT_INDEX to LOADER;
+grant select on U1.V_RFO_Z#CLIENT_INDEX to LOAD_MO;
+
+

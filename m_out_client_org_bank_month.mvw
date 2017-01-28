@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_OUT_CLIENT_ORG_BANK_MONTH
+refresh force on demand
+as
+select t.iin,
+       t.bin,
+       t.bank,
+       t.mon,
+       t.sal_by_cli_org_bnk_mon_sum
+from M_GX_CLIENT_ORG_BANK_MONTH_2 t
+join M_OUT_CLIENT_ORG_BANK_LAST cl on cl.iin = t.iin;
+grant select on U1.M_OUT_CLIENT_ORG_BANK_MONTH to IT6_USER;
+grant select on U1.M_OUT_CLIENT_ORG_BANK_MONTH to LOADDB;
+grant select on U1.M_OUT_CLIENT_ORG_BANK_MONTH to LOADER;
+
+

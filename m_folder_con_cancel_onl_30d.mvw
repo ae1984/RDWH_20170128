@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_FOLDER_CON_CANCEL_ONL_30D
+build deferred
+refresh force on demand
+as
+select m.rfo_client_id, m.date_create, m.monthly_pay, m.folder_id, v.inc_sal, m.is_credit_rejected
+from u1.M_FOLDER_CON_CANCEL_ONLINE_1 m
+left join u1.V_FORM_CLIENT_ALL_RFO v on v.rfo_client_id = m.rfo_client_id
+                                             and v.folder_id = m.folder_id
+where m.date_create >= trunc(sysdate) - 30;
+grant select on U1.M_FOLDER_CON_CANCEL_ONL_30D to LOAD_MO;
+
+

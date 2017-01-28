@@ -1,0 +1,52 @@
+﻿create table U1.NT_DEPENDENCIES
+(
+  owner                VARCHAR2(128) not null,
+  name                 VARCHAR2(128) not null,
+  type                 VARCHAR2(18),
+  referenced_owner     VARCHAR2(128),
+  referenced_name      VARCHAR2(128),
+  referenced_type      VARCHAR2(18),
+  referenced_link_name VARCHAR2(128),
+  dependency_type      VARCHAR2(4)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.IDX_DEPENDENCIES_1 on U1.NT_DEPENDENCIES (NAME)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_DEPENDENCIES_2 on U1.NT_DEPENDENCIES (REFERENCED_NAME)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.NT_DEPENDENCIES to LOADDB;
+

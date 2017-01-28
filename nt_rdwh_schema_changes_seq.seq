@@ -1,0 +1,8 @@
+﻿create sequence U1.NT_RDWH_SCHEMA_CHANGES_SEQ
+minvalue 1
+maxvalue 99999999999999999999
+start with 2957478
+increment by 1
+cache 20
+cycle;
+

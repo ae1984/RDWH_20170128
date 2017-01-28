@@ -1,0 +1,41 @@
+﻿create table U1.KSPKZ_VREGISTEREDUSERS20
+(
+  userid      NUMBER not null,
+  usernamerus VARCHAR2(512),
+  regdate     DATE,
+  iin         VARCHAR2(256),
+  dateofbirth DATE,
+  phonenumber VARCHAR2(128)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 16K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+alter table U1.KSPKZ_VREGISTEREDUSERS20
+  add constraint USERID_PK primary key (USERID)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.USERID_PK nologging;
+grant select, insert, update, delete on U1.KSPKZ_VREGISTEREDUSERS20 to ETL;
+grant select on U1.KSPKZ_VREGISTEREDUSERS20 to LOADDB;
+grant select on U1.KSPKZ_VREGISTEREDUSERS20 to LOADER;
+

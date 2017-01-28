@@ -1,0 +1,15 @@
+﻿CREATE MATERIALIZED VIEW U1.M_FORM_CL_LAST_DATA_180D_AGO
+REFRESH FORCE ON DEMAND
+AS
+SELECT rfo_client_id, last_inc_all_180d,inc_sal,
+c_code as last_marital_status_180d, form_date_create from
+(
+  select fc.rfo_client_id, l.c_code, fc.inc_sal, coalesce(fc.inc_sal, 0) + coalesce(fc.inc_sal_add, 0) +coalesce(fc.inc_sal_spouse, 0) + coalesce(fc.inc_pension_benefits, 0)  AS last_inc_all_180d, fc.form_date_create, max(fc.form_date_create) over (partition by FC.rfo_client_id) as max_date
+  from u1.V_FORM_CLIENT_ALL_RFO fc
+  left join u1.V_RFO_Z#CLIENT_INDEX l on l.c_value = fc.marital_status and l.c_parent_idx = 48934
+  where fc.form_date_create < trunc(sysdate) - 180
+) where form_date_create   = max_date;
+grant select on U1.M_FORM_CL_LAST_DATA_180D_AGO to LOADDB;
+grant select on U1.M_FORM_CL_LAST_DATA_180D_AGO to LOAD_MO;
+
+

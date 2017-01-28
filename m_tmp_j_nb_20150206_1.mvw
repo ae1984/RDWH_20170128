@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_TMP_J_NB_20150206_1
+refresh force on demand
+as
+select t.folder_id, max(t.rfo_client_id) as rfo_client_id,
+       max(case when coalesce(g.salary,0) < 5000 then 0 else 1 end) as is_salary_exists,
+       max(case when coalesce(p.total_debt,0) > 7000000 then 1 else 0 end) as is_pkb_debt_above_7mln,
+       max(t.is_credit_issued) as is_credit_issued
+from M_FOLDER_CON_CANCEL t
+left join V_GCVP_REPORT g on g.folder_id = t.folder_id
+left join V_PKB_REPORT p on p.folder_id = t.folder_id
+where t.folder_date_create_mi > to_date('01.08.2013','dd.mm.yyyy') and
+      t.folder_date_create_mi < to_date('01.08.2014','dd.mm.yyyy')
+group by t.folder_id;
+grant select on U1.M_TMP_J_NB_20150206_1 to LOADDB;
+grant select on U1.M_TMP_J_NB_20150206_1 to LOADER;
+
+

@@ -1,0 +1,60 @@
+﻿create materialized view U1.V_TMP_ONLINE_MOBILE_OLD
+using no index
+refresh complete on demand
+as
+select /*+ no_parallel*/distinct
+b.folder_id,
+b.folder_date_create,
+b.folder_state,
+p.c_cl_req_old#contacts,
+co_old.c_numb,
+co_old.c_affirmed,
+co_old.c_date_audit
+from (
+select c1.id as claim_id, f.c_date_create
+       from V_RFO_Z#KAS_ONLINE_CLAIM c1
+       left join V_RFO_Z#KAS_UNIVERSA_REF s1 on s1.collection_id = c1.c_mng_vis_scen
+       left join V_RFO_Z#KAS_UNIVERSAL_D kd1 on kd1.id = s1.c_value
+       left join V_RFO_Z#KAS_ONLINE_BUY f on c1.c_buy_ref = f.id
+where kd1.c_name = 'Подойти к менеджеру для изменения анкетных данных') a--16 280
+join (
+  select trunc(f.folder_date_create_mi) as a_date,
+         f.folder_date_create_mi,
+         f.is_categ_a,
+         f.is_client_new_by_con,
+         f.is_credit_issued,
+         f.is_sign_require,
+         f.claim_id,
+         f.contract_number,
+         f.rfo_client_id,
+         f.contract_amount,
+         f.folder_id
+  from U1.M_FOLDER_CON_CANCEL f
+  where f.process_name = 'ОНЛАЙН КРЕДИТ' and
+        f.claim_id is not null and
+        f.folder_date_create_mi >= to_date('2014-12-08','yyyy-mm-dd')
+  union all
+  select trunc(fo.folder_date_create_mi) as a_date,
+         fo.folder_date_create_mi,
+         fo.is_categ_a,
+         fo.is_client_new_by_con,
+         fo.is_credit_issued,
+         fo.is_sign_require,
+         fo.claim_id,
+         fo.contract_number,
+         fo.rfo_client_id,
+         fo.contract_amount,
+         fo.folder_id
+  from u1.M_FOLDER_CON_CANCEL_ONLINE fo
+  where fo.folder_date_create_mi >= to_date('2014-12-08','yyyy-mm-dd')
+) f on a.claim_id = f.claim_id
+join v_folder_all_rfo b on /*a.c_client_ref*/f.rfo_client_id = b.rfo_client_id  and b.process_name = 'ИЗМЕНЕНИЕ АНКЕТНЫХ ДАННЫХ КЛИЕНТА' and b.folder_date_create > /*a.c_date_create*/f.folder_date_create_mi
+and b.folder_date_create <= /*a.c_date_create*/f.folder_date_create_mi + 3
+join u1.V_RFO_Z#RDOC rd on rd.collection_id = b.fld_c_docs
+join u1.V_RFO_Z#FDOC fd on fd.id = rd.c_doc
+join u1.V_RFO_Z#REQ_EDIT_CL_PRIV p on p.id = fd.id
+left join v_rfo_z#contacts co_old on c_cl_req_old#contacts = co_old.collection_id and co_old.c_private = 690120;
+grant select on U1.V_TMP_ONLINE_MOBILE_OLD to LOADDB;
+grant select on U1.V_TMP_ONLINE_MOBILE_OLD to LOADER;
+
+

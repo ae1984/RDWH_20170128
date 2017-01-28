@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_TMP_J_FLD_CHANGES
+refresh force on demand
+as
+select a.id, a.c_date_action, a.c_class_object, a.c_id_object as folder_id,
+       a.c_note,
+       substr(a.c_note,instr(a.c_note,' ',1,2)+1,1000) as note,
+        u.c_username, u.c_name
+from V_RFO_Z#JOURNAL a join V_RFO_Z#USER u on u.id = a.c_user
+where a.c_Action = 'Изменение записи'
+  and a.c_class_object = 'FOLDERS'
+  and instr(a.c_note, 'Смена состояния из Отк') > 0;
+grant select on U1.M_TMP_J_FLD_CHANGES to LOADDB;
+grant select on U1.M_TMP_J_FLD_CHANGES to LOADER;
+
+

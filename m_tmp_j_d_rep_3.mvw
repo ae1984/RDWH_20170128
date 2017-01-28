@@ -1,0 +1,88 @@
+﻿create materialized view U1.M_TMP_J_D_REP_3
+refresh force on demand
+as
+select a.*, b.sales_mln, b.con_cnt
+from (
+select p.yy_mm_report,
+
+       round(count(distinct case when p.planned_pmt_month > 0 and
+                                      p.delinq_days > 7 and p.delinq_days < 31
+                            then p.contract_number end) /
+             count(distinct case when p.planned_pmt_month > 0
+                            then p.contract_number end) * 100, 2) as del_cons_8_30_pmt_any,
+
+       round(count(distinct case when p.planned_pmt_month > 0 and
+                                      p.delinq_days > 30 and p.delinq_days < 61
+                            then p.contract_number end) /
+             count(distinct case when p.planned_pmt_month > 0
+                            then p.contract_number end) * 100, 2) as del_cons_31_60_pmt_any,
+
+       round(count(distinct case when p.planned_pmt_month > 0 and
+                                      p.delinq_days > 60 and p.delinq_days < 91
+                            then p.contract_number end) /
+             count(distinct case when p.planned_pmt_month > 0
+                            then p.contract_number end) * 100, 2) as del_cons_61_90_pmt_any,
+
+       round(count(distinct case when p.planned_pmt_month = 1 and
+                                      p.delinq_days > 7 and p.delinq_days < 31
+                            then p.contract_number end) /
+             count(distinct case when p.planned_pmt_month = 1
+                            then p.contract_number end) * 100, 2) as del_cons_8_30_pmt_1,
+
+       round(count(distinct case when p.planned_pmt_month = 2 and
+                                      p.delinq_days > 7 and p.delinq_days < 31
+                            then p.contract_number end) /
+             count(distinct case when p.planned_pmt_month = 2
+                            then p.contract_number end) * 100, 2) as del_cons_8_30_pmt_2,
+
+       round(count(distinct case when p.planned_pmt_month = 3 and
+                                      p.delinq_days > 7 and p.delinq_days < 31
+                            then p.contract_number end) /
+             count(distinct case when p.planned_pmt_month = 3
+                            then p.contract_number end) * 100, 2) as del_cons_8_30_pmt_3,
+
+       round(count(distinct case when p.planned_pmt_month = 4 and
+                                      p.delinq_days > 7 and p.delinq_days < 31
+                            then p.contract_number end) /
+             count(distinct case when p.planned_pmt_month = 4
+                            then p.contract_number end) * 100, 2) as del_cons_8_30_pmt_4,
+
+       round(count(distinct case when p.planned_pmt_month = 5 and
+                                      p.delinq_days > 7 and p.delinq_days < 31
+                            then p.contract_number end) /
+             count(distinct case when p.planned_pmt_month = 5
+                            then p.contract_number end) * 100, 2) as del_cons_8_30_pmt_5,
+
+       round(count(distinct case when p.planned_pmt_month > 0 and p.planned_pmt_month < 5 and
+                                      p.delinq_days > 7 and p.delinq_days < 31
+                            then p.contract_number end) /
+             count(distinct case when p.planned_pmt_month > 0 and p.planned_pmt_month < 5
+                            then p.contract_number end) * 100, 2) as del_cons_8_30_pmt_1to4,
+
+       round(count(distinct case when p.planned_pmt_month >= 5 and p.planned_pmt_month <= 8 and
+                                      p.delinq_days > 7 and p.delinq_days < 31
+                            then p.contract_number end) /
+              count(distinct case when p.planned_pmt_month >= 5 and p.planned_pmt_month <= 8
+                            then p.contract_number end) * 100, 2) as del_cons_8_30_pmt_5to8,
+
+       round(count(distinct case when p.planned_pmt_month >= 9 and p.planned_pmt_month <= 12 and
+                                      p.delinq_days > 7 and p.delinq_days < 31
+                            then p.contract_number end) /
+              count(distinct case when p.planned_pmt_month >= 9 and p.planned_pmt_month <= 12
+                            then p.contract_number end) * 100, 2) as del_cons_8_30_pmt_9to12,
+
+       round(count(distinct case when p.planned_pmt_month >= 13 and p.planned_pmt_month <= 16 and
+                                      p.delinq_days > 7 and p.delinq_days < 31
+                            then p.contract_number end) /
+              count(distinct case when p.planned_pmt_month >= 13 and p.planned_pmt_month <= 16
+                            then p.contract_number end) * 100, 2) as del_cons_8_30_pmt_13to16
+
+from V_PORTFOLIO p
+join V_DATA_ALL d on d.id = p.id
+where p.report_year in (2012, 2013, 2014) and d.contract_amount > 0
+group by p.yy_mm_report
+) a join M_TMP_J_DEL_2_ALL b on b.yy_mm_start_last = a.yy_mm_report;
+grant select on U1.M_TMP_J_D_REP_3 to LOADDB;
+grant select on U1.M_TMP_J_D_REP_3 to LOADER;
+
+

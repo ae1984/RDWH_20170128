@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_ONLINE_RULE5_PRE2_1
+build deferred
+refresh force on demand
+as
+select t.claim_id,
+       t.date_create,
+       t.rfo_client_id
+       ,x.*
+from u1.M_FOLDER_CON_CANCEL_ONLINE_1 t
+left join (
+          select  /*+ parallel 30 */
+                  a.pk,
+                  a.code,
+                  --a.createdts sh_order_date_create,
+
+                  --t.*,
+                  --min(t.createdts)  as sh_date_start,
+
+                  min(case when v.code in ('CANCELLED', 'COMPLETED', 'RETURNED') then t.createdts end) as sh_last_date_create,
+                  min(case when v.code in ('COMPLETED') then t.createdts end) as sh_active_date_create,
+                  max(v.code) keep (dense_rank last order by t.p_orderpos) as sh_status_code,
+
+                  max(v2.p_name) keep (dense_rank last order by t.p_orderpos) as sh_status_name
+
+                  --max(case when upper(t.p_description) like '%ГОСТ%' then 1 else 0 end) as is_loan_guest
+          from u1.M_KASPISH_ORDERS a
+          join u1.M_KASPISH_ORDERHISTORYENTRIES t on t.p_order = a.pk
+          join u1.M_KASPISH_ENUMERATIONVALUES v on v.pk = t.statuspk
+          join u1.M_KASPISH_ENUMERATIONVALUESLP v2 on v2.itempk = v.pk and
+                                                      v2.langpk = 8796093317152
+          group by a.pk,
+                   a.code,
+                   a.createdts
+) x on x.code = t.process_id;
+grant select on U1.M_ONLINE_RULE5_PRE2_1 to LOADDB;
+
+

@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_FOLDER_MO_CANCEL_NIGHT_PRE22
+refresh force on demand
+as
+select /*+ parallel(20)*/
+       rfolder_id, --rfolder_id
+       ppv2.value_number rfo_client_id, --rfo_client_id
+       ppv3.value_number sco_num_scoring,
+       max(p.id) as process_id, --id process
+       max(p.date_start) date_start --process date_start
+from MO_PROCESS p
+join MO_PROCESS_PAR_VALUE ppv on ppv.process_id = p.id
+                             and ppv.d_par_id in (select dpar.id
+                                                  from v_mo_d_par dpar
+                                                  where dpar.code_int = 'IN_SCO_FOLDER_ID') -- IN_SCO_FOLDER_ID
+join MO_PROCESS_PAR_VALUE ppv2 on ppv2.process_id = p.id
+                              and ppv2.d_par_id in (select dpar.id
+                                                    from v_mo_d_par dpar
+                                                    where dpar.code_int = 'IN_SCO_CLIENT_ID')-- IN_SCO_CLIENT_ID
+join MO_PROCESS_PAR_VALUE ppv3 on ppv3.process_id = p.id
+                              and ppv3.d_par_id in (select dpar.id
+                                                    from v_mo_d_par dpar
+                                                    where dpar.code_int = 'IN_SCO_NUM_SCORING')-- IN_SCO_NUM_SCORING
+join v_mo_d_process dp on dp.id = p.d_process_id
+                      and dp.code = 'MO_SCO'
+where ppv.value_number is null
+group by p.rfolder_id, ppv2.value_number, ppv3.value_number;
+grant select on U1.M_FOLDER_MO_CANCEL_NIGHT_PRE22 to LOADDB;
+
+

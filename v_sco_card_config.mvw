@@ -1,0 +1,9 @@
+﻿create materialized view U1.V_SCO_CARD_CONFIG
+refresh complete on demand
+as
+select id, id_system, id_card, formula, id_actual, ref, create_date, id_user
+from V_MO_CARD_CONFIG@sc18;
+grant select on U1.V_SCO_CARD_CONFIG to LOADDB;
+grant select on U1.V_SCO_CARD_CONFIG to LOADER;
+
+

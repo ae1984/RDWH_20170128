@@ -1,0 +1,55 @@
+﻿create materialized view U1.M_CONTRACT_DEL_TEST1
+refresh complete on demand
+as
+with dat as (select
+       ca.rbo_contract_id,
+       ca.start_date,
+       vp.rep_date,
+       vp.total_debt,
+       vp.delinq_days_cli,
+       max(vp.total_debt) over (partition by vp.rbo_contract_id
+           order by vp.rep_date rows unbounded preceding) as max_total_debt
+  from m_contract_all_rbo ca
+  join v_rbo_port vp on vp.rbo_contract_id = ca.rbo_contract_id
+                    and vp.rep_date >= ca.start_date)
+select c.rbo_contract_id,
+       c.contract_number,
+       c.start_date,
+       p.max_total_debt as max_debt_used,
+       p1.total_debt as total_debt_pmt_1,
+       p2.total_debt as total_debt_pmt_2,
+       p3.total_debt as total_debt_pmt_3,
+       p4.total_debt as total_debt_pmt_4,
+       p5.total_debt as total_debt_pmt_5,
+       p6.total_debt as total_debt_pmt_6,
+       p1.max_total_debt as max_debt_used_pmt_1,
+       p2.max_total_debt as max_debt_used_pmt_2,
+       p3.max_total_debt as max_debt_used_pmt_3,
+       p4.max_total_debt as max_debt_used_pmt_4,
+       p5.max_total_debt as max_debt_used_pmt_5,
+       p6.max_total_debt as max_debt_used_pmt_6,
+       p1.delinq_days_cli as delinq_days_pmt_1,
+       p2.delinq_days_cli as delinq_days_pmt_2,
+       p3.delinq_days_cli as delinq_days_pmt_3,
+       p4.delinq_days_cli as delinq_days_pmt_4,
+       p5.delinq_days_cli as delinq_days_pmt_5,
+       p6.delinq_days_cli as delinq_days_pmt_6
+  from m_contract_all_rbo c
+  left join dat p1 on p1.rbo_contract_id = c.rbo_contract_id
+                  and p1.rep_date = add_months(c.start_date,1)
+  left join dat p2 on p2.rbo_contract_id = c.rbo_contract_id
+                  and p2.rep_date = add_months(c.start_date,2)
+  left join dat p3 on p3.rbo_contract_id = c.rbo_contract_id
+                  and p3.rep_date = add_months(c.start_date,3)
+  left join dat p4 on p4.rbo_contract_id = c.rbo_contract_id
+                  and p4.rep_date = add_months(c.start_date,4)
+  left join dat p5 on p5.rbo_contract_id = c.rbo_contract_id
+                  and p5.rep_date = add_months(c.start_date,5)
+  left join dat p6 on p6.rbo_contract_id = c.rbo_contract_id
+                  and p6.rep_date = add_months(c.start_date,6)
+  left join dat p  on p.rbo_contract_id = c.rbo_contract_id
+                  and p.rep_date = trunc(sysdate)-4;
+grant select on U1.M_CONTRACT_DEL_TEST1 to LOADDB;
+grant select on U1.M_CONTRACT_DEL_TEST1 to LOADER;
+
+

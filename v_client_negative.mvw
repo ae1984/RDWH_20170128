@@ -1,0 +1,231 @@
+﻿create materialized view U1.V_CLIENT_NEGATIVE
+refresh complete on demand
+as
+select /*+ parallel(15)*/
+  distinct coalesce(c.x_iin,bl1.x_iin,bl3.x_iin) as iin,
+  coalesce(upper(cp.c_last_name),bl2.surname,bl4.surname,bl1.surname,bl3.surname) as surname,
+  coalesce(upper(cp.c_first_name),bl2.first_name, bl4.first_name,bl1.first_name,bl3.first_name) as first_name,
+  coalesce(upper(cp.c_sur_name),bl2.patronymic,bl4.patronymic,bl1.patronymic,bl3.patronymic) as patronymic,
+  coalesce(to_char(cp.c_date_pers,'dd.mm.yyyy'),bl2.birth_date,bl4.birth_date,bl1.birth_date,bl3.birth_date) as birth_date,
+  upper(ct.c_name) as doc_type, cp.c_pasport#num as doc_num,
+  upper(cp.c_pasport#who) as doc_issuer,
+  to_char(cp.c_pasport#date_doc,'dd.mm.yyyy') as doc_date_start,
+  to_char(cp.c_pasport#date_end,'dd.mm.yyyy') as doc_date_end,
+  upper(aa.region_name) as reg_region, upper(aa.place) as reg_place,
+  upper(aa.district) as reg_district,
+  upper(aa.street) as reg_street,
+  upper(aa.house) as reg_house,
+  upper(aa.house_part) as reg_house_part,
+  aa.flat,
+      coalesce(greatest(cc.delinq_days_max_all, dw.del_days_max),
+          cc.delinq_days_max_all, dw.del_days_max) as
+  delinq_days_max_all,
+      coalesce(greatest(cc.max_debt_used_all, dw.sum_total_debt),
+          cc.max_debt_used_all, dw.sum_total_debt) as
+  max_debt_used_all,
+  cc.total_pmts,
+  dw.del_days_max as del_days_max_cur,
+  dw.sum_total_debt as sum_total_debt_cur,
+  dw.sum_delinq_amount as sum_delinq_amount_cur,
+  case when coalesce(bl1.iin,bl2.client_name_bd,bl3.iin,bl4.client_name_bd) is not null then 1 else 0 end as is_in_black_list,
+  upper(coalesce(bl3.note,bl4.note,bl1.note,bl2.note)) as black_list_note,
+  nvl(pkb2.pkb_report_date_max, pkb1.pkb_report_date_max) as pkb_report_date_max,
+  nvl(pkb2.pkb_total_amount_due, pkb1.pkb_total_amount_due) as pkb_total_outstanding_amount,
+  nvl(pkb2.pkb_total_delinq_amount, pkb1.pkb_total_delinq_amount) as pkb_total_delinq_amount,
+  case when nvl(pkb_n2.iin,pkb_n1.rnn) is not null
+       then 1 else 0 end as is_pkb_negative,
+  nvl(pkb_n2.pkb_negative_date_max, pkb_n1.pkb_negative_date_max) as pkb_negative_date_max,
+  cat.cat_first_name,
+  cat.cat_first_date_begin,
+  cat.cat_first_date_end,
+  cat.cat_last_name,
+  cat.cat_last_date_begin,
+  cat.cat_last_date_end,
+      decode(coalesce(bl3.note_type_imp,bl4.note_type_imp,bl1.note_type_imp,bl2.note_type_imp),
+             'DELINQ', 'ПРОСРОЧКА В KASPI',
+             'DELINQ OTHER', 'ВОЗМОЖНО ПРОСРОЧКА В ДРУГОМ БАНКЕ',
+             'OTHER', 'ДРУГИЕ ПРИЧИНЫ',
+             'INFO', 'НЕГАТИВНАЯ ИНФОРМАЦИЯ',
+             'CRIMINAL', 'ГРАЖДАНСКАЯ НЕСОСТОЯТЕЛЬНОСТЬ',
+             'LSBO', 'ЛСБО',
+             'NOT MASS', 'ДРУГИЕ ПРИЧИНЫ')
+  as black_list_note_type,
+      case when coalesce(bl1.iin,bl2.client_name_bd,bl3.iin,bl4.client_name_bd) is not null and
+           (sysdate - to_date(cc.yy_mm_report_max,'yyyy - mm') > 50 or
+               cc.delinq_days_max_last_rep = 0)
+           then to_char(add_months(to_date(cc.yy_mm_report_max,'yyyy - mm'),1),'yyyy - mm') end as
+  yy_mm_delinq_closed
+from V_RFO_Z#CLIENT c
+join V_RFO_Z#CL_PRIV cp on cp.id = c.id
+left join (select a.collection_id,
+            nvl(cr1.c_name, a.c_region) as region_name,
+            nvl(nc1.c_name, a.c_place) as place,
+            nvl(ra1.c_name, a.c_district) as district,
+            a.c_street as street, a.c_house as house,
+            a.c_frame as house_part, a.c_flat as flat
+            from V_RFO_Z#ADRESSES a
+            join V_RFO_Z#ADDR_TYPE aty on aty.id = a.c_adr_type
+            left join V_RFO_Z#CODE_REGION cr1 on cr1.id = a.c_region_ref
+            left join V_RFO_Z#NAMES_CITY nc1 on nc1.id = a.c_place_ref
+            left join V_RFO_Z#REGION_AREA ra1 on ra1.id = a.c_district_ref
+            left join V_RFO_Z#COUNTRY c1 on c1.id = nc1.c_country
+            where aty.c_code = 'REGISTRATION'
+          ) aa on aa.collection_id = c.c_addresses
+left join V_RFO_Z#CERTIFIC_TYPE ct on ct.id = cp.c_pasport#type
+left join (
+    select dww.client_iin,
+      nvl(max(dww.x_delinq_days),0) as del_days_max,
+      sum(dww.x_total_debt) as sum_total_debt,
+      sum(dww.x_delinq_amount) as sum_delinq_amount
+    from V_DWH_PORTFOLIO_CURRENT dww
+    group by dww.client_iin
+    ) dw on dw.client_iin = c.x_iin
+left join (
+    select c.client_iin_last as iin,
+           max(c.delinq_days_max) as delinq_days_max_all,
+           max(c.delinq_days_max_last_rep) as delinq_days_max_last_rep,
+           max(c.max_debt_used) as max_debt_used_all,
+           sum(c.total_pmts) as total_pmts,
+           max(c.yy_mm_report_max) as yy_mm_report_max
+    from V_CLIENT_CAL c
+    where c.client_iin_last is not null
+    group by c.client_iin_last) cc on cc.iin = c.x_iin
+
+
+full outer join (
+    select b.iin,
+           max(b.note) keep (dense_rank first order by to_date(b.date_add_text,'dd.mm.yyyy')) as note,
+           max(b.iin) keep (dense_rank last order by b.rfo_black_list_id) as x_iin,
+           max(b.surname) as surname,
+           max(b.first_name) as first_name,
+           max(b.patronymic) as patronymic,
+           max(b.birth_date_text) as birth_date,
+           max(b.note_type_imp) as note_type_imp
+    from V_RFO_BLACK_LIST b
+    where b.iin is not null
+    group by b.iin) bl1 on bl1.iin = c.x_iin
+full outer join (
+    select b.iin,
+           max(b.note) keep (dense_rank first order by to_date(b.date_add_text,'dd.mm.yyyy')) as note,
+           max(b.iin) keep (dense_rank last order by b.mo_black_list_id) as x_iin,
+           max(b.surname) as surname,
+           max(b.first_name) as first_name,
+           max(b.patronymic) as patronymic,
+           max(b.birth_date_text) as birth_date,
+           max(b.note_type_imp) as note_type_imp
+    from V_MO_BLACK_LIST b
+    where b.iin is not null
+    group by b.iin) bl3 on bl3.iin = c.x_iin
+full outer join (
+select b.surname ||' '|| b.first_name||' '||
+       b.patronymic ||' '|| b.birth_date_text as client_name_bd,
+           max(b.note) keep (dense_rank first order by to_date(b.date_add_text,'dd.mm.yyyy')) as note,
+           max(b.surname) as surname,
+           max(b.first_name) as first_name,
+           max(b.patronymic) as patronymic,
+           max(b.birth_date_text) as birth_date,
+           max(b.iin) keep (dense_rank last order by b.rfo_black_list_id) as x_iin,
+           max(b.note_type_imp) as note_type_imp
+from V_RFO_BLACK_LIST b
+group by b.surname ||' '|| b.first_name||' '||
+       b.patronymic ||' '|| b.birth_date_text) bl2
+            on bl2.client_name_bd = upper(cp.c_last_name ||' '||
+               cp.c_first_name||' '||cp.c_sur_name||' '||
+               to_char(cp.c_date_pers,'dd.mm.yyyy'))
+full outer join (
+select b.surname ||' '|| b.first_name||' '||
+       b.patronymic ||' '|| b.birth_date_text as client_name_bd,
+           max(b.note) keep (dense_rank first order by to_date(b.date_add_text,'dd.mm.yyyy')) as note,
+           max(b.surname) as surname,
+           max(b.first_name) as first_name,
+           max(b.patronymic) as patronymic,
+           max(b.birth_date_text) as birth_date,
+           max(b.iin) keep (dense_rank last order by b.mo_black_list_id) as x_iin,
+           max(b.note_type_imp) as note_type_imp
+from V_MO_BLACK_LIST b
+group by b.surname ||' '|| b.first_name||' '||
+       b.patronymic ||' '|| b.birth_date_text) bl4
+            on bl4.client_name_bd = upper(cp.c_last_name ||' '||
+               cp.c_first_name||' '||cp.c_sur_name||' '||
+               to_char(cp.c_date_pers,'dd.mm.yyyy'))
+left join (
+    select p.c_rnn as rnn,
+           max(to_date(p.c_dateofrptissue,'dd.mm.yyyy')) as pkb_report_date_max,
+           max(p.c_si_tod) keep (dense_rank last order by p.c_dateofrptissue) as pkb_total_amount_due,
+           max(p.c_si_tdo) keep (dense_rank last order by p.c_dateofrptissue) as pkb_total_delinq_amount
+    from V_RFO_Z#PKB_REPORT p, V_RFO_Z#KAS_PKB_CI pc
+    where p.c_status = 'OK' and pc.collection_id = p.c_ci
+           and to_date(p.c_dateofrptissue,'dd.mm.yyyy') < to_date('2013-01-03','yyyy-mm-dd')
+    group by p.c_rnn
+) pkb1 on pkb1.rnn = c.x_rnn
+left join (
+    select p.c_rnn as iin,
+           max(to_date(p.c_dateofrptissue,'dd.mm.yyyy')) as pkb_report_date_max,
+           max(p.c_si_tod) keep (dense_rank last order by p.c_dateofrptissue) as pkb_total_amount_due,
+           max(p.c_si_tdo) keep (dense_rank last order by p.c_dateofrptissue) as pkb_total_delinq_amount
+    from V_RFO_Z#PKB_REPORT p, V_RFO_Z#KAS_PKB_CI pc
+    where p.c_status = 'OK' and pc.collection_id = p.c_ci
+           and to_date(p.c_dateofrptissue,'dd.mm.yyyy') > to_date('2013-01-03','yyyy-mm-dd')
+    group by p.c_rnn
+) pkb2 on pkb2.iin = c.x_iin
+left join (
+    select p.c_rnn as rnn, max(to_date(p.c_dateofrptissue,'dd.mm.yyyy')) as pkb_negative_date_max
+    from V_RFO_Z#PKB_REPORT p, V_RFO_Z#KAS_PKB_CI pc
+    where p.c_status = 'OK' and (pc.collection_id = p.c_ci or pc.collection_id = p.c_closed_ci)
+           and (pc.c_contr_status like '%Исполнение обязательств по договору приостановлено%' or
+                pc.c_contr_status like '%переведена в разряд убытков%' or
+                pc.c_contr_status like '%списана за баланс%' or
+                pc.c_contr_status like '%от 91%' or
+                pc.c_contr_status like '%свыше 90%' or
+                pc.c_contr_status like '%свыше 360 дней%')
+           and to_date(p.c_dateofrptissue,'dd.mm.yyyy') < to_date('2013-01-03','yyyy-mm-dd')
+    group by p.c_rnn
+) pkb_n1 on pkb_n1.rnn = c.x_rnn
+left join (
+    select p.c_rnn as iin, max(to_date(p.c_dateofrptissue,'dd.mm.yyyy')) as pkb_negative_date_max
+    from V_RFO_Z#PKB_REPORT p, V_RFO_Z#KAS_PKB_CI pc
+    where p.c_status = 'OK' and (pc.collection_id = p.c_ci or pc.collection_id = p.c_closed_ci)
+           and (pc.c_contr_status like '%Исполнение обязательств по договору приостановлено%' or
+                pc.c_contr_status like '%переведена в разряд убытков%' or
+                pc.c_contr_status like '%списана за баланс%' or
+                pc.c_contr_status like '%от 91%' or
+                pc.c_contr_status like '%свыше 90%' or
+                pc.c_contr_status like '%свыше 360 дней%')
+           and to_date(p.c_dateofrptissue,'dd.mm.yyyy') > to_date('2013-01-03','yyyy-mm-dd')
+    group by p.c_rnn
+) pkb_n2 on pkb_n2.iin = c.x_iin
+left join (
+    select
+        xc.iin,
+        xc.cat_first_name,
+        xc.cat_first_date_begin,
+        xc.cat_first_date_end,
+              case when xc.cat_last_hist_id != xc.cat_first_hist_id then xc.cat_last_name else null end as
+        cat_last_name,
+              case when xc.cat_last_hist_id != xc.cat_first_hist_id then xc.cat_last_date_begin else null end as
+        cat_last_date_begin,
+              case when xc.cat_last_hist_id != xc.cat_first_hist_id then xc.cat_last_date_end else null end as
+        cat_last_date_end
+    from (
+        select c.x_iin as iin, -- h.*, g.c_name,
+               min(h.id) keep (dense_rank first order by h.c_date_begin nulls last) as cat_first_hist_id,
+               min(g.c_name) keep (dense_rank first order by h.c_date_begin nulls last) as cat_first_name,
+               min(h.c_date_begin) keep (dense_rank first order by h.c_date_begin nulls last) as cat_first_date_begin,
+               min(h.c_date_end) keep (dense_rank first order by h.c_date_begin nulls last) as cat_first_date_end,
+               max(h.id) keep (dense_rank last order by h.c_date_begin nulls first) as cat_last_hist_id,
+               max(g.c_name) keep (dense_rank last order by h.c_date_begin nulls first) as cat_last_name,
+               max(h.c_date_begin) keep (dense_rank last order by h.c_date_begin nulls first) as cat_last_date_begin,
+               max(h.c_date_end) keep (dense_rank last order by h.c_date_begin nulls first) as cat_last_date_end
+        from V_RFO_Z#CLIENT c
+        join V_RFO_Z#CL_PRIV cp on cp.id = c.id
+        join V_RFO_Z#HIST_CLIENT_CAT h on h.collection_id = cp.c_client_categ
+        join V_RFO_Z#CLIENT_CATEG g on g.id = h.c_client_categ
+        where g.c_name like '-%'
+        group by c.x_iin
+    ) xc
+) cat on cat.iin = c.x_iin;
+grant select on U1.V_CLIENT_NEGATIVE to AIDA;
+grant select on U1.V_CLIENT_NEGATIVE to LOADDB;
+grant select on U1.V_CLIENT_NEGATIVE to LOADER;
+
+

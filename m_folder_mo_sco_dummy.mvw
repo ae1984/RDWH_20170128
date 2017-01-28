@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_FOLDER_MO_SCO_DUMMY
+build deferred
+refresh complete on demand
+as
+select t.rfolder_id
+  from u1.T_MO_RFOLDER_PAR_VALUE_2016 t
+       left join u1.V_MO_D_PAR p on p.id = t.d_par_id
+ where p.code_int like '%MO_SCO_IS_CTRL_GR_%'
+    or p.code_int like '%MO_SCO_REJECT_PRE_%'
+ group by t.rfolder_id
+having sum(t.value_number) = 2
+   and count(*) = 2;
+grant select on U1.M_FOLDER_MO_SCO_DUMMY to LOADDB;
+
+

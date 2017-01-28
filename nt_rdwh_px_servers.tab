@@ -1,0 +1,29 @@
+﻿create table U1.NT_RDWH_PX_SERVERS
+(
+  dt                DATE,
+  servers_in_use    NUMBER,
+  servers_available NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_RDWH_PX_SERVERS
+  is 'Загруженность параллельных сессий';
+comment on column U1.NT_RDWH_PX_SERVERS.dt
+  is 'Дата и время показаний';
+comment on column U1.NT_RDWH_PX_SERVERS.servers_in_use
+  is 'Занято параллельных сессий';
+comment on column U1.NT_RDWH_PX_SERVERS.servers_available
+  is 'Доступно параллельных сессий';
+grant select on U1.NT_RDWH_PX_SERVERS to LOADDB;
+

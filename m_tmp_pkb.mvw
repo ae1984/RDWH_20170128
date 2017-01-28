@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_TMP_PKB
+refresh force on demand
+as
+select /*distinct REPORT_IIN_RNN*/ distinct v.report_id,/*v.folder_id,*/v.report_iin_rnn,v.report_status,v.report_type,v.rfo_report_date_time
+from v_pkb_report v
+where v.report_iin_rnn in (
+            (select  v.report_iin_rnn from v_pkb_report v
+                                           where RFO_REPORT_DATE>=to_date('01.07.2015','dd.mm.yyyy')
+                                           and RFO_REPORT_DATE<=to_date('31.07.2015','dd.mm.yyyy')
+                                           and is_from_cache=0
+                                           and v.report_status ='БЕКИ'-- ('РАСШИРЕННЫЙ','СТАНДАРТНЫЙ','ПЕРВИЧНЫЙ')
+
+            minus
+            select t.inn_1 from risk_sdarya.t_tmp_pkb_1 t
+            where t.rep_type='Информация о заемщике отсутствует'))
+                  and RFO_REPORT_DATE>=to_date('01.07.2015','dd.mm.yyyy')
+                  and RFO_REPORT_DATE<=to_date('31.07.2015','dd.mm.yyyy')
+                  and is_from_cache=0
+                  and v.report_status ='БЕКИ';
+grant select on U1.M_TMP_PKB to LOADDB;
+grant select on U1.M_TMP_PKB to LOADER;
+
+

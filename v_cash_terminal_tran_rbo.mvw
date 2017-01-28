@@ -1,0 +1,45 @@
+﻿create materialized view U1.V_CASH_TERMINAL_TRAN_RBO
+build deferred
+refresh complete on demand
+as
+select m.debit_acc_client_iin,
+       m.main_doc_date,
+       m.contract_number,
+       m.contract_amount_first,
+       m.debit_product_card_num_pc,
+       m.credit_product_card_num,
+       m.credit_product_deposit_num,
+       m.product_start_last,
+       m.pmt_nom_rate,
+       m.in_amount_day_end as in_amount_month,
+       m.pmt_cnt as pmt_cnt_month,
+       t2.in_amount_day_end as in_amount_day_end_2,
+       t2.pmt_cnt as pmt_cnt_2_days,
+       t1.in_amount_day_end as in_amount_day_end_1,
+       t1.pmt_cnt as pmt_cnt_1_day
+from V_CASH_TERMINAL_TRAN_RBO_MONTH m
+left join V_CASH_TERMINAL_TRAN_RBO_2 t2 on t2.debit_acc_client_iin = m.debit_acc_client_iin and
+                                           t2.contract_number = m.contract_number and
+                                           t2.main_doc_date = m.main_doc_date
+left join V_CASH_TERMINAL_TRAN_RBO_1 t1 on t1.debit_acc_client_iin = m.debit_acc_client_iin and
+                                           t1.contract_number = m.contract_number and
+                                           t1.main_doc_date = m.main_doc_date
+group by m.debit_acc_client_iin,
+       m.main_doc_date,
+       m.contract_number,
+       m.contract_amount_first,
+       m.debit_product_card_num_pc,
+       m.credit_product_card_num,
+       m.credit_product_deposit_num,
+       m.product_start_last,
+       m.pmt_nom_rate,
+       m.in_amount_day_end,
+       m.pmt_cnt,
+       t2.in_amount_day_end,
+       t2.pmt_cnt,
+       t1.in_amount_day_end,
+       t1.pmt_cnt;
+grant select on U1.V_CASH_TERMINAL_TRAN_RBO to LOADDB;
+grant select on U1.V_CASH_TERMINAL_TRAN_RBO to LOADER;
+
+

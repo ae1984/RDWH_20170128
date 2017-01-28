@@ -1,0 +1,26 @@
+﻿create table U1.T_TMP_CS6M
+(
+  iin                   VARCHAR2(1500),
+  sal_by_cli_6_mon_med  NUMBER,
+  sal_by_cli_6_mon_avg  NUMBER,
+  sal_by_cli_6_mon_max  NUMBER,
+  mon_by_cli_6_last     CHAR(9),
+  sal_6_mon_count       NUMBER,
+  sal_by_cli_6_mon_last NUMBER,
+  bin_last              VARCHAR2(2000)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_CS6M to LOADDB;
+

@@ -1,0 +1,49 @@
+﻿create materialized view U1.V_RFO_Z#USER
+using no index
+refresh complete on demand
+as
+select
+  id,
+  c_username,
+        translate(upper(c_name),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  c_name,
+  c_email,
+  c_empl,
+  c_user_back,
+  c_id_depart,
+  c_casta,
+  c_name_depart,
+  c_depart,
+  c_by_right,
+  c_c#parameters,
+  c_st_depart,
+  c_warrant,
+  c_warrant_date,
+  c_plan,
+  c_kas_journal,
+  c_kas_prop,
+  c_num_tab,
+  c_kas_date_inhand,
+  c_kas_date_order,
+  c_kas_order_num,
+  c_kas_audit#rcv_file,
+  c_kas_audit#create,
+  c_kas_audit#edit,
+  c_kas_audit#date_create,
+  c_kas_audit#date_edit,
+  c_kas_audit#from_rout,
+  c_kas_audit#op_date,
+  c_kas_audit#key_valid,
+  c_kas_warr_date_sk,
+  c_kas_op_date
+--from IBS.Z#USER@RFO_SNAP;
+from IBS.Z#USER@RFO_SNAP;
+grant select on U1.V_RFO_Z#USER to LOADDB;
+grant select on U1.V_RFO_Z#USER to LOADER;
+grant select on U1.V_RFO_Z#USER to RISK_VERIF;
+
+

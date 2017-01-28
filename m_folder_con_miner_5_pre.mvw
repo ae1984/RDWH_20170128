@@ -1,0 +1,60 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_5_PRE
+refresh complete on demand
+as
+select c.rfo_client_id,
+           c.contract_number,
+           c.contract_id,
+           c.yy_mm_start_last,
+           c.contract_term_months,
+           c.pmt_nom_rate,
+           c.inc_total,
+           c.exp_utilities,
+
+           round(case when c.inc_total - nvl(c.exp_utilities,0) > 0 then
+                      c.pmt_nom_rate / (c.inc_total - nvl(c.exp_utilities,0)) * c.contract_term_months
+                 end) as paid_sal_count,
+
+          xx.*,
+
+          months_between(trunc(xx.plan_end_date, 'mm'), to_date(c.yy_mm_start_last, 'yyyy - mm')) m_bet,
+          months_between(trunc(xx.plan_end_date2, 'mm'), to_date(c.yy_mm_start_last, 'yyyy - mm')) m_bet2,
+
+          case
+            when (to_date(c.yy_mm_start_last, 'yyyy - mm') >= to_date(xx.yy_mm_start_last_ch, 'yyyy - mm')
+                 and to_date(c.yy_mm_start_last, 'yyyy - mm') <= trunc(xx.plan_end_date2, 'mm')
+                 and c.contract_number != xx.contract_number_ch)
+              then
+                round(case when xx.inc_total_ch - nvl(xx.exp_utilities_ch, 0) > 0 then
+                                xx.pmt_nom_rate_ch/(xx.inc_total_ch - nvl(xx.exp_utilities_ch, 0)) *
+                                (xx.contract_term_months_ch - months_between(trunc(xx.plan_end_date2, 'mm'), to_date(c.yy_mm_start_last, 'yyyy - mm')))
+                      end)
+              else
+                0
+          end paid_sal_count_con_other
+
+    from M_FOLDER_CON_MINER_4 c
+    left join v_dwh_portfolio_current dpp on dpp.deal_number = c.contract_number
+    left join (
+         select
+              cc.rfo_client_id rfo_client_id_ch,
+              cc.contract_number contract_number_ch,
+              cc.contract_id contract_id_ch,
+              cc.yy_mm_start_last yy_mm_start_last_ch,
+              cc.pmt_nom_rate pmt_nom_rate_ch,
+              cc.exp_utilities exp_utilities_ch,
+              cc.inc_total inc_total_ch,
+              cc.contract_term_months contract_term_months_ch,
+              add_months(to_date(cc.yy_mm_start_last, 'yyyy - mm'), cc.contract_term_months) plan_end_date2,
+
+              dp.plan_end_date,
+              dp.actual_end_date,
+              case when (dp.actual_end_date is null) then dp.plan_end_date
+              else dp.actual_end_date end con_end_date_ch
+
+         from M_FOLDER_CON_MINER_4 cc
+         left join v_dwh_portfolio_current dp on dp.deal_number = cc.contract_number
+         ) xx on xx.rfo_client_id_ch = c.rfo_client_id;
+grant select on U1.M_FOLDER_CON_MINER_5_PRE to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER_5_PRE to LOADER;
+
+

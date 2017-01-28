@@ -1,0 +1,36 @@
+﻿create materialized view U1.M_TMP_J_TK_PROC_TIMES_1
+refresh complete on demand
+as
+select a_date,
+       line_name,
+       source_system,
+       round(line_dur_sec) as line_dur_sec,
+       ---
+       count(*), count(distinct history_id) as history_cnt
+--       avg(line_dur_sec) as line_dur_avg_sec,
+--       median(line_dur_sec) as line_dur_med_sec,
+--       min(line_dur_sec) as line_dur_min_sec,
+--       max(line_dur_sec) as line_dur_max_sec
+from (
+    select trunc(f.folder_date_create_mi) as a_date,
+           h.line_name,
+           f.source_system,
+           ---
+           h.history_id,
+    --       case when h.line_time is not null then
+                   (lead(h.line_time,1) over (partition by f.folder_id order by h.history_id) - h.line_time) * 24 * 3600
+    --            end
+                as line_dur_sec
+    from M_FOLDER_CON_CANCEL f
+    join V_FOLDER_ALL_HISTORY h on h.folder_id = f.folder_id
+    where f.cr_program_name = 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР' and
+          f.folder_date_create_mi > trunc(sysdate) - 30
+) x
+group by a_date,
+         line_name,
+         source_system,
+         round(line_dur_sec);
+grant select on U1.M_TMP_J_TK_PROC_TIMES_1 to LOADDB;
+grant select on U1.M_TMP_J_TK_PROC_TIMES_1 to LOADER;
+
+

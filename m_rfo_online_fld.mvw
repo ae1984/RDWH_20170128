@@ -1,0 +1,58 @@
+﻿create materialized view U1.M_RFO_ONLINE_FLD
+refresh complete on demand
+as
+select
+     t1.*,
+     x.cr_program_id,
+     case
+       when x.c_code in ('CANCEL', 'PREPARE', 'PREP_REVOLV') then
+        0 --IOEAC, IIAAIOIAEA
+       else
+        1
+     end as is_credit_issued_con
+
+      from M_RFO_ONLINE_FLD_PRE1 t1
+
+      left join((select t2.collection_id, t2.cr_program_id, t2.c_code
+                   from M_RFO_ONLINE_FLD_PRE2 t2/*IBS.Z#RDOC@RFO rd
+                   join IBS.Z#FDOC@RFO fd
+                     on fd.id = rd.c_doc
+                    and fd.class_id = 'CREDIT_DOG'
+                   join IBS.Z#CREDIT_DOG@RFO cd
+                     on cd.id = rd.c_doc
+                   join IBS.Z#STATUS_DOG@RFO sd
+                     on sd.id = fd.c_status_doc
+                   join IBS.Z#CRED_SCHEME@RFO cs
+                     on cs.id = cd.c_cred_scheme
+                   join IBS.Z#PROPERTIES@RFO p
+                     on p.COLLECTION_ID = cs.c_add_prop
+                   join IBS.Z#PROD_PROPERTY@RFO pr
+                     on pr.id = p.C_PROP
+                  where fd.c_doc_date > sysdate - 2 / 24
+                    and cd.c_shop is null*/)
+    union (select t3.collection_id, t3.cr_program_id, t3.c_code
+             from M_RFO_ONLINE_FLD_PRE3 t3/*IBS.Z#KAS_PC_DOG@RFO      cd2,
+                  IBS.Z#PROPERTIES@RFO      p,
+                  IBS.Z#KAS_CARD_SCHEME@RFO cs,
+                  IBS.z#PROD_PROPERTY@RFO   pr,
+                  IBS.Z#PROPERTY_GRP@RFO    gr,
+                  IBS.Z#STATUS_DOG@RFO      sd,
+                  IBS.Z#FDOC@RFO            fd,
+                  IBS.Z#RDOC@RFO            rd
+            where cs.c_add_prop = p.collection_id
+              and gr.id = pr.c_group_prop
+              and gr.c_code = 'KAS_CRED_PROGRAM'
+              and p.c_prop = pr.id
+              and cs.id = cd2.c_pc_scheme
+              and fd.id = cd2.id
+              and sd.id = fd.c_status_doc
+              and fd.id = rd.c_doc
+              and fd.class_id = 'KAS_PC_DOG'
+              and fd.c_doc_date > sysdate - 2 / 24*/)) x
+        on x.collection_id = t1.c_docs
+/*     where t1.c_date_create > sysdate - 2 / 24
+       and t1.c_private = 690120*/;
+grant select on U1.M_RFO_ONLINE_FLD to LOADDB;
+grant select on U1.M_RFO_ONLINE_FLD to LOADER;
+
+

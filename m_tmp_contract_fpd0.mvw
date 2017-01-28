@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_TMP_CONTRACT_FPD0
+refresh force on demand
+as
+select
+  start_date,
+  deal_number,
+  prod,
+  case when coalesce(delinq_days_old,delinq_days_past,delinq_days_future)>=1 then 1 else 0 end is_fpd_0
+from
+        (select *
+           from M_FPD_SPD_PRE
+         where plan_date_due_rn = 1
+           and rep_date = plan_pmt_date_first
+        )
+group by start_date,
+         deal_number,
+         prod,
+         coalesce(delinq_days_old,delinq_days_past,delinq_days_future);
+grant select on U1.M_TMP_CONTRACT_FPD0 to LOADDB;
+grant select on U1.M_TMP_CONTRACT_FPD0 to LOADER;
+
+

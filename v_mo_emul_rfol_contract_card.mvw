@@ -1,0 +1,41 @@
+﻿create materialized view U1.V_MO_EMUL_RFOL_CONTRACT_CARD
+using no index
+refresh complete on demand
+as
+select cp.id             as cmchp_id,     -- folder_id
+       f.c_client        as foldr_client, -- client_id
+       pd.id             as kpdog_id,
+       pd.c_num_dog      as kpdog_num_dog,
+       pd.c_credit_limit as kpdog_credit_limit,
+       pd.c_date_begin   as kpdog_date_begin,
+       pd.c_date_end     as kpdog_date_end,
+--       pcs.id            as kcacs_id,
+       pcs.c_code        as kcacs_code,
+--       pcs.c_name        as kcacs_name,
+--       pdpr.id           as pprop_id__kpdog_cr_prog,
+       pdpr.c_code       as pprop_code__kpdog_cr_prog,
+--       pdpr.c_name       as pprop_name__kpdog_cr_prog,
+--       pd_std.id         as stdog_id__kpdog,
+       pd_std.c_code     as stdog_code__kpdog,
+--       pd_std.c_name     as stdog_name__kpdog,
+--       pd_tp.id          as kunid_id__kpdog_tar_pln,
+       pd_tp.c_code      as kunid_code__kpdog_tar_pln--,
+--       pd_tp.c_name      as kunid_name__kpdog_tar_pln
+from V_RFO_Z#CM_CHECKPOINT cp
+join V_RFO_Z#FOLDERS f on f.id = cp.id -- чекпоинт без фолдера нам не нужен
+join V_RFO_Z#CM_WAY cmw on cmw.id = cp.c_way and
+     cmw.id in (1441324352,6503652354,84522668,1441325149,578214112) -- кредитные маршруты
+join V_RFO_Z#RDOC rd_3 on rd_3.collection_id = f.c_docs
+join V_RFO_Z#FDOC fd_3 on fd_3.id = rd_3.c_doc and fd_3.class_id = 'KAS_PC_DOG'
+join V_RFO_Z#KAS_PC_DOG pd on pd.id = fd_3.id
+left join V_RFO_Z#KAS_CARD_SCHEME pcs on pcs.id = pd.c_pc_scheme
+left join V_RFO_Z#PROPERTIES pdp on pdp.COLLECTION_ID = pcs.c_add_prop
+left join V_RFO_Z#PROD_PROPERTY pdpr on pdpr.id = pdp.C_PROP and pdpr.c_group_prop = 188106869
+left join V_RFO_Z#STATUS_DOG pd_std on pd_std.id = fd_3.c_status_doc
+left join V_RFO_Z#KAS_UNIVERSAL_D pd_tp on pd_tp.id = pd.c_tariff_plan
+--where cp.id = 7907571283 -- ТК + карта
+where cp.c_date_create > trunc(sysdate) - 30;
+grant select on U1.V_MO_EMUL_RFOL_CONTRACT_CARD to LOADDB;
+grant select on U1.V_MO_EMUL_RFOL_CONTRACT_CARD to LOADER;
+
+

@@ -1,0 +1,21 @@
+﻿create table U1.T_TMP_PROVISION_631_660
+(
+  contract_number VARCHAR2(100),
+  prod_type       VARCHAR2(20)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_PROVISION_631_660 to LOADDB;
+grant select on U1.T_TMP_PROVISION_631_660 to LOADER;
+

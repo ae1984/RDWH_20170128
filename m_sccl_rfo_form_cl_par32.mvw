@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_SCCL_RFO_FORM_CL_PAR32
+build deferred
+refresh force on demand
+as
+select x.phone_number,
+       x.client_cnt,
+       x.del_client_cnt,
+
+       case when x.client_cnt > 0 then x.del_client_cnt/x.client_cnt*100 end as delay_contacts_share
+from (
+      select /*+ parallel(30) */
+             t.phone_number,
+
+             count(distinct t.rfo_client_id) as client_cnt,
+             count(distinct case when d.max_del_days > 30
+                                      and d.delinq_amount > 1000
+                                 then t.rfo_client_id end) as del_client_cnt
+      from u1.V_FORM_CLIENT_CONTACT_PHONE t
+      left join u1.M_SCCL_RBO_PORT_PAR1 d on d.rfo_client_id = t.rfo_client_id
+      group by t.phone_number
+) x;
+grant select on U1.M_SCCL_RFO_FORM_CL_PAR32 to LOADDB;
+grant select on U1.M_SCCL_RFO_FORM_CL_PAR32 to LOAD_MO;
+
+

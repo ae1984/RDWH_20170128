@@ -1,0 +1,23 @@
+﻿create table U1.T_CUT_OFF_LKN_KN15
+(
+  sc_client_fresh_ar1        VARCHAR2(5),
+  sc_contract_amount_ar1     CHAR(7),
+  sc_contract_term_months    CHAR(2),
+  sc_dnp_name                VARCHAR2(31),
+  sc_gcvp_sal_to_sal_grp_ar1 VARCHAR2(2)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_CUT_OFF_LKN_KN15 to LOADDB;
+

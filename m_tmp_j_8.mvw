@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_TMP_J_8
+refresh force on demand
+as
+select floor(c.max_debt_used / 10000) * 10000 as max_debt_used, --c.product_start_last,
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate, -- просрочка всего по-старому
+    round(sum(c.max_debt_used) / 1000000) as sales_mln,
+    round(sum(c.total_debt_last_rep_new_b_w) / 1000000) as total_debt_last_rep_new_b_w,
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1,
+    round(sum(c.delinq_rate_b_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b_w,
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt -- проверка - если эти два поля равны, значит выборка верна
+from M_CONTRACT_CAL_DEL c
+join V_DWH_PORTFOLIO_CURRENT dc on dc.deal_number = c.contract_number
+where c.yy_mm_start_last like '2013 - 0%'
+group by floor(c.max_debt_used / 10000) * 10000 having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_J_8 to LOADDB;
+grant select on U1.M_TMP_J_8 to LOADER;
+
+

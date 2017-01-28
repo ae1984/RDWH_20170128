@@ -1,0 +1,57 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_PKB_KDN
+refresh force on demand
+as
+select
+  x.contract_number,
+  pos.pos_type_rfo,
+  pos.partner as pos_parther,
+  ced.shop_name,
+  ced.shop_name||'__'||fch.expert_name as TP_MP,
+  k5.kdn_simple_rbo,
+  k5.kdn_simple_nom_rate,
+  k5.kdn_form_salary_max,
+  mdc.start_cli_delinq_month_cnt,
+  mdc.start_cli_max_delinq_days,
+  vpr.report_status||'_'||ca.status_name as pkb_report_deal_status
+from M_FOLDER_CON_MINER x
+left join M_CONTRACT_PARAM_KDN5 k5 on k5.deal_number = x.contract_number
+left join V_FORM_PAR_CHANGES fch on fch.folder_id = x.folder_id
+left join V_PKB_REPORT vpr on vpr.folder_id = x.folder_id
+left join M_RBO_CONTRACT_BAS ca on ca.contract_number = x.contract_number
+left join (select sum(nvl(ce.initial_payment,0)) as initial_payment, ce.contract_number, ce.shop_name
+          from V_CONTRACT_EKT_DWH ce
+          group by ce.contract_number, ce.shop_name) ced on ced.contract_number = x.contract_number
+left join (
+          select distinct b.yy_mm_report, b.contract_number, b.client_id, b.start_cli_max_delinq_days, c.start_cli_delinq_month_cnt
+                  from (
+                 select a.*, max(a.delinq_days_old) over (partition by a.client_id order by a.rank_by_cli range between unbounded preceding and 1 preceding) start_cli_max_delinq_days
+                  from (
+                       select ww.yy_mm_report, ww.contract_number, ww.client_id, ww.delinq_days_old,
+                              dense_rank() over (partition by ww.client_id order by ww.yy_mm_report_num) rank_by_cli,
+                              dense_rank() over (partition by ww.contract_number order by ww.yy_mm_report_num) rank_by_con
+                       from v_portfolio ww
+                       ) a
+                       ) b
+          join (
+          select b.yy_mm_report, b.client_id,
+                 sum(b.delinq_month) over (partition by b.client_id order by b.rank_by_cli range between unbounded preceding and 1 preceding) start_cli_delinq_month_cnt
+           from (
+                 select distinct a.yy_mm_report,a.client_id,a.rank_by_cli,max(a.delinq_month) as delinq_month
+                 from (
+                       select ww.yy_mm_report, ww.client_id, case when ww.delinq_days_old > 0 then 1 else 0 end as delinq_month,
+                              dense_rank() over (partition by ww.client_id order by ww.yy_mm_report_num) rank_by_cli
+                       from v_portfolio ww
+                       ) a
+                 group by a.yy_mm_report,a.client_id,a.rank_by_cli
+                 ) b
+                 ) c on b.client_id = c.client_id and b.yy_mm_report = c.yy_mm_report
+          where b.rank_by_con = 1
+          ) mdc on mdc.contract_number = x.contract_number
+left join (select  d.rfo_contract_id,p.pos_type_rfo,p.partner
+            from V_CONTRACT_EKT_DWH d
+            left join V_POS p on p.pos_code  = d.pos_code
+         ) pos on pos.rfo_contract_id = x.rfo_contract_id;
+grant select on U1.M_FOLDER_CON_MINER_PKB_KDN to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER_PKB_KDN to LOADER;
+
+

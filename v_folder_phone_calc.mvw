@@ -1,0 +1,135 @@
+﻿create materialized view U1.V_FOLDER_PHONE_CALC
+using no index
+refresh complete on demand
+as
+select /*+ parallel 30 */
+       x.*,
+       floor(folder_date - ph_home_all_date_min) as ph_home_all_age,
+       floor(folder_date - ph_home_same_date_min) as ph_home_same_age,
+
+       floor(folder_date - ph_mobile_all_date_min) as ph_mobile_all_age,
+       floor(folder_date - ph_mobile_same_date_min) as ph_mobile_same_age,
+
+--       floor(folder_date - ph_work_all_date_min_min) as ph_work_all_age_max,
+       floor(folder_date - ph_work_all_date_min_max) as ph_work_all_age_min,
+--       floor(folder_date - ph_work_all_date_min_avg) as ph_work_all_age_avg, --
+
+--       floor(folder_date - ph_work_same_date_min_min) as ph_work_same_age_max,
+       floor(folder_date - ph_work_same_date_min_max) as ph_work_same_age_min,
+--       floor(folder_date - ph_work_same_date_min_avg) as ph_work_same_age_avg,
+
+--       floor(folder_date - ph_contact_all_date_min_min) as ph_contact_all_age_max,
+       floor(folder_date - ph_contact_all_date_min_max) as ph_contact_all_age_min,
+--       floor(folder_date - ph_contact_all_date_min_avg) as ph_contact_all_age_avg,
+
+--       floor(folder_date - ph_contact_same_date_min_min) as ph_contact_same_age_max,
+       floor(folder_date - ph_contact_same_date_min_max) as ph_contact_same_age_min
+--       floor(folder_date - ph_contact_same_date_min_avg) as ph_contact_same_age_avg
+
+from (
+select  p.folder_id,
+        max(p.form_client_id) as form_client_id,
+        max(p.rfo_client_id) as rfo_client_id,
+        min(p.folder_date) as folder_date,
+        trunc(min(p.folder_date)) as folder_date_day,
+
+        min(s.phone_date_min) as phone_date_min_min,
+        max(s.phone_date_min) as phone_date_min_max,
+
+        min(case when s.phone_type_simple = 'ДОМАШНИЙ' then s.phone_date_min end) as ph_home_all_date_min,
+        max(case when s.phone_type_simple = 'ДОМАШНИЙ' then s.client_order_phone end) as ph_home_all_order,
+
+        min(case when s.phone_type_simple = 'ДОМАШНИЙ' then s.phone_type_date_min end) as  ph_home_same_date_min,
+        max(case when s.phone_type_simple = 'ДОМАШНИЙ' then s.client_order_phone_type end) as ph_home_same_order,
+
+        min(case when s.phone_type_simple = 'МОБИЛЬНЫЙ' then s.phone_date_min end) as ph_mobile_all_date_min,
+        max(case when s.phone_type_simple = 'МОБИЛЬНЫЙ' then s.client_order_phone end) as ph_mobile_all_order,
+
+        min(case when s.phone_type_simple = 'МОБИЛЬНЫЙ' then s.phone_type_date_min end) as ph_mobile_same_date_min,
+        max(case when s.phone_type_simple = 'МОБИЛЬНЫЙ' then s.client_order_phone_type end) as ph_mobile_same_order,
+
+--        min(case when s.phone_type_simple = 'РАБОЧИЙ' then s.phone_date_min end) as ph_work_all_date_min_min,
+        max(case when s.phone_type_simple = 'РАБОЧИЙ' then s.phone_date_min end) as ph_work_all_date_min_max,
+--        sysdate - avg(sysdate - (case when s.phone_type_simple = 'РАБОЧИЙ' then s.phone_date_min end)) as ph_work_all_date_min_avg, --
+
+        min(case when s.phone_type_simple = 'РАБОЧИЙ' then s.client_order_phone end) as ph_work_all_order_min,
+--        max(case when s.phone_type_simple = 'РАБОЧИЙ' then s.client_order_phone end) as ph_work_all_order_max,
+--        floor(avg(case when s.phone_type_simple = 'РАБОЧИЙ' then s.client_order_phone end)) as ph_work_all_order_avg, --
+
+
+--        min(case when s.phone_type_simple = 'РАБОЧИЙ' then s.phone_type_date_min end) as ph_work_same_date_min_min,
+        max(case when s.phone_type_simple = 'РАБОЧИЙ' then s.phone_type_date_min end) as ph_work_same_date_min_max,
+--        sysdate - avg(sysdate - (case when s.phone_type_simple = 'РАБОЧИЙ' then s.phone_date_min end)) as ph_work_same_date_min_avg, --
+
+        min(case when s.phone_type_simple = 'РАБОЧИЙ' then s.client_order_phone_type end) as ph_work_same_order_min,
+--        max(case when s.phone_type_simple = 'РАБОЧИЙ' then s.client_order_phone_type end) as ph_work_same_order_max,
+--        floor(avg(case when s.phone_type_simple = 'РАБОЧИЙ' then s.client_order_phone_type end)) as ph_work_same_order_avg, --
+
+--        min(case when s.phone_type_simple = 'КОНТАКТ' then s.phone_date_min end) as ph_contact_all_date_min_min,
+        max(case when s.phone_type_simple = 'КОНТАКТ' then s.phone_date_min end) as ph_contact_all_date_min_max,
+--        sysdate - avg(sysdate - (case when s.phone_type_simple = 'КОНТАКТ' then s.phone_date_min end)) as ph_contact_all_date_min_avg, --
+
+        min(case when s.phone_type_simple = 'КОНТАКТ' then s.client_order_phone end) as ph_contact_all_order_min,
+--        max(case when s.phone_type_simple = 'КОНТАКТ' then s.client_order_phone end) as ph_contact_all_order_max,
+--        floor(avg(case when s.phone_type_simple = 'КОНТАКТ' then s.client_order_phone end)) as ph_contact_all_order_avg, --
+
+--        min(case when s.phone_type_simple = 'КОНТАКТ' then s.phone_type_date_min end) as ph_contact_same_date_min_min,
+        max(case when s.phone_type_simple = 'КОНТАКТ' then s.phone_type_date_min end) as ph_contact_same_date_min_max,
+--        sysdate - avg(sysdate - (case when s.phone_type_simple = 'КОНТАКТ' then s.phone_type_date_min end)) as ph_contact_same_date_min_avg, --
+
+        min(case when s.phone_type_simple = 'КОНТАКТ' then s.client_order_phone_type end) as ph_contact_same_order_min,
+--        max(case when s.phone_type_simple = 'КОНТАКТ' then s.client_order_phone_type end) as ph_contact_same_order_max,
+--        floor(avg(case when s.phone_type_simple = 'КОНТАКТ' then s.client_order_phone_type end)) as ph_contact_same_order_avg,
+
+        min(client_phone_date_min) as client_phone_date_min_min,
+        max(client_phone_date_min) as client_phone_date_min_max
+from V_FORM_CLIENT_CONTACT_PHONE p
+join (
+    select ss.phone_number, ss.phone_type_simple, ss.rfo_client_id,
+           min(ss.folder_date_min) over (partition by ss.phone_number)
+                              as phone_date_min, --дата создания группы без учета типа
+           min(ss.folder_date_min) over (partition by ss.phone_number, ss.rfo_client_id)
+                              as client_phone_date_min, -- первая дата попадания клиента в группу без учета типа
+           min(ss.folder_date_min) over (partition by ss.phone_number, ss.phone_type_simple)
+                              as phone_type_date_min, --дата создания группы с учетом типа
+           dense_rank() over (partition by ss.phone_number
+                              order by folder_date_min) as client_order_phone, --номер клиента в группе без учета типа
+           dense_rank() over (partition by ss.phone_number, ss.phone_type_simple
+                              order by folder_date_min) as client_order_phone_type --номер клиента в группе с учетом типа
+    from (select pp.phone_number, pp.phone_type_simple, pp.rfo_client_id,
+                 min(pp.folder_date) as folder_date_min
+          from V_FORM_CLIENT_CONTACT_PHONE pp
+          where pp.phone_type_simple in ('ДОМАШНИЙ','МОБИЛЬНЫЙ','КОНТАКТ','РАБОЧИЙ') and
+                pp.is_input = 1
+          group by pp.phone_number, pp.phone_type_simple, pp.rfo_client_id
+    ) ss
+) s on s.phone_number = p.phone_number and s.phone_type_simple = p.phone_type_simple and s.rfo_client_id = p.rfo_client_id
+group by p.folder_id
+) x
+--) y
+/*left join REF_PH_CNTR_ORDER_AGE_CATEG c1 on c1.amount_from <= y.ph_home_all_order and c1.amount_to > y.ph_home_all_order
+left join REF_PH_CNTR_ORDER_AGE_CATEG c2 on c2.amount_from <= y.ph_home_all_age and c2.amount_to > y.ph_home_all_age
+left join REF_PH_CNTR_ORDER_AGE_CATEG c3 on c3.amount_from <= y.ph_home_same_order and c3.amount_to > y.ph_home_same_order
+left join REF_PH_CNTR_ORDER_AGE_CATEG c4 on c4.amount_from <= y.ph_home_same_age and c4.amount_to > y.ph_home_same_age
+
+left join REF_PH_CNTR_ORDER_AGE_CATEG c5 on c5.amount_from <= y.ph_mobile_all_order and c5.amount_to > y.ph_mobile_all_order
+left join REF_PH_CNTR_ORDER_AGE_CATEG c6 on c6.amount_from <= y.ph_mobile_all_age and c6.amount_to > y.ph_mobile_all_age
+left join REF_PH_CNTR_ORDER_AGE_CATEG c7 on c7.amount_from <= y.ph_mobile_same_order and c7.amount_to > y.ph_mobile_same_order
+left join REF_PH_CNTR_ORDER_AGE_CATEG c8 on c8.amount_from <= y.ph_mobile_same_age and c8.amount_to > y.ph_mobile_same_age
+
+left join REF_PH_CNTR_ORDER_AGE_CATEG c9 on c9.amount_from <= y.ph_work_all_order_avg and c9.amount_to > y.ph_work_all_order_avg
+left join REF_PH_CNTR_ORDER_AGE_CATEG c10 on c10.amount_from <= y.ph_work_all_age_avg and c10.amount_to > y.ph_work_all_age_avg
+left join REF_PH_CNTR_ORDER_AGE_CATEG c11 on c11.amount_from <= y.ph_work_same_order_avg and c11.amount_to > y.ph_work_same_order_avg
+left join REF_PH_CNTR_ORDER_AGE_CATEG c12 on c12.amount_from <= y.ph_work_same_age_avg and c12.amount_to > y.ph_work_same_age_avg
+
+left join REF_PH_CNTR_ORDER_AGE_CATEG c13 on c13.amount_from <= y.ph_contact_all_order_avg and c13.amount_to > y.ph_contact_all_order_avg
+left join REF_PH_CNTR_ORDER_AGE_CATEG c14 on c14.amount_from <= y.ph_contact_all_age_avg and c14.amount_to > y.ph_contact_all_age_avg
+left join REF_PH_CNTR_ORDER_AGE_CATEG c15 on c15.amount_from <= y.ph_contact_same_order_avg and c15.amount_to > y.ph_contact_same_order_avg
+left join REF_PH_CNTR_ORDER_AGE_CATEG c16 on c16.amount_from <= y.ph_contact_same_age_avg and c16.amount_to > y.ph_contact_same_age_avg*/
+
+--where nvl(ph_home_same_order,9999) < 10000 and nvl(ph_home_same_age,9999) < 9999 and
+--      nvl(ph_mobile_same_order,9999) < 10000 and nvl(ph_mobile_same_age,9999) < 9999;
+grant select on U1.V_FOLDER_PHONE_CALC to LOADDB;
+grant select on U1.V_FOLDER_PHONE_CALC to LOADER;
+
+

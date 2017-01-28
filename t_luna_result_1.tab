@@ -1,0 +1,50 @@
+﻿create table U1.T_LUNA_RESULT_1
+(
+  similarity     NUMBER,
+  rfo_client_id  NUMBER,
+  luna_id        NUMBER,
+  rfo_client_id2 NUMBER,
+  luna_id2       NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.T_LUNA_RESULT_1_IND1 on U1.T_LUNA_RESULT_1 (RFO_CLIENT_ID)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_LUNA_RESULT_1_IND2 on U1.T_LUNA_RESULT_1 (LUNA_ID)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_LUNA_RESULT_1 to LOADDB;
+grant select on U1.T_LUNA_RESULT_1 to LOADER;
+

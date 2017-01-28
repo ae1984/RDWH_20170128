@@ -1,0 +1,17 @@
+﻿create materialized view U1.V_TMP_CLIENT_ALL_RFO_2_UDL
+using no index
+refresh complete on demand
+as
+select --+noparallel
+a.*,
+case when b.delinq_rate_npl > 0 then 1 else 0 end as is_npl,
+case when b.delinq_rate_b_w > 0 then 1 else 0 end as is_b_w,
+case when b.delinq_rate_pmt_1 > 0 then 1 else 0 end as is_fpd_1,
+case when b.delinq_rate_pmt_8_30 > 0 then 1 else 0 end as is_fpd_8_30,
+case when b.delinq_rate_pmt_1_7 > 0 then 1 else 0 end as is_fpd_1_7
+from V_TMP_CLIENT_ALL_RFO_1_UDL a
+join m_contract_cal_del b on a.contract_number = b.contract_number;
+grant select on U1.V_TMP_CLIENT_ALL_RFO_2_UDL to LOADDB;
+grant select on U1.V_TMP_CLIENT_ALL_RFO_2_UDL to LOADER;
+
+

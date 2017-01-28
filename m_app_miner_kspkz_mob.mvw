@@ -1,0 +1,34 @@
+﻿create materialized view U1.M_APP_MINER_KSPKZ_MOB
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       m.app_id,
+       frm.phone_mobile,
+       --t.pay_param_clear as mobile_phone,
+
+       trunc(max(m.folder_date_create_mi)) - trunc(min(t.pay_date)) as kspkz_mob_pay_days_180d,
+       min(t.pay_date) as kspkz_mob_pay_date_180d_min,
+
+       count(distinct t.pay_info_id) as kspkz_mob_pay_180d_cnt,
+       sum(t.pay_amount) as kspkz_mob_pay_180d_sum,
+
+       round(avg(t.pay_amount)) as kspkz_mob_pay_180d_avg
+
+from u1.M_APP_MINER_BAS m
+left join u1.M_APP_MINER_FORM_CLIENT frm on frm.app_id = m.app_id
+left join u1.M_KASPIKZ_PAY t on t.rfo_client_id = m.rfo_client_id
+                                and t.pay_param_clear = substr(frm.phone_mobile, 2, 10)
+
+                                and t.pay_date >= trunc(m.folder_date_create_mi) - 180
+                                and t.pay_date < trunc(m.folder_date_create_mi)
+
+                                and t.is_prov = 1
+                                and t.category_name = 'MOBILE'
+
+where m.folder_date_create_mi >= to_date('20150101', 'yyyymmdd')
+group by m.app_id,
+         frm.phone_mobile;
+grant select on U1.M_APP_MINER_KSPKZ_MOB to LOADDB;
+
+

@@ -1,0 +1,33 @@
+﻿create materialized view U1.M_KAS_CLIENT_PKB_GCVP_REP_DD
+build deferred
+refresh force on demand
+as
+select/*+parallel(2)*/ oc.c_form_client_st#inn as c_iin,
+       g.c_sal as GCVP_SAL,--официальная зарплата(ГЦВП)
+       p.report_status,--Статус отчета ПКБ
+       nvl(p.TOTAL_DEBT,0) as TOTAL_DEBT ,--общий долг по всем кредитам
+       nvl(p.delinq_amount,0) as delinq_amount,--просроченная сумма по всем кредитам
+       case when p.delinq_amount>0 then 'да' else 'нет' end as pkb_cl_delinq_exists
+from u1.T_RFO_Z#KAS_ONLINE_BUY ob
+join u1.T_RFO_Z#KAS_ONLINE_CLAIM  oc on oc.c_buy_ref = ob.id
+--GCVP
+left join (select *
+           from
+                (select distinct g.*,
+                        row_number () over (partition by x_client_iin order by c_statement_date desc) as rn
+                 from u1.T_RFO_Z#KAS_GCVP_REPORT g)--На Частое обновление (в режиме онлайн времени)
+           where rn  = 1) g on oc.c_form_client_st#inn= g.x_client_iin
+                               and trunc(ob.c_date_create) = trunc(g.c_statement_date)
+--PKB
+left join (select *
+           from
+              (select distinct p.*,
+                      row_number () over (partition by p.iin_rnn order by report_id desc) as rn
+              from u1.t_pkb_report p)--На Частое обновление (в режиме онлайн времени)
+           where rn  = 1) p on oc.c_form_client_st#inn = p.iin_rnn
+                               and trunc(ob.c_date_create) = trunc(p.report_date)
+where ob.c_date_create > trunc(sysdate)
+group by oc.c_form_client_st#inn,g.c_sal,p.report_status,p.TOTAL_DEBT,p.delinq_amount;
+grant select on U1.M_KAS_CLIENT_PKB_GCVP_REP_DD to LOADDB;
+
+

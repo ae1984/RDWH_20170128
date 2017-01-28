@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_CONTRACT_DISCOUNT_PRE2
+build deferred
+refresh force on demand
+as
+select e.c_cred_ref as rbo_contract_id,
+       --pr.c_num_dog as contract_number,
+       p.c_date as c_date_in,
+       pr.c_date_close ,
+       max(p.id)  keep (dense_rank last order by p.id) as prov_id,
+       max(p.c_sum_out_com_1435) keep (dense_rank last order by p.id) as c_sum_out_com_1435,
+       max(p.c_sum_out_dif_1435) keep (dense_rank last order by p.id) as c_sum_out_dif_1435,
+       max(p.c_sum_out_dis_1435) keep (dense_rank last order by p.id) as c_sum_out_dis_1435,
+       max(p.c_sum_out_com_1434) keep (dense_rank last order by p.id) as c_sum_out_com_1434,
+       max(p.c_sum_out_dif_1434) keep (dense_rank last order by p.id) as c_sum_out_dif_1434,
+       max(p.c_sum_out_dis_1434) keep (dense_rank last order by p.id) as c_sum_out_dis_1434,
+       0 as is_card
+from
+V_RBO_Z#KAS_CALC_EPS e
+join  V_RBO_Z#KAS_JRN_PROV_EPS p on p.collection_id = e.c_kas_jrn_eps_arr
+join V_RBO_Z#PR_CRED PR          on pr.id = e.c_cred_ref
+group by e.c_cred_ref, p.c_date,pr.c_date_close;
+grant select on U1.M_CONTRACT_DISCOUNT_PRE2 to LOADDB;
+grant select on U1.M_CONTRACT_DISCOUNT_PRE2 to LOADER;
+
+

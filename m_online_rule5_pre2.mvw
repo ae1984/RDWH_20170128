@@ -1,0 +1,48 @@
+﻿create materialized view U1.M_ONLINE_RULE5_PRE2
+build deferred
+refresh force on demand
+as
+select z.claim_id
+
+       , count(distinct z.claim_id2) as active_cnt_x
+
+from (
+select o.*,
+       y.claim_id claim_id2,
+       y.date_create date_create2,
+       y.rfo_client_id rfo_client_id2,
+       y.pk,
+       y.code,
+       y.sh_last_date_create,
+       y.sh_active_date_create,
+       y.sh_status_code,
+       y.sh_status_name
+from u1.M_FOLDER_CON_CANCEL_ONLINE_1 o
+left join u1.M_ONLINE_RULE5_PRE2_1 y on  y.rfo_client_id = o.rfo_client_id and
+                                       y.claim_id != o.claim_id and
+                                       ((y.date_create < o.date_create and
+                                         coalesce(y.sh_last_date_create, o.date_create) >= o.date_create)/* or
+                                        y.sh_active_date_create >= trunc(o.date_create) - 30*/
+                                       )
+union all
+select o.*,
+       y.claim_id claim_id2,
+       y.date_create date_create2,
+       y.rfo_client_id rfo_client_id2,
+       y.pk,
+       y.code,
+       y.sh_last_date_create,
+       y.sh_active_date_create,
+       y.sh_status_code,
+       y.sh_status_name
+from u1.M_FOLDER_CON_CANCEL_ONLINE_1 o
+left join u1.M_ONLINE_RULE5_PRE2_1 y on  y.rfo_client_id = o.rfo_client_id and
+                                       y.claim_id != o.claim_id and
+                                       y.sh_active_date_create < trunc(o.date_create) and
+                                       y.sh_active_date_create >= trunc(o.date_create) - 30
+) z
+--where z.claim_id = 89700735828
+group by z.claim_id;
+grant select on U1.M_ONLINE_RULE5_PRE2 to LOADDB;
+
+

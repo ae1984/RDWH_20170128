@@ -1,0 +1,51 @@
+﻿create table U1.T_RDWH_PX_SESSION_HIST
+(
+  dt           DATE,
+  saddr        RAW(8),
+  sid          NUMBER,
+  serial#      NUMBER,
+  qcsid        NUMBER,
+  qcserial#    NUMBER,
+  qcinst_id    NUMBER,
+  server_group NUMBER,
+  server_set   NUMBER,
+  server#      NUMBER,
+  degree       NUMBER,
+  req_degree   NUMBER,
+  con_id       NUMBER,
+  sql_id       VARCHAR2(50)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RDWH_PX_SESSION_HIST
+  is 'История. Информации о работе сессий, работающих под управлением параллельного выполнения';
+comment on column U1.T_RDWH_PX_SESSION_HIST.degree
+  is 'Степень параллелизма ';
+comment on column U1.T_RDWH_PX_SESSION_HIST.req_degree
+  is 'Степень параллелизма, запрошенный пользователем';
+create index U1.IDX_T_RDWH_PX_SESSION_DT on U1.T_RDWH_PX_SESSION_HIST (DT)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_RDWH_PX_SESSION_HIST to LOADDB;
+

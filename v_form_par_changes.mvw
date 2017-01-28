@@ -1,0 +1,58 @@
+﻿create materialized view U1.V_FORM_PAR_CHANGES
+refresh complete on demand
+as
+select xx.rfo_client_id client_id ,
+       xx.folder_id,
+       xx.folder_date_create date_create,
+       xx.iin iin,
+       sum(xx.is_education_changed) over (partition by xx.rfo_client_id order by xx.folder_date_create range 1 preceding) education,
+       sum(xx.is_ms_changed) over (partition by xx.rfo_client_id order by xx.folder_date_create range 1 preceding) marital_status,
+       sum(xx.is_child_changed) over (partition by xx.rfo_client_id order by xx.folder_date_create range 1 preceding) children,
+       sum(xx.is_dep_changed) over (partition by xx.rfo_client_id order by xx.folder_date_create range 1 preceding) dependants,
+       sum(xx.is_inc_sal_changed) over (partition by xx.rfo_client_id order by xx.folder_date_create range 1 preceding) salary,
+       sum(xx.inc_sal_add_changed) over (partition by xx.rfo_client_id order by xx.folder_date_create range 1 preceding) salary_add,
+       sum(xx.inc_sal_spouse_changed) over (partition by xx.rfo_client_id order by xx.folder_date_create range 1 preceding) salary_spouse,
+       sum(xx.real_estate_relation_changed) over (partition by xx.rfo_client_id order by xx.folder_date_create range 1 preceding) real_estate_relation,
+       sum(xx.amount_changed) over (partition by xx.rfo_client_id order by xx.folder_date_create range 1 preceding) amount,
+       sum(xx.term_duration_changed) over (partition by xx.rfo_client_id order by xx.folder_date_create range 1 preceding) term_duration,
+       xx.expert_name
+from (
+    select x.rfo_client_id,
+           x.folder_id,
+           x.folder_date_create,
+           x.expert_name,
+           x.iin,
+           x.inc_sal,
+           case when (nvl(x.inc_sal, 0) = nvl(lag(x.inc_sal, 1, x.inc_sal) over (partition by x.rfo_client_id, trunc(x.folder_date_create) order by x.folder_date_create), 0)) then 0 else 1 end is_inc_sal_changed,
+           x.education,
+           case when (nvl(x.education, 0) = nvl(lag(x.education, 1, x.education) over (partition by x.rfo_client_id, trunc(x.folder_date_create) order by x.folder_date_create), 0)) then 0 else 1 end is_education_changed,
+           x.marital_status,
+           case when (nvl(x.marital_status, 0) = nvl(lag(x.marital_status, 1, x.marital_status) over (partition by x.rfo_client_id, trunc(x.folder_date_create) order by x.folder_date_create), 0)) then 0 else 1 end is_ms_changed,
+           x.children,
+           case when (nvl(x.children, 0) = nvl(lag(x.children, 1, x.children) over (partition by x.rfo_client_id, trunc(x.folder_date_create) order by x.folder_date_create), 0)) then 0 else 1 end is_child_changed,
+           x.dependants_count,
+           case when (nvl(x.dependants_count, 0) = nvl(lag(x.dependants_count, 1, x.dependants_count) over (partition by x.rfo_client_id, trunc(x.folder_date_create) order by x.folder_date_create), 0)) then 0 else 1 end is_dep_changed,
+           x.inc_sal_add,
+           case when (nvl(x.inc_sal_add, 0) = nvl(lag(x.inc_sal_add, 1, x.inc_sal_add) over (partition by x.rfo_client_id, trunc(x.folder_date_create) order by x.folder_date_create), 0)) then 0 else 1 end inc_sal_add_changed,
+           x.inc_sal_spouse,
+           case when (nvl(x.inc_sal_spouse, 0) = nvl(lag(x.inc_sal_spouse, 1, x.inc_sal_spouse) over (partition by x.rfo_client_id, trunc(x.folder_date_create) order by x.folder_date_create), 0)) then 0 else 1 end inc_sal_spouse_changed,
+           x.real_estate_relation,
+           case when (nvl(x.real_estate_relation, 0) = nvl(lag(x.real_estate_relation, 1, x.real_estate_relation) over (partition by x.rfo_client_id, trunc(x.folder_date_create) order by x.folder_date_create), 0)) then 0 else 1 end real_estate_relation_changed,
+           x.amount,
+           case when (nvl(x.amount, 0) = nvl(lag(x.amount, 1, x.amount) over (partition by x.rfo_client_id, trunc(x.folder_date_create) order by x.folder_date_create), 0)) then 0 else 1 end amount_changed,
+           x.term_duration,
+           case when (nvl(x.term_duration, 0) = nvl(lag(x.term_duration, 1, x.term_duration) over (partition by x.rfo_client_id, trunc(x.folder_date_create) order by x.folder_date_create), 0)) then 0 else 1 end term_duration_changed
+
+    from
+    (select
+          f.rfo_client_id, f.folder_id, f.folder_date_create, t.iin,
+          t.education, t.marital_status, t.children, t.dependants_count, t.inc_sal, t.inc_sal_add, t.inc_sal_spouse,
+          t.real_estate_relation , f.expert_name, t.amount, t.term_duration
+    from v_folder_all_rfo f
+    join v_form_client_all_rfo t on t.form_client_id = f.form_client_id
+    ) x
+) xx;
+grant select on U1.V_FORM_PAR_CHANGES to LOADDB;
+grant select on U1.V_FORM_PAR_CHANGES to LOADER;
+
+

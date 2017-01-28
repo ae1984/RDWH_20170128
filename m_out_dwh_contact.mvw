@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_OUT_DWH_CONTACT
+refresh complete on demand
+as
+select c.id,
+       c.cont_id,
+       c.numb_cont,
+       c.type_cont_ver,
+       c.cont_property,
+       c.cont_info,
+       c.last_name_cp,
+       c.first_name_cp,
+       c.sur_name_cp,
+       c.status_owner_cp,
+       c.accepted,
+       c.is_added,
+       c.verification_id,
+       cast (c.portition_date as date) as portition_date
+  from verificator.OUT_DWH_CONTACT@verifais c;
+grant select on U1.M_OUT_DWH_CONTACT to LOADDB;
+grant select on U1.M_OUT_DWH_CONTACT to LOADER;
+
+

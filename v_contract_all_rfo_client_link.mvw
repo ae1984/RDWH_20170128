@@ -1,0 +1,26 @@
+﻿create materialized view U1.V_CONTRACT_ALL_RFO_CLIENT_LINK
+using no index
+refresh complete on demand
+as
+select /*+parallel(15) parallel_index(15) */ c3.contract_number, max(c3.rfo_client_id) as rfo_client_id, max(c3.is_card) as is_card
+from V_CONTRACT_ALL_RFO c3
+where c3.contract_number is not null
+group by c3.contract_number
+having count(distinct c3.rfo_client_id) = 1
+union
+select c4.contract_number, max(c4.rfo_client_id) as rfo_client_id, max(c4.is_card) as is_card
+from V_CONTRACT_ALL_RFO c4
+join V_CLIENT_RFO_BY_ID cl on cl.rfo_client_id = c4.rfo_client_id
+join V_DWH_PORTFOLIO_CURRENT dw on dw.deal_number = c4.contract_number and dw.client_iin = cl.iin
+-- V_DWH_PORTFOLIO_CURRENT используется только для разрешения конфликтов по 56 дублированным договорам
+-- сама вьюшка делает связку не только для выданных кредитов
+where c4.contract_number in (
+        select c3.contract_number from V_CONTRACT_ALL_RFO c3
+        where c3.contract_number is not null
+        group by c3.contract_number
+        having count(distinct c3.rfo_client_id) > 1)
+group by c4.contract_number;
+grant select on U1.V_CONTRACT_ALL_RFO_CLIENT_LINK to LOADDB;
+grant select on U1.V_CONTRACT_ALL_RFO_CLIENT_LINK to LOADER;
+
+

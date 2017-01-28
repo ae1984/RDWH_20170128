@@ -1,0 +1,8 @@
+﻿create sequence U1.SQ_RFO_KAS_ONLINE_CLAIM_CANCEL
+minvalue 1
+maxvalue 999999999999
+start with 2863828
+increment by 1
+cache 20
+cycle;
+

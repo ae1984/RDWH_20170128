@@ -1,0 +1,21 @@
+﻿create table U1.T_RDWH_SQL_MONITOR_HIST
+(
+  dt             DATE,
+  sql_id         VARCHAR2(13),
+  sql_exec_start DATE,
+  sql_exec_id    NUMBER
+)
+tablespace USERS_ARC
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+nologging;
+grant select on U1.T_RDWH_SQL_MONITOR_HIST to LOADDB;
+

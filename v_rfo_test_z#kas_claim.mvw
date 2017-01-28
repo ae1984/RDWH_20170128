@@ -1,0 +1,20 @@
+﻿create materialized view U1.V_RFO_TEST_Z#KAS_CLAIM
+using no index
+refresh complete on demand
+as
+select id,
+         c_parameters,
+         c_date_create,
+         c_rnn,
+         c_type,
+         state_id,
+         c_datlast,
+         case when upper(c_parameters) like '%pkb_id%' then
+            substr(c_parameters, instr(upper(c_parameters),'pkb_id#',-1)+7,
+                          length(c_parameters)-instr(upper(c_parameters),'pkb_id#',-1) - 7) else '0' end as id_report
+from IBS.Z#KAS_CLAIM@RFO_TEST
+where trunc(c_date_create) >= add_months(trunc(sysdate,'mm'),-13);
+grant select on U1.V_RFO_TEST_Z#KAS_CLAIM to LOADDB;
+grant select on U1.V_RFO_TEST_Z#KAS_CLAIM to LOADER;
+
+

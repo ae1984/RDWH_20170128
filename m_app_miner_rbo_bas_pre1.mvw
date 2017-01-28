@@ -1,0 +1,36 @@
+﻿create materialized view U1.M_APP_MINER_RBO_BAS_PRE1
+build deferred
+refresh force on demand
+as
+select am.app_id
+
+       ,trunc(max(am.folder_date_create_mi)) - trunc(min(least(coalesce(t1.begin_date, t2.begin_date),
+                                                               coalesce(t2.begin_date, t1.begin_date)))) as life_length
+
+       ,trunc(max(am.folder_date_create_mi)) - trunc(min(t2.begin_date)) as deposit_life_length
+
+       ,trunc(max(am.folder_date_create_mi)) - trunc(min(case when t2.currency != 'KZT' then t2.begin_date end)) as deposit_life_usd
+
+       --
+	     ,case when sum(case when t2.currency != 'KZT'
+                                  and coalesce(t2.closed_date, trunc(am.folder_date_create_mi)) >= trunc(am.folder_date_create_mi)
+                      then 1 else 0 end) > 0
+                 then 1
+        else 0 end as deposit_usd_active
+
+       ,case when sum(case when coalesce(t2.closed_date, trunc(am.folder_date_create_mi)) >= trunc(am.folder_date_create_mi)
+                      then 1 else 0 end) > 0
+                 then 1
+        else 0 end as deposit_active
+
+from U1.M_APP_MINER_BAS am
+left join U1.M_RBO_CONTRACT_BAS t1 on t1.rfo_client_id = am.rfo_client_id
+                                      and t1.begin_date < trunc(am.folder_date_create_mi)
+left join U1.M_RBO_CONTRACT_DEPOSIT_BAS t2 on t2.is_has_timeout = 1
+                                              and t2.rfo_client_id = am.rfo_client_id
+                                              and t2.begin_date < trunc(am.folder_date_create_mi)
+where am.folder_date_create_mi >= to_date('2015-01-01','yyyy-mm-dd')
+group by am.app_id;
+grant select on U1.M_APP_MINER_RBO_BAS_PRE1 to LOADDB;
+
+

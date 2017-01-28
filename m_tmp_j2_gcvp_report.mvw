@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_TMP_J2_GCVP_REPORT
+build deferred
+refresh complete on demand
+as
+select /*+parallel(2)*/
+       g.id as report_id,
+       g.c_rnn as iin_rnn,
+       trunc(g.c_statement_date) as report_date,
+       g.c_statement_date as report_date_time,
+       trunc(fd.c_doc_date) as report_doc_date,
+       fd.c_doc_date as report_doc_date_time,
+       g.c_error_code as error_code,
+       round(case when coalesce(g.c_sal,0) < 3000 then 0 else g.c_sal end) as salary,
+       round(g.c_sal) as salary_raw,
+       g.c_avg_gcvp_payment as pmt_avg,
+       g.c_payment_qty as pmts_quantity
+from u1.V_RFO_Z#KAS_GCVP_REPORT g
+left join u1.V_RFO_Z#FDOC fd on fd.id = g.id;
+grant select on U1.M_TMP_J2_GCVP_REPORT to LOADDB;
+
+

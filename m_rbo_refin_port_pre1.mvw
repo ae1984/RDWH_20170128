@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_RBO_REFIN_PORT_PRE1
+build deferred
+refresh force on demand
+as
+select /*+parallel(10)*/
+       vp.rbo_contract_id,
+       max(vp.total_debt) as total_debt_max,
+       max(vp.delinq_days) as del_days_max,
+       max(vp.delinq_days_cli) as del_days_cli_max
+from M_RBO_REFIN_PORT_PRE0 mr
+join u1.V_RBO_PORT vp on vp.rbo_contract_id = mr.rbo_contract_id
+                       and vp.rep_date < mr.min_refin_date
+group by vp.rbo_contract_id;
+

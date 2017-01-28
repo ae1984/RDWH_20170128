@@ -1,0 +1,9 @@
+﻿create materialized view U1.M_RBO_REFIN_PORT_PRE0
+build deferred
+refresh force on demand
+as
+select /*+parallel(1)*/
+    rbo_contract_id, min(min_refin_date) as min_refin_date
+from M_RBO_CONTR_AFTER_REF_PERCENT
+group by rbo_contract_id, min_refin_date;
+

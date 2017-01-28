@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_MO_AUTO_PHOTO_HG
+build deferred
+refresh complete on demand
+as
+select /*+ parallel(5) */
+       x.rfolder_id,
+       x.IN_AP_VERIF_ID,
+       x.AP_RESULT_PRE,
+       x.AP_RESULT
+from (
+  select
+         t.rfolder_id,
+         dp.code_int,
+         t.value_number
+  from MO_RFOLDER_PAR_VALUE t
+  join V_MO_D_PAR dp on dp.id = t.d_par_id and
+                      dp.code_int in ('AP_RESULT',
+                                      'AP_RESULT_PRE',
+                                      'IN_AP_VERIF_ID')
+  where t.date_create > (sysdate-1)
+  ) pivot (
+    max(value_number)
+    for code_int in('AP_RESULT' as AP_RESULT,
+                    'AP_RESULT_PRE' as AP_RESULT_PRE,
+                    'IN_AP_VERIF_ID' as IN_AP_VERIF_ID)
+  ) x
+
+  where x.AP_RESULT_PRE != AP_RESULT;
+grant select on U1.M_MO_AUTO_PHOTO_HG to LOADDB;
+
+

@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_19
+build deferred
+refresh force on demand
+as
+select t.claim_id
+       ,t.rfo_client_id
+       ,t.date_create
+       ,coalesce(b.form_client_id,b2.form_client_id) as form_client_id
+       ,coalesce(b.inc_sal, b2.inc_sal) as income_form
+       ,coalesce(coalesce(b.inc_sal,0)+coalesce(b.inc_sal_add,0)+coalesce(b.inc_sal_spouse,0)+coalesce(b.inc_pension_benefits,0),
+                 coalesce(b2.inc_sal,0)+coalesce(b2.inc_sal_add,0)+coalesce(b2.inc_sal_spouse,0)+coalesce(b2.inc_pension_benefits,0)) as income_form_all
+       ,avg(coalesce(b.inc_sal, b2.inc_sal))
+           over (partition by t.rfo_client_id order by trunc(t.date_create) range between 30 preceding and 1 preceding) as avg_zp_h
+       ,avg(coalesce(b.inc_sal, b2.inc_sal))
+           over (partition by t.rfo_client_id order by t.date_create range between 30 preceding and 1/24/60/60 preceding) as avg_zp_h_x
+       ,max(coalesce(b.inc_sal, b2.inc_sal))
+           over (partition by t.rfo_client_id order by trunc(t.date_create) range between 30 preceding and 1 preceding) as max_zp_h
+       ,max(coalesce(b.inc_sal, b2.inc_sal))
+           over (partition by t.rfo_client_id order by t.date_create range between 30 preceding and 1/24/60/60 preceding) as max_zp_h_x
+       ,case when coalesce(b.inc_sal, b2.inc_sal) != 0 then (t.monthly_pay/coalesce(b.inc_sal, b2.inc_sal))*100 end as installment_incom_avg
+       ,avg(case when coalesce(b.inc_sal, b2.inc_sal) != 0 then (t.monthly_pay/coalesce(b.inc_sal, b2.inc_sal))*100 end)
+           over (partition by t.rfo_client_id order by trunc(t.date_create) range between 30 preceding and 1 preceding) as  installment_incom_avg_30d
+       ,avg(case when coalesce(b.inc_sal, b2.inc_sal) != 0 then (t.monthly_pay/coalesce(b.inc_sal, b2.inc_sal))*100 end)
+           over (partition by t.rfo_client_id order by t.date_create range between 30 preceding and 1/24/60/60 preceding) as  installment_incom_avg_30d_x
+from u1.M_FOLDER_CON_CANCEL_ONLINE_1 t
+left join u1.V_FORM_CLIENT_ALL_RFO b on b.rfo_client_id = t.rfo_client_id and
+                                        b.folder_id = t.folder_id
+left join u1.V_FORM_CLIENT_ALL_RFO b2 on b2.form_client_id = t.form_client_ref;
+grant select on U1.M_RFO_FRAUD_SEARCH_19 to LOADDB;
+
+

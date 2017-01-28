@@ -1,0 +1,36 @@
+﻿create materialized view U1.V_RBO_Z#KAS_JRN_PROV_EPS
+refresh complete on demand
+as
+select id,
+      collection_id,
+      c_date,
+      c_sum_calc_profit,
+      c_sum_comis_1434,
+      c_doc_1434,
+      c_doc_1434_amort,
+      c_doc_1435,
+      c_doc_1435_amort,
+      c_sum_comis_1435,
+      c_sum_disc_1434,
+      c_sum_disc_1435,
+      c_sum_diff_1434,
+      c_sum_diff_1435,
+      c_corr_acc,
+      c_sign_1434_1435,
+      c_doc_1434_dif,
+      c_doc_1435_dif,
+      c_doc_1434_corr,
+      c_doc_1435_corr,
+      c_sign_1434_1435_2,
+      c_sum_out_com_1435,
+      c_sum_out_com_1434,
+      c_sum_out_dif_1435,
+      c_sum_out_dif_1434,
+      c_sum_out_dis_1435,
+      c_sum_out_dis_1434,
+      c_sign_resid
+from s02.Z#KAS_JRN_PROV_EPS@rdwh_exd;
+grant select on U1.V_RBO_Z#KAS_JRN_PROV_EPS to LOADDB;
+grant select on U1.V_RBO_Z#KAS_JRN_PROV_EPS to LOADER;
+
+

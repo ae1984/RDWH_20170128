@@ -1,0 +1,36 @@
+﻿create materialized view U1.V_CLIENT_RFO_BY_ID
+build deferred
+refresh complete on demand
+as
+select
+      c.id as
+      rfo_client_id,
+      c.x_iin as
+      iin,
+      c.x_rnn
+      rnn,
+      upper(cp.c_last_name) || ' ' || upper(cp.c_first_name) || ' ' ||
+      upper(cp.c_sur_name) as
+      client_name,
+      upper(cp.c_last_name) as name_last,
+      upper(cp.c_first_name) as name_first,
+      upper(cp.c_sur_name) as name_patronymic,
+      cp.c_date_pers as
+      birth_date,
+      check_iin(c.x_iin) as is_iin_valid,
+      case  when cp.c_sex#0 = 1 then 'М'
+      when cp.c_sex#0 = 2 then 'Ж'
+      when cp.c_sex#0 = 3 then '?' end as sex/*,
+      decode(tt.c_bool,1,'Да','0','Нет',c_bool) as photo_agree,
+      trunc(tt.c_date_beg) as photo_agree_date*/
+ from V_RFO_Z#CLIENT c
+ join V_RFO_Z#CL_PRIV cp on c.id = cp.id
+/* left join (select pr.collection_id, pr.c_bool, pr.c_date_beg
+              from v_rfo_z#properties pr
+              join v_rfo_z#property_grp pg on pr.c_group_prop = pg.id and pg.c_name = 'Согласие на фотографирование') tt on tt.collection_id = cp.c_add_props*/;
+grant select on U1.V_CLIENT_RFO_BY_ID to LOADDB;
+grant select on U1.V_CLIENT_RFO_BY_ID to LOADER;
+grant select on U1.V_CLIENT_RFO_BY_ID to LOAD_MO;
+grant select on U1.V_CLIENT_RFO_BY_ID to RISK_VERIF;
+
+

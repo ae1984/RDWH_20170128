@@ -1,0 +1,51 @@
+﻿create materialized view U1.M_DWH_REF_TRANSACT_LOYAL
+build deferred
+refresh complete on demand
+as
+select trnly_id,
+       trnly_gid,
+       trnly$start_date,
+       trnly$end_date,
+       trnly$row_status,
+       trnly$audit_id,
+       trnly$hash,
+       trnly_clnt_gid,
+       trnly_trnsct_loyal_type_cd,
+       trnly_percent_rate,
+       trnly_bonus_type,
+       trnly$change_date,
+       trnly$source,
+       trnly$provider,
+       trnly$source_pk,
+       trnly_date,
+       trnly_mcc_code,
+       trnly_cardly_gid,
+       trnly_dcard_gid,
+       trnly_atm_type,
+       trnly_place,
+       trnly_trnsct_loyal_status_cd,
+       trnly_trnsct_amt_tg,
+       trnly_created_date,
+       trnly_txn_id,
+       trnly_sub_type_cd,
+       trnly_description,
+       trnly_merchant_cd,
+       trnly_card_gid,
+       trnly_trnly_gid,
+       trnly_advcmp_gid,
+       trnly_advcmprl_gid,
+       trnly_tm_date,
+       trnly_bonus_date,
+       trnly_prcss_date,
+       trnly_crnc_gid,
+       trnly_source_name,
+       trnly_res_of_match,
+       trnly_start_date,
+       trnly_ly_prod_cd,
+       trnly_ly_prog_cd,
+       trnly_bonus_sum,
+       trnly_company_policy_name
+  from DWH_MAIN.REF_TRANSACT_LOYAL@DWH_PROD2;
+grant select on U1.M_DWH_REF_TRANSACT_LOYAL to LOADDB;
+
+

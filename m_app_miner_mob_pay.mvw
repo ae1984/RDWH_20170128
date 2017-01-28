@@ -1,0 +1,39 @@
+﻿create materialized view U1.M_APP_MINER_MOB_PAY
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       m.app_id
+       ,coalesce(trm.phone_mobile, kspkz.phone_mobile) as phone_mobile
+       --t.pay_param_clear as mobile_phone,
+
+      ,case when (coalesce(trm.trm_mob_pay_180d_cnt, 0) + coalesce(kspkz.kspkz_mob_pay_180d_cnt, 0)) > 0
+            then coalesce(trm.trm_mob_pay_180d_cnt, 0) + coalesce(kspkz.kspkz_mob_pay_180d_cnt, 0) end as pmt_qty
+
+      ,case when (coalesce(trm.trm_mob_pay_180d_cnt, 0) + coalesce(kspkz.kspkz_mob_pay_180d_cnt, 0)) > 0
+            then round((coalesce(trm.trm_mob_pay_180d_sum, 0) + coalesce(kspkz.kspkz_mob_pay_180d_sum, 0)) /
+                       (coalesce(trm.trm_mob_pay_180d_cnt, 0) + coalesce(kspkz.kspkz_mob_pay_180d_cnt, 0)), 2)
+       end as avg_pmt
+
+      ,case when (coalesce(trm.trm_mob_pay_180d_sum, 0) + coalesce(kspkz.kspkz_mob_pay_180d_sum, 0)) > 0
+            then round(coalesce(kspkz.kspkz_mob_pay_180d_sum, 0)/(coalesce(trm.trm_mob_pay_180d_sum, 0) + coalesce(kspkz.kspkz_mob_pay_180d_sum, 0)), 2)
+       end as share_of_kaspikz_pmt
+
+      ,case when (coalesce(trm.trm_mob_pay_180d_sum, 0) + coalesce(kspkz.kspkz_mob_pay_180d_sum, 0)) > 0
+            then round(coalesce(trm.trm_mob_pay_180d_sum, 0)/(coalesce(trm.trm_mob_pay_180d_sum, 0) + coalesce(kspkz.kspkz_mob_pay_180d_sum, 0)), 2)
+       end as share_of_term_pmt
+
+      ,case when (coalesce(trm.trm_mob_pay_180d_sum, 0) + coalesce(kspkz.kspkz_mob_pay_180d_sum, 0)) > 0
+            then (coalesce(trm.trm_mob_pay_180d_sum, 0) + coalesce(kspkz.kspkz_mob_pay_180d_sum, 0))
+       end as ttl_pmt_amt
+
+      ,trunc(m.folder_date_create_mi) - coalesce(least(trm.trm_mob_pay_date_180d_min, kspkz.kspkz_mob_pay_date_180d_min), trm.trm_mob_pay_date_180d_min, kspkz.kspkz_mob_pay_date_180d_min) as days_from_first_mob_pay
+
+from u1.M_APP_MINER_BAS m
+left join u1.M_APP_MINER_TERM_MOB trm on trm.app_id = m.app_id
+left join u1.M_APP_MINER_KSPKZ_MOB kspkz on kspkz.app_id = m.app_id
+
+where m.folder_date_create_mi >= to_date('20150101', 'yyyymmdd');
+grant select on U1.M_APP_MINER_MOB_PAY to LOADDB;
+
+

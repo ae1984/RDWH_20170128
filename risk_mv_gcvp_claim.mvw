@@ -1,0 +1,15 @@
+﻿create materialized view U1.RISK_MV_GCVP_CLAIM
+build deferred
+refresh complete on demand
+as
+select
+       vg.gcvp_rep_id, vg.client_rnn, vg.client_iin, kc.*,
+       u.c_username,
+       to_number(replace(replace(regexp_substr(kc.c_parameters,'CLIENT#.*?]',1),'CLIENT#',''),']','')) as client_id
+  from V_GCVP_REPORT  vg
+  left join RISK_MV_V_RFO_Z#KAS_CLAIM kc on kc.gcvp_report_id = vg.gcvp_rep_id
+  left join v_rfo_z#user u on u.id = kc.c_creator
+ where folder_id is null;
+grant select on U1.RISK_MV_GCVP_CLAIM to LOADDB;
+
+

@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_TMP_J_CLI_SEGMENT_8
+build deferred
+refresh complete on demand
+as
+select ct.inn as iin, 1 as is_terminal_client_ever,
+       max(case when ct.document_date > add_months(trunc(sysdate), -3) then 1 else 0 end) as is_terminal_client_3_mon
+from M_CASH_PRODUCT_TERMINAL ct
+where ct.inn is not null
+group by ct.inn;
+grant select on U1.M_TMP_J_CLI_SEGMENT_8 to LOADDB;
+grant select on U1.M_TMP_J_CLI_SEGMENT_8 to LOADER;
+
+

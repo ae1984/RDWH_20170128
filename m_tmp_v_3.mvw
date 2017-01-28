@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_TMP_V_3
+refresh complete on demand
+as
+select p.*
+  from u1.V_RFO_Z#PKB_REPORT p
+join u1.V_RFO_Z#FDOC fd on fd.id = p.id and fd.class_id = 'PKB_REPORT'
+left join u1.V_RFO_Z#KAS_PKB_CI c on c.collection_id = p.c_ci or c.collection_id = p.c_closed_ci
+--left join u1.V_RFO_Z#KAS_STRING_250 s on s.collection_id = p.c_agre_statuses  --and p.c_rpt_type  = 2
+left join u1.V_RFO_Z#RDOC rd on rd.c_doc = p.id
+left join u1.V_RFO_Z#FOLDERS fld on fld.c_docs = rd.collection_id
+where p.c_rpt_type != 2;
+grant select on U1.M_TMP_V_3 to LOADDB;
+grant select on U1.M_TMP_V_3 to LOADER;
+
+

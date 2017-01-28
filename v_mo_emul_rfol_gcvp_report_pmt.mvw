@@ -1,0 +1,25 @@
+﻿create materialized view U1.V_MO_EMUL_RFOL_GCVP_REPORT_PMT
+using no index
+refresh complete on demand
+as
+select p.id       as gcvpp_id,
+       g.id       as gcvpr_id,
+--       f.id       as foldr_id,     -- folder_id
+--       f.c_client as foldr_client, -- client_id
+--       c.id       as clien_id,     -- client_id
+       p.c_payment_date as gcvpp_payment_date,
+       upper(p.c_organization) as gcvpp_organization,
+       p.c_org_rnn      as gcvpp_org_rnn,
+       p.c_org_bin      as gcvpp_org_bin
+from V_RFO_Z#KAS_GCVP_REPORT g
+join V_RFO_Z#KAS_GCVP_PAYMENT p on p.collection_id = g.c_payments_arr
+--left join V_RFO_Z#FDOC fd on fd.id = g.id and fd.class_id = 'KAS_GCVP_REPORT'
+--left join V_RFO_Z#RDOC rd on fd.id = rd.c_doc
+--left join V_RFO_Z#FOLDERS f on f.c_docs = rd.collection_id
+--left join V_RFO_Z#CLIENT c on c.c_inn = g.c_iin and c.class_id = 'CL_PRIV'
+--where g.id = 4095036543
+where p.c_payment_date > trunc(sysdate) - 30;
+grant select on U1.V_MO_EMUL_RFOL_GCVP_REPORT_PMT to LOADDB;
+grant select on U1.V_MO_EMUL_RFOL_GCVP_REPORT_PMT to LOADER;
+
+

@@ -1,0 +1,39 @@
+﻿create materialized view U1.MV_MO_SMART_CACHE
+using no index
+refresh complete on demand
+as
+select t.client_ref,
+       t.iin,
+       'PKB' report_kind,
+       '2' report_type,
+       t.date_expire,
+       t.report_id
+from mv_mo_smart_cache_pkb t
+union all
+select t.client_ref,
+       t.iin,
+       'PKB' report_kind,
+       '4' report_type,
+       t.date_expire,
+       t.report_id
+from mv_mo_smart_cache_pkb t
+union all
+select t.client_ref,
+       t.iin,
+       'PKB' report_kind,
+       '6' report_type,
+       t.date_expire,
+       t.report_id
+from mv_mo_smart_cache_pkb t
+union all
+select t.client_ref,
+       t.iin,
+       'GCVP' report_kind,
+       null report_type,
+       t.date_expire,
+       t.report_id
+from mv_mo_smart_cache_gcvp t;
+grant select on U1.MV_MO_SMART_CACHE to LOADDB;
+grant select on U1.MV_MO_SMART_CACHE to LOADER;
+
+

@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_MO_VERIFICATION_RESULT2
+refresh complete on demand
+as
+selecT p.id as mo_process_id,
+         max(p.date_start) as date_create,
+         max(decode(dp.code_int, 'VERIF_PHOTO', j.value_text, null)) as VERIF_PHOTO,
+         max(decode(dp.code_int, 'VERIF_CONTACTS', j.value_text, null)) as VERIF_CONTACT,
+         max(decode(dp.code_int, 'VERIF_VECTOR', j.value_text, null)) as VERIF_VECTOR,
+         max(decode(dp.code_int, 'VERIF_CACHE_RESULT', j.value_number, null)) as VERIF_CACHE_RESULT,
+                  max(decode(dp.code_int, 'VERIF_STATUS', j.value_text, null)) as VERIF_STATUS
+
+  from u1.MO_CALC h
+  join u1.mo_process p
+    on p.id = h.process_id
+   and p.d_process_id = 1007
+  join u1.T_MO_CALC_PAR_VALUE_2016 j
+    on j.calc_id = h.id
+  join u1.v_mo_d_par dp
+    on dp.id = j.d_par_id
+   and dp.code_int in ('VERIF_PHOTO',
+                       'VERIF_CONTACTS',
+                       'VERIF_VECTOR',
+                       'VERIF_CACHE_RESULT',
+                       'VERIF_STATUS')
+-- where h.process_id = 225490751
+  group by p.id;
+

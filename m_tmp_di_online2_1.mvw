@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_TMP_DI_ONLINE2_1
+refresh complete on demand
+as
+select
+
+onl.claim_id,
+onl.folder_id,
+onl.month_ratif,
+onl.is_sign_reason,
+onl.is_sign_require,
+onl.is_categ_a,
+onl.is_client_new_by_con,
+onl.is_approved,
+onl.is_credit_issued,
+onl.is_verification_reject,
+date_ratif,
+case when onl.is_verification = 1 then
+  case when mn.is_verif_manager = 1 or mn.is_verif_manager_old = 1 then 'У клиента есть прошлые фрод отказы'
+       when mn.is_verif_manager_by_purse = 1 then 'Проверка по кошельку' else 'Other' end
+         end as is_verif_reason,
+
+case when onl.is_iad = 1 then
+ case when f.is_fc_mobile_diff = 1 then 'ИАД по номеру моб.тел.'
+      when f.is_fc_fio_diff = 1 and f.is_fc_doc_diff = 1 then 'ИАД по ФИО и паспортным данным'
+      when f.is_fc_fio_diff = 1 then 'ИАД по ФИО'
+      when f.is_fc_doc_diff = 1 then 'ИАД по паспортным данным'
+      when f.is_fc_sex_exists = 0 then 'ИАД - не заполнен пол'
+       else 'Other' end
+        end as is_iad_reason
+
+from M_TMP_DI_ONLINE0 onl
+left join m_folder_con_cancel_add4 mn on mn.claim_id = onl.claim_id
+left join M_TMP_GK_IAD_MOBILE_F f on f.claim_id = onl.claim_id;
+grant select on U1.M_TMP_DI_ONLINE2_1 to LOADDB;
+grant select on U1.M_TMP_DI_ONLINE2_1 to LOADER;
+
+

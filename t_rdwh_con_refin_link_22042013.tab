@@ -1,0 +1,44 @@
+﻿create table U1.T_RDWH_CON_REFIN_LINK_22042013
+(
+  rbo_contract_id       NUMBER not null,
+  deal_number_to        VARCHAR2(66) not null,
+  refin_deal_number     VARCHAR2(66) not null,
+  refin_rbo_contract_id NUMBER not null,
+  refin_type            VARCHAR2(50) not null,
+  refin_summa           NUMBER(21,2) not null,
+  refin_date            DATE not null,
+  kas_pc_fo_id          NUMBER not null
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RDWH_CON_REFIN_LINK_22042013
+  is 'Таблица хранит информацию о рефинансирование траншей и карт на ГУ до 22-04-2013 включительно';
+comment on column U1.T_RDWH_CON_REFIN_LINK_22042013.rbo_contract_id
+  is 'Идентификатор договора ГУ';
+comment on column U1.T_RDWH_CON_REFIN_LINK_22042013.deal_number_to
+  is 'Номер договора ГУ';
+comment on column U1.T_RDWH_CON_REFIN_LINK_22042013.refin_deal_number
+  is 'Номер рефинансируемого договора';
+comment on column U1.T_RDWH_CON_REFIN_LINK_22042013.refin_rbo_contract_id
+  is 'Идентификатор рефинансируемого договора';
+comment on column U1.T_RDWH_CON_REFIN_LINK_22042013.refin_type
+  is 'Тип рефинансируемого договора';
+comment on column U1.T_RDWH_CON_REFIN_LINK_22042013.refin_summa
+  is 'Сумма рефинанса';
+comment on column U1.T_RDWH_CON_REFIN_LINK_22042013.refin_date
+  is 'Дата рефианасирования';
+comment on column U1.T_RDWH_CON_REFIN_LINK_22042013.kas_pc_fo_id
+  is 'Идентификатор проводки рефинансирование займа на ГУ';
+grant select on U1.T_RDWH_CON_REFIN_LINK_22042013 to LOADDB;
+grant select on U1.T_RDWH_CON_REFIN_LINK_22042013 to LOADER;
+

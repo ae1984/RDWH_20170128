@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_SCCL_CL_PAR
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       cl.rfo_client_id
+
+       ,trunc(a.reg_date) as reg_kaspikz_length_date
+
+from u1.V_CLIENT_RFO_BY_ID cl
+left join ( select  max(t.user_id) as user_id
+                    ,t.rfo_id
+                    ,max(a.date_of_birth) as date_of_birth
+                    ,min(a.reg_date) as reg_date
+            from u1.M_KASPIKZ_USERS_ALL t
+            left join u1.M_KASPIKZ_USERS a on a.id = t.user_id
+            group by t.rfo_id
+          ) a on a.rfo_id = to_char(cl.rfo_client_id);
+grant select on U1.M_SCCL_CL_PAR to LOADDB;
+grant select on U1.M_SCCL_CL_PAR to RTS_RDWH;
+
+

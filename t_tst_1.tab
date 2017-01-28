@@ -1,0 +1,42 @@
+﻿create table U1.T_TST_1
+(
+  claim_id               NUMBER,
+  buy_id                 NUMBER,
+  buy_date_create        DATE,
+  c_process_id           VARCHAR2(100 CHAR),
+  folder_id              NUMBER,
+  rfo_contract_id        NUMBER,
+  c_date_create          DATE,
+  c_client               NUMBER,
+  c_business             NUMBER,
+  c_n                    VARCHAR2(16 CHAR),
+  c_st_depart            NUMBER,
+  c_way                  NUMBER,
+  c_point                NUMBER,
+  c_create_user          NUMBER,
+  c_info_cred#summa_cred NUMBER(17,2),
+  c_shop                 NUMBER,
+  credit_dog_status_id   NUMBER,
+  c_inn                  VARCHAR2(12 CHAR),
+  product_name           VARCHAR2(100 CHAR),
+  product_type_name      VARCHAR2(750),
+  product_price          NUMBER(17,2),
+  c_check_result         NUMBER,
+  is_sign_require        NUMBER,
+  c_exec_comment         VARCHAR2(2000 CHAR)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TST_1 to LOADDB;
+

@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_TMP_J2_FOLDER_CON_LINK_KB
+build deferred
+refresh complete on demand
+as
+select /*+parallel(2)*/ f.rfo_con_or_claim_id,
+       coalesce(p3.pkb_ext_report_id, p2.pkb_std_report_id, p1.pkb_pri_report_id) as pkb_report_id,
+       p1.pkb_pri_report_id,
+       p2.pkb_std_report_id,
+       p3.pkb_ext_report_id
+from u1.M_TMP_J2_FOLDER_CON_BAS f
+left join u1.M_TMP_J2_FOLDER_CON_LINK_KB_P1 p1 on p1.rfo_con_or_claim_id = f.rfo_con_or_claim_id
+left join u1.M_TMP_J2_FOLDER_CON_LINK_KB_P2 p2 on p2.rfo_con_or_claim_id = f.rfo_con_or_claim_id
+left join u1.M_TMP_J2_FOLDER_CON_LINK_KB_P3 p3 on p3.rfo_con_or_claim_id = f.rfo_con_or_claim_id;
+grant select on U1.M_TMP_J2_FOLDER_CON_LINK_KB to LOADDB;
+
+

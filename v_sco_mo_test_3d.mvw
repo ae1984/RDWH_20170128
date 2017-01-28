@@ -1,0 +1,20 @@
+﻿create materialized view U1.V_SCO_MO_TEST_3D
+using no index
+refresh complete on demand
+as
+select distinct r.id_request,
+       to_date(substr(r.id_request,1,14),'yymmddhh24miss') as s_date,
+       case when r."folder_id" < 90000000000 then r."folder_id" end as rfo_folder_id,
+       r.id_card as card_number,
+       substr(r.request_name,1,12) as iin,
+       c.rules as answer,
+       decode(c.rules,null,null,'NO',1,0) as yn_num,
+       decode(c.rules,null,'ERR','NO','NO','YES') as yn,
+       decode(c.calculation,'E',1,0) as idle,
+       c.calculation as status
+from V_SCO_REQUESTS_3D r
+left join V_SCO_CALCULATION_TABLE_3D c on c.id_request = r.id_request;
+grant select on U1.V_SCO_MO_TEST_3D to LOADDB;
+grant select on U1.V_SCO_MO_TEST_3D to LOADER;
+
+

@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_RBO_CLIENT_INFO
+build deferred
+refresh complete on demand
+as
+select cl.id as rbo_client_id,
+       l.rfo_client_id,
+       cl.c_inn as client_iin,
+       cp.c_date_death as date_death,
+       sum(case when cb.is_card = 0 then 1 end) as cnt_credit,
+       sum(case when cb.is_card = 1 then 1 end) as cnt_card,
+       sum(case when cb.is_card = 0 and cb.date_fact_end is null then 1 end) as cnt_work_credit,
+       sum(case when cb.is_card = 1 and cb.date_fact_end is null then 1 end) as cnt_work_card
+  from V_RBO_Z#CLIENT cl
+  left join V_RBO_Z#CL_PRIV    cp on cp.id = cl.id
+  left join M_RBO_CONTRACT_BAS cb on cb.rbo_client_id = cl.id
+  left join M_CLIENT_LINK       l on l.rbo_client_id = cl.id
+  group by cl.id,
+       l.rfo_client_id,
+       cl.c_inn,
+       cp.c_date_death;
+grant select on U1.M_RBO_CLIENT_INFO to LOADDB;
+
+

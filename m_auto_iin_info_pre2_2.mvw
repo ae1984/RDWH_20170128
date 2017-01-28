@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_AUTO_IIN_INFO_PRE2_2
+refresh complete on demand
+as
+select /*+ parallel 30 */
+       trim(t.mvd_iin) as iin, max(t.mvd_date) as max_date
+      from DWH_AUTO_VIN t
+      where t.mvd_iin is not null
+        and (t.ar_parsed_flg = 1)
+        /*and (t.ar_model is not null \*or t.esbd_model is not null*\)*/
+      group by trim(t.mvd_iin);
+grant select on U1.M_AUTO_IIN_INFO_PRE2_2 to LOADDB;
+grant select on U1.M_AUTO_IIN_INFO_PRE2_2 to LOADER;
+
+

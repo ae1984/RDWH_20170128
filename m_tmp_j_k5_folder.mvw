@@ -1,0 +1,52 @@
+﻿create materialized view U1.M_TMP_J_K5_FOLDER
+refresh force on demand
+as
+select --+ parallel(30) parallel_index(30)
+       case when a.form_income_total > 0 then
+                round((coalesce(a.contract_pmt,0) + coalesce(b.other_deal_pmt,0) + coalesce(c.pkb_pmt,0)) /
+                          a.form_income_total * 100, 2)
+            else 99999999 end as kdn_form,
+
+       case when a.form_income_gcvp_salary_max > 0 then
+                round((coalesce(a.contract_pmt,0) + coalesce(b.other_deal_pmt,0) + coalesce(c.pkb_pmt,0)) /
+                          a.form_income_gcvp_salary_max * 100, 2)
+            else 99999999 end as kdn_form_salary_max,
+
+       case when a.salary_gcvp > 0 then
+                round((coalesce(a.contract_pmt,0) + coalesce(b.other_deal_pmt,0) + coalesce(c.pkb_pmt,0)) /
+                          a.salary_gcvp * 100, 2)
+            else 99999999 end as kdn_gcvp_salary,
+
+       case when a.form_income_total < nvl(sv.salary_double, 99999999)then 1 else 0 end as is_kdn_regulated_sal_form,
+
+       case when a.form_income_gcvp_salary_max < nvl(sv.salary_double, 99999999) then 1 else 0 end as is_kdn_regulated_sal_max,
+
+       case when a.salary_gcvp < nvl(sv.salary_double, 99999999) then 1 else 0 end as is_kdn_regulated_sal_gcvp,
+
+       a.*, b.other_deal_pmt, b.other_written_off_con_count, b.other_delinq_con_count,
+       b.other_ok_con_count, b.other_con_count, b.other_dist_con_count,
+       c.pkb_pmt, c.pkb_pmt_wo_st_ext, c.pkb_pmt_wo_prim, c.pkb_pmt_del_st_ext,
+       c.pkb_pmt_del_prim, c.pkb_pmt_no_del_st_ext, c.outstanding_sum,
+       c.overdue_sum, c.monthly_payment_limit_max, c.monthly_payment_wo_limit,
+       c.monthly_payment_by_limit,
+
+       sv.salary_double avg_salary_limit,
+
+       case when a.form_income_gcvp_salary_max > 0 then
+           round((coalesce(a.contract_pmt,0) + coalesce(b.other_deal_pmt,0)) /
+                   coalesce(a.form_income_gcvp_salary_max,0) * 100, 2)
+       else 99999999 end as kdn_simple_rbo,
+
+       case when a.form_income_gcvp_salary_max > 0 then
+           round((coalesce(a.contract_pmt,0) + coalesce(b.other_deal_pmt,0)) /
+                       coalesce(a.form_income_gcvp_salary_max,0) * 100, 2)
+       else 99999999 end as kdn_simple_nom_rate
+
+from M_TMP_J_K1_FOLDER a
+left join M_TMP_J_K2_FOLDER b on b.deal_rfo_client_id = a.rfo_client_id
+left join M_PKB_REPORT_PARAM2 c on c.report_id = a.pkb_rep_id
+left join T_SALARY_AVERAGE sv on sv.ym_str = a.yy_mm_start_b;
+grant select on U1.M_TMP_J_K5_FOLDER to LOADDB;
+grant select on U1.M_TMP_J_K5_FOLDER to LOADER;
+
+

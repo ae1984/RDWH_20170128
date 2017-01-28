@@ -1,0 +1,15 @@
+﻿create materialized view U1.V_TMP_JAN_GOODS_1
+refresh force on demand
+as
+select g1.*, rg.*, dg.con_cnt, dg.del_rate_pmt_1, dg.sales_mln
+from (
+select t.product_type_name, t.product_name, count(distinct t.contract_number) as contract_cnt,
+       round(avg(t.goods_price),2) as goods_price_avg
+from V_CONTRACT_EKT_DWH t where t.start_month like '2013%' or t.start_month like '2014%'
+group by t.product_type_name, t.product_name
+) g1 left join V_MO_RISKY_GOODS rg on rg.title = g1.product_name
+left join V_TMP_JAN_D_2 dg on dg.product_name = g1.product_name;
+grant select on U1.V_TMP_JAN_GOODS_1 to LOADDB;
+grant select on U1.V_TMP_JAN_GOODS_1 to LOADER;
+
+

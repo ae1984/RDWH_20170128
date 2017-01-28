@@ -1,0 +1,34 @@
+﻿create materialized view U1.V_TMP_VERIF_ONLINE_REP
+using no index
+refresh complete on demand
+as
+select /*+ no_parallel*/
+       distinct mvv.verify_pr_cr as credit_prg,
+       trunc(mvv.verification_date),
+       count(distinct to_char(smart_script_begin_dtm, 'dd.mm.yyyy hh24:mi:ss')||mvv.verification_id) as cnt_fld,
+       count(distinct case when smart_script_result = 'ОТКАЗ' then to_char(smart_script_begin_dtm, 'dd.mm.yyyy hh24:mi:ss')||mvv.verification_id end) as cnt_rej,
+       count(distinct case when smart_script_result = 'УСПЕХ' then to_char(smart_script_begin_dtm, 'dd.mm.yyyy hh24:mi:ss')||mvv.verification_id end) as cnt_approv,
+       count(distinct case when smart_script_result = 'ПЕРЕФОТОГРАФИРОВАНИЕ' then to_char(smart_script_begin_dtm, 'dd.mm.yyyy hh24:mi:ss')||mvv.verification_id end) as cnt_rephoto,
+       count(distinct mvv1.neobrabotan) as neobrabotan,
+       count(distinct case when mvv.smart_script_work_time < 60 then  to_char(smart_script_begin_dtm, 'dd.mm.yyyy hh24:mi:ss')||mvv.verification_id end) as cnt_do_1min,
+       count(distinct case when (mvv.smart_script_begin_dtm - mvv.send_to_verification_dtm)*24*60*60 < 60 then to_char(smart_script_begin_dtm, 'dd.mm.yyyy hh24:mi:ss')||mvv.verification_id end) as cnt_do_1min_2,
+       count(distinct case when (mvv.smart_script_finish_dtm - mvv.send_to_verification_dtm)*24*60*60 < 60 then to_char(smart_script_begin_dtm, 'dd.mm.yyyy hh24:mi:ss')||mvv.verification_id end) as cnt_do_1min_3,
+       count(distinct case when mvv.smart_script_work_time < 90 then to_char(smart_script_begin_dtm, 'dd.mm.yyyy hh24:mi:ss')||mvv.verification_id end) as cnt_do_1_5min,
+       count(distinct case when (mvv.smart_script_begin_dtm - mvv.send_to_verification_dtm)*24*60*60 < 90 then to_char(smart_script_begin_dtm, 'dd.mm.yyyy hh24:mi:ss')||mvv.verification_id end) as cnt_do_1_5min_2,
+       count(distinct case when (mvv.smart_script_finish_dtm - mvv.send_to_verification_dtm)*24*60*60 < 90 then to_char(smart_script_begin_dtm, 'dd.mm.yyyy hh24:mi:ss')||mvv.verification_id end) as cnt_do_1_5min_3
+from u1.M_VERIFICATION mvv
+left join (select trunc(from_rfo_to_is) as dt,
+                  mvv1.verify_pr_cr as credit_prg,
+                  mvv1.verification_id as neobrabotan
+           from u1.M_OUT_DWH_VERIFICATION mvv1
+           where mvv1.is_untreated = 1 and mvv1.from_rfo_to_is >= to_date('01.09.2015', 'dd.mm.yyyy')
+           ) mvv1 on trunc(mvv.verification_date) = mvv1.dt and mvv.verify_pr_cr = mvv1.credit_prg
+where mvv.verification_type_id = 'PHOTO'
+and mvv.verification_date >= to_date('01.09.2015', 'dd.mm.yyyy')
+group by
+mvv.verify_pr_cr,
+trunc(mvv.verification_date);
+grant select on U1.V_TMP_VERIF_ONLINE_REP to LOADDB;
+grant select on U1.V_TMP_VERIF_ONLINE_REP to LOADER;
+
+

@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_APP_MINER_RBO_PORT
+build deferred
+refresh force on demand
+as
+select am.app_id,
+
+       round(p.total_debt) as active_total_debt,
+       p.active_con_cnt,
+       case when p.total_debt > 0 then 1 else 0 end is_active_debt_exists,
+       case when p.total_debt >= 50000 then 1 else 0 end is_active_debt_50K_exists,
+       case when p.total_debt >= 100000 then 1 else 0 end is_active_debt_100K_exists,
+       case when p.total_debt >= 500000 then 1 else 0 end is_active_debt_500K_exists,
+       p.max_del_days
+
+from u1.M_APP_MINER_BAS am
+left join u1.M_CLIENT_LINK cl on cl.rfo_client_id = am.rfo_client_id
+left join (
+    select t.rbo_client_id, t.rep_date,
+           sum(t.total_debt) as total_debt,
+           count(distinct case when t.total_debt > 0 then t.rbo_contract_id end) as active_con_cnt,
+           max(t.del_days_cli_max) as max_del_days
+    from u1.T_RBO_PORT t
+    where t.rep_date >= to_date('2015-01-01','yyyy-mm-dd')
+    group by t.rbo_client_id, t.rep_date
+) p on p.rbo_client_id = cl.rbo_client_id and p.rep_date = am.folder_date_create - 1
+where am.folder_date_create >= to_date('2015-01-01','yyyy-mm-dd');
+grant select on U1.M_APP_MINER_RBO_PORT to LOADDB;
+
+

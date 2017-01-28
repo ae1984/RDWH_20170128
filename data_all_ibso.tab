@@ -1,0 +1,88 @@
+﻿create table U1.DATA_ALL_IBSO
+(
+  ymr                            VARCHAR2(250),
+  entity_type                    VARCHAR2(10),
+  account_personal               VARCHAR2(250),
+  account_gk                     VARCHAR2(250),
+  contract_number                VARCHAR2(250),
+  contract_type                  VARCHAR2(250),
+  product                        VARCHAR2(250),
+  client_name                    VARCHAR2(250),
+  rnn                            VARCHAR2(250),
+  iin_bin                        VARCHAR2(250),
+  start_date                     VARCHAR2(250),
+  end_date                       VARCHAR2(250),
+  prolong_quantity               VARCHAR2(250),
+  end_date_before_prolong        VARCHAR2(250),
+  currency                       VARCHAR2(250),
+  amount                         VARCHAR2(250),
+  principal                      VARCHAR2(250),
+  overdue_principal              VARCHAR2(250),
+  sp_in_thousands                VARCHAR2(250),
+  rem_debt_discount              VARCHAR2(250),
+  interest                       VARCHAR2(250),
+  interest_del                   VARCHAR2(250),
+  total_debt                     VARCHAR2(250),
+  classific_category             VARCHAR2(250),
+  provision_percent              VARCHAR2(250),
+  provision_amount               VARCHAR2(250),
+  provision_percent_msfo         VARCHAR2(250),
+  provision_amount_msfo          VARCHAR2(250),
+  provision_hundred_rate_msfo    VARCHAR2(250),
+  percent_rate                   VARCHAR2(250),
+  amount_security                VARCHAR2(250),
+  view_provided_security         VARCHAR2(1000),
+  activity_type_client           VARCHAR2(250),
+  pos_code                       VARCHAR2(250),
+  expert_name                    VARCHAR2(250),
+  source_financing               VARCHAR2(250),
+  availability_currency_earnings VARCHAR2(250),
+  portfolio_symptom              VARCHAR2(250),
+  effective_rate                 VARCHAR2(250),
+  marg_tran_credit_line_date     VARCHAR2(1000),
+  belonging_credit               VARCHAR2(1000),
+  kas_purpose_credit             VARCHAR2(250),
+  kas_object_credit              VARCHAR2(1000),
+  type_security_extended         VARCHAR2(1000),
+  disc_cost_future_cash_flows    VARCHAR2(1000),
+  account_provisions_msfo        VARCHAR2(250),
+  account_corrections_provisions VARCHAR2(250),
+  amount_monthly_income_tg       VARCHAR2(250),
+  present_cost_maintenance       VARCHAR2(250),
+  count_family_members           VARCHAR2(250),
+  age_group_dependents           VARCHAR2(250),
+  quantity_dependents_clent      VARCHAR2(250),
+  industry_group                 VARCHAR2(250),
+  sign_small_business            VARCHAR2(250),
+  quantity                       VARCHAR2(250),
+  purpose_credit                 VARCHAR2(250),
+  type_pledge                    VARCHAR2(250),
+  delinq_days                    VARCHAR2(250),
+  provisions_msfo_od             VARCHAR2(250),
+  sum_provisions_msfo_percent    VARCHAR2(250),
+  deducted_by_msfo               VARCHAR2(250),
+  sp_msfo                        VARCHAR2(250),
+  combined_product               VARCHAR2(250),
+  feature_asset                  VARCHAR2(1000),
+  category_msfo                  VARCHAR2(250),
+  amount_monthly_expenses        VARCHAR2(250),
+  total_od_including_delay       VARCHAR2(50),
+  total_od_interest_and_overdue  VARCHAR2(50),
+  estim_present_value_security   VARCHAR2(50)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.DATA_ALL_IBSO to LOADDB;
+grant select on U1.DATA_ALL_IBSO to LOADER;
+

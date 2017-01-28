@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_16
+build deferred
+refresh force on demand
+as
+select t.claim_id
+
+       /*
+       partition by t.rfo_client_id order by t.date_create - range будет работать с учетом времени
+       t.date_create - trunc(t.date_create) preceding - берем с предыдущего дня
+
+       более правильно делать без учета времени, т.к. в МО дапнные будут на t-1 без учета времени
+       partition by t.rfo_client_id order by trunc(t.date_create) - range будет работать без учета времени
+       1 preceding - берем с предыдущего дня
+       */
+       ,avg(kl.p_salary) over (partition by t.rfo_client_id order by trunc(t.date_create) range between 90 preceding and 1 preceding) as avg_zp_h
+       ,max(kl.p_salary) over (partition by t.rfo_client_id order by trunc(t.date_create) range between 90 preceding and 1 preceding) as max_zp_h
+from u1.M_FOLDER_CON_CANCEL_ONLINE_1 t
+left join u1.M_KASPISH_ORDERS a on a.code = t.process_id
+left join u1.M_KASPISH_LOANAPPLICATION kl on kl.pk = a.p_loanapplicationform;
+grant select on U1.M_RFO_FRAUD_SEARCH_16 to LOADDB;
+
+

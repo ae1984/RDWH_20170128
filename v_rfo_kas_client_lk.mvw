@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_RFO_KAS_CLIENT_LK
+build deferred
+refresh force on demand
+as
+select /*+parallel(1)*/ kel.c_client,
+        max(coalesce (ksp.c_date_end,trunc(sysdate) + 2))  as date_end
+  from u1.V_RFO_Z#KAS_EMP_LIMIT kel
+  join u1.V_RFO_Z#KAS_SPEC_PRODUCT ksp on ksp.collection_id = kel.c_spec_product
+  join u1.V_RFO_Z#KAS_SPEC_PROD_CL  c2 on c2.id = ksp.id
+  where c_prod_code_lev2 in ('MONEY_LKN', 'MONEY_LK')
+  group by  kel.c_client;
+grant select on U1.V_RFO_KAS_CLIENT_LK to LOADDB;
+
+

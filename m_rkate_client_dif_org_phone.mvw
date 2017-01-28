@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_RKATE_CLIENT_DIF_ORG_PHONE
+build deferred
+refresh force on demand
+as
+select cp.rfo_client_id,
+       cp.phone_number,
+       cp.phone_number_clear,
+       cp.phone_type,
+       cp.contact_relation
+from  V_FORM_CLIENT_CONTACT_PHONE cp
+where cp.phone_type in ('ОРГАНИЗАЦИЯ','РАБОЧИЙ')
+and exists (select 1 from V_FORM_CLIENT_CONTACT_PHONE cp2
+            where cp2.rfo_client_id       != cp.rfo_client_id
+               and cp2.phone_number_clear = cp.phone_number_clear
+               and cp2.contact_surname    != cp.contact_surname
+               and cp2.phone_type in ('ОРГАНИЗАЦИЯ','РАБОЧИЙ')
+               );
+grant select on U1.M_RKATE_CLIENT_DIF_ORG_PHONE to LOADDB;
+grant select on U1.M_RKATE_CLIENT_DIF_ORG_PHONE to LOADER;
+
+

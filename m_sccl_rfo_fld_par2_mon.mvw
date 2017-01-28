@@ -1,0 +1,196 @@
+﻿create materialized view U1.M_SCCL_RFO_FLD_PAR2_MON
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       cl.rfo_client_id
+
+       ,count(case when am.folder_date_create_mi >= trunc(sysdate) - 30 then am.app_id end) as app_30d_mon_cnt
+       ,count(case when am.folder_date_create_mi >= trunc(sysdate) - 90 then am.app_id end) as app_90d_mon_cnt
+
+       --app days cnt distinct
+       /*,count(distinct case when am.folder_date_create_mi >= add_months(am.folder_date_create_mi, -3)
+                                 and am.folder_date_create_mi < trunc(sysdate)
+                            then trunc(am.folder_date_create_mi) end) as app_days_3m_cnt
+
+       ,count(distinct case when am.folder_date_create_mi >= add_months(am.folder_date_create_mi, -3)
+                                 and am.folder_date_create_mi < trunc(sysdate)
+                                 and am.product_type = am.product_type
+                            then trunc(am.folder_date_create_mi) end) as app_days_3m_pr_cnt*/
+
+
+       --shop cnt distinct
+       ,count(distinct case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                            then am.shop_code end) as shop_30d_mon_cnt
+
+       /*,count(distinct case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                                 and am.folder_date_create_mi < am.folder_date_create_mi
+                            then am.shop_code end) as shop_30d_cnt_x*/
+
+       /*,count(distinct case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                                 and am.folder_date_create_mi < trunc(sysdate)
+                                 and am.product_type = am.product_type
+                            then am.shop_code end) as shop_30d_pr_cnt
+
+       ,count(distinct case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                                 and am.folder_date_create_mi < am.folder_date_create_mi
+                                 and am.product_type = am.product_type
+                            then am.shop_code end) as shop_30d_pr_cnt_x  */
+
+       --3 month
+       ,coalesce(max(case when am.folder_date_create_mi >= add_months(am.folder_date_create_mi, -3)
+                          then am.contract_amount end), 0) as max_app_amount_3m_mon --MAX_SUM_ONLINE_EKT_3_M
+
+       /*,coalesce(max(case when am.folder_date_create_mi >= add_months(am.folder_date_create_mi, -3)
+                               and am.folder_date_create_mi < trunc(am.folder_date_create)
+                               and am.product_type = am.product_type
+                          then am.contract_amount end), 0) as max_app_amount_3m_pr*/
+
+       ----------
+       --CLIENT
+       --30 days
+       ,coalesce(max(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                          then am.contract_amount end), 0) as max_app_amount_30d_mon
+
+       ,coalesce(min(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                          then am.contract_amount end), 0) as min_app_amount_30d_mon
+
+       ,round(coalesce(avg(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                                then am.contract_amount end), 0)) as avg_app_amount_30d_mon
+
+       ,round(sum(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                                then am.contract_amount end)) as app_amount_sum_30d_mon
+
+       /*--30 days x
+       ,coalesce(max(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                               and am.folder_date_create_mi < am.folder_date_create_mi
+                          then am.contract_amount end), 0) as max_app_amount_30d_x
+
+       ,coalesce(min(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                               and am.folder_date_create_mi < am.folder_date_create_mi
+                          then am.contract_amount end), 0) as min_app_amount_30d_x
+
+       ,round(coalesce(avg(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                                     and am.folder_date_create_mi < am.folder_date_create_mi
+                                then am.contract_amount end), 0)) as avg_app_amount_30d_x*/
+
+       --90 days
+       ,coalesce(max(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                          then am.contract_amount end), 0) as max_app_amount_90d_mon
+
+       ,coalesce(min(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                          then am.contract_amount end), 0) as min_app_amount_90d_mon
+
+       ,round(coalesce(avg(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                                then am.contract_amount end), 0)) as avg_app_amount_90d_mon
+
+       ,round(sum(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                                then am.contract_amount end)) as app_amount_sum_90d_mon
+
+/*       --90 days x
+       ,coalesce(max(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                               and am.folder_date_create_mi < am.folder_date_create_mi
+                          then am.contract_amount end), 0) as max_app_amount_90d_x
+
+       ,coalesce(min(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                               and am.folder_date_create_mi < am.folder_date_create_mi
+                          then am.contract_amount end), 0) as min_app_amount_90d_x
+
+       ,round(coalesce(avg(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                                     and am.folder_date_create_mi < am.folder_date_create_mi
+                                then am.contract_amount end), 0)) as avg_app_amount_90d_x*/
+
+
+       --PRODUCT
+       --30 days
+       /*,coalesce(max(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                               and am.folder_date_create_mi < trunc(sysdate)
+                               and am.product_type = am.product_type
+                          then am.contract_amount end), 0) as max_app_amount_30d_pr
+
+       ,coalesce(min(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                               and am.folder_date_create_mi < trunc(sysdate)
+                               and am.product_type = am.product_type
+                          then am.contract_amount end), 0) as min_app_amount_30d_pr
+
+       ,round(coalesce(avg(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                                     and am.folder_date_create_mi < trunc(sysdate)
+                                     and am.product_type = am.product_type
+                                then am.contract_amount end), 0)) as avg_app_amount_30d_pr
+
+       --30 days x
+       ,coalesce(max(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                               and am.folder_date_create_mi < am.folder_date_create_mi
+                               and am.product_type = am.product_type
+                          then am.contract_amount end), 0) as max_app_amount_30d_pr_x
+
+       ,coalesce(min(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                               and am.folder_date_create_mi < am.folder_date_create_mi
+                               and am.product_type = am.product_type
+                          then am.contract_amount end), 0) as min_app_amount_30d_pr_x
+
+       ,round(coalesce(avg(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                                     and am.folder_date_create_mi < am.folder_date_create_mi
+                                     and am.product_type = am.product_type
+                                then am.contract_amount end), 0)) as avg_app_amount_30d_pr_x
+
+       --90 days
+       ,coalesce(max(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                               and am.folder_date_create_mi < trunc(sysdate)
+                               and am.product_type = am.product_type
+                          then am.contract_amount end), 0) as max_app_amount_90d_pr
+
+       ,coalesce(min(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                               and am.folder_date_create_mi < trunc(sysdate)
+                               and am.product_type = am.product_type
+                          then am.contract_amount end), 0) as min_app_amount_90d_pr
+
+       ,round(coalesce(avg(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                                     and am.folder_date_create_mi < trunc(sysdate)
+                                     and am.product_type = am.product_type
+                                then am.contract_amount end), 0)) as avg_app_amount_90d_pr
+
+       --90 days x
+       ,coalesce(max(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                               and am.folder_date_create_mi < am.folder_date_create_mi
+                               and am.product_type = am.product_type
+                          then am.contract_amount end), 0) as max_app_amount_90d_pr_x
+
+       ,coalesce(min(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                               and am.folder_date_create_mi < am.folder_date_create_mi
+                               and am.product_type = am.product_type
+                          then am.contract_amount end), 0) as min_app_amount_90d_pr_x
+
+       ,round(coalesce(avg(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                                     and am.folder_date_create_mi < am.folder_date_create_mi
+                                     and am.product_type = am.product_type
+                                then am.contract_amount end), 0)) as avg_app_amount_90d_pr_x*/
+
+
+       --KN
+       /*,coalesce(max(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                               and am.product_type = 'ДЕНЬГИ'
+                          then am.contract_amount end), 0) as max_app_amount_kn_30d*/
+
+       /*,coalesce(max(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                               and am.folder_date_create_mi < am.folder_date_create_mi
+                               and am.product_type = 'ДЕНЬГИ'
+                          then am.contract_amount end), 0) as max_app_amount_kn_30d_x*/
+
+      /* ,coalesce(max(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                               and am.product_type = 'ДЕНЬГИ'
+                          then am.contract_amount end), 0) as max_app_amount_kn_90d*/
+
+       /*,coalesce(max(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                               and am.folder_date_create_mi < am.folder_date_create_mi
+                               and am.product_type = 'ДЕНЬГИ'
+                          then am.contract_amount end), 0) as max_app_amount_kn_90d_x*/
+
+from u1.V_CLIENT_RFO_BY_ID cl
+left join u1.M_APP_MINER_BAS am on am.rfo_client_id = cl.rfo_client_id
+                                   and am.product_type = 'ДЕНЬГИ'
+                                   and am.folder_date_create >= trunc(sysdate) - 150
+group by cl.rfo_client_id;
+grant select on U1.M_SCCL_RFO_FLD_PAR2_MON to LOAD_MO;
+
+

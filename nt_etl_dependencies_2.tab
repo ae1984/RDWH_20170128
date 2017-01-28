@@ -1,0 +1,21 @@
+﻿create table U1.NT_ETL_DEPENDENCIES_2
+(
+  owner           VARCHAR2(128) not null,
+  name            VARCHAR2(128) not null,
+  referenced_name VARCHAR2(128)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_ETL_DEPENDENCIES_2 to LOADDB;
+

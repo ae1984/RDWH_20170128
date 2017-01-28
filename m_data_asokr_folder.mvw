@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_DATA_ASOKR_FOLDER
+refresh force on demand
+as
+select /*+ parallel 30 */
+       t.folder_id,
+       max(t.scoring_date) scoring_date,
+       max(t.prescoring_result) keep (dense_rank last order by t.scoring_date) prescoring_result,
+       max(t.scoring_status) keep (dense_rank last order by t.scoring_date) scoring_status,
+       max(t.scoring_result) keep (dense_rank last order by t.scoring_date) scoring_result,
+       max(t.iin) keep (dense_rank last order by t.scoring_date) iin,
+       max(t.rnn) keep (dense_rank last order by t.scoring_date) rnn,
+       max(t.card_number) keep (dense_rank last order by t.scoring_date) card_number
+from V_DATA_ASOKR t
+--where t.folder_id = 17153192220
+group by t.folder_id;
+grant select on U1.M_DATA_ASOKR_FOLDER to LOADDB;
+grant select on U1.M_DATA_ASOKR_FOLDER to LOADER;
+
+

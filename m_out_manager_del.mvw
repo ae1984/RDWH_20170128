@@ -1,0 +1,42 @@
+﻿create materialized view U1.M_OUT_MANAGER_DEL
+build deferred
+refresh complete on demand
+as
+select trim(upper(s.direct_name||' '||s.depart_name||' '||s.office_name||' '||s.divis_name)) as department,
+       trim(upper(s.position_name)) as position,
+       fcc.expert_name as expert_name,
+       f.expert_num_tab as expert_num_tab,
+       s.tax_id as iin,
+       to_date(s.birthdate_txt,'dd.mm.yyyy') as birthdate,
+       s.hiring_date_txt as hiring_date,
+       s.firing_date_txt as firing_date,
+       s.home_address as home_address,
+       s.home_phone as home_phone,
+       s.mobile_phone as mobile_phone,
+       c.client_name as client_name,
+       c.client_iin as client_iin,
+       c.deal_number as contract_number,
+       c.prod_type as product,
+       c.prod_name,
+       c.begin_date,
+       c.plan_end_date,
+       c.set_revolving_date,
+       fcc.folder_date_create_mi,
+       fcc.process_name,
+       c.deal_status,
+       c.actual_end_date,
+       c.delinq_days_old as delinq_days_old,
+       c.x_delinq_amount as delinq_amount,
+       c.x_total_debt as total_debt,
+       c.x_amount as amount,
+       c.pmt
+from u1.M_ZUP_1C_STAFF s
+left join u1.v_Folder_All f on f.expert_num_tab = s.tab_num
+left join u1.M_FOLDER_CON_CANCEL fcc on fcc.folder_id = f.folder_id
+left join u1.V_DWH_PORTFOLIO_CURRENT c on c.deal_number = fcc.contract_number
+where fcc.is_credit_issued = 1;
+grant select on U1.M_OUT_MANAGER_DEL to AIDA;
+grant select on U1.M_OUT_MANAGER_DEL to LOADDB;
+grant select on U1.M_OUT_MANAGER_DEL to LOADER;
+
+

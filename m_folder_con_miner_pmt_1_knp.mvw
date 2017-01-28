@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_PMT_1_KNP
+refresh complete on demand
+as
+select t2.contract_number,
+       max(t2.yy_mm_report_date) yy_mm_report_date,
+       /*max(t2.is_bad) keep (DENSE_RANK LAST ORDER BY t2.yy_mm_report_date) is_bad,*/
+       max(t2.is_bad_pmt_1) /*keep (DENSE_RANK LAST ORDER BY t2.yy_mm_report_date)*/ is_bad_pmt_1,
+       max(t2.is_fraud_1) is_fraud_1
+          from (
+            select /*+ parallel(5) */ t.*,
+            to_date(t.yy_mm_start, 'yyyy - mm') yy_mm_start_date,
+            to_date(t.yy_mm_report, 'yyyy - mm') yy_mm_report_date,
+/*            case when t.client_status in ('B','W') then 1 else 0 end is_bad,*/
+            case when t.total_debt > 0 and t.planned_pmt_month_new = 1 and t.delinq_days > 7 and t.delinq_days < 31 then 1 else 0 end is_bad_pmt_1,
+            c.is_fraud_1 is_fraud_1
+            from v_portfolio t
+            join m_contract_cal_del c on c.contract_number = t.contract_number
+          ) t2
+          join m_folder_con_miner m on m.contract_number = t2.contract_number
+                                       and m."CR_PROGRAM_NAME" like 'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ'
+          where (t2.yy_mm_start_date >= to_date('20121001', 'yyyymmdd')
+              and t2.yy_mm_start_date < to_date('20130601', 'yyyymmdd'))
+            and (
+                t2.yy_mm_report_date >= to_date('20121101', 'yyyymmdd') and
+                t2.yy_mm_report_date < to_date('20130701', 'yyyymmdd'))
+group by t2.contract_number;
+grant select on U1.M_FOLDER_CON_MINER_PMT_1_KNP to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER_PMT_1_KNP to LOADER;
+
+

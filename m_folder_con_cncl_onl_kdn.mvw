@@ -1,0 +1,36 @@
+﻿create materialized view U1.M_FOLDER_CON_CNCL_ONL_KDN
+refresh force on demand
+as
+select folder_date_create_mi,
+       rfo_client_id,
+       iin,
+       shop_code,
+       shop_name,
+       folder_id ,
+       folder_date,
+       claim_id,
+       case when form_income_gcvp_salary_max > 0 then
+                round((coalesce(monthly_pay,0) + coalesce(other_deal_pmt,0) + coalesce(pkb_pmt,0)) /
+                          form_income_gcvp_salary_max * 100, 2)
+            else 99999999 end as kdn_form_salary_max
+      from (
+          select /*+ parallel 30 */ o.folder_date_create_mi,o.rfo_client_id,o.iin,o.shop_code,o.shop_name, o.monthly_pay,o.claim_id,
+                 max(k.form_income_gcvp_salary_max) keep (dense_rank first order by k.begin_date desc) as form_income_gcvp_salary_max,
+                 max(k.other_deal_pmt) keep (dense_rank first order by k.begin_date desc) as other_deal_pmt,
+                 max(k.pkb_pmt) keep (dense_rank first order by k.begin_date desc) as pkb_pmt,
+                 max(k.folder_id) keep (dense_rank first order by k.begin_date desc) as folder_id,
+                 max(k.begin_date) keep (dense_rank first order by k.begin_date desc) as folder_date
+          from M_FOLDER_CON_CANCEL_ONLINE o
+          left join (
+                 select k2.kdn_form_salary_max ,k2.folder_id_first as folder_id ,k2.begin_date ,k2.rfo_client_id,k2.form_income_gcvp_salary_max,k2.other_deal_pmt,k2.pkb_pmt
+                 from M_CONTRACT_PARAM_KDN5 k2
+                 union all
+                 select k1.kdn_form_salary_max ,k1.folder_id as folder_id ,k1.begin_date ,k1.rfo_client_id,k1.form_income_gcvp_salary_max,k1.other_deal_pmt,k1.pkb_pmt
+                 from M_TMP_J_K5_FOLDER k1 )  k  on k.rfo_client_id = o.rfo_client_id and k.begin_date <= o.folder_date_create_mi
+          --where o.rfo_client_id  = 4524648414
+          group by o.folder_date_create_mi,o.rfo_client_id,o.iin,o.shop_code,o.shop_name, o.monthly_pay,o.claim_id
+      );
+grant select on U1.M_FOLDER_CON_CNCL_ONL_KDN to LOADDB;
+grant select on U1.M_FOLDER_CON_CNCL_ONL_KDN to LOADER;
+
+

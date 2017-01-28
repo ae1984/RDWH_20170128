@@ -1,0 +1,22 @@
+﻿create materialized view U1.V_TMP_JAN_A_02
+refresh force on demand
+as
+select c.yms,
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate,
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1,
+    round(sum(c.max_debt_used) / 1000000, 1) as sales_mln,
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt
+from V_TMP_CONTRACT_CAL_DEL c
+join V_FOLDER_ALL_RFO f on f.folder_id = c.folder_id_first
+join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = f.form_client_id
+join V_PKB_REPORT p on p.folder_id = c.folder_id_first and p.report_status = 'БЕКИ'
+where c.yms in  (/*'2013 - 07', '2013 - 08', '2013 - 09', */'2013 - 10', '2013 - 11', '2013 - 12',
+                 '2014 - 01', '2014 - 02', '2014 - 03') and
+      exists (select null from V_TMP_JAN_A_01 a where a.reg_address_city = fc.reg_address_city and
+                     a.reg_address_street = fc.reg_address_street /*and
+                     a.reg_address_house = fc.reg_address_house*/)
+group by c.yms having sum(c.max_debt_used) > 0;
+grant select on U1.V_TMP_JAN_A_02 to LOADDB;
+grant select on U1.V_TMP_JAN_A_02 to LOADER;
+
+

@@ -1,0 +1,34 @@
+﻿create materialized view U1.M_KASPISH_CATALOGVERSIONS
+build deferred
+refresh force on demand
+as
+select HJMPTS,
+       TYPEPKSTRING,
+       OWNERPKSTRING,
+       MODIFIEDTS,
+       CREATEDTS,
+       PK,
+       P_ACTIVE,
+       P_DEFAULTCURRENCY,
+       P_TERRITORIES,
+       P_INCLDUTY,
+       P_INCLFREIGHT,
+       P_LANGUAGES,
+       P_VERSION,
+       P_MIMEROOTDIRECTORY,
+       P_GENERATORINFO,
+       P_GENERATIONDATE,
+       P_INCLASSURANCE,
+       P_PREVIOUSUPDATEVERSION,
+       P_CATEGORYSYSTEMID,
+       P_CATALOG,
+       P_INCLPACKING,
+       P_IMPORTEDVERSIONS,
+       P_MNEMONIC,
+       ACLTS,
+       PROPTS
+  from kaspi.catalogversions@ks_std
+ where rownum > 0;
+grant select on U1.M_KASPISH_CATALOGVERSIONS to LOADDB;
+
+

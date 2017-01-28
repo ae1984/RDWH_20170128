@@ -1,0 +1,24 @@
+﻿create table U1.TMP_NB_CONS_2
+(
+  num             NUMBER,
+  source          VARCHAR2(100),
+  num_in_source   NUMBER,
+  contract_number VARCHAR2(100),
+  comments        VARCHAR2(100)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.TMP_NB_CONS_2 to LOADDB;
+grant select on U1.TMP_NB_CONS_2 to LOADER;
+

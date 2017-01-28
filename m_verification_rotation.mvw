@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_VERIFICATION_ROTATION
+build deferred
+refresh force on demand
+as
+select * from (
+    select
+      count (distinct case when v.client_id = v.client_id1 and v.person_tabnum = p1.person_tabnum then v.verification_id end) as ver_id_cnt,
+      count (distinct case when v.client_id = v.client_id1 and v.person_tabnum = p1.person_tabnum then v.process_id end) as process_cnt,
+      v.person_tabnum,
+      v.verificator_name,
+      v.folder_mon,
+      v.folder_day
+      ,v.client_id
+    from M_VERIFICATION_ROTATION_PRE1 v
+    join U1.M_OUT_DWH_PROCESS p1 on p1.verification_id = v.id1 and p1.verification_type = 'PHOTO'
+    where v.folders_date >= to_date('01.01.2014','dd.mm.yyyy') --
+    group by
+      v.person_tabnum,
+      v.verificator_name,
+      v.folder_mon,
+      v.folder_day
+      ,v.client_id
+)
+where ver_id_cnt>= 2 or process_cnt>=2;
+grant select on U1.M_VERIFICATION_ROTATION to LOADDB;
+
+

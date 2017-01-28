@@ -1,0 +1,34 @@
+﻿create table U1.REF_BANKS
+(
+  g1_bank  VARCHAR2(500),
+  big_bank VARCHAR2(500)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.REF_BANKS_IND1 on U1.REF_BANKS (G1_BANK, BIG_BANK)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.REF_BANKS to LOADDB;
+grant select on U1.REF_BANKS to LOADER;
+

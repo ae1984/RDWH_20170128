@@ -1,0 +1,115 @@
+﻿create materialized view U1.M_TMP_DI_REPEATED_APP6
+refresh force on demand
+as
+select  /*+ noparallel */
+
+c.yy_mm_start_last,
+count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt,
+count(distinct client_iin) as client_num,
+--m.deal_number,
+c.product_start_last,
+m.term_of_first_loan_cat,
+/*m.term_of_first_loan,*/
+m.deal_status,
+m.contract_amount,
+m.x_product_type,
+m.term_of_further,
+m.planned_term, report_status_prev, report_status_cur,
+cred_amount_of_first_loan_cat,m.x_is_credit_issued,
+case /*when days_diff=0 then 'Взяли 2-ой кредит в тот же день'*/
+     when days_diff>=0 and days_diff<=5 then 'Взяли 2-ой кредит в тот же день или 1-5 дней спустя'
+     /*when days_diff=2 then 'Взяли 2-ой кредит 2 дня спустя'
+     when days_diff=3 then 'Взяли 2-ой кредит 3 дня спустя'
+     when days_diff=4 then 'Взяли 2-ой кредит 4 дня спустя'
+     when days_diff=5 then 'Взяли 2-ой кредит 5 дней спустя'*/
+     when days_diff>=6 and days_diff<=15 then 'Взяли 2-ой кредит 6-15 дней спустя'
+     when days_diff>=16 and days_diff<=31 then 'Взяли 2-ой кредит 16-31 дней спустя'
+     when days_diff>=32 and days_diff<=60 then 'Взяли 2-ой кредит 32-60 дней спустя'
+     when days_diff>=61 then 'Взяли 2-ой кредит спустя >=61 дней' else 'OTHER' end as days_diff,
+
+round(sum(c.max_debt_used)/1000000) as sales_mln, -- продажи
+sum(c.max_debt_used) as sales, -- продажи
+sum(c.delinq_rate_pmt_1 * c.max_debt_used) as del_rate_pmt_1,
+sum(c.delinq_rate_b_w * c.max_debt_used) as del_rate_b_w,
+sum(c.total_debt_last_rep_new_b_w) as b_w_2,
+sum(c.delinq_rate_b * c.max_debt_used) as del_rate_b,
+sum(c.total_debt_last_rep_new_b) as del_rate_b_2,
+sum(c.delinq_rate_w * c.max_debt_used) as del_rate_w,
+sum(c.delinq_rate_g * c.max_debt_used) as del_rate_g,
+sum(c.delinq_rate_npl * c.max_debt_used) as del_rate_npl,
+sum(c.total_debt_last_rep_new_npl) as npl_2,
+sum(c.delinq_rate * c.max_debt_used) as del_rate,
+sum(c.max_debt_used) as total_used_sum,
+sum(case when c.yy_mm_start_last_date <= add_months(sysdate,-6) then c.delinq_rate_b_w * c.max_debt_used end) as del_rate_b_w_tolerance,
+sum(case when c.yy_mm_start_last_date <= add_months(sysdate,-6) then c.max_debt_used end) as total_used_sum_b_w_tolerance,   --b_w, считаем до -8 месяцев назад
+count(distinct(case when c.yy_mm_start_last_date <= add_months(sysdate,-6) and c.delinq_rate_b_w>0 then c.contract_number end)) as b_w_tolerance_cnt,
+count(distinct(case when c.yy_mm_start_last_date <= add_months(sysdate,-6) and c.max_debt_used>0 then c.contract_number end)) as total_b_w_tolerance_cnt,   --b_w, считаем до -8 месяцев назад
+count(distinct(case when c.delinq_rate_pmt_1>0 then c.contract_number end)) as pmt_1_cnt,
+count(distinct(case when c.max_debt_used_pmt_1>0 then c.contract_number end)) as max_debt_used_pmt_1,
+
+count(distinct(case when c.delinq_rate_npl>0 then c.contract_number end)) as npl_cnt,
+
+count(distinct(case when c.delinq_rate_pmt_2_x1>0 then c.contract_number end)) as delinq_rate_pmt_2_x1,
+count(distinct(case when c.delinq_rate_pmt_2_01>0 then c.contract_number end)) as delinq_rate_pmt_2_01,
+count(distinct(case when c.max_debt_used_pmt_2>0 then c.contract_number end)) as max_debt_used_pmt_2,
+
+
+count(distinct(case when c.delinq_rate_pmt_3_xx1>0 then c.contract_number end)) as delinq_rate_pmt_3_xx1,
+count(distinct(case when c.delinq_rate_pmt_3_001>0 then c.contract_number end)) as delinq_rate_pmt_3_001,
+count(distinct(case when c.max_debt_used_pmt_3>0 then c.contract_number end)) as max_debt_used_pmt_3,
+
+count(distinct(case when c.delinq_rate_pmt_4_xxx1>0 then c.contract_number end)) as delinq_rate_pmt_4_xxx1,
+count(distinct(case when c.delinq_rate_pmt_4_0001>0 then c.contract_number end)) as delinq_rate_pmt_4_0001,
+count(distinct(case when c.max_debt_used_pmt_4>0 then c.contract_number end)) as max_debt_used_pmt_4,
+
+count(distinct(case when c.delinq_rate_pmt_5_xxxx1>0 then c.contract_number end)) as delinq_rate_pmt_5_xxxx1,
+count(distinct(case when c.delinq_rate_pmt_5_00001>0 then c.contract_number end)) as delinq_rate_pmt_5_00001,
+count(distinct(case when c.max_debt_used_pmt_5>0 then c.contract_number end)) as max_debt_used_pmt_5,
+
+count(distinct(case when c.delinq_rate_pmt_6_xxxxx1>0 then c.contract_number end)) as delinq_rate_pmt_6_xxxxx1,
+count(distinct(case when c.delinq_rate_pmt_6_000001>0 then c.contract_number end)) as delinq_rate_pmt_6_000001,
+count(distinct(case when c.max_debt_used_pmt_6>0 then c.contract_number end)) as max_debt_used_pmt_6,
+
+count(distinct(case when c.max_debt_used>0 then c.contract_number end)) as total_cnt,
+
+sum(c.delinq_rate_pmt_2_01*c.max_debt_used) as pmt_2_01_sum,
+sum(c.delinq_rate_pmt_3_001*c.max_debt_used) as pmt_3_001_sum,
+sum(c.delinq_rate_pmt_4_0001*c.max_debt_used) as pmt_4_0001_sum,
+sum(c.delinq_rate_pmt_5_00001*c.max_debt_used) as pmt_5_00001_sum,
+sum(c.delinq_rate_pmt_6_000001*c.max_debt_used) as pmt_6_000001_sum
+
+from M_CONTRACT_CAL_DEL c
+join m_tmp_di_repeated_app5 m on c.contract_number=m.deal_number
+/*join V_CONTRACT_CAL cc on cc.contract_number = c.contract_number and
+     cc.is_refin_restruct_first != 1
+where not exists (select null from M_FOLDER_CON_CANCEL f
+                  where f.folder_id = c.folder_id_first and f.is_refin = 1)
+and not exists (select null from M_TMP_E_REF_2  ff
+                       where ff.contract_number=c.contract_number and ff.client_id in (select client_id from M_TMP_E_REF_2 where restr_cnt is not null and total_debt>0))
+*/
+
+group by c.yy_mm_start_last,
+c.product_start_last,
+m.term_of_first_loan_cat,
+/*m.term_of_first_loan,*/
+m.deal_status,
+m.contract_amount,
+m.x_product_type,
+m.term_of_further,
+m.planned_term,report_status_prev, report_status_cur,
+cred_amount_of_first_loan_cat,m.x_is_credit_issued,
+case /*when days_diff=0 then 'Взяли 2-ой кредит в тот же день'*/
+     when days_diff>=0 and days_diff<=5 then 'Взяли 2-ой кредит в тот же день или 1-5 дней спустя'
+     /*when days_diff=2 then 'Взяли 2-ой кредит 2 дня спустя'
+     when days_diff=3 then 'Взяли 2-ой кредит 3 дня спустя'
+     when days_diff=4 then 'Взяли 2-ой кредит 4 дня спустя'
+     when days_diff=5 then 'Взяли 2-ой кредит 5 дней спустя'*/
+     when days_diff>=6 and days_diff<=15 then 'Взяли 2-ой кредит 6-15 дней спустя'
+     when days_diff>=16 and days_diff<=31 then 'Взяли 2-ой кредит 16-31 дней спустя'
+     when days_diff>=32 and days_diff<=60 then 'Взяли 2-ой кредит 32-60 дней спустя'
+     when days_diff>=61 then 'Взяли 2-ой кредит спустя >=61 дней' else 'OTHER' end
+having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_DI_REPEATED_APP6 to LOADDB;
+grant select on U1.M_TMP_DI_REPEATED_APP6 to LOADER;
+
+

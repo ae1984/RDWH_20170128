@@ -1,0 +1,41 @@
+﻿create materialized view U1.V_TMP_CLIENT_ALL_RFO
+using no index
+refresh complete on demand
+as
+select a.folder_id,
+       a.folder_date_create,
+       a.rfo_client_id,
+       a.is_credit_issued,
+       a.folder_state,
+       a.route_point_code,
+       a.route_point_name,
+       a.form_client_id,
+       a.form_client_date,
+       a.rnn,
+       a.iin,
+       a.surname,
+       a.first_name,
+       a.patronymic,
+       a.citizenship,
+       a.birth_date,
+       a.personal_id_doc_num,
+       a.id,
+       a.c_main_doc#type,
+       a.c_main_doc#num,
+       a.c_main_doc#seria,
+       a.c_main_doc#date_doc,
+       a.c_main_doc#date_end,
+       a.c_main_doc#date_doc - lag(a.c_main_doc#date_doc,1) over (partition by a.rfo_client_id, a.c_main_doc#type  order by a.folder_date_create) as raznica,
+       lag(a.c_main_doc#date_doc,1) over (partition by a.rfo_client_id, a.c_main_doc#type  order by a.folder_date_create) as pred_date_doc,
+       lag(a.c_main_doc#date_end,1) over (partition by a.rfo_client_id, a.c_main_doc#type  order by a.folder_date_create) as pred_date_end,
+       lag(a.c_main_doc#num,1) over (partition by a.rfo_client_id, a.c_main_doc#type  order by a.folder_date_create) as pred_doc_num,
+       lag(a.c_main_doc#type,1) over (partition by a.rfo_client_id, a.c_main_doc#type  order by a.folder_date_create) as pred_doc_type,
+       lag(a.folder_id, 1) over (partition by a.rfo_client_id, a.c_main_doc#type  order by a.folder_date_create) as pred_folder_id,
+       lag(a.folder_date_create, 1) over (partition by a.rfo_client_id, a.c_main_doc#type  order by a.folder_date_create) as pred_folder_date,
+       lag(a.folder_state, 1) over (partition by a.rfo_client_id, a.c_main_doc#type  order by a.folder_date_create) as pred_folder_state,
+       lag(a.route_point_code, 1) over (partition by a.rfo_client_id, a.c_main_doc#type  order by a.folder_date_create) as pred_route_code
+from V_TMP_CLIENT_ALL_RFO_1 a;
+grant select on U1.V_TMP_CLIENT_ALL_RFO to LOADDB;
+grant select on U1.V_TMP_CLIENT_ALL_RFO to LOADER;
+
+

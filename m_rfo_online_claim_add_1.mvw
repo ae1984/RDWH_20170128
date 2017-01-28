@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_RFO_ONLINE_CLAIM_ADD_1
+refresh complete on demand
+as
+select t.id claim_id,
+       case when count(kd.id) > 0 then 1 else 0 end is_sign_require
+from V_RFO_Z#KAS_ONLINE_CLAIM t
+left join V_RFO_Z#KAS_UNIVERSA_REF s on s.collection_id = t.c_mng_vis_scen
+left join V_RFO_Z#KAS_UNIVERSAL_D kd on kd.id = s.c_value
+group by t.id;
+grant select on U1.M_RFO_ONLINE_CLAIM_ADD_1 to LOADDB;
+grant select on U1.M_RFO_ONLINE_CLAIM_ADD_1 to LOADER;
+
+

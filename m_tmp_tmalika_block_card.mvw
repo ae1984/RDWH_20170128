@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_TMP_TMALIKA_BLOCK_CARD
+build deferred
+refresh force on demand
+as
+select /*+ parallel(20)*/
+       f.id as folder_id,
+       bp.c_code as bus_process_code,
+       upper(bp.c_name) as bus_process_name ,
+       fd.c_doc_date as folder_date_create,
+       cast(case when bc.c_pr_block = 1 then 'БЛОКИРОВАН'
+                 when bc.c_pr_block = 0 then 'РАЗБЛОКИРОВАН'
+            end
+            as varchar2(500)) as is_block,
+       upper(bc.c_reason)  as reason_block
+  from u1.v_rfo_z#kas_block_card bc
+  join u1.V_RFO_Z#FDOC_TEST1     fd on fd.id = bc.id
+  join u1.v_rfo_z#rdoc           rd on rd.c_doc = fd.id
+  join u1.v_rfo_z#folders         f on f.c_docs = rd.collection_id
+  join u1.v_rfo_z#bus_process    bp on bp.id = f.c_business;
+grant select on U1.M_TMP_TMALIKA_BLOCK_CARD to LOADDB;
+grant select on U1.M_TMP_TMALIKA_BLOCK_CARD to LOADER;
+
+

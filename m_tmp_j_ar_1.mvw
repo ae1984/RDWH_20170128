@@ -1,0 +1,41 @@
+﻿create materialized view U1.M_TMP_J_AR_1
+refresh force on demand
+as
+select t.x_dnp_name,
+
+           median(t.contract_amount) as contract_amount_median,
+--           ceil(t.contract_amount/50000)*50000 as contract_amount,
+--           ceil(t.contract_amount/200000)*200000 as contract_amount,
+--           ceil(t.contract_amount/1000)*1000 as contract_amount,
+           round(count(distinct case when t.is_credit_issued = 1 then t.rfo_contract_id end) /
+                   count(distinct t.rfo_contract_id)*100,2) as approval_rate_fld,
+           count(distinct case when t.is_credit_issued = 1 then t.rfo_contract_id end) as fld_approved_cnt,
+           count(distinct t.rfo_contract_id) as fld_all_cnt,
+
+           round(count(distinct case when t.is_credit_issued = 1 then t.rfo_client_id end) /
+                   count(distinct t.rfo_client_id)*100,2) as approval_rate_cli,
+           count(distinct case when t.is_credit_issued = 1 then t.rfo_client_id end) as cli_approved_cnt,
+           count(distinct t.rfo_client_id) as cli_all_cnt,
+
+           round(count(distinct case when t.cancel_middle_office = 1 then t.rfo_client_id end) /
+                   count(distinct t.rfo_client_id)*100,2) as reject_rate_mo_cli,
+           count(distinct case when t.cancel_middle_office = 1 then t.rfo_client_id end) as cli_rejected_mo_cnt,
+
+           round(count(distinct case when t.cancel_middle_office is not null then t.rfo_client_id end) /
+                   count(distinct t.rfo_client_id)*100,2) as reject_rate_mo_all_cli,
+           count(distinct case when t.cancel_middle_office is not null then t.rfo_client_id end) as cli_rejected_mo_all_cnt
+
+    from M_FOLDER_CON_CANCEL t
+    where t.is_refin = 0 and t.is_point_active = 0 and
+          to_char(t.folder_date_create_mi,'yyyy-mm') in ('2014-08','2014-09') and
+          t.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ',
+                            'КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ','ЛУЧШИЙ КЛИЕНТ – НАЛИЧНЫЕ')
+    group by t.x_dnp_name
+--    group by ceil(t.contract_amount/50000)*50000
+--    group by ceil(t.contract_amount/200000)*200000
+--    group by ceil(t.contract_amount/1000)*1000
+--);
+grant select on U1.M_TMP_J_AR_1 to LOADDB;
+grant select on U1.M_TMP_J_AR_1 to LOADER;
+
+

@@ -1,0 +1,10 @@
+﻿create materialized view U1.V_MOGW_KAS_EDIT_PRD_RES
+using no index
+refresh complete on demand
+as
+select * from MOGW_KAS_EDIT_PRD_RES@MOGW_PROD t
+where t.DATE_CREATE > trunc(sysdate) - 30;
+grant select on U1.V_MOGW_KAS_EDIT_PRD_RES to LOADDB;
+grant select on U1.V_MOGW_KAS_EDIT_PRD_RES to LOADER;
+
+

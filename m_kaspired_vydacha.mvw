@@ -1,0 +1,54 @@
+﻿create materialized view U1.M_KASPIRED_VYDACHA
+build deferred
+refresh force on demand
+as
+select
+td.text_yyyy_mm,
+td.week_text,
+td.yyyy_mm_dd,
+r.date_create as date_time_sco,
+t.folder_id,
+t.rfo_contract_id,
+b.rbo_contract_id,
+t.contract_number,
+t.cancel_prescoring,
+t.cancel_middle_office,
+t.cancel_controller,
+t.cancel_client,
+t.cancel_manager,
+t.cancel_cpr_aa,
+t.cancel_verificator,
+t.cancel_undefined,
+t.iin,
+case when t.is_categ_a = 1 then 'A'
+     when t.is_categ_b = 1 then 'B'
+     when t.is_client_new_by_con = 1 then 'D'
+     else 'C' end as cli_cat,
+t.x_dnp_name as city,
+t.pos_code,
+t.pos_name,
+t.pos_type,
+t.expert_name,
+t.expert_position,
+t.is_credit_issued,
+t.folder_state,
+q.credit_limit,
+c.c_card_num as card_num,
+c.c_acc_num as account_num,
+c.c_date_activate as date_activate,
+c.state_id as card_status
+
+from u1.m_folder_con_cancel t
+join u1.V_TIME_DAYS td on td.yyyy_mm_dd = trunc(t.folder_date_create_mi)
+left join u1.V_FOLDER_MO_SCO_REQUEST r on r.folder_id=t.folder_id
+left join u1.m_rbo_contract_bas b on t.contract_number=b.contract_number and t.folder_id=b.folder_id_first
+left join u1.v_rbo_z#kas_pc_card c on c.c_client_ref=b.rbo_client_id and c.c_text like ('%KASPI RED%') and c.c_date_take >=to_date('08.08.2016','dd.mm.yyyy')
+left join
+    (select k.rbo_contract_id,k.credit_limit, min(k.rep_date)
+             from u1.m_dwh_kaspired_port k
+             where k.rep_date>=to_date('08.08.2016','dd.mm.yyyy')
+             group by k.rbo_contract_id,k.credit_limit) q on q.rbo_contract_id=b.rbo_contract_id
+where t.CR_PROGRAM_NAME = 'KASPI RED' and trunc(t.folder_date_create_mi)>=to_date('08.08.2016','dd.mm.yyyy');
+grant select on U1.M_KASPIRED_VYDACHA to LOADDB;
+
+

@@ -1,0 +1,76 @@
+﻿create table U1.T_RFO_Z#PACK_DOC
+(
+  id                 NUMBER not null,
+  c_doc_group        NUMBER,
+  c_doc_type         NUMBER,
+  c_present          VARCHAR2(1 CHAR),
+  c_images           NUMBER,
+  c_note             VARCHAR2(500 CHAR),
+  c_need_image       VARCHAR2(1 CHAR),
+  c_reclaimed        VARCHAR2(1 CHAR),
+  c_accepted         VARCHAR2(1 CHAR),
+  c_phase            NUMBER(4),
+  c_to_recl          VARCHAR2(1 CHAR),
+  collection_id      NUMBER,
+  c_type_recl        NUMBER,
+  sn                 NUMBER,
+  su                 NUMBER,
+  c_kas_recl_his_arr NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RFO_Z#PACK_DOC
+  is 'Документ пакета';
+comment on column U1.T_RFO_Z#PACK_DOC.id
+  is 'Уникальный ID';
+comment on column U1.T_RFO_Z#PACK_DOC.c_doc_group
+  is 'Группа видов документов';
+comment on column U1.T_RFO_Z#PACK_DOC.c_doc_type
+  is 'Вид документа';
+comment on column U1.T_RFO_Z#PACK_DOC.c_present
+  is 'Признак наличия';
+comment on column U1.T_RFO_Z#PACK_DOC.c_images
+  is 'Изображения';
+comment on column U1.T_RFO_Z#PACK_DOC.c_note
+  is 'Примечания';
+comment on column U1.T_RFO_Z#PACK_DOC.c_need_image
+  is 'Наличие изображения';
+comment on column U1.T_RFO_Z#PACK_DOC.c_reclaimed
+  is 'Исправлен';
+comment on column U1.T_RFO_Z#PACK_DOC.c_accepted
+  is 'Подтверждение контролера';
+comment on column U1.T_RFO_Z#PACK_DOC.c_phase
+  is 'Этап рассмотрения';
+comment on column U1.T_RFO_Z#PACK_DOC.c_to_recl
+  is 'На рекламацию';
+comment on column U1.T_RFO_Z#PACK_DOC.collection_id
+  is 'KAS. Пакет документов.  FK на Z#FOLDERS(collection_id = Z#FOLDERS.c_kas_doc_pack)';
+comment on column U1.T_RFO_Z#PACK_DOC.c_type_recl
+  is 'Вид рекламаций';
+comment on column U1.T_RFO_Z#PACK_DOC.c_kas_recl_his_arr
+  is 'KAS. История рекламаций';
+create unique index U1.T_RFO_Z#PACK_DOC_IND1 on U1.T_RFO_Z#PACK_DOC (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_RFO_Z#PACK_DOC to LOADDB;
+

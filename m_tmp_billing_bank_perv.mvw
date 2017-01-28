@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_TMP_BILLING_BANK_PERV
+refresh force on demand
+as
+select b.p_num, b.p_type_id, TRIM(b.iin) AS iin,b.report_type,b.p_date||' '||b.p_date_time as p_date,b.rep_status,b.p_rep
+
+from RISK_SDARYA.T_TMP_BILLING_BANK_2 b
+where b.report_type='Первичный по физ. лицу';
+grant select on U1.M_TMP_BILLING_BANK_PERV to LOADDB;
+grant select on U1.M_TMP_BILLING_BANK_PERV to LOADER;
+
+

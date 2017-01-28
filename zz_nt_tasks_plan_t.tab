@@ -1,0 +1,29 @@
+﻿create table U1.ZZ_NT_TASKS_PLAN_T
+(
+  sdt         DATE not null,
+  task_name   VARCHAR2(100) not null,
+  start_time  NUMBER,
+  end_time    NUMBER,
+  group_num   NUMBER not null,
+  task_num    NUMBER not null,
+  sql_code    CLOB not null,
+  descr       VARCHAR2(1000) not null,
+  is_active   NUMBER not null,
+  object_name VARCHAR2(100),
+  interval    NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.ZZ_NT_TASKS_PLAN_T to LOADDB;
+

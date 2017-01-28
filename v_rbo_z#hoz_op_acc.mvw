@@ -1,0 +1,28 @@
+﻿create materialized view U1.V_RBO_Z#HOZ_OP_ACC
+refresh complete on demand
+as
+select
+       h.id,
+       h.collection_id,
+       h.c_name_account,
+       h.c_account_dog#0,
+       h.c_account_dog#1#1,
+       h.c_account_dog#1#2,
+       h.c_account_dog#2#1,
+       h.c_account_dog#2#inn,
+       h.c_account_dog#2#2,
+       h.c_account_dog#2#3,
+       h.c_account_dog#2#friends,
+       h.c_account_dog#2#part,
+       h.c_account_dog#1#cash,
+       h.c_account_dog#1#doc,
+       h.c_account_dog#1#product,
+       h.c_account_dog#2#kpp,
+       h.c_account_dog#2#is_priv,
+       h.c_account_dog#2#krs,
+       h.c_kas_svod_acc
+  from rdwh.V_RBO_Z#HOZ_OP_ACC@rdwh_exd h;
+grant select on U1.V_RBO_Z#HOZ_OP_ACC to LOADDB;
+grant select on U1.V_RBO_Z#HOZ_OP_ACC to LOADER;
+
+

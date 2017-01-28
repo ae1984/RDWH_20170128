@@ -1,0 +1,36 @@
+﻿create table U1.T_EFF_RATE
+(
+  contract_number VARCHAR2(200),
+  eff_rate        NUMBER,
+  rep_date        DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+alter table U1.T_EFF_RATE
+  add constraint T_EFF_RATE_UNQ unique (CONTRACT_NUMBER, REP_DATE)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.T_EFF_RATE_UNQ nologging;
+grant select on U1.T_EFF_RATE to LOADDB;
+grant select on U1.T_EFF_RATE to LOADER;
+

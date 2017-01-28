@@ -1,0 +1,42 @@
+﻿create table U1.T_RDWH_SALDO_PORT
+(
+  c_rep_date    DATE not null,
+  c_summa_saldo NUMBER(21,2) not null,
+  c_pl_usv_num  VARCHAR2(11)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RDWH_SALDO_PORT
+  is 'Таблица для ежедневного расчета баланса из РБО для проверки с t_rbo_port';
+comment on column U1.T_RDWH_SALDO_PORT.c_rep_date
+  is 'Отчетная дата';
+comment on column U1.T_RDWH_SALDO_PORT.c_summa_saldo
+  is 'Сумма остатка на счете';
+comment on column U1.T_RDWH_SALDO_PORT.c_pl_usv_num
+  is 'Номер учетного счета';
+create index U1.T_RDWH_SALDO_PORT_IND1 on U1.T_RDWH_SALDO_PORT (C_REP_DATE)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_RDWH_SALDO_PORT to LOADDB;
+

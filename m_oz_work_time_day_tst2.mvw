@@ -1,0 +1,75 @@
+﻿create materialized view U1.M_OZ_WORK_TIME_DAY_TST2
+refresh complete on demand
+as
+select t_day,
+       count(distinct folder_id) as cnt_folder_id,
+       sum(time_oz) as time_oz,
+       sum(time_oz_revis) as time_oz_revis,
+       sum(time_oz_reg) as time_oz_reg,
+       sum(time_manag) as time_manag,
+       sum(time_all) as time_all
+from(
+select   t_day,line_time,
+         folder_id,
+       (case when point_to_name = 'ОЦЕНКА ЗАЛОГА' then time_ln else 0 end) as time_oz,
+       (case when  point_to_name = 'ОЦЕНКА ЗАЛОГА' and name_line =  'НА ДОРАБОТКУ' then time_ln else 0 end) as time_oz_revis,
+       (case when  point_to_name = 'ОЦЕНКА ЗАЛОГА' and name_line !=  'НА ДОРАБОТКУ' then time_ln else 0 end) as time_oz_reg,
+       (case when  point_to_name != 'ОЦЕНКА ЗАЛОГА'  then time_ln else 0 end) as time_manag,
+       (time_ln) as time_all
+from (
+            select trunc(h.line_time,'hh24') as t_day,
+                   h.line_time,
+                   h.point_from_name,
+                   h.point_to_name,
+                   lead(h.point_to_name,1,0) over (partition by h.folder_id order by line_time)  as  name_line,
+                   lag(h.point_from_name,1,0) over (partition by h.folder_id order by line_time) as point_from2,
+                   lead(h.line_time,1,null) over (partition by h.folder_id order by line_time) tm,
+                   (lead(h.line_time,1,h.line_time) over (partition by h.folder_id order by line_time) - h.line_time)*24
+                    -(trunc(lead(h.line_time,1,h.line_time) over (partition by h.folder_id order by line_time)) - trunc(h.line_time))*12 as time_ln,--исключаем не рабочее время
+                   fa.process_code,
+                   h.folder_id
+            from v_folder_all_history h
+            join v_folder_all_rfo fa on h.folder_id = fa.folder_id
+            where fa.process_code = 'KAS_AUTO_CRED_PRIV_PC'
+               and fa.folder_date_create >= to_date('01-01-2013','dd-mm-yyyy')
+               and h.line_time >= fa.folder_date_create
+               and( point_to_name in ('НА ДОРАБОТКУ','МЕНЕДЖЕР ПРОДАЖ','ОЦЕНКА ЗАЛОГА') or (point_from_name = 'ОЦЕНКА ЗАЛОГА'))
+            )
+            where (point_to_name = 'ОЦЕНКА ЗАЛОГА'
+             or (point_to_name in ('НА ДОРАБОТКУ','МЕНЕДЖЕР ПРОДАЖ') and (point_from2 = 'ОЦЕНКА ЗАЛОГА' or point_from_name = 'ОЦЕНКА ЗАЛОГА'  ) ))
+             and tm is not null
+
+   union all
+    select  t_day,line_time,
+        folder_id,
+       (case when point_to_name = 'ОЦЕНКА ЗАЛОГА' or (point_from_name ='ОЦЕНКА ЗАЛОГА' and name_line = 'КРЕДИТНОЕ ПРЕДЛОЖЕНИЕ') then time_ln else 0 end) as time_oz,
+       (case when  point_to_name = 'ОЦЕНКА ЗАЛОГА' and name_line =  'НА ДОРАБОТКУ' then time_ln else 0 end) as time_oz_revis,
+       (case when  (point_to_name = 'ОЦЕНКА ЗАЛОГА' and name_line !=  'НА ДОРАБОТКУ') or (point_from_name ='ОЦЕНКА ЗАЛОГА' and name_line = 'КРЕДИТНОЕ ПРЕДЛОЖЕНИЕ') then time_ln else 0 end) as time_oz_reg,
+       (case when  point_to_name != 'ОЦЕНКА ЗАЛОГА' and (point_from_name !='ОЦЕНКА ЗАЛОГА' or name_line != 'КРЕДИТНОЕ ПРЕДЛОЖЕНИЕ') then time_ln else 0 end) as time_manag,
+       (time_ln) as time_all
+          from (
+          select trunc(h.line_time,'hh24') as t_day,
+                 h.line_time,
+                 --to_char(h.line_time, 'hh24') as a_hour,
+                 h.line_name,
+                 h.point_from_name,
+                 h.point_to_name,
+                 lead(h.point_to_name,1,0) over (partition by h.folder_id order by line_time) as name_line ,
+                 lead(h.line_time,1,null) over (partition by h.folder_id order by line_time) tm,
+                 (lead(h.line_time,1,h.line_time) over (partition by h.folder_id order by line_time) - h.line_time)*24 -- берем сколько в часах прошло
+                 -(trunc(lead(h.line_time,1,h.line_time) over (partition by h.folder_id order by line_time)) - trunc(h.line_time))*12 as time_ln, -- отнимаемм нерабочее время (раб день 8:00 -20:00) => *12
+                 fa.process_code,
+                 h.folder_id
+            from v_folder_all_history h
+            join v_folder_all_rfo fa on h.folder_id = fa.folder_id
+          where  fa.process_code = 'KAS_ZAL_EST'
+            and fa.folder_date_create >= to_date('01-01-2013','dd-mm-yyyy')
+            and h.line_time >= fa.folder_date_create
+           ) t
+      where t.point_from_name != 'ПЕЧАТЬ ДОКУМЕНТОВ'
+        and t.tm is not null
+ ) group by  t_day;
+grant select on U1.M_OZ_WORK_TIME_DAY_TST2 to LOADDB;
+grant select on U1.M_OZ_WORK_TIME_DAY_TST2 to LOADER;
+
+

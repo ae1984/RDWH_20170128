@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_TMP_R_OZ_REPORT
+refresh complete on demand
+as
+select  h.*, cl.iin, fa.process_code
+
+from v_folder_all_history h
+join v_folder_all_rfo fa on h.folder_id = fa.folder_id
+join v_client_rfo_by_id cl on cl.rfo_client_id = fa.rfo_client_id
+where h.line_time >= add_months(trunc(sysdate, 'month'),-6) and fa.process_code in ('KAS_ZAL_EST', 'KAS_AUTO_CRED_PRIV_PC');
+grant select on U1.M_TMP_R_OZ_REPORT to AUTO_USER;
+grant select on U1.M_TMP_R_OZ_REPORT to DNP;
+grant select on U1.M_TMP_R_OZ_REPORT to LOADDB;
+grant select on U1.M_TMP_R_OZ_REPORT to LOADER;
+
+

@@ -1,0 +1,18 @@
+﻿create materialized view U1.V_TMP_CON_PKB_REP_LAST
+refresh force on demand
+as
+select c.contract_number,
+       max(p.rfo_report_date) keep (dense_rank last order by p.report_id) as pkb_rep_date_max,
+       c.start_date_last - max(p.rfo_report_date) keep (dense_rank last order by p.report_id) as last_pkb_rep_age,
+       count(*) as prior_pkb_rep_count,
+       max(p.report_status) keep (dense_rank last order by p.report_id) as last_pkb_rep_status,
+       max(p.active_contracts) keep (dense_rank last order by p.report_id) as last_pkb_rep_active_contracts,
+       max(p.report_id) as pkb_rep_id_max
+from V_CONTRACT_CAL c
+join V_PKB_REPORT p on p.report_iin_rnn = c.client_iin_last and p.rfo_report_date <= c.start_date_last
+where /*c.contract_number = 'R1687487-002/CRD-2' and*/ p.is_from_cache = 0
+group by c.contract_number, c.start_date_last;
+grant select on U1.V_TMP_CON_PKB_REP_LAST to LOADDB;
+grant select on U1.V_TMP_CON_PKB_REP_LAST to LOADER;
+
+

@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_GBQ_CONTENT_INFO
+build deferred
+refresh force on demand
+as
+select id,
+      hit_id,
+      description,
+      idate
+from GBQ.GBQ_CONTENT_INFO@KSVISIT;
+grant select on U1.M_GBQ_CONTENT_INFO to LOADDB;
+
+

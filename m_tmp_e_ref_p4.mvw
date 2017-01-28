@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_TMP_E_REF_P4
+refresh force on demand
+as
+select sp21.client_id,
+       min(sp21.restr_prior) restr_prior
+from M_TMP_E_REF_P2 sp21 --where sp21.client_id = 1044322
+group by sp21.client_id;
+grant select on U1.M_TMP_E_REF_P4 to LOADDB;
+grant select on U1.M_TMP_E_REF_P4 to LOADER;
+
+

@@ -1,0 +1,92 @@
+﻿create table U1.VINTAGE_WRITTEN_OFF_RBO
+(
+  yy_mm_report VARCHAR2(25),
+  quarter      VARCHAR2(25),
+  "0"          NUMBER,
+  "1"          NUMBER,
+  "2"          NUMBER,
+  "3"          NUMBER,
+  "4"          NUMBER,
+  "5"          NUMBER,
+  "6"          NUMBER,
+  "7"          NUMBER,
+  "8"          NUMBER,
+  "9"          NUMBER,
+  "10"         NUMBER,
+  "11"         NUMBER,
+  "12"         NUMBER,
+  "13"         NUMBER,
+  "14"         NUMBER,
+  "15"         NUMBER,
+  "16"         NUMBER,
+  "17"         NUMBER,
+  "18"         NUMBER,
+  "19"         NUMBER,
+  "20"         NUMBER,
+  "21"         NUMBER,
+  "22"         NUMBER,
+  "23"         NUMBER,
+  "24"         NUMBER,
+  "25"         NUMBER,
+  "26"         NUMBER,
+  "27"         NUMBER,
+  "28"         NUMBER,
+  "29"         NUMBER,
+  "30"         NUMBER,
+  "31"         NUMBER,
+  "32"         NUMBER,
+  "33"         NUMBER,
+  "34"         NUMBER,
+  "35"         NUMBER,
+  "36"         NUMBER,
+  "37"         NUMBER,
+  "38"         NUMBER,
+  "39"         NUMBER,
+  "40"         NUMBER,
+  "41"         NUMBER,
+  "42"         NUMBER,
+  "43"         NUMBER,
+  "44"         NUMBER,
+  "45"         NUMBER,
+  "46"         NUMBER,
+  "47"         NUMBER,
+  "48"         NUMBER,
+  "49"         NUMBER,
+  "50"         NUMBER,
+  "51"         NUMBER,
+  "52"         NUMBER,
+  "53"         NUMBER,
+  "54"         NUMBER,
+  "55"         NUMBER,
+  "56"         NUMBER,
+  "57"         NUMBER,
+  "58"         NUMBER,
+  "59"         NUMBER,
+  "60"         NUMBER,
+  "61"         NUMBER,
+  "62"         NUMBER,
+  "63"         NUMBER,
+  "64"         NUMBER,
+  "65"         NUMBER,
+  "66"         NUMBER,
+  "67"         NUMBER,
+  "68"         NUMBER,
+  "69"         NUMBER,
+  "70"         NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.VINTAGE_WRITTEN_OFF_RBO to LOADDB;
+grant select on U1.VINTAGE_WRITTEN_OFF_RBO to LOADER;
+

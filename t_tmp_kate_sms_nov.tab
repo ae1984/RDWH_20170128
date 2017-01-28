@@ -1,0 +1,34 @@
+﻿create table U1.T_TMP_KATE_SMS_NOV
+(
+  iin                    VARCHAR2(12),
+  phone_number           VARCHAR2(50),
+  date_send_message      VARCHAR2(20),
+  date_delivery_message  VARCHAR2(20),
+  status_delivery        VARCHAR2(100),
+  deliv_status_mess_name VARCHAR2(100),
+  text_message           VARCHAR2(500),
+  sms_source_system      VARCHAR2(100),
+  product_2_lev_id       VARCHAR2(100),
+  contract_number        VARCHAR2(100),
+  contract_status        VARCHAR2(100),
+  del_days               NUMBER,
+  create_date            VARCHAR2(20),
+  business_process       VARCHAR2(100),
+  del_last_data          VARCHAR2(20)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_KATE_SMS_NOV to LOADDB;
+grant select on U1.T_TMP_KATE_SMS_NOV to LOADER;
+

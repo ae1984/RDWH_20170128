@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_KASPIKZ_FRM_USER_DOC
+refresh force on demand
+as
+select t."Id" id,
+t."BankingUserId" banking_user_id,
+t."Type" doc_type,
+t."Number" doc_number,
+t."Series" doc_series,
+to_date(to_char(t."ExpDate", 'dd.mm.yyyy hh24:mi:ss'), 'dd.mm.yyyy hh24:mi:ss') exp_date,
+t."IsMain" is_main,
+to_date(to_char(t."RecDate", 'dd.mm.yyyy hh24:mi:ss'), 'dd.mm.yyyy hh24:mi:ss') rec_date
+
+from "dbo"."tb_Framework_UserDocument"@"db_kr2" t;
+grant select on U1.M_KASPIKZ_FRM_USER_DOC to LOADDB;
+grant select on U1.M_KASPIKZ_FRM_USER_DOC to LOADER;
+
+

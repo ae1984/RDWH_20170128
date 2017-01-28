@@ -1,0 +1,79 @@
+﻿create materialized view U1.M_CNT_FLD_MIN_INC_TEST
+refresh complete on demand
+as
+select a.datmin as datrep,
+a.iin_min_inc as  iin,
+a.cnt_fld  as  cnt_fld,
+a.inc_dif_max_prc as inc_dif_max_prc from
+
+(select trunc(xx.folder_date_create) as datmin,
+       fc.iin as iin_min_inc,  --  все, имеющие одну заявку
+       0 as cnt_fld,
+       --count(xx.folder_id),
+       case when max(a.inc_total)=0 then 0
+         else round( (max(a.inc)/max(a.inc_total))*100,2)
+           end as inc_dif_max_prc
+
+  from /*m_folder_con_miner*/ M_FOLDER_CON_MINER_4 xx
+  join V_FORM_CLIENT_ALL_RFO fc
+    on fc.form_client_id = xx.form_client_id
+
+  join (select trunc(x.folder_date_create) as datrep,
+               fc.iin,
+
+               max(nvl(x.inc_total, 0) - nvl(x.inc_sal_spouse, 0)) as inc,
+               max(nvl(x.inc_total,0)) as inc_total
+          from /*m_folder_con_miner*/ M_FOLDER_CON_MINER_4 x
+          join V_FORM_CLIENT_ALL_RFO fc
+            on fc.form_client_id = x.form_client_id
+
+         group by trunc(x.folder_date_create), fc.iin) a
+
+    on a.iin = fc.iin
+   and a.datrep = trunc(xx.folder_date_create)
+ where (nvl(xx.inc_total, 0) - nvl(xx.inc_sal_spouse, 0)) = a.inc
+
+ group by trunc(xx.folder_date_create), fc.iin, a.inc
+ --having count(xx.folder_id)=1
+  ) a
+
+ UNION
+
+select b.datmin as datrep,
+b.iin_min_inc as  iin,
+b.cnt_fld  as  cnt_fld,
+b.inc_dif_max_prc as inc_dif_max_prc from
+
+(select trunc(xx.folder_date_create) as datmin,
+       fc.iin as iin_min_inc,
+
+       count(xx.folder_id) as cnt_fld,
+       case when max(a.inc_total)=0 then 0
+         else round( (max(a.inc)/max(a.inc_total))*100,2)
+           end as inc_dif_max_prc
+
+
+  from /*m_folder_con_miner*/ M_FOLDER_CON_MINER_4 xx
+  join V_FORM_CLIENT_ALL_RFO fc
+    on fc.form_client_id = xx.form_client_id
+
+  join (select trunc(x.folder_date_create) as datmax,
+               fc.iin,
+
+               max(nvl(x.inc_total, 0) - nvl(x.inc_sal_spouse, 0)) as inc,
+               max(nvl(x.inc_total,0)) as inc_total
+          from /*m_folder_con_miner*/ M_FOLDER_CON_MINER_4 x
+          join V_FORM_CLIENT_ALL_RFO fc
+            on fc.form_client_id = x.form_client_id
+
+         group by trunc(x.folder_date_create), fc.iin) a
+
+    on a.iin = fc.iin
+   and a.datmax = trunc(xx.folder_date_create)
+ where (nvl(xx.inc_total, 0) - nvl(xx.inc_sal_spouse, 0)) < a.inc
+
+ group by trunc(xx.folder_date_create), fc.iin) b;
+grant select on U1.M_CNT_FLD_MIN_INC_TEST to LOADDB;
+grant select on U1.M_CNT_FLD_MIN_INC_TEST to LOADER;
+
+

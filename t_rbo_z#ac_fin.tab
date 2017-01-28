@@ -1,0 +1,229 @@
+﻿create table U1.T_RBO_Z#AC_FIN
+(
+  id                            NUMBER not null,
+  class_id                      VARCHAR2(16 CHAR),
+  c_main_v_id                   VARCHAR2(25 CHAR),
+  c_name                        VARCHAR2(250 CHAR),
+  c_fintool                     NUMBER,
+  c_user_op                     NUMBER,
+  c_client_r                    NUMBER,
+  c_client_v                    NUMBER,
+  c_date_op                     DATE,
+  c_ps                          NUMBER,
+  c_date_last                   DATE,
+  c_date_l_nt                   DATE,
+  c_saldo                       NUMBER(17,2),
+  c_saldo_nt                    NUMBER(17,2),
+  c_vid                         NUMBER,
+  c_date_close                  DATE,
+  c_user_close                  NUMBER,
+  c_to_product                  NUMBER,
+  c_com_status                  NUMBER,
+  c_depart                      NUMBER,
+  c_otv                         NUMBER,
+  c_recont_acc#0                NUMBER,
+  c_recont_acc#rec_bs           VARCHAR2(128 CHAR),
+  c_recont_acc#rec_yes#rec_s_dt NUMBER,
+  c_recont_acc#rec_yes#rec_s_kt NUMBER,
+  c_recont_acc#rec_not          VARCHAR2(128 CHAR),
+  c_main_usv                    NUMBER,
+  c_turn_today_dt               NUMBER(17,2),
+  c_turn_today_ct               NUMBER(17,2),
+  c_turn_today_dt_nt            NUMBER(17,2),
+  c_turn_today_ct_nt            NUMBER(17,2),
+  c_filial                      NUMBER,
+  c_date_tax                    DATE,
+  c_order_ref                   NUMBER,
+  c_period_ref                  NUMBER,
+  c_acc_summary                 NUMBER,
+  c_delins_date                 DATE,
+  c_accs_arr                    NUMBER,
+  c_target                      NUMBER,
+  c_note                        VARCHAR2(2000 CHAR),
+  c_period_action               DATE,
+  c_over                        NUMBER(17,2),
+  c_tune_delta#0                NUMBER,
+  c_tune_delta#oper#sc_minus    NUMBER,
+  c_tune_delta#oper#sc_plus     NUMBER,
+  c_journal_sald_arr            NUMBER,
+  c_oper_delta#sc_minus         NUMBER,
+  c_oper_delta#sc_plus          NUMBER,
+  c_course_delta#sc_minus       NUMBER,
+  c_course_delta#sc_plus        NUMBER,
+  c_old_acc_num                 VARCHAR2(25 CHAR),
+  c_main_v_id_nokey             VARCHAR2(25 CHAR),
+  c_chapter                     NUMBER,
+  c_vid_p                       NUMBER,
+  c_today_recount               NUMBER(17,2),
+  c_pr_list                     NUMBER,
+  c_acc_summary_kt              NUMBER,
+  c_equal_odb                   VARCHAR2(30 CHAR),
+  c_kas_prev_acc_20             VARCHAR2(20 CHAR),
+  c_kas_need_sign               VARCHAR2(1 CHAR),
+  c_kas_dis_conv_bl             VARCHAR2(1 CHAR),
+  c_kas_product_ref             NUMBER,
+  c_kas_type_acc_ref            NUMBER,
+  c_kas_date_last               DATE,
+  c_kas_date_last_nt            DATE
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RBO_Z#AC_FIN
+  is 'Финансовые счета';
+comment on column U1.T_RBO_Z#AC_FIN.id
+  is 'Идентификатор финансового счета';
+comment on column U1.T_RBO_Z#AC_FIN.class_id
+  is 'MetaClass объекта';
+comment on column U1.T_RBO_Z#AC_FIN.c_main_v_id
+  is 'Основной номер';
+comment on column U1.T_RBO_Z#AC_FIN.c_name
+  is 'Наименование';
+comment on column U1.T_RBO_Z#AC_FIN.c_fintool
+  is 'Валюта(FK на Z#FT_MONEY)';
+comment on column U1.T_RBO_Z#AC_FIN.c_user_op
+  is 'Создатель(FK на Z#USER)';
+comment on column U1.T_RBO_Z#AC_FIN.c_client_r
+  is 'Клиент, для расчетов с которым открыт счет банка(FK на Z#CLIENT)';
+comment on column U1.T_RBO_Z#AC_FIN.c_client_v
+  is 'Владелец(FK на Z#CLIENT)';
+comment on column U1.T_RBO_Z#AC_FIN.c_date_op
+  is 'Дата открытия';
+comment on column U1.T_RBO_Z#AC_FIN.c_ps
+  is 'Признак счета(FK на Z#PS)';
+comment on column U1.T_RBO_Z#AC_FIN.c_date_last
+  is 'Дата последней операции по счету';
+comment on column U1.T_RBO_Z#AC_FIN.c_date_l_nt
+  is 'Дата последней операции по счету в нац. валюте';
+comment on column U1.T_RBO_Z#AC_FIN.c_saldo
+  is 'Остаток в валюте счета';
+comment on column U1.T_RBO_Z#AC_FIN.c_saldo_nt
+  is 'Остаток в основной валюте';
+comment on column U1.T_RBO_Z#AC_FIN.c_vid
+  is 'Вид счета(FK на Z#TYPE_ACC)';
+comment on column U1.T_RBO_Z#AC_FIN.c_date_close
+  is 'Дата закрытия';
+comment on column U1.T_RBO_Z#AC_FIN.c_user_close
+  is 'Пользователь, закрывший счет(FK на Z#USER)';
+comment on column U1.T_RBO_Z#AC_FIN.c_to_product
+  is 'Отношение счета к продукту(FK на Z#ACC_PRODUCT)';
+comment on column U1.T_RBO_Z#AC_FIN.c_com_status
+  is 'Обобщенный статус(FK на Z#COM_STATUS_PRD)';
+comment on column U1.T_RBO_Z#AC_FIN.c_depart
+  is 'Подразделение(FK на Z#DEPART)';
+comment on column U1.T_RBO_Z#AC_FIN.c_otv
+  is 'Ответственный по счету(FK на Z#USER)';
+comment on column U1.T_RBO_Z#AC_FIN.c_main_usv
+  is 'Балансовый счет(FK на Z#PL_USV)';
+comment on column U1.T_RBO_Z#AC_FIN.c_turn_today_dt
+  is 'Оборот Дебет за день в валюте счета';
+comment on column U1.T_RBO_Z#AC_FIN.c_turn_today_ct
+  is 'Оборот Кредит за день в валюте счета';
+comment on column U1.T_RBO_Z#AC_FIN.c_turn_today_dt_nt
+  is 'Оборот Дебет за день в основной валюте';
+comment on column U1.T_RBO_Z#AC_FIN.c_turn_today_ct_nt
+  is 'Оборот Кредит за день в основной валюте';
+comment on column U1.T_RBO_Z#AC_FIN.c_filial
+  is 'Филиал(FK на Z#BRANCH)';
+comment on column U1.T_RBO_Z#AC_FIN.c_date_tax
+  is 'Дата уведомления об открытии счета налоговых органов';
+comment on column U1.T_RBO_Z#AC_FIN.c_order_ref
+  is 'Порядок выдачи выписок счета(FK на Z#DISTRIB_ORDER)';
+comment on column U1.T_RBO_Z#AC_FIN.c_period_ref
+  is 'Периодичность выдачи выписок счета(FK на Z#PERIODS_OPER)';
+comment on column U1.T_RBO_Z#AC_FIN.c_acc_summary
+  is 'Сводный счет(FK на Z#AC_FIN)';
+comment on column U1.T_RBO_Z#AC_FIN.c_delins_date
+  is 'Наименьшая дата удаления или вставки';
+comment on column U1.T_RBO_Z#AC_FIN.c_target
+  is 'Целевое назначение счета(FK на Z#INTEND_FOR)';
+comment on column U1.T_RBO_Z#AC_FIN.c_note
+  is 'Примечания';
+comment on column U1.T_RBO_Z#AC_FIN.c_period_action
+  is 'Срок действия';
+comment on column U1.T_RBO_Z#AC_FIN.c_over
+  is 'Допустимый остаток';
+comment on column U1.T_RBO_Z#AC_FIN.c_journal_sald_arr
+  is 'Журнал остатков(COLLECTION в Z#JOURNAL_SALDO)';
+comment on column U1.T_RBO_Z#AC_FIN.c_old_acc_num
+  is 'Cтарый номер счета';
+comment on column U1.T_RBO_Z#AC_FIN.c_main_v_id_nokey
+  is 'Номер счета без ключа';
+comment on column U1.T_RBO_Z#AC_FIN.c_chapter
+  is 'Глава(FK на Z#CHAPTERS)';
+comment on column U1.T_RBO_Z#AC_FIN.c_vid_p
+  is 'Вид плана счетов(FK на Z#DIC_VPL)';
+comment on column U1.T_RBO_Z#AC_FIN.c_today_recount
+  is 'Сумма переоценки за текущий день';
+comment on column U1.T_RBO_Z#AC_FIN.c_pr_list
+  is 'Признаки(COLLECTION в Z#PR_ARR_ITEM)';
+comment on column U1.T_RBO_Z#AC_FIN.c_acc_summary_kt
+  is 'Сводный счет КТ(FK на Z#AC_FIN)';
+comment on column U1.T_RBO_Z#AC_FIN.c_equal_odb
+  is 'Режим сравнения с ОДБ';
+comment on column U1.T_RBO_Z#AC_FIN.c_kas_prev_acc_20
+  is 'KAS. Номер счета до перехода на 20 значные счета';
+comment on column U1.T_RBO_Z#AC_FIN.c_kas_need_sign
+  is 'KAS.Подписано';
+comment on column U1.T_RBO_Z#AC_FIN.c_kas_dis_conv_bl
+  is 'KAS.Отключить пересчет сальдо';
+comment on column U1.T_RBO_Z#AC_FIN.c_kas_product_ref
+  is 'KAS. Продукт(FK на Z#PRODUCT)';
+comment on column U1.T_RBO_Z#AC_FIN.c_kas_type_acc_ref
+  is 'KAS. Тип счета(FK на Z#TIP_ACC)';
+comment on column U1.T_RBO_Z#AC_FIN.c_kas_date_last
+  is 'KAS. Дата последнего изменения сальдо';
+comment on column U1.T_RBO_Z#AC_FIN.c_kas_date_last_nt
+  is 'KAS. Дата последнего изменения сальдо в нац. валюте';
+create index U1.T_RBO_Z#AC_FIN_IND1 on U1.T_RBO_Z#AC_FIN (ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  compress  nologging;
+create index U1.T_RBO_Z#AC_FIN_IND2 on U1.T_RBO_Z#AC_FIN (C_MAIN_USV)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  compress  nologging;
+create index U1.T_RBO_Z#AC_FIN_IND3 on U1.T_RBO_Z#AC_FIN (C_MAIN_V_ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  compress  nologging;
+grant select on U1.T_RBO_Z#AC_FIN to LOADDB;
+grant select on U1.T_RBO_Z#AC_FIN to LOADER;
+

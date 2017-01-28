@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_TMP_KASPIKZ_3M
+refresh force on demand
+as
+select y.*,
+       x.cli_ip_cnt_pre as other_cli_ip_cnt_pre,
+       x.shop_cnt
+
+from M_TMP_KASPIKZ y
+left join ( select t.order_number,
+                   count(distinct tt.iin) cli_ip_cnt_pre,
+                   count(coalesce(cc.shop_code, ccc.shop_code)) as shop_cnt
+                   --*
+
+            from M_TMP_KASPIKZ t
+            left join M_TMP_KASPIKZ tt on tt.buy_create_date < t.buy_create_date and
+                                                      tt.buy_create_date >= add_months(t.buy_create_date,-3) and
+                                                      tt.iin != t.iin and
+                                                      tt.client_ip = t.client_ip and
+                                                      tt.client_ip != '00000000' and
+                                                      tt.user_agent ||'#'|| tt.client_ip = t.user_agent ||'#'|| t.client_ip
+
+            left join m_folder_con_cancel cc on cc.iin = t.iin and cc.process_name = 'ОНЛАЙН КРЕДИТ'
+            left join m_folder_con_cancel ccc on ccc.iin = t.iin
+             --where t.order_number = '00384204'
+            group by t.order_number
+            ) x on x.order_number = y.order_number;
+grant select on U1.M_TMP_KASPIKZ_3M to LOADDB;
+grant select on U1.M_TMP_KASPIKZ_3M to LOADER;
+
+

@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_KASPIKZ_LOGINS
+build deferred
+refresh complete on demand
+as
+select cast(t.Login as varchar2(2700)) login_val,
+       t.ChangeDate as change_date,
+       cast(t.IsDisabled as number(3)) as is_disabled,
+       t.NextChangeDate as next_change_date,
+       cast(t.UserId as number(20)) as user_id,
+       cast(t.Id as number(20)) as id,
+       cast(case when t.Login like '%was change%' then regexp_substr(t.Login, '[^X ]+', 1, 1)
+            else t.Login end as varchar2(2700))                                as login_val_prev,
+       cast(case when t.Login like '%was change%' then regexp_substr(t.Login, '[^ ]+', 1, 5)
+            else null end as varchar2(2700))                                as login_val_next,
+       cast(case when t.Login like '%was change%'
+                 then to_date(regexp_substr(t.Login, '[^ ]+', 1, 7) || ' ' ||regexp_substr(t.Login, '[^ ]+', 1, 8), 'dd.mm.yyyy hh24:mi:ss')
+                 end as date)                 as login_change_date
+  from s37.TB_FRAMEWORK_LOGINPASSWORDS@rdwh_exd t;
+grant select on U1.M_KASPIKZ_LOGINS to LOADDB;
+grant select on U1.M_KASPIKZ_LOGINS to RISK_VERIF;
+
+

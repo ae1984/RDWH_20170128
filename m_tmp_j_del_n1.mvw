@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_TMP_J_DEL_N1
+refresh force on demand
+as
+select to_char(c.x_start_date,'yyyy - mm') as yy_mm_start,
+       count(*), count(distinct c.deal_number) as count_check,
+       sum(coalesce(d.max_debt_used,cc.max_debt_used)) as sales,
+       round(sum(coalesce(d.max_debt_used,cc.max_debt_used))/1000000) as sales_mln,
+       round(sum(case when c.x_delinq_days > 7 then c.x_total_debt end) /
+             sum(coalesce(d.max_debt_used,cc.max_debt_used)) * 100, 2) as del_rate,
+       round(sum(case when c.x_delinq_days > 90 then c.x_total_debt end) /
+             sum(coalesce(d.max_debt_used,cc.max_debt_used)) * 100, 2) as del_rate_npl,
+       round(sum(case when dp1.delinq_days > 0 then dp1.total_debt end) /
+             sum(coalesce(d.max_debt_used,cc.max_debt_used)) * 100, 2) as del_rate_fpd_7
+from V_DWH_PORTFOLIO_CURRENT c
+left join (
+    select t.deal_number, max(t.total_debt) as max_debt_used
+    from DWH_PORT t
+    where t.rep_date >= to_date('2014-01-01','yyyy-mm-dd')
+    group by t.deal_number
+) d on d.deal_number = c.deal_number
+left join V_CONTRACT_CAL cc on cc.contract_number = c.deal_number
+left join (
+    select t.dcard_number as contract_number,
+           max(t.date_plan_pay) as plan_pmt_date_1
+    from M_DWH_PLAN_OPER_CARD t
+    where t.cardplanr_number = 1
+    group by t.dcard_number
+    union all
+    select t.crdt_number as contract_number,
+           max(t.crdtplanr_date_plan_pay) as plan_pmt_date_1
+    from M_DWH_PLAN_OPER_CREDIT t
+    where t.crdtplanr_number = 1
+    group by t.crdt_number
+) p1 on p1.contract_number = c.deal_number
+left join DWH_PORT dp1 on dp1.deal_number = c.deal_number and
+                          dp1.rep_date = p1.plan_pmt_date_1 + 7
+where c.x_is_credit_issued = 1 and
+      c.x_start_date >= to_date('2013-01-01','yyyy-mm-dd')
+group by to_char(c.x_start_date,'yyyy - mm')
+having sum(coalesce(d.max_debt_used,cc.max_debt_used)) > 0;
+grant select on U1.M_TMP_J_DEL_N1 to LOADDB;
+grant select on U1.M_TMP_J_DEL_N1 to LOADER;
+
+

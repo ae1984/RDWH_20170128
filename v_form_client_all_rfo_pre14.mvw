@@ -1,0 +1,13 @@
+﻿create materialized view U1.V_FORM_CLIENT_ALL_RFO_PRE14
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/
+      distinct
+                  pr13.collection_id, pr13.c_bool as prop_name --дублирование данных в источнике
+             from V_RFO_Z#PROPERTIES   pr13
+             join V_RFO_Z#PROPERTY_GRP pg13 on pg13.id = pr13.c_group_prop
+            where pg13.c_code = 'KAS_ESTATE_E'     --Наличие недвижимости(дополнительной);
+grant select on U1.V_FORM_CLIENT_ALL_RFO_PRE14 to LOADDB;
+
+

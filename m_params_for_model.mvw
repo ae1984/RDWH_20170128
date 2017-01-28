@@ -1,0 +1,70 @@
+﻿create materialized view U1.M_PARAMS_FOR_MODEL
+build deferred
+refresh force on demand
+as
+select /*+parallel(5)*/
+        cln.rfo_client_id
+       ,cln.app_id
+       ,cln.folder_date_create_mi
+
+       --,case when a.operator_value > 0 then a.operator_value                    end as operator_value
+       --,case when a.unique_sumbol_qty > 0 then a.unique_sumbol_qty              end as unique_sumbol_qty
+       --,case when a.unique_contact_persons > 0 then a.unique_contact_persons    end as unique_contact_persons
+       --,case when a.unique_subs_on_a_number > 0 then a.unique_subs_on_a_number  end as unique_subs_on_a_number
+       ,case when b.unique_kaspikz_client > 0 then b.unique_kaspikz_client end as unique_kaspikz_client
+
+       ,case when c.application_flag  > 0 then c.application_flag end as application_flag
+       ,case when c.count_application > 0 then c.count_application end as count_application
+
+       ,case when d.subs_with_delay_in_contact > 0 then d.subs_with_delay_in_contact end as subs_with_delay_in_contact /*M_PARAMS_FOR_MODEL_PRE_1  M_PARAMS_FOR_MODEL_PRE_4*/
+       ,case when a.unique_contact_persons=0 then null else d.subs_with_delay_in_contact/a.unique_contact_persons*100 end as DELAY_CONTACTS_SHARE
+
+       /*,case when nvl(e.pmt_qty_kaspi,0)+nvl(f.pmt_qty_term,0)<=0 then null else nvl(e.pmt_qty_kaspi,0)+nvl(f.pmt_qty_term,0) end as PMT_QTY
+       ,case when nvl(e.ttl_pmt_amt_kaspi,0)+nvl(f.ttl_pmt_amt_term,0)<=0
+            then null
+            else nvl(e.ttl_pmt_amt_kaspi,0)/(nvl(e.ttl_pmt_amt_kaspi,0)+nvl(f.ttl_pmt_amt_term,0))
+        end as SHARE_OF_KASPIKZ_PMT
+       ,case when nvl(e.ttl_pmt_amt_kaspi,0)+nvl(f.ttl_pmt_amt_term,0) > 0 then round(nvl(e.ttl_pmt_amt_kaspi,0)+nvl(f.ttl_pmt_amt_term,0),2) end as TTL_PMT_AMT
+       ,case when nvl(e.CNT_PMT_KASPI,0)+nvl(f.CNT_PMT_TERM,0)<=0 then null
+            else round((nvl(e.ttl_pmt_amt_kaspi,0)+nvl(f.ttl_pmt_amt_term,0))/(nvl(e.CNT_PMT_KASPI,0)+nvl(f.CNT_PMT_TERM,0)),2)
+        end as AVG_PMT
+
+       ,trunc(cln.folder_date_create_mi)
+        -trunc(case when f.days_from_first_mob_pay_term is not null or e.days_from_first_mob_pay_kaspi is not null
+           then least(nvl(f.days_from_first_mob_pay_term,sysdate),nvl(e.days_from_first_mob_pay_kaspi,sysdate))
+         end) as DAYS_FROM_FIRST_MOB_PAY*/
+
+       --,case when f.unique_terminal_qty > 0 then f.unique_terminal_qty end as unique_terminal_qty
+
+       ,case when g.count_category_kspkz > 0 then g.count_category_kspkz end as count_category_kspkz
+       ,case when g.count_month_kspkz > 0 then g.count_month_kspkz       end as count_month_kspkz
+       ,case when g.flag_avia_kspkz > 0 then g.flag_avia_kspkz           end as flag_avia_kspkz
+       ,case when h.delay_contact_flag > 0 then h.delay_contact_flag end as delay_contact_flag
+       --,trunc(cln.folder_date_create_mi-k.begin_date) as CLIENT_LIFE_LENGTH
+       --,case when l.bylo_ili_est_auto > 0 then l.bylo_ili_est_auto end as bylo_ili_est_auto
+       --,l.years_from_issue_ever
+       --,case when l.actual_auto_flag > 0 then l.actual_auto_flag end as actual_auto_flag
+       --,l.years_from_issue
+       ,m.mobile_popularity
+       ,n.popularity_90 as mobile_popularity90
+       ,n.popularity_30 as mobile_popularity30
+       --,o.ip_flag
+from u1.M_APP_MINER_BAS cln--V_CLIENT_RFO_BY_ID cln
+left join u1.M_PARAMS_FOR_MODEL_PRE_0 a on a.app_id=cln.app_id
+left join u1.M_PARAMS_FOR_MODEL_PRE_2 b on b.app_id=cln.app_id
+left join u1.M_PARAMS_FOR_MODEL_PRE_3 c on c.app_id=cln.app_id
+left join u1.M_PARAMS_FOR_MODEL_PRE_4 d on d.app_id=cln.app_id
+--left join u1.M_PARAMS_FOR_MODEL_PRE_5 e on e.app_id=cln.app_id
+--left join u1.M_PARAMS_FOR_MODEL_PRE_6 f on f.app_id=cln.app_id
+left join u1.M_PARAMS_FOR_MODEL_PRE_7 g on g.app_id=cln.app_id
+left join u1.M_PARAMS_FOR_MODEL_PRE_8 h on h.app_id=cln.app_id
+--left join u1.M_PARAMS_FOR_MODEL_PRE_9 k on k.rfo_client_id=to_char(cln.rfo_client_id)
+--left join u1.M_PARAMS_FOR_MODEL_PRE_10 l on l.app_id=cln.app_id
+left join u1.M_PARAMS_FOR_MODEL_PRE_11 m on m.app_id=cln.app_id
+left join u1.M_PARAMS_FOR_MODEL_PRE_13 n on n.mask_cellphone=a.mask_cellphone and n.dt=trunc(cln.folder_date_create_mi)
+/*left join u1.M_MATRIX_BASE mb on mb.rfo_con_or_claim_id=cln.app_id
+left join (select * from u1.T_IIN_IP where sdt=(select max(sdt)from T_IIN_IP)) o on o.iin=mb.iin*/
+where cln.folder_date_create_mi >= to_date('01.01.2015','dd.mm.yyyy');
+grant select on U1.M_PARAMS_FOR_MODEL to LOADDB;
+
+

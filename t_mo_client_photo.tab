@@ -1,0 +1,267 @@
+﻿create table U1.T_MO_CLIENT_PHOTO
+(
+  id                NUMBER,
+  proccess_type     VARCHAR2(200),
+  cred_program      VARCHAR2(200),
+  client_id         NUMBER(20),
+  proccess_id       NUMBER(20),
+  photo_type        VARCHAR2(100),
+  source_user_type  VARCHAR2(100),
+  system_code       VARCHAR2(30),
+  photo_type_id     VARCHAR2(140),
+  source_user       VARCHAR2(60),
+  photo_luna_id     NUMBER(20),
+  photo_date_create DATE,
+  process_status    VARCHAR2(40),
+  error_code        VARCHAR2(1000),
+  verif_id          NUMBER,
+  pos_code          VARCHAR2(200),
+  date_update       DATE,
+  date_insert       DATE,
+  date_insert_luna  DATE,
+  date_insert_front DATE,
+  request_id        NUMBER,
+  bpd_instance_id   VARCHAR2(80),
+  photo_quality     NUMBER
+)
+partition by range (DATE_INSERT) interval (NUMTOYMINTERVAL(1, 'MONTH'))
+(
+  partition P0 values less than (TO_DATE(' 2000-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_ARC
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P22307 values less than (TO_DATE(' 2016-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_ARC
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P22619 values less than (TO_DATE(' 2016-02-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_ARC
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P446 values less than (TO_DATE(' 2016-03-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_ARC
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1054 values less than (TO_DATE(' 2016-04-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_ARC
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1715 values less than (TO_DATE(' 2016-05-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_ARC
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P2454 values less than (TO_DATE(' 2016-06-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_ARC
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P3292 values less than (TO_DATE(' 2016-07-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_ARC
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P5172 values less than (TO_DATE(' 2016-08-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_ARC
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P6012 values less than (TO_DATE(' 2016-09-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_ARC
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P6727 values less than (TO_DATE(' 2016-10-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_ARC
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P7431 values less than (TO_DATE(' 2016-11-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_ARC
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P10004 values less than (TO_DATE(' 2016-12-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_ARC
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P10950 values less than (TO_DATE(' 2017-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_ARC
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P19157 values less than (TO_DATE(' 2017-02-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_ARC
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    )
+);
+comment on column U1.T_MO_CLIENT_PHOTO.proccess_type
+  is 'БП Выдачи';
+comment on column U1.T_MO_CLIENT_PHOTO.cred_program
+  is 'Программа кредитования';
+comment on column U1.T_MO_CLIENT_PHOTO.client_id
+  is 'ID Клиента';
+comment on column U1.T_MO_CLIENT_PHOTO.proccess_id
+  is 'ID Процесса';
+comment on column U1.T_MO_CLIENT_PHOTO.photo_type
+  is 'Тип фото';
+comment on column U1.T_MO_CLIENT_PHOTO.source_user_type
+  is 'ID Подразделения';
+comment on column U1.T_MO_CLIENT_PHOTO.system_code
+  is 'Система источник код';
+comment on column U1.T_MO_CLIENT_PHOTO.photo_type_id
+  is 'GUID Фото';
+comment on column U1.T_MO_CLIENT_PHOTO.source_user
+  is 'Менеджер';
+comment on column U1.T_MO_CLIENT_PHOTO.photo_luna_id
+  is 'Бинарный ID фото';
+comment on column U1.T_MO_CLIENT_PHOTO.photo_date_create
+  is 'Дата и время создания фото';
+comment on column U1.T_MO_CLIENT_PHOTO.process_status
+  is 'Статус процесса';
+comment on column U1.T_MO_CLIENT_PHOTO.error_code
+  is 'Код ошибки';
+comment on column U1.T_MO_CLIENT_PHOTO.verif_id
+  is 'Верификаци';
+comment on column U1.T_MO_CLIENT_PHOTO.pos_code
+  is 'Код Подразделения';
+comment on column U1.T_MO_CLIENT_PHOTO.date_update
+  is 'Дата обновления записи';
+comment on column U1.T_MO_CLIENT_PHOTO.date_insert
+  is 'Дата вставки записи';
+comment on column U1.T_MO_CLIENT_PHOTO.date_insert_luna
+  is 'Дата вставки записи от LUNA';
+comment on column U1.T_MO_CLIENT_PHOTO.date_insert_front
+  is 'Дата вставки записи от RFO';
+comment on column U1.T_MO_CLIENT_PHOTO.request_id
+  is 'Номер запроса';
+comment on column U1.T_MO_CLIENT_PHOTO.photo_quality
+  is 'Качество фото';
+create index U1.IDX_T_MO_CLIENT_PHOTO_1 on U1.T_MO_CLIENT_PHOTO (PHOTO_LUNA_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_MO_CLIENT_PHOTO to LOADDB;
+grant select on U1.T_MO_CLIENT_PHOTO to LOADER;
+

@@ -1,0 +1,13 @@
+﻿create materialized view U1.TMP_R_DEPOSIT
+refresh force on demand
+as
+select distinct (dc.clnt_inn) as iin
+     from V_DWH_DEPOSITS t
+     join V_DWH_CLIENT_PHYS_CURRENT dc on dc.clnt_gid = t.clnt_gid
+     where t.product_type_name = 'ДОГОВОР СРОЧНОГО ВКЛАДА' and
+      t.deal_status_name not in ('АННУЛИРОВАН','ОТКАЗ') and
+      dc.clnt_inn is not null;
+grant select on U1.TMP_R_DEPOSIT to LOADDB;
+grant select on U1.TMP_R_DEPOSIT to LOADER;
+
+

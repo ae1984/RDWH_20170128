@@ -1,0 +1,97 @@
+﻿create materialized view U1.M_RFO_ONLINE_CLAIM_PHOTO_VER
+refresh force on demand
+as
+select to_char(f.folder_date_create, 'yyyy-mm') as mon,
+       to_char(f.folder_date_create, 'yyyy-mm-dd') as a_date,
+
+       f.folder_date_create,
+       f.folder_state,
+       f.expert_name,
+       c.hiring_date,
+       f.expert_position,
+       f.folder_id,
+       f.folder_number,
+       case
+         when fa.folder_id = f.folder_id then
+          1
+         else
+          0
+       end as is_fld_rejected,
+
+       f.rfo_client_id,
+       cl.iin,
+       cl.client_name,
+
+       f.route_name,
+
+       fc.cr_program_name,
+       fc.contract_amount,
+       fc.contract_number,
+       fc.is_credit_issued,
+       --        f.pos_name,
+       --        f.pos_code,
+       sd.c_code pos_code,
+       sd.c_name pos_name,
+       --mvv.question,
+      -- f.pos_code,
+       mvv.verification_id,
+       mvv.verification_date,
+       fa.folder_id as fraud_folder_id,
+       floor((f.folder_date_create - trunc(fa.folder_date_create, 'mi')) * 24) as hours_from_fraud_event,
+
+       case
+         when upper(trim(mvv.question)) like
+              '%СРАВНИТЬ%4%ФОТОГРАФИИ%КЛИЕНТА%' then
+          'QUESTION_1'
+         when upper(trim(mvv.question)) like
+              '%НА%ДОКУМЕНТЕ%УД%ЛИЧНОСТИ%И%ФОТО%КЛИЕНТА%ИЗОБРАЖЕН%ОДИН%ЧЕЛОВЕК%' then
+          'QUESTION_2'
+         when upper(trim(mvv.question)) like '%С%ФОТО%ИЗ%ПРЕДЫДУЩЕЙ%ЗАЯВКИ%' then
+          'QUESTION_3'
+         when upper(trim(mvv.question)) like
+              '%ФОТО%КЛИЕНТА%И%ФОТО%ДОКУМЕНТА%ЦВЕТНЫЕ%(ПОХОЖИ%НА%ОРИГИНАЛ)%' then
+          'QUESTION_4'
+         when upper(trim(mvv.question)) like
+              '%ФОТО%КЛИЕНТА%И%ФОТО%ДОКУМЕНТА%ЦВЕТНЫЕ%' then
+          'QUESTION_5'
+         else
+          'UNKNOWN'
+       end as question
+
+  from u1.V_FOLDER_ALL_RFO f -- папки, которые ищем
+  join u1.V_RFO_Z#USER u
+    on u.c_username = f.expert_login
+  join V_RFO_Z#STRUCT_DEPART sd on sd.c_code=f.pos_code
+  join u1.V_CLIENT_RFO_BY_ID cl
+    on cl.rfo_client_id = f.rfo_client_id
+  left join u1.M_ZUP_1C_STAFF_OUT2 c
+    on c.tab_num = u.c_num_tab
+-- папки, по которым были фрод отказы фотоверификаторов до искомой папки
+  join u1.V_FOLDER_ALL_RFO fa
+    on (fa.expert_login = f.expert_login and
+       trunc(f.folder_date_create, 'mi') >=
+       trunc(fa.folder_date_create, 'mi') and
+       trunc(f.folder_date_create) = trunc(fa.folder_date_create))
+    or (fa.folder_id = f.folder_id)
+  join u1.M_VERIFICATION mvv
+    on mvv.demand_folder_id = fa.folder_id
+   and (upper(trim(mvv.question)) like '%СРАВНИТЬ%4%ФОТОГРАФИИ%КЛИЕНТА%' or
+       upper(trim(mvv.question)) like
+       '%НА%ДОКУМЕНТЕ%УД%ЛИЧНОСТИ%И%ФОТО%КЛИЕНТА%ИЗОБРАЖЕН%ОДИН%ЧЕЛОВЕК%' or
+       upper(trim(mvv.question)) like '%С%ФОТО%ИЗ%ПРЕДЫДУЩЕЙ%ЗАЯВКИ%' or
+       upper(trim(mvv.question)) like
+       '%ФОТО%КЛИЕНТА%И%ФОТО%ДОКУМЕНТА%ЦВЕТНЫЕ%(ПОХОЖИ%НА%ОРИГИНАЛ)%' or
+       upper(trim(mvv.question)) like
+       '%ФОТО%КЛИЕНТА%И%ФОТО%ДОКУМЕНТА%ЦВЕТНЫЕ%')
+   and mvv.answer_text = 'НЕТ'
+   and mvv.verification_scheme = 'PHOTO'
+
+  left join u1.m_folder_con_cancel fc
+    on fc.folder_id = f.folder_id
+
+ where trunc(f.folder_date_create) = to_date('02.07.2015', 'dd.mm.yyyy');
+grant select on U1.M_RFO_ONLINE_CLAIM_PHOTO_VER to LOADDB;
+grant select on U1.M_RFO_ONLINE_CLAIM_PHOTO_VER to LOADER;
+grant select on U1.M_RFO_ONLINE_CLAIM_PHOTO_VER to LOAD_RDWH_PROD;
+
+

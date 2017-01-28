@@ -1,0 +1,51 @@
+﻿create materialized view U1.V_RBO_Z#KAS_SPEC_OFFER
+build deferred
+refresh complete on demand
+as
+select id,
+        c_dog_ref,
+        c_tarif_plan_ref,
+        c_limit_sum,
+        c_vid_card_ref,
+        c_date_begin,
+        c_date_end,
+        c_status_ref,
+        c_program,
+        c_program_ref,
+        c_src_of_chng_ref,
+        c_note,
+        c_vid_product_ref,
+        class_id,
+        state_id,
+        c_ek_dog_ref,
+        c_client_ref,
+        c_vid_spec_ref,
+        c_date_cancel,
+        c_o_vid_prod_ref,
+        c_o_tarif_plan_ref,
+        c_o_limit_sum,
+        c_date_edit,
+        c_date_tp_restore,
+        c_date_lim_restore,
+        c_min_sum,
+        c_camp_name_code,
+        c_camp_type_code,
+        c_cell_package_sk,
+        c_depn_ref,
+        c_amount_min,
+        c_amount_max,
+        c_persent_bonus,
+        c_day_for_pay,
+        c_period,
+        c_calc_rule_id,
+        c_date_approved,
+        c_so_ref,
+        c_sas_offer_id,
+        c_param_array,
+        c_camp_name,
+        c_camp_type,
+        c_smartscript_code
+   from s02.Z#KAS_SPEC_OFFER@rdwh_exd a;
+grant select on U1.V_RBO_Z#KAS_SPEC_OFFER to LOADDB;
+
+

@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_TMP_FIRST_PLAN_PAYMENT_STAT
+using no index
+refresh complete on demand
+as
+select p.yy_mm_start,
+       p.prod_type,
+       coalesce(q.date_plan_pay,t.date_plan_pay) - p.x_start_date as days,
+       sum(p.x_amount) as amount,
+       count(p.deal_number) as deal_number
+from v_dwh_portfolio_current p
+left join
+         (select min(t.date_plan_pay) as date_plan_pay, t.dcard_number from M_DWH_PLAN_OPER_CARD t
+         group by t.dcard_number) t on t.dcard_number = p.deal_number
+left join
+         (select min(q.crdtplanr_date_plan_pay) as date_plan_pay, q.crdt_number from M_DWH_PLAN_OPER_CREDIT q
+         group by q.crdt_number) q on q.crdt_number = p.deal_number
+where p.x_start_date >= to_date('01.01.2013','dd.mm.yyyy') and p.x_is_credit_issued = 1 and p.x_amount > 0
+group by p.prod_type, p.yy_mm_start, coalesce(q.date_plan_pay,t.date_plan_pay) - p.x_start_date;
+grant select on U1.M_TMP_FIRST_PLAN_PAYMENT_STAT to LOADDB;
+grant select on U1.M_TMP_FIRST_PLAN_PAYMENT_STAT to LOADER;
+
+

@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_DWH_KASPIRED_PORT
+build deferred
+refresh force on demand
+as
+select distinct t.artba_saveartdate as rep_date,
+       t.artba_idcardrbo as rbo_contract_id,
+       t.artba_creditlimit as credit_limit,
+       nvl(t.artba_acc1balcreditend,0) as principal,
+       nvl(t.artba_acc4balendcredit,0) as principal_del,
+       nvl(t.artba_acc9balcreditend,0) as overdraft,
+       nvl(t.artba_acc1balbzend,0) as w_principal_del,
+       nvl(t.artba_acc1balcardend,0) as client_account,
+       nvl(t.artba_acc9balcardend ,0) as zalog_amount,
+
+       nvl(t.artba_acc3balcreditend ,0) as free_limit ,
+      decode(t.artba_overduedebtdate, to_date('01.01.0001','dd.mm.yyyy'), null,t.artba_overduedebtdate) as delinq_date, -- 01 01 0001
+       decode(t.artba_payoverduedebtdate, to_date('01.01.0001','dd.mm.yyyy'), null,t.artba_overduedebtdate) as pay_over_date, -- 01 01 0001
+     --  t.artba_maindebtdatevbal as w_delinq_date,  --всегда пустой
+        t.artba_paydebtdatefact as fact_pay_date,
+       t.artba_prolongdate as ending_date,
+
+       nvl(t.artba_futuremaindebt,0) as future_pay_amount ,
+       nvl(t.artba_quantityoverduedebtdate,0) as delinq_days,
+       nvl(t.artba_billsum,0) as bill_amount ,
+       cast(t.artba_grantdebtdatefact as varchar2(200)) as start_date, --почему то пустой, выясняю
+     --  nvl(t.artba_provisionsum,0) as provision_sum, --всегда пустой
+       nvl(t.artba_maindebt,0) as principal2,
+       nvl(t.artba_overdraft,0) as overdraft2,
+       nvl(t.artba_overmaindebt,0) as principal_del2,
+       nvl(t.artba_overdueoverdraft,0) as overdraft_del2,
+       nvl(t.artba_acc1balcreditend,0) + nvl(t.artba_acc4balendcredit,0) + nvl(t.artba_acc9balcreditend,0) + nvl(t.artba_acc1balbzend,0) as total_debt  -- principal+principal_del+overdraft+w_principal_del
+
+from DWH_MAIN.ACC_ARTB_ACCINFO@rdwh_exd t
+where t.artba$row_status = 'A';
+grant select on U1.M_DWH_KASPIRED_PORT to LOADDB;
+
+

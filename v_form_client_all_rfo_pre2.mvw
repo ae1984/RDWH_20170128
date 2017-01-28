@@ -1,0 +1,13 @@
+﻿create materialized view U1.V_FORM_CLIENT_ALL_RFO_PRE2
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/ distinct pr1.collection_id, pp1.c_name as prop_name
+             from V_RFO_Z#PROPERTIES pr1
+             join V_RFO_Z#PROD_PROPERTY pp1 on pp1.id = pr1.c_prop
+                                           and pp1.c_group_prop = pr1.c_group_prop
+             join V_RFO_Z#PROPERTY_GRP pg1  on pg1.id = pr1.c_group_prop
+             where pg1.c_code = 'ORG_ACTIVITY'  --Направление деятельности 3647984 -- ORG_ACTIVITY;
+grant select on U1.V_FORM_CLIENT_ALL_RFO_PRE2 to LOADDB;
+
+

@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_3
+refresh force on demand
+as
+select fc1.rfo_client_id, min(fc1.folder_date_create) as folder_date_create_min
+      from V_FOLDER_ALL_RFO fc1
+      where fc1.rfo_client_id is not null
+      group by fc1.rfo_client_id;
+grant select on U1.M_FOLDER_CON_MINER_3 to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER_3 to LOADER;
+
+

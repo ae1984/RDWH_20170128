@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_CLIENT_HISTORY_BARCODE
+refresh force on demand
+as
+select /*+ parallel 30 */
+       t.*,
+           substr(tt.pmt_code, 1, t.cli_row_rank) as pmt_hist,
+           substr(tt.pmt_code_new, 1, t.cli_row_rank) as pmt_hist_new,
+           substr(tt.pmt_full_code, 1, t.cli_row_rank) as pmt_full_hist,
+           substr(tt.pmt_full_code_new, 1, t.cli_row_rank) as pmt_full_hist_new
+    from M_CLIENT_HISTORY_BARCODE_PRE1 t
+    join M_CLIENT_BARCODE tt on tt.client_id = t.client_id;
+grant select on U1.M_CLIENT_HISTORY_BARCODE to LOADDB;
+grant select on U1.M_CLIENT_HISTORY_BARCODE to LOADER;
+
+

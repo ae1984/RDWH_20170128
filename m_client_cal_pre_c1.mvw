@@ -1,0 +1,58 @@
+﻿create materialized view U1.M_CLIENT_CAL_PRE_C1
+refresh complete on demand
+as
+select
+                --substr(ltrim(contract_no, 'R'),1,7) as client_id,
+                d.client_id,
+/* оставляем в c
+                min(d.contract_no) keep (dense_rank first order by d.start_date) as contract_number_first,
+                max(d.client_name) keep (dense_rank last order by d.yy_mm_report) as client_name,
+        --        min(d.rnn) keep (dense_rank first order by d.start_date) as client_rnn_first, -- nulls last
+                min(d.product) keep (dense_rank first order by d.start_date) as product_first,
+                min(d.product_refin) keep (dense_rank first order by d.start_date) as product_refin_first,
+                min(d.product_programm) keep (dense_rank first order by d.start_date) as product_program_first,
+                min(d.start_date) as start_date_first,
+                min(d.end_date) keep (dense_rank first order by d.start_date) as end_date_first,
+                min(d.contract_amount) keep (dense_rank first order by d.start_date) as contract_amount_first,
+--!                min(r.contract_amount_categ) keep (dense_rank first order by r.start_date) as contract_amount_categ_first,-- r1
+                min(d.expert_name) keep (dense_rank first order by d.yy_mm_report) as expert_name_first,
+        --        min(d.expert_name) keep (dense_rank first order by d.yy_mm_report nulls last) as expert_name_first_not_null,
+                min(d.pos_code) keep (dense_rank first order by d.yy_mm_report) as pos_code_first,
+        --        min(d.pos_code) keep (dense_rank first order by d.yy_mm_report nulls last) as pos_code_first_not_null,
+        --        min(d.rnn) keep (dense_rank last order by d.start_date) as client_rnn_last, --  nulls first
+                min(d.product) keep (dense_rank last order by d.start_date) as product_last,
+                min(d.product_refin) keep (dense_rank last order by d.start_date) as product_refin_last,
+                min(d.product_programm) keep (dense_rank last order by d.start_date) as product_program_last,
+*/
+
+                max(d.start_date) as start_date_last,
+                min(d.end_date) keep (dense_rank last order by d.start_date) as end_date_last,
+                min(d.contract_amount) keep (dense_rank last order by d.start_date) as contract_amount_last,
+--!                min(r.contract_amount_categ) keep (dense_rank last order by r.start_date) as contract_amount_categ_last, -- r1
+                min(d.expert_name) keep (dense_rank last order by d.yy_mm_report) as expert_name_last,
+        --        min(d.expert_name) keep (dense_rank last order by d.yy_mm_report nulls first) as expert_name_last_not_null,
+                min(d.pos_code) keep (dense_rank last order by d.yy_mm_report) as pos_code_last,
+        --        min(d.pos_code) keep (dense_rank last order by d.yy_mm_report nulls first) as pos_code_last_not_null,
+                max(d.contract_amount) as contract_amount_max,
+                min(d.contract_amount) as contract_amount_min,
+                max(d.total_debt) as max_debt_used,
+                max(d.delinq_days) as delinq_days_max,
+                max(d.delinq_days) keep (dense_rank last order by d.start_date) as delinq_days_max_last_con,
+                sum(d.contract_amount) keep (dense_rank last order by d.yy_mm_report) as contract_amount_all_con_last,
+                sum(d.total_debt) keep (dense_rank last order by d.yy_mm_report) as total_debt_all_con_last,
+                max(d.delinq_days) keep (dense_rank last order by d.yy_mm_report) as delinq_days_max_last,
+                count(distinct d.contract_no) as number_of_contracts
+        --        count(d.contract_no) keep (dense_rank last order by d.yy_mm_report) as number_of_contracts_last
+
+--!                max(r.pmt_in_rep_sum_by_cli) as client_pmt_max,
+--!                max(r.yy_mm_report) as yy_mm_report_max,
+--!                max(r.provision_in_rep_by_cli) as provision_max
+
+              from v_data_all d/*, v_report_cal_1 r*/
+--              where r.id = d.id
+        --           where d.start_date is not null
+              group by d.client_id /*substr(ltrim(contract_no, 'R'),1,7)*/;
+grant select on U1.M_CLIENT_CAL_PRE_C1 to LOADDB;
+grant select on U1.M_CLIENT_CAL_PRE_C1 to LOADER;
+
+

@@ -1,0 +1,28 @@
+﻿create table U1.TMP_J_DUP_CLIENTS_REZ_20150711
+(
+  list_id           NUMBER,
+  num_in_group      NUMBER,
+  group_num         NUMBER,
+  graph_1           NUMBER,
+  client_name       VARCHAR2(500),
+  doc_num           VARCHAR2(200),
+  rnn               VARCHAR2(100),
+  iin               VARCHAR2(100),
+  registry_line_num NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.TMP_J_DUP_CLIENTS_REZ_20150711 to LOADDB;
+grant select on U1.TMP_J_DUP_CLIENTS_REZ_20150711 to LOADER;
+

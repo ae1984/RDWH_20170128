@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_TMP_J2_FOLDER_CON_LINK_GCVP
+build deferred
+refresh complete on demand
+as
+select f.rfo_con_or_claim_id,
+       coalesce(max(g1.report_id), min(g2.report_id)) as gcvp_report_id
+from u1.M_TMP_J2_FOLDER_CON_BAS f
+left join u1.M_TMP_J2_GCVP_REPORT g1 on g1.iin_rnn = f.iin and
+                   (g1.report_doc_date >= f.folder_con_date - 60 and g1.report_doc_date <= f.folder_con_date)
+left join u1.M_TMP_J2_GCVP_REPORT g2 on g2.iin_rnn = f.iin and
+                   f.process_name = 'ОНЛАЙН КРЕДИТ' and
+                   (g2.report_doc_date > f.folder_con_date and g2.report_doc_date <= f.folder_con_date + 5)
+group by f.rfo_con_or_claim_id;
+grant select on U1.M_TMP_J2_FOLDER_CON_LINK_GCVP to LOADDB;
+
+

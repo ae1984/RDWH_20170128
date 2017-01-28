@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_SC_FRAUD_SEARCH_PRE3
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30 */
+       x.rfo_client_id
+       ,max(x.COUNT_FAIL_ONL_DAY) as MAX_COUNT_FAIL_ONL_DAY
+from (
+    select /*+ parallel 30 */
+           t.rfo_client_id
+
+          ,trunc(b.date_create) as date_fail_onl
+          ,count(case when upper(b.status_name) like '%ОТКАЗ%' then trunc(b.date_create) end) as count_fail_onl_day
+
+    from u1.V_CLIENT_RFO_BY_ID t
+    left join u1.M_FOLDER_CON_CANCEL_ONLINE_1 b on b.rfo_client_id = t.rfo_client_id and
+                                                b.date_create >= trunc(sysdate) - 30
+    group by t.rfo_client_id
+             ,trunc(b.date_create)
+    ) x
+group by x.rfo_client_id;
+grant select on U1.M_SC_FRAUD_SEARCH_PRE3 to LOADDB;
+
+

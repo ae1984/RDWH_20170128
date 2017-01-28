@@ -1,0 +1,31 @@
+﻿create table U1.BISQUIT_CLIENTS_DELINQ_2
+(
+  date_import     DATE not null,
+  iin             VARCHAR2(12) not null,
+  rnn             VARCHAR2(12),
+  name            VARCHAR2(1000),
+  birth_date      DATE,
+  amount          NUMBER(38),
+  delinq_days     NUMBER(38),
+  name_fixed      VARCHAR2(1000),
+  name_last       VARCHAR2(300),
+  name_first      VARCHAR2(300),
+  name_patronymic VARCHAR2(300),
+  is_error        NUMBER(1)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.BISQUIT_CLIENTS_DELINQ_2 to LOADDB;
+grant select on U1.BISQUIT_CLIENTS_DELINQ_2 to LOADER;
+

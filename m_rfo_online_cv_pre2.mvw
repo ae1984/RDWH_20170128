@@ -1,0 +1,56 @@
+﻿create materialized view U1.M_RFO_ONLINE_CV_PRE2
+build deferred
+refresh force on demand
+as
+select /*+ PARALLEL 30*/ t.update_date, t.client_ref,t.anketa_type,t.mng_vis_reason
+from M_RFO_ONLINE_CV_PRE t
+where
+not exists (select null from M_RFO_ONLINE_CV_OLD tt
+            where tt.client_ref = t.client_ref)
+and t.client_ref is not null
+
+union
+select /*+ PARALLEL 30*/ t.update_date, t.client_ref,t.anketa_type,t.mng_vis_reason
+from M_RFO_ONLINE_CV_PRE t
+where
+exists (select null from M_RFO_ONLINE_CV_OLD tt
+              where tt.client_ref = t.client_ref and
+                    tt.anketa_type != t.anketa_type)
+and t.client_ref is not null
+
+union
+select /*+ PARALLEL 30*/ t.update_date, t.client_ref,t.anketa_type,t.mng_vis_reason
+from M_RFO_ONLINE_CV_PRE t
+where
+exists (select null from M_RFO_ONLINE_CV_OLD tt
+              where tt.client_ref = t.client_ref and
+                    (tt.mng_vis_reason != t.mng_vis_reason/* or
+                     (tt.mng_vis_reason is null and t.mng_vis_reason is not null) or
+                     (tt.mng_vis_reason is not null and t.mng_vis_reason is null)*/))
+and t.client_ref is not null
+
+union
+select /*+ PARALLEL 30*/ t.update_date, t.client_ref,t.anketa_type,t.mng_vis_reason
+from M_RFO_ONLINE_CV_PRE t
+where
+exists (select null from M_RFO_ONLINE_CV_OLD tt
+              where tt.client_ref = t.client_ref and
+                    (/*tt.mng_vis_reason != t.mng_vis_reason or*/
+                     (tt.mng_vis_reason is null and t.mng_vis_reason is not null)/* or
+                     (tt.mng_vis_reason is not null and t.mng_vis_reason is null)*/))
+and t.client_ref is not null
+
+union
+select /*+ PARALLEL 30*/ t.update_date, t.client_ref,t.anketa_type,t.mng_vis_reason
+from M_RFO_ONLINE_CV_PRE t
+where
+exists (select null from M_RFO_ONLINE_CV_OLD tt
+              where tt.client_ref = t.client_ref and
+                    (/*tt.mng_vis_reason != t.mng_vis_reason or
+                     (tt.mng_vis_reason is null and t.mng_vis_reason is not null) or*/
+                     (tt.mng_vis_reason is not null and t.mng_vis_reason is null)))
+and t.client_ref is not null;
+grant select on U1.M_RFO_ONLINE_CV_PRE2 to LOADDB;
+grant select on U1.M_RFO_ONLINE_CV_PRE2 to LOADER;
+
+

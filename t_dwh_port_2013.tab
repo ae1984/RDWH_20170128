@@ -1,0 +1,265 @@
+﻿create table U1.T_DWH_PORT_2013
+(
+  rep_date             DATE,
+  deal_number          VARCHAR2(100),
+  total_debt           NUMBER,
+  total_debt_decrease  NUMBER,
+  delinq_days          NUMBER,
+  delinq_days_previous NUMBER,
+  start_date           DATE,
+  prod_type            VARCHAR2(100),
+  delinq_days_old      NUMBER,
+  delinq_amount        NUMBER,
+  is_card              NUMBER,
+  client_id            NUMBER,
+  is_active            NUMBER,
+  is_on_balance        VARCHAR2(1),
+  pmt_date             DATE,
+  pmt_date_first       DATE,
+  prod_avto            VARCHAR2(100)
+)
+partition by range (REP_DATE) interval (NUMTOYMINTERVAL(1, 'MONTH'))
+subpartition by hash (CLIENT_ID)
+(
+  partition T_DWH_PORT_2013_PART_01 values less than (TO_DATE(' 2013-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_F
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP11995 tablespace USERS,
+    subpartition SYS_SUBP11996 tablespace USERS,
+    subpartition SYS_SUBP11997 tablespace USERS,
+    subpartition SYS_SUBP11998 tablespace USERS,
+    subpartition SYS_SUBP11999 tablespace USERS,
+    subpartition SYS_SUBP12000 tablespace USERS,
+    subpartition SYS_SUBP12001 tablespace USERS,
+    subpartition SYS_SUBP12002 tablespace USERS,
+    subpartition SYS_SUBP12003 tablespace USERS,
+    subpartition SYS_SUBP12004 tablespace USERS,
+    subpartition SYS_SUBP12005 tablespace USERS,
+    subpartition SYS_SUBP12006 tablespace USERS,
+    subpartition SYS_SUBP12007 tablespace USERS,
+    subpartition SYS_SUBP12008 tablespace USERS,
+    subpartition SYS_SUBP12009 tablespace USERS,
+    subpartition SYS_SUBP12010 tablespace USERS,
+    subpartition SYS_SUBP12011 tablespace USERS,
+    subpartition SYS_SUBP12012 tablespace USERS,
+    subpartition SYS_SUBP12013 tablespace USERS,
+    subpartition SYS_SUBP12014 tablespace USERS,
+    subpartition SYS_SUBP12015 tablespace USERS,
+    subpartition SYS_SUBP12016 tablespace USERS,
+    subpartition SYS_SUBP12017 tablespace USERS,
+    subpartition SYS_SUBP12018 tablespace USERS,
+    subpartition SYS_SUBP12019 tablespace USERS,
+    subpartition SYS_SUBP12020 tablespace USERS,
+    subpartition SYS_SUBP12021 tablespace USERS,
+    subpartition SYS_SUBP12022 tablespace USERS,
+    subpartition SYS_SUBP12023 tablespace USERS,
+    subpartition SYS_SUBP12024 tablespace USERS,
+    subpartition SYS_SUBP12025 tablespace USERS,
+    subpartition SYS_SUBP12026 tablespace USERS
+  ),
+  partition SYS_P12059 values less than (TO_DATE(' 2013-09-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_F
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP12027 tablespace USERS,
+    subpartition SYS_SUBP12028 tablespace USERS,
+    subpartition SYS_SUBP12029 tablespace USERS,
+    subpartition SYS_SUBP12030 tablespace USERS,
+    subpartition SYS_SUBP12031 tablespace USERS,
+    subpartition SYS_SUBP12032 tablespace USERS,
+    subpartition SYS_SUBP12033 tablespace USERS,
+    subpartition SYS_SUBP12034 tablespace USERS,
+    subpartition SYS_SUBP12035 tablespace USERS,
+    subpartition SYS_SUBP12036 tablespace USERS,
+    subpartition SYS_SUBP12037 tablespace USERS,
+    subpartition SYS_SUBP12038 tablespace USERS,
+    subpartition SYS_SUBP12039 tablespace USERS,
+    subpartition SYS_SUBP12040 tablespace USERS,
+    subpartition SYS_SUBP12041 tablespace USERS,
+    subpartition SYS_SUBP12042 tablespace USERS,
+    subpartition SYS_SUBP12043 tablespace USERS,
+    subpartition SYS_SUBP12044 tablespace USERS,
+    subpartition SYS_SUBP12045 tablespace USERS,
+    subpartition SYS_SUBP12046 tablespace USERS,
+    subpartition SYS_SUBP12047 tablespace USERS,
+    subpartition SYS_SUBP12048 tablespace USERS,
+    subpartition SYS_SUBP12049 tablespace USERS,
+    subpartition SYS_SUBP12050 tablespace USERS,
+    subpartition SYS_SUBP12051 tablespace USERS,
+    subpartition SYS_SUBP12052 tablespace USERS,
+    subpartition SYS_SUBP12053 tablespace USERS,
+    subpartition SYS_SUBP12054 tablespace USERS,
+    subpartition SYS_SUBP12055 tablespace USERS,
+    subpartition SYS_SUBP12056 tablespace USERS,
+    subpartition SYS_SUBP12057 tablespace USERS,
+    subpartition SYS_SUBP12058 tablespace USERS
+  ),
+  partition SYS_P12092 values less than (TO_DATE(' 2013-10-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_F
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP12060 tablespace USERS,
+    subpartition SYS_SUBP12061 tablespace USERS,
+    subpartition SYS_SUBP12062 tablespace USERS,
+    subpartition SYS_SUBP12063 tablespace USERS,
+    subpartition SYS_SUBP12064 tablespace USERS,
+    subpartition SYS_SUBP12065 tablespace USERS,
+    subpartition SYS_SUBP12066 tablespace USERS,
+    subpartition SYS_SUBP12067 tablespace USERS,
+    subpartition SYS_SUBP12068 tablespace USERS,
+    subpartition SYS_SUBP12069 tablespace USERS,
+    subpartition SYS_SUBP12070 tablespace USERS,
+    subpartition SYS_SUBP12071 tablespace USERS,
+    subpartition SYS_SUBP12072 tablespace USERS,
+    subpartition SYS_SUBP12073 tablespace USERS,
+    subpartition SYS_SUBP12074 tablespace USERS,
+    subpartition SYS_SUBP12075 tablespace USERS,
+    subpartition SYS_SUBP12076 tablespace USERS,
+    subpartition SYS_SUBP12077 tablespace USERS,
+    subpartition SYS_SUBP12078 tablespace USERS,
+    subpartition SYS_SUBP12079 tablespace USERS,
+    subpartition SYS_SUBP12080 tablespace USERS,
+    subpartition SYS_SUBP12081 tablespace USERS,
+    subpartition SYS_SUBP12082 tablespace USERS,
+    subpartition SYS_SUBP12083 tablespace USERS,
+    subpartition SYS_SUBP12084 tablespace USERS,
+    subpartition SYS_SUBP12085 tablespace USERS,
+    subpartition SYS_SUBP12086 tablespace USERS,
+    subpartition SYS_SUBP12087 tablespace USERS,
+    subpartition SYS_SUBP12088 tablespace USERS,
+    subpartition SYS_SUBP12089 tablespace USERS,
+    subpartition SYS_SUBP12090 tablespace USERS,
+    subpartition SYS_SUBP12091 tablespace USERS
+  ),
+  partition SYS_P12125 values less than (TO_DATE(' 2013-11-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_F
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP12093 tablespace USERS,
+    subpartition SYS_SUBP12094 tablespace USERS,
+    subpartition SYS_SUBP12095 tablespace USERS,
+    subpartition SYS_SUBP12096 tablespace USERS,
+    subpartition SYS_SUBP12097 tablespace USERS,
+    subpartition SYS_SUBP12098 tablespace USERS,
+    subpartition SYS_SUBP12099 tablespace USERS,
+    subpartition SYS_SUBP12100 tablespace USERS,
+    subpartition SYS_SUBP12101 tablespace USERS,
+    subpartition SYS_SUBP12102 tablespace USERS,
+    subpartition SYS_SUBP12103 tablespace USERS,
+    subpartition SYS_SUBP12104 tablespace USERS,
+    subpartition SYS_SUBP12105 tablespace USERS,
+    subpartition SYS_SUBP12106 tablespace USERS,
+    subpartition SYS_SUBP12107 tablespace USERS,
+    subpartition SYS_SUBP12108 tablespace USERS,
+    subpartition SYS_SUBP12109 tablespace USERS,
+    subpartition SYS_SUBP12110 tablespace USERS,
+    subpartition SYS_SUBP12111 tablespace USERS,
+    subpartition SYS_SUBP12112 tablespace USERS,
+    subpartition SYS_SUBP12113 tablespace USERS,
+    subpartition SYS_SUBP12114 tablespace USERS,
+    subpartition SYS_SUBP12115 tablespace USERS,
+    subpartition SYS_SUBP12116 tablespace USERS,
+    subpartition SYS_SUBP12117 tablespace USERS,
+    subpartition SYS_SUBP12118 tablespace USERS,
+    subpartition SYS_SUBP12119 tablespace USERS,
+    subpartition SYS_SUBP12120 tablespace USERS,
+    subpartition SYS_SUBP12121 tablespace USERS,
+    subpartition SYS_SUBP12122 tablespace USERS,
+    subpartition SYS_SUBP12123 tablespace USERS,
+    subpartition SYS_SUBP12124 tablespace USERS
+  ),
+  partition SYS_P12158 values less than (TO_DATE(' 2013-12-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_F
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP12126 tablespace USERS,
+    subpartition SYS_SUBP12127 tablespace USERS,
+    subpartition SYS_SUBP12128 tablespace USERS,
+    subpartition SYS_SUBP12129 tablespace USERS,
+    subpartition SYS_SUBP12130 tablespace USERS,
+    subpartition SYS_SUBP12131 tablespace USERS,
+    subpartition SYS_SUBP12132 tablespace USERS,
+    subpartition SYS_SUBP12133 tablespace USERS,
+    subpartition SYS_SUBP12134 tablespace USERS,
+    subpartition SYS_SUBP12135 tablespace USERS,
+    subpartition SYS_SUBP12136 tablespace USERS,
+    subpartition SYS_SUBP12137 tablespace USERS,
+    subpartition SYS_SUBP12138 tablespace USERS,
+    subpartition SYS_SUBP12139 tablespace USERS,
+    subpartition SYS_SUBP12140 tablespace USERS,
+    subpartition SYS_SUBP12141 tablespace USERS,
+    subpartition SYS_SUBP12142 tablespace USERS,
+    subpartition SYS_SUBP12143 tablespace USERS,
+    subpartition SYS_SUBP12144 tablespace USERS,
+    subpartition SYS_SUBP12145 tablespace USERS,
+    subpartition SYS_SUBP12146 tablespace USERS,
+    subpartition SYS_SUBP12147 tablespace USERS,
+    subpartition SYS_SUBP12148 tablespace USERS,
+    subpartition SYS_SUBP12149 tablespace USERS,
+    subpartition SYS_SUBP12150 tablespace USERS,
+    subpartition SYS_SUBP12151 tablespace USERS,
+    subpartition SYS_SUBP12152 tablespace USERS,
+    subpartition SYS_SUBP12153 tablespace USERS,
+    subpartition SYS_SUBP12154 tablespace USERS,
+    subpartition SYS_SUBP12155 tablespace USERS,
+    subpartition SYS_SUBP12156 tablespace USERS,
+    subpartition SYS_SUBP12157 tablespace USERS
+  ),
+  partition SYS_P12191 values less than (TO_DATE(' 2014-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_F
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP12159 tablespace USERS,
+    subpartition SYS_SUBP12160 tablespace USERS,
+    subpartition SYS_SUBP12161 tablespace USERS,
+    subpartition SYS_SUBP12162 tablespace USERS,
+    subpartition SYS_SUBP12163 tablespace USERS,
+    subpartition SYS_SUBP12164 tablespace USERS,
+    subpartition SYS_SUBP12165 tablespace USERS,
+    subpartition SYS_SUBP12166 tablespace USERS,
+    subpartition SYS_SUBP12167 tablespace USERS,
+    subpartition SYS_SUBP12168 tablespace USERS,
+    subpartition SYS_SUBP12169 tablespace USERS,
+    subpartition SYS_SUBP12170 tablespace USERS,
+    subpartition SYS_SUBP12171 tablespace USERS,
+    subpartition SYS_SUBP12172 tablespace USERS,
+    subpartition SYS_SUBP12173 tablespace USERS,
+    subpartition SYS_SUBP12174 tablespace USERS,
+    subpartition SYS_SUBP12175 tablespace USERS,
+    subpartition SYS_SUBP12176 tablespace USERS,
+    subpartition SYS_SUBP12177 tablespace USERS,
+    subpartition SYS_SUBP12178 tablespace USERS,
+    subpartition SYS_SUBP12179 tablespace USERS,
+    subpartition SYS_SUBP12180 tablespace USERS,
+    subpartition SYS_SUBP12181 tablespace USERS,
+    subpartition SYS_SUBP12182 tablespace USERS,
+    subpartition SYS_SUBP12183 tablespace USERS,
+    subpartition SYS_SUBP12184 tablespace USERS,
+    subpartition SYS_SUBP12185 tablespace USERS,
+    subpartition SYS_SUBP12186 tablespace USERS,
+    subpartition SYS_SUBP12187 tablespace USERS,
+    subpartition SYS_SUBP12188 tablespace USERS,
+    subpartition SYS_SUBP12189 tablespace USERS,
+    subpartition SYS_SUBP12190 tablespace USERS
+  )
+);
+create index U1.T_DWH_PORT_2013_IND1 on U1.T_DWH_PORT_2013 (CLIENT_ID)
+  nologging  local;
+create index U1.T_DWH_PORT_2013_IND2 on U1.T_DWH_PORT_2013 (DEAL_NUMBER)
+  nologging  local;
+grant select on U1.T_DWH_PORT_2013 to LOADDB;
+grant select on U1.T_DWH_PORT_2013 to LOADER;
+

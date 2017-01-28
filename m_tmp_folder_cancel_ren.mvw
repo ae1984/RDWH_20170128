@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_TMP_FOLDER_CANCEL_REN
+refresh force on demand
+as
+select count (*) from (select  tm.text_yyyy_mm_dd ||' '|| tm.week_day_short_ru as day, tm.yyyy_mm_dd, tm.yyyy, tm.yyyy_mm_num,
+        tt.*,
+        x.cancel_type_group, x.cancel_type_code, x.cancel_type_name, tm.yyyy_mm_num,
+        case when tt.contract_amount > 1000000 then '1000-...'
+            when tt.contract_amount > 500000 then '500-1000'
+            when tt.contract_amount > 300000 then '300-500'
+            when tt.contract_amount > 200000 then '200-300'
+            when tt.contract_amount > 150000 then '150-200'
+                 else '000-150' end as AMOUNT_CATEG
+from M_FOLDER_CON_CANCEL tt
+join V_TIME_MINUTES tm on tm.yyyy_mm_dd_hh_mi = tt.folder_date_create_mi
+left join (
+      select distinct t.folder_id,
+                                        c.cancel_type_group,
+                                        c.cancel_type_code,
+                                        c.cancel_type_name
+
+      from m_folder_con_cancel t
+      join v_cancel c on c.folder_id = t.folder_id and
+                              c.cancel_level = 1
+
+      ) x on x.folder_id = tt.folder_id
+
+
+);
+grant select on U1.M_TMP_FOLDER_CANCEL_REN to LOADDB;
+grant select on U1.M_TMP_FOLDER_CANCEL_REN to LOADER;
+
+

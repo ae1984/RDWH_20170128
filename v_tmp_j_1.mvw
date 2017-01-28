@@ -1,0 +1,13 @@
+﻿create materialized view U1.V_TMP_J_1
+refresh force on demand
+as
+select iin, count(*) from (
+select t.rnn as iin, t.name as bank
+from V_G3_P_VIEW t
+where t.rnn like '7409%'
+group by t.rnn, t.name
+) group by iin having count(*) > 1;
+grant select on U1.V_TMP_J_1 to LOADDB;
+grant select on U1.V_TMP_J_1 to LOADER;
+
+

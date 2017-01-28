@@ -1,0 +1,48 @@
+﻿create materialized view U1.M_FOLDER_MO_PKB_2016
+build deferred
+refresh force on demand
+as
+select /*+ parallel(10) */*
+from (
+    select
+           r.id rfolder_id,
+           r.date_create,
+           dp.code_int,
+           case when dp.code_int = 'SC_PKB_REPORT_STATUS' then
+                  case when t.value_text = 'БЕКИ' then 0
+                       when t.value_text = 'OK' then 1
+                  end
+
+                when dp.code_int = 'SC_KASPI_PKB_REPORT_STATUS' then
+                  case when t.value_text = 'SUBJECTNOTFOUND' then 0
+                       when t.value_text = 'OK' then 1
+                  end
+
+                when dp.code_int = 'IN_SCO_PKB_STATUS' then
+                  case when t.value_text = 'SUBJECTNOTFOUND' then 0
+                       when t.value_text = 'OK' then 1
+                  end
+           else t.value_number
+           end value_number
+    from MO_RFOLDER r
+    join T_MO_RFOLDER_PAR_VALUE_2016 t on t.rfolder_id = r.id
+    join V_MO_D_PAR dp on dp.id = t.d_par_id
+                          and dp.code_int in ('IN_SCO_FOLDER_ID',
+                                              'SC_PKB_REPORT_STATUS',
+                                              'SC_KASPI_PKB_REPORT_STATUS',
+                                              'IN_SCO_PKB_STATUS'
+                                              )
+    where r.date_create >= to_date('01-01-2016', 'dd-mm-yyyy')
+          and r.date_create < to_date('01-01-2017', 'dd-mm-yyyy')
+          /*and r.id = 35894176*/
+) pivot (
+    max(value_number)
+    for code_int in ('IN_SCO_FOLDER_ID' as folder_id,
+                     'SC_PKB_REPORT_STATUS' as sco_pkb_status,
+                     'SC_KASPI_PKB_REPORT_STATUS' as sco_kaspi_pkb_status,
+                     'IN_SCO_PKB_STATUS' as pkb_status)
+)
+where folder_id is not null;
+grant select on U1.M_FOLDER_MO_PKB_2016 to LOADDB;
+
+

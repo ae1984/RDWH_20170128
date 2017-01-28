@@ -1,0 +1,37 @@
+﻿create table U1.NT_SQLID
+(
+  sql_id       VARCHAR2(13),
+  sql_fulltext CLOB,
+  sql_text     VARCHAR2(1000),
+  action       VARCHAR2(64),
+  module       VARCHAR2(64),
+  schema       VARCHAR2(30)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.IDX_SQLID_1 on U1.NT_SQLID (SQL_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  compress  nologging;
+grant select on U1.NT_SQLID to LOADDB;
+

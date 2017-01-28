@@ -1,0 +1,72 @@
+﻿create materialized view U1.M_CLIENT_CAL_CATEG
+build deferred
+refresh force on demand
+as
+selecT /*+ parallel(5)*/ x.rfo_client_id,
+       x.amount_max_before, --- Максимальная сумма погашения
+       x.prev_con_closed_cnt,
+       x.prior_optim_count,
+       x.prev_con_del_days_max,
+       x.fact_pmt_mon_before,
+       x.fact_pmt_mon_before_12_mon,
+       --Категория А
+       case
+         when coalesce(x.prev_con_closed_cnt, 0) >= 2 and --Закрыл несколько кредитов
+              coalesce(x.prior_optim_count, 0) = 0 and --Не было оптимизации
+              coalesce(x.prev_con_del_days_max, 0) <= 15 and --Не допускал просрочку > 15
+              coalesce(x.fact_pmt_mon_before, 0) >= 12 and --Кол-во платежей
+              coalesce(x.fact_pmt_mon_before_12_mon, 0) > 0 --Платил в течении последних 12 мес
+          then
+          1
+         else
+          0
+       end as is_categ_a,
+       ----Скор-карта ('ДЕНЬГИ', 'ТОВАРЫ'):
+       sc.prev_con_cnt,
+       sc.is_client_new,
+       sc.activ_credit_num,
+       round(sc.months_lived,2) as months_lived,
+       sc.first_con_start_mon_ago,
+       sc.last_con_start_mon_ago,
+       sc.good_months_before_cnt,
+       inc.income_amount          as dohod,
+       ----Скор-карта2 (по всем продуктам):
+       sc2.prev_con_cnt            as prev_con_cnt_all,
+       sc2.is_client_new           as is_client_new_all,
+       sc2.activ_credit_num        as activ_credit_num_all,
+       round(sc2.months_lived,2)            as months_lived_all,
+       sc2.first_con_start_mon_ago as first_con_start_mon_ago_all,
+       sc2.last_con_start_mon_ago  as last_con_start_mon_ago_all,
+       sc2.good_months_before_cnt  as good_months_before_cnt_all,
+       sc2.bad_months_before_cnt   as bad_months_before_cnt_all,
+       sc2.contract_amount_min_del as contract_amount_min_del_all,
+       inc2.income_amount          as dohod_all,
+
+       d.is_cli_new_to_depn,
+       x.clsd_and_active_cont_cnt as clsd_and_active_cont_cnt
+  from M_CLIENT_CAL_CATEG_pre1 x
+  left join M_CLIENT_CAL_CATEG_pre2 sc
+    on x.rfo_client_id = sc.RFO_CLIENT_ID
+  left join u1.M_CLIENT_INCOME inc
+    on inc.rfo_client_id = x.rfo_client_id
+  left join (select t.rfo_client_id, 0 as is_cli_new_to_depn
+               from u1.M_CLIENT_DEPN_MO t
+              where t.sum_depn_kzt > 0
+              group by t.rfo_client_id) d
+    on d.rfo_client_id = x.rfo_client_id
+  left join M_CLIENT_CAL_CATEG_pre3 sc2
+    on x.rfo_client_id = sc2.RFO_CLIENT_ID
+  left join (select rc.rbo_client_id,
+                    rc.rfo_client_id,
+                    sum(nvl(ci.interest, 0) + nvl(ci.commiss, 0)) as income_amount
+               from u1.m_rbo_contract_bas rc
+               join u1.t_contract_income_pre ci
+                 on ci.rbo_contract_id = rc.rbo_contract_id
+              where rc.is_card = 0
+             -- and rc.product_type in ('ДЕНЬГИ','ТОВАРЫ')
+              group by rc.rbo_client_id, rc.rfo_client_id) inc2
+    on inc2.rfo_client_id = x.rfo_client_id;
+grant select on U1.M_CLIENT_CAL_CATEG to LOADDB;
+grant select on U1.M_CLIENT_CAL_CATEG to LOAD_MO;
+
+

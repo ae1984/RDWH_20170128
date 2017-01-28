@@ -1,0 +1,34 @@
+﻿create table U1.DWH_DM_SPGU_HD_T
+(
+  exhd_rep_date           DATE,
+  exhd_deal_number        VARCHAR2(250 CHAR),
+  exhd_begin_date         DATE,
+  exhd_prod_type          VARCHAR2(255 CHAR),
+  exhd_old_ovd_scheme     CHAR(1 CHAR),
+  exhd_fgu_cred           NUMBER,
+  exhd_fgu_prc            NUMBER,
+  exhd_fgu_ovrd_cred      NUMBER,
+  exhd_fgu_ovrd_prc       NUMBER,
+  exhd_ovrd_days          NUMBER,
+  exhd_vnb_ovrd_cred      NUMBER,
+  exhd_vnb_ovrd_prc       NUMBER,
+  exhd_vnb_comm           NUMBER,
+  exhd_fgu_overdraft      NUMBER,
+  exhd_fgu_ovrd_overdraft NUMBER,
+  exhd_vnb_overdraft      NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.DWH_DM_SPGU_HD_T to LOADDB;
+grant select on U1.DWH_DM_SPGU_HD_T to LOADER;
+

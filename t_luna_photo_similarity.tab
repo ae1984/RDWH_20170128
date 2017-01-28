@@ -1,0 +1,123 @@
+﻿create table U1.T_LUNA_PHOTO_SIMILARITY
+(
+  sdt                         DATE,
+  similarity                  NUMBER,
+  rfo_client_id               NUMBER,
+  luna_id                     NUMBER,
+  photo_guid                  VARCHAR2(210),
+  photo_date_create           DATE,
+  photo_type                  VARCHAR2(100),
+  rfo_client_id_candidate     NUMBER,
+  luna_id_candidate           NUMBER,
+  photo_guid_candidate        VARCHAR2(210),
+  photo_date_create_candidate DATE,
+  photo_type_candidate        VARCHAR2(100)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_LUNA_PHOTO_SIMILARITY
+  is 'Результат сверки фото клиентов. Заполняется вручную по результатам работы REST-запросов';
+comment on column U1.T_LUNA_PHOTO_SIMILARITY.sdt
+  is 'Дата и время сверки';
+comment on column U1.T_LUNA_PHOTO_SIMILARITY.similarity
+  is '% совпадения от 0 до 1';
+comment on column U1.T_LUNA_PHOTO_SIMILARITY.rfo_client_id
+  is 'RFO_CLIENT_ID клиента';
+comment on column U1.T_LUNA_PHOTO_SIMILARITY.luna_id
+  is 'LUNA_ID (ID который в LUNA)';
+comment on column U1.T_LUNA_PHOTO_SIMILARITY.photo_guid
+  is 'PHOTO_GUID (ID который в PhotoDB)';
+comment on column U1.T_LUNA_PHOTO_SIMILARITY.photo_date_create
+  is 'Дата и время фотографии';
+comment on column U1.T_LUNA_PHOTO_SIMILARITY.photo_type
+  is 'тип фото (см. v_rfo_images_by_type)';
+comment on column U1.T_LUNA_PHOTO_SIMILARITY.rfo_client_id_candidate
+  is 'RFO_CLIENT_ID клиента кандидата на проверку';
+comment on column U1.T_LUNA_PHOTO_SIMILARITY.luna_id_candidate
+  is 'LUNA_ID (ID который в LUNA) кандидата';
+comment on column U1.T_LUNA_PHOTO_SIMILARITY.photo_guid_candidate
+  is 'PHOTO_GUID (ID который в PhotoDB) кандидата';
+comment on column U1.T_LUNA_PHOTO_SIMILARITY.photo_date_create_candidate
+  is 'Дата и время фотографии кандидата';
+comment on column U1.T_LUNA_PHOTO_SIMILARITY.photo_type_candidate
+  is 'тип фото кандидата (см. v_rfo_images_by_type)';
+create index U1.IDX_LUNA_PHOTO_SIMILARITY_1 on U1.T_LUNA_PHOTO_SIMILARITY (LUNA_ID, LUNA_ID_CANDIDATE)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_LUNA_PHOTO_SIMILARITY_2 on U1.T_LUNA_PHOTO_SIMILARITY (LUNA_ID_CANDIDATE, LUNA_ID)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_LUNA_PHOTO_SIMILARITY_3 on U1.T_LUNA_PHOTO_SIMILARITY (RFO_CLIENT_ID)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_LUNA_PHOTO_SIMILARITY_4 on U1.T_LUNA_PHOTO_SIMILARITY (SDT)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_LUNA_PHOTO_SIMILARITY_5 on U1.T_LUNA_PHOTO_SIMILARITY (SIMILARITY)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_LUNA_PHOTO_SIMILARITY to LOADDB;
+grant select, insert, update, delete, references, alter, index on U1.T_LUNA_PHOTO_SIMILARITY to RISK_ALEXEY;
+grant select, insert, update, delete, references, alter, index on U1.T_LUNA_PHOTO_SIMILARITY to RISK_ALEXEY2;
+

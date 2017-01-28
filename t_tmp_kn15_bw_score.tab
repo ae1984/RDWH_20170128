@@ -1,0 +1,26 @@
+﻿create table U1.T_TMP_KN15_BW_SCORE
+(
+  rfo_contract_id          VARCHAR2(100),
+  contract_number          VARCHAR2(100),
+  contract_id              VARCHAR2(100),
+  is_bad_by_con_del_max_90 VARCHAR2(1),
+  is_bad_by_cli_b_w        VARCHAR2(1),
+  is_bad_by_cli_b_w_del_40 VARCHAR2(1),
+  scorecard_points         VARCHAR2(100)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_KN15_BW_SCORE to LOADDB;
+grant select on U1.T_TMP_KN15_BW_SCORE to LOADER;
+

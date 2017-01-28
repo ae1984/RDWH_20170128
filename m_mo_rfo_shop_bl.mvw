@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_MO_RFO_SHOP_BL
+build deferred
+refresh complete on demand
+as
+select id,
+       shop_code,
+       add_cause_desc,
+       add_date,
+       change_cause_desc,
+       change_date,
+       apex_user_add,
+       apex_user_last_change,
+       os_user_add,
+       os_user_last_change,
+       oracle_user_add,
+       oracle_user_last_change,
+       ip_address_add,
+       ip_address_last_change
+  from u1.T_RFO_SHOP_BL@MO1_PROD t;
+grant select on U1.M_MO_RFO_SHOP_BL to LOADDB;
+
+

@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_CLIENT_LINK
+refresh complete on demand
+as
+select /*+parallel(1)*/ x.rfo_client_id,
+       x.rbo_client_id
+  from (
+select crf.id as rfo_client_id,
+       crb.id as rbo_client_id,
+       count(crf.id) over (partition by crb.id) as count_rfo_client_id
+  from (select * from u1.V_RFO_Z#MAP_OBJ_IN_OUT mo where mo.c_class_object = 'CL_PRIV') m
+  full join u1.V_RFO_Z#CLIENT crf on m.c_id_object = crf.id
+  full join u1.V_RBO_Z#CLIENT crb on m.c_ext_code = crb.id) x
+ where (x.count_rfo_client_id <= 1 or
+       x.rbo_client_id is null)
+       and x.rfo_client_id is not null
+ union all
+select max(crf.id) as rfo_client_id,
+       crb.id as rbo_client_id
+  from (select * from u1.V_RFO_Z#MAP_OBJ_IN_OUT mo where mo.c_class_object = 'CL_PRIV') m
+  full join u1.V_RFO_Z#CLIENT crf on m.c_id_object = crf.id
+  full join u1.V_RBO_Z#CLIENT crb on m.c_ext_code = crb.id
+ where crb.id is not null
+ group by crb.id
+having count(crf.id) > 1;
+grant select on U1.M_CLIENT_LINK to LOADDB;
+grant select on U1.M_CLIENT_LINK to LOADER;
+grant select on U1.M_CLIENT_LINK to RISK_VERIF;
+
+

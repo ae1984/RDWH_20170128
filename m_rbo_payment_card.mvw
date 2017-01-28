@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_RBO_PAYMENT_CARD
+refresh complete on demand
+as
+select /*+ parallel(30)*/
+       rbo_contract_id,
+       contract_number,
+       oper_payment_code,
+       oper_payment_name,
+       trunc(oper_date) as oper_date,
+       sum(amount) as amount
+  from T_RBO_PAYMENT_CARD
+ where nvl(is_storno,0) = 0
+ group by rbo_contract_id,
+       contract_number,
+       oper_payment_code,
+       oper_payment_name,
+       trunc(oper_date);
+grant select on U1.M_RBO_PAYMENT_CARD to LOADDB;
+grant select on U1.M_RBO_PAYMENT_CARD to LOADER;
+
+

@@ -1,0 +1,112 @@
+﻿create materialized view U1.V_RFO_Z#CL_PRIV
+using no index
+refresh complete on demand
+as
+select
+  id,
+--  class_id,
+--  c$1,
+  c_date_pers,
+  c_sex#0,
+  c_sex#male,
+  c_sex#female,
+  c_certificates,
+  c_pasport#type,
+  c_pasport#num,
+  c_pasport#seria,
+     translate(upper(c_pasport#who),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  c_pasport#who,
+  c_pasport#date_doc,
+     translate(upper(c_pasport#place),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  c_pasport#place,
+  c_pasport#date_end,
+     translate(upper(c_last_name),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  c_last_name,
+      translate(upper(c_first_name),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  c_first_name,
+      translate(upper(c_sur_name),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  c_sur_name,
+  c_add_props,
+     translate(upper(c_work#org#name),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  c_work#org#name,
+  c_work#org#rnn,
+  c_work#org#address#post_ind,
+     translate(upper(c_work#org#address#place),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  c_work#org#address#place,
+  c_work#org#address#adr_type,
+  c_work#org#address#date_begin,
+  c_work#org#address#date_end,
+  c_work#org#address#house,
+  c_work#org#address#frame,
+  c_work#org#address#flat,
+     translate(upper(c_work#org#address#street),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  c_work#org#address#street,
+      translate(upper(c_work#org#address#region),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  c_work#org#address#region,
+  c_work#org#address#district,
+  c_work#org#add_props,
+  c_work#prev_exp,
+  c_work#month_profit,
+  c_work#add_props,
+  c_work#org#address#region_ref,
+  c_resident,
+     translate(upper(c_work#department),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  c_work#department,
+  c_client_categ,
+  c_pasport#depart_code,
+  c_work#org#address#city,
+     translate(upper(c_place_birth),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  c_place_birth,
+  c_work#org#address#place_ref,
+  c_work#org#address#country
+--from IBS.Z#CL_PRIV@RFO_SNAP;
+from IBS.Z#CL_PRIV@RFO_SNAP;
+grant select on U1.V_RFO_Z#CL_PRIV to LOADDB;
+grant select on U1.V_RFO_Z#CL_PRIV to LOADER;
+grant select on U1.V_RFO_Z#CL_PRIV to RISK_VERIF;
+
+

@@ -1,0 +1,10 @@
+﻿create materialized view U1.V_RFO_Z#KAS_BLOCK_CARD
+build deferred
+refresh force on demand
+as
+select id, c_pr_block, c_reason, c_dog_arr
+  from ibs.z#kas_block_card@rfo_dvl;
+grant select on U1.V_RFO_Z#KAS_BLOCK_CARD to LOADDB;
+grant select on U1.V_RFO_Z#KAS_BLOCK_CARD to LOADER;
+
+

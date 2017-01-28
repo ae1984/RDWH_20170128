@@ -1,0 +1,48 @@
+﻿create materialized view U1.M_TMP_REF_RES_PMT
+refresh complete on demand
+as
+select *
+from
+    (select xx.contract_no,
+           xx.ref_res_date,
+           xx.yy_mm_report,
+           --xx.total_debt,
+           --xx.total_dept_pre,
+           --xx.delinq_days,
+           xx.pmt_exists,
+           rank() over (partition by xx.contract_no order by xx.yy_mm_report_num)-1 pmt_num
+    from (
+        select x.*,
+               case when (x.total_debt < x.total_dept_pre)
+                    then case when nvl(x.delinq_days, 0) > 0 then 1 else 2 end
+                    when (x.total_debt >= x.total_dept_pre)
+                    then case when nvl(x.delinq_days, 0) > 0 then 0 else null end
+               end pmt_exists
+        from (
+            select d.yy_mm_report_num,
+                   d.yy_mm_report,
+                   t.ref_res_date,
+                   d.contract_no,
+                   d.total_debt,
+                   d.delinq_days,
+                   d.contract_amount,
+                   lag(d.total_debt, 1, d.contract_amount) over (partition by d.contract_no order by d.yy_mm_report_num) total_dept_pre
+            from V_DATA_ALL d
+            join TMP_REF_RES_PMT t on t.contract_number = d.contract_no
+            --where d.yy_mm_report >= to_char(t.ref_res_date,'yyyy - mm')
+            where d.yy_mm_report_date >= trunc(t.ref_res_date, 'mm') --and
+            --d.contract_no not in ('R2943796-001','R2497034-001','R2276133-001','R3328430-001')
+             ) x
+    ) xx
+    --where xx.pmt_exists is not null
+   )
+ where pmt_num != 0
+/*)
+pivot (
+  sum(pmt_exists) pmt
+  for pmt_num in (1,2)
+) x;*/;
+grant select on U1.M_TMP_REF_RES_PMT to LOADDB;
+grant select on U1.M_TMP_REF_RES_PMT to LOADER;
+
+

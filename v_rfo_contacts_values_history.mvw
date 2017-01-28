@@ -1,0 +1,18 @@
+﻿create materialized view U1.V_RFO_CONTACTS_VALUES_HISTORY
+build deferred
+refresh complete on demand
+as
+select id,
+       time,
+       obj_id,
+       class_id,
+       audsid,
+       user_id,
+       qual,
+       base_id,
+       value
+  from ibs.values_history@rfo_snap
+ where class_id = 'CONTACTS';
+grant select on U1.V_RFO_CONTACTS_VALUES_HISTORY to LOADDB;
+
+

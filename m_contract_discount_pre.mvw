@@ -1,0 +1,75 @@
+﻿create materialized view U1.M_CONTRACT_DISCOUNT_PRE
+build deferred
+refresh complete on demand
+as
+select /*+ parallel(10) */
+       rbo_contract_id,
+       c_date_in,
+       coalesce(lead(c_date_in-1) over (partition by collection_id order by c_date_in),
+                c_date_close,
+                trunc(sysdate)-1) c_date_out,
+       (c_saldo - c_turn_day_dt + c_turn_day_ct)*(-1) total,
+       0 is_card,
+       c_date_close,
+       c_acc_summary
+  from
+  (
+    select pc.id as rbo_contract_id,
+           js.c_date as c_date_in,
+           js.collection_id,
+           pc.c_date_close,
+           max(js.c_saldo) keep (dense_rank first order by js.id desc) as c_saldo,
+           max(js.c_turn_day_dt) keep (dense_rank first order by js.id desc) as c_turn_day_dt,
+           max(js.c_turn_day_ct) keep (dense_rank first order by js.id desc) as c_turn_day_ct,
+           af.c_acc_summary
+    from u1.V_RBO_Z#PR_CRED pc,
+         u1.V_RBO_Z#HOZ_OP_ACC hoa,
+         u1.T_RBO_Z#AC_FIN af,
+         u1.V_RBO_Z#TIP_ACC ta,
+         u1.T_RBO_Z#JOURNAL_SALDO js
+   where pc.c_array_dog_acc = hoa.collection_id
+     and hoa.c_account_dog#1#2 = af.id
+     and ta.id = hoa.c_name_account
+     and ta.c_cod = 'KAS_DISC_DEBT_AGNT'
+     and af.c_journal_sald_arr = js.collection_id
+   group by pc.id,
+           js.c_date,
+           js.collection_id,
+           pc.c_date_close,
+           af.c_acc_summary)
+union all
+select /*+ parallel(10) */
+       rbo_contract_id, c_date_in,
+       coalesce(lead(c_date_in-1) over (partition by collection_id order by c_date_in),
+                c_date_close,
+                trunc(sysdate)-1) c_date_out,
+       (c_saldo - c_turn_day_dt + c_turn_day_ct)*(-1) total,
+       1 is_card,
+       c_date_close,
+       c_acc_summary
+ from
+ (select kpd.id as rbo_contract_id,
+         js.c_date as c_date_in,
+         js.collection_id,
+         kpd.c_date_close,
+         max(js.c_saldo) keep (dense_rank first order by js.id desc) as c_saldo,
+         max(js.c_turn_day_dt) keep (dense_rank first order by js.id desc) as c_turn_day_dt,
+         max(js.c_turn_day_ct) keep (dense_rank first order by js.id desc) as c_turn_day_ct,
+         af.c_acc_summary
+  from u1.V_RBO_Z#KAS_PC_DOG kpd,
+       u1.V_RBO_Z#HOZ_OP_ACC hoa,
+       u1.T_RBO_Z#AC_FIN af,
+       u1.V_RBO_Z#TIP_ACC ta,
+       u1.T_RBO_Z#JOURNAL_SALDO js
+ where kpd.c_acc_arr = hoa.collection_id
+   and hoa.c_account_dog#1#2 = af.id
+   and ta.id = hoa.c_name_account
+   and ta.c_cod = 'PC_BONUS_FROM'
+   and af.c_journal_sald_arr = js.collection_id
+ group by kpd.id,
+         js.c_date,
+         js.collection_id,
+         kpd.c_date_close,
+         af.c_acc_summary
+   );
+

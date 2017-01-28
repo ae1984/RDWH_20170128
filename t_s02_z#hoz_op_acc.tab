@@ -1,0 +1,31 @@
+﻿create table U1.T_S02_Z#HOZ_OP_ACC
+(
+  id                      NUMBER,
+  collection_id           NUMBER,
+  c_name_account          NUMBER,
+  c_account_dog#0         NUMBER,
+  c_account_dog#1#1       NUMBER,
+  c_account_dog#1#2       NUMBER,
+  c_account_dog#2#1       VARCHAR2(25),
+  c_account_dog#2#inn     VARCHAR2(16),
+  c_account_dog#2#2       VARCHAR2(250),
+  c_account_dog#2#3       NUMBER,
+  c_account_dog#2#friends NUMBER,
+  c_account_dog#2#part    NUMBER,
+  c_account_dog#1#cash    NUMBER,
+  c_account_dog#1#doc     NUMBER,
+  c_account_dog#1#product NUMBER,
+  c_account_dog#2#kpp     VARCHAR2(9),
+  c_account_dog#2#is_priv VARCHAR2(1),
+  c_account_dog#2#krs     VARCHAR2(2),
+  c_kas_svod_acc          NUMBER
+)
+tablespace USERS_ARC
+  pctfree 10
+  initrans 1
+  maxtrans 255
+nologging;
+grant select, insert, update, delete on U1.T_S02_Z#HOZ_OP_ACC to ETL;
+grant select on U1.T_S02_Z#HOZ_OP_ACC to LOADDB;
+grant select on U1.T_S02_Z#HOZ_OP_ACC to LOADER;
+

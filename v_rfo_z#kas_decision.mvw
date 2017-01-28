@@ -1,0 +1,26 @@
+﻿create materialized view U1.V_RFO_Z#KAS_DECISION
+refresh complete on demand
+as
+select  ID,
+      C_CRD_EX,
+      C_HIGH_UNDERWRITER,
+      C_UNDERWRITER,
+      C_TYPE_PRODUCT,
+      C_CLIENT,
+      C_RESULT_SCORE,
+      C_SUMMA_CRED_COM,
+      C_TERM_CRED#QUANT,
+      C_TERM_CRED#UNIT,
+      C_RATE_PRC,
+      C_CREDIT_LIMIT,
+      C_FC_DOC_NUM,
+      C_FC_DOC_DATE,
+      C_TERM_CRED_LIMIT#QUANT,
+      C_TERM_CRED_LIMIT#UNIT,
+      SN,
+      SU
+from IBS.Z#KAS_DECISION@RFO_SNAP d;
+grant select on U1.V_RFO_Z#KAS_DECISION to LOADDB;
+grant select on U1.V_RFO_Z#KAS_DECISION to LOADER;
+
+

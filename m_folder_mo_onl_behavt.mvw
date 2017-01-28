@@ -1,0 +1,68 @@
+﻿create materialized view U1.M_FOLDER_MO_ONL_BEHAVT
+refresh force on demand
+as
+select /*+ parallel(20) */ *
+from (
+    select
+           r.id rfolder_id,
+           r.date_create,
+           dp.code_int,
+           case when dp.d_par_datatype_code = 'NUMBER' then to_char(t.value_number)
+                when dp.d_par_datatype_code = 'DATE' then to_char(t.value_date, 'dd-mm-yyyy hh24:mi:ss')
+           else t.value_text end as value_number
+    from MO_RFOLDER r
+    join MO_RFOLDER_PAR_VALUE t on t.rfolder_id = r.id and t.date_create >= to_date('01.01.2015','dd.mm.yyyy')
+    join MO_RFOLDER_PAR_VALUE t2 on t2.rfolder_id = r.id and
+                                           t2.d_par_id = 1327 and
+                                           t2.value_text = 'KASPI_SHOPPING' and
+                                           t2.date_create >= to_date('01.01.2015','dd.mm.yyyy')
+    join V_MO_D_PAR dp on dp.id = t.d_par_id
+                           and dp.code_int in ('IN_SCO_IIN',
+                                              'IN_SCO_CLIENT_ID',
+                                              'IN_SCO_FOLDER_ID',
+
+                                              'SC_IS_CATEG_A',
+                                              'SC_ONL_30D_GOOD_CNT_MAX',
+                                              'IN_SCO_TOV_CATEG',
+
+                                              'SC_ONL_30D_KN_REJECT',
+                                              'SC_ONL_60D_KN_REJECT',
+
+                                              'IN_SCO_SALARY',
+                                              'SC_ONL_30D_MAX_SALARY',
+
+                                              'SC_ONL_BEHAVIOR_SCORE',
+
+                                              'SC_ONL_BEHAVIOR_RES_PRE',
+                                              'SC_ONL_BEHAVIOR_CTRL_GR_RES_PRE',
+                                              'MO_SCO_REJECT_81',
+                                              'MO_SCO_REJECT'
+                                              )
+    where r.date_create >= to_date('11-12-2015', 'dd-mm-yyyy')
+          /*and r.id = 35894176*/
+) pivot (
+    max(value_number)
+    for code_int in ( 'IN_SCO_IIN' as iin,
+                      'IN_SCO_CLIENT_ID' as rfo_client_id,
+                      'IN_SCO_FOLDER_ID' as rfo_folder_id,
+
+                      'SC_IS_CATEG_A' as is_categ_a,
+                      'SC_ONL_30D_GOOD_CNT_MAX' as SC_ONL_30D_GOOD_CNT_MAX,
+                      'IN_SCO_TOV_CATEG' as IN_SCO_TOV_CATEG,
+
+                      'SC_ONL_30D_KN_REJECT' as SC_ONL_30D_KN_REJECT,
+                      'SC_ONL_60D_KN_REJECT' as SC_ONL_60D_KN_REJECT,
+
+                      'IN_SCO_SALARY' as IN_SCO_SALARY,
+                      'SC_ONL_30D_MAX_SALARY' as SC_ONL_30D_MAX_SALARY,
+
+                      'SC_ONL_BEHAVIOR_SCORE' as SC_ONL_BEHAV_SCORE,
+
+                      'SC_ONL_BEHAVIOR_RES_PRE' as SC_ONL_BEHAV_RES_PRE,
+                      'SC_ONL_BEHAVIOR_CTRL_GR_RES_PRE' as SC_ONL_BEHAV_CTRL_GR_RES_PRE,
+                      'MO_SCO_REJECT_81' as MO_SCO_REJECT_81,
+                      'MO_SCO_REJECT' as MO_SCO_REJECT)
+);
+grant select on U1.M_FOLDER_MO_ONL_BEHAVT to LOADDB;
+
+

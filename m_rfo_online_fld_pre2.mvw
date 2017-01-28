@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_RFO_ONLINE_FLD_PRE2
+refresh complete on demand
+as
+select /*+ driving_site(x) first_rows*/
+ *
+  from (select /*+ driving_site(rd) no_merge*/
+         rd.collection_id, p.C_PROP as cr_program_id, sd.c_code
+          from IBS.Z#RDOC@RFO rd
+          join IBS.Z#FDOC@RFO fd
+            on fd.id = rd.c_doc
+           and fd.class_id = 'CREDIT_DOG'
+          join IBS.Z#CREDIT_DOG@RFO cd
+            on cd.id = rd.c_doc
+          join IBS.Z#STATUS_DOG@RFO sd
+            on sd.id = fd.c_status_doc
+          join IBS.Z#CRED_SCHEME@RFO cs
+            on cs.id = cd.c_cred_scheme
+          join IBS.Z#PROPERTIES@RFO p
+            on p.COLLECTION_ID = cs.c_add_prop
+          join IBS.Z#PROD_PROPERTY@RFO pr
+            on pr.id = p.C_PROP
+         where fd.c_doc_date > sysdate - 2 / 24
+           and cd.c_shop is null) x;
+grant select on U1.M_RFO_ONLINE_FLD_PRE2 to LOADDB;
+grant select on U1.M_RFO_ONLINE_FLD_PRE2 to LOADER;
+
+

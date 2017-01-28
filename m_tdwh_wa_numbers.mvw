@@ -1,0 +1,21 @@
+﻿CREATE MATERIALIZED VIEW U1.M_TDWH_WA_NUMBERS
+USING NO INDEX
+REFRESH COMPLETE ON DEMAND
+AS
+SELECT wa_numbers.id                 id,
+            wa_numbers.mob_num            mob_num,
+            case when regexp_like(wa_numbers.mob_num, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(wa_numbers.mob_num,'^[7-8]{2}','')
+                 when regexp_like(wa_numbers.mob_num, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(wa_numbers.mob_num,'^[7-8]{1}','')
+                 when regexp_like(wa_numbers.mob_num, '^[+]7[[:digit:]]{10}$') then regexp_replace(wa_numbers.mob_num,'^[+]7','')
+                 else to_char(wa_numbers.mob_num)
+            end as mob_num_clear,
+            wa_numbers.is_whatsapp_number is_whatsapp_number,
+            wa_numbers.last_seen_date     last_seen_date,
+            wa_numbers.last_check_date    last_check_date,
+            wa_numbers.client_dwh_id      client_dwh_id
+
+       FROM  WA.WA_NUMBERS@TDWH2 wa_numbers;
+grant select on U1.M_TDWH_WA_NUMBERS to LOADDB;
+grant select on U1.M_TDWH_WA_NUMBERS to LOADER;
+
+

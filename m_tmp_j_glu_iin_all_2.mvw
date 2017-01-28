@@ -1,0 +1,9 @@
+﻿create materialized view U1.M_TMP_J_GLU_IIN_ALL_2
+refresh force on demand
+as
+select * from M_GX_CLIENT_ORG_BANK_MONTH@EE13 t
+where t.bin = '930640000629';
+grant select on U1.M_TMP_J_GLU_IIN_ALL_2 to LOADDB;
+grant select on U1.M_TMP_J_GLU_IIN_ALL_2 to LOADER;
+
+

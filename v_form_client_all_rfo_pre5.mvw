@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_FORM_CLIENT_ALL_RFO_PRE5
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/
+      distinct pr4.collection_id, pp4.c_name as prop_name
+             from V_RFO_Z#PROPERTIES pr4
+             join V_RFO_Z#PROD_PROPERTY pp4 on pp4.id = pr4.c_prop
+                                           and pp4.c_group_prop = pr4.c_group_prop
+             join V_RFO_Z#PROPERTY_GRP pg4  on pg4.id = pr4.c_group_prop
+             where pg4.c_code =  'JOB_2'  --Тип должности супруга(ги) 4074076 -- JOB_2;
+grant select on U1.V_FORM_CLIENT_ALL_RFO_PRE5 to LOADDB;
+
+

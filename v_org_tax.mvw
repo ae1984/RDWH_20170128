@@ -1,0 +1,49 @@
+﻿create materialized view U1.V_ORG_TAX
+refresh complete on demand
+as
+select /*+parallel(15)*/ p.c_iin_bin as tax_org_bin, -- с налоговой
+       p.c_rnn as tax_org_rnn,                                                            --Теперь в этой вьюшке улучшен отбор Юр лиц. Смотрим не только на поля, которые помогают нам
+       upper(trim(nvl(p.c_name_jur, p.c_name))) as tax_org_name,                          --различить Юр и Физ лиз в V_RFO_Z#KAS_NB_TAXPAYER, но и производится просмотр имени в
+       p.c_taxpayer_type as tax_is_jur_person,                                            --V_RFO_Z#KAS_GCVP_PAYMENT по связке РНН или ИИН, в имени мы можем увидеть что это ИП или ТОО и т д.
+       p.c_sign_inactive as tax_is_inactive,                                              --Таким образом определение Юр лиц увеличилось на 10%
+       ot.org_form,                                                                       --Так же теперь здесь и выдаются Физ лица. различия между Юр и Физ по полю is_jur_person
+       case when pp.is_jur_person is not null then 1 else 0 end as is_jur_person          --is_jur_person = 1 это Юр лицо, is_jur_person = 0 Физ лицо
+    from V_RFO_Z#KAS_NB_TAXPAYER p
+    left join                                                                             --P.S. Отбор Юр лиц можно улучшить, дополнив возможные определения Юр лиц по имени
+         (select max(id) keep (dense_rank last order by c_date_last_upd) as org_last_id,  --       (...like '% "ИП" %'...like '% ТОО %'... и т д.)
+           1 as is_jur_person                                                             --Но в любом случае, те что не попали в Юр. Будут отработанны как Физ лица.
+            from V_RFO_Z#KAS_NB_TAXPAYER tp1 where tp1.id in (
+              select distinct org_last_id from (
+                  select max(id) keep (dense_rank last order by c_date_last_upd) as org_last_id
+                           from V_RFO_Z#KAS_NB_TAXPAYER
+                           where (c_taxpayer_type = 1 or (c_taxpayer_type = 0 and c_name_jur is not null)) and
+                           c_rnn is not null and c_iin_bin is null
+                           group by c_rnn
+                  union
+                  select max(id) keep (dense_rank last order by c_date_last_upd) as org_last_id
+                           from V_RFO_Z#KAS_NB_TAXPAYER
+                           where (c_taxpayer_type = 1 or (c_taxpayer_type = 0 and c_name_jur is not null)) and
+                           c_iin_bin is not null
+                           group by c_iin_bin
+                  union
+                  select  max(qqq.id) keep (dense_rank last order by qqq.c_date_last_upd) as org_last_id
+                           from (select pax.c_rnn,pax.c_iin_bin, pax.id, pax.c_date_last_upd,/*pax.c_name,pax.c_taxpayer_type,pax.c_name_jur,*/ pay.c_organization
+                           from V_RFO_Z#KAS_NB_TAXPAYER pax
+                           join V_RFO_Z#KAS_GCVP_PAYMENT pay on pay.x_org_rnn = pax.c_rnn or pay.x_org_bin = pax.c_iin_bin ) qqq
+                           where (upper(qqq.c_organization) like '% ИП %' or upper(qqq.c_organization) like '% ИП' or upper(qqq.c_organization) like 'ИП %' or
+                                  upper(qqq.c_organization) like '% "ИП" %' or upper(qqq.c_organization) like '% "ИП"' or upper(qqq.c_organization) like '"ИП" %' or
+                                  upper(qqq.c_organization) like '% КХ %' or upper(qqq.c_organization) like '% КХ' or upper(qqq.c_organization) like 'КХ %' or
+                                  upper(qqq.c_organization) like '% К/Х %' or upper(qqq.c_organization) like '% К/Х' or upper(qqq.c_organization) like 'К/Х %' or
+                                  upper(qqq.c_organization) like '% ТОО %' or upper(qqq.c_organization) like '% ТОО' or upper(qqq.c_organization) like 'ТОО %' or
+                                  upper(qqq.c_organization) like '%КРЕСТЬЯНСКОЕ ХОЗЯЙСТВО%' or upper(qqq.c_organization) like '%ИНДИВИДУЛЬНЫЙ ПРЕДПРИНИМАТЕЛЬ%' or
+                                  upper(qqq.c_organization) like '%ФИЛИАЛ%' or upper(qqq.c_organization) like '%Ф-Л%' or
+                                  upper(qqq.c_organization) like '% ЧП %' or upper(qqq.c_organization) like '% ЧП' or upper(qqq.c_organization) like 'ЧП %')
+                           group by qqq.c_rnn,qqq.c_iin_bin))
+            group by tp1.c_iin_bin,tp1.c_rnn
+          ) pp on p.id = pp.org_last_id
+    left join DATA_ORG_TYPE_TMP ot on p.c_iin_bin = ot.bin
+    where p.c_rnn <>'582100014152' and p.c_rnn <>'181210354064' and p.c_rnn<>'580520432715' and p.c_rnn<>'302520238974';
+grant select on U1.V_ORG_TAX to LOADDB;
+grant select on U1.V_ORG_TAX to LOADER;
+
+

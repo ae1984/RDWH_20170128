@@ -1,0 +1,117 @@
+﻿create materialized view U1.M_RFO_ZALOG_ESTIMATE
+build deferred
+refresh complete on demand
+as
+with DAT_TIME as (select /*+ parallel(20)*/
+                         h.collection_id, h.c_line_time
+                    from v_rfo_z#cm_history h
+                    join v_rfo_z#cm_line    l on l.id = h.c_line
+                    join v_rfo_z#cm_point   p on p.id = l.c_to_p
+                   where p.c_code = 'KAS_ZAL_ESTIMATE'),
+     mo_eval as (select *
+                   from (
+                          select
+                          r.id,
+                          r.date_create,
+                          dp.code_int,
+                          t.value_number,
+                          r.rfo_folder_id
+                          from MO_RFOLDER r
+                          join MO_RFOLDER_PAR_VALUE t on t.rfolder_id = r.id and t.date_create >= to_date('01.01.2015','dd.mm.yyyy')
+                          join V_MO_D_PAR dp on dp.id = t.d_par_id
+                                        and dp.code_int in ('IN_AA_FOLDER_ID',
+                                                            'AUTO_EVAL_PRICE',
+                                                            'AUTO_EVAL_CONFIDENCE_LEVEL')
+                          ) pivot (
+                          max(value_number)
+                          for code_int in ('IN_AA_FOLDER_ID' as folder_id,
+                                           'AUTO_EVAL_PRICE' as auto_eval_price,
+                                           'AUTO_EVAL_CONFIDENCE_LEVEL' as auto_eval_confidence_level
+                                          )
+                                  )
+                 )
+select to_char(chl.c_line_time,'yyyy - mm') as date_estimate_yyyymm,
+       x.folder_id,
+       chl.c_line_time as date_estimate,
+       x.brand,
+       x.model,
+       x.year,
+       x.vin,
+       x.point_name,
+       count(x.folder_id) over (partition by x.folder_id) as cnt_estimate,
+       dense_rank() over (partition by x.folder_id order by chl.c_line_time) as num_estimate,
+       me.auto_eval_price,
+       nvl(me.auto_eval_confidence_level,0) as auto_eval_confidence_level,
+       x.estim_user,
+       x.is_auto_estim,
+       x.estim_id,
+       x.info_id,
+       x.process_code
+  from (
+select /*+ parallel(20) */
+       f.id            as folder_id,
+       tb.c_name       as brand,
+       tm.c_name       as model,
+       ia.c_year       as year,
+       ia.c_body_num   as vin,
+       cc.c_history,
+       cp.c_name       as point_name,
+       u.c_name        as estim_user,
+       ud.c_name       as is_auto_estim,
+       oe.id as estim_id,
+       ia.id as info_id,
+       bp.c_code  as process_code
+  from V_RFO_Z#CM_POINT cp
+  join V_RFO_Z#CM_CHECKPOINT cc on cc.c_point = cp.id
+  join V_RFO_Z#FOLDERS f        on f.id = cc.id
+  join V_RFO_Z#BUS_PROCESS bp   on bp.id = f.c_business
+  join V_RFO_Z#RDOC        rd   on rd.collection_id = f.c_docs
+  join V_RFO_Z#FDOC        fd   on fd.id = rd.c_doc
+                               and fd.class_id = 'KAS_AUTO_ESTIM'
+  join V_RFO_Z#KAS_AUTO_ESTIM oe on oe.id = fd.id
+  left join V_RFO_Z#USER       u on oe.c_estim_user = u.id
+  join V_RFO_Z#KAS_INFO_AUTO ia  on ia.id = oe.c_kas_inf_auto_ref
+  join V_RFO_Z#TRANSPORT_MODEL tm on tm.id = ia.c_ts_model
+  join V_RFO_Z#TRANSPORT_BRAND tb on tb.id = tm.c_brand
+  left join V_RFO_Z#KAS_SIGNS  s  on s.collection_id = tm.c_kas_sign_avto#signs_arr_ref
+  left join V_RFO_Z#KAS_UNIVERSAL_D ud on ud.id = s.c_sign_ref
+ where cc.class_id = 'FOLDERS'
+   and bp.c_code = 'KAS_ZAL_EST'
+ union all
+select /*+ parallel(20) */
+       f.id      as folder_id,
+       tb.c_name as brand,
+       tm.c_name as model,
+       ia.c_year as year,
+       ia.c_body_num,
+       cc.c_history,
+       cp.c_name  as point_name,
+       u.c_name   as estim_user,
+       ud.c_name  as is_auto_estim,
+       oe.id as estim_id,
+       ia.id as info_id,
+       bp.c_code  as process_code
+  from V_RFO_Z#CM_POINT cp
+  join V_RFO_Z#CM_CHECKPOINT cc on cc.c_point = cp.id
+  join V_RFO_Z#FOLDERS f        on f.id = cc.id
+  join V_RFO_Z#BUS_PROCESS bp   on bp.id = f.c_business
+  join V_RFO_Z#RDOC        rd   on rd.collection_id = f.c_docs
+  join V_RFO_Z#FDOC        fd   on fd.id = rd.c_doc
+                               and fd.class_id = 'CREDIT_DOG'
+  join V_RFO_Z#CREDIT_DOG cd    on cd.id = fd.id
+  join V_RFO_Z#KAS_INFO_AUTO ia on ia.collection_id = cd.c_red#kas_auto#kas_info_auto20
+  left join V_RFO_Z#KAS_AUTO_ESTIM oe on oe.c_kas_inf_auto_ref = ia.id
+  left join V_RFO_Z#USER            u on oe.c_estim_user = u.id
+  join V_RFO_Z#TRANSPORT_MODEL tm on tm.id = ia.c_ts_model
+  join V_RFO_Z#TRANSPORT_BRAND tb on tb.id = tm.c_brand
+  left join V_RFO_Z#KAS_SIGNS  s  on s.collection_id = tm.c_kas_sign_avto#signs_arr_ref
+  left join V_RFO_Z#KAS_UNIVERSAL_D ud on ud.id = s.c_sign_ref
+ where cc.class_id = 'FOLDERS'
+   and bp.c_code = 'KAS_AUTO_CRED_PRIV_PC' ) x
+  join DAT_TIME    chl on chl.collection_id = x.c_history
+  left join MO_EVAL me on me.folder_id = x.folder_id
+                      and trunc(me.date_create) = trunc(chl.c_line_time);
+grant select on U1.M_RFO_ZALOG_ESTIMATE to LOADDB;
+grant select on U1.M_RFO_ZALOG_ESTIMATE to LOADER;
+
+

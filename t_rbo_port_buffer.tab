@@ -1,0 +1,108 @@
+﻿create table U1.T_RBO_PORT_BUFFER
+(
+  rep_date                 DATE not null,
+  rbo_contract_id          NUMBER(32) not null,
+  rbo_client_id            NUMBER(32) not null,
+  principal                NUMBER(21,2),
+  interest                 NUMBER(21,2),
+  overlimit                NUMBER(21,2),
+  overlimit_interest       NUMBER(21,2),
+  overdraft                NUMBER(21,2),
+  overdraft_interest       NUMBER(21,2),
+  principal_del            NUMBER(21,2),
+  interest_del             NUMBER(21,2),
+  overlimit_del            NUMBER(21,2),
+  overlimit_interest_del   NUMBER(21,2),
+  overdraft_del            NUMBER(21,2),
+  overdraft_interest_del   NUMBER(21,2),
+  w_principal_del          NUMBER(21,2),
+  w_interest_del           NUMBER(21,2),
+  w_overlimit_del          NUMBER(21,2),
+  w_overlimit_interest_del NUMBER(21,2),
+  w_overdraft_del          NUMBER(21,2),
+  w_overdraft_interest_del NUMBER(21,2),
+  pc_cred_limit            NUMBER(21,2),
+  delinq_days              NUMBER(21),
+  delinq_date              DATE,
+  delinq_days_cli          NUMBER(21),
+  delinq_date_cli          DATE,
+  total_debt               NUMBER(21,2) not null,
+  delinq_amount            NUMBER(21,2),
+  is_on_balance            NUMBER(1) not null,
+  is_card                  NUMBER(1) not null,
+  total_debt_cli           NUMBER(21,2) not null,
+  del_amount_cli           NUMBER(21,2),
+  total_debt_max           NUMBER(21,2),
+  total_debt_cli_max       NUMBER(21,2),
+  del_days_max             NUMBER(21),
+  del_days_cli_max         NUMBER(21),
+  del_amount_max           NUMBER(21,2),
+  del_amount_cli_max       NUMBER(21,2)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.T_RBO_PORT_BUFFER_IND1 on U1.T_RBO_PORT_BUFFER (RBO_CONTRACT_ID)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RBO_PORT_BUFFER_IND2 on U1.T_RBO_PORT_BUFFER (RBO_CLIENT_ID)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RBO_PORT_BUFFER_IND3 on U1.T_RBO_PORT_BUFFER (REP_DATE)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RBO_PORT_BUFFER_IND4 on U1.T_RBO_PORT_BUFFER (RBO_CONTRACT_ID, REP_DATE)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_RBO_PORT_BUFFER to LOADDB;
+

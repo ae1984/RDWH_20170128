@@ -1,0 +1,72 @@
+﻿create materialized view U1.V_TMP_J_3
+refresh force on demand
+as
+select a.*, a2.sal_median_last_6_months, upper(b.banks) as banks,
+       c.send_days_of_last_month, c2.send_days_of_last_2_months
+from (
+  select iin, round(median(sal_in_month)) as sal_median from (
+      select t.rnn as iin, to_char(t.send_date,'yyyy-mm') as send_month,
+             sum(t.amount * 8.1 + 1731) as sal_in_month
+      from V_G3_P_VIEW t
+      join V_G3_ADF d on d.f1 = t.p_key and d.f2 not in ('940440000910','060240016519')
+      where upper(t.p_name) not like '%KASPI BANK%'
+            and t.send_date < to_date('2014-02-01','yyyy-mm-dd')
+       --and
+--            t.rnn = '740921301643'
+      group by t.rnn, to_char(t.send_date,'yyyy-mm')
+  ) group by iin
+) a
+left join (
+  select iin, round(median(sal_in_month)) as sal_median_last_6_months from (
+      select t.rnn as iin, to_char(t.send_date,'yyyy-mm') as send_month,
+             sum(t.amount * 8.1 + 1731) as sal_in_month
+      from V_G3_P_VIEW t
+      join V_G3_ADF d on d.f1 = t.p_key and d.f2 not in ('940440000910','060240016519')
+      where upper(t.p_name) not like '%KASPI BANK%'
+            and t.send_date < to_date('2014-02-01','yyyy-mm-dd')
+            and t.send_date >= to_date('2013-08-01','yyyy-mm-dd')
+       --and
+--            t.rnn = '740921301643'
+      group by t.rnn, to_char(t.send_date,'yyyy-mm')
+  ) group by iin
+) a2 on a2.iin = a.iin
+left join (
+  select iin, LISTAGG(bank, ';') within group (order by bank) as banks
+  from (
+      select t.rnn as iin, t.name as bank
+      from V_G3_P_VIEW t
+      join V_G3_ADF d on d.f1 = t.p_key and d.f2 not in ('940440000910','060240016519')
+      where upper(t.p_name) not like '%KASPI BANK%' -- and
+            and t.send_date < to_date('2014-02-01','yyyy-mm-dd')
+--            t.rnn = '740921301643'
+      group by t.rnn, t.name
+  ) group by iin
+) b on b.iin = a.iin
+left join (
+  select iin, LISTAGG(send_day_of_month, ';') within group (order by send_day_of_month) as send_days_of_last_month
+  from (
+        select t.rnn as iin, to_char(t.send_date,'dd') as send_day_of_month
+        from V_G3_P_VIEW t
+        join V_G3_ADF d on d.f1 = t.p_key and d.f2 not in ('940440000910','060240016519')
+        where upper(t.p_name) not like '%KASPI BANK%' -- and
+              and to_char(t.send_date, 'yyyy - mm') = '2014 - 01'
+  --            t.rnn = '740921301643'
+        group by t.rnn, t.send_date
+  ) group by iin
+) c on c.iin = a.iin
+left join (
+  select iin, LISTAGG(send_day_of_month, ';') within group (order by send_day_of_month) as send_days_of_last_2_months
+  from (
+        select t.rnn as iin, to_char(t.send_date,'dd') as send_day_of_month
+        from V_G3_P_VIEW t
+        join V_G3_ADF d on d.f1 = t.p_key and d.f2 not in ('940440000910','060240016519')
+        where upper(t.p_name) not like '%KASPI BANK%' -- and
+              and to_char(t.send_date, 'yyyy - mm') in ('2013 - 12','2014 - 01')
+  --            t.rnn = '740921301643'
+        group by t.rnn, t.send_date
+  ) group by iin
+) c2 on c2.iin = a.iin;
+grant select on U1.V_TMP_J_3 to LOADDB;
+grant select on U1.V_TMP_J_3 to LOADER;
+
+

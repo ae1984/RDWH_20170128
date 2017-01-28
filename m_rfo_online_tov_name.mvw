@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_RFO_ONLINE_TOV_NAME
+refresh force on demand
+as
+select /*+ parallel 30 */
+       t.id zb_id,
+       t.c_code zb_code,
+       t.c_name zb_name,
+       n.id tv_id,
+       n.c_code tv_code,
+       n.c_name tv_name,
+       i.id pi_id,
+       i.c_name pi_name,
+       i.c_producer pi_producer,
+       i.c_model pi_model,
+       i.c_price pi_price,
+       i.c_quant pi_quant,
+       i.c_cost pi_cost
+from V_RFO_Z#KIND_ZAL_BODY t
+join V_RFO_Z#PROD_INFO i on i.c_type_tov = t.id
+join V_RFO_Z#KAS_TOV_NAME n on n.id = i.c_name_ref
+where t.c_code in ('SMARTPHONE_MOBILE_TABLETS',
+                   'NOTES_COMPS_PERIPHERALS',
+                   'TV_ AUDIO',
+                   'PHOTO_VIDEO_CAMERAS',
+                   'BIG_HOME_APPLIANCES',
+                   'BUILTIN_HOME_APPLIANCES',
+                   'SMALL_HOME_APPLIANCES');
+grant select on U1.M_RFO_ONLINE_TOV_NAME to LOADDB;
+grant select on U1.M_RFO_ONLINE_TOV_NAME to LOADER;
+
+

@@ -1,0 +1,354 @@
+﻿create materialized view U1.M_OPERATORS_CONTACTS_BY_MONTHS
+build deferred
+refresh force on demand
+as
+with tt as (select /*+ parallel 10 */
+                   cp.phone_number_clear,
+                   cp.phone_type,
+                   case when cp.folder_date < to_date('01.02.2015','dd.mm.yyyy') then 1 else 0 end jan,
+                   case when cp.folder_date < to_date('01.03.2015','dd.mm.yyyy') then 1 else 0 end feb,
+                   case when cp.folder_date < to_date('01.04.2015','dd.mm.yyyy') then 1 else 0 end mar,
+                   case when cp.folder_date < to_date('01.05.2015','dd.mm.yyyy') then 1 else 0 end apr,
+                   case when cp.folder_date < to_date('01.06.2015','dd.mm.yyyy') then 1 else 0 end may,
+                   case when cp.folder_date < to_date('01.07.2015','dd.mm.yyyy') then 1 else 0 end jun,
+                   case when cp.folder_date < to_date('01.08.2015','dd.mm.yyyy') then 1 else 0 end jul,
+                   case when cp.folder_date < to_date('01.09.2015','dd.mm.yyyy') then 1 else 0 end aug,
+                   case when cp.folder_date < to_date('01.10.2015','dd.mm.yyyy') then 1 else 0 end sep
+              from V_FORM_CLIENT_CONTACT_PHONE cp
+             where cp.phone_type in ('МОБИЛЬНЫЙ','КОНТАКТ-МОБИЛЬНЫЙ'))
+
+select /*+ parallel 10 */
+       tjan.operator,
+       tjan.operator_sum as m_operator_sum_jan,
+       tfeb.operator_sum as m_operator_sum_feb,
+       tmar.operator_sum as m_operator_sum_mar,
+       tapr.operator_sum as m_operator_sum_apr,
+       tmay.operator_sum as m_operator_sum_may,
+       tjun.operator_sum as m_operator_sum_jun,
+       tjul.operator_sum as m_operator_sum_jul,
+       taug.operator_sum as m_operator_sum_aug,
+       tsep.operator_sum as m_operator_sum_sep,
+
+       tojan.operator_sum as cm_operator_sum_jan,
+       tofeb.operator_sum as cm_operator_sum_feb,
+       tomar.operator_sum as cm_operator_sum_mar,
+       toapr.operator_sum as cm_operator_sum_apr,
+       tomay.operator_sum as cm_operator_sum_may,
+       tojun.operator_sum as cm_operator_sum_jun,
+       tojul.operator_sum as cm_operator_sum_jul,
+       toaug.operator_sum as cm_operator_sum_aug,
+       tosep.operator_sum as cm_operator_sum_sep
+  from (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.jan = 1
+                       and tt.phone_type = 'МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) tjan
+   join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.feb = 1
+                       and tt.phone_type = 'МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) tfeb on tfeb.operator = tjan.operator
+--
+  join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.mar = 1
+                       and tt.phone_type = 'МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) tmar on tmar.operator = tjan.operator
+  join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.apr = 1
+                       and tt.phone_type = 'МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) tapr on tapr.operator = tjan.operator
+  join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.may = 1
+                       and tt.phone_type = 'МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) tmay on tmay.operator = tjan.operator
+  join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.jun = 1
+                       and tt.phone_type = 'МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) tjun on tjun.operator = tjan.operator
+  join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.jul = 1
+                       and tt.phone_type = 'МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) tjul on tjul.operator = tjan.operator
+  join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.aug = 1
+                       and tt.phone_type = 'МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) taug on taug.operator = tjan.operator
+  join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.sep = 1
+                       and tt.phone_type = 'МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) tsep on tsep.operator = tjan.operator
+
+-------OUT----------
+  join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.jan = 1
+                       and tt.phone_type = 'КОНТАКТ-МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) tojan on tojan.operator = tjan.operator
+   join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.feb = 1
+                       and tt.phone_type = 'КОНТАКТ-МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) tofeb on tofeb.operator = tjan.operator
+--
+  join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.mar = 1
+                       and tt.phone_type = 'КОНТАКТ-МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) tomar on tomar.operator = tjan.operator
+  join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.apr = 1
+                       and tt.phone_type = 'КОНТАКТ-МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) toapr on toapr.operator = tjan.operator
+  join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.may = 1
+                       and tt.phone_type = 'КОНТАКТ-МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) tomay on tomay.operator = tjan.operator
+  join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.jun = 1
+                       and tt.phone_type = 'КОНТАКТ-МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) tojun on tojun.operator = tjan.operator
+  join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.jul = 1
+                       and tt.phone_type = 'КОНТАКТ-МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) tojul on tojul.operator = tjan.operator
+  join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.aug = 1
+                       and tt.phone_type = 'КОНТАКТ-МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) toaug on toaug.operator = tjan.operator
+  join (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                 else 'OTHER' end as operator,
+                 count(*) as operator_sum
+          from (select distinct tt.phone_number_clear
+                  from tt
+                 where tt.sep = 1
+                       and tt.phone_type = 'КОНТАКТ-МОБИЛЬНЫЙ') cp
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) tosep on tosep.operator = tjan.operator;
+grant select on U1.M_OPERATORS_CONTACTS_BY_MONTHS to LOADDB;
+grant select on U1.M_OPERATORS_CONTACTS_BY_MONTHS to LOADER;
+
+

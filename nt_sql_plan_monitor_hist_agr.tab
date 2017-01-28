@@ -1,0 +1,61 @@
+﻿create table U1.NT_SQL_PLAN_MONITOR_HIST_AGR
+(
+  sdt_min             DATE,
+  sdt_max             DATE,
+  sql_exec_start      DATE,
+  sql_id              VARCHAR2(13),
+  sql_plan_hash_value NUMBER,
+  plan_operation      VARCHAR2(30),
+  plan_options        VARCHAR2(30),
+  plan_object_name    VARCHAR2(30),
+  status              VARCHAR2(19),
+  plan_line_id        NUMBER,
+  plan_object_owner   VARCHAR2(30),
+  first_refresh_time  DATE,
+  last_refresh_time   DATE,
+  cnt_row             NUMBER,
+  plan_cost           NUMBER,
+  plan_bytes          NUMBER,
+  plan_time           NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.IDX_SQL_PLAN_MON_HIST_AGR_1 on U1.NT_SQL_PLAN_MONITOR_HIST_AGR (SQL_ID, SQL_EXEC_START)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_SQL_PLAN_MON_HIST_AGR_2 on U1.NT_SQL_PLAN_MONITOR_HIST_AGR (SQL_EXEC_START)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.NT_SQL_PLAN_MONITOR_HIST_AGR to LOADDB;
+

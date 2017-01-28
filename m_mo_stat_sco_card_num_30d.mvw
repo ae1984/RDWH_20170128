@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_MO_STAT_SCO_CARD_NUM_30D
+refresh complete on demand
+as
+select ppv.value_number as card_num, count(*) as process_count_30days
+from MO_PROCESS_PAR_VALUE ppv
+where ppv.d_par_id = 1030 and ppv.date_create > sysdate - 30
+group by ppv.value_number;
+grant select on U1.M_MO_STAT_SCO_CARD_NUM_30D to LOADDB;
+grant select on U1.M_MO_STAT_SCO_CARD_NUM_30D to LOADER;
+
+

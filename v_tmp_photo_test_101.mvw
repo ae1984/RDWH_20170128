@@ -1,0 +1,39 @@
+﻿create materialized view U1.V_TMP_PHOTO_TEST_101
+using no index
+refresh complete on demand
+as
+select a.*,
+       d.verif_photo_result as verif_photo_prev,
+       e.c_name as c_name_prev,
+       e.c_uid as c_uid_prev,
+       e.c_date as c_date_prev
+from (select a.*,
+       max(c.folder_id) keep (dense_rank last order by c.folder_date_create) as folder_id_prev,
+       max(c.folder_date_create) keep (dense_rank last order by c.folder_date_create) as folder_date_prev
+from V_TMP_PHOTO_TEST_100 a
+join v_folder_all_rfo c on a.rfo_client_id = c.rfo_client_id and c.folder_date_create < a.folder_date_create_mi
+group by
+       a.folder_date_create_mi,
+       a.folder_id,
+       a.contract_number,
+       --a.folder_state,
+       a.rfo_contract_id,
+       a.rfo_client_id,
+       a.is_credit_issued,
+       a.cr_program_name,
+       a.delinq_rate,
+       a.iin,
+       a.folder_state,
+       a.verif_photo_result,
+       a.c_uid,
+       a.c_name,
+       a.c_date,
+       a.c_fold_id)   a
+join v_verification d on a.folder_id_prev = d.folder_id and d.verif_photo_result = 'ОДОБРЕНИЕ'
+join v_rfo_z#images e on d.folder_id = e.c_fold_id and upper(e.c_name) like '%FOTO_FL%'
+     and trunc(e.c_date) = trunc(a.folder_date_prev)
+where trunc(a.folder_date_create_mi) - trunc(folder_date_prev) > 30;
+grant select on U1.V_TMP_PHOTO_TEST_101 to LOADDB;
+grant select on U1.V_TMP_PHOTO_TEST_101 to LOADER;
+
+

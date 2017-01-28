@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_OUT_OPTIMIZATION_AFTER
+refresh force on demand
+as
+select /*+ parallel(30) */
+       --count(*), count(distinct t.contract_number)
+       t.*,
+       p.delinq_days as del_days_cli,
+       p.delinq_days_old as del_days_con,
+       p.total_debt,
+       p.yy_mm_report
+from risk_derbol.T_VITRINA_OP t
+left join u1.V_PORTFOLIO p on p.contract_number = t.contract_number
+                          and p.yy_mm_report_num >= to_number(to_char(to_date(t.op_date_start,'dd.mm.yyyy'),'yyyymm'))
+--where t.contract_number in ('R1989095-002','R2137690-002','R3045003-001') -- дубликаты;
+grant select on U1.M_OUT_OPTIMIZATION_AFTER to LOADDB;
+grant select on U1.M_OUT_OPTIMIZATION_AFTER to LOADER;
+
+

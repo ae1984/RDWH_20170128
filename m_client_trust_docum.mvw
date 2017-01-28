@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_CLIENT_TRUST_DOCUM
+build deferred
+refresh complete on demand
+as
+select fcl.rfo_client_id as trust_rfo_client_id,
+       fcl.iin as trust_client_iin,
+       fcl.client_name as trust_client_name,
+       tcl.rfo_client_id,
+       tcl.iin            as client_iin,
+       tcl.client_name,
+       td.id              as trust_docum_id,
+       pd.c_date_begin    as trust_date_create,
+       pd.c_date_begining as trust_date_begin,
+       pd.c_date_ending as trust_date_end,
+       pd.c_date_close  as trust_date_close,
+       u.c_name         as username,
+       vp.x_dnp_name    as pos_city,
+       vp.pos_name,
+       fld.c_n       as folder_num,
+       fd.c_doc_date as folder_date_create_mi,
+       fld.id as folder_id,
+       upper(sp.c_name) as folder_status_name,
+       upper(csp.c_name) as trust_docum_status_name,
+       cc.c_num_dog      as contract_number
+  from u1.V_RFO_Z#FOLDERS         fld
+  join u1.V_RFO_Z#RDOC             rd on rd.collection_id = fld.c_docs
+  join u1.V_RFO_Z#FDOC             fd on fd.id = rd.c_doc
+                                     and fd.class_id = 'KAS_TRUST_DOCUM'
+  join u1.V_RFO_Z#STATUS_DOG       sp on sp.id = fd.c_status_doc
+  join u1.V_RFO_Z#KAS_TRUST_DOCUM ktd on ktd.id = fd.id
+  join u1.V_RFO_Z#TRUST_DOCUM      td on td.id = ktd.c_trust_docum
+  join u1.V_RFO_Z#PRODUCT          pd on pd.id = td.id
+                                     and pd.class_id = 'TRUST_DOCUM'
+  left join u1.V_RFO_Z#COM_STATUS_PRD  csp on csp.id = pd.c_com_status
+  join u1.V_CLIENT_RFO_BY_ID      fcl on fcl.rfo_client_id = fld.c_client
+  join u1.V_RFO_Z#USER              u on u.id = pd.c_create_user
+  join u1.V_RFO_Z#STRUCT_DEPART    sd on sd.id = td.c_kas_st_depart
+  join u1.V_POS                    vp on vp.pos_code = sd.c_code
+  join u1.V_RFO_Z#CONT_DEP_REF    cdr on cdr.collection_id = td.c_dep_dogs
+  join u1.V_RFO_Z#CONTRACT         cc on cc.id = cdr.c_value
+  join u1.V_CLIENT_RFO_BY_ID      tcl on tcl.rfo_client_id = cc.c_client;
+grant select on U1.M_CLIENT_TRUST_DOCUM to LOADDB;
+
+

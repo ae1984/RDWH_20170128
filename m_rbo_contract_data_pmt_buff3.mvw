@@ -1,0 +1,309 @@
+﻿create materialized view U1.M_RBO_CONTRACT_DATA_PMT_BUFF3
+build deferred
+refresh force on demand
+as
+select /*+parallel(5)*/
+        rp.rbo_contract_id
+       ,sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=0   then rp.total_debt end) as total_debt_pmt_1_0
+       ,sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=1   then rp.total_debt end) as total_debt_pmt_1_1
+       ,sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=7   then rp.total_debt end) as total_debt_pmt_1_7
+       ,sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=15  then rp.total_debt end) as total_debt_pmt_1_15
+       ,sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=16  then rp.total_debt end) as total_debt_pmt_1_16
+       ,sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=30  then rp.total_debt end) as total_debt_pmt_1_30
+       ,sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=60  then rp.total_debt end) as total_debt_pmt_1_60
+       ,sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=90  then rp.total_debt end) as total_debt_pmt_1_90
+       ,sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt=0     then rp.total_debt end) as total_debt_pmt_1_0_old
+       ,sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=0   then rp.total_debt end) as total_debt_pmt_2_0
+       ,sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=7   then rp.total_debt end) as total_debt_pmt_2_7
+       ,sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=30  then rp.total_debt end) as total_debt_pmt_2_30
+       ,sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=60  then rp.total_debt end) as total_debt_pmt_2_60
+       ,sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=90  then rp.total_debt end) as total_debt_pmt_2_90
+
+       ,sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=0   then rp.total_debt end)as total_debt_pmt_3_0,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=7   then rp.total_debt end) as total_debt_pmt_3_7,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=30  then rp.total_debt end) as total_debt_pmt_3_30,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=60  then rp.total_debt end) as total_debt_pmt_3_60,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=90  then rp.total_debt end) as total_debt_pmt_3_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=0   then rp.total_debt end) as total_debt_pmt_4_0,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=7   then rp.total_debt end) as total_debt_pmt_4_7,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=30  then rp.total_debt end) as total_debt_pmt_4_30,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=60  then rp.total_debt end) as total_debt_pmt_4_60,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=90  then rp.total_debt end) as total_debt_pmt_4_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=0   then rp.total_debt end) as total_debt_pmt_5_0,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=7   then rp.total_debt end) as total_debt_pmt_5_7,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=30  then rp.total_debt end) as total_debt_pmt_5_30,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=60  then rp.total_debt end) as total_debt_pmt_5_60,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=90  then rp.total_debt end) as total_debt_pmt_5_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=0   then rp.total_debt end) as total_debt_pmt_6_0,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=7   then rp.total_debt end) as total_debt_pmt_6_7,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=30  then rp.total_debt end) as total_debt_pmt_6_30,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=60  then rp.total_debt end) as total_debt_pmt_6_60,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=90  then rp.total_debt end) as total_debt_pmt_6_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=0   then rp.total_debt end) as total_debt_pmt_7_0,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=7   then rp.total_debt end) as total_debt_pmt_7_7,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=30  then rp.total_debt end) as total_debt_pmt_7_30,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=60  then rp.total_debt end) as total_debt_pmt_7_60,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=90  then rp.total_debt end) as total_debt_pmt_7_90,
+       -----------
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=0   then rp.total_debt_max end) as max_debt_used_pmt_1_0,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=1   then rp.total_debt_max end) as max_debt_used_pmt_1_1,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=7   then rp.total_debt_max end) as max_debt_used_pmt_1_7,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=15  then rp.total_debt_max end) as max_debt_used_pmt_1_15,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=16  then rp.total_debt_max end) as max_debt_used_pmt_1_16,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=30  then rp.total_debt_max end) as max_debt_used_pmt_1_30,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=60  then rp.total_debt_max end) as max_debt_used_pmt_1_60,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=90  then rp.total_debt_max end) as max_debt_used_pmt_1_90,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt=0     then rp.total_debt_max end) as max_debt_used_pmt_1_0_old,
+       --
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=0   then rp.total_debt_max end)  as max_debt_used_pmt_2_0,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=7   then rp.total_debt_max end) as max_debt_used_pmt_2_7,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=30  then rp.total_debt_max end) as max_debt_used_pmt_2_30,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=60  then rp.total_debt_max end) as max_debt_used_pmt_2_60,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=90  then rp.total_debt_max end) as max_debt_used_pmt_2_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=0   then rp.total_debt_max end)  as max_debt_used_pmt_3_0,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=7   then rp.total_debt_max end) as max_debt_used_pmt_3_7,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=30  then rp.total_debt_max end) as max_debt_used_pmt_3_30,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=60  then rp.total_debt_max end) as max_debt_used_pmt_3_60,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=90  then rp.total_debt_max end) as max_debt_used_pmt_3_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=0   then rp.total_debt_max end)  as max_debt_used_pmt_4_0,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=7   then rp.total_debt_max end) as max_debt_used_pmt_4_7,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=30  then rp.total_debt_max end) as max_debt_used_pmt_4_30,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=60  then rp.total_debt_max end) as max_debt_used_pmt_4_60,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=90  then rp.total_debt_max end) as max_debt_used_pmt_4_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=0   then rp.total_debt_max end)  as max_debt_used_pmt_5_0,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=7   then rp.total_debt_max end) as max_debt_used_pmt_5_7,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=30  then rp.total_debt_max end) as max_debt_used_pmt_5_30,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=60  then rp.total_debt_max end) as max_debt_used_pmt_5_60,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=90  then rp.total_debt_max end) as max_debt_used_pmt_5_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=0   then rp.total_debt_max end)  as max_debt_used_pmt_6_0,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=7   then rp.total_debt_max end) as max_debt_used_pmt_6_7,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=30  then rp.total_debt_max end) as max_debt_used_pmt_6_30,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=60  then rp.total_debt_max end) as max_debt_used_pmt_6_60,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=90  then rp.total_debt_max end) as max_debt_used_pmt_6_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=0   then rp.total_debt_max end)  as max_debt_used_pmt_7_0,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=7   then rp.total_debt_max end) as max_debt_used_pmt_7_7,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=30  then rp.total_debt_max end) as max_debt_used_pmt_7_30,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=60  then rp.total_debt_max end) as max_debt_used_pmt_7_60,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=90  then rp.total_debt_max end) as max_debt_used_pmt_7_90,
+       -----------
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=0   then rp.delinq_days end)   as delinq_days_pmt_1_0,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=1   then rp.delinq_days end)  as delinq_days_pmt_1_1,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=7   then rp.delinq_days end)  as delinq_days_pmt_1_7,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=15  then rp.delinq_days end) as delinq_days_pmt_1_15,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=16  then rp.delinq_days end) as delinq_days_pmt_1_16,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=30  then rp.delinq_days end) as delinq_days_pmt_1_30,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=60  then rp.delinq_days end) as delinq_days_pmt_1_60,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=90  then rp.delinq_days end) as delinq_days_pmt_1_90,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt=0     then rp.delinq_days end) as delinq_days_pmt_1_0_old,
+       --
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=0   then rp.delinq_days end)  as delinq_days_pmt_2_0,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=7   then rp.delinq_days end) as delinq_days_pmt_2_7,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=30  then rp.delinq_days end) as delinq_days_pmt_2_30,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=60  then rp.delinq_days end) as delinq_days_pmt_2_60,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=90  then rp.delinq_days end) as delinq_days_pmt_2_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=0   then rp.delinq_days end)  as delinq_days_pmt_3_0,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=7   then rp.delinq_days end) as delinq_days_pmt_3_7,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=30  then rp.delinq_days end) as delinq_days_pmt_3_30,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=60  then rp.delinq_days end) as delinq_days_pmt_3_60,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=90  then rp.delinq_days end) as delinq_days_pmt_3_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=0   then rp.delinq_days end)  as delinq_days_pmt_4_0,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=7   then rp.delinq_days end) as delinq_days_pmt_4_7,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=30  then rp.delinq_days end) as delinq_days_pmt_4_30,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=60  then rp.delinq_days end) as delinq_days_pmt_4_60,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=90  then rp.delinq_days end) as delinq_days_pmt_4_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=0   then rp.delinq_days end)  as delinq_days_pmt_5_0,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=7   then rp.delinq_days end) as delinq_days_pmt_5_7,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=30  then rp.delinq_days end) as delinq_days_pmt_5_30,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=60  then rp.delinq_days end) as delinq_days_pmt_5_60,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=90  then rp.delinq_days end) as delinq_days_pmt_5_90,
+
+       --
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=0   then rp.delinq_days end)  as delinq_days_pmt_6_0,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=7   then rp.delinq_days end) as delinq_days_pmt_6_7,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=30  then rp.delinq_days end) as delinq_days_pmt_6_30,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=60  then rp.delinq_days end) as delinq_days_pmt_6_60,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=90  then rp.delinq_days end) as delinq_days_pmt_6_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=0   then rp.delinq_days end)  as delinq_days_pmt_7_0,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=7   then rp.delinq_days end) as delinq_days_pmt_7_7,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=30  then rp.delinq_days end) as delinq_days_pmt_7_30,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=60  then rp.delinq_days end) as delinq_days_pmt_7_60,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=90  then rp.delinq_days end) as delinq_days_pmt_7_90,
+
+       max(case when rp.cnt_pmt_plan = 1 then rp.plan_date_x else null end) as plan_date_x_pmt_1,
+       max(case when rp.cnt_pmt_plan = 2 then rp.plan_date_x else null end) as plan_date_x_pmt_2,
+       max(case when rp.cnt_pmt_plan = 3 then rp.plan_date_x else null end) as plan_date_x_pmt_3,
+       max(case when rp.cnt_pmt_plan = 4 then rp.plan_date_x else null end) as plan_date_x_pmt_4,
+       max(case when rp.cnt_pmt_plan = 5 then rp.plan_date_x else null end) as plan_date_x_pmt_5,
+       max(case when rp.cnt_pmt_plan = 6 then rp.plan_date_x else null end) as plan_date_x_pmt_6,
+       max(case when rp.cnt_pmt_plan = 7 then rp.plan_date_x else null end) as plan_date_x_pmt_7,
+       --
+       max(case when rp.cnt_pmt_plan = 1 then rp.plan_date else null end) as plan_date_pmt_1,
+       max(case when rp.cnt_pmt_plan = 2 then rp.plan_date else null end) as plan_date_pmt_2,
+       max(case when rp.cnt_pmt_plan = 3 then rp.plan_date else null end) as plan_date_pmt_3,
+       max(case when rp.cnt_pmt_plan = 4 then rp.plan_date else null end) as plan_date_pmt_4,
+       max(case when rp.cnt_pmt_plan = 5 then rp.plan_date else null end) as plan_date_pmt_5,
+       max(case when rp.cnt_pmt_plan = 6 then rp.plan_date else null end) as plan_date_pmt_6,
+       max(case when rp.cnt_pmt_plan = 7 then rp.plan_date else null end) as plan_date_pmt_7,
+
+
+
+
+
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=0   then  rp.total_debt  end) as total_debt_x_pmt_1_0,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=1   then  rp.total_debt  end) as total_debt_x_pmt_1_1,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=7   then  rp.total_debt  end) as total_debt_x_pmt_1_7,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=15  then  rp.total_debt  end) as total_debt_x_pmt_1_15,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=16  then  rp.total_debt  end) as total_debt_x_pmt_1_16,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=30  then  rp.total_debt  end) as total_debt_x_pmt_1_30,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=60  then  rp.total_debt  end) as total_debt_x_pmt_1_60,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=90  then  rp.total_debt  end) as total_debt_x_pmt_1_90,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt=0     then  rp.total_debt  end) as total_debt_x_pmt_1_0_old,
+       --
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=0   then  rp.total_debt end) as total_debt_x_pmt_2_0,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=7   then  rp.total_debt end) as total_debt_x_pmt_2_7,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=30  then  rp.total_debt end) as total_debt_x_pmt_2_30,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=60  then  rp.total_debt end) as total_debt_x_pmt_2_60,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=90  then  rp.total_debt end) as total_debt_x_pmt_2_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=0   then  rp.total_debt end) as total_debt_x_pmt_3_0,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=7   then  rp.total_debt end) as total_debt_x_pmt_3_7,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=30  then  rp.total_debt end) as total_debt_x_pmt_3_30,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=60  then  rp.total_debt end) as total_debt_x_pmt_3_60,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=90  then  rp.total_debt end) as total_debt_x_pmt_3_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=0   then  rp.total_debt end) as total_debt_x_pmt_4_0,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=7   then  rp.total_debt end) as total_debt_x_pmt_4_7,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=30  then  rp.total_debt end) as total_debt_x_pmt_4_30,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=60  then  rp.total_debt end) as total_debt_x_pmt_4_60,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=90  then  rp.total_debt end) as total_debt_x_pmt_4_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=0   then  rp.total_debt end) as total_debt_x_pmt_5_0,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=7   then  rp.total_debt end) as total_debt_x_pmt_5_7,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=30  then  rp.total_debt end) as total_debt_x_pmt_5_30,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=60  then  rp.total_debt end) as total_debt_x_pmt_5_60,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=90  then  rp.total_debt end) as total_debt_x_pmt_5_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=0   then  rp.total_debt end) as total_debt_x_pmt_6_0,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=7   then  rp.total_debt end) as total_debt_x_pmt_6_7,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=30  then  rp.total_debt end) as total_debt_x_pmt_6_30,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=60  then  rp.total_debt end) as total_debt_x_pmt_6_60,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=90  then  rp.total_debt end) as total_debt_x_pmt_6_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=0   then  rp.total_debt end) as total_debt_x_pmt_7_0,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=7   then  rp.total_debt end) as total_debt_x_pmt_7_7,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=30  then  rp.total_debt end) as total_debt_x_pmt_7_30,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=60  then  rp.total_debt end) as total_debt_x_pmt_7_60,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=90  then  rp.total_debt end) as total_debt_x_pmt_7_90,
+       -----------
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=0   then  rp.total_debt_max  end) as max_debt_used_x_pmt_1_0,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=1   then  rp.total_debt_max  end) as max_debt_used_x_pmt_1_1,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=7   then  rp.total_debt_max  end) as max_debt_used_x_pmt_1_7,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=15  then  rp.total_debt_max  end) as max_debt_used_x_pmt_1_15,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=16  then  rp.total_debt_max  end) as max_debt_used_x_pmt_1_16,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=30  then  rp.total_debt_max  end) as max_debt_used_x_pmt_1_30,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=60  then  rp.total_debt_max  end) as max_debt_used_x_pmt_1_60,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=90  then  rp.total_debt_max  end) as max_debt_used_x_pmt_1_90,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt=0     then  rp.total_debt_max  end) as max_debt_used_x_pmt_1_0_old,
+       --
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=0   then  rp.total_debt_max  end) as max_debt_used_x_pmt_2_0,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=7   then  rp.total_debt_max  end) as max_debt_used_x_pmt_2_7,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=30  then  rp.total_debt_max  end) as max_debt_used_x_pmt_2_30,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=60  then  rp.total_debt_max  end) as max_debt_used_x_pmt_2_60,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=90  then  rp.total_debt_max  end) as max_debt_used_x_pmt_2_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=0   then  rp.total_debt_max  end) as max_debt_used_x_pmt_3_0,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=7   then  rp.total_debt_max  end) as max_debt_used_x_pmt_3_7,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=30  then  rp.total_debt_max  end) as max_debt_used_x_pmt_3_30,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=60  then  rp.total_debt_max  end) as max_debt_used_x_pmt_3_60,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=90  then  rp.total_debt_max  end) as max_debt_used_x_pmt_3_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=0   then  rp.total_debt_max  end) as max_debt_used_x_pmt_4_0,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=7   then  rp.total_debt_max  end) as max_debt_used_x_pmt_4_7,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=30  then  rp.total_debt_max  end) as max_debt_used_x_pmt_4_30,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=60  then  rp.total_debt_max  end) as max_debt_used_x_pmt_4_60,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=90  then  rp.total_debt_max  end) as max_debt_used_x_pmt_4_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=0   then  rp.total_debt_max  end) as max_debt_used_x_pmt_5_0,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=7   then  rp.total_debt_max  end) as max_debt_used_x_pmt_5_7,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=30  then  rp.total_debt_max  end) as max_debt_used_x_pmt_5_30,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=60  then  rp.total_debt_max  end) as max_debt_used_x_pmt_5_60,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=90  then  rp.total_debt_max  end) as max_debt_used_x_pmt_5_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=0   then  rp.total_debt_max  end) as max_debt_used_x_pmt_6_0,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=7   then  rp.total_debt_max  end) as max_debt_used_x_pmt_6_7,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=30  then  rp.total_debt_max  end) as max_debt_used_x_pmt_6_30,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=60  then  rp.total_debt_max  end) as max_debt_used_x_pmt_6_60,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=90  then  rp.total_debt_max  end) as max_debt_used_x_pmt_6_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=0   then  rp.total_debt_max  end) as max_debt_used_x_pmt_7_0,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=7   then  rp.total_debt_max  end) as max_debt_used_x_pmt_7_7,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=30  then  rp.total_debt_max  end) as max_debt_used_x_pmt_7_30,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=60  then  rp.total_debt_max  end) as max_debt_used_x_pmt_7_60,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=90  then  rp.total_debt_max  end) as max_debt_used_x_pmt_7_90,
+       -----------
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=0   then  rp.delinq_days  end) as delinq_days_x_pmt_1_0,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=1   then  rp.delinq_days  end) as delinq_days_x_pmt_1_1,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=7   then  rp.delinq_days  end) as delinq_days_x_pmt_1_7,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=15  then  rp.delinq_days  end) as delinq_days_x_pmt_1_15,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=16  then  rp.delinq_days  end) as delinq_days_x_pmt_1_16,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=30  then  rp.delinq_days  end) as delinq_days_x_pmt_1_30,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=60  then  rp.delinq_days  end) as delinq_days_x_pmt_1_60,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt_x=90  then  rp.delinq_days  end) as delinq_days_x_pmt_1_90,
+       sum(case when rp.cnt_pmt_plan = 1 and rp.diff_dt=0     then  rp.delinq_days  end) as delinq_days_x_pmt_1_0_old,
+       --
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=0   then  rp.delinq_days  end) as delinq_days_x_pmt_2_0,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=7   then  rp.delinq_days  end) as delinq_days_x_pmt_2_7,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=30  then  rp.delinq_days  end) as delinq_days_x_pmt_2_30,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=60  then  rp.delinq_days  end) as delinq_days_x_pmt_2_60,
+       sum(case when rp.cnt_pmt_plan = 2 and rp.diff_dt_x=90  then  rp.delinq_days  end) as delinq_days_x_pmt_2_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=0   then  rp.delinq_days  end) as delinq_days_x_pmt_3_0,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=7   then  rp.delinq_days  end) as delinq_days_x_pmt_3_7,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=30  then  rp.delinq_days  end) as delinq_days_x_pmt_3_30,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=60  then  rp.delinq_days  end) as delinq_days_x_pmt_3_60,
+       sum(case when rp.cnt_pmt_plan = 3 and rp.diff_dt_x=90  then  rp.delinq_days  end) as delinq_days_x_pmt_3_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=0   then  rp.delinq_days  end) as delinq_days_x_pmt_4_0,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=7   then  rp.delinq_days  end) as delinq_days_x_pmt_4_7,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=30  then  rp.delinq_days  end) as delinq_days_x_pmt_4_30,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=60  then  rp.delinq_days  end) as delinq_days_x_pmt_4_60,
+       sum(case when rp.cnt_pmt_plan = 4 and rp.diff_dt_x=90  then  rp.delinq_days  end) as delinq_days_x_pmt_4_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=0   then  rp.delinq_days  end) as delinq_days_x_pmt_5_0,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=7   then  rp.delinq_days  end) as delinq_days_x_pmt_5_7,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=30  then  rp.delinq_days  end) as delinq_days_x_pmt_5_30,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=60  then  rp.delinq_days  end) as delinq_days_x_pmt_5_60,
+       sum(case when rp.cnt_pmt_plan = 5 and rp.diff_dt_x=90  then  rp.delinq_days  end) as delinq_days_x_pmt_5_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=0   then  rp.delinq_days  end) as delinq_days_x_pmt_6_0,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=7   then  rp.delinq_days  end) as delinq_days_x_pmt_6_7,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=30  then  rp.delinq_days  end) as delinq_days_x_pmt_6_30,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=60  then  rp.delinq_days  end) as delinq_days_x_pmt_6_60,
+       sum(case when rp.cnt_pmt_plan = 6 and rp.diff_dt_x=90  then  rp.delinq_days  end) as delinq_days_x_pmt_6_90,
+       --
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=0   then  rp.delinq_days  end) as delinq_days_x_pmt_7_0,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=7   then  rp.delinq_days  end) as delinq_days_x_pmt_7_7,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=30  then  rp.delinq_days  end) as delinq_days_x_pmt_7_30,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=60  then  rp.delinq_days  end) as delinq_days_x_pmt_7_60,
+       sum(case when rp.cnt_pmt_plan = 7 and rp.diff_dt_x=90  then  rp.delinq_days  end) as delinq_days_x_pmt_7_90
+
+
+
+
+from M_RBO_CONTRACT_DATA_PMT_BUFF1 rp
+--where rp.rbo_contract_id=237021069692
+group by rp.rbo_contract_id;
+

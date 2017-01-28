@@ -1,0 +1,38 @@
+﻿create materialized view U1.M_KASPIKZ_USER_CHANGE_LOGIN
+build deferred
+refresh complete on demand
+as
+with dat as (select kl.*, level, rownum,
+                    case when level = 1 then rownum else rownum-level + 1 end as tt
+              from (select kl.login_val,
+                           kl.change_date,
+                           kl.is_disabled,
+                           kl.next_change_date,
+                           kl.user_id,
+                           kl.id,
+                           kl.login_val_prev,
+                           kl.login_val_next,
+                           kl.login_val_prev||' '||kl2.user_id as prev,
+                           kl.login_val_next||' '||kl.user_id as next,
+                           nvl(kl.login_change_date,sysdate) as login_change_date
+                      from u1.M_KASPIKZ_LOGINS kl
+                      left join u1.M_KASPIKZ_LOGINS kl2 on kl.login_val_prev = kl2.login_val_next and nvl(kl.login_change_date,sysdate) > kl2.login_change_date
+                   ) kl
+           connect by prior prev = next
+           start with kl.login_val_next is null),
+  dat1 as (select login_val_prev,
+                  login_val_next,
+                  login_change_date as login_date_end,
+                  user_id as user_id_fact,
+                  min(user_id) keep (dense_rank first order by is_disabled) over (partition by tt) as user_id_calc
+             from dat)
+select login_val_prev as login_val,
+       login_val_next,
+       lag(login_date_end) over (partition by user_id_calc order by login_date_end) as login_date_begin,
+       login_date_end - 1/24/60/60 as login_date_end,
+       user_id_fact,
+       user_id_calc
+ from dat1;
+grant select on U1.M_KASPIKZ_USER_CHANGE_LOGIN to LOADDB;
+
+

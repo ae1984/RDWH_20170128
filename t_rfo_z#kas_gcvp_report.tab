@@ -1,0 +1,96 @@
+﻿create table U1.T_RFO_Z#KAS_GCVP_REPORT
+(
+  id                 NUMBER not null,
+  c_cik              VARCHAR2(16 CHAR),
+  c_rnn              VARCHAR2(12 CHAR),
+  c_surname          VARCHAR2(50 CHAR),
+  c_name             VARCHAR2(25 CHAR),
+  c_middlename       VARCHAR2(35 CHAR),
+  c_dateofbirth      DATE,
+  c_statement_id     NUMBER(10),
+  c_statement_date   DATE,
+  c_query_type       NUMBER(2),
+  c_avg_gcvp_payment NUMBER(17,2),
+  c_error_code       NUMBER(2),
+  c_query_id         NUMBER(10),
+  c_payments_arr     NUMBER,
+  c_sal_stable       NUMBER(2),
+  c_sal              NUMBER(17,2),
+  c_payment_qty      NUMBER(10),
+  c_iin              VARCHAR2(20 CHAR),
+  c_gcvp_report_ref  NUMBER,
+  sn                 NUMBER,
+  su                 NUMBER,
+  c_add_prop         NUMBER,
+  x_client_rnn       VARCHAR2(36),
+  x_client_iin       VARCHAR2(60)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RFO_Z#KAS_GCVP_REPORT
+  is 'KAS. Отчет из ГЦВП';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_cik
+  is 'СИК';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_rnn
+  is 'РНН';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_surname
+  is 'Фамилия';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_name
+  is 'Имя';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_middlename
+  is 'Отчество';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_dateofbirth
+  is 'Дата рождения';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_statement_id
+  is '№ заявления';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_statement_date
+  is 'Дата заявления';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_query_type
+  is 'ГЦВП Тип запроса';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_avg_gcvp_payment
+  is 'Средне месячная сумма начислений';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_error_code
+  is 'Код ошибки';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_query_id
+  is 'Уникальный номер запроса';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_payments_arr
+  is 'Ежемесячные отчисления(COLLECTION в Z#KAS_GCVP_PAYMENT)';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_sal_stable
+  is 'Стабильность З/П';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_sal
+  is 'Доход заявителя';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_payment_qty
+  is 'Количество  перечислений';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_iin
+  is 'ИИН';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_gcvp_report_ref
+  is 'Ссылка на оригинал ГЦВП(FK на Z#KAS_GCVP_REPORT)';
+comment on column U1.T_RFO_Z#KAS_GCVP_REPORT.c_add_prop
+  is 'Дополнительные свойства(COLLECTION в Z#PROPERTIES)';
+create unique index U1.T_RFO_Z#KAS_GCVP_REPORT_IND1 on U1.T_RFO_Z#KAS_GCVP_REPORT (ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#KAS_GCVP_REPORT
+  add constraint T_RFO_Z#KAS_GCVP_REPORT_PK primary key (ID);
+grant select on U1.T_RFO_Z#KAS_GCVP_REPORT to LOADDB;
+

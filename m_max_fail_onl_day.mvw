@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_MAX_FAIL_ONL_DAY
+refresh force on demand
+as
+select /*+parallel(1)*/ max(CNT_DATE_FAIL_ONL) CNT_DATE_FAIL_ONL, rfo_client_id
+from (
+select
+               t.rfo_client_id
+               ,count(trunc(t.date_create)) as CNT_DATE_FAIL_ONL
+          from u1.M_FOLDER_CON_CANCEL_ONLINE_1 t
+          where t.date_create>=trunc(sysdate) - 30 and upper(t.status_name) like '%ОТКАЗ%'
+          group by trunc(t.date_create), t.rfo_client_id
+          )
+
+  group by rfo_client_id;
+grant select on U1.M_MAX_FAIL_ONL_DAY to LOADDB;
+grant select on U1.M_MAX_FAIL_ONL_DAY to LOAD_MO;
+
+

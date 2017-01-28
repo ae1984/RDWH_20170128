@@ -1,0 +1,129 @@
+﻿create materialized view U1.M_CRED_PREPARE
+build deferred
+refresh complete on demand
+as
+select/*+parallel(1)*/ *
+from (
+select cd.id as con_num,
+       cd.c_client_ref as client_id,
+       fld.id as folder_id,
+       cd.c_info_cred#summa_cred cred_sum,
+       cd.c_date_begin,
+       case
+         when cd.c_info_cred#summa_cred > 0 and
+              cd.c_info_cred#rate_prc is not null and
+              cd.c_info_cred#rate_prc != 0 and
+              cd.c_info_cred#term_cred#quant > 0 then
+          round(cd.c_info_cred#summa_cred /
+                (1 - 1 / power((1 + cd.c_info_cred#rate_prc / 1200),
+                               cd.c_info_cred#term_cred#quant)) *
+                cd.c_info_cred#rate_prc / 1200,
+                0)
+       end as mon_pay
+  from u1.V_RFO_Z#CREDIT_DOG cd
+  join u1.V_RFO_Z#FDOC fd
+    on fd.id = cd.id
+  join u1.V_RFO_Z#STATUS_DOG sd
+    on sd.id = fd.c_status_doc
+  join u1.V_RFO_Z#FDOC fd
+    on fd.id = cd.id
+  join u1.V_RFO_Z#RDOC rd
+    on rd.c_doc = fd.id
+  join u1.V_RFO_Z#FOLDERS fld
+    on fld.c_docs = rd.collection_id
+  join V_RFO_Z#CM_CHECKPOINT cmch
+    on cmch.ID = fld.ID
+  join u1.V_RFO_Z#CM_POINT cmpt
+    on cmpt.ID = cmch.C_POINT
+ where cd.c_date_begin > trunc(sysdate) - 4
+   and sd.c_code = 'PREPARE'
+   and cmpt.c_code not like '%CANCEL%'
+   and cmpt.c_code not like '%FAILED%'
+
+union all
+
+select  pd.id as con_num,
+                          pd.c_client_ref as client_id,
+                          fld.id as folder_id,
+                          pd.c_credit_limit as cred_sum,
+                          pd.c_date_begin,
+                            case
+                            when  pd.c_credit_limit > 0 then
+                             case
+                                 when upper(ud.c_name) like '%ПРОСТАЯ КАРТА%' or upper(ud.c_name) like '%КАРТА СОТРУДНИКА%' then
+                                    decode(upper(ud.c_name),'ПРОСТАЯ КАРТА 6/50',10000,
+                                                        'ПРОСТАЯ КАРТА 1/50',6000,
+                                                        'ПРОСТАЯ КАРТА 1/100',12000,
+                                                        'ПРОСТАЯ КАРТА 2/100',7700,
+                                                        'ПРОСТАЯ КАРТА 1/150',17500,
+                                                        'ПРОСТАЯ КАРТА 2/150',11300,
+                                                        'ПРОСТАЯ КАРТА (A)',10000,
+                                                        'ПРОСТАЯ КАРТА (B)',10000,
+                                                        'ПРОСТАЯ КАРТА (C)',10000,
+                                                        'ПРОСТАЯ КАРТА 1/200',23500,
+                                                        'ПРОСТАЯ КАРТА 2/200',15000,
+                                                        'ПРОСТАЯ КАРТА 1/250',29000,
+                                                        'ПРОСТАЯ КАРТА 2/250',18500,
+                                                        'ПРОСТАЯ КАРТА 1/300',34500,
+                                                        'ПРОСТАЯ КАРТА 2/300',22000,
+                                                        'ПРОСТАЯ КАРТА 2/350',25000,
+                                                        'ПРОСТАЯ КАРТА 2/400',29000,
+                                                        'ПРОСТАЯ КАРТА 2/450',32000,
+                                                        'ПРОСТАЯ КАРТА 2/500',36000,
+                                                        'КАРТА СОТРУДНИКА 6/50',10000,
+                                                        'КАРТА СОТРУДНИКА 1/50',6000,
+                                                        'КАРТА СОТРУДНИКА 1/100',12000,
+                                                        'КАРТА СОТРУДНИКА 2/100',7700,
+                                                        'КАРТА СОТРУДНИКА 1/150',17500,
+                                                        'КАРТА СОТРУДНИКА 2/150',11300,
+                                                        'КАРТА СОТРУДНИКА (A)',10000,
+                                                        'КАРТА СОТРУДНИКА (B)',10000,
+                                                        'КАРТА СОТРУДНИКА (C)',10000,
+                                                        'КАРТА СОТРУДНИКА 1/200',23500,
+                                                        'КАРТА СОТРУДНИКА 2/200',15000,
+                                                        'КАРТА СОТРУДНИКА 1/250',29000,
+                                                        'КАРТА СОТРУДНИКА 2/250',18500,
+                                                        'КАРТА СОТРУДНИКА 1/300',34500,
+                                                        'КАРТА СОТРУДНИКА 2/300',22000,
+                                                        'КАРТА СОТРУДНИКА 2/350',25000,
+                                                        'КАРТА СОТРУДНИКА 2/400',29000,
+                                                        'КАРТА СОТРУДНИКА 2/450',32000,
+                                                        'КАРТА СОТРУДНИКА 2/500',36000
+                                                         ) else
+                                    round(pd.c_credit_limit * 0.07, 0)
+                                        end
+                               end as mon_pay
+from  u1.V_RFO_Z#KAS_PC_DOG pd
+join  u1.V_RFO_Z#KAS_CARD_SCHEME cs on cs.id = pd.c_pc_scheme
+join  u1.V_RFO_Z#KAS_UNIVERSAL_D ud on  pd.c_tariff_plan = ud.id
+join  u1.V_RFO_Z#FDOC fd on fd.id = pd.id
+join  u1.V_RFO_Z#RDOC rd on rd.c_doc = fd.id
+join  u1.V_RFO_Z#FOLDERS fld on fld.c_docs=rd.collection_id
+join  V_RFO_Z#CM_CHECKPOINT cmch on cmch.ID=fld.ID
+join u1.V_RFO_Z#CM_POINT cmpt on cmpt.ID=cmch.C_POINT
+join  u1.V_RFO_Z#BUS_PROCESS bp on bp.id = fld.c_business
+join  u1.V_RFO_Z#STATUS_DOG sdc on sdc.id=fd.c_status_doc
+where pd.c_date_begin > trunc(sysdate)-4
+  and sdc.c_code='PREPARE'
+  and cmpt.c_code not like '%CANCEL%'
+  and cmpt.c_code not like '%FAILED%'
+  and bp.c_code in (
+              'OPEN_CRED_PRIV_PC',
+              'KAS_AUTO_CRED_PRIV_PC',
+              'KAS_CREDIT_CASH_PRIV_PC',
+              'SET_REVOLV',
+              'KAS_OPEN_CRED_PRIV_MIN',
+              'KAS_AUTO_CRED_PRIV',
+              'OPEN_PC',
+              'KAS_CREDIT_CASH_PRIV',
+              'OPEN_CRED_PRIV',
+              'OPEN_TRANSH',
+              'OPEN_CRED_PRIV_CRL',
+              'OPEN_CRED_PRIV_OLD',
+              'ONLINE_CRED'
+             )
+);
+grant select on U1.M_CRED_PREPARE to LOADDB;
+grant select on U1.M_CRED_PREPARE to LOAD_MO;
+
+

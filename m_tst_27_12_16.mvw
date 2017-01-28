@@ -1,0 +1,43 @@
+﻿create materialized view U1.M_TST_27_12_16
+build deferred
+refresh force on demand
+as
+select  t.deal_number,
+         case when t.prod_avto='AVTO' then 'A'
+         when t.prod_avto like '%КРЕДИТ НА ПОКУПКУ (СТАНДАРТ%'then 'POS'
+         when t.prod_avto like '%АВТОЗАПЧАСТИ%' then 'POS'
+         when t.prod_avto like '%ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ%' then 'POS'
+         when t.prod_avto like '%ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ%' then 'POS'
+         else 'M' end as Prod,
+ t.rep_date,
+ case when nvl(t.delinq_days,0)>750 then 751 else nvl(t.delinq_days,0) end as delinq,
+ t.IS_ON_BALANCE,
+ t.prod_avto as product_full,
+ t.is_on_balance_prev,
+ (nvl(t.TOTAL_DEBT,0) + nvl(pd.TOTAL_DISCOUNT,0)) as Total_Debt,
+ f.optim_type as opt_type,
+ case
+  when t.is_on_balance='Y' and t.is_on_balance_prev = 'Y' or t.is_on_balance_prev is null then 0
+  when t.is_on_balance='W' and t.is_on_balance_prev = 'W' then 0
+  when t.is_on_balance='W' and t.is_on_balance_prev = 'Y' then -1
+  when t.is_on_balance='Y' and t.is_on_balance_prev = 'W' then 1
+  when t.is_on_balance='I' then 0 end as is_written_during_day,
+    Case when nvl(t.DELINQ_DAYS,0) < 8 then '000 – 007'
+ when nvl(t.DELINQ_DAYS,0) > 7 and nvl(t.DELINQ_DAYS,0) <31 then '008 – 030'     when nvl(t.DELINQ_DAYS,0) > 30 and nvl(t.DELINQ_DAYS,0) < 61 then '031 – 060'    when nvl(t.DELINQ_DAYS,0) > 60 and nvl(t.DELINQ_DAYS,0) < 91 then '061 - 090'
+ when nvl(t.DELINQ_DAYS,0) > 90 and nvl(t.DELINQ_DAYS,0) < 121 then '091 - 120'  when nvl(t.DELINQ_DAYS,0) > 120 and nvl(t.DELINQ_DAYS,0) < 151 then '121 - 150'  when nvl(t.DELINQ_DAYS,0) > 150 and nvl(t.DELINQ_DAYS,0) < 181 then '151 - 180'                         when nvl(t.DELINQ_DAYS,0) > 180 and nvl(t.DELINQ_DAYS,0) < 211 then '181 - 210'
+ when nvl(t.DELINQ_DAYS,0) > 210 and nvl(t.DELINQ_DAYS,0) < 241 then '211 - 240' when nvl(t.DELINQ_DAYS,0) > 240 and nvl(t.DELINQ_DAYS,0) < 271 then '241 - 270'  when nvl(t.DELINQ_DAYS,0) > 270 and nvl(t.DELINQ_DAYS,0) < 301 then '271 - 300'                         when nvl(t.DELINQ_DAYS,0) > 300 and nvl(t.DELINQ_DAYS,0) < 331 then '301 – 330'
+ when nvl(t.DELINQ_DAYS,0) > 330 and nvl(t.DELINQ_DAYS,0) < 361 then '331 - 360' when nvl(t.DELINQ_DAYS,0) > 360 and nvl(t.DELINQ_DAYS,0) < 391 then '361 - 390'  when nvl(t.DELINQ_DAYS,0) > 390 and nvl(t.DELINQ_DAYS,0) < 421 then '391 - 420'                         when nvl(t.DELINQ_DAYS,0) > 420 and nvl(t.DELINQ_DAYS,0) < 451 then '421 - 450'
+ when nvl(t.DELINQ_DAYS,0) > 450 and nvl(t.DELINQ_DAYS,0) < 481 then '451 - 480' when nvl(t.DELINQ_DAYS,0) > 480 and nvl(t.DELINQ_DAYS,0) < 511 then '481 - 510'  when nvl(t.DELINQ_DAYS,0) > 510 and nvl(t.DELINQ_DAYS,0) < 541 then '511 - 540'                         when nvl(t.DELINQ_DAYS,0) > 540 and nvl(t.DELINQ_DAYS,0) < 571 then '541 - 570'
+ when nvl(t.DELINQ_DAYS,0) > 570 and nvl(t.DELINQ_DAYS,0) < 601 then '571 - 600' when nvl(t.DELINQ_DAYS,0) > 600 and nvl(t.DELINQ_DAYS,0) < 631 then '601 - 630'  when nvl(t.DELINQ_DAYS,0) > 630 and nvl(t.DELINQ_DAYS,0) < 661 then '631 - 660'                          when nvl(t.DELINQ_DAYS,0) > 660 and nvl(t.DELINQ_DAYS,0) < 691 then '661 - 690'
+ when nvl(t.DELINQ_DAYS,0) > 690 and nvl(t.DELINQ_DAYS,0) < 721 then '691 - 720'
+    when nvl(t.DELINQ_DAYS,0) > 720 and nvl(t.DELINQ_DAYS,0) < 751 then '721 - 750'
+      when nvl(t.DELINQ_DAYS,0) > 750 then '750 <' end as long_delinq
+
+ from u1.dwh_port t
+
+ left join RISK_RKATE.M_CONTRACT_OPTIM_FIX f on f.contract_number = t.deal_number and f.rep_date = to_date('29-04-2016','dd-mm-yyyy')
+ left join u1.m_contract_port_discount pd on pd.rep_date = t.rep_date and pd.CONTRACT_NUMBER = t.deal_number
+ where t.rep_date = '27 dec 2016' and t.IS_ON_BALANCE<> 'I';
+grant select on U1.M_TST_27_12_16 to LOADDB;
+
+

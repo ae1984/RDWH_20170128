@@ -1,0 +1,40 @@
+﻿create table U1.NT_KEY_PARAM_HIST
+(
+  sdt         DATE,
+  object_name VARCHAR2(50),
+  param_name  VARCHAR2(50),
+  val         NUMBER,
+  dt          DATE
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on column U1.NT_KEY_PARAM_HIST.sdt
+  is 'дата создания записи';
+comment on column U1.NT_KEY_PARAM_HIST.dt
+  is 'дата из объекта';
+create index U1.IDX_KEY_PARAM_HIST_1 on U1.NT_KEY_PARAM_HIST (OBJECT_NAME, PARAM_NAME, SDT)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.NT_KEY_PARAM_HIST to LOADDB;
+

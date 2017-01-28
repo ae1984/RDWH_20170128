@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_CLIENT_BARCODE
+refresh force on demand
+as
+select /*+ parallel 30 */
+       t.client_id,
+       min(t.yyyy_mm_num) yyyy_mm_num_start,
+       max(t.yyyy_mm_num) yyyy_mm_num_end,
+       min(t.text_yyyy_mm) keep (dense_rank first order by t.yyyy_mm_num) text_yyyy_mm_start,
+       max(t.text_yyyy_mm) keep (dense_rank last order by t.yyyy_mm_num) text_yyyy_mm_end,
+       listagg(t.pmt_h, '') within group (order by t.yyyy_mm_num) as pmt_code,
+       listagg(t.pmt_h_new, '') within group (order by t.yyyy_mm_num) as pmt_code_new,
+       listagg(t.opt_h, '') within group (order by t.yyyy_mm_num) as opt_code,
+       listagg(t.pmt_up_h, '') within group (order by t.yyyy_mm_num) as pmt_up_code,
+       listagg(t.pmt_full_h, '') within group (order by t.yyyy_mm_num) as pmt_full_code,
+       listagg(t.pmt_full_h_new, '') within group (order by t.yyyy_mm_num) as pmt_full_code_new,
+       listagg(t.pmt_full_h_3, '') within group (order by t.yyyy_mm_num) as pmt_full_code_3
+from M_CLIENT_HISTORY_BARCODE_PRE1 t
+group by t.client_id;
+grant select on U1.M_CLIENT_BARCODE to LOADDB;
+grant select on U1.M_CLIENT_BARCODE to LOADER;
+
+

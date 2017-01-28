@@ -1,0 +1,70 @@
+﻿create materialized view U1.M_TMP_DASHA_FOLDER_RFO_GCVP
+refresh force on demand
+as
+select /*+ parallel 10 */
+       f.folder_date_create_mi,
+       f.folder_id,
+       f.rfo_client_id,
+       f.is_credit_issued,
+
+       gcvp.gcvp_rep_id,
+       gcvp.gcvp_find_type,
+       gcvp.max_gcvp_rep_date,
+
+       gg.salary,
+       gg.avg_gcvp_payment,
+       gg.pmts_count_from_rep
+
+
+from M_FOLDER_CON_CANCEL f
+
+left join (select tt.folder_id,
+                  coalesce(tt.gcvp_rep_id_1, tt.gcvp_rep_id_2, tt.gcvp_rep_id_3) as gcvp_rep_id,
+                  case when tt.gcvp_rep_id_1 is not null then 1
+                       when tt.gcvp_rep_id_2 is not null then 2
+                       when tt.gcvp_rep_id_3 is not null then 3
+                  else 0 end as gcvp_find_type,
+
+                  case when tt.gcvp_rep_id_1 is not null then tt.rep_date_1
+                       when tt.gcvp_rep_id_2 is not null then tt.rep_date_2
+                       when tt.gcvp_rep_id_3 is not null then tt.rep_date_3
+                  end as max_gcvp_rep_date
+
+           from (select t.folder_id,
+
+                        max(g.gcvp_rep_id) as gcvp_rep_id_1,
+                        max(g.rep_date) as rep_date_1,
+
+                        max(g2.gcvp_rep_id) keep (dense_rank last order by g2.rep_date) as gcvp_rep_id_2,
+                        max(g3.gcvp_rep_id) keep (dense_rank last order by g3.rep_date) as gcvp_rep_id_3,
+
+                        max(g2.rep_date) as rep_date_2,
+                        max(g3.rep_date) as rep_date_3
+
+                  from M_FOLDER_CON_CANCEL t
+                  --??????? ???? ??????????? ? ?????
+                  left join v_gcvp_report g on g.folder_id = t.folder_id
+                  --???? ???, ??????? ????????? ?? ??? ? ???? ??????
+                  left join v_gcvp_report g2 on g2.client_iin = t.iin and
+                                                trunc(g2.rep_date) = trunc(t.folder_date_create_mi)
+                  --???? ???, ??????? ????????? ?? ??? ? ?? ????????? 30 ????
+                  left join v_gcvp_report g3 on g3.client_iin = t.iin and
+                                                trunc(g3.rep_date) >= trunc(t.folder_date_create_mi) - 30
+
+                  where t.folder_date_create_mi >= to_date('01012013', 'ddmmyyyy')
+
+                  group by t.folder_id) tt) gcvp on gcvp.folder_id = f.folder_id
+
+left join (select gg2.gcvp_rep_id,
+                  max(gg2.rep_date) as rep_date,
+                  max(gg2.salary) as salary,
+                  max(gg2.avg_gcvp_payment) as avg_gcvp_payment,
+                  max(gg2.pmts_count_from_rep) as pmts_count_from_rep
+           from v_gcvp_report gg2
+           group by gg2.gcvp_rep_id) gg on gg.gcvp_rep_id = gcvp.gcvp_rep_id
+
+where f.folder_date_create_mi >= to_date('01012013', 'ddmmyyyy');
+grant select on U1.M_TMP_DASHA_FOLDER_RFO_GCVP to LOADDB;
+grant select on U1.M_TMP_DASHA_FOLDER_RFO_GCVP to LOADER;
+
+

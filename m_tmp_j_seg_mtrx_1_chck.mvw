@@ -1,0 +1,80 @@
+﻿create materialized view U1.M_TMP_J_SEG_MTRX_1_CHCK
+refresh complete on demand
+as
+select t.product_type,
+       t.is_credit_issued, -- для расчета насколько вырастут продажи смотреть 0
+        case when t.cancel_middle_office is not null and -- только отказ МО -- для расчета насколько вырастут продажи
+           t.cancel_prescoring is null and
+           t.cancel_manager is null and
+           t.cancel_client is null and
+           t.cancel_cpr_aa is null and
+           t.cancel_verificator is null and
+           t.cancel_controller is null and
+           t.cancel_undefined is null then 1 else 0 end as is_only_mo_cancel,
+--       coalesce(max(cm.is_client_gets_credit),0) as is_client_gets_credit_in_mon, -- получил ли клиент кредит в этом месяце
+       coalesce(cm.is_client_gets_credit,0) as is_client_gets_credit_in_mon, -- получил ли клиент кредит в этом месяце
+       case when pcc.amount_max_before > 0 and t.contract_amount / pcc.amount_max_before <= 1.2 then 1 else 0 end as is_amount_within_120_perc,
+       round(coalesce(k1.kdn_form_salary_max, k2.kdn_form_salary_max)) as kdn_now,
+       round(kp.prior_con_kdn_max) as kdn_max_closed_cons,
+       case when pcc.amount_max_before > 0 then
+            round(t.contract_amount / pcc.amount_max_before * 100)
+       end as amount_to_max_prev_amnt_ratio,
+       case when kp.prior_con_kdn_max > 0 then
+            round(coalesce(k1.kdn_form_salary_max, k2.kdn_form_salary_max) / kp.prior_con_kdn_max * 100)
+       end as kdn_to_max_prev_kdn_ratio,
+       count(*) as cnt, count(distinct t.rfo_contract_id) as con_cnt,
+       count(distinct t.rfo_client_id) as cli_cnt,
+       sum(fc.amount) / count(distinct t.rfo_contract_id) * count(distinct t.rfo_client_id) / 1000000 as sales_mln, -----!!!!!!!!!
+       sum(fc.amount) / 1000000 as sales_mln_2
+from M_FOLDER_CON_CANCEL t
+join M_TMP_J_MIN_CON_BY_CLIMONPROD ff on ff.rfo_client_id = t.rfo_client_id and ff.mon = trunc(t.folder_date_create_mi,'mm') and
+                                         ff.product_type = t.product_type -- берем только первую заявку в мес по клиенту и продукту
+join V_TIME_MINUTES tm on tm.yyyy_mm_dd_hh_mi = t.folder_date_create_mi
+join V_FOLDER_ALL_RFO fa on fa.folder_id = t.folder_id
+join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = fa.form_client_id
+left join M_TMP_J_FLD_PREV_CON_CLOSED pcc on pcc.rfo_contract_id = t.rfo_contract_id
+left join M_TMP_J_K5_FOLDER k1 on k1.folder_id = t.folder_id and -- kdn rejected
+                                  k1.prod_type = t.cr_program_name
+left join M_CONTRACT_PARAM_KDN5C k2 on k2.folder_id_first = t.folder_id and -- kdn contracts
+                                       k2.deal_number = t.contract_number
+left join M_TMP_J_FLD_PREV_CON_CLSD_KDN kp on kp.rfo_contract_id = t.rfo_contract_id -- previous kdn
+left join M_TMP_J_CLI_GETS_CREDIT_IN_MON cm on cm.client_iin = t.iin and cm.start_mon = trunc(t.folder_date_create_mi,'mm')
+where t.is_refin = 0 and -- не рефин
+      tm.yyyy_mm_num = 201503 and
+      t.product_type in ('ДЕНЬГИ','ТОВАРЫ') and --t.process_name != 'ОНЛАЙН КРЕДИТ' and
+      t.is_categ_a = 1 --and -- Категория А
+/*      t.is_credit_issued = 0 and
+      t.cancel_middle_office is not null and -- только отказ МО -- для расчета насколько вырастут продажи
+                   t.cancel_prescoring is null and
+                   t.cancel_manager is null and
+                   t.cancel_client is null and
+                   t.cancel_cpr_aa is null and
+                   t.cancel_verificator is null and
+                   t.cancel_controller is null and
+                   t.cancel_undefined is null and
+     coalesce(cm.is_client_gets_credit,0) = 0 -- не взял в месяце*/
+
+group by t.product_type,
+         t.is_credit_issued,
+         case when t.cancel_middle_office is not null and -- только отказ МО -- для расчета насколько вырастут продажи
+                   t.cancel_prescoring is null and
+                   t.cancel_manager is null and
+                   t.cancel_client is null and
+                   t.cancel_cpr_aa is null and
+                   t.cancel_verificator is null and
+                   t.cancel_controller is null and
+                   t.cancel_undefined is null then 1 else 0 end,
+         coalesce(cm.is_client_gets_credit,0), -- получил ли клиент кредит в этом месяце
+         case when pcc.amount_max_before > 0 and t.contract_amount / pcc.amount_max_before <= 1.2 then 1 else 0 end,
+         round(coalesce(k1.kdn_form_salary_max, k2.kdn_form_salary_max)), -- kdn now
+         round(kp.prior_con_kdn_max), -- kdn before
+         case when pcc.amount_max_before > 0 then
+             round(t.contract_amount / pcc.amount_max_before * 100)
+         end,
+         case when kp.prior_con_kdn_max > 0 then
+             round(coalesce(k1.kdn_form_salary_max, k2.kdn_form_salary_max) / kp.prior_con_kdn_max * 100)
+         end;
+grant select on U1.M_TMP_J_SEG_MTRX_1_CHCK to LOADDB;
+grant select on U1.M_TMP_J_SEG_MTRX_1_CHCK to LOADER;
+
+

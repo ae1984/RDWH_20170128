@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_SCCL_RBO_PORT_PAR2
+build deferred
+refresh force on demand
+as
+select c.rfo_client_id,
+
+       max(case when t.delinq_amount >= 1000
+                then t.delinq_days_cli end) as del_days_1y_max
+
+from u1.V_CLIENT_RFO_BY_ID c
+left join u1.M_CLIENT_LINK cl on cl.rfo_client_id = c.rfo_client_id
+left join u1.T_RBO_PORT t on t.rbo_client_id = cl.rbo_client_id
+                             and t.rep_date >= trunc(sysdate) - 365
+group by c.rfo_client_id;
+grant select on U1.M_SCCL_RBO_PORT_PAR2 to LOADDB;
+grant select on U1.M_SCCL_RBO_PORT_PAR2 to LOAD_MO;
+grant select on U1.M_SCCL_RBO_PORT_PAR2 to RTS_RDWH;
+
+

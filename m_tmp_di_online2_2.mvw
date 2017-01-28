@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_TMP_DI_ONLINE2_2
+refresh complete on demand
+as
+select
+
+onl.claim_id,
+onl.rfo_client_id as cli_cnt,
+onl.month_ratif,
+onl.is_sign_reason,
+onl.is_sign_require,
+onl.is_categ_a,
+onl.is_client_new_by_con,
+onl.is_approved,
+onl.is_credit_issued,
+onl.is_verification_reject,
+date_ratif,
+case when onl.is_verification = 1 then
+  case when onl.is_rfo_fast_approve = 1 then 'Быстрое одобрение'
+       when mn.is_verif_manager = 1 or mn.is_verif_manager_old = 1 then 'У клиента есть прошлые фрод-отказы'
+       when mn.is_verif_manager_by_purse = 1 then 'Проверка по кошельку'
+       when is_ver_cal = 1 then 'Отправлен на верификацию при звонке' else 'Other' end
+       when is_verif_manager_new = 2 then 'Не категория А - должны были отправить, но уже не отправляем'
+       when is_verif_manager_new = 3 then 'Категория А - должны были отправить, но уже не отправляем'
+       end as is_verif_reason
+
+
+from M_TMP_DI_ONLINE0 onl
+left join M_FLD_CON_CNL_ONL_VERIF mn on mn.claim_id = onl.claim_id
+left join M_FOLDER_CON_CNL_ONL_VERIF1 v on v.claim_id = onl.claim_id
+left join M_TMP_GK_IAD_MOBILE_F f on f.claim_id = onl.claim_id
+left join M_TMP_GK_IAD f2 on f2.folder_id = onl.folder_id
+left join M_TMP_GK_IAD_MOBILE f22 on f22.folder_id = onl.folder_id
+left join M_TMP_GK_IAD_DEP f3 on f3.claim_id = onl.claim_id;
+grant select on U1.M_TMP_DI_ONLINE2_2 to LOADDB;
+grant select on U1.M_TMP_DI_ONLINE2_2 to LOADER;
+
+

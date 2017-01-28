@@ -1,0 +1,85 @@
+﻿create materialized view U1.M_AUTO_IIN_INFO_PRE2_1
+refresh complete on demand
+as
+select /*+ parallel 30 */trim(t.mvd_iin) as iin,
+            t.mvd_date as send_date,
+            t.vin,
+            case when (t.ar_mark = 'значение не определено'
+                             or t.ar_mark like '%???%'
+                             or t.ar_mark = 'данные отсутствуют'
+                             or t.ar_mark = 'нет данных'
+                             or trim(t.ar_mark) = '')
+                       then null
+                  else upper(t.ar_mark) end rus,
+            case when (t.ar_model = 'значение не определено'
+                             or t.ar_model like '%???%'
+                             or t.ar_model = 'данные отсутствуют'
+                             or t.ar_model = 'нет данных'
+                             or trim(t.ar_model) = '')
+                       then null
+                  else upper(t.ar_model) end code,
+            t.ar_model_year ar_model_year,
+            t.ar_origin_country as model_origin_country,
+            t.ar_manufacture_factory as model_manuf_factory,
+            t.ar_body_type as model_body_type,
+            t.ar_car_type as model_car_type,
+            --d.rus as model_doors_count,
+            t.ar_kpp_type as model_kpp_type,
+            --s.rus as model_steering_column_place,
+            t.ar_engine_type as model_engine_type,
+            t.ar_assemblage_countr as model_assemblage_country,
+            t.ar_drive as model_drive,
+            t.ar_engine_volume as model_engine_volume,
+            max(t.mvd_date) as max_date,
+            min(t.mvd_date) as min_date
+     from DWH_AUTO_VIN t
+/*     join V_TDWH_E#VIN_INFO q on q.e#vin$vin = t.e#vin$vin
+     left join V_TDWH_D#AR#MARK ma on ma.id = q.d#ar#mark
+     left join V_TDWH_D#AR#MODEL mo on mo.id = q.d#ar#model
+     left join V_TDWH_D#AR#ORIGIN_COUNTRY c on c.id = q.d#ar#origin_country
+     left join V_TDWH_D#AR#ASSEMBLAGE_COUNTRY a on a.id = q.d#ar#assemblage_country
+     left join V_TDWH_D#AR#MANUF_FACTORY f on f.id = q.d#ar#manufacture_factory
+     left join V_TDWH_D#AR#BODY_TYPE b on b.id = q.d#ar#body_type
+     left join V_TDWH_D#AR#CAR_TYPE ct on ct.id = q.d#ar#car_type
+     left join V_TDWH_D#AR#DOORS_COUNT d on d.id = q.d#ar#doors_count
+     left join V_TDWH_D#AR#KPP_TYPE k on k.id = q.d#ar#kpp_type
+     left join V_TDWH_D#AR#STEERING_COL_PLACE s on s.id = q.d#ar#steering_column_place
+     left join V_TDWH_D#AR#ENGINE_TYPE e on e.id = q.d#ar#engine_type
+     left join V_TDWH_D#AR#DRIVE dr on dr.id = q.d#ar#drive
+     left join V_TDWH_D#AR#ENGINE_VOLUME ev on ev.id = q.d#ar#engine_volume*/
+     where t.mvd_iin is not null
+           and (t.ar_parsed_flg = 1 /*or t.esbd_parsed_flg = 1*/)
+           /*and (t.ar_model is not null or t.esbd_model is not null)*/
+     group by trim(t.mvd_iin),
+            t.mvd_date,
+            t.vin,
+             case when (t.ar_mark = 'значение не определено'
+                             or t.ar_mark like '%???%'
+                             or t.ar_mark = 'данные отсутствуют'
+                             or t.ar_mark = 'нет данных'
+                             or trim(t.ar_mark) = '')
+                       then null
+                  else upper(t.ar_mark) end,
+            case when (t.ar_model = 'значение не определено'
+                             or t.ar_model like '%???%'
+                             or t.ar_model = 'данные отсутствуют'
+                             or t.ar_model = 'нет данных'
+                             or trim(t.ar_model) = '')
+                       then null
+                  else upper(t.ar_model) end,
+            t.ar_model_year,
+            t.ar_origin_country,
+            t.ar_manufacture_factory,
+            t.ar_body_type,
+            t.ar_car_type,
+            --d.rus as model_doors_count,
+            t.ar_kpp_type,
+            --s.rus as model_steering_column_place,
+            t.ar_engine_type,
+            t.ar_assemblage_countr,
+            t.ar_drive,
+            t.ar_engine_volume;
+grant select on U1.M_AUTO_IIN_INFO_PRE2_1 to LOADDB;
+grant select on U1.M_AUTO_IIN_INFO_PRE2_1 to LOADER;
+
+

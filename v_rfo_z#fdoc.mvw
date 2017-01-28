@@ -1,0 +1,49 @@
+﻿create materialized view U1.V_RFO_Z#FDOC
+build deferred
+using no index
+refresh force on demand
+as
+select /*+ driving_site(t) */
+       t.id,
+       t.class_id,
+       t.c_num,
+       t.c_doc_date,
+       t.c_parent_fdoc,
+       t.c_status_doc,
+       t.c_date_audit,
+       t.sn,
+       t.su
+  from IBS.Z#FDOC@RFO_SNAP t
+where class_id in (
+'CREDIT_DOG',
+'FORM_CLIENT',
+'KAS_FORM_CL_POD',
+'KAS_GCVP_REPORT',
+'KAS_MONITORING',
+'KAS_PC_DOG',
+'KAS_VERIFICATION',
+'PKB_REPORT',
+'KAS_DECISION',
+'REQ_EDIT_CL_PRIV',
+'KAS_AUTOCALC_RES',
+'CONT_INSUR', -- страховки
+'KAS_CONT_INS_GPO', -- страховки
+'KAS_KASKO_INS', -- страховки
+'KAS_FORM_CL_GPO', -- страховки
+'KAS_REQ_REFIN',
+'KAS_ONLINE_CLAIM',
+'KAS_ONLINE_BUY',
+'KAS_AUTO_ESTIM',
+'DRAW_DOWN',
+'CLOSE_DEPOSIT',
+'CONT_DEP',
+'DEPOSIT',
+'KAS_CONT_DOP_AGR',
+'MAIN_DOCUM',
+'KAS_TRUST_DOCUM'
+);
+grant select on U1.V_RFO_Z#FDOC to LOADDB;
+grant select on U1.V_RFO_Z#FDOC to LOADER;
+grant select on U1.V_RFO_Z#FDOC to RISK_VERIF;
+
+

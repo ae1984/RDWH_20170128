@@ -1,0 +1,42 @@
+﻿create table U1.MO_AA_REQUEST_CANCEL
+(
+  id              NUMBER not null,
+  aa_request_id   NUMBER not null,
+  class_id        VARCHAR2(20),
+  field_code      VARCHAR2(40),
+  field_name      VARCHAR2(250),
+  id_rfo          NUMBER,
+  id_rfo_cnl_type NUMBER,
+  code            VARCHAR2(50),
+  name            VARCHAR2(500),
+  note            VARCHAR2(4000),
+  err_level       VARCHAR2(10)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+create index U1.IDX_MO_AA_REQUEST_CANCEL_1 on U1.MO_AA_REQUEST_CANCEL (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.MO_AA_REQUEST_CANCEL to LOADDB;
+grant select on U1.MO_AA_REQUEST_CANCEL to LOADER;
+

@@ -1,0 +1,20 @@
+﻿create materialized view U1.V_RBO_Z#PROPERTY
+refresh complete on demand
+as
+select
+       h.id,
+       h.collection_id,
+       h.c_property_type,
+       h.c_date_begin,
+       h.c_date_end,
+       h.c_date_set,
+       h.c_user,
+       h.c_ref_value,
+       h.c_num_value,
+       h.c_str_value,
+       h.c_change_date
+from rdwh.V_RBO_Z#PROPERTY@rdwh_exd h;
+grant select on U1.V_RBO_Z#PROPERTY to LOADDB;
+grant select on U1.V_RBO_Z#PROPERTY to LOADER;
+
+

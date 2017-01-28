@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_TMP_NIGHT_SCORE
+refresh complete on demand
+as
+select /*+ paralle 30 */
+ c.inn, f.id as rfolder_id, f.rfo_folder_id, p.id as process_id,
+       cast(f.date_create as date) as date_create, p.d_process_id, p.params_out
+from MO_PROCESS p
+left join V_MO_D_PROCESS dp on dp.id = p.d_process_id
+left join MO_RFOLDER f on p.rfolder_id = f.id and f.rfo_folder_id is null
+left join V_MO_RCLIENT c on c.id = f.rclient_id
+where f.date_create > to_date('2014-08-30 00','yyyy-mm-dd hh24') and
+      f.date_create < to_date('2014-09-03 00','yyyy-mm-dd hh24') and
+      dp.code = 'MO_SCO';
+grant select on U1.M_TMP_NIGHT_SCORE to LOADDB;
+grant select on U1.M_TMP_NIGHT_SCORE to LOADER;
+
+

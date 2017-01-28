@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_TMP_J_MIN_CON_BY_CLIMONPROD
+refresh complete on demand
+as
+select f2.rfo_client_id, trunc(f2.folder_date_create_mi,'mm') as mon, f2.product_type,
+       min(f2.rfo_contract_id) as rfo_con_id_min_by_cli_mon_prod
+from M_FOLDER_CON_CANCEL f2
+group by f2.rfo_client_id, trunc(f2.folder_date_create_mi,'mm'), f2.product_type;
+grant select on U1.M_TMP_J_MIN_CON_BY_CLIMONPROD to LOADDB;
+grant select on U1.M_TMP_J_MIN_CON_BY_CLIMONPROD to LOADER;
+
+

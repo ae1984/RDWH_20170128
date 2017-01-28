@@ -1,0 +1,34 @@
+﻿create materialized view U1.V_RFO_TUNE_TP_LIST_GIVE_X_CRD
+refresh force on demand
+as
+select t.id as tune_id,
+       t.c_code as tune_code,
+       t.c_name as tune_name,
+       t.c_group_id as tune_group_id,
+
+       v.c_value as tune_val,
+       v.id as tune_val_id,
+       c.c_priority as add_priority,
+
+       case when LENGTH(TRIM(TRANSLATE(vid.id1, ' +-.0123456789', ' '))) is null and
+                 to_number(vid.id1) > 0 then un1.c_code end canon1,
+
+       case when LENGTH(TRIM(TRANSLATE(vid.id2, ' +-.0123456789', ' '))) is null and
+                 to_number(vid.id2) > 0 then un2.c_code end canon2,
+
+       case when LENGTH(TRIM(TRANSLATE(vid.id3, ' +-.0123456789', ' '))) is null and
+                 to_number(vid.id3) > 0 then un3.c_val_code end canon3
+from V_RFO_Z#TUNE t
+left join V_RFO_Z#TUNE_VAL v on v.collection_id = t.c_values
+left join M_RFO_TUNE_VAL_CANON_ID vid on vid.id = v.id
+left join V_RFO_Z#TUNE_CN c on c.collection_id = t.c_canons
+left join V_RFO_Z#KAS_UNIVERSAL_D un1 on un1.id = vid.id1
+left join V_RFO_Z#KAS_UNIVERSAL_D un2 on un2.id = vid.id2
+left join V_RFO_Z#TUNE_ADDV un3 on un3.id = vid.id3
+
+where t.c_code = 'TP_LIST_GIVE_X_CRD'
+--order by v.id, c.c_priority;
+grant select on U1.V_RFO_TUNE_TP_LIST_GIVE_X_CRD to LOADDB;
+grant select on U1.V_RFO_TUNE_TP_LIST_GIVE_X_CRD to LOADER;
+
+

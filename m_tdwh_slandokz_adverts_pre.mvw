@@ -1,0 +1,78 @@
+﻿create materialized view U1.M_TDWH_SLANDOKZ_ADVERTS_PRE
+refresh force on demand
+as
+select /*+ parallel 20 */
+       tab.id,
+        case when regexp_like(phone1_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone1_clear,'^[7-8]{2}','')
+             when regexp_like(phone1_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone1_clear,'^[7-8]{1}','')
+             when regexp_like(phone1_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone1_clear,'^[+]7','')
+             else to_char(phone1_clear)
+         end as phone1_clear,
+
+         case when regexp_like(phone2_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone2_clear,'^[7-8]{2}','')
+             when regexp_like(phone2_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone2_clear,'^[7-8]{1}','')
+             when regexp_like(phone2_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone2_clear,'^[+]7','')
+             else to_char(phone2_clear)
+         end as phone2_clear,
+
+         case when regexp_like(phone3_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone3_clear,'^[7-8]{2}','')
+             when regexp_like(phone3_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone3_clear,'^[7-8]{1}','')
+             when regexp_like(phone3_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone3_clear,'^[+]7','')
+             else to_char(phone3_clear)
+         end as phone3_clear,
+
+         case when regexp_like(phone4_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone4_clear,'^[7-8]{2}','')
+             when regexp_like(phone4_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone4_clear,'^[7-8]{1}','')
+             when regexp_like(phone4_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone4_clear,'^[+]7','')
+             else to_char(phone4_clear)
+         end as phone4_clear,
+
+         case when regexp_like(phone5_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone5_clear,'^[7-8]{2}','')
+             when regexp_like(phone5_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone5_clear,'^[7-8]{1}','')
+             when regexp_like(phone5_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone5_clear,'^[+]7','')
+             else to_char(phone5_clear)
+         end as phone5_clear,
+
+         case when regexp_like(phone6_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone6_clear,'^[7-8]{2}','')
+             when regexp_like(phone6_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone6_clear,'^[7-8]{1}','')
+             when regexp_like(phone6_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone6_clear,'^[+]7','')
+             else to_char(phone6_clear)
+         end as phone6_clear,
+
+         case when regexp_like(phone7_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone7_clear,'^[7-8]{2}','')
+             when regexp_like(phone7_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone7_clear,'^[7-8]{1}','')
+             when regexp_like(phone7_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone7_clear,'^[+]7','')
+             else to_char(phone7_clear)
+         end as phone7_clear
+ from (select /*+ parallel 20 */
+               mn.id,
+               substr(mn.phone,1, decode(instr(mn.phone,chr(10),1),0,100,instr(mn.phone,chr(10),1)-1) ) as phone1_clear,
+               substr(mn.phone,
+                     decode(instr(mn.phone,chr(10),1,1),0,null,instr(mn.phone,chr(10),1,1)+1)
+                     ,decode(instr(mn.phone,chr(10),1,2),0,100,instr(mn.phone,chr(10),1,2) - instr(mn.phone,chr(10),1,1) -1)
+                     ) as phone2_clear,
+               substr(mn.phone,
+                     decode(instr(mn.phone,chr(10),1,2),0,null,instr(mn.phone,chr(10),1,2)+1)
+                     ,decode(instr(mn.phone,chr(10),1,3),0,100,instr(mn.phone,chr(10),1,3) - instr(mn.phone,chr(10),1,2) -1)
+                     ) as phone3_clear,
+               substr(mn.phone,
+                     decode(instr(mn.phone,chr(10),1,3),0,null,instr(mn.phone,chr(10),1,3)+1)
+                     ,decode(instr(mn.phone,chr(10),1,4),0,100,instr(mn.phone,chr(10),1,4) - instr(mn.phone,chr(10),1,3) -1)
+                     ) as phone4_clear,
+               substr(mn.phone,
+                     decode(instr(mn.phone,chr(10),1,4),0,null,instr(mn.phone,chr(10),1,4)+1)
+                     ,decode(instr(mn.phone,chr(10),1,5),0,100,instr(mn.phone,chr(10),1,5) - instr(mn.phone,chr(10),1,4) -1)
+                     ) as phone5_clear,
+               substr(mn.phone,
+                     decode(instr(mn.phone,chr(10),1,5),0,null,instr(mn.phone,chr(10),1,5)+1)
+                     ,decode(instr(mn.phone,chr(10),1,6),0,100,instr(mn.phone,chr(10),1,6) - instr(mn.phone,chr(10),1,5) -1)
+                     ) as phone6_clear,
+               substr(mn.phone,
+                     decode(instr(mn.phone,chr(10),1,6),0,null,instr(mn.phone,chr(10),1,6)+1)
+                     ,decode(instr(mn.phone,chr(10),1,7),0,100,instr(mn.phone,chr(10),1,7) - instr(mn.phone,chr(10),1,6) -1)
+                     ) as phone7_clear
+          from U1.M_TDWH_SLANDOKZ_ADVERTS mn) tab;
+grant select on U1.M_TDWH_SLANDOKZ_ADVERTS_PRE to LOADDB;
+grant select on U1.M_TDWH_SLANDOKZ_ADVERTS_PRE to LOADER;
+
+

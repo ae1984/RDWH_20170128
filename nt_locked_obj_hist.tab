@@ -1,0 +1,29 @@
+﻿create table U1.NT_LOCKED_OBJ_HIST
+(
+  sdt         DATE,
+  owner       VARCHAR2(128),
+  object_name VARCHAR2(128),
+  object_type VARCHAR2(23),
+  sid         NUMBER,
+  serial#     NUMBER,
+  status      VARCHAR2(8),
+  osuser      VARCHAR2(30),
+  machine     VARCHAR2(64)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_LOCKED_OBJ_HIST
+  is 'временная. можно удалить';
+grant select on U1.NT_LOCKED_OBJ_HIST to LOADDB;
+

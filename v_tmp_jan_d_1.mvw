@@ -1,0 +1,23 @@
+﻿create materialized view U1.V_TMP_JAN_D_1
+refresh force on demand
+as
+select
+    c.yms, -- месяц выдачи
+    count(c.contract_number) as con_cnt, count(distinct c.contract_number) as con_dist_cnt, -- кол-во договоров + проверка
+    round(sum(case when c.delinq_days_last_rep > 0 and c.delinq_days_last_rep < 8 then c.total_debt_last_rep * 0.45
+                   when c.delinq_days_last_rep > 7 then c.total_debt_last_rep
+                   else 0 end) / sum(c.max_debt_used) * 100, 2) as del_rate, -- просрочка
+    round(sum(case when p1.delinq_days > 0 and p1.delinq_days < 8 then p1.total_debt * 0.45
+                   when p1.delinq_days > 7 then p1.total_debt
+                   else 0 end) / sum(c.max_debt_used) * 100, 2) as del_rate_pmt_1, -- просрочка 1-го платежа
+    round(sum(c.max_debt_used) / 1000000, 2) as sales_mln -- продажи в млн. тг
+from V_CONTRACT_CAL c
+left join V_PORTFOLIO p1 on c.contract_id = p1.contract_id and p1.planned_pmt_month_new = 1
+where c.yms like '2013%' or c.yms in ('2014 - 01','2014 - 02') --in ('2013 - 10','2013 - 11','2013 - 12','2014 - 01')
+      and c.product_first /*.product_refin_last*/ = 'ТК'
+group by c.yms
+having sum(c.max_debt_used) > 0;
+grant select on U1.V_TMP_JAN_D_1 to LOADDB;
+grant select on U1.V_TMP_JAN_D_1 to LOADER;
+
+

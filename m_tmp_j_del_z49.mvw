@@ -1,0 +1,58 @@
+﻿create materialized view U1.M_TMP_J_DEL_Z49
+refresh force on demand
+as
+select yy_mm_start,
+    con_cnt, con_dist_cnt,
+    del_rate_sotn,
+/*    del_rate_by_fld_count,
+    del_fld_cnt, all_fld_cnt,*/
+
+    del_rate_by_con_count,
+    del_con_cnt,
+    all_con_cnt,
+
+--    del_rate_sotn - del_rate_by_fld_count as del_rate_to_add,
+    del_rate_sotn - del_rate_by_con_count as del_rate_to_add,
+--    round((all_fld_cnt * del_rate_sotn / 100) - del_fld_cnt,1) as bad_cons_to_add,
+    round((all_con_cnt * del_rate_sotn / 100) - del_con_cnt,1) as bad_cons_to_add,
+    del_rate_b_w,
+    del_rate
+from (select --c.yy_mm_start_last,
+     to_char(c.yy_mm_start_first_date,'yyyy - mm') as yy_mm_start,--_last
+    -- ПРОВЕРКА
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt, -- проверка - если эти два поля равны, значит выборка верна
+    max(s.del_rate_b_w) as del_rate_sotn,
+    -- ПРОДАЖИ
+--    round(sum(c.max_debt_used) / 1000000) as sales_mln, -- USE THIS! - продажи, млн
+
+/*    round(count(distinct case when p.delinq_days > 0 then c.folder_id_first end) /
+              count(distinct c.folder_id_first)*100,2) as del_rate_by_fld_count,
+    count(distinct case when p.delinq_days > 0 then c.folder_id_first end) as del_fld_cnt,
+    count(distinct c.folder_id_first) as all_fld_cnt,*/
+
+    round(count(distinct case when p.delinq_days > 0 then c.contract_number end) /
+              count(distinct c.contract_number)*100,2) as del_rate_by_con_count,
+    count(distinct case when p.delinq_days > 0 then c.contract_number end) as del_con_cnt,
+    count(distinct c.contract_number) as all_con_cnt,
+
+    round(sum(c.delinq_rate_b_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b_w, -- USE THIS! - просрочка всего по-новому
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate--, -- просрочка всего по-старому
+from M_CONTRACT_CAL_DEL c
+--join V_CONTRACT_CAL cc on cc.contract_number = c.contract_number
+--join M_TMP_J_Z49_ASOKR_CTRL_GROUP ff on ff.folder_id = c.folder_id_first
+join (select cg.contract_number from M_TMP_J_Z49_ASOKR_CTRL_CONS cg
+     union select ca.contract_number from M_TMP_J_Z49_ASOKR_CTRL_CONSADD ca
+) cg on cg.contract_number = c.contract_number
+join M_TMP_J_DEL_Z49_SOTNIKOVA s on s.mon = c.yy_mm_start_last
+left join V_PORTFOLIO p on p.contract_number = cg.contract_number and p.yy_mm_report = '2014 - 01'
+where not exists (select null from M_FOLDER_CON_CANCEL f
+                where f.folder_id = c.folder_id_first and f.is_refin = 1) and ----!
+      c.yy_mm_start_last like '2013 - %' --and cc.contract_amount_first > 0 and cc.product_program_first != 'ПРИВИЛЕГИРОВАННЫЙ'
+--group by c.yy_mm_start_last
+group by to_char(c.yy_mm_start_first_date,'yyyy - mm')
+having sum(c.max_debt_used) > 0
+);
+grant select on U1.M_TMP_J_DEL_Z49 to LOADDB;
+grant select on U1.M_TMP_J_DEL_Z49 to LOADER;
+
+

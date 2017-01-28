@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_TMP_J_X11
+refresh force on demand
+as
+select cln.contract_number, cln.fio, p1.client_iin, p.deal_number, p.x_total_debt, p.client_name
+from cln
+left join v_dwh_portfolio_current p1 on p1.deal_number = cln.contract_number
+left join v_dwh_portfolio_current p on p.client_iin = p1.client_iin;
+grant select on U1.M_TMP_J_X11 to LOADDB;
+grant select on U1.M_TMP_J_X11 to LOADER;
+
+

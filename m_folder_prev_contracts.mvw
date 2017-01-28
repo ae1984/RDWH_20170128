@@ -1,0 +1,161 @@
+﻿create materialized view U1.M_FOLDER_PREV_CONTRACTS
+build deferred
+refresh force on demand
+as
+select /*+parallel(10)*/
+         tttt.folder_date_create_mi
+        ,tttt.folder_id
+        ,tttt.rfo_client_id
+        ,tttt.cr_program_name
+        ,case when tttt.process_name0 = 'КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НА КАРТУ' then 'КН15'
+              when tttt.process_name0 = 'КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НАЛИЧНЫМИ НА КАРТУ' then 'КН'
+         end as prod_type0
+       ,max(prod1) as prod1
+       ,max(prod2) as prod2
+       ,max(prod3) as prod3
+       ,max(folder_id1) as folder_id1
+       ,max(folder_id2) as folder_id2
+       ,max(folder_id3) as folder_id3
+
+from (
+    select
+        ttt.folder_date_create_mi
+        ,ttt.folder_id
+        ,ttt.rfo_client_id
+        ,ttt.cr_program_name
+        ,ttt.process_name0
+        ,case when nn=1 then ttt.prod_type end       as prod1
+        ,case when nn=2 then ttt.prod_type end       as prod2
+        ,case when nn=3 then ttt.prod_type end       as prod3
+        ,case when nn=1 then ttt.folder_id_first end as folder_id1
+        ,case when nn=2 then ttt.folder_id_first end as folder_id2
+        ,case when nn=3 then ttt.folder_id_first end as folder_id3
+    from (
+        select
+            tt.*
+           ,row_number() over (partition by tt.folder_date_create_mi,tt.folder_id,tt.rfo_client_id order by tt.start_date_actual desc) as nn
+           ,case
+               when cred_program_name in (
+                   'KASPI GOLD'
+                  ,'KASPI RED'
+                  ,'АВТОКРЕДИТЫ'
+                  ,'ЗАРПЛАТНЫЕ КАРТЫ'
+                  ,'КАРТА ВКЛАДЧИКА'
+                  ,'ОВЕРДРАФТЫ'
+                  ,'РЕФИНАНСИРОВАНИЕ АВТОКРЕДИТА'
+                  ,'РЕФИНАНСИРОВАНИЕ/РЕСТРУКТУРИЗАЦИЯ'
+                  ,'СМЕНА КК НА КН'
+                ) then 'ДРУГОЕ'
+               when cred_program_name in (
+                   'PC.ПОСТОЯННЫЙ КЛИЕНТ'
+                  ,'ЛУЧШИЙ КЛИЕНТ'
+                  ,'ОСОБЕННЫЙ КЛИЕНТ - КК'
+                  ,'ПРОСТАЯ КАРТА'
+                  ,'РЕВОЛЬВЕРНЫЕ КАРТЫ'
+                ) then 'КАРТА'
+               when cred_program_name in (
+                   'АВТОЗАПЧАСТИ'
+                  ,'ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)'
+                ) then 'ЭКТ'
+               when cred_program_name in (
+                   'ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)'
+                ) then 'ЭКУ'
+               when cred_program_name in (
+                   'КРЕДИТ НАЛИЧНЫМИ'
+                  ,'КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ'
+                  ,'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ'
+                  ,'ЛУЧШИЙ КЛИЕНТ НАЛИЧНЫМИ'
+                  ,'ОСОБЕННЫЙ КЛИЕНТ - КН'
+                  ,'ОСОБЕННЫЙ КЛИЕНТ -КН 15'
+                  ,'ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ'
+                  ,'ЭКСПРЕСС-КРЕДИТЫ (ДЕНЬГИ)'
+                ) and tt.process_name = 'КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НА КАРТУ' then 'КН15'
+               when cred_program_name in (
+                   'КРЕДИТ НАЛИЧНЫМИ'
+                  ,'КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ'
+                  ,'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ'
+                  ,'ЛУЧШИЙ КЛИЕНТ НАЛИЧНЫМИ'
+                  ,'ОСОБЕННЫЙ КЛИЕНТ - КН'
+                  ,'ОСОБЕННЫЙ КЛИЕНТ -КН 15'
+                  ,'ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ'
+                  ,'ЭКСПРЕСС-КРЕДИТЫ (ДЕНЬГИ)'
+                ) and tt.process_name = 'КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НАЛИЧНЫМИ НА КАРТУ' then 'КН'
+                when is_uk=1 then 'УК'
+                else  'ДРУГОЕ2'
+            end as prod_type
+        from (
+          select
+              distinct
+              t.folder_date_create_mi
+              ,t.folder_id
+              ,t.rfo_client_id
+              ,t.cr_program_name
+              ,t.process_name as process_name0
+              --,cl.rbo_client_id
+              ,c.rbo_contract_id
+              ,c.start_date_actual
+              ,c.date_fact_end
+              ,c.contract_number
+              ,c.cred_program_name
+              ,f.process_name
+              ,c.folder_id_first
+              ,case when pd.id is null then 0 else 1 end is_uk
+          from u1.m_folder_con_cancel t
+          --left join m_client_link cl on cl.rfo_client_id=t.rfo_client_id
+          join u1.m_rbo_contract_bas c on c.rfo_client_id=t.rfo_client_id
+                    and c.start_date_actual is not null
+                    and trunc(t.folder_date_create_mi)-1 between c.start_date_actual and nvl(c.date_fact_end,sysdate)
+                    and c.cred_program_name in (
+                             'PC.ПОСТОЯННЫЙ КЛИЕНТ'
+                            ,'ЛУЧШИЙ КЛИЕНТ'
+                            ,'ОСОБЕННЫЙ КЛИЕНТ - КК'
+                            ,'ПРОСТАЯ КАРТА'
+                            ,'РЕВОЛЬВЕРНЫЕ КАРТЫ'
+                            ,'АВТОЗАПЧАСТИ'
+                            ,'ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)'
+                            ,'ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)'
+                            ,'КРЕДИТ НАЛИЧНЫМИ'
+                            ,'КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ'
+                            ,'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ'
+                            ,'ЛУЧШИЙ КЛИЕНТ НАЛИЧНЫМИ'
+                            ,'ОСОБЕННЫЙ КЛИЕНТ - КН'
+                            ,'ОСОБЕННЫЙ КЛИЕНТ -КН 15'
+                            ,'ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ'
+                            ,'ЭКСПРЕСС-КРЕДИТЫ (ДЕНЬГИ)'
+                            ,'КРЕДИТ НАЛИЧНЫМИ'
+                            ,'КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ'
+                            ,'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ'
+                            ,'ЛУЧШИЙ КЛИЕНТ НАЛИЧНЫМИ'
+                            ,'ОСОБЕННЫЙ КЛИЕНТ - КН'
+                            ,'ОСОБЕННЫЙ КЛИЕНТ -КН 15'
+                            ,'ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ'
+                            ,'ЭКСПРЕСС-КРЕДИТЫ (ДЕНЬГИ)'
+                    )
+          join u1.m_folder_con_cancel f on f.folder_id=c.folder_id_first and f.contract_number=c.contract_number
+          left join u1.v_rbo_z#kas_pc_dog pd on pd.id = c.rbo_contract_id and pd.C_CLIENT_SUM>0
+          where t.folder_date_create_mi>=to_date('01.01.2014','dd.mm.yyyy')
+                and t.cr_program_name in (
+                        'КРЕДИТ НАЛИЧНЫМИ'
+                      , 'КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ'
+                      , 'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ'
+                      , 'ЛУЧШИЙ КЛИЕНТ НАЛИЧНЫМИ'
+                      , 'ОСОБЕННЫЙ КЛИЕНТ – КН'
+                      , 'ОСОБЕННЫЙ КЛИЕНТ -КН 15'
+                      , 'ПОСТОЯННЫЙ КЛИЕНТ – НАЛИЧНЫЕ'
+                      , 'ЭКСПРЕСС-КРЕДИТЫ (ДЕНЬГИ)'
+                    )
+                    --or t.process_name in ('КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НА КАРТУ','КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НАЛИЧНЫМИ НА КАРТУ')
+                    --and t.folder_id =20117344038
+        ) tt
+    ) ttt
+    where ttt.nn <=3
+) tttt
+group by
+         tttt.folder_date_create_mi
+        ,tttt.folder_id
+        ,tttt.rfo_client_id
+        ,tttt.cr_program_name
+        ,tttt.process_name0;
+grant select on U1.M_FOLDER_PREV_CONTRACTS to LOADDB;
+
+

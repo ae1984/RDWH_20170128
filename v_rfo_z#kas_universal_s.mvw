@@ -1,0 +1,30 @@
+﻿create materialized view U1.V_RFO_Z#KAS_UNIVERSAL_S
+refresh complete on demand
+as
+select us.id,
+       us.collection_id,
+       us.c_s1,
+       us.c_s2,
+       us.c_n1,
+       us.c_n2,
+       us.c_i1,
+       us.c_i2,
+       us.c_b1,
+       us.c_b2,
+       us.c_d1,
+       us.c_d2,
+       us.c_r1,
+       us.c_r2,
+       us.sn,
+       us.su,
+       us.c_s3,
+       us.c_s4,
+       us.c_n3,
+       us.c_n4,
+       us.c_n5,
+       us.c_n6
+  from IBS.Z#KAS_UNIVERSAL_S@RFO_SNAP us;
+grant select on U1.V_RFO_Z#KAS_UNIVERSAL_S to LOADDB;
+grant select on U1.V_RFO_Z#KAS_UNIVERSAL_S to LOADER;
+
+

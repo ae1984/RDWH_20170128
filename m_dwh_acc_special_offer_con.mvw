@@ -1,0 +1,10 @@
+﻿create materialized view U1.M_DWH_ACC_SPECIAL_OFFER_CON
+refresh force on demand
+as
+select distinct con.dcard_number as contract_number, so.*
+from DWH_MAIN.REF_DEAL_CARD@DWH_PROD2 con
+join M_DWH_ACC_SPECIAL_OFFER so on con.dcard_gid = so.spof_dcard_gid;
+grant select on U1.M_DWH_ACC_SPECIAL_OFFER_CON to LOADDB;
+grant select on U1.M_DWH_ACC_SPECIAL_OFFER_CON to LOADER;
+
+

@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_KASPIKZ_PAY_ECOMM_BILLER
+refresh force on demand
+as
+select t."PaymentId" payment_id,
+      t."vchBiller" biller,
+      t."vchBeneficiaryAccount" beneficiary_account,
+      t."vchBeneficiaryBIC" beneficiary_bic,
+      t."vchBeneficiaryINN" beneficiary_inn
+
+from "dbo"."tb_Payments_EcommBiller"@"db_kr2" t;
+grant select on U1.M_KASPIKZ_PAY_ECOMM_BILLER to LOADDB;
+grant select on U1.M_KASPIKZ_PAY_ECOMM_BILLER to LOADER;
+
+

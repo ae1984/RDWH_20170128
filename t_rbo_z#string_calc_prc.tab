@@ -1,0 +1,138 @@
+﻿create table U1.T_RBO_Z#STRING_CALC_PRC
+(
+  id                NUMBER not null,
+  collection_id     NUMBER,
+  c_date_beg        DATE,
+  c_days            NUMBER(6),
+  c_summa           NUMBER(17,2),
+  c_prc             NUMBER(12,6),
+  c_summa_prc       NUMBER(22,6),
+  c_contrprc        VARCHAR2(1 CHAR),
+  c_date_view       DATE,
+  c_date_calc       DATE,
+  c_base_summa      NUMBER(17,2),
+  c_scheme_prc      NUMBER,
+  c_recalc_prc      VARCHAR2(1 CHAR),
+  c_date_end        DATE,
+  c_was_capital     VARCHAR2(1 CHAR),
+  c_bank_year       VARCHAR2(1 CHAR),
+  c_acc_for_calc    NUMBER,
+  c_dbegincount     DATE,
+  c_valuta          NUMBER,
+  c_summa_cb        NUMBER(17,2),
+  c_prc_cb          NUMBER(17,2),
+  c_summa_prc_cb    NUMBER(20,6),
+  c_summa_nl        NUMBER(17,2),
+  c_prc_nl          NUMBER(12,6),
+  c_summa_prc_nl    NUMBER(20,6),
+  c_sum_fault       NUMBER(30,10),
+  c_sum_fault_cb    NUMBER(30,10),
+  c_sum_fault_nl    NUMBER(30,10),
+  c_vid_debt_ref    NUMBER,
+  c_saldo           NUMBER(17,2),
+  c_prc_dv          NUMBER(17,2),
+  c_summa_prc_dv    NUMBER(20,6),
+  c_sum_fault_dv    NUMBER(30,10),
+  c_decoding        NUMBER,
+  c_summa_prc_round NUMBER(17,2),
+  c_summa_prc_tune  NUMBER(10,6),
+  sn                NUMBER,
+  su                NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RBO_Z#STRING_CALC_PRC
+  is 'Строка журнала начисленных процентов';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_date_beg
+  is 'Дата начала периода';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_days
+  is 'Количество дней';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_summa
+  is 'Сумма для начисления';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_prc
+  is 'Процентная ставка';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_summa_prc
+  is 'Сумма начисленных процентов';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_contrprc
+  is 'Признак контрпроцентов';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_date_view
+  is 'Дата, на которую рассчитывались проценты';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_date_calc
+  is 'Дата расчета процентов';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_base_summa
+  is 'Базовая сумма для процентной схемы';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_scheme_prc
+  is 'Процентная схема(FK на Z#PRC_SCHEME)';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_recalc_prc
+  is 'Признак анулирования расчета процентов';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_date_end
+  is 'Дата окончания периода';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_was_capital
+  is 'Признак капитализации процентов';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_bank_year
+  is 'Признак банковского года';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_acc_for_calc
+  is 'Счет для начисления(FK на Z#AC_FIN)';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_dbegincount
+  is 'Дата начала расчета(Валовой расчет %)';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_valuta
+  is 'Валюта(FK на Z#FT_MONEY)';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_prc_cb
+  is 'Процентная ставка ЦБ';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_summa_prc_cb
+  is 'Сумма начисленных процентов по ставке ЦБ';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_summa_nl
+  is 'Сумма для начисления по ставке налога';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_prc_nl
+  is 'Процентная ставка налога';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_summa_prc_nl
+  is 'Сумма начисленных процентов по ставке налога';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_sum_fault
+  is 'Сумма набежавшей погрешности';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_sum_fault_cb
+  is 'Сумма набежавшей погрешности по схеме ЦБ';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_sum_fault_nl
+  is 'Сумма набежавшей погрешности по схеме налога';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_vid_debt_ref
+  is 'Вид задолженности(FK на Z#VID_DEBT)';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_saldo
+  is 'Исходящий остаток за период';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_prc_dv
+  is 'Процентная ставка до востребования';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_summa_prc_dv
+  is 'Сумма начисленных процентов до востребования';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_sum_fault_dv
+  is 'Сумма набежавшей погрешности по схеме до востребования';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_decoding
+  is 'Расшифровка траншей(COLLECTION в Z#SUMS_DECODE)';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_summa_prc_round
+  is 'Сумма процентов округленная';
+comment on column U1.T_RBO_Z#STRING_CALC_PRC.c_summa_prc_tune
+  is 'Корректировка к сумме округленной';
+create index U1.T_RBO_Z#STRING_CALC_PRC_IND1 on U1.T_RBO_Z#STRING_CALC_PRC (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RBO_Z#STRING_CALC_PRC
+  add constraint T_RBO_Z#STRING_CALC_PRC_PK primary key (ID);
+grant select on U1.T_RBO_Z#STRING_CALC_PRC to LOADDB;
+

@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_AVERAGE_SALARY_ON_FOLDER
+using no index
+refresh complete on demand
+as
+select round(sum(a.income)/count(*),2) as income,
+round(sum(a.inc_sal)/count(*),2) as inc_sal,
+round(sum(a.inc_sal_add)/count(*),2) as inc_sal_add,
+round(sum(a.inc_sal_spouse)/count(*),2) as inc_sal_spouse,
+round(sum(a.inc_rent)/count(*),2) as inc_rent,
+round(sum(a.inc_pension_benefits)/count(*),2) as inc_pension_benefits,
+round(sum(a.inc_interest)/count(*),2) as inc_interest,
+a.folder_id from (
+select nvl(rr.inc_sal,0) + nvl(rr.inc_sal_add,0) + nvl(rr.inc_sal_spouse,0) + nvl(rr.inc_rent,0) +
+       nvl(rr.inc_pension_benefits,0) + nvl(rr.inc_interest,0) as income,
+       rr.inc_sal,
+       rr.inc_sal_add,
+       rr.inc_sal_spouse,
+       rr.inc_rent,
+       rr.inc_pension_benefits,
+       rr.inc_interest, f.folder_id
+from v_folder_all_rfo f
+join V_FORM_CLIENT_ALL_RFO rr1 on f.form_client_id = rr1.form_client_id
+left join V_FORM_CLIENT_ALL_RFO rr on rr.rnn = rr1.rnn or rr.iin = rr1.iin
+join v_folder_all_rfo ff1 on ff1.form_client_id = rr.form_client_id
+where rr.form_client_date >= add_months(f.folder_date_create,-6) and rr.form_client_date <= f.folder_date_create
+       ) a where a.income >0
+group by a.folder_id;
+grant select on U1.M_AVERAGE_SALARY_ON_FOLDER to LOADDB;
+grant select on U1.M_AVERAGE_SALARY_ON_FOLDER to LOADER;
+
+

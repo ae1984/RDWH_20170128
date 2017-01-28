@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_TMP_J_ONL_MODEL_COMPARE
+refresh force on demand
+as
+select t.age, b.age_full_years,
+       count(*) as cnt, count(distinct t.claim_id) as claim_cnt
+from M_RFO_FRAUD_SEARCH t
+left join M_MATRIX_BASE mb on mb.claim_id = t.claim_id
+left join V_FORM_CLIENT_ALL_RFO b on b.form_client_id = mb.form_client_id
+group by t.age, b.age_full_years;
+grant select on U1.M_TMP_J_ONL_MODEL_COMPARE to LOADDB;
+
+

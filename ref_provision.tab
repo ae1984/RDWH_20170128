@@ -1,0 +1,22 @@
+﻿create table U1.REF_PROVISION
+(
+  days_del  VARCHAR2(50),
+  provision NUMBER,
+  a_date    DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.REF_PROVISION to LOADDB;
+grant select on U1.REF_PROVISION to LOADER;
+

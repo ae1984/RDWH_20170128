@@ -1,0 +1,29 @@
+﻿create table U1.TMP_J_DEP_CLI_20150126
+(
+  client_name    VARCHAR2(500),
+  iin            VARCHAR2(500),
+  phone_home     VARCHAR2(500),
+  phone_mobile_1 VARCHAR2(500),
+  phone_mobile_2 VARCHAR2(500),
+  phone_mobile_3 VARCHAR2(500),
+  employer       VARCHAR2(500),
+  phone_work_1   VARCHAR2(500),
+  phone_work_2   VARCHAR2(500),
+  email          VARCHAR2(500)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.TMP_J_DEP_CLI_20150126 to LOADDB;
+grant select on U1.TMP_J_DEP_CLI_20150126 to LOADER;
+

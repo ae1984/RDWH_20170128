@@ -1,0 +1,21 @@
+﻿create table U1.T_TMP_A_KASPIRED_2
+(
+  folder_id       NUMBER,
+  is_mo_reject    NUMBER,
+  mo_cred_limit_k NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_A_KASPIRED_2 to LOADDB;
+

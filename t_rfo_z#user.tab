@@ -1,0 +1,113 @@
+﻿create table U1.T_RFO_Z#USER
+(
+  id                      NUMBER not null,
+  c_username              VARCHAR2(30 CHAR),
+  c_name                  VARCHAR2(100 CHAR),
+  c_email                 VARCHAR2(100 CHAR),
+  c_empl                  NUMBER,
+  c_user_back             VARCHAR2(32 CHAR),
+  c_id_depart             VARCHAR2(32 CHAR),
+  c_casta                 NUMBER,
+  c_name_depart           VARCHAR2(400 CHAR),
+  c_depart                NUMBER,
+  c_by_right              NUMBER,
+  c_c#parameters          CLOB,
+  c_st_depart             NUMBER,
+  c_warrant               VARCHAR2(30 CHAR),
+  c_warrant_date          DATE,
+  c_plan                  VARCHAR2(1 CHAR),
+  c_kas_journal           NUMBER,
+  c_kas_prop              NUMBER,
+  c_num_tab               VARCHAR2(10 CHAR),
+  c_kas_date_inhand       DATE,
+  c_kas_date_order        DATE,
+  c_kas_order_num         VARCHAR2(40 CHAR),
+  c_kas_audit#rcv_file    VARCHAR2(128 CHAR),
+  c_kas_audit#create      NUMBER,
+  c_kas_audit#edit        NUMBER,
+  c_kas_audit#date_create DATE,
+  c_kas_audit#date_edit   DATE,
+  c_kas_audit#from_rout   VARCHAR2(1 CHAR),
+  c_kas_audit#op_date     DATE,
+  c_kas_audit#key_valid   VARCHAR2(1 CHAR),
+  c_kas_warr_date_sk      DATE,
+  c_kas_op_date           DATE,
+  sn                      NUMBER,
+  su                      NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RFO_Z#USER
+  is 'Пользователи';
+comment on column U1.T_RFO_Z#USER.c_username
+  is 'Сетевое имя';
+comment on column U1.T_RFO_Z#USER.c_name
+  is 'ФИО';
+comment on column U1.T_RFO_Z#USER.c_email
+  is 'Адрес электронной почты';
+comment on column U1.T_RFO_Z#USER.c_empl
+  is 'Сотрудник(FK на Z#CL_PRIV)';
+comment on column U1.T_RFO_Z#USER.c_user_back
+  is 'ID пользователя в бэк-офисе';
+comment on column U1.T_RFO_Z#USER.c_id_depart
+  is 'Подразделение банка';
+comment on column U1.T_RFO_Z#USER.c_casta
+  is 'Должность(FK на Z#CASTA)';
+comment on column U1.T_RFO_Z#USER.c_name_depart
+  is 'Наименование подразделения';
+comment on column U1.T_RFO_Z#USER.c_depart
+  is 'Подразделение(FK на Z#DEPART)';
+comment on column U1.T_RFO_Z#USER.c_c#parameters
+  is 'Строка параметров WebNav';
+comment on column U1.T_RFO_Z#USER.c_st_depart
+  is 'Структурное подразделение(FK на Z#STRUCT_DEPART)';
+comment on column U1.T_RFO_Z#USER.c_warrant
+  is 'Номер доверенности';
+comment on column U1.T_RFO_Z#USER.c_warrant_date
+  is 'Дата доверенности';
+comment on column U1.T_RFO_Z#USER.c_plan
+  is 'Планировать перемещение по магазинам';
+comment on column U1.T_RFO_Z#USER.c_kas_journal
+  is 'KAS_Журнал аудита состояний пользователя(COLLECTION в Z#KAS_JOURN_AUDIT)';
+comment on column U1.T_RFO_Z#USER.c_kas_prop
+  is 'KAS. Дополнительные свойства(COLLECTION в Z#PROPERTIES)';
+comment on column U1.T_RFO_Z#USER.c_num_tab
+  is 'Табельный номер';
+comment on column U1.T_RFO_Z#USER.c_kas_date_inhand
+  is 'KAS. Дата приема на должность';
+comment on column U1.T_RFO_Z#USER.c_kas_date_order
+  is 'KAS. Дата приказа';
+comment on column U1.T_RFO_Z#USER.c_kas_order_num
+  is 'KAS. Номер приказа';
+comment on column U1.T_RFO_Z#USER.c_kas_warr_date_sk
+  is 'KAS. Дата доверенности СК';
+comment on column U1.T_RFO_Z#USER.c_kas_op_date
+  is 'KAS. Индивидуальный операционный день';
+create unique index U1.T_RFO_Z#USER_IND1 on U1.T_RFO_Z#USER (ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#USER
+  add constraint T_RFO_Z#USER_PK primary key (ID);
+grant select on U1.T_RFO_Z#USER to LOADDB;
+grant select on U1.T_RFO_Z#USER to RISK_VERIF;
+

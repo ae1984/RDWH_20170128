@@ -1,0 +1,30 @@
+﻿create table U1.T_OUT_VERIFICATION_DEMAND_1
+(
+  verification_demand_id     NUMBER not null,
+  rfo_client_id              NUMBER,
+  folder_id                  NUMBER,
+  verif_demand_status_doc_id NUMBER,
+  is_verif_demand_result_flg VARCHAR2(10),
+  c_comment                  VARCHAR2(4000),
+  c_comment_photo            VARCHAR2(4000),
+  verif_date_create          DATE,
+  verif_demand_date_out      DATE,
+  verif_demand_date_in       DATE,
+  reason_process_id          NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_OUT_VERIFICATION_DEMAND_1 to LOADDB;
+grant select on U1.T_OUT_VERIFICATION_DEMAND_1 to LOADER;
+

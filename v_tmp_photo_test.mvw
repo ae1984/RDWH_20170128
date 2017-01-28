@@ -1,0 +1,34 @@
+﻿create materialized view U1.V_TMP_PHOTO_TEST
+using no index
+refresh complete on demand
+as
+select distinct
+a.rfo_client_id,
+a.folder_id,
+a.folder_date_create,
+t.c_inn,
+i.c_date,
+i.c_name,
+i.c_uid
+from (
+select a.* from (
+select a.* from (
+select distinct
+rfo_client_id,
+max(a.folder_id) keep (dense_rank last order by a.folder_date_create) as folder_id,
+max(a.folder_date_create) keep (dense_rank last order by a.folder_date_create) as folder_date_create
+from v_folder_all_rfo a
+where trunc(a.folder_date_create) >= to_date('01.10.2014', 'dd.mm.yyyy')
+and a.process_name in ('КАСПИЙСКИЙ. ВЫДАЧА АВТОКРЕДИТА НА КАРТУ',
+'КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НА КАРТУ',
+'КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НАЛИЧНЫМИ НА КАРТУ')
+group by rfo_client_id) a
+order by a.folder_date_create) a
+where rownum < 120000) a
+join V_RFO_Z#CLIENT t on a.rfo_client_id = t.id
+join V_RFO_Z#IMAGES i on i.c_fold_id = a.folder_id and upper(i.c_name) like '%FOTO_FL%'
+join v_verification v on a.folder_id = v.folder_id and v.verif_photo_result = 'ОТКАЗ';
+grant select on U1.V_TMP_PHOTO_TEST to LOADDB;
+grant select on U1.V_TMP_PHOTO_TEST to LOADER;
+
+

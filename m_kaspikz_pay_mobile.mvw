@@ -1,0 +1,42 @@
+﻿create materialized view U1.M_KASPIKZ_PAY_MOBILE
+build deferred
+refresh complete on demand
+as
+select ua.rbo_id as rbo_client_id,
+       ua.rfo_id as rfo_client_id,
+       fu.id     as user_id,
+       kl.login_val as client_phone_number,
+       replace(kl.login_val,'X','') as client_phone_number_clear,
+       ua.bank_prof_iin  as client_prof_iin,
+       fu.INN,
+       fu.RNN,
+       fu.date_of_birth,
+       fu.user_last_name_rus||' '||fu.user_first_name_rus||' '||fu.user_middle_name_rus as client_name,
+       fu.is_blocked,
+       sc.alias_val as service_categ_code,
+       sc.name_val as service_categ_name,
+       s.alias_val as mobile_operator,
+       pp.reg_date as pay_date,
+       pp.amount   as pay_amount,
+       pp.amount_fee as pay_amount_fee,
+       pp.currency   as pay_currency,
+       pp.bonus_amount,
+       psp.alias_val as pay_service_param,
+       pip.str_value as pay_phone_number,
+       case when regexp_like(pip.str_value,'^8[[:digit:]]{10}$') then regexp_replace(pip.str_value,'(^8)([[:digit:]]{10})$', '\2')
+         else pip.str_value
+       end as pay_phone_number_clear,
+       pp.id  as pay_pay_info_id
+  from u1.M_KASPIKZ_PAY_SERVICE_CATEG sc
+  join u1.M_KASPIKZ_PAY_SERVICES      s  on s.service_category_id = sc.id
+  join u1.M_KASPIKZ_PAY_PAY_INFO      pp on pp.service_id = s.id
+  join u1.M_KASPIKZ_USERS             fu on fu.Id = pp.user_id
+  join u1.M_KASPIKZ_LOGINS            kl on kl.user_id = fu.Id
+  join u1.M_KASPIKZ_USERS_ALL         ua on ua.user_id = fu.id
+  join u1.T_KASPIKZ_PAY_PAYINFOPARAMS  pip on pip.pay_info_id = pp.id
+  join u1.M_KASPIKZ_PAY_SERVICE_PARAMS psp on psp.id = pip.service_params_id
+ where upper(sc.alias_val) = 'MOBILE';
+grant select on U1.M_KASPIKZ_PAY_MOBILE to LOADDB;
+grant select on U1.M_KASPIKZ_PAY_MOBILE to RISK_VERIF;
+
+

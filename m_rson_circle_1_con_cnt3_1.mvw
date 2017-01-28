@@ -1,0 +1,46 @@
+﻿create materialized view U1.M_RSON_CIRCLE_1_CON_CNT3_1
+refresh complete on demand
+as
+select f.rfo_client_id,
+       f.contract_number,
+       f.yy_mm_start_last,
+       f.rfo_client_id_link,
+       c.client_id as client_id_link
+  from (select h1.rfo_client_id    as rfo_client_id,
+               cd.contract_number  as contract_number,
+               cd.yy_mm_start_last as yy_mm_start_last,
+               h2.rfo_client_id    as rfo_client_id_link
+          from M_CONTRACT_CAL_DEL cd
+          join V_FOLDER_ALL_RFO a
+            on cd.folder_id_first = a.folder_id
+          join V_FORM_CLIENT_CONTACT_PHONE h1
+            on a.rfo_client_id = h1.rfo_client_id
+          left join V_FORM_CLIENT_CONTACT_PHONE h2
+            on h1.phone_number = h2.phone_number
+           and h2.folder_date < a.folder_date_create
+           and trunc(h2.folder_date) > trunc(a.folder_date_create)-720
+           and trunc(h1.folder_date) = trunc(a.folder_date_create)
+         where h2.phone_type_simple in
+               ('МОБИЛЬНЫЙ', 'ДОМАШНИЙ')
+           and h1.phone_type_simple in
+               ('ДОМАШНИЙ', 'КОНТАКТ')
+           and h1.phone_number not like '%000000%'
+           and h1.phone_number not like '%1234567%'
+           and h2.rfo_client_id != h1.rfo_client_id
+         group by cd.contract_number,
+                  h1.rfo_client_id,
+                  h2.rfo_client_id,
+                  cd.yy_mm_start_last
+        having sum(cd.max_debt_used) > 0) f
+  join M_CONTRACT_CAL_DEL c
+    on c.rfo_client_id = f.rfo_client_id_link
+ group by f.rfo_client_id,
+          f.contract_number,
+          f.yy_mm_start_last,
+          f.rfo_client_id_link,
+          c.client_id
+having sum(c.max_debt_used) > 0;
+grant select on U1.M_RSON_CIRCLE_1_CON_CNT3_1 to LOADDB;
+grant select on U1.M_RSON_CIRCLE_1_CON_CNT3_1 to LOADER;
+
+

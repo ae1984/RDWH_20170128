@@ -1,0 +1,48 @@
+﻿create table U1.NT_RBO_CRED_PORTFOLIO
+(
+  rep_date                 DATE,
+  rbo_contract_id          NUMBER(20) not null,
+  rbo_client_id            NUMBER,
+  principal                NUMBER,
+  interest                 NUMBER,
+  overlimit                NUMBER,
+  overlimit_interest       NUMBER,
+  overdraft                NUMBER,
+  overdraft_interest       NUMBER,
+  principal_del            NUMBER,
+  interest_del             NUMBER,
+  overlimit_del            NUMBER,
+  overlimit_interest_del   NUMBER,
+  overdraft_del            NUMBER,
+  overdraft_interest_del   NUMBER,
+  w_principal_del          NUMBER,
+  w_interest_del           NUMBER,
+  w_overlimit_del          NUMBER,
+  w_overlimit_interest_del NUMBER,
+  w_overdraft_del          NUMBER,
+  w_overdraft_interest_del NUMBER,
+  pc_cred_limit            NUMBER,
+  delinq_days              NUMBER,
+  delinq_date              DATE,
+  delinq_days_cli          NUMBER,
+  date_delinq_date_cli     DATE,
+  total_debt               NUMBER,
+  delinq_amount            NUMBER,
+  is_on_balance            NUMBER,
+  is_card                  NUMBER(1) not null,
+  total_debt_cli           NUMBER,
+  del_amount_cli           NUMBER
+)
+tablespace USERS
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+nologging;
+

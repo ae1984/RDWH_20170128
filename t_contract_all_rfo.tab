@@ -1,0 +1,165 @@
+﻿create table U1.T_CONTRACT_ALL_RFO
+(
+  rfo_contract_id         NUMBER not null,
+  contract_number         VARCHAR2(300),
+  rfo_client_id           NUMBER,
+  is_card                 NUMBER,
+  contract_date           DATE,
+  contract_status_code    VARCHAR2(150),
+  contract_status_name    VARCHAR2(300),
+  cr_program_code         VARCHAR2(105),
+  cr_program_name         VARCHAR2(750),
+  credit_type_of_contract VARCHAR2(25),
+  credit_type_of_scheme   VARCHAR2(25),
+  cr_scheme_code          VARCHAR2(120),
+  cr_scheme_name          VARCHAR2(300),
+  tariff_plan_code        VARCHAR2(120),
+  tariff_plan_name        VARCHAR2(750),
+  gu_contract_num         VARCHAR2(300),
+  is_aa_approved          NUMBER,
+  auto_calc_result        VARCHAR2(4000),
+  date_begin              DATE,
+  set_revolving_date      DATE,
+  shop_id                 NUMBER,
+  shop_code               VARCHAR2(150),
+  shop_place              VARCHAR2(510),
+  folder_id               NUMBER,
+  contract_amount         NUMBER(17,2),
+  wish_pay_sum            NUMBER,
+  is_credit_issued        NUMBER,
+  gu_version              VARCHAR2(300),
+  gu_sign_date            DATE,
+  gu_date                 DATE,
+  kas_add_prop            NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on column U1.T_CONTRACT_ALL_RFO.contract_number
+  is 'Номер контракта';
+comment on column U1.T_CONTRACT_ALL_RFO.rfo_client_id
+  is ' Клиент(FK на Z#CLIENT)';
+comment on column U1.T_CONTRACT_ALL_RFO.is_card
+  is 'Признак (1-карта,0-кредит)';
+comment on column U1.T_CONTRACT_ALL_RFO.contract_date
+  is 'Дата документа карты';
+comment on column U1.T_CONTRACT_ALL_RFO.contract_status_code
+  is 'Код статуса договора(V_RFO_Z#STATUS_DOG)';
+comment on column U1.T_CONTRACT_ALL_RFO.contract_status_name
+  is 'Наименование статуса договора';
+comment on column U1.T_CONTRACT_ALL_RFO.cr_program_code
+  is 'Код дополнительных реквизитов(V_RFO_Z#PROD_PROPERTY)';
+comment on column U1.T_CONTRACT_ALL_RFO.cr_program_name
+  is 'Дополнительные реквизиты';
+comment on column U1.T_CONTRACT_ALL_RFO.credit_type_of_contract
+  is 'Тип контракта';
+comment on column U1.T_CONTRACT_ALL_RFO.cr_scheme_code
+  is 'Код кредитной схемы(V_RFO_Z#CRED_SCHEME) или карточной схемы(V_RFO_Z#KAS_CARD_SCHEME)';
+comment on column U1.T_CONTRACT_ALL_RFO.cr_scheme_name
+  is 'Название схемы';
+comment on column U1.T_CONTRACT_ALL_RFO.tariff_plan_code
+  is 'Код тарифного плана (V_RFO_Z#KAS_UNIVERSAL_D)';
+comment on column U1.T_CONTRACT_ALL_RFO.tariff_plan_name
+  is 'Наименование тарифного плана';
+comment on column U1.T_CONTRACT_ALL_RFO.gu_contract_num
+  is 'Номер карточного договора';
+comment on column U1.T_CONTRACT_ALL_RFO.auto_calc_result
+  is 'Результат авторасчета';
+comment on column U1.T_CONTRACT_ALL_RFO.date_begin
+  is 'Дата начала договора';
+comment on column U1.T_CONTRACT_ALL_RFO.set_revolving_date
+  is 'Дата включения револьвирования';
+comment on column U1.T_CONTRACT_ALL_RFO.shop_id
+  is 'Магазин(FK на Z#SHOPS)';
+comment on column U1.T_CONTRACT_ALL_RFO.shop_code
+  is 'Код магазина';
+comment on column U1.T_CONTRACT_ALL_RFO.shop_place
+  is 'Адрес магазина (город)';
+comment on column U1.T_CONTRACT_ALL_RFO.folder_id
+  is ' Папка(FK на V_RFO_Z#FOLDERS)';
+comment on column U1.T_CONTRACT_ALL_RFO.contract_amount
+  is 'Сумма кредита';
+comment on column U1.T_CONTRACT_ALL_RFO.wish_pay_sum
+  is 'Сумма желаемого платежа';
+comment on column U1.T_CONTRACT_ALL_RFO.kas_add_prop
+  is 'KAS. Дополнительные свойства(COLLECTION в Z#PROPERTIES)';
+create index U1.T_CONTRACT_ALL_RFO_IND1 on U1.T_CONTRACT_ALL_RFO (CONTRACT_NUMBER)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_CONTRACT_ALL_RFO_IND2 on U1.T_CONTRACT_ALL_RFO (CONTRACT_STATUS_CODE)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_CONTRACT_ALL_RFO_IND3 on U1.T_CONTRACT_ALL_RFO (CR_PROGRAM_NAME)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_CONTRACT_ALL_RFO_IND4 on U1.T_CONTRACT_ALL_RFO (FOLDER_ID)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create unique index U1.T_CONTRACT_ALL_RFO_PK_IND on U1.T_CONTRACT_ALL_RFO (RFO_CONTRACT_ID)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_CONTRACT_ALL_RFO
+  add constraint T_CONTRACT_ALL_RFO_PK primary key (RFO_CONTRACT_ID);
+grant select on U1.T_CONTRACT_ALL_RFO to LOADDB;
+grant select on U1.T_CONTRACT_ALL_RFO to LOADER;
+

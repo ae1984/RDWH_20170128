@@ -1,0 +1,40 @@
+﻿create materialized view U1.M_CONTRACT_VERIF_DELINQ
+build deferred
+refresh force on demand
+as
+select /*+ parallel 5 */
+       ca.rfo_contract_id,
+       ca.folder_id as contract_folder_id,
+       ca.rfo_client_id as contract_client_id,
+       ca.contract_number,
+       far.folder_date_create as contract_folder_date,
+       ca.contract_amount,
+       fcr.c_summa as contract_folder_summa,
+       max(rp.delinq_days) as max_delinq_days
+  from u1.v_contract_all_rfo ca
+  join u1.v_folder_all_rfo far on far.folder_id = ca.folder_id
+  join u1.v_rfo_z#form_client fcr on fcr.id = far.form_client_id
+
+  join u1.v_folder_all_rfo fa on fa.folder_id <> ca.folder_id and ca.rfo_client_id = fa.rfo_client_id
+       and fa.folder_date_create >= trunc(far.folder_date_create)-1 and fa.folder_date_create < trunc(far.folder_date_create)
+  join u1.v_rfo_z#form_client fc on fc.id = fa.form_client_id
+  join u1.V_RFO_Z#KAS_CANCEL kc on kc.c_folders = fa.folder_id
+  join u1.V_RFO_Z#KAS_CANCEL_TYPES ct  on ct.id = kc.c_type and ct.c_code in ('VERIFICATION_CONTACT','VERIFICATION_PHOTO')
+
+  join u1.m_rbo_contract_bas cb on cb.rfo_contract_id = ca.rfo_contract_id
+  join u1.v_rbo_port rp on cb.rbo_contract_id = rp.rbo_contract_id-- and rp.rep_date = trunc(sysdate)-2
+ where ca.cr_program_code = 'EC_GOODS'
+       and ca.contract_date >= to_date('01.01.2015','dd.mm.yyyy')
+       and ca.is_credit_issued = 1
+group by
+ca.rfo_contract_id,
+       ca.folder_id,
+       ca.rfo_client_id,
+       ca.contract_number,
+       far.folder_date_create,
+       ca.contract_amount,
+       fcr.c_summa;
+grant select on U1.M_CONTRACT_VERIF_DELINQ to LOADDB;
+grant select on U1.M_CONTRACT_VERIF_DELINQ to LOADER;
+
+

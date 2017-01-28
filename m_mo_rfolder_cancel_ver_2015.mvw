@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_MO_RFOLDER_CANCEL_VER_2015
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30 */
+       pp.rfolder_id,
+       h.reject_code,
+       max(h.reject_ver) as reject_ver,
+       max(r.reject_result) as reject_result
+from u1.M_FOLDER_MO_SCO_REQUEST_2015 pp
+join u1.M_MO_SCO_REJECT_RULE_2015 r on r.rfolder_id = pp.rfolder_id
+join u1.m_mo_reject_param_hist h on h.batch_date <= pp.date_create and
+                                           h.reject_code = 'C_' || r.code_int
+group by pp.rfolder_id, h.reject_code;
+grant select on U1.M_MO_RFOLDER_CANCEL_VER_2015 to LOADDB;
+
+

@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_TDWH_HHKZ
+refresh force on demand
+as
+select t.ID,
+       t.UDATE,
+       t.IDATE,
+       upper(t.LAST_UPDATE) LAST_UPDATE,
+       upper(t.LAST_JOB_EXP) LAST_JOB_EXP,
+       upper(t.LAST_JOB_PROF_TITLE) LAST_JOB_PROF_TITLE,
+       upper(t.LAST_JOB_FIELD) LAST_JOB_FIELD,
+       upper(t.LAST_JOB_TITLE) LAST_JOB_TITLE,
+       t.JOB_TITLE_LINK,
+       upper(t.JOB_TITLE) JOB_TITLE,
+       upper(t.EXP_SUM) EXP_SUM,
+       t.COMPENSATION,
+       t.AGE,
+       upper(t.USERNAME) USERNAME,
+       upper(t.USERNAME_PATRONYMIC) USERNAME_PATRONYMIC,
+       upper(t.USERNAME_NAME) USERNAME_NAME,
+       upper(t.USERNAME_SURNAME) USERNAME_SURNAME,
+       t.LAST_UPDATE_DATE,
+       upper(t.COMPENSATION_CURRENCY) COMPENSATION_CURRENCY,
+       upper(t.CITY) CITY
+from MAIN.HHKZ_SHORT@TDWH2 t;
+grant select on U1.M_TDWH_HHKZ to LOADDB;
+grant select on U1.M_TDWH_HHKZ to LOADER;
+
+

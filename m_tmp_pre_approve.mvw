@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_TMP_PRE_APPROVE
+refresh complete on demand
+as
+select *
+from (
+select t.client_ref, t.anketa_type, t.is_gu_match, t.is_form_match, t.folder_date_create, t.is_cancel_exists, t.is_not_fraud,
+       p.report_type, max(p.rfo_report_date) rfo_report_date
+from M_RFO_ONLINE_CV_PRE_DESC t
+left join V_PKB_REPORT p on p.folder_client_id = t.client_ref
+     and p.is_from_cache = 0
+group by t.client_ref, t.anketa_type, t.is_gu_match, t.is_form_match, t.folder_date_create, t.is_cancel_exists, t.is_not_fraud,
+       p.report_type
+       ) pivot (
+max(rfo_report_date) report_date
+for report_type in ('ПЕРВИЧНЫЙ' as pkb_1,
+                    'СТАНДАРТНЫЙ' as pkb_2,
+                    'РАСШИРЕННЫЙ' as pkb_3)
+
+       );
+grant select on U1.M_TMP_PRE_APPROVE to LOADDB;
+grant select on U1.M_TMP_PRE_APPROVE to LOADER;
+
+

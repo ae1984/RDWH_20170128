@@ -1,0 +1,78 @@
+﻿create table U1.T_RFO_Z#PROD_INFO
+(
+  id             NUMBER not null,
+  collection_id  NUMBER,
+  c_name         VARCHAR2(100 CHAR),
+  c_producer     VARCHAR2(100 CHAR),
+  c_model        VARCHAR2(100 CHAR),
+  c_price        NUMBER(17,2),
+  c_quant        NUMBER(4),
+  c_cost         NUMBER(17,2),
+  class_id       VARCHAR2(16 CHAR),
+  c_type_tov     NUMBER,
+  c_bill_number  VARCHAR2(50 CHAR),
+  c_bill_summ    NUMBER(17,2),
+  c_bill_date    DATE,
+  c_name_ref     NUMBER,
+  c_act_prod     NUMBER,
+  sn             NUMBER,
+  su             NUMBER,
+  c_kas_prod_com NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RFO_Z#PROD_INFO
+  is 'Информация о товаре';
+comment on column U1.T_RFO_Z#PROD_INFO.c_name
+  is 'Наименование товара';
+comment on column U1.T_RFO_Z#PROD_INFO.c_producer
+  is 'Производитель';
+comment on column U1.T_RFO_Z#PROD_INFO.c_model
+  is 'Модель';
+comment on column U1.T_RFO_Z#PROD_INFO.c_price
+  is 'Цена';
+comment on column U1.T_RFO_Z#PROD_INFO.c_quant
+  is 'Количество';
+comment on column U1.T_RFO_Z#PROD_INFO.c_cost
+  is 'Стоимость';
+comment on column U1.T_RFO_Z#PROD_INFO.c_type_tov
+  is 'Вид товара(FK на Z#KIND_ZAL_BODY)';
+comment on column U1.T_RFO_Z#PROD_INFO.c_bill_number
+  is 'Номер счета';
+comment on column U1.T_RFO_Z#PROD_INFO.c_bill_summ
+  is 'Сумма счета';
+comment on column U1.T_RFO_Z#PROD_INFO.c_bill_date
+  is 'Дата счета';
+comment on column U1.T_RFO_Z#PROD_INFO.c_name_ref
+  is 'Ссылка "Наименование товара"(FK на Z#KAS_TOV_NAME)';
+comment on column U1.T_RFO_Z#PROD_INFO.c_act_prod
+  is 'Ссылка на "Aкционный товар"(FK на Z#KAS_DISC_PROD)';
+comment on column U1.T_RFO_Z#PROD_INFO.c_kas_prod_com
+  is 'KAS. Комиссии(COLLECTION в Z#KAS_PROD_COM)';
+create unique index U1.T_RFO_Z#PROD_INFO_IND1 on U1.T_RFO_Z#PROD_INFO (ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#PROD_INFO
+  add constraint T_RFO_Z#PROD_INFO_PK primary key (ID);
+grant select on U1.T_RFO_Z#PROD_INFO to LOADDB;
+

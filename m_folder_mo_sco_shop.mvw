@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_FOLDER_MO_SCO_SHOP
+build deferred
+refresh force on demand
+as
+select *
+from (
+    select /*+ parallel 30 */
+           r.id rfolder_id,
+           r.date_create,
+           dp.code_int,
+           case when dp.d_par_datatype_code = 'NUMBER' then to_char(t.value_number)
+                when dp.d_par_datatype_code = 'DATE' then to_char(t.value_date, 'dd-mm-yyyy hh24:mi:ss')
+           else t.value_text end as value_number
+    from MO_RFOLDER r
+    join T_MO_RFOLDER_PAR_VALUE_2016 t on t.rfolder_id = r.id
+    join V_MO_D_PAR dp on dp.id = t.d_par_id
+                           and dp.code_int in ('IN_SCO_IIN',
+                                               'IN_SCO_CLIENT_ID',
+                                               'IN_SCO_FOLDER_ID',
+                                               'IN_SCO_POS_CODE',
+                                               'IN_SCO_SHOP_CODE'
+                                              )
+    where r.date_create >= to_date('01-01-2016', 'dd-mm-yyyy')
+          and r.date_create < to_date('01-01-2017', 'dd-mm-yyyy')
+          /*and r.id = 35894176*/
+) pivot (
+    max(value_number)
+    for code_int in ( 'IN_SCO_IIN' as iin,
+                      'IN_SCO_CLIENT_ID' as rfo_client_id,
+                      'IN_SCO_FOLDER_ID' as rfo_folder_id,
+
+                      'IN_SCO_POS_CODE' as in_sco_pos_code,
+                      'IN_SCO_SHOP_CODE' as in_sco_shop_code)
+);
+grant select on U1.M_FOLDER_MO_SCO_SHOP to LOADDB;
+
+

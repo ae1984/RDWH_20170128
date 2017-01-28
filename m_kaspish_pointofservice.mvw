@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_KASPISH_POINTOFSERVICE
+build deferred
+refresh force on demand
+as
+select hjmpts,
+       typepkstring,
+       ownerpkstring,
+       modifiedts,
+       createdts,
+       pk,
+       p_mapicon,
+       p_type,
+       p_address,
+       p_longitude,
+       p_openingschedule,
+       p_description,
+       p_latitude,
+       p_storeimage,
+       p_basestore,
+       p_name,
+       p_geocodetimestamp,
+       p_nearbystoreradius,
+       p_displayname,
+       p_active,
+       p_kaspisignatureaddress,
+       p_rfoid,
+       p_merchant,
+       p_city,
+       p_kaspiagent,
+       aclts,
+       propts,
+       p_status
+  from KASPI.POINTOFSERVICE@KS_STD
+ where rownum >= 0;
+grant select on U1.M_KASPISH_POINTOFSERVICE to LOADDB;
+
+

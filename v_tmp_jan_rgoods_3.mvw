@@ -1,0 +1,101 @@
+﻿create materialized view U1.V_TMP_JAN_RGOODS_3
+refresh force on demand
+as
+select * from V_TMP_JAN_GOODS_1 t where t.title is null and (
+t.product_name like '%BLU%RAY%' or
+t.product_name like '%BLU-RAY%' or
+t.product_name like '%BLUE RAY%' or
+t.product_name like '%DIGITAL CAMERA%' or
+t.product_name like '%IPAD%' or
+t.product_name like '%IPHONE%' or
+t.product_name like '%IPOD%' or
+t.product_name like '%LCD%' or
+t.product_name like '%LED%' or  --
+t.product_name like '%MACBOOK%' or
+t.product_name like '%NET BOOK%' or
+t.product_name like '%НЕТБУК%' or --
+t.product_name like '%NOTEBOOK%' or
+t.product_name like '%НОУТБУК%' or  --
+t.product_name like '%УЛЬТРАБУК%' or t.product_name like '%ULTRABOOK%' OR---
+t.product_name like '%МОНОБЛОК%' or  --
+t.product_name like '%PAD%' or
+t.product_name like '%APPLE%' or
+t.product_name like '%TAB%' or
+t.product_name like '%КОМПЬЮТЕР %' or
+t.product_name like '%ВИДЕОКАМЕРА%' or
+t.product_name like '%ФОТОАППАРАТ%' or
+t.product_name like '%ЦИФРОВАЯ%' or
+t.product_name like '%ВСТР%' or --
+t.product_name like '%ПОСУДОМО%' or  --
+t.product_name like '%КОНСОЛ%' or
+t.product_name like '%КОНДИЦИОНЕР%' or
+t.product_name like '%МОБИЛЬНЫЙ ТЕЛЕФОН%' OR
+       t.product_name like 'GSM%'or t.product_name like '%СОТ%ТЕЛ%' OR t.product_name like '%CОТ%ТЕЛ%' OR
+t.product_name like '%МОНИТОР%' or
+t.product_name like '%МОРОЗИЛЬНИК%' or
+t.product_name like '%МУЗ%ЦЕНТР%' or
+t.product_name like '%ПЛАНШЕТ%' or
+t.product_name like '%ПРИНТЕР%' or --
+t.product_name like '%МФУ%' or --
+t.product_name like '%СИНТЕЗАТОР%' or
+t.product_name like '%СИСТЕМНЫЙ БЛОК%' or
+t.product_name like '%СМАРТФОН%' OR  t.product_name like '%SMARTPHONE%' or ---
+t.product_name like '%СТИР%МАШ%' or --
+t.product_name like '%ТЕЛЕВИЗОР%' or
+t.product_name like '%ТЕЛЕФОН%' or
+t.product_name like '%ТУМБА%TV%' or
+t.product_name like '%TV%ТУМБА%' or
+t.product_name like '%ТУМБА%ТВ%' or
+t.product_name like '%ТУМБА%TV%' or
+t.product_name like '%ФОТОАППАРАТ%' or
+t.product_name like '%ХОЛОД%' OR t.product_name like 'ХОЛ %' or ---
+t.product_name like '%LCD%TV%' OR t.product_name like '%LED%TV%' OR t.product_name like '%ТЕЛЕВ%' or t.product_name like '%SMART%TV%' OR
+       t.product_name like '%ТЕЛЕ%МОНОБЛОК%' or t.product_name like '%LCD% - %' or t.product_name like '%LCD __- %' or t.product_name like '%LCD _ %'
+       OR t.product_name like '%ПЛАЗМА %' OR t.product_name like '%ВСТР.TV%'  or---
+t.product_name like '%ЦИФРОВЫЕ%ФОТОАППАРАТЫ%' or
+t.product_name like '%ЭЛЕКТРОННАЯ%КНИГА%'
+) and not (
+t.product_name Like '%ЧЕХОЛ%' or
+t.product_name like '%ЗАЩИТНАЯ ПЛЕНКА%' or
+t.product_name like '%АККУМУЛЯТОР%' or
+t.product_name like '%АДАПТЕР%' or --
+t.product_name like '%ДОК-СТАНЦИИ%' or
+t.product_name like '%TRIPOD%' or
+t.product_name like '%ДАТА-КАБЕЛЬ%' or
+t.product_name like '%ДОК-CТАНЦИИ%' or
+t.product_name like '%АКСЕССУАРЫ ДЛЯ%' or
+t.product_name like '%АКСЕСС ДЛЯ%' or --
+t.product_name like '%СУМКА ДЛЯ%' or
+t.product_name like '%СУМКИ ДЛЯ%' or   --
+t.product_name like '%КРОНШТЕЙН ДЛЯ%' or   --
+t.product_name like '%СЕТКИ ДЛЯ%' or   --
+t.product_name like '%КЕЙС ДЛЯ%' or --
+t.product_name like '%РЮКЗАК ДЛЯ%'or
+t.product_name like '%ПОДСТАВКА ПОД%'or
+t.product_name like '%ПЕДАЛЬ ДЛЯ%' or
+t.product_name like '%ТЕЛЕФОННЫЙ КАБЕЛЬ%' or
+t.product_name like '%ГАРНИТУРЫ ДЛЯ%' or
+t.product_name like '%ЧЕХЛЫ ДЛЯ%' or
+t.product_name like '%КОЛОНКИ ДЛЯ%' or
+t.product_name like '%АКСЕССУАРЫ К МОБИЛЬНЫМ ТЕЛЕФОНАМ%' or
+t.product_name like '%СРЕДСТВ%' or --
+t.product_name like '%СОЛЬ ДЛЯ%' or --
+t.product_name like '%СР-ВО%' or  --
+t.product_name like '%ТАБЛЕТКИ ДЛЯ%' or --
+
+                           t.product_name like '%ТУМБА%' OR
+t.product_name like '%СТАБИЛИЗАТОР%' or --
+t.product_name like '%ПОДСТАВКА ДЛЯ%' or --
+t.product_name like '%ОЧИСТИТЕЛЬ%ДЛЯ%' or --
+t.product_name like '%ФОТОПРИНТЕРЫ%' or --
+t.product_name like '%ПОГЛОТИТЕЛЬ%' or --
+t.product_name like '%АНТИБАКТЕРИАЛЬНЫЙ КОВРИК В%' or
+t.product_name like '%НАБОР ДЛЯ %' or
+t.product_name like '%КОВРИК ДЛЯ %' or
+t.product_name like '%АМОРТИЗИРУЮЩИЕ ПОДСТАВКИ ДЛЯ %' or
+t.product_name like '%ДЕКОРАТИВНАЯ НАКЛЕЙКА НА %'
+);
+grant select on U1.V_TMP_JAN_RGOODS_3 to LOADDB;
+grant select on U1.V_TMP_JAN_RGOODS_3 to LOADER;
+
+

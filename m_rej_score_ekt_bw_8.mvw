@@ -1,0 +1,137 @@
+﻿create materialized view U1.M_REJ_SCORE_EKT_BW_8
+refresh complete on demand
+as
+select a.contract_number from (
+select (case when f.age_full_years_gender < -41 then 14
+             when f.age_full_years_gender >= -41 and f.age_full_years_gender < -32 then 10
+             when f.age_full_years_gender >= -32 and f.age_full_years_gender < -27 then 6
+             when f.age_full_years_gender >= -27 and f.age_full_years_gender < -23 then 1
+             when f.age_full_years_gender >= -23 and f.age_full_years_gender < 24 then -4
+             when f.age_full_years_gender >= 24 and f.age_full_years_gender < 29 then 4
+             when f.age_full_years_gender >= 29 and f.age_full_years_gender < 32 then 8
+             when f.age_full_years_gender >= 32 and f.age_full_years_gender < 36 then 10
+             when (f.age_full_years_gender >= 36 and f.age_full_years_gender < 51) or f.age_full_years_gender is null then 13
+             when f.age_full_years_gender >= 51 then 17 end ) +
+       (case when f.children in ('НЕТ','1','5 И БОЛЕЕ','2','4','3') or f.children is null then 6 end ) +
+       (case when f.cli_age_based_on_fld < 3 or f.cli_age_based_on_fld is null then 6
+             when f.cli_age_based_on_fld >= 3 and f.cli_age_based_on_fld < 102 then -14
+             when f.cli_age_based_on_fld >= 102 and f.cli_age_based_on_fld < 181 then -4
+             when f.cli_age_based_on_fld >= 181 and f.cli_age_based_on_fld < 358 then 2
+             when f.cli_age_based_on_fld >= 358 and f.cli_age_based_on_fld < 570 then 5
+             when f.cli_age_based_on_fld >= 570 and f.cli_age_based_on_fld < 701 then 11
+             when f.cli_age_based_on_fld >= 701 and f.cli_age_based_on_fld < 983 then 13
+             when f.cli_age_based_on_fld >= 983 and f.cli_age_based_on_fld < 1151 then 15
+             when f.cli_age_based_on_fld >= 1151 and f.cli_age_based_on_fld < 1352 then 18
+             when f.cli_age_based_on_fld >= 1352 then 20 end ) +
+       (case when f.cli_age_basing_on_con < 105 or f.cli_age_basing_on_con is null then 8
+             when f.cli_age_basing_on_con >= 105 and f.cli_age_basing_on_con < 176 then 12
+             when f.cli_age_basing_on_con >= 176 and f.cli_age_basing_on_con < 247 then 10
+             when f.cli_age_basing_on_con >= 247 and f.cli_age_basing_on_con < 341 then 8
+             when f.cli_age_basing_on_con >= 341 and f.cli_age_basing_on_con < 566 then 6
+             when f.cli_age_basing_on_con >= 566 and f.cli_age_basing_on_con < 865 then 2
+             when f.cli_age_basing_on_con >= 865 and f.cli_age_basing_on_con < 1240 then -1
+             when f.cli_age_basing_on_con >= 1240 then -3 end ) +
+       (case when f.contract_term_months < 6 then 19
+             when (f.contract_term_months >= 6 and f.contract_term_months < 9) or f.contract_term_months is null then 15
+             when f.contract_term_months >= 9 and f.contract_term_months < 12 then 9
+             when f.contract_term_months >= 12 and f.contract_term_months < 20 then 0
+             when f.contract_term_months >= 20 then -6 end ) +
+       (case when f.education is null then -17
+             when f.education in ('НЕПОЛНОЕ ВЫСШЕЕ','НЕПОЛНОЕ СРЕДНЕЕ','СРЕДНЕЕ','УЧЕНАЯ СТЕПЕНЬ') then -3
+             when f.education = 'СРЕДНЕЕ-СПЕЦИАЛЬНОЕ' then 3
+             when f.education in ('ВЫСШЕЕ','НЕСКОЛЬКО ВЫСШИХ') then 19 end ) +
+       (case when f.gcvp_first_pmt_days_ago_floor < 141 then 6
+             when f.gcvp_first_pmt_days_ago_floor >= 141 then 7
+             when f.gcvp_first_pmt_days_ago_floor is null then 5 end ) +
+       (case when f.gcvp_last_pmt_days_ago_floor is null then 1
+             when f.gcvp_last_pmt_days_ago_floor < 6 then 11
+             when f.gcvp_last_pmt_days_ago_floor >= 6 and f.gcvp_last_pmt_days_ago_floor < 28 then 10
+             when f.gcvp_last_pmt_days_ago_floor >= 28 and f.gcvp_last_pmt_days_ago_floor < 34 then 9
+             when f.gcvp_last_pmt_days_ago_floor >= 34 and f.gcvp_last_pmt_days_ago_floor < 59 then 8
+             when f.gcvp_last_pmt_days_ago_floor >= 59 then 4 end ) +
+       (case when f.gcvp_org_count_by_name is null then 5
+             when f.gcvp_org_count_by_name < 1 then 3
+             when f.gcvp_org_count_by_name >= 1 and f.gcvp_org_count_by_name < 3 then 8
+             when f.gcvp_org_count_by_name >= 3 then 9 end ) +
+       (case when f.gcvp_pmts_count_from_rep < 2 then 7
+             when f.gcvp_pmts_count_from_rep >=2 or f.gcvp_pmts_count_from_rep is null then 6 end ) +
+       (case when f.gcvp_pmts_per_day_max is null then 9
+             when f.gcvp_pmts_per_day_max < 2 then 5
+             when f.gcvp_pmts_per_day_max >= 2 then 4 end ) +
+       (case when f.gcvp_salary is null then 5
+             when f.gcvp_salary < 5514 then 0
+             when f.gcvp_salary >= 5514 and f.gcvp_salary < 16846 then 3
+             when f.gcvp_salary >= 16846 and f.gcvp_salary < 34131 then 7
+             when f.gcvp_salary >= 34131 and f.gcvp_salary < 48622 then 8
+             when f.gcvp_salary >= 48622 and f.gcvp_salary < 66450 then 10
+             when f.gcvp_salary >= 66450 and f.gcvp_salary < 90094 then 12
+             when f.gcvp_salary >= 90094 and f.gcvp_salary < 134092 then 13
+             when f.gcvp_salary >= 134092 then 17 end ) +
+       (case when f.IS_BANK_ACCOUNT_EXISTS is null or f.IS_BANK_ACCOUNT_EXISTS = 'НЕТ' then 5
+             when f.IS_BANK_ACCOUNT_EXISTS in ('АТФ','ДРУГОЙ БАНК РК','КАСПИЙСКИЙ','ТЕМИР','АЛЬЯНС','НАРОДНЫЙ') then 7
+             when f.IS_BANK_ACCOUNT_EXISTS in ('БТА','ЕВРАЗИЙСКИЙ','ДРУГОЙ ИНОСТРАННЫЙ БАНК','ЦЕНТРКРЕДИТ','ККБ','НУРБАНК') then 8 end ) +
+       (case when f.MARITAL_STATUS in ('ВДОВЕЦ/ВДОВА','ЖЕНАТ/ЗАМУЖЕМ') or f.MARITAL_STATUS is null then 9
+             when f.MARITAL_STATUS = 'РАЗВЕДЕН/РАЗВЕДЕНА' then 6
+             when f.MARITAL_STATUS in ('ГРАЖДАНСКИЙ БРАК/СОВМЕСТНОЕ ПРОЖИВАНИЕ','НИКОГДА В БРАКЕ НЕ СОСТОЯЛ(А)') then 3 end ) +
+       (case when f.ORG_GCVP_MAXPMTD_AGE_MON_FLOOR is null then 10
+             when f.ORG_GCVP_MAXPMTD_AGE_MON_FLOOR < 44 then 5
+             when f.ORG_GCVP_MAXPMTD_AGE_MON_FLOOR >= 44 and f.ORG_GCVP_MAXPMTD_AGE_MON_FLOOR < 48 then 3
+             when f.ORG_GCVP_MAXPMTD_AGE_MON_FLOOR >= 48 and f.ORG_GCVP_MAXPMTD_AGE_MON_FLOOR < 50 then 4
+             when f.ORG_GCVP_MAXPMTD_AGE_MON_FLOOR >= 50 then 3 end ) +
+       (case when f.PKB_CLOSED_CONTRACTS is null then 9
+             when f.PKB_CLOSED_CONTRACTS < 1 then 11
+             when f.PKB_CLOSED_CONTRACTS = 1 then 5
+             when f.PKB_CLOSED_CONTRACTS = 2 then 3
+             when f.PKB_CLOSED_CONTRACTS = 3 then 2
+             when f.PKB_CLOSED_CONTRACTS = 4 then 0
+             when f.PKB_CLOSED_CONTRACTS >= 5 then -1 end ) +
+       (case when f.PKB_TOTAL_DEBT is null then 2
+             when f.PKB_TOTAL_DEBT < 15882.43 then 15
+             when f.PKB_TOTAL_DEBT >= 15882.43 and f.PKB_TOTAL_DEBT < 59250.79 then 11
+             when f.PKB_TOTAL_DEBT >= 59250.79 and f.PKB_TOTAL_DEBT < 122090 then 3
+             when f.PKB_TOTAL_DEBT >= 122090 and f.PKB_TOTAL_DEBT < 548473.21 then 1
+             when f.PKB_TOTAL_DEBT >= 548473.21 and f.PKB_TOTAL_DEBT < 1232015.32 then 6
+             when f.PKB_TOTAL_DEBT >= 1232015.32 then 13 end ) +
+       (case when f.real_estate_relation = 'АРЕНДОВАННОЕ' then -1
+             when f.real_estate_relation in ('ДРУГОЕ','ЖИЛИЩЕ РОДИТЕЛЕЙ','НЕПРИВАТИЗИРОВАННОЕ') then 3
+             when f.real_estate_relation in ('ВЕДОМСТВЕННОЕ','КУПЛЕННОЕ В КРЕДИТ','СОБСТВЕННОЕ') or f.real_estate_relation is null then 10 end ) +
+       (case when f.sal_gcvp_to_sal_form_prc_floor is null then 5
+             when f.sal_gcvp_to_sal_form_prc_floor < 2 then 2
+             when f.sal_gcvp_to_sal_form_prc_floor = 2 then 1
+             when f.sal_gcvp_to_sal_form_prc_floor >= 3 and f.sal_gcvp_to_sal_form_prc_floor < 14 then 2
+             when f.sal_gcvp_to_sal_form_prc_floor >= 14 and f.sal_gcvp_to_sal_form_prc_floor < 33 then 5
+             when f.sal_gcvp_to_sal_form_prc_floor >= 33 and f.sal_gcvp_to_sal_form_prc_floor < 56 then 6
+             when f.sal_gcvp_to_sal_form_prc_floor >= 56 and f.sal_gcvp_to_sal_form_prc_floor < 78 then 8
+             when f.sal_gcvp_to_sal_form_prc_floor >= 78 and f.sal_gcvp_to_sal_form_prc_floor < 93 then 10
+             when f.sal_gcvp_to_sal_form_prc_floor >= 93 and f.sal_gcvp_to_sal_form_prc_floor < 132 then 12
+             when f.sal_gcvp_to_sal_form_prc_floor >= 132 then 14 end ) +
+       (case when f.start_con_del_days_max_by_cli is null then 2
+             when f.start_con_del_days_max_by_cli < 2 then 19
+             when f.start_con_del_days_max_by_cli >= 2 then -14 end ) +
+       (case when f.start_num_of_con_by_cli < 1 or f.start_num_of_con_by_cli is null then 6
+             when f.start_num_of_con_by_cli = 1 then -3
+             when f.start_num_of_con_by_cli = 2 then 5
+             when f.start_num_of_con_by_cli = 3 then 9
+             when f.start_num_of_con_by_cli = 4 then 13
+             when f.start_num_of_con_by_cli >=5 then 18 end ) +
+       (case when f.work_expr_last_place_mon_floor < 10 then 0
+             when f.work_expr_last_place_mon_floor >= 10 and f.work_expr_last_place_mon_floor < 16 then 1
+             when (f.work_expr_last_place_mon_floor >= 16 and f.work_expr_last_place_mon_floor < 29) or f.work_expr_last_place_mon_floor is null then 3
+             when f.work_expr_last_place_mon_floor >= 29 and f.work_expr_last_place_mon_floor < 39 then 6
+             when f.work_expr_last_place_mon_floor >= 39 and f.work_expr_last_place_mon_floor < 53 then 7
+             when f.work_expr_last_place_mon_floor >= 53 and f.work_expr_last_place_mon_floor < 71 then 10
+             when f.work_expr_last_place_mon_floor >= 71 and f.work_expr_last_place_mon_floor < 96 then 12
+             when f.work_expr_last_place_mon_floor >= 96 and f.work_expr_last_place_mon_floor < 117 then 14
+             when f.work_expr_last_place_mon_floor >= 117 and f.work_expr_last_place_mon_floor < 208 then 15
+             when f.work_expr_last_place_mon_floor >= 208 then 20 end )
+ as Scorecard_Points,
+           f.contract_number
+
+from
+(select f.*, case when f.sex = 'М' then f.age_full_years * -1 else f.age_full_years end as age_full_years_gender
+from m_folder_con_miner f
+where f.cr_program_name = 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР') f) a where a.Scorecard_Points < 90;
+grant select on U1.M_REJ_SCORE_EKT_BW_8 to LOADDB;
+grant select on U1.M_REJ_SCORE_EKT_BW_8 to LOADER;
+
+

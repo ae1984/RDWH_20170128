@@ -1,0 +1,52 @@
+﻿create table U1.T_TMP_J_SC_DEL_COMB_A_KN15
+(
+  contract_amount_categ_first VARCHAR2(10),
+  client_new_fresh_old        VARCHAR2(5),
+  sal_gcvp_to_sal_form        NUMBER,
+  contract_term_months        NUMBER,
+  x_dnp_name                  VARCHAR2(510),
+  del_rate                    NUMBER,
+  del_rate_pmt_1              NUMBER,
+  sales_mln                   NUMBER,
+  sales                       NUMBER,
+  con_cnt                     NUMBER,
+  con_dist_cnt                NUMBER,
+  del_rate_b_w                NUMBER,
+  del_rate_npl                NUMBER,
+  del_rate_b                  NUMBER,
+  del_rate_w                  NUMBER,
+  del_rate_g                  NUMBER,
+  income_mln                  NUMBER,
+  expense_mln                 NUMBER,
+  profit_mln                  NUMBER,
+  income                      NUMBER,
+  expense                     NUMBER,
+  profit                      NUMBER,
+  profit_rate                 NUMBER,
+  sales_b_w_mln               NUMBER,
+  sales_b_w                   NUMBER,
+  sales_b_mln                 NUMBER,
+  sales_b                     NUMBER,
+  sales_w_mln                 NUMBER,
+  sales_w                     NUMBER,
+  sales_g_mln                 NUMBER,
+  sales_g                     NUMBER,
+  sales_npl_mln               NUMBER,
+  sales_npl                   NUMBER,
+  sales_b_w_to_sales_ratio    NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_J_SC_DEL_COMB_A_KN15 to LOADDB;
+

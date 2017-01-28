@@ -1,0 +1,41 @@
+﻿create materialized view U1.M_TDWH_SLANDOKZ_ADVERTS_TMP
+using no index
+refresh complete on demand
+as
+select mn.ID,
+            mn.ADV_NAME,
+            mn.PRICE,
+            mn.REGION_NAME,
+            mn.ADDRESS,
+            replace(mn.PHONE,',',chr(10)) as PHONE,
+            mn.SELLER_NAME,
+            mn.VIEW_CNT,
+            mn.IDATE,
+            mn.CAT_NAME,
+            mn.SLANDO_ADV_ID,
+            mn.ADVERT_URL,
+            mn.PHONE1,
+            mn.PHONE2,
+            mn.PHONE3,
+            mn.PHONE4,
+            mn.PHONE5,
+            mn.PHONE6,
+            mn.PHONE7,
+            mn.PARENT_CAT_ID,
+            mn.SELLER_URL,
+            mn.MOBILE_SOURCE,
+            mn.SELLER_SINCE,
+            mn.PUBLISH_DATE,
+            mn.ADVERT_CAT_ID,
+            mn.SKYPE,
+            mn.ICQ,
+            mn.CLIENT_DWH_ID,
+            mn.IS_DELETED,
+            mn.UDATE,
+            mn.THREAD_ID,
+            mn.CURRENCY
+       from KASPISHOP.SLANDOKZ_ADVERTS@tdwh2 mn;
+grant select on U1.M_TDWH_SLANDOKZ_ADVERTS_TMP to LOADDB;
+grant select on U1.M_TDWH_SLANDOKZ_ADVERTS_TMP to LOADER;
+
+

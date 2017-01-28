@@ -1,0 +1,34 @@
+﻿create materialized view U1.M_MATRIX_KDN_1_GCVP_ONL
+build deferred
+refresh force on demand
+as
+select gm.claim_id,
+       gm.gcvp_report_id,
+       case when coalesce(g.gcvp_salary,0) < 2000 then 0 else g.gcvp_salary end as gcvp_salary
+from (select fcc.claim_id,
+             max(v.gcvp_rep_id) as gcvp_report_id
+          from u1.M_FOLDER_CON_CANCEL_ONLINE fcc
+          join u1.V_GCVP_REPORT v on
+                    v.error_code = 0 and
+                    (
+                        /*v.folder_id = fcc.folder_id or
+                        (*/
+                            v.client_iin = fcc.iin and
+                            (
+                                 v.rep_date >= trunc(fcc.folder_date_create_mi) - 60 and
+                                 v.rep_date <= trunc(fcc.folder_date_create_mi)
+                            )
+                        /*)*/
+                    )
+          group by fcc.claim_id
+) gm
+join (select v.gcvp_rep_id,
+             max(v.salary) as gcvp_salary
+             --max(v.pmts_count_from_rep) as gcvp_pmts_count_from_rep
+          from V_GCVP_REPORT v
+          group by v.gcvp_rep_id
+) g on g.gcvp_rep_id = gm.gcvp_report_id;
+grant select on U1.M_MATRIX_KDN_1_GCVP_ONL to LOADDB;
+grant select on U1.M_MATRIX_KDN_1_GCVP_ONL to LOADER;
+
+

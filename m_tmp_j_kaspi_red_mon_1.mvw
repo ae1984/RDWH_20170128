@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_TMP_J_KASPI_RED_MON_1
+build deferred
+refresh complete on demand
+as
+select f.id as fld_id,
+       cp.c_date_create as fld_date_create,
+       f.c_n as fld_number,
+       f.c_client as rfo_client_id,
+       c.c_inn as client_iin,
+       p.c_last_name || ' ' || p.c_first_name || ' ' || p.c_sur_name as client_name,
+       cp.c_create_user as fld_create_user_id,
+       cp.c_point as fld_point_id,
+       cp.c_st_depart as fld_department_id,
+       --- additional fields
+       f.c_docs as fld_c_docs,
+       f.c_result_oper_note as fld_result_oper_note,
+       cp.c_history as fld_history_id
+--from u1.V_RFO_Z#FOLDERS f
+--join u1.V_RFO_Z#CM_CHECKPOINT cp on cp.id = f.id
+from ibs.Z#FOLDERS@rfo f
+join ibs.Z#CM_CHECKPOINT@rfo cp on cp.id = f.id
+join ibs.Z#CLIENT@rfo c on c.id = f.c_client
+join ibs.Z#CL_PRIV@rfo p on p.id = f.c_client
+--join V_RFO_Z#BUS_PROCESS bp on bp.id = t.c_business and bp.c_code = 'KASPI_RED'
+where f.c_business = 77835269256 and -- KASPI_RED
+      cp.c_date_create > trunc(sysdate);
+grant select on U1.M_TMP_J_KASPI_RED_MON_1 to LOADDB;
+
+

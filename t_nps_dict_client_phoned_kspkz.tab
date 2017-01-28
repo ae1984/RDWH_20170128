@@ -1,0 +1,41 @@
+﻿create table U1.T_NPS_DICT_CLIENT_PHONED_KSPKZ
+(
+  user_id     NUMBER not null,
+  insert_date DATE default sysdate
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 16K
+    next 16K
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_NPS_DICT_CLIENT_PHONED_KSPKZ
+  is 'Справочник клиентов которым уже звонили(Проект для Маркетинга, каспи кз)';
+comment on column U1.T_NPS_DICT_CLIENT_PHONED_KSPKZ.user_id
+  is 'id пользователя';
+comment on column U1.T_NPS_DICT_CLIENT_PHONED_KSPKZ.insert_date
+  is 'дата вставки';
+create unique index U1.CL_PH_KSPKZ_IND1 on U1.T_NPS_DICT_CLIENT_PHONED_KSPKZ (USER_ID)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_NPS_DICT_CLIENT_PHONED_KSPKZ to LOADDB;
+grant select on U1.T_NPS_DICT_CLIENT_PHONED_KSPKZ to LOADER;
+grant select on U1.T_NPS_DICT_CLIENT_PHONED_KSPKZ to NPS;
+

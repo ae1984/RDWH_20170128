@@ -1,0 +1,33 @@
+﻿create table U1.T_TMP_K_FOR_IMPORT
+(
+  foto_now           VARCHAR2(250),
+  foto_now_quality   NUMBER,
+  foto_prev          VARCHAR2(250),
+  foto_prev_quality  NUMBER,
+  q                  VARCHAR2(50),
+  identity_percent   NUMBER,
+  count_percon       NUMBER,
+  i_type             VARCHAR2(200),
+  expert_rating      NUMBER,
+  folder_id_cur      NUMBER,
+  folder_date_create VARCHAR2(20),
+  client_iin         VARCHAR2(50),
+  folder_id_prev     NUMBER,
+  folder_date_prev   VARCHAR2(20)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_K_FOR_IMPORT to LOADDB;
+grant select on U1.T_TMP_K_FOR_IMPORT to LOADER;
+

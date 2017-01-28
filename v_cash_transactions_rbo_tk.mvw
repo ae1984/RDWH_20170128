@@ -1,0 +1,58 @@
+﻿create materialized view U1.V_CASH_TRANSACTIONS_RBO_TK
+build deferred
+refresh complete on demand
+as
+select /*+ parallel 30*/
+    distinct
+    md.state_id as main_doc_state,
+    upper(np.c_name) as main_doc_type_name,
+    md.c_document_date as main_doc_date,
+    md.c_sum_nt as main_doc_sum_kzt,
+    -- счет дебит
+    af1.c_main_v_id as debit_acc_num,
+    c1.class_id as debit_acc_client_class_id, -- CL_BANK_F  CL_BANK_N  CL_ORG  CL_PART  CL_PRIV
+    c1.c_inn as debit_acc_client_iin,
+    c1.c_kas_rnn as debit_acc_client_rnn,
+    p1.id as debit_product_id,
+    p1.class_id as debit_product_class_id, -- BANK  DEPOSIT_PRIV  INSURANCE  KAS_PC_DOG  KAS_PROVIS
+                                           -- KAS_PROVIS_DZ  KAS_REQUES_PRIV  KAS_SIM_PORT  KRED_PERS
+                                           -- LONG_ORDER  LO_MERCHANT  NOTRADE  PARTNERS  RECONT_ACCOUNT
+                                           -- TECH_PROD  ZALOG
+    p1.state_id as debit_product_state,
+    pd1.c_num_dog as debit_product_card_num_pc,
+    cr1.c_num_dog as debit_product_card_num_cr,
+    pl1.c_num as debit_product_account_num,
+    coalesce(c.contract_number,c2.contract_number) as contract_number,
+    coalesce(c.product_start_last,c2.product_start_last) as product_start_last,
+    coalesce(c.contract_amount_first,c2.contract_amount_first) as contract_amount_first,
+    coalesce(c.start_date_last,c2.start_date_last) as start_date_last,
+    coalesce(c.client_iin_last,c2.client_iin_last) as client_iin_last,
+    coalesce(c.pmt,c2.pmt) as pmt,
+    coalesce(c.pmt_nom_rate,c2.pmt_nom_rate) as pmt_nom_rate,
+    cr1.id as cr_id,
+    pd1.id as pc_id
+
+from RBO_Z#MAIN_DOCUM md
+join V_RBO_Z#NAME_PAYDOC np on np.id = md.c_vid_doc
+
+-- счет дебит
+left join T_RBO_Z#AC_FIN af1 on af1.id = md.c_acc_dt
+left join V_RBO_Z#CLIENT c1 on c1.id = af1.c_client_v
+left join V_RBO_Z#PRODUCT p1 on p1.id = af1.c_kas_product_ref
+left join V_RBO_Z#PR_CRED cr1 on cr1.c_kas_pc_dog_ref = p1.id
+left join V_RBO_Z#KAS_PC_DOG pd1 on pd1.id = p1.id--cr1.c_kas_pc_dog_ref
+--left join V_RBO_Z#KAS_PC_DOG pd1 on pd1.id = p1.id
+left join V_RBO_Z#DEPN dpn1 on dpn1.id = p1.id
+left join V_RBO_Z#PL_USV pl1 on pl1.id = af1.c_main_usv
+--left join V_RBO_Z#PR_CRED cr1 on cr1.c_kas_pc_dog_ref = pd1.id
+left join V_CONTRACT_CAL c on c.contract_number = /*pd1.c_num_dog*/ cr1.c_num_dog/*c.contract_number like pd1.c_num_dog||'%'*/   and
+                               c.start_date_last = md.c_document_date and c.contract_amount_first = md.c_sum_nt
+left join V_CONTRACT_CAL c2 on c2.contract_number like pd1.c_num_dog||'%'   and
+                               c2.start_date_last = md.c_document_date and c.contract_amount_first = md.c_sum_nt
+                               and cr1.c_num_dog is null
+
+where md.c_vid_doc = '1916985' and c1.class_id = 'CL_PRIV' and md.c_sum_nt = c.contract_amount_first and
+      c.product_start_last = 'ТК' and md.state_id = 'PROV';
+grant select on U1.V_CASH_TRANSACTIONS_RBO_TK to LOADDB;
+
+

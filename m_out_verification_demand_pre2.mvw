@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_OUT_VERIFICATION_DEMAND_PRE2
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/ u.collection_id, max(u.c_d1) as c_d1
+from T_RFO_Z#KAS_UNIVERSAL_S u
+group by u.collection_id
+                    --where u.collection_id = t.c_photover_work;
+grant select on U1.M_OUT_VERIFICATION_DEMAND_PRE2 to LOADDB;
+
+

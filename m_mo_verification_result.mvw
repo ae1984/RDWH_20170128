@@ -1,0 +1,78 @@
+﻿create materialized view U1.M_MO_VERIFICATION_RESULT
+build deferred
+refresh force on demand
+as
+select  rf.rfolder_id,
+        rf.in_aa_client_id as rfo_client_id,
+        rf.in_aa_inn as client_iin,
+        rf.in_aa_folder_id as folder_id,
+        f.folder_date_create,
+        rf.in_aa_verification_id as verif_id,
+        (case when coalesce(ta.date_create, to_date('01.01.2014','dd.mm.yyyy')) > rf.max_date_end then ta.verif_photo
+              else  rf.verif_photo end) as verif_photo,
+          (case when coalesce(ta.date_create, to_date('01.01.2014','dd.mm.yyyy')) > rf.max_date_end then ta.verif_contacts
+              else   rf.verif_contact end) as verif_contact,
+         (case when  upper(rf.in_aa_system_source) = 'BPM' then   rf.verif_ap_result_bpm
+           else
+            case when coalesce(ta.date_create, to_date('01.01.2014','dd.mm.yyyy')) > rf.max_date_end then ta.auto_photo_result
+              else  rf.ap_result end end) as ap_result,
+           (case when coalesce(ta.date_create, to_date('01.01.2014','dd.mm.yyyy')) > rf.max_date_end then ta.verif_vector_gr
+              else   rf.verif_vector end) as verif_vector,
+         rf.in_aa_cred_program as cred_program,
+         rf.in_aa_system_source as system_source,
+         rf.in_aa_proccess_type as proccess_type,
+         rf.date_end as date_end_mo_ver,
+         ta.date_end as date_end_autocheck,
+         greatest(ta.date_end,rf.date_end) as date_send_to_verif,
+         rv.c_photover_result as rfo_verif_photo_result,
+         rv.c_verify_result as rfo_verif_contact_result,
+         rv.c_repeat_photo as rfo_repeat_photo,
+         (case when coalesce(ta.date_create, to_date('01.01.2014','dd.mm.yyyy')) > rf.max_date_end then ta.verif_status
+              else   rf.verif_status end) as verif_status,
+                rf.verif_cache_result
+from
+    (select    p.id as mo_process_id,
+               t.rfolder_id,
+              max(p.date_start) as date_create,
+              max(replace(replace(regexp_substr(p.params_out,'VERIF_CONTACT#.*?]'),'VERIF_CONTACT#','') ,']','')) as VERIF_CONTACT,
+              max(replace(replace(regexp_substr(p.params_out,'VERIF_PHOTO#.*?]'),'VERIF_PHOTO#','') ,']','')) as VERIF_PHOTO,
+              max(replace(replace(regexp_substr(p.params_out,'VERIF_STATUS#.*?]'),'VERIF_STATUS#','') ,']','')) as VERIF_STATUS,
+              max(replace(replace(regexp_substr(p.params_out,'VERIF_VECTOR#.*?]'),'VERIF_VECTOR#','') ,']','')) as VERIF_VECTOR,
+             --  max(decode(dp.code_int, 'VERIF_PHOTO', t.value_text, null)) as VERIF_PHOTO,
+            --   max(decode(dp.code_int, 'VERIF_CONTACTS', t.value_text, null)) as VERIF_CONTACT,
+               max(decode(dp.code_int, 'VERIF_AP_RESULT_BPM', t.value_number, null)) as VERIF_AP_RESULT_BPM,
+               max(decode(dp.code_int, 'AP_RESULT', t.value_number, null)) as AP_RESULT,
+             --  max(decode(dp.code_int, 'VERIF_VECTOR', t.value_text, null)) as VERIF_VECTOR,
+               max(decode(dp.code_int, 'IN_AA_CRED_PROGRAM', t.value_text, null)) as IN_AA_CRED_PROGRAM,
+               max(decode(dp.code_int, 'IN_AA_FOLDER_ID', t.value_number, null)) as IN_AA_FOLDER_ID,
+               max(decode(dp.code_int, 'IN_AA_CLIENT_ID', t.value_number, null)) as IN_AA_CLIENT_ID,
+               max(decode(dp.code_int, 'IN_AA_INN', t.value_text, null)) as IN_AA_INN,
+               max(decode(dp.code_int, 'IN_AA_VERIFICATION_ID', t.value_number, null)) as IN_AA_VERIFICATION_ID,
+               max(decode(dp.code_int, 'IN_AA_SYSTEM_SOURCE', t.value_text, null)) as IN_AA_SYSTEM_SOURCE,
+               max(decode(dp.code_int, 'IN_AA_PROCCESS_TYPE', t.value_text, null)) as IN_AA_PROCCESS_TYPE,
+               max(decode(dp.code_int, 'IN_AA_TYPE_PROD', t.value_text, null)) as IN_AA_TYPE_PROD,
+               to_date(to_char(max(p.date_end),'dd.mm.yyyy HH24:MI:SS'),'dd.mm.yyyy HH24:MI:SS')  as date_end,
+               max(to_date(to_char(max(p.date_end),'dd.mm.yyyy HH24:MI:SS'),'dd.mm.yyyy HH24:MI:SS')) over (partition by t.rfolder_id) as  max_date_end,
+               max(decode(dp.code_int, 'VERIF_CACHE_RESULT', t.value_number, null)) as VERIF_CACHE_RESULT
+        from u1.t_mo_rfolder_par_value_2016 t
+        join u1.mo_process p on p.rfolder_id = t.rfolder_id and p.d_process_id=1007
+        join u1.v_mo_d_par dp on dp.id = t.d_par_id
+                              and dp.code_int in ('VERIF_PHOTO',
+                                                   'VERIF_CONTACTS',
+                                                   'VERIF_AP_RESULT_BPM',
+                                                   'AP_RESULT',
+                                                   'VERIF_VECTOR',
+                                                   'IN_AA_CRED_PROGRAM',
+                                                   'IN_AA_FOLDER_ID',
+                                                   'IN_AA_CLIENT_ID',
+                                                   'IN_AA_INN',
+                                                   'IN_AA_VERIFICATION_ID',
+                                                   'IN_AA_SYSTEM_SOURCE',
+                                                   'IN_AA_PROCCESS_TYPE',
+                                                   'IN_AA_TYPE_PROD',
+                                                   'VERIF_CACHE_RESULT')
+        group by t.rfolder_id,p.id) rf
+    left join u1.t_mo_autocheck_result ta on rf.in_aa_verification_id=ta.verif_id
+         join v_folder_all_rfo f on f.folder_id = rf.in_aa_folder_id
+    left join t_rfo_z#kas_verification rv on rv.id = rf.in_aa_verification_id;
+

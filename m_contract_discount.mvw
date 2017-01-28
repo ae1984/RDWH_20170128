@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_CONTRACT_DISCOUNT
+refresh complete on demand
+as
+select /*+ PARALLEL 20*/rbo_contract_id,
+       c_date_in,
+       coalesce(lead(x.c_date_in-1) over (partition by x.rbo_contract_id order by x.c_date_in),
+                x.c_date_close,
+                trunc(sysdate)-1) c_date_out,
+      total ,
+      is_card
+from (
+      select coalesce(rd.rbo_contract_id, cd.rbo_contract_id) as rbo_contract_id,
+             coalesce(rd.c_date_in, cd.c_date_in) as c_date_in,
+             coalesce((rd.c_sum_out_com_1435+rd.c_sum_out_dif_1435+rd.c_sum_out_dis_1435+rd.c_sum_out_com_1434+rd.c_sum_out_dif_1434+rd.c_sum_out_dis_1434)*(-1),cd.total) as total,
+             coalesce(rd.is_card,cd.is_card) as is_card,
+             coalesce(rd.c_date_close,cd.c_date_close) as c_date_close
+      from M_CONTRACT_DISCOUNT_PRE cd
+      full join M_CONTRACT_DISCOUNT_PRE2 rd on rd.c_date_in = cd.c_date_in and rd.rbo_contract_id =  cd.rbo_contract_id
+) x;
+grant select on U1.M_CONTRACT_DISCOUNT to LOADDB;
+grant select on U1.M_CONTRACT_DISCOUNT to LOADER;
+
+

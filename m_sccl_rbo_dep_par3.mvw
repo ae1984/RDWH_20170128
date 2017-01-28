@@ -1,0 +1,118 @@
+﻿create materialized view U1.M_SCCL_RBO_DEP_PAR3
+build deferred
+refresh force on demand
+as
+with curs as (select *
+              from u1.M_COURSES
+              unpivot
+              (curs_value for currency in (curs_usd,curs_eur,curs_rur,curs_gbp,curs_kgs)))
+
+select x.rfo_client_id
+
+       ,x.dep_refill_sum
+       ,x.dep_withdraw_sum
+
+       ,x.dep_refill_90d_sum
+       ,x.dep_withdraw_90d_sum
+
+       ,x.oper_refill_days_90d_cnt
+       ,x.oper_withdraw_days_90d_cnt
+
+       ,o.amount_oper*coalesce(dc2.curs_value, 1) as last_refill_amount
+       ,o2.amount_oper*coalesce(dc3.curs_value, 1) as last_withdraw_amount
+
+from (
+    select /*+ parallel(30) */
+           cl.rfo_client_id
+
+           ,sum(case when tt.dep_oper_ord > 1
+                          --and tt.date_doc_prov < trunc(sysdate)
+                          and tt.c_check_oper_depn_cli = 1
+                          and tt.is_dt_ct = 0
+                     then tt.amount_oper*coalesce(tt.curs_value, 1) end) as dep_refill_sum
+
+
+           ,sum(case when tt.dep_oper_ord > 1
+                          --and tt.date_doc_prov < trunc(sysdate)
+                          and tt.c_check_oper_depn_cli = 1
+                          and tt.is_dt_ct = 1
+                     then tt.amount_oper*coalesce(tt.curs_value, 1) end) as dep_withdraw_sum
+
+           --90 days
+           ,sum(case when tt.dep_oper_ord > 1
+                          and tt.date_doc_prov >= trunc(sysdate) - 90
+                          --and tt.date_doc_prov < trunc(sysdate)
+                          and tt.c_check_oper_depn_cli = 1
+                          and tt.is_dt_ct = 0
+                     then tt.amount_oper*coalesce(tt.curs_value, 1) end) as dep_refill_90d_sum
+
+
+           ,sum(case when tt.dep_oper_ord > 1
+                          and tt.date_doc_prov >= trunc(sysdate) - 90
+                          --and tt.date_doc_prov < trunc(sysdate)
+                          and tt.c_check_oper_depn_cli = 1
+                          and tt.is_dt_ct = 1
+                     then tt.amount_oper*coalesce(tt.curs_value, 1) end) as dep_withdraw_90d_sum
+
+           --
+           ,count(distinct case when tt.date_doc_prov >= trunc(sysdate) - 90
+                                     --and tt.date_doc_prov < trunc(sysdate)
+                                     and tt.c_check_oper_depn_cli = 1
+                                     and tt.is_dt_ct = 0
+                                then trunc(tt.date_doc_prov) end) as oper_refill_days_90d_cnt
+
+           ,count(distinct case when tt.date_doc_prov >= trunc(sysdate) - 90
+                                     --and tt.date_doc_prov < trunc(sysdate)
+                                     and tt.c_check_oper_depn_cli = 1
+                                     and tt.is_dt_ct = 1
+                                then trunc(tt.date_doc_prov) end) as oper_withdraw_days_90d_cnt
+
+
+           ,max(case when tt.is_dt_ct = 0
+                          and tt.c_check_oper_depn_cli = 1
+                     then tt.fact_oper_id end) as oper_refill_id_max
+
+           ,max(case when tt.is_dt_ct = 1
+                          and tt.c_check_oper_depn_cli = 1
+                     then tt.fact_oper_id end) as oper_withwraw_id_max
+
+    from u1.V_CLIENT_RFO_BY_ID cl
+    join U1.M_RBO_CONTRACT_DEPOSIT_BAS t on t.rfo_client_id = cl.rfo_client_id
+                                                 and t.is_has_timeout = 1
+                                                 --and t.begin_date < trunc(sysdate)
+
+    left join (select tt2.*
+
+                      ,row_number() over (partition by tt2.rbo_contract_id order by tt2.fact_oper_id) as dep_oper_ord
+
+                      ,dc.curs_value
+                      ,v.c_check_oper_depn_cli
+
+               from U1.T_CONTRACT_DEPN_OPER_ALL tt2
+               left join V_RBO_Z#VID_OPER_DOG v on v.c_code = tt2.oper_dog_code
+               left join curs dc on dc.date_recount = tt2.date_doc_prov  --на дату операции
+                                     and dc.currency = 'CURS_'||tt2.contract_currency
+                                     and tt2.contract_currency != 'KZT'
+               ) tt on tt.rbo_contract_id = t.rbo_contract_id
+                       --and tt.date_doc_prov >= trunc(sysdate) - 90
+                       --and tt.date_doc_prov < sysdate
+
+
+
+    --where am.rfo_client_id = 9960545157
+    group by cl.rfo_client_id
+) x
+left join U1.T_CONTRACT_DEPN_OPER_ALL o on o.fact_oper_id = x.oper_refill_id_max
+left join curs dc2 on dc2.date_recount = o.date_doc_prov  --на дату операции
+                     and dc2.currency = 'CURS_'||o.contract_currency
+                     and o.contract_currency != 'KZT'
+
+left join U1.T_CONTRACT_DEPN_OPER_ALL o2 on o2.fact_oper_id = x.oper_withwraw_id_max
+left join curs dc3 on dc3.date_recount = o2.date_doc_prov  --на дату операции
+                     and dc3.currency = 'CURS_'||o2.contract_currency
+                     and o2.contract_currency != 'KZT';
+grant select on U1.M_SCCL_RBO_DEP_PAR3 to LOADDB;
+grant select on U1.M_SCCL_RBO_DEP_PAR3 to LOAD_MO;
+grant select on U1.M_SCCL_RBO_DEP_PAR3 to RTS_RDWH;
+
+

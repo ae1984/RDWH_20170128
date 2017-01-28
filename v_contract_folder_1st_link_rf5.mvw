@@ -1,0 +1,130 @@
+﻿create materialized view U1.V_CONTRACT_FOLDER_1ST_LINK_RF5
+refresh complete on demand
+as
+select /*+all_rows*/
+    distinct c1.c_num_dog as contract_number,
+    nvl(c1_sco.folder_id_first, c1_oth.folder_id_first) as folder_id_first,
+    1 as is_card
+from
+V_RFO_Z#KAS_PC_DOG c1,
+(select
+     c.c_num_dog as contract_number,
+     min(fld.id) as folder_id_first
+  from   V_RFO_Z#KAS_PC_DOG c,
+         V_RFO_Z#FOLDERS fld,
+         V_RFO_Z#FDOC fd,
+         V_RFO_Z#RDOC rd,
+         V_RFO_Z#BUS_PROCESS bp,
+         V_RFO_Z#STATUS_DOG s
+  where c.c_num_dog is not null
+        and c.id = fd.id
+        and fd.class_id = 'KAS_PC_DOG'
+        and rd.c_doc = fd.id
+        and rd.collection_id = fld.c_docs
+        and bp.id = fld.c_business
+        and s.id = fd.c_status_doc
+        and s.c_code not in ('PREPARE')--,'RFO_CLOSE')
+        and bp.c_code in (
+--        процессы скоринга
+            'OPEN_CRED_PRIV',--              ВЫДАЧА КРЕДИТА ФИЗИЧЕСКОМУ ЛИЦУ -- ok old
+            'OPEN_PC',--                    ВЫДАЧА ПЛАСТИКОВОЙ КАРТЫ -- ok
+            'KAS_AUTO_CRED_PRIV_PC',--      КАСПИЙСКИЙ. ВЫДАЧА АВТОКРЕДИТА НА КАРТУ -- ok new
+            'OPEN_CRED_PRIV_PC',--          КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НА КАРТУ -- ok
+            'KAS_CREDIT_CASH_PRIV_PC',--    КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НАЛИЧНЫМИ НА КАРТУ -- ok new
+            'KAS_CREDIT_CASH_PRIV',--        КАСПИЙСКИЙ. КРЕДИТ НАЛИЧНЫМИ -- ok old
+            'SET_REVOLV'--                  УСТАНОВКА РЕВОЛЬВЕРНОСТИ -- ok
+        )
+  group by c.c_num_dog
+) c1_sco,
+(select
+     c.c_num_dog as contract_number,
+     min(fld.id) as folder_id_first
+  from   V_RFO_Z#KAS_PC_DOG c,
+         V_RFO_Z#FOLDERS fld,
+         V_RFO_Z#FDOC fd,
+         V_RFO_Z#RDOC rd,
+         V_RFO_Z#BUS_PROCESS bp,
+         V_RFO_Z#STATUS_DOG s
+  where c.c_num_dog is not null
+        and c.id = fd.id
+        and fd.class_id = 'KAS_PC_DOG'
+        and rd.c_doc = fd.id
+        and rd.collection_id = fld.c_docs
+        and bp.id = fld.c_business
+        and s.id = fd.c_status_doc
+        and s.c_code not in ('PREPARE')--,'RFO_CLOSE')
+--        and bp.c_code in (
+--        доп. процессы
+--            'KAS_SAFE_CREDIT',-- Выдача управляемого кредита
+--            'KAS_PC_PURSE'    -- Выдача кошелька
+--        )
+  group by c.c_num_dog
+) c1_oth
+where c1.c_num_dog = c1_sco.contract_number(+)
+  and c1.c_num_dog = c1_oth.contract_number(+)
+union --------------------------------------------------------------------
+select /*+all_rows*/
+    distinct c2.c_num_dog as contract_number,
+    nvl(c2_sco.folder_id_first, c2_oth.folder_id_first) as folder_id_first,
+    0 as is_card
+from
+V_RFO_Z#CREDIT_DOG c2,
+(select
+      c.c_num_dog as contract_number,
+      min(fld.id) as folder_id_first
+      from   V_RFO_Z#CREDIT_DOG c,
+             V_RFO_Z#FOLDERS fld,
+             V_RFO_Z#FDOC fd,
+             V_RFO_Z#RDOC rd,
+             V_RFO_Z#BUS_PROCESS bp,
+             V_RFO_Z#STATUS_DOG s
+      where  c.c_num_dog is not null
+              and c.id = fd.id
+              and fd.class_id = 'CREDIT_DOG'
+              and rd.c_doc = fd.id
+              and rd.collection_id = fld.c_docs
+              and bp.id = fld.c_business
+              and s.id = fd.c_status_doc
+              and s.c_code not in ('PREPARE')--,'RFO_CLOSE')
+              and bp.c_code in (
+--              процессы скоринга
+                  'OPEN_CRED_PRIV',--             ВЫДАЧА КРЕДИТА ФИЗИЧЕСКОМУ ЛИЦУ -- ok old
+                  'OPEN_PC',--                     ВЫДАЧА ПЛАСТИКОВОЙ КАРТЫ -- ok
+                  'KAS_AUTO_CRED_PRIV_PC',--                 КАСПИЙСКИЙ. ВЫДАЧА АВТОКРЕДИТА НА КАРТУ -- ok new
+                  'OPEN_CRED_PRIV_PC',--                КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НА КАРТУ -- ok
+                  'KAS_CREDIT_CASH_PRIV_PC',--            КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НАЛИЧНЫМИ НА КАРТУ -- ok new
+                  'KAS_CREDIT_CASH_PRIV',--         КАСПИЙСКИЙ. КРЕДИТ НАЛИЧНЫМИ -- ok old
+                  'SET_REVOLV'--                             УСТАНОВКА РЕВОЛЬВЕРНОСТИ -- ok
+              )
+      group by c.c_num_dog
+) c2_sco,
+(select
+      c.c_num_dog as contract_number,
+      min(fld.id) as folder_id_first
+      from   V_RFO_Z#CREDIT_DOG c,
+             V_RFO_Z#FOLDERS fld,
+             V_RFO_Z#FDOC fd,
+             V_RFO_Z#RDOC rd,
+             V_RFO_Z#BUS_PROCESS bp,
+             V_RFO_Z#STATUS_DOG s
+      where  c.c_num_dog is not null
+              and c.id = fd.id
+              and fd.class_id = 'CREDIT_DOG'
+              and rd.c_doc = fd.id
+              and rd.collection_id = fld.c_docs
+              and bp.id = fld.c_business
+              and s.id = fd.c_status_doc
+              and s.c_code not in ('PREPARE')--,'RFO_CLOSE')
+--              and bp.c_code in (
+--              доп. процессы
+--                  'KAS_SAFE_CREDIT',-- Выдача управляемого кредита
+--                  'KAS_PC_PURSE'-- Выдача кошелька
+--              )
+      group by c.c_num_dog
+) c2_oth
+where c2.c_num_dog = c2_sco.contract_number(+)
+  and c2.c_num_dog = c2_oth.contract_number(+);
+grant select on U1.V_CONTRACT_FOLDER_1ST_LINK_RF5 to LOADDB;
+grant select on U1.V_CONTRACT_FOLDER_1ST_LINK_RF5 to LOADER;
+
+

@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_TMP_J_D_REP_1
+refresh force on demand
+as
+select t.rep_date,
+       count(distinct case when t.delinq_days > 0 then t.deal_number end) as contracts_del_cnt,
+       count(distinct t.deal_number) as contracts_all_cnt,
+       round(count(distinct case when t.delinq_days > 0 then t.deal_number end) /
+              count(distinct t.deal_number) * 100, 2) as del_rate_by_cons
+from DWH_PORT t
+where t.rep_date > trunc(sysdate - 120)
+group by t.rep_date;
+grant select on U1.M_TMP_J_D_REP_1 to LOADDB;
+grant select on U1.M_TMP_J_D_REP_1 to LOADER;
+
+

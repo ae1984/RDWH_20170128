@@ -1,0 +1,8 @@
+﻿create materialized view U1.V_TMP_J_CLI_ZH_OPT_PMT
+refresh force on demand
+as
+select * from V_TMP_J_ZH_OPT_PMT;
+grant select on U1.V_TMP_J_CLI_ZH_OPT_PMT to LOADDB;
+grant select on U1.V_TMP_J_CLI_ZH_OPT_PMT to LOADER;
+
+

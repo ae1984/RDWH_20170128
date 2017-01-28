@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_PORT
+build deferred
+refresh complete on demand
+as
+select ff.claim_id, max(rp.delinq_days) as total_max_delay_2years
+               from u1.M_FOLDER_CON_CANCEL_ONLINE_1 ff
+               join u1.M_CLIENT_LINK                cl on cl.rfo_client_id = ff.rfo_client_id
+               join u1.V_RBO_PORT                   rp on rp.rbo_client_id = cl.rbo_client_id
+                                                      and rp.rep_date < trunc(ff.date_create)
+                                                      and rp.rep_date >= add_months(trunc(ff.date_create),-24)
+              group by ff.claim_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_PORT to LOADDB;
+
+

@@ -1,0 +1,28 @@
+﻿create materialized view U1.V_MO_EMUL_RFOL_GCVP_REPORT
+using no index
+refresh complete on demand
+as
+select g.id                 as gcvpr_id,
+       f.id                 as foldr_id,     -- folder_id
+       f.c_client           as foldr_client, -- client_id
+       c.id                 as clien_id,     -- client_id
+       fd.c_doc_date        as fdocx_doc_date,
+       g.c_iin              as gcvpr_iin,
+       --g.c_surname          as gcvpr_surname,
+       --g.c_name             as gcvpr_name,
+       --g.c_middlename       as gcvpr_middlename,
+       g.c_statement_date   as gcvpr_statement_date,
+       g.c_avg_gcvp_payment as gcvpr_avg_gcvp_payment,
+       g.c_sal              as gcvpr_sal,
+       g.c_error_code       as gcvpr_error_code
+from V_RFO_Z#KAS_GCVP_REPORT g
+left join V_RFO_Z#FDOC fd on fd.id = g.id and fd.class_id = 'KAS_GCVP_REPORT'
+left join V_RFO_Z#RDOC rd on fd.id = rd.c_doc
+left join V_RFO_Z#FOLDERS f on f.c_docs = rd.collection_id
+left join V_RFO_Z#CLIENT c on c.c_inn = g.c_iin and c.class_id = 'CL_PRIV'
+--where g.id = 4095036543
+where fd.c_doc_date > trunc(sysdate) - 30;
+grant select on U1.V_MO_EMUL_RFOL_GCVP_REPORT to LOADDB;
+grant select on U1.V_MO_EMUL_RFOL_GCVP_REPORT to LOADER;
+
+

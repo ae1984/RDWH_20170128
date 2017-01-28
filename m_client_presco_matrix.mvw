@@ -1,0 +1,110 @@
+﻿create materialized view U1.M_CLIENT_PRESCO_MATRIX
+refresh force on demand
+as
+select y.*
+from (
+    select /*+ parallel 30 */
+           xx.x_client_id as client_id,
+           xx.prod_cnt_by_cli,
+           xx.con_cnt_by_cli,
+           xx.amount_by_cli_sum,
+
+           xx.con_order_by_cli,
+           xx.matrix_prod,
+           xx.amount_by_prod_sum,
+           xx.con_by_prod_cnt
+
+    from (
+            select x.*,
+
+                   dense_rank() over (partition by x.x_client_id order by x.x_start_date) as con_order_by_cli,
+                   dense_rank() over (partition by x.x_client_id, x.matrix_prod order by x.x_start_date) as con_order_by_prod,
+
+                   count(distinct x.matrix_prod) over (partition by x.x_client_id) as prod_cnt_by_cli,
+                   sum(x.con_cnt) over (partition by x.x_client_id) as con_cnt_by_cli,
+                   sum(x.x_amount) over (partition by x.x_client_id) as amount_by_cli_sum,
+
+                   sum(x.con_cnt) over (partition by x.x_client_id, x.matrix_prod) as con_by_prod_cnt,
+                   sum(x.x_amount) over (partition by x.x_client_id, x.matrix_prod) as amount_by_prod_sum
+
+            from (
+                 select x2.x_client_id,
+                        x2.matrix_prod,
+
+                        count(distinct x2.deal_number) as con_cnt,
+                        min(x2.x_start_date) as x_start_date,
+                        sum(x2.x_amount) as x_amount
+
+                 from (
+                        select t.x_client_id,
+                               /*t.client_iin,
+                               t.client_rnn,
+
+                               last_value(t.client_iin) ignore nulls over (partition by t.x_client_id order by t.x_start_date
+                                                                          range between unbounded preceding and unbounded following) as client_iin_last,
+                               last_value(t.client_rnn) ignore nulls over (partition by t.x_client_id order by t.x_start_date
+                                                                           range between unbounded preceding and unbounded following) as client_rnn_last,*/
+
+                               t.deal_number,
+
+                               t.x_is_card,
+                               t.x_start_date,
+
+                               t.x_amount,
+                               --t.actual_end_date,
+                               t.x_is_credit_issued,
+                               t.prod_type,
+
+
+                               case when t.x_is_card = 1 then
+                                    --группируем КАРТЫ
+                                    case when t.prod_type in ('ОСОБЕННЫЙ КЛИЕНТ - КН', 'КРЕДИТ НАЛИЧНЫМИ', 'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ') then 'CK' --управляемый КН
+                                    else 'PC' end --карты, с лимитом
+                               else
+                                   --группируем ТРАНШИ
+                                   case when t.prod_type in ('АВТОКРЕДИТОВАНИЕ', 'АВТОКРЕДИТОВАНИЕ БУ', 'АВТОКРЕДИТЫ',
+                                                             'РЕФИНАНСИРОВАНИЕ АВТОКРЕДИТА')                           then 'AUTO' --AUTO
+
+                                        when t.prod_type in ('КРЕДИТ НАЛИЧНЫМИ', 'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ',
+                                                             'ОСОБЕННЫЙ КЛИЕНТ - КН', 'СМЕНА КК НА КН')                then 'KN'   --КН
+                                        when t.prod_type in ('КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ', 'ЛУЧШИЙ КЛИЕНТ НАЛИЧНЫМИ',
+                                                             'ОСОБЕННЫЙ КЛИЕНТ -КН 15', 'ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ',
+                                                             'ЭКСПРЕСС-КРЕДИТЫ (ДЕНЬГИ)')                              then 'KN15' --КН15
+
+                                        when t.prod_type in ('ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)', 'АВТОЗАПЧАСТИ',
+                                                             'КРЕДИТ НА ПОКУПКИ','КРЕДИТ НА ПОКУПКУ (СТАНДАРТ)')       then 'EKT'  --EKT
+
+                                        when t.prod_type in ('ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)', 'КРЕДИТ НА УСЛУГИ')          then 'EKU'  --EKU
+                                   else 'TRANSH' end
+                               end as matrix_prod
+
+
+                        from V_DWH_PORTFOLIO_CURRENT t
+                        where coalesce(t.x_amount, 0) > 0 and --берем все карты с лимитом и транши
+                              t.actual_end_date is null and  --все активные кредиты
+                              t.x_is_credit_issued = 1 and   --все выданные
+                              t.prod_type not in ('ЗАРПЛАТНЫЕ КАРТЫ', --убираем зарплатные карты
+                                                  'КАРТА ВКЛАДЧИКА')  --и депозитные карты
+                              --and t.x_client_id = 4753036
+                ) x2
+                group by x2.x_client_id,
+                         x2.matrix_prod
+            ) x
+
+    ) xx
+    where xx.con_order_by_prod = 1
+
+    ) pivot (
+        max(matrix_prod) as prod,
+        sum(amount_by_prod_sum) as sum,
+        max(con_by_prod_cnt) as con_cnt/*,
+        max(prod_cnt_by_cli) as prod_cnt*/
+
+        for con_order_by_cli in (1 as PROD_1,
+                                 2 as PROD_2,
+                                 3 as PROD_3)
+    ) y;
+grant select on U1.M_CLIENT_PRESCO_MATRIX to LOADDB;
+grant select on U1.M_CLIENT_PRESCO_MATRIX to LOADER;
+
+

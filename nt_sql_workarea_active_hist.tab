@@ -1,0 +1,35 @@
+﻿create table U1.NT_SQL_WORKAREA_ACTIVE_HIST
+(
+  sdt                DATE,
+  workarea_address   RAW(8),
+  sql_id             VARCHAR2(13),
+  sql_exec_start     DATE,
+  sid                NUMBER,
+  operation_type     VARCHAR2(160),
+  operation_id       NUMBER,
+  expected_size_mb   NUMBER,
+  actual_mem_used_mb NUMBER,
+  max_mem_used_mb    NUMBER,
+  pass               NUMBER,
+  tempseg_size_mb    NUMBER,
+  username           VARCHAR2(30),
+  tablespace         VARCHAR2(30),
+  segtype            VARCHAR2(9),
+  sql_id_t           VARCHAR2(13),
+  sql_id_tempseg     VARCHAR2(13)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_SQL_WORKAREA_ACTIVE_HIST to LOADDB;
+

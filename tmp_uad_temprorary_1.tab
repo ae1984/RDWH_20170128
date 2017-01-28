@@ -1,0 +1,24 @@
+﻿create table U1.TMP_UAD_TEMPRORARY_1
+(
+  rfo_id                NUMBER,
+  bylo_ili_est_auto     NUMBER,
+  years_from_issue_ever NUMBER,
+  years_from_issue      NUMBER,
+  count_application     NUMBER,
+  count_application2    NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.TMP_UAD_TEMPRORARY_1 to LOADDB;
+

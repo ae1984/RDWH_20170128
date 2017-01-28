@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_V5
+refresh force on demand
+as
+select x.rfo_contract_id,
+       case when fc.c_email#numb is not null then
+                 case when fc.c_email#activ = 1 then 1
+                      when fc.c_email#activ = 0 then null
+                 else null
+                 end
+            else 0
+       end is_have_email,  --Наличие электронной почты у клиента
+       get_mphone_cat(fc.c_mobile#numb, 1) ph_number_quality_ch1, --Check1 3 повторения и более
+       get_mphone_cat(fc.c_mobile#numb, 2) ph_number_quality_ch2, --Check2 2 и более повторения двузначных чисел
+       get_mphone_cat(fc.c_mobile#numb, 3) ph_number_quality_ch3, --Check3 2 два зеркальных  двузначных чисела отличающихся на 11. Пример 55 66
+       get_mphone_cat(fc.c_mobile#numb, 4) ph_number_quality_ch4, --Check4 2 два зеркальных двузначных чисела. Пример 44 99
+       get_mphone_cat(fc.c_mobile#numb, 5) ph_number_quality_ch5, --Check5 2 двузначных чисела в одной десятке. Пример 25 29
+       get_mphone_cat(fc.c_mobile#numb, 6) ph_number_quality_ch6  --Check6 цифры по порядку
+  from U1.M_FOLDER_CON_MINER x
+  left join U1.V_RFO_Z#FORM_CLIENT fc on fc.id = x.form_client_id;
+grant select on U1.M_FOLDER_CON_MINER_V5 to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER_V5 to LOADER;
+
+

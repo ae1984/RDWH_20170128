@@ -1,0 +1,46 @@
+﻿create table U1.T_OPER_CANCEL
+(
+  number_emp              NUMBER,
+  fio                     VARCHAR2(500),
+  position                VARCHAR2(200),
+  depart                  VARCHAR2(200),
+  otdel                   VARCHAR2(500),
+  city                    VARCHAR2(200),
+  date_fire               DATE,
+  couse                   VARCHAR2(1000),
+  date_req                DATE,
+  req_to_go               NUMBER,
+  day_rest                NUMBER,
+  comments                VARCHAR2(1000),
+  change_date             DATE,
+  rfo_user_id             NUMBER,
+  rfo_user_login          VARCHAR2(64),
+  rfo_user_depart         VARCHAR2(128),
+  rfo_user_depart_code    VARCHAR2(32),
+  rfo_user_tabel_number   VARCHAR2(32),
+  rfo_black_list_id       NUMBER,
+  apex_user_add           VARCHAR2(64),
+  apex_user_last_change   VARCHAR2(64),
+  os_user_add             VARCHAR2(64),
+  os_user_last_change     VARCHAR2(64),
+  oracle_user_add         VARCHAR2(64),
+  oracle_user_last_change VARCHAR2(64),
+  ip_address_add          VARCHAR2(64),
+  ip_address_last_change  VARCHAR2(64)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_OPER_CANCEL to LOADDB;
+grant select on U1.T_OPER_CANCEL to LOADER;
+

@@ -1,0 +1,48 @@
+﻿CREATE MATERIALIZED VIEW U1.V_RFO_Z#KAS_BLACK_LIST_D
+REFRESH COMPLETE ON DEMAND
+AS
+SELECT id,
+       c_passport#type,
+       c_passport#num,
+       c_passport#seria,
+       c_passport#who,
+       c_passport#date_doc,
+       c_passport#place,
+       c_passport#date_end,
+       c_passport#depart_code,
+       c_note,
+       c_inn,
+       c_date_birth,
+       translate(upper(c_last_name),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as c_last_name,
+          translate(upper(c_first_name),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as c_first_name,
+          translate(upper(c_sur_name),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as c_sur_name,
+       c_address,
+       c_place_birth,
+       c_date_add,
+       c_date_edit,
+       c_user_ref,
+       c_kas_reason,
+       c_date_delete,
+       c_user_delete,
+       c_reason_delete,
+       c_rnn,
+       c_rnn_replaced,
+       sn,
+       su
+  FROM ibs.Z#KAS_BLACK_LIST_D@rfo_snap;
+grant select on U1.V_RFO_Z#KAS_BLACK_LIST_D to LOADDB;
+grant select on U1.V_RFO_Z#KAS_BLACK_LIST_D to LOADER;
+
+

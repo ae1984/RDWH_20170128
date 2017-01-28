@@ -1,0 +1,102 @@
+﻿create materialized view U1.M_APP_MINER_DEPO_PRE
+build deferred
+refresh complete on demand
+as
+with curs as (select *
+          from u1.M_COURSES
+        unpivot
+          (curs_value for currency in (curs_usd,curs_eur,curs_rur,curs_gbp,curs_kgs)))
+select x.app_id,
+       x.folder_date_create,
+       count(distinct case when sum_oper_cr != 0 and num_months >= 1
+                            and num_months <= 6  then num_months end) as  cnt_count6_cr, --количество пополнений за последние 6 месяцев
+       count(distinct case when sum_oper_cr != 0 and num_months >= 1
+                            and num_months <= 12 then num_months end) as  cnt_count12_cr,  --количество пополнений за последние 12 месяцев
+       --
+       count(distinct case when sum_oper_db != 0 and num_months >= 1
+                            and num_months <= 6  then num_months end) as  cnt_count6_db, --количество снятий за последние 6 месяцев
+       count(distinct case when sum_oper_db != 0 and num_months >= 1
+                            and num_months <= 12 then num_months end) as  cnt_count12_db,  --количество снятий за последние 12 месяцев
+       --
+       case when count(distinct case when sum_oper_cr != 0 and num_months >= 1 and num_months <= 6  then num_months end) = 0 then 0
+            else sum(case when num_months >= 1 and num_months <= 6  then sum_oper_cr end)/
+                 count(distinct case when sum_oper_cr != 0 and num_months >= 1 and num_months <= 6  then num_months end)
+            end as avg_sum6_cr, --средняя сумма пополнений за последние 6 месяцев
+       case when count(distinct case when sum_oper_cr != 0 and num_months >= 1 and num_months <= 12  then num_months end) = 0 then 0
+            else sum(case when num_months >= 1 and num_months <= 12  then sum_oper_cr end)/
+                 count(distinct case when sum_oper_cr != 0 and num_months >= 1 and num_months <= 12  then num_months end)
+            end as avg_sum12_cr,  --средняя сумма пополнений за последние 12 месяцев
+       --
+       case when count(distinct case when sum_oper_db != 0 and num_months >= 1 and num_months <= 6  then num_months end) = 0 then 0
+            else sum(case when num_months >= 1 and num_months <= 6  then sum_oper_db end)/
+                 count(distinct case when sum_oper_db != 0 and num_months >= 1 and num_months <= 6  then num_months end)
+            end as avg_sum6_db,  --средняя сумма снятий за последние 6 месяцев
+       case when count(distinct case when sum_oper_db != 0 and num_months >= 1 and num_months <= 12  then num_months end) = 0 then 0
+            else sum(case when num_months >= 1 and num_months <= 12  then sum_oper_db end)/
+                 count(distinct case when sum_oper_db != 0 and num_months >= 1 and num_months <= 12  then num_months end)
+            end as avg_sum12_db, --средняя сумма снятий за последние 12 месяцев
+       sum((c_sum_oper_db*(-1) + c_sum_oper_cr)*x.curs_value) as total_bal,  --сумма депозитов на день заведения заявки
+       max(part_total_bal)    as max_total_bal_closed                        --максимальная сумма по закрытым депозитам
+  from (
+select xx.app_id,
+       xx.folder_date_create,
+       do.rbo_contract_id,
+       do.c_cur_short,
+       c_sum_oper_db*coalesce(nc.curs_value,1) as sum_oper_db, --сумма снятия в тенге
+       c_sum_oper_cr*coalesce(nc.curs_value,1) as sum_oper_cr,  --сумма пополнения в тенге
+       c_sum_oper_db,
+       c_sum_oper_cr,
+       coalesce(fc.curs_value,1) as curs_value,
+       do.c_date_begin_oper,
+       sum(case when xx.is_closed = 1 then (c_sum_oper_db*(-1) + c_sum_oper_cr)*coalesce(fc.curs_value,1) end)
+            over (partition by xx.app_id order by do.c_date_begin_oper) as part_total_bal,
+       xx.is_closed,--только закрытые
+       --номер периода
+       case when do.c_date_begin_oper <= xx.folder_date_create
+             and do.c_date_begin_oper >  add_months(xx.folder_date_create,-1) then 1
+            when do.c_date_begin_oper <= add_months(xx.folder_date_create,-1)
+             and do.c_date_begin_oper >  add_months(xx.folder_date_create,-2) then 2
+            when do.c_date_begin_oper <= add_months(xx.folder_date_create,-2)
+             and do.c_date_begin_oper >  add_months(xx.folder_date_create,-3) then 3
+            when do.c_date_begin_oper <= add_months(xx.folder_date_create,-3)
+             and do.c_date_begin_oper >  add_months(xx.folder_date_create,-4) then 4
+            when do.c_date_begin_oper <= add_months(xx.folder_date_create,-4)
+             and do.c_date_begin_oper >  add_months(xx.folder_date_create,-5) then 5
+            when do.c_date_begin_oper <= add_months(xx.folder_date_create,-5)
+             and do.c_date_begin_oper >  add_months(xx.folder_date_create,-6) then 6
+            when do.c_date_begin_oper <= add_months(xx.folder_date_create,-6)
+             and do.c_date_begin_oper >  add_months(xx.folder_date_create,-7) then 7
+            when do.c_date_begin_oper <= add_months(xx.folder_date_create,-7)
+             and do.c_date_begin_oper >  add_months(xx.folder_date_create,-8) then 8
+            when do.c_date_begin_oper <= add_months(xx.folder_date_create,-8)
+             and do.c_date_begin_oper >  add_months(xx.folder_date_create,-9) then 9
+            when do.c_date_begin_oper <= add_months(xx.folder_date_create,-9)
+             and do.c_date_begin_oper >  add_months(xx.folder_date_create,-10) then 10
+            when do.c_date_begin_oper <= add_months(xx.folder_date_create,-10)
+             and do.c_date_begin_oper >  add_months(xx.folder_date_create,-11) then 11
+            when do.c_date_begin_oper <= add_months(xx.folder_date_create,-11)
+             and do.c_date_begin_oper >  add_months(xx.folder_date_create,-12) then 12
+        end as num_months
+  from (select dd.rbo_client_id, dd.rbo_contract_id, mb.app_id, mb.folder_date_create,
+               case when dd.closed_date <=  mb.folder_date_create then 1 else 0 end as is_closed
+          from U1.M_APP_MINER_BAS mb
+          join u1.M_CLIENT_LINK           cl on  cl.rfo_client_id = mb.rfo_client_id
+          join U1.M_RBO_CONTRACT_DEPOSIT_BAS dd on dd.rbo_client_id = cl.rbo_client_id
+                                                       and dd.is_has_timeout = 1                     --только срочные депозиты
+                                                       and dd.begin_date <= trunc(mb.folder_date_create)) xx
+  join u1.T_CONTRACT_DEPN_OPER  do on do.rbo_contract_id = xx.rbo_contract_id
+  join u1.V_RBO_Z#VID_OPER_DOG vod on vod.c_code = do.c_code_oper
+                                  and nvl(vod.c_check_oper_depn_cli,0) = 1   --только клиентские операции
+  left join curs                   nc on nc.date_recount = do.c_date_begin_oper
+                                  and nc.currency = 'CURS_'||do.c_cur_short     --создать отдельную mview по курсам, с нормальным кодом валют
+                                  and do.c_cur_short != 'KZT'
+  left join curs                   fc on fc.date_recount = trunc(xx.folder_date_create)
+                                  and fc.currency = 'CURS_'||do.c_cur_short     --создать отдельную mview по курсам, с нормальным кодом валют
+                                  and do.c_cur_short != 'KZT'
+ where do.c_date_begin_oper <= xx.folder_date_create
+       ) x
+ group by x.app_id,
+       x.folder_date_create;
+grant select on U1.M_APP_MINER_DEPO_PRE to LOADDB;
+
+

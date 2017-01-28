@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_REF_RESTR_CONS_ZHOMART
+refresh force on demand
+as
+select --/*+noparallel first_rows*/
+t.*, cc.client_id, cc.yy_mm_start_last, cc.product_last,
+     ccc1.contract_number as contract_number_old,
+     ccc1.product_last as product_last_old,
+     ccc1.yy_mm_start_last as yy_mm_start_last_old
+from TMP_REF_RESTR_CONS_ZHOMART t
+join V_CONTRACT_CAL cc on cc.contract_number = t.contract_number
+left join V_DATA_ALL d1 on d1.client_id = cc.client_id and -- cards
+        d1.yy_mm_report = to_char(add_months(t.ref_res_first_date,-1),'yyyy - mm') and
+        d1.contract_amount > 0 and d1.total_debt > 0
+left join V_CONTRACT_CAL ccc1 on ccc1.contract_number = d1.contract_no;
+grant select on U1.M_REF_RESTR_CONS_ZHOMART to LOADDB;
+grant select on U1.M_REF_RESTR_CONS_ZHOMART to LOADER;
+
+

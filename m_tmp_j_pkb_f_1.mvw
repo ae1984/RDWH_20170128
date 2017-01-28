@@ -1,0 +1,9 @@
+﻿create materialized view U1.M_TMP_J_PKB_F_1
+refresh complete on demand
+as
+select t.c_type_of_founding, count(*) from V_PKB_ALL t
+group by t.c_type_of_founding;
+grant select on U1.M_TMP_J_PKB_F_1 to LOADDB;
+grant select on U1.M_TMP_J_PKB_F_1 to LOADER;
+
+

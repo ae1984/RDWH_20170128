@@ -1,0 +1,20 @@
+﻿create table U1.REF_RPODUCTS_IMPORT
+(
+  product_program VARCHAR2(100),
+  first_pmt_days  NUMBER(3)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.REF_RPODUCTS_IMPORT to LOADDB;
+grant select on U1.REF_RPODUCTS_IMPORT to LOADER;
+

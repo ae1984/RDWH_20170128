@@ -1,0 +1,28 @@
+﻿create table U1.RFO_Z#KAS_SAS_DEL_OFF
+(
+  id               NUMBER not null,
+  c_client_id_rfo  NUMBER,
+  c_prod_code_lev1 VARCHAR2(10),
+  c_prod_code_lev2 VARCHAR2(40),
+  c_prod_code_lev3 VARCHAR2(40),
+  c_camp_name_code NUMBER,
+  c_client_dwh_id  VARCHAR2(40),
+  change_date      DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select, insert, update, delete on U1.RFO_Z#KAS_SAS_DEL_OFF to ETL;
+grant select on U1.RFO_Z#KAS_SAS_DEL_OFF to LOADDB;
+grant select on U1.RFO_Z#KAS_SAS_DEL_OFF to LOADER;
+

@@ -1,0 +1,164 @@
+﻿create materialized view U1.M_KASPI_ONLINE_MONITORING
+build deferred
+refresh force on demand
+as
+select /*+ noparallel */
+      ob.c_date_create as buy_date_create,--дата заказа
+       ob.id as buy_id,--id заказа
+       oc.id as claim_id,--id заявки
+       ob.c_process_id  as order_id,--номер заказа
+       oc.c_form_client_st#inn, --ИИН клиента
+       oc.c_folder_ref as folder_id,--ID folder
+       f.c_n as folder_num,--номер папки
+       g.sal as gcvp_sal, --официальная зарплата(ГЦВП)
+       pkb.report_status, --Статус отчета ПКБ
+       --cpg.report_status, --Статус отчета ПКБ
+       --pkb.C_STATUS,
+       oc.c_form_client_st#mobile#numb,--моб тел клиента
+       --cr.prod_type, --тип продукта
+       'онлайн-кредит' as prod_type  , --тип продукта онлайн-кредит
+       case when cat.client_categ='A' then 1 else 0 end  IS_CLIENT_CATEG_A, --Клиент категории А?
+
+       upper(i.c_name)  as product_name,--название товара
+       upper(tn.c_name) as tov_category,--категория товара
+
+       i.c_price as product_price,--цена товара
+       i.id as product_id, -- id товара
+
+       s.c_code as rfo_shop_code,--Код Продавца в РФО
+       s.c_name as rfo_shop_name, --Название Продавца в РФО
+       pkb.total_debt,--общий долг по всем кредитам
+       pkb.delinq_amount,--просроченная сумма по всем кредитам
+
+       sal.inc_sal, --зарплата
+       coalesce(fcd.c_fio_wife,
+              fcd.c_last_name_wife||
+              decode(fcd.c_first_name_wife,null,null,' '||fcd.c_first_name_wife)||
+              decode(fcd.c_sur_name_wife,null,null,' '||fcd.c_sur_name_wife)) as fio_wife_full,--ФИО супруга
+       fcd.c_phone_wife as phone_wife,--телефон супруга
+
+       fcd.c_address_reg#region||', '||fcd.c_address_reg#place||', '||fcd.c_address_reg#district||', '||fcd.c_address_reg#street||', '||fcd.c_address_reg#house||', '||fcd.c_address_reg#flat as reg_address,--адрес регистрации
+       fcd.c_address_fact#region||', '||fcd.c_address_fact#city||', '||fcd.c_address_fact#district||', '||fcd.c_address_fact#street||', '||fcd.c_address_fact#house||', '||fcd.c_address_fact#flat as fact_adr,--адрес проживания
+
+    --   dd.product_sum_7d,
+     --  dd.product_cnt_7d,
+       --sum(i.c_price) over (partition by upper(i.c_name),s.c_address#place order by ob.c_date_create rows between unbounded preceding and 1 preceding),
+       --count(upper(i.c_name)) over (partition by upper(i.c_name),s.c_address#place order by ob.c_date_create rows between unbounded preceding and 1 preceding),
+       round((nvl(dd.product_sum_7d,0)+nvl((sum(i.c_price) over (partition by upper(i.c_name),s.c_address#place order by ob.c_date_create rows between unbounded preceding and 1 preceding)),0))/(nvl(dd.product_cnt_7d,0.1)+count(upper(i.c_name)) over (partition by upper(i.c_name),s.c_address#place order by ob.c_date_create rows between unbounded preceding and 1 preceding) ),2) as AVG_AMOUNT_7D,--средняя цена за последние 7 дней
+
+      case when  (nvl(dd.product_sum_7d,0)+nvl((sum(i.c_price) over (partition by upper(i.c_name),s.c_address#place order by ob.c_date_create rows between unbounded preceding and 1 preceding)),0))/(nvl(dd.product_cnt_7d,0.1)+count(upper(i.c_name)) over (partition by upper(i.c_name),s.c_address#place order by ob.c_date_create rows between unbounded preceding and 1 preceding) )=0 then 0
+       else
+      round((
+         (
+           i.c_price-(nvl(dd.product_sum_7d,0) +
+           nvl((sum(i.c_price)
+           over (partition by upper(i.c_name),s.c_address#place order by ob.c_date_create rows between unbounded preceding and 1 preceding)),0))
+           /
+           (
+             nvl(dd.product_cnt_7d,0) +
+             count(upper(i.c_name))
+             over (partition by upper(i.c_name),s.c_address#place order by ob.c_date_create rows between unbounded preceding and 1 preceding)
+           )
+         )
+         /
+         (
+           (
+             nvl(dd.product_sum_7d,0) +
+             nvl((sum(i.c_price)
+             over (partition by upper(i.c_name),s.c_address#place order by ob.c_date_create rows between unbounded preceding and 1 preceding)),0)
+           )
+           /
+           (
+             nvl(dd.product_cnt_7d,0) +
+             count(upper(i.c_name)) over (partition by upper(i.c_name),s.c_address#place order by ob.c_date_create rows between unbounded preceding and 1 preceding)
+           )
+         )
+       )*100,2) end || '%'  as PRICE_AVG_7D_DIF,--разница между текущей ценой и средней за 7 дней на t-1
+       case when kcl.c_client is not null then 1
+       else 0 end   as is_lk,-- Есть ли у клиента спецпредложение в РФО (ЛК не ЛК)
+
+
+      -- sum(i.c_price) over (partition by upper(i.c_name),s.c_address#place order by ob.c_date_create rows between unbounded preceding and 1 preceding) as product_sum_7d_x,
+      -- count(upper(i.c_name)) over (partition by upper(i.c_name),s.c_address#place order by ob.c_date_create rows between unbounded preceding and 1 preceding) as product_cnt_7d_x,
+       cat2.is_client_new_by_con as IS_CLIENT_NEW,--Новый клиент
+       tb.total_debt as total_debt_cli,--общий долг клиента перед Банком
+       nvl(cn.cnt,0) as phone_mob_cli_cnt, --сколько еще клиентов указали этот мобильный
+       nvl(cli.appl_count_7d,0)+count(oc.id) over (partition by oc.c_form_client_st#inn, s.id order by ob.c_date_create rows between unbounded preceding and 1 preceding) as amount_of_claims_7days,
+       nvl(cci.is_delinq_exists,0) as is_delinq_exists,-- Имеется ли просрочка
+       nvl(cci.cli_del_days_max,0) as cli_del_days_max, --максимальное дней просрочки
+       case when srd.folder_id is not null then 1 else 0 end is_sign_require, --Будет ли идти клиент на подписание в отделение
+       sd.c_name as DEPART_NAME,--Отделение
+       cd.id, -- rfo_contract_id
+       kua.reg_date, --Дата регистрации на kaspi.kz
+       c.c_date_create,--Дата и время создания заявки
+       case when ch.user_name is null then u.c_name else ch.user_name end as user_name,--Менеджер
+       round(avg(i.c_price)over(partition by i.c_model,upper(s.c_address#place))) as AVG_PRICE_BY_CITY_X,--Средняя Цена товара в городе (текущий момент)
+       nvl(kcc.amount_of_claims_90days,0)+count(oc.id) over (partition by oc.c_form_client_st#inn order by ob.c_date_create rows between unbounded preceding and 1 preceding ) as amount_of_claims_90days,--Указывать кол-во обращений (кол-во заявок клиента) на Онлайн-кредит за последние 3 месяца
+       cmp.c_name, -- статус заявки в РФО
+       pkb.pkb_cl_delinq_exists, --ПКБ – есть ли у клиента просрочка в текущих и закрытых займах
+      --  cpg.pkb_cl_delinq_exists,--ПКБ – есть ли у клиента просрочка в текущих и закрытых займах
+       case when  oc.c_check_result is null then 'Одобрено на сайте'  else 'Отказано на сайте' end as  is_credit_issued_site,--Одобрено ли на сайте
+       m.name,--Наименование магазина на kaspi.kz
+       upper(s.c_address#place) as DEPART_REGION, --  Город создания заявки в РФО
+       ko.statusinfo as KSPSH_ORDER_STATUS --Статус заявки в kaspi.kz
+
+from GG_RFO.Z#KAS_ONLINE_BUY ob--(online)
+join GG_RFO.Z#KAS_ONLINE_CLAIM  oc on oc.c_buy_ref = ob.id--На Частое обновление (в режиме онлайн времени)
+
+--RFO FLD
+left join GG_RFO.Z#CM_CHECKPOINT c on c.id = oc.c_folder_ref
+                                      --and c.c_date_create >= trunc(sysdate)--(online)
+left join GG_RFO.Z#FOLDERS f on f.id = c.id--(online)
+left join GG_RFO.Z#CM_POINT cmp on cmp.id = c.c_point--На Частое обновление (в режиме онлайн времени)--(t-1)
+left join GG_RFO.Z#STRUCT_DEPART sd on sd.id = c.c_st_depart--(t-1)
+
+left join RISK_UALIKHAN.Z#CM_HISTORY_LAST_ONL_DD  ch on ch.collection_id=c.c_history--(online)
+left join GG_RFO.Z#USER u on u.id = c.c_create_user--(online)
+
+
+left join GG_RFO.Z#FORM_CLIENT fcd on fcd.id = oc.c_form_client_ref--(online)
+--left join RISK_UALIKHAN.CL_FROM_SAL sal on sal.form_client_id=fcd.id
+
+left join GG_RFO.Z#SHOPS s on s.id = ob.c_shop--На Частое обновление (в режиме онлайн времени)
+
+
+
+left join (select rd.collection_id,
+                  cd.id,
+                  cd.c_d#type_cred#prod#prod_info11
+
+             from GG_RFO.Z#CREDIT_DOG cd--(online)
+             join GG_RFO.Z#FDOC fd on fd.id = cd.id --(online)
+                                   and fd.class_id = 'CREDIT_DOG'
+             join GG_RFO.Z#RDOC rd on rd.c_doc = fd.id--(online)
+             where cd.c_date_begin >= trunc(sysdate)
+          ) cd on cd.collection_id = f.c_docs
+left join GG_RFO.Z#PROD_INFO                      i on i.collection_id = cd.c_d#type_cred#prod#prod_info11--На Частое обновление (в режиме онлайн времени)
+left join GG_RFO.Z#KAS_TOV_NAME                  tn on tn.id = i.c_name_ref--На Частое обновление (в режиме онлайн времени)
+
+left join GG_RFO.Z#CL_PRIV                      clp on clp.id = f.c_client--На Частое обновление (в режиме онлайн времени)
+left join GG_RFO.Z#CLIENT                        cl on cl.id = clp.id--На Частое обновление (в режиме онлайн времени)*\
+left join RISK_UALIKHAN.CL_FROM_SAL                sal on sal.form_client_id=fcd.id
+--left join u1.V_FORM_CLIENT_ALL_RFO                fca on fca.form_client_id = oc.c_form_client_ref--(t-1)
+left join M_TMP_ONLINE_PRODUCT_PRICE               dd on dd.product_name = upper(i.c_name) and dd.city=upper(s.c_address#place)--(t-1)
+left join M_SCCL_DWH_CL_CATEG                     cat on cat.rfo_client_id=f.c_client--(t-1)
+left join M_SCCL_DWH_CL_PAR1                     cat2 on cat2.rfo_client_id=f.c_client--(t-1)
+left join M_RFO_CLIENT_NUM_CNT                     cn on cn.c_client=f.c_client and cn.numb=oc.c_form_client_st#mobile#numb--(t-1)
+left join M_RFO_CLIENT_CLAIM_CNT_7D               cli on cli.cli_iin=oc.c_form_client_st#inn and cli.rfo_partner_id=s.id--(t-1)
+left join M_RFO_CLIENT_CONTR_INFO                 cci on cci.rfo_client_id=cl.id--(t-1)
+left join V_RFO_KAS_CLIENT_LK                     kcl on kcl.c_client=clp.id and kcl.date_end>trunc(sysdate)--(t-1)
+left join v_client_sign_req_day                   srd on srd.folder_id=c.id--(online)
+left join u1.M_KASPIKZ_USERS_ALL                  kua on to_number(replace(kua.rfo_id, 'X', '')) = oc.c_client_ref and kua.rfo_id is not null--(t-1)
+left join M_RFO_KAS_CLIENT_CLAIMS90D              kcc on kcc.c_inn=oc.c_form_client_st#inn--(t-1)
+--left join M_KAS_CLIENT_PKB_GCVP_REP_DD            cpg on cpg.c_iin = oc.c_form_client_st#inn--(online)
+left join RISK_UALIKHAN.CL_GCVP_REP                 g on g.iin=oc.c_form_client_st#inn
+left join RISK_UALIKHAN.V_CL_PKB_REPORT           pkb on pkb.inn=oc.c_form_client_st#inn
+left join M_KASPISH_ORDERS_DD                      ko on ko.code=ob.c_process_id--(online)
+left join M_RBO_CL_TOT_DEBT                        tb on tb.rfo_client_id =oc.c_client_ref
+--left join M_RBO_CRED_LIM_CASE_FIN2         cr on cr.rfo_client_id = oc.c_client_ref--(t-1)
+left join M_KASPI_MERCHANT_NAME m  on m.id=s.id --(t-1)      */
+--left join GG_RFO.Z#PKB_REPORT
+where ob.c_date_create >= trunc(sysdate);
+grant select on U1.M_KASPI_ONLINE_MONITORING to LOADDB;
+
+

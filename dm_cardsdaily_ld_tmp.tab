@@ -1,0 +1,71 @@
+﻿create table U1.DM_CARDSDAILY_LD_TMP
+(
+  cdhd$change_date           DATE not null,
+  cdhd$audit_id              NUMBER not null,
+  cdhd_rep_date              DATE,
+  cdhd_clnt_gid              NUMBER,
+  cdhd_dcard_gid             NUMBER not null,
+  cdhd_client_name           VARCHAR2(255 CHAR),
+  cdhd_client_iin            VARCHAR2(12 CHAR),
+  cdhd_client_rnn            VARCHAR2(40 CHAR),
+  cdhd_client_rfo_id         VARCHAR2(2000 CHAR),
+  cdhd_deal_number           VARCHAR2(250 CHAR) not null,
+  cdhd_currency              VARCHAR2(3 CHAR),
+  cdhd_begin_date            DATE,
+  cdhd_plan_end_date         DATE,
+  cdhd_actual_end_date       DATE,
+  cdhd_set_revolving_date    DATE,
+  cdhd_deal_status           VARCHAR2(255 CHAR),
+  cdhd_fst_dept_auto_date    DATE,
+  cdhd_fst_dept_date         DATE,
+  cdhd_card_limit            NUMBER,
+  cdhd_rate_value            NUMBER,
+  cdhd_prod_name             VARCHAR2(255 CHAR),
+  cdhd_prod_type             VARCHAR2(255 CHAR),
+  cdhd_dept_name             VARCHAR2(254 CHAR),
+  cdhd_dept_number           VARCHAR2(254 CHAR),
+  cdhd_unp_name              VARCHAR2(254 CHAR),
+  cdhd_unp_number            VARCHAR2(254 CHAR),
+  cdhd_fil_name              VARCHAR2(254 CHAR),
+  cdhd_fil_number            VARCHAR2(254 CHAR),
+  cdhd_empl_name             VARCHAR2(4000),
+  cdhd_empl_number           VARCHAR2(10),
+  cdhd_create_empl_name      VARCHAR2(4000),
+  cdhd_create_empl_number    VARCHAR2(10),
+  cdhd_pc_cred               NUMBER,
+  cdhd_pc_overlimit          NUMBER,
+  cdhd_pc_overdraft          NUMBER,
+  cdhd_pc_prc                NUMBER,
+  cdhd_pc_ovrd_cred          NUMBER,
+  cdhd_pc_ovrd_overlimit     NUMBER,
+  cdhd_pc_ovrd_overdraft     NUMBER,
+  cdhd_pc_ovrd_prc           NUMBER,
+  cdhd_available_balance     NUMBER,
+  cdhd_to_ovrd_date          DATE,
+  cdhd_ovrd_days             NUMBER,
+  cdhd_cl_to_ovrd_date       DATE,
+  cdhd_cl_ovrd_days          NUMBER,
+  cdhd_pc_vnb_ovrd_cred      NUMBER,
+  cdhd_pc_vnb_ovrd_overdraft NUMBER,
+  cdhd_pc_vnb_ovrd_overlimit NUMBER,
+  cdhd_pc_vnb_ovrd_prc_cred  NUMBER,
+  cdhd_vnb_flag              VARCHAR2(10),
+  cdhd_vnb_date              DATE,
+  cdhd_restruct_type         VARCHAR2(10),
+  cdhd_restruct_count        NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.DM_CARDSDAILY_LD_TMP to LOADDB;
+grant select on U1.DM_CARDSDAILY_LD_TMP to LOADER;
+

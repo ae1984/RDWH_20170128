@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_SHOP_ONLINE_CREDIT
+build deferred
+refresh complete on demand
+as
+select td.yyyy_mm_dd,
+       td.week_text_online_credit,
+       td.yyyy_mm,
+       coalesce(t.shop_name, t1.shop_name) as shop_name,
+       coalesce(t.x_dnp_name, t1.x_dnp_name) as city,
+       count(distinct a.id) as req_cnt,
+       count(distinct case when t.is_credit_issued = 1 then a.id end) as appr_cnt,
+       sum(coalesce(t.contract_amount, t1.contract_amount)) as requested_sum,
+       sum(case when t.is_credit_issued = 1 then t.contract_amount end) as approved_sum
+  from u1.V_RFO_Z#KAS_ONLINE_CLAIM         a
+  join u1.V_RFO_Z#KAS_ONLINE_BUY           f on a.c_buy_ref = f.id
+                                            and f.c_date_create >= to_date('08-12-2014','dd-mm-yyyy')
+  left join u1.M_FOLDER_CON_CANCEL         t on t.folder_id = a.c_folder_ref
+                                            and t.process_name = 'ОНЛАЙН КРЕДИТ'
+  left join u1.M_FOLDER_CON_CANCEL_ONLINE t1 on t1.claim_id = a.id
+  join u1.V_TIME_DAYS                     td on td.yyyy_mm_dd = trunc(f.c_date_create)
+ group by td.yyyy_mm_dd,
+       td.week_text_online_credit,
+       td.yyyy_mm,
+       coalesce(t.shop_name, t1.shop_name),
+       coalesce(t.x_dnp_name, t1.x_dnp_name);
+grant select on U1.M_SHOP_ONLINE_CREDIT to LOADDB;
+grant select on U1.M_SHOP_ONLINE_CREDIT to RISK_VERIF;
+
+

@@ -1,0 +1,53 @@
+﻿create table U1.T_RFO_Z#RDOC
+(
+  id            NUMBER not null,
+  c_doc         NUMBER,
+  collection_id NUMBER,
+  class_id      VARCHAR2(16 CHAR),
+  sn            NUMBER,
+  su            NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RFO_Z#RDOC
+  is 'Документы';
+comment on column U1.T_RFO_Z#RDOC.c_doc
+  is 'Документ(FK на Z#FDOC)';
+create index U1.T_RFO_Z#RDOC_IND1 on U1.T_RFO_Z#RDOC (C_DOC)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RFO_Z#RDOC_IND2 on U1.T_RFO_Z#RDOC (COLLECTION_ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_RFO_Z#RDOC to LOADDB;
+

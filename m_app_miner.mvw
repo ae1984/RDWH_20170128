@@ -1,0 +1,86 @@
+﻿create materialized view U1.M_APP_MINER
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       am.rfo_client_id,
+       am.app_id,
+       am.folder_id,
+       am.claim_id,
+       am.form_client_id,
+       am.rfo_contract_id,
+       cb.rbo_contract_id,
+       am.folder_date_create,
+       am.folder_date_create_mi,
+       am.contract_number,
+       cb.start_date,
+       am.contract_amount,
+       am.product_type,
+       am.product,
+       am.is_card,
+       am.cr_scheme_name,
+       am.tariff_plan_name,
+       am.expert_name,
+       am.pos_code,
+       am.pos_name,
+       am.x_dnp_name,
+       am.is_credit_issued as is_issued_rfo,
+       case when cb.rbo_contract_id is not null then 1 else 0 end as is_issued_rbo,
+       am.shop_code,
+       am.shop_name,
+       am.process_code,
+       am.process_name,
+       am.prev_con_closed_cnt,
+       am.prior_optim_count,
+       am.prev_con_del_days_max,
+       am.fact_pmt_mon_before,
+       am.fact_pmt_mon_before_12_mon,
+       am.prev_con_cnt,
+       am.amount_max_before,
+       am.is_client_new_by_con,
+       case when cb.rbo_contract_id is not null
+            then case when cb.is_card = 1 then ceil(months_between(cb.date_plan_end, cb.start_date))
+                 else ceil(months_between(cb.date_plan_end, cd.plan_date_x_pmt_1)) + 1 end
+       else c.contract_term end as contract_term_mon,
+       case when am.is_categ_a = 1 then 'CAT А'
+            when am.is_categ_b = 1 then 'CAT B'
+            when am.is_client_new_by_con = 0 then 'CAT C'
+            when am.is_client_new_by_con = 1 then 'CAT D'
+            end as cli_categ,
+       case when cd.total_debt_x_pmt_1_7 > 0 then 1 else 0 end as is_fpd,
+       case when cd.total_debt_x_pmt_1_30 > 0 then 1 else 0 end as is_spd,
+       case when cd.total_debt_x_pmt_1_60> 0 then 1 else 0 end as is_tpd,
+       case when cd.del_days_max_x > 60      then 1 else 0 end as is_del_ever_60 ,
+       case when cd.del_days_max_x > 60  and
+       to_char(regexp_count(substr(cl.pmt_full_code_3,-6),'1') + regexp_count(substr(cl.pmt_full_code_3,-6),'0')) ||'-'||
+       to_char(regexp_count(substr(cl.pmt_full_code_3,-3),'1') + regexp_count(substr(cl.pmt_full_code_3,-3),'0'))
+                             in ('4-1','3-1','3-0','-3','2-1','2-0','-2','1-1','1-0','-1','0-0','-0','-') then 1 else 0 end as is_npl,
+
+       case when gc.app_id is not null then 1 else 0 end as is_auto,
+       gc.cnt_auto,
+
+       cl.br_r_cnt,
+       cl.br_r_closed_cnt,
+
+       xx.anketa_type,
+
+       am.cli_cat,
+       am.client_categ,
+       m.wife_cat,
+       m.cat_union
+
+from u1.M_APP_MINER_BAS am
+left join u1.M_RBO_CONTRACT_BAS cb on cb.folder_id_first = am.folder_id
+                                      and cb.contract_number = am.contract_number
+left join U1.M_RBO_CONTRACT_DEL cd on cd.rbo_contract_id = cb.rbo_contract_id
+
+left join U1.M_APP_MINER_AUTO_GAI gc on gc.app_id = am.app_id
+left join U1.M_APP_MINER_CLIENT_BARCODE cl on cl.app_id = am.app_id
+left join U1.M_APP_MINER_FORM_TYPE xx on xx.app_id = am.app_id
+left join U1.M_APP_MINER_SPOUSE_CATEG m on m.app_id = am.app_id
+
+left join u1.V_CONTRACT_ALL_RFO c on c.folder_id = am.folder_id and c.rfo_contract_id = am.rfo_contract_id
+where am.folder_date_create >= to_date('01012015', 'ddmmyyyy');
+grant select on U1.M_APP_MINER to LOADDB;
+
+

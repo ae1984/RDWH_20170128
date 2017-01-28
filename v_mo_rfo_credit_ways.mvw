@@ -1,0 +1,16 @@
+﻿create materialized view U1.V_MO_RFO_CREDIT_WAYS
+using no index
+refresh complete on demand
+as
+select w.id as way_id, w.c_code as way_code, upper(w.c_name) as way_name
+from V_RFO_Z#CM_WAY w
+where w.c_code in (
+      'KAS_FIRST_CRED_PC',
+      'KAS_FIRST_PC',
+      'KAS_AUTO_CRED_PC',
+      'KAS_CREDIT_CASH_PC',
+      'KAS_PC_RATES');
+grant select on U1.V_MO_RFO_CREDIT_WAYS to LOADDB;
+grant select on U1.V_MO_RFO_CREDIT_WAYS to LOADER;
+
+

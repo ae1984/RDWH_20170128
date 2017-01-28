@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_TMP_J_DEL_REP_FLOOD
+refresh complete on demand
+as
+select /* noparallel */
+       t.rep_date,
+       sum(t.total_debt) as total_debt,
+       sum(case when t.delinq_days = 8 then t.total_debt end) / sum(t.total_debt) as del_8_rate,
+       sum(case when t.delinq_days = 31 then t.total_debt end) / sum(t.total_debt) as del_31_rate,
+       sum(case when t.delinq_days > 0 and t.delinq_days < 8 then t.total_debt end) / sum(t.total_debt) as del_1_7_rate,
+       sum(case when t.delinq_days >= 8 and t.delinq_days < 31 then t.total_debt end) / sum(t.total_debt) as del_8_30_rate,
+       sum(case when t.delinq_days >= 31 and t.delinq_days < 61 then t.total_debt end) / sum(t.total_debt) as del_31_60_rate,
+       sum(case when t.delinq_days >= 61 and t.delinq_days < 91 then t.total_debt end) / sum(t.total_debt) as del_61_90_rate,
+       sum(case when t.delinq_days >= 91 then t.total_debt end) / sum(t.total_debt) as del_91_XX_rate
+from DWH_PORT t
+join V_DWH_PORTFOLIO_CURRENT c on c.deal_number = t.deal_number
+where t.rep_date >= to_date('2014-07-01','yyyy-mm-dd') and
+      exists (select null from M_TMP_J_FLOOD_KARAGANDA_2 k where k.iin = c.client_iin)
+group by t.rep_date;
+grant select on U1.M_TMP_J_DEL_REP_FLOOD to LOADDB;
+grant select on U1.M_TMP_J_DEL_REP_FLOOD to LOADER;
+
+

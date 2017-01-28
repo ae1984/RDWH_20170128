@@ -1,0 +1,445 @@
+﻿create table U1.MOGW_PROCESS_MO1
+(
+  id                 NUMBER not null,
+  date_start         TIMESTAMP(6) not null,
+  process_request_id NUMBER,
+  date_end           TIMESTAMP(6) not null,
+  proc_param_out     VARCHAR2(4000),
+  process_type       NUMBER(1) default 0 not null,
+  error_msg          VARCHAR2(2048),
+  process_id         NUMBER,
+  rfolder_id         NUMBER,
+  rfo_client_id      NUMBER,
+  rfo_folder_id      NUMBER,
+  rclient_id         NUMBER,
+  esb_xml            VARCHAR2(256),
+  esb_result         VARCHAR2(128),
+  esb_record_id      VARCHAR2(128),
+  esb_date_start     TIMESTAMP(6),
+  esb_date_end       TIMESTAMP(6),
+  process_code       VARCHAR2(64),
+  send_cnt           NUMBER default 1 not null,
+  esb_rep_date_start TIMESTAMP(6)
+)
+partition by range (DATE_START) interval (NUMTOYMINTERVAL(1,'MONTH'))
+(
+  partition P0 values less than (TIMESTAMP' 2010-01-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255,
+  partition SYS_P1492 values less than (TIMESTAMP' 2013-09-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1494 values less than (TIMESTAMP' 2013-10-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1493 values less than (TIMESTAMP' 2013-11-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1495 values less than (TIMESTAMP' 2013-12-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1496 values less than (TIMESTAMP' 2014-01-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1736 values less than (TIMESTAMP' 2014-02-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P2086 values less than (TIMESTAMP' 2014-03-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P2537 values less than (TIMESTAMP' 2014-04-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P3075 values less than (TIMESTAMP' 2014-05-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P3697 values less than (TIMESTAMP' 2014-06-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P4317 values less than (TIMESTAMP' 2014-07-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P4822 values less than (TIMESTAMP' 2014-08-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P5377 values less than (TIMESTAMP' 2014-09-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P5966 values less than (TIMESTAMP' 2014-10-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P6606 values less than (TIMESTAMP' 2014-11-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P7206 values less than (TIMESTAMP' 2014-12-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P7637 values less than (TIMESTAMP' 2015-01-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P8131 values less than (TIMESTAMP' 2015-02-01 00:00:00')
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P8453 values less than (TIMESTAMP' 2015-03-01 00:00:00')
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P8763 values less than (TIMESTAMP' 2015-04-01 00:00:00')
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P9333 values less than (TIMESTAMP' 2015-05-01 00:00:00')
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P9987 values less than (TIMESTAMP' 2015-06-01 00:00:00')
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P10840 values less than (TIMESTAMP' 2015-07-01 00:00:00')
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P12831 values less than (TIMESTAMP' 2015-08-01 00:00:00')
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P19965 values less than (TIMESTAMP' 2015-09-01 00:00:00')
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P20628 values less than (TIMESTAMP' 2015-10-01 00:00:00')
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P21104 values less than (TIMESTAMP' 2015-11-01 00:00:00')
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P21674 values less than (TIMESTAMP' 2015-12-01 00:00:00')
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P22142 values less than (TIMESTAMP' 2016-01-01 00:00:00')
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P22552 values less than (TIMESTAMP' 2016-02-01 00:00:00')
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1984 values less than (TIMESTAMP' 2016-03-01 00:00:00')
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1985 values less than (TIMESTAMP' 2016-04-01 00:00:00')
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1986 values less than (TIMESTAMP' 2016-05-01 00:00:00')
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    )
+);
+create index U1.MOGW_PROCESS_MO1_IND1 on U1.MOGW_PROCESS_MO1 (DATE_START)
+  nologging  local;
+create index U1.MOGW_PROCESS_MO1_IND2 on U1.MOGW_PROCESS_MO1 (PROCESS_REQUEST_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.MOGW_PROCESS_MO1 to LOADDB;
+grant select on U1.MOGW_PROCESS_MO1 to LOADER;
+

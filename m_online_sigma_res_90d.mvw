@@ -1,0 +1,49 @@
+﻿create materialized view U1.M_ONLINE_SIGMA_RES_90D
+build deferred
+refresh complete on demand
+as
+select
+    f1.order_id,
+    f1.a_date,
+    f1.full_date,
+    f1.shop_code,
+    f1.shop_name,
+    f1.city_name,
+    f1.iin,
+    f1.phone_mobile,
+
+    f1.total_amount,
+    --f1.total_amount as total_amount_7d,
+    f1.product_model,
+    f1.prod_id,
+    f1.prodcity_id,
+
+    count(f7.total_amount) as count_7d,
+    round(sum(f7.total_amount))  as sum_amount_7d,
+
+    round(avg(f7.total_amount))  as avg_amount_7d,
+
+    round(median(f7.total_amount)) as median_7d,
+
+    round(stddev(f7.total_amount)) as stddev_7d
+from u1.M_ONLINE_SIGMA_PRE_90D f1
+left join u1.M_ONLINE_SIGMA_PRE_90D f7 on f1.prodcity_id = f7.prodcity_id
+                                          and f7.full_date < f1.full_date
+                                          and f7.a_date >= f1.a_date - 7
+group by f1.order_id,
+          f1.a_date,
+          f1.full_date,
+          f1.shop_code,
+          f1.shop_name,
+          f1.city_name,
+          f1.iin,
+          f1.phone_mobile,
+
+          f1.total_amount,
+          --f1.total_amount as total_amount_7d,
+          f1.product_model,
+          f1.prod_id,
+          f1.prodcity_id;
+grant select on U1.M_ONLINE_SIGMA_RES_90D to LOADDB;
+
+

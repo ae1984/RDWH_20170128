@@ -1,0 +1,71 @@
+﻿create materialized view U1.M_RFO_ONLINE_CLAIM
+build deferred
+refresh force on demand
+as
+select /*+ driving_site(oc) driving_site(ob) driving_site(c) driving_site(cd) driving_site(f) driving_site(fd) driving_site(rd) driving_site(cl) driving_site(clp) */
+       oc.id as claim_id,
+       ob.id as buy_id,
+       ob.c_date_create as buy_date_create,
+       ob.c_process_id,
+       c.id as folder_id,
+       cd.id as rfo_contract_id,
+       c.c_date_create,
+       f.c_client,
+       f.c_business,
+       f.c_n,
+       c.c_st_depart,
+       c.c_way,
+       c.c_point,
+       c.c_create_user,
+       cd.c_info_cred#summa_cred,
+       cd.c_shop,
+       fd.c_status_doc as credit_dog_status_id,
+       cl.c_inn,
+       upper(i.c_name) as product_name,
+       upper(k.c_name) as product_type_name,
+       i.c_price as product_price,
+       oc.c_check_result,
+       case when count(kd1.id)>0 then 1 else 0 end is_sign_require,
+       oc.c_exec_comment
+from GG_RFO.Z#KAS_ONLINE_CLAIM oc
+join GG_RFO.Z#KAS_ONLINE_BUY ob on oc.c_buy_ref = ob.id
+join GG_RFO.Z#CM_CHECKPOINT c on c.id = oc.c_folder_ref
+join GG_RFO.Z#FOLDERS f on f.id = c.id
+join GG_RFO.Z#RDOC rd on rd.collection_id = f.c_docs
+join GG_RFO.Z#FDOC fd on fd.id = rd.c_doc and fd.class_id = 'CREDIT_DOG'
+join GG_RFO.Z#CREDIT_DOG cd on cd.id = rd.c_doc and cd.c_shop is not null
+join GG_RFO.Z#CL_PRIV clp on clp.id = f.c_client
+join GG_RFO.Z#CLIENT cl on cl.id = clp.id
+join GG_RFO.Z#PROD_INFO i on i.collection_id = cd.c_d#type_cred#prod#prod_info11
+join GG_RFO.Z#KIND_ZAL_BODY k on k.id = i.c_type_tov
+
+left join GG_RFO.Z#KAS_UNIVERSA_REF s1 on s1.collection_id = oc.c_mng_vis_scen
+left join GG_RFO.Z#KAS_UNIVERSAL_D kd1 on kd1.id = s1.c_value
+
+where c.c_date_create > sysdate - 10/24/60 and
+      ob.c_date_create > sysdate - 10/24/60
+
+group by oc.id,
+       ob.id,
+       ob.c_date_create,
+       ob.c_process_id,
+       c.id,
+       cd.id,
+       c.c_date_create,
+       f.c_client,
+       f.c_business,
+       f.c_n,
+       c.c_st_depart,
+       c.c_way,
+       c.c_point,
+       c.c_create_user,
+       cd.c_info_cred#summa_cred,
+       cd.c_shop,
+       fd.c_status_doc,
+       cl.c_inn,
+       i.c_name,
+       k.c_name,
+       i.c_price,
+       oc.c_check_result,
+       oc.c_exec_comment;
+

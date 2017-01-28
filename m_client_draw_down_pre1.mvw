@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_CLIENT_DRAW_DOWN_PRE1
+build deferred
+refresh complete on demand
+as
+select /*+parallel(2)*/ distinct f1.id, f1.c_doc_date, r1.collection_id, f1.c_parent_fdoc
+from T_RFO_Z#RDOC  r1
+join T_RFO_Z#FDOC  f1 on f1.id = r1.c_doc
+                     and f1.class_id = 'DRAW_DOWN'
+join V_RFO_Z#STATUS_DOG  s1 on s1.id = f1.c_status_doc
+                     and s1.c_code = 'DRAW_DOWN';
+grant select on U1.M_CLIENT_DRAW_DOWN_PRE1 to LOADDB;
+
+

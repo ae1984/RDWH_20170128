@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_CON_CAL_DEL_AUTO_COLLATERAL
+using no index
+refresh complete on demand
+as
+select con.*,
+       li.date_calc,
+       li.reduced_cost,
+       li.market_cost,
+       li.total_ts_cost,
+       li.total_set_cost,
+       li.zalog_cost
+from M_CONTRACT_CAL_DEL con
+left join (
+            select t.date_calc,
+                   t.reduced_cost,
+                   t.market_cost,
+                   t.total_ts_cost,
+                   t.total_set_cost,
+                   t.zalog_cost,
+                   t.contract_number
+            from M_AUTO_COLLATERAL t
+            join (
+            select t.contract_number,
+                   max(t.date_calc) as date_calc
+            from M_AUTO_COLLATERAL t
+            group by t.contract_number
+            ) z on t.contract_number = z.contract_number and t.date_calc = z.date_calc
+          ) li on con.contract_number = li.contract_number;
+grant select on U1.M_CON_CAL_DEL_AUTO_COLLATERAL to LOADDB;
+grant select on U1.M_CON_CAL_DEL_AUTO_COLLATERAL to LOADER;
+
+

@@ -1,0 +1,52 @@
+﻿create materialized view U1.M_FOLDER_INFO_GAI
+build deferred
+refresh complete on demand
+as
+select --
+       a.folder_id,
+       a.a_date,
+       max(a.vin) keep (dense_rank last order by a. mvd_status_date) as vin,
+       max(a.mvd_status_date) as mvd_status_date,
+       max (a.esbd_mark) keep (dense_rank last order by a. mvd_status_date) as esbd_mark,
+       max (a.esbd_model) keep (dense_rank last order by a. mvd_status_date) as esbd_model,
+       max (a.esbd_issue_year) keep (dense_rank last order by a. mvd_status_date) as esbd_issue_year,
+       max (a.ar_origin_country) keep (dense_rank last order by a. mvd_status_date) as ar_origin_country,
+       max (a.ar_assemblage_countr) keep (dense_rank last order by a. mvd_status_date) as ar_assemblage_countr
+from
+    (  --  последний статус по авто
+    select f.iin,
+           f.folder_id,
+           f.a_date,
+           m.vin,
+           max(m.mvd_status_id) keep (dense_rank last order by m.mvd_status_date) as mvd_status_id,
+           max(m.mvd_status_date) as mvd_status_date,
+           m.esbd_mark,
+           m.esbd_model,
+           m.esbd_issue_year,
+           m.ar_origin_country,
+           m.ar_assemblage_countr
+    from u1.M_MATRIX_BASE f
+    left join u1.DWH_AUTO_VIN m on m.mvd_iin = f.iin and m.mvd_status_date>= to_date('01012014', 'ddmmyyyy')
+    where m.mvd_status_date <= trunc(f.a_date)
+      and f.folder_id is not null
+    group by
+          f.iin,
+          f.folder_id,
+          f.a_date,
+          m.vin,
+          m.esbd_mark,
+          m.esbd_model,
+          m.esbd_issue_year,
+          m.ar_origin_country,
+          m.ar_assemblage_countr
+    order by
+          f.a_date
+
+    ) a
+where a.mvd_status_id <> 4  --
+group by
+       a.folder_id,
+       a.a_date;
+grant select on U1.M_FOLDER_INFO_GAI to LOADDB;
+
+

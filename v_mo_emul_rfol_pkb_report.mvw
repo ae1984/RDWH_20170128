@@ -1,0 +1,33 @@
+﻿create materialized view U1.V_MO_EMUL_RFOL_PKB_REPORT
+using no index
+refresh complete on demand
+as
+select pr.id               as pkbrp_id,
+       fld.id              as foldr_id,     -- folder_id
+       fld.c_client        as foldr_client, -- client_id
+       c.id                as clien_id,     -- client_id
+       fd.c_doc_date       as fdocx_doc_date,
+       pr.c_rnn            as pkbrp_rnn,
+--       pr.c_surname        as pkbrp_surname,
+--       pr.c_name           as pkbrp_name,
+--       pr.c_fathersname    as pkbrp_fathersname,
+       pr.c_si_noec        as pkbrp_si_noec,
+       pr.c_si_notc        as pkbrp_si_notc,
+       pr.c_si_tdo         as pkbrp_si_tdo,
+       upper(pr.c_nsoc)    as pkbrp_nsoc,
+       upper(pr.c_nsoa)    as pkbrp_nsoa,
+       pr.c_dateofrptissue as pkbrp_dateofrptissue,
+       upper(pr.c_status)  as pkbrp_status,
+       pr.c_rpt_type       as pkbrp_rpt_type,
+       pr.c_pkb_report_ref as pkbrp_pkb_report_ref
+from V_RFO_Z#PKB_REPORT pr
+join V_RFO_Z#FDOC fd on fd.id = pr.id and fd.class_id = 'PKB_REPORT'
+left join V_RFO_Z#CLIENT c on c.c_inn = pr.c_rnn and c.class_id = 'CL_PRIV'
+left join V_RFO_Z#RDOC rd on rd.c_doc = fd.id
+left join V_RFO_Z#FOLDERS fld on fld.c_docs = rd.collection_id
+--where pr.id = 13212822149
+where fd.c_doc_date > trunc(sysdate) - 30;
+grant select on U1.V_MO_EMUL_RFOL_PKB_REPORT to LOADDB;
+grant select on U1.V_MO_EMUL_RFOL_PKB_REPORT to LOADER;
+
+

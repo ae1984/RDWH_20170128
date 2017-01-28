@@ -1,0 +1,20 @@
+﻿create materialized view U1.V_BIG_CLIENT_DOC_CLEAN_FINAL
+refresh force on demand
+as
+select iin,
+       max(rnn) keep (dense_rank last order by creditinfoid) as rnn,
+       max(doc_number) keep (dense_rank last order by creditinfoid) as doc_number,
+       max(registration_date) keep (dense_rank last order by creditinfoid) as registration_date,
+       max(issue_date) keep (dense_rank last order by creditinfoid) as issue_date,
+       max(expiration_date) keep (dense_rank last order by creditinfoid) as expiration_date
+from (
+    select a.creditinfoid, coalesce(a.iin, c.iin) as iin,
+           a.rnn, a.doc_number, a.registration_date, a.issue_date, a.expiration_date
+    from V_BIG_CLIENT_DOC_CLEAN a
+    left join V_CLIENT_TAX c on c.rnn = a.rnn
+    where coalesce(a.iin, c.iin) is not null
+) group by iin;
+grant select on U1.V_BIG_CLIENT_DOC_CLEAN_FINAL to LOADDB;
+grant select on U1.V_BIG_CLIENT_DOC_CLEAN_FINAL to LOADER;
+
+

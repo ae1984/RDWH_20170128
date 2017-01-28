@@ -1,0 +1,56 @@
+﻿create table U1.T_DWH_KOLESA_KZ
+(
+  kolesa_id                NUMBER not null,
+  kolesa_brand             VARCHAR2(100 CHAR),
+  kolesa_model             VARCHAR2(100 CHAR),
+  kolesa_year              VARCHAR2(10 CHAR),
+  kolesa_color             VARCHAR2(100 CHAR),
+  kolesa_price             VARCHAR2(100 CHAR),
+  kolesa_phone             VARCHAR2(2000 CHAR),
+  kolesa_email             VARCHAR2(1000 CHAR),
+  kolesa_region            VARCHAR2(500 CHAR),
+  kolesa_fuel              VARCHAR2(100 CHAR),
+  kolesa_volume            VARCHAR2(10 CHAR),
+  kolesa$change_date       DATE,
+  kolesa_publication_date  DATE,
+  kolesa_created_at        DATE,
+  kolesa_updated_at        DATE,
+  kolesa_text              VARCHAR2(2000 CHAR),
+  kolesa_car_body          VARCHAR2(200 CHAR),
+  kolesa_car_transm        VARCHAR2(100 CHAR),
+  kolesa_emergency         VARCHAR2(100 CHAR),
+  kolesa_car_order         VARCHAR2(100 CHAR),
+  kolesa_custom            VARCHAR2(100 CHAR),
+  kolesa_condition         VARCHAR2(100 CHAR),
+  kolesa_sweel             VARCHAR2(100 CHAR),
+  kolesa_price_currency    VARCHAR2(100 CHAR),
+  kolesa_car_dwheel        VARCHAR2(100 CHAR),
+  kolesa_car_run           VARCHAR2(100 CHAR),
+  kolesa_torg              VARCHAR2(100 CHAR),
+  kolesa_price_user        VARCHAR2(100 CHAR),
+  kolesa_kas_date          DATE,
+  kolesa_kas_sto           VARCHAR2(100 CHAR),
+  kolesa_kas_state         VARCHAR2(100 CHAR),
+  kolesa_kas_electronics   VARCHAR2(100 CHAR),
+  kolesa_kas_wheel         VARCHAR2(100 CHAR),
+  kolesa_kas_engine        VARCHAR2(100 CHAR),
+  kolesa_kas_interior      VARCHAR2(100 CHAR),
+  kolesa_kas_body          VARCHAR2(100 CHAR),
+  kolesa_kas_interest_free VARCHAR2(100 CHAR),
+  kolesa_color_m           VARCHAR2(100 CHAR),
+  kolesa_avtosalon_ref     VARCHAR2(100 CHAR),
+  kolesa_active_bool       NUMBER
+)
+tablespace USERS
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+nologging;
+

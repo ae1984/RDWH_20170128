@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_RBO_ACC_SENDER_OUT_PRE
+build deferred
+refresh force on demand
+as
+select /*+ parallel(10)*/  *
+  from s02.Z#MAIN_DOCUM@rdwh_exd md
+   where c_date_prov >= to_date('01-01-2016','dd-mm-yyyy')
+   and c_date_prov <  trunc(sysdate)
+   --and nvl(bn.c_bic,'CASPKZKA') != 'CASPKZKA'  --со внешних счетов
+   and nvl(c_kl_dt#2#3,334692543) != 334692543
+   and md.c_quit_doc is not null
+   and md.state_id = 'PROV';
+

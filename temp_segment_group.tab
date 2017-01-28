@@ -1,0 +1,26 @@
+﻿create table U1.TEMP_SEGMENT_GROUP
+(
+  id                     NUMBER(19) not null,
+  name                   VARCHAR2(255),
+  group_type             VARCHAR2(255),
+  actual                 NUMBER(1) not null,
+  contact_any_count      NUMBER(10),
+  contact_deactive_count NUMBER(10),
+  photo_min_result_count NUMBER(10),
+  photo_ver_count        NUMBER(10),
+  schema_type            VARCHAR2(255 CHAR),
+  biggroup_id            NUMBER(19)
+)
+tablespace USERS_ARC
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+nologging;
+

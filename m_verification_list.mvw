@@ -1,0 +1,68 @@
+﻿create materialized view U1.M_VERIFICATION_LIST
+build deferred
+refresh complete on demand
+as
+select /*+parallel(2)*/
+ to_char(t.verif_id) as verif_id,
+ pp.date_start,
+ case
+   when coalesce(t.date_end, to_date('01/01/2014', 'dd/mm/yyyy')) >
+        pp.date_end then
+    t.verif_photo
+   else
+    'MO_VER посл'
+ end as verif_photo,
+ case
+   when coalesce(t.date_end, to_date('01/01/2014', 'dd/mm/yyyy')) >
+        pp.date_end then
+    t.verif_contacts
+   else
+    'MO_VER посл'
+ end as verif_contacts,
+ case
+   when coalesce(t.date_end, to_date('01/01/2014', 'dd/mm/yyyy')) >
+        pp.date_end then
+    t.verif_status
+   else
+    'MO_VER посл'
+ end as verif_status,
+ case
+   when coalesce(t.date_end, to_date('01/01/2014', 'dd/mm/yyyy')) >
+        pp.date_end then
+    t.verif_vector_gr
+   else
+    'MO_VER посл'
+ end as verif_vec_gr,
+ case
+   when coalesce(t.date_end, to_date('01/01/2014', 'dd/mm/yyyy')) <
+        pp.date_end and instr(pp.params_out, '[VERIF_PHOTO#VER_YES]') > 0 then
+    'VER_YES'
+   when coalesce(t.date_end, to_date('01/01/2014', 'dd/mm/yyyy')) <
+        pp.date_end and instr(pp.params_out, '[VERIF_PHOTO#VER_NO]') > 0 then
+    'VER_NO'
+   else
+    null
+ end as verif_photo2,
+ case
+   when coalesce(t.date_end, to_date('01/01/2014', 'dd/mm/yyyy')) <
+        pp.date_end and instr(pp.params_out, '[VERIF_CONTACT#VER_YES]') > 0 then
+    'VER_YES'
+   when coalesce(t.date_end, to_date('01/01/2014', 'dd/mm/yyyy')) <
+        pp.date_end and instr(pp.params_out, '[VERIF_CONTACT#VER_NO]') > 0 then
+    'VER_NO'
+   else
+    null
+ end as verif_contacts2,
+ pp.params_out
+  from u1.T_MO_AUTOCHECK_RESULT t
+  join u1.mo_rfolder_par_value rf
+    on rf.value_number = t.verif_id
+   and rf.d_par_id = 2031
+  join u1.mo_process pp
+    on pp.rfolder_id = rf.rfolder_id
+ where t.date_create > trunc(sysdate) - 1
+   and rf.date_create > trunc(sysdate) - 1
+   and pp.d_process_id = 1007;
+grant select on U1.M_VERIFICATION_LIST to LOADDB;
+
+

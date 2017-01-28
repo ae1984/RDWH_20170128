@@ -1,0 +1,36 @@
+﻿create table U1.KSPKZ_VUSERLOGIN20
+(
+  userid    NUMBER,
+  starttime DATE,
+  closetime DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 16K
+    next 16K
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.LOGIN_USERID_INDX on U1.KSPKZ_VUSERLOGIN20 (USERID)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select, insert, update, delete on U1.KSPKZ_VUSERLOGIN20 to ETL;
+grant select on U1.KSPKZ_VUSERLOGIN20 to LOADDB;
+grant select on U1.KSPKZ_VUSERLOGIN20 to LOADER;
+

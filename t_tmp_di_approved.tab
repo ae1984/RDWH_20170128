@@ -1,0 +1,23 @@
+﻿create table U1.T_TMP_DI_APPROVED
+(
+  client_id           VARCHAR2(7 CHAR),
+  rej_another_check   NUMBER,
+  rej_antifraud_check NUMBER,
+  folder_id           NUMBER not null
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_DI_APPROVED to LOADDB;
+grant select on U1.T_TMP_DI_APPROVED to LOADER;
+

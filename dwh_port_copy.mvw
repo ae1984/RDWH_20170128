@@ -1,0 +1,9 @@
+﻿create materialized view U1.DWH_PORT_COPY
+using no index
+refresh complete on demand
+as
+select * from dwh_port p where p.rep_date >= to_date('27.06.2014','dd.mm.yyyy');
+grant select on U1.DWH_PORT_COPY to LOADDB;
+grant select on U1.DWH_PORT_COPY to LOADER;
+
+

@@ -1,0 +1,23 @@
+﻿create table U1.EMAIL_RECIPIENT
+(
+  email_code VARCHAR2(32) not null,
+  email_box  VARCHAR2(256) not null,
+  is_active  NUMBER default 1 not null,
+  is_default NUMBER default 0
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.EMAIL_RECIPIENT to LOADDB;
+grant select on U1.EMAIL_RECIPIENT to LOADER;
+

@@ -1,0 +1,97 @@
+﻿create materialized view U1.M_TMP_J_FC_FIELDS_3
+refresh complete on demand
+as
+select to_char(f.folder_date_create_mi,'yyyy') as year, to_char(f.folder_date_create_mi,'yyyy-mm') as mon,
+       f.cr_program_name, f.product_type, f.is_credit_issued,
+       fc.job_position_type,
+--       round(months_between(f.folder_date_create_mi, fc.fact_address_date_begin)) as fact_address_term,
+       round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) as fact_address_term,
+
+       case when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 6 then '00-05'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 12 then '06-11'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 24 then '1 год'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 36 then '2 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 48 then '3 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 60 then '4 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 72 then '5 лет'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 120 then '6-10 лет'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 180 then '11-15 лет'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) >= 180 then '16 и более лет'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) is null then 'null' end
+        as fact_address_term_1,
+
+       case when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 12 then '0 лет'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 24 then '1 год'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 36 then '2 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 48 then '3 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 60 then '4 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) >= 60 then '5 и более лет'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) is null then 'null' end
+        as fact_address_term_2,
+
+       case when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 12 then 'менее 1 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 24 then '1 год'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 36 then '2 года'
+--            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 48 then '3 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 60 then '3-4 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) >= 60 then '5 и более лет'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) is null then 'null' end
+        as fact_address_term_3,
+
+       fc.org_activity,
+       fc.org_sector,
+       fc.is_auto_exists,
+       fc.real_estate_relation as real_estate,
+       ---
+       count(*) as cnt,
+       count(distinct f.rfo_contract_id) as cnt_rfo_con,
+       sum(d.max_debt_used_x) / 1000000 as sales_mln,
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_mln
+from M_FOLDER_CON_CANCEL f
+join M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = f.form_client_id
+left join V_RFO_Z#FORM_CLIENT fc2 on fc2.id = f.form_client_id
+where to_char(f.folder_date_create_mi,'yyyy') in ('2014','2015')
+group by to_char(f.folder_date_create_mi,'yyyy'), to_char(f.folder_date_create_mi,'yyyy-mm'),
+         f.cr_program_name, f.product_type, f.is_credit_issued,
+         fc.job_position_type,
+--         round(months_between(f.folder_date_create_mi, fc.fact_address_date_begin)),
+         round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))),
+
+       case when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 6 then '00-05'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 12 then '06-11'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 24 then '1 год'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 36 then '2 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 48 then '3 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 60 then '4 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 72 then '5 лет'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 120 then '6-10 лет'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 180 then '11-15 лет'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) >= 180 then '16 и более лет'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) is null then 'null' end,
+
+       case when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 12 then '0 лет'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 24 then '1 год'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 36 then '2 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 48 then '3 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 60 then '4 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) >= 60 then '5 и более лет'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) is null then 'null' end,
+
+       case when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 12 then 'менее 1 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 24 then '1 год'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 36 then '2 года'
+--            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 48 then '3 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) < 60 then '3-4 года'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) >= 60 then '5 и более лет'
+            when round(months_between(f.folder_date_create_mi, coalesce(fc.fact_address_date_begin,fc.reg_address_date_begin))) is null then 'null' end,
+
+         fc.org_activity,
+         fc.org_sector,
+         fc.is_auto_exists,
+         fc.real_estate_relation;
+grant select on U1.M_TMP_J_FC_FIELDS_3 to LOADDB;
+grant select on U1.M_TMP_J_FC_FIELDS_3 to LOADER;
+
+

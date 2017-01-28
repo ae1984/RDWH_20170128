@@ -1,0 +1,25 @@
+﻿create table U1.NT_TREE_OBJECTS_DET
+(
+  lvl                 NUMBER,
+  is_cycle            NUMBER,
+  name                VARCHAR2(128),
+  referenced_name     VARCHAR2(128),
+  is_source           NUMBER,
+  end_refresh_name    DATE,
+  end_refresh_refname DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_TREE_OBJECTS_DET to LOADDB;
+

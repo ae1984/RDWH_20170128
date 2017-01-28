@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_CLIENT_SCO_BEHAV_3_RAW
+refresh complete on demand
+as
+select c.c_client_ref as rfo_client_id,
+                       c.id as claim_id,
+                       b.c_date_create as buy_date_create
+                  from v_rfo_Z#KAS_ONLINE_CLAIM c
+                  join v_rfo_Z#KAS_ONLINE_BUY b
+                    on c.c_buy_ref = b.id
+                  join v_rfo_Z#STATUS_DOG s
+                    on s.id = b.c_state_id
+                    where b.c_date_create>= trunc(sysdate) - 60
+                    and s.c_code='CREDIT_REJECTED';
+grant select on U1.M_CLIENT_SCO_BEHAV_3_RAW to LOADDB;
+grant select on U1.M_CLIENT_SCO_BEHAV_3_RAW to LOADER;
+grant select on U1.M_CLIENT_SCO_BEHAV_3_RAW to LOAD_MO;
+
+

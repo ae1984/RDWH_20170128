@@ -1,0 +1,31 @@
+﻿create table U1.DATA_PKB_FAILURE_SCO_TMP
+(
+  sco_date   DATE,
+  iin        VARCHAR2(12),
+  rnn        VARCHAR2(12),
+  param_text NUMBER,
+  result     VARCHAR2(10),
+  is_day     NUMBER(1)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on column U1.DATA_PKB_FAILURE_SCO_TMP.sco_date
+  is 'date';
+comment on column U1.DATA_PKB_FAILURE_SCO_TMP.result
+  is 'pS';
+comment on column U1.DATA_PKB_FAILURE_SCO_TMP.is_day
+  is 'дневные/ночные';
+grant select on U1.DATA_PKB_FAILURE_SCO_TMP to LOADDB;
+grant select on U1.DATA_PKB_FAILURE_SCO_TMP to LOADER;
+

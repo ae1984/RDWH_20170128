@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_ONL_CRED_VERIFY_PHOTO
+refresh force on demand
+as
+select t.client_ref rfo_client_id,t.is_cancel_exists,t.is_credit_exists,t.is_purse_exists
+  from M_RFO_ONLINE_CV_PRE_TEST t
+ where (t.is_credit_exists = 0 and t.is_purse_exists = 1)
+    or t.is_cancel_exists = 1;
+grant select on U1.M_ONL_CRED_VERIFY_PHOTO to LOADDB;
+grant select on U1.M_ONL_CRED_VERIFY_PHOTO to LOADER;
+
+

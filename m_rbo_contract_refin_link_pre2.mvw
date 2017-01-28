@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_RBO_CONTRACT_REFIN_LINK_PRE2
+build deferred
+refresh force on demand
+as
+select /*+parallel(20)*/ rbo_contract_id_to,
+                        refin_date,
+                        min(rep_date_one) as refin_date_repay
+                  from (
+                 select
+                        r.rbo_contract_id_to,
+                        r.refin_date,
+                        p.rep_date,
+                        lead(p.rep_date) over (partition by p.rbo_contract_id, r.refin_date order by p.rep_date) as rep_date_next,
+                        p.rep_date + 1 as rep_date_one
+                   from M_RBO_CONTRACT_REFIN_LINK_PRE0 r
+                   join u1.V_RBO_PORT p on p.rbo_contract_id = r.rbo_contract_id_to
+                                       and p.rep_date >= r.refin_date-1
+                        )
+                   join (select max(rep_date) as max_rep_date from t_rbo_port) tt on 1 = 1
+                 where nvl(rep_date_next,to_date('01-01-1900','dd-mm-yyyy')) != rep_date_one
+                   and rep_date_one != tt.max_rep_date + 1     --если v_rbo_port на sysdate, берем последнюю максимальную
+                 group by rbo_contract_id_to, refin_date;
+

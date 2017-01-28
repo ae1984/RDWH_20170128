@@ -1,0 +1,11 @@
+﻿create materialized view U1.V_RFO_Z#CONTACTS_REF
+refresh force on demand
+as
+select id,
+      c_value,
+      collection_id
+ from ibs.Z#CONTACTS_REF@rfo_snap;
+grant select on U1.V_RFO_Z#CONTACTS_REF to LOADDB;
+grant select on U1.V_RFO_Z#CONTACTS_REF to LOADER;
+
+

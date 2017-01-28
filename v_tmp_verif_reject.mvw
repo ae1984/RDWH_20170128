@@ -1,0 +1,64 @@
+﻿create materialized view U1.V_TMP_VERIF_REJECT
+build deferred
+refresh force on demand
+as
+select /*+ no_parallel*/
+mvv.*,
+nvl(mvv.verify_folder_id, mvv.demand_folder_id) as folder_id,
+bb.verif_photo_result as rfo_verif_photo,
+bb.verif_phone_result as rfo_verif_phone,
+bb.verif_doc_status as rfo_verif_doc_status,
+--d.yy_mm_start_last as mesyac_vydachi,
+--cc.folder_date_create_mi as data_vydachi,
+--d.contract_number,
+--cc.contract_number,
+--d.delinq_rate_pmt_1 as fpd,
+(mvv.smart_script_finish_dtm - mvv.smart_script_begin_dtm)*24*60*60 as verif_time,
+(kv.c_date_last_edit - bb.verif_doc_date)* 24 * 60 * 60 as rfo_time,
+--d.max_debt_used as sum_of_contract,
+--cc.contract_amount as sum_of_contract,
+--d.product_start_last,
+cc.product_type,
+c.folder_date_create,
+c.folder_state as status_papki,
+c.process_name as business_process,
+c.expert_name as manager,
+c.pos_code as otdelenie,
+c.dnp_name as gorod
+from u1.M_VERIFICATION mvv
+left join u1.v_verification bb on nvl(mvv.verify_folder_id, mvv.demand_folder_id) = bb.folder_id
+left join U1.V_FOLDER_ALL_RFO c on nvl(mvv.verify_folder_id, mvv.demand_folder_id) = c.folder_id
+left join U1.V_CLIENT_RFO_BY_ID n on n.rfo_client_id = c.rfo_client_id
+--left join U1.V_VERIFICATION v on v.folder_id = t.folder_id
+left join U1.V_RFO_Z#KAS_VERIFICATION kv on bb.verif_doc_id = kv.id
+/*left join U1.V_RFO_Z#FDOC f on f.id = kv.id*/
+/*left join (select c_id_object, max(c_date_edit) keep (dense_rank first order by c_date_edit) as c_date_edit
+from U1.V_RFO_Z#KAS_EDIT_PRD
+where c_comments = 'VERIFY'
+group by c_id_object) ppr on ppr.c_id_object = f.id */
+left join u1.m_folder_con_cancel cc on nvl(mvv.verify_folder_id, mvv.demand_folder_id) = cc.folder_id
+--left join u1.m_contract_cal_del d on cc.folder_id = d.folder_id_first
+--left join u1.v_dwh_portfolio_current dd on dd.deal_number = cc.contract_number
+where (mvv.question in (
+/*'Имеется ли негативная информация?&nbsp;(Бомж, надпись "Откажите", "Клиент пришел с посредником", надпись на фото "Web cam")',
+'Имеется ли негативная информация?Клиент является сотрудником АО "Kaspi Bank"?',*/
+'Фото клиента и фото документа цветные (похожи на оригинал)?',
+/*'Имеется ли негативная информация? Например: Клиент похож на бомжа, есть снимки с комментарием "Клиент с посредником", "Клиент ушел" и т.д.',
+'Имеется ли негативная информация? Клиент является сотрудником АО "Kaspi Bank"?',*/
+'На документе уд. личности и фото Клиента изображен один человек?',
+'Фото клиента и фото документа цветные?',
+'Фото Клиента (уд.личности и снимок Клиента) совпадает с фото из предыдущей заявки?',
+/*'Имеется ли негативная информация? К примеру, Клиент похож на бомжа, менеджер отправляет фото с комментарием "Клиент с посредником" и т.д.',
+'Имеется ли негативная информация?',*/
+'Фото клиента и фото документа цветные (похожи на оригинал) ?',
+/*'Имеется ли негативная информация?',*/
+'Фото клиента и фото документа цветные?',
+'На документе уд. личности и фото Клиента изображен один человек? ')
+or mvv.question like '%совпадает с фото из предыдущей заявки?%')
+and mvv.answer_text = 'НЕТ'
+and verification_scheme = 'PHOTO'
+and trunc(verification_date) >= to_date('01.01.2013', 'dd.mm.yyyy');
+grant select on U1.V_TMP_VERIF_REJECT to LOADDB;
+grant select on U1.V_TMP_VERIF_REJECT to LOADER;
+
+

@@ -1,0 +1,43 @@
+﻿create materialized view U1.M_TMP_K_SCORE_FM_F
+refresh complete on demand
+as
+select /*+ parallel 30 */
+t.folder_id,
+max(t.yy_mm_start_b) keep (dense_rank last order by t.kdn_form_salary_max) yy_mm_start_b,
+max(t.rfo_client_id) keep (dense_rank last order by t.kdn_form_salary_max) rfo_client_id,
+max(t.form_income_gcvp_salary_max) keep (dense_rank last order by t.kdn_form_salary_max) form_income_gcvp_salary_max,
+max(t.is_kdn_regulated_sal_max) keep (dense_rank last order by t.kdn_form_salary_max) is_kdn_regulated_sal_max,
+max(t.is_ref_hard) keep (dense_rank last order by t.kdn_form_salary_max) is_ref_hard,
+max(t.kdn_form_salary_max) keep (dense_rank last order by t.kdn_form_salary_max) kdn_form_salary_max,
+max(t.inc_pred) keep (dense_rank last order by t.kdn_form_salary_max) inc_pred,
+max(t.inc_pred_target) keep (dense_rank last order by t.kdn_form_salary_max) inc_pred_target,
+max(t.kdn_pred) keep (dense_rank last order by t.kdn_form_salary_max) kdn_pred,
+max(t.is_kdn_regulated_pred) keep (dense_rank last order by t.kdn_form_salary_max) is_kdn_regulated_pred,
+
+
+round(coalesce(max(t.contract_pmt) keep (dense_rank last order by t.kdn_form_salary_max),0) + coalesce(max(t.other_deal_pmt) keep (dense_rank last order by t.kdn_form_salary_max),0) + coalesce(max(t.pkb_pmt) keep (dense_rank last order by t.kdn_form_salary_max),0)) client_kdn_pmt,
+
+max(t2.inc_pred_target) keep (dense_rank last order by t2.kdn_form_salary_max) inc_pred_target2,
+max(t2.inc_pred) keep (dense_rank last order by t2.kdn_form_salary_max) inc_pred2,
+max(t2.kdn_pred) keep (dense_rank last order by t2.kdn_form_salary_max) kdn_pred2,
+max(t2.is_kdn_regulated_pred) keep (dense_rank last order by t2.kdn_form_salary_max) is_kdn_regulated_pred2,
+
+max(t3.inc_pred_target) keep (dense_rank last order by t3.kdn_form_salary_max) inc_pred_target3,
+max(t3.inc_pred) keep (dense_rank last order by t3.kdn_form_salary_max) inc_pred3,
+max(t3.kdn_pred) keep (dense_rank last order by t3.kdn_form_salary_max) kdn_pred3,
+max(t3.is_kdn_regulated_pred) keep (dense_rank last order by t3.kdn_form_salary_max) is_kdn_regulated_pred3,
+
+max(t4.inc_pred_target) keep (dense_rank last order by t4.kdn_form_salary_max) inc_pred_target4,
+max(t4.inc_pred) keep (dense_rank last order by t4.kdn_form_salary_max) inc_pred4,
+max(t4.kdn_pred) keep (dense_rank last order by t4.kdn_form_salary_max) kdn_pred4,
+max(t4.is_kdn_regulated_pred) keep (dense_rank last order by t4.kdn_form_salary_max) is_kdn_regulated_pred4
+
+from M_TMP_K_SCORE_F1_F t
+join M_TMP_K_SCORE_F2_F t2 on t2.folder_id = t.folder_id
+join M_TMP_K_SCORE_F3_F t3 on t3.folder_id = t.folder_id
+join M_TMP_K_SCORE_F4_F t4 on t4.folder_id = t.folder_id
+group by t.folder_id;
+grant select on U1.M_TMP_K_SCORE_FM_F to LOADDB;
+grant select on U1.M_TMP_K_SCORE_FM_F to LOADER;
+
+

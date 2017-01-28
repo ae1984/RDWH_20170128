@@ -1,0 +1,12 @@
+﻿create materialized view U1.V_FORM_CLIENT_ALL_RFO_PRE11
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/
+     distinct pr10.collection_id, pr10.c_str as prop_name
+             from V_RFO_Z#PROPERTIES pr10
+             join V_RFO_Z#PROPERTY_GRP pg10 on pg10.id = pr10.c_group_prop
+            where pg10.c_code = 'CASTA_NOW'  --Должность на данный момент;
+grant select on U1.V_FORM_CLIENT_ALL_RFO_PRE11 to LOADDB;
+
+

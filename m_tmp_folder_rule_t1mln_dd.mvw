@@ -1,0 +1,85 @@
+﻿create materialized view U1.M_TMP_FOLDER_RULE_T1MLN_DD
+build deferred
+using no index
+refresh force on demand
+as
+select /*+ parallel 30 */
+       *
+from (
+    select /*+ parallel 30 */
+           r.id rfolder_id,
+           r.date_create,
+           dp.code_int,
+           /*case when dp.d_par_datatype_code = 'NUMBER' then to_char(t.value_number)
+                when dp.d_par_datatype_code = 'DATE' then to_char(t.value_date, 'dd-mm-yyyy hh24:mi:ss')
+           else t.value_text end as value_number*/
+
+           t.value_number
+    from u1.T_MO_RFOLDER_DD r
+    join u1.T_MO_RFOLDER_PAR_VALUE_DD t on t.rfolder_id = r.id and t.date_create >= trunc(sysdate)
+    join u1.T_MO_RFOLDER_PAR_VALUE_DD t2 on t2.rfolder_id = r.id and
+                                              t2.d_par_id = 1327 and
+                                              t2.value_text = 'KASPI_SHOPPING' and
+                                              t2.date_create >= trunc(sysdate)
+    join u1.V_MO_D_PAR dp on dp.id = t.d_par_id
+                          and dp.code_int in ('IN_SCO_IIN',
+                                              'IN_SCO_CLIENT_ID',
+                                              'IN_SCO_FOLDER_ID',
+
+                                              'SC_GENERAL_CONTRACT_AMOUNT',
+
+                                              'SC_GCVP_SALARY',
+                                              'SC_CLI_ACTIVE_TOTAL_DEBT_ONL',
+                                              'SC_CLI_TOTAL_DEBT_ONL',
+                                              'SC_GENERAL_CONTRACT_AMOUNT',
+                                              'SC_CRED_LIM_ONLINE_T1MLN',
+
+                                              'SC_30D_KN_REJECT_EXISTS_RES_PRE',
+                                              'SC_ONL_30D_ACTIVE_LOAN_CNT',
+                                              'SC_ONL_30D_ACTIVE_LOAN_RES_PRE',
+
+                                              'SC_ONL_30D_MO_REJECT_CNT',
+                                              'SC_ONL_30D_MO_REJECT_RES_PRE',
+
+                                              'SC_ONL_30D_REQUEST_RES_PRE',
+
+                                              'SC_BAD_CHECK_ONLY',
+                                              'SC_CLIENT_SEGMENT_RULE_BL',
+
+                                              'MO_SCO_REJECT_PRE_81',
+                                              'MO_SCO_REJECT'
+                                              )
+    where r.date_create >= trunc(sysdate)
+          /*and r.id = 35894176*/
+) pivot (
+    max(value_number)
+    for code_int in ( 'IN_SCO_IIN' as iin,
+                      'IN_SCO_CLIENT_ID' as rfo_client_id,
+                      'IN_SCO_FOLDER_ID' as rfo_folder_id,
+
+                      'SC_GENERAL_CONTRACT_AMOUNT' as contract_amount,
+
+                      'SC_GCVP_SALARY' as sc_gcvp_salary,
+                      'SC_CLI_ACTIVE_TOTAL_DEBT_ONL' sc_cli_active_total_debt_onl,
+                      'SC_CLI_TOTAL_DEBT_ONL' sc_cli_total_debt_onl,
+                      'SC_GENERAL_CONTRACT_AMOUNT' sc_general_contract_amount,
+                      'SC_CRED_LIM_ONLINE_T1MLN' sc_cred_lim_online_t1mln,
+
+                      'SC_30D_KN_REJECT_EXISTS_RES_PRE' sc_30d_kn_reject_exists,
+                      'SC_ONL_30D_ACTIVE_LOAN_CNT' as sc_onl_30d_active_loan_cnt,
+                      'SC_ONL_30D_ACTIVE_LOAN_RES_PRE' sc_onl_30d_active_loan,
+
+                      'SC_ONL_30D_MO_REJECT_CNT' as sc_onl_30d_mo_reject_cnt,
+                      'SC_ONL_30D_MO_REJECT_RES_PRE' as sc_onl_30d_mo_reject,
+
+                      'SC_ONL_30D_REQUEST_RES_PRE' as sc_onl_30d_request_res_pre,
+
+                      'SC_BAD_CHECK_ONLY' as sc_bad_check_only,
+                      'SC_CLIENT_SEGMENT_RULE_BL' as sc_client_segment_rule_bl,
+
+                      'MO_SCO_REJECT_PRE_81' as mo_sco_reject_pre_81,
+                      'MO_SCO_REJECT' as mo_sco_reject)
+);
+grant select on U1.M_TMP_FOLDER_RULE_T1MLN_DD to LOADDB;
+
+

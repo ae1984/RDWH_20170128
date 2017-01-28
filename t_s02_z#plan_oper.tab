@@ -1,0 +1,35 @@
+﻿create table U1.T_S02_Z#PLAN_OPER
+(
+  id                 NUMBER,
+  collection_id      NUMBER,
+  c_date             DATE,
+  c_oper             NUMBER,
+  c_summa            NUMBER(17,2),
+  c_valuta           NUMBER,
+  c_doc              NUMBER,
+  c_summa_exec       NUMBER(17,2),
+  c_num_oper         VARCHAR2(5),
+  c_fact_opers       NUMBER,
+  c_fix_below_border VARCHAR2(1),
+  c_date_begin       DATE,
+  c_reg_currency_sum NUMBER(17,2),
+  c_date_end         DATE,
+  c_reg_cur_sum_exec NUMBER(17,2),
+  c_is_executed      VARCHAR2(1),
+  c_param            NUMBER,
+  c_outtime_sum      NUMBER(17,2),
+  class_id           VARCHAR2(16),
+  c_prc_dig          NUMBER(10,6),
+  c_change           NUMBER(2),
+  c_full_exec        VARCHAR2(1),
+  c_audit            NUMBER
+)
+tablespace USERS_ARC
+  pctfree 10
+  initrans 1
+  maxtrans 255
+nologging;
+grant select, insert, update, delete on U1.T_S02_Z#PLAN_OPER to ETL;
+grant select on U1.T_S02_Z#PLAN_OPER to LOADDB;
+grant select on U1.T_S02_Z#PLAN_OPER to LOADER;
+

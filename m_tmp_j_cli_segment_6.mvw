@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_TMP_J_CLI_SEGMENT_6
+refresh complete on demand
+as
+select distinct dc.clnt_inn, 1 as is_depo_client_now
+from V_DWH_DEPOSITS e -- клиенты с действующими депозитами
+join V_DWH_CLIENT_PHYS_CURRENT dc on dc.clnt_gid = e.clnt_gid
+where e.product_type_name = 'ДОГОВОР СРОЧНОГО ВКЛАДА' and
+      e.deal_status_name in ('РАБОТАЕТ') and
+      dc.clnt_inn is not null;
+grant select on U1.M_TMP_J_CLI_SEGMENT_6 to LOADDB;
+grant select on U1.M_TMP_J_CLI_SEGMENT_6 to LOADER;
+
+

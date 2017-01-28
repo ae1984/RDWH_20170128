@@ -1,0 +1,27 @@
+﻿create table U1.T_RDWH_DEPENDENCIES
+(
+  owner            VARCHAR2(128),
+  name             VARCHAR2(128),
+  type             VARCHAR2(18),
+  referenced_owner VARCHAR2(128),
+  referenced_name  VARCHAR2(128),
+  referenced_type  VARCHAR2(128),
+  d_date           DATE,
+  is_main_object   VARCHAR2(1)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RDWH_DEPENDENCIES to LOADDB;
+grant select on U1.T_RDWH_DEPENDENCIES to LOADER;
+

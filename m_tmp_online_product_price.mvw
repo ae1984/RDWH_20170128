@@ -1,0 +1,60 @@
+﻿create materialized view U1.M_TMP_ONLINE_PRODUCT_PRICE
+build deferred
+refresh force on demand
+as
+select --product_id,
+       product_name,
+       city,
+       sum(product_price) as product_sum_7d,
+       count(distinct claim_id) product_cnt_7d
+from (
+      select
+             oc.id as claim_id,
+             ob.id as buy_id,
+             ob.c_date_create as buy_date_create,--дата заказа
+             ob.c_process_id  as order_id,--номер заказа
+
+             oc.c_folder_ref as folder_id,
+             f.c_n as folder_num,
+
+             i.c_name  as product_name,--название товара
+             upper(tn.c_code) as tov_category,--категория товара
+
+             i.c_price as product_price,--цена товара
+             i.id as product_id, -- id товара
+
+             s.c_code as rfo_shop_code,--Код Продавца в РФО
+             s.c_name as rfo_shop_name, --Название Продавца в РФО
+             s.c_address#place as city -- Город Продавца
+      from u1.V_RFO_Z#KAS_ONLINE_BUY ob
+      join u1.V_RFO_Z#KAS_ONLINE_CLAIM oc on oc.c_buy_ref = ob.id--На Частое обновление (в режиме онлайн времени)
+      left join u1.V_RFO_Z#CM_CHECKPOINT c on c.id = oc.c_folder_ref
+      left join u1.V_RFO_Z#FOLDERS f on f.id = c.id
+
+      left join u1.V_RFO_Z#SHOPS s on s.id = ob.c_shop--На Частое обновление (в режиме онлайн времени)
+
+      left join (select rd.collection_id,
+                        cd.id,
+                        cd.c_d#type_cred#prod#prod_info11
+
+                 from u1.V_RFO_Z#CREDIT_DOG cd
+                 join u1.V_RFO_Z#FDOC fd on fd.id = cd.id
+                                            and fd.class_id = 'CREDIT_DOG'
+                 join u1.V_RFO_Z#RDOC rd on rd.c_doc = fd.id
+                ) cd on cd.collection_id = f.c_docs
+      /*left join u1.T_RFO_Z#CL_PRIV                clp on clp.id = f.c_client--На Частое обновление (в режиме онлайн времени)
+      left join u1.T_RFO_Z#CLIENT                  cl on cl.id = clp.id--На Частое обновление (в режиме онлайн времени)*/
+      left join u1.V_RFO_Z#PROD_INFO i on i.collection_id = cd.c_d#type_cred#prod#prod_info11--На Частое обновление (в режиме онлайн времени)
+      left join u1.V_RFO_Z#KAS_TOV_NAME tn on tn.id = i.c_name_ref--На Частое обновление (в режиме онлайн времени)
+
+
+
+      where --oc.c_date_create > trunc(sysdate) and
+            ob.c_date_create >= trunc(sysdate) - 7
+
+)
+group by --product_id,
+       product_name, city;
+grant select on U1.M_TMP_ONLINE_PRODUCT_PRICE to LOADDB;
+
+

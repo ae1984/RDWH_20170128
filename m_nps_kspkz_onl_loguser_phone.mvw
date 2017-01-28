@@ -1,0 +1,67 @@
+﻿create materialized view U1.M_NPS_KSPKZ_ONL_LOGUSER_PHONE
+refresh complete on demand
+as
+select f.userid,
+       upper(f.usernamerus) USERNAME,
+       f.regdate,
+       f.iin,
+       f.dateofbirth,
+       f.phonenumber,
+       f.is_bank_employee,
+       f.starttime,
+       f.closetime,
+       f.servicename_list,
+       f.prod_type_list
+  from (select u.userid,
+               r.usernamerus,
+               r.regdate,
+               r.iin,
+               r.dateofbirth,
+               r.phonenumber,
+               case
+                 when pe.iin is null then
+                  'НЕТ'
+                 else
+                  'ДА'
+               end as is_bank_employee,
+               u.starttime,
+               u.closetime,
+               s.servicename_list,
+               activ.prod_type_list
+          from kspkz_vuserlogin20 u
+          join kspkz_vregisteredusers20 r
+            on u.userid = r.userid
+          left join (select g.userid,
+                           LISTAGG(g.servicename_list, '; ') WITHIN GROUP(order by g.userid) as servicename_list
+                      from ((select f.userid,
+                                    LISTAGG(f.servicename, '; ') WITHIN GROUP(order by f.userid) as servicename_list
+                               from (select p.userid, p.servicename
+                                       from kspkz_vuserpayment20 p
+                                     where p.paymenttime > sysdate - 2 / 24 --prod
+                                      group by p.userid, p.servicename) f
+                              group by f.userid)
+
+                            union all
+
+                            (select f2.userid,
+                                    LISTAGG(f2.name, '; ') WITHIN GROUP(order by f2.userid) as servicename_list
+                               from (select st.userid, st.name
+                                       from kspkz_vuserstatement20 st
+                                     where st.requesttimestamp > sysdate - 2 / 24 --prod
+                                      group by st.userid, st.name) f2
+                              group by f2.userid)) g
+                     group by g.userid) s
+            on u.userid = s.userid
+          left join M_ZUP_1C_STAFF_OUT pe
+            on pe.iin = r.iin
+           and pe.firing_date is null
+            left join M_NPS_CL_ACTIV_PRODUCT activ
+            on activ.client_iin = r.iin
+         where u.starttime > sysdate - 2 / 24    --prod
+         and   not exists (select k.user_id from t_nps_dict_client_phoned_kspkz k where k.user_id=u.userid)
+         order by s.servicename_list, userid) f
+ where rownum < 201;
+grant select on U1.M_NPS_KSPKZ_ONL_LOGUSER_PHONE to LOADDB;
+grant select on U1.M_NPS_KSPKZ_ONL_LOGUSER_PHONE to LOADER;
+
+

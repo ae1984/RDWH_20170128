@@ -1,0 +1,9 @@
+﻿create materialized view U1.V_TDWH_E#MVD#VIN
+using no index
+refresh complete on demand
+as
+select * from VIN.E#MVD#VIN@TDWHTEST t;
+grant select on U1.V_TDWH_E#MVD#VIN to LOADDB;
+grant select on U1.V_TDWH_E#MVD#VIN to LOADER;
+
+

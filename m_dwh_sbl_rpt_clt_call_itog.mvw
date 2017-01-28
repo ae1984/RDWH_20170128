@@ -1,0 +1,34 @@
+﻿create materialized view U1.M_DWH_SBL_RPT_CLT_CALL_ITOG
+refresh complete on demand
+as
+select d.*,activ.prod_type_list
+  from M_DWH_SIEBEL_RPT_CLNT_FST_CALL d
+  left join M_NPS_CL_ACTIV_PRODUCT activ
+    on activ.client_iin = d.client_iin
+ where upper(d.client_id) not like 'PROSPECT:%'
+   and upper(d.topic1) not like 'ПРОСПЕКТ%'
+   and upper(d.topic1) not in ('KASPI SHOPING')
+   and (d.topic1 is not null)
+   and (d.topic2 is not null)
+   and (d.client_iin is not null)
+   and upper(d.client_address) like '%АЛМАТЫ%'
+   and not exists (select null
+          from M_ZUP_1C_STAFF_OUT pe
+         where pe.iin = d.client_iin
+           and pe.firing_date is null)
+    -- убрать тех, кому отказали в кредите в течение недели назад
+     and not exists
+          (select null
+             from M_FOLDER_CON_CANCEL sd
+            where trunc(sd.folder_date_create_mi) > trunc(sysdate - 7)
+              and sd.is_credit_issued = 0
+              and sd.is_point_active = 0 /*and sd.pos_type='ОТДЕЛЕНИЕ'*/
+              and sd.x_dnp_region in
+                  ('АЛМАТЫ', 'КАСКЕЛЕН', 'ТАЛГАР')
+              and (sd.cancel_client <> 1 or sd.cancel_client is null)
+              and sd.iin = d.client_iin
+            group by sd.iin);
+grant select on U1.M_DWH_SBL_RPT_CLT_CALL_ITOG to LOADDB;
+grant select on U1.M_DWH_SBL_RPT_CLT_CALL_ITOG to LOADER;
+
+

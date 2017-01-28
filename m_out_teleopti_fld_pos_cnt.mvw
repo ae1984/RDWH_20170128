@@ -1,0 +1,40 @@
+﻿create materialized view U1.M_OUT_TELEOPTI_FLD_POS_CNT
+refresh complete on demand
+as
+select /*+ parallel 30*/ pc.pos_code,
+      pc.pos_name,
+      to_char(vfa.folder_date_create,'day') day_of_week ,
+      to_char(vfa.folder_date_create,'hh24') hour_of_day,
+      case when  process_code in ('KAS_AUTO_CRED_PRIV_PC','KAS_PC_PURSE','OPEN_PC','OPEN_CRED_PRIV_CRL','OPEN_CRED_PRIV','OPEN_TRANSH','KAS_OPEN_CRED_PRIV_MIN','KAS_SAFE_CREDIT',
+                                 'KAS_CREDIT_CASH_PRIV_PC','OPEN_CRED_PRIV_PC', 'ONLINE_CRED')
+           then 'Выдача'
+           else 'Постобслуживание'
+       end as process_type,
+       case when  process_code not in ('KAS_AUTO_CRED_PRIV_PC','KAS_PC_PURSE','OPEN_PC','OPEN_CRED_PRIV_CRL','OPEN_CRED_PRIV','OPEN_TRANSH','KAS_OPEN_CRED_PRIV_MIN','KAS_SAFE_CREDIT',
+                                 'KAS_CREDIT_CASH_PRIV_PC','OPEN_CRED_PRIV_PC', 'ONLINE_CRED')
+           then
+             vfa.process_name
+        end as post_process_name ,
+       count(vfa.folder_id) as folders_cnt
+from V_FOLDER_ALL_RFO vfa
+join T_TOV_POS_CODE pc on pc.pos_code = vfa.pos_code
+where vfa.folder_date_create between to_date('01-08-2015 00:00:00','dd-mm-yyyy hh24:mi:ss') and to_date('31-08-2015 23:59:59','dd-mm-yyyy hh24:mi:ss')
+  and VFA.Process_code != 'ONLINE_CRED'
+group by pc.pos_code,
+      pc.pos_name,
+      to_char(vfa.folder_date_create,'day') ,
+      to_char(vfa.folder_date_create,'hh24'),
+      case when  process_code in ('KAS_AUTO_CRED_PRIV_PC','KAS_PC_PURSE','OPEN_PC','OPEN_CRED_PRIV_CRL','OPEN_CRED_PRIV','OPEN_TRANSH','KAS_OPEN_CRED_PRIV_MIN','KAS_SAFE_CREDIT',
+                                 'KAS_CREDIT_CASH_PRIV_PC','OPEN_CRED_PRIV_PC', 'ONLINE_CRED')
+           then 'Выдача'
+           else 'Постобслуживание'
+       end,
+       case when  process_code not in ('KAS_AUTO_CRED_PRIV_PC','KAS_PC_PURSE','OPEN_PC','OPEN_CRED_PRIV_CRL','OPEN_CRED_PRIV','OPEN_TRANSH','KAS_OPEN_CRED_PRIV_MIN','KAS_SAFE_CREDIT',
+                                 'KAS_CREDIT_CASH_PRIV_PC','OPEN_CRED_PRIV_PC', 'ONLINE_CRED')
+           then
+             vfa.process_name
+        end;
+grant select on U1.M_OUT_TELEOPTI_FLD_POS_CNT to LOADDB;
+grant select on U1.M_OUT_TELEOPTI_FLD_POS_CNT to LOADER;
+
+

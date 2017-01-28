@@ -1,0 +1,35 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_4
+refresh force on demand
+as
+select
+           t.rfo_client_id
+           ,t.date_create
+           ,t.claim_id
+           ,t.delinq_amount_sum
+      from(
+      select
+           t.rfo_client_id
+           ,t.date_create
+           ,t.claim_id
+           ,t.claim_client_iin
+           ,row_number() over (partition by t.rfo_client_id,t.claim_id   order by a.report_date_time desc) as nn
+           ,a.delinq_amount_sum
+           --,a.report_date_time
+      from M_FOLDER_CON_CANCEL_ONLINE_1 t
+      join (
+          select
+               t.report_id
+              ,t.report_date_time
+              ,t.iin_rnn
+              ,nvl(sum(t.delinq_amount),0) as delinq_amount_sum
+          from t_pkb_report t
+          group by
+              t.report_id
+              ,t.report_date_time
+              ,t.iin_rnn
+      ) a on a.iin_rnn  = t.claim_client_iin and a.report_date_time <= t.date_create + 5
+      --where t.rfo_client_id = 31393192
+      ) t where t.nn=1;
+grant select on U1.M_RFO_FRAUD_SEARCH_4 to LOADDB;
+
+

@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_RBO_CONTRACT_PLAN_OPER
+build deferred
+refresh complete on demand
+as
+select /*+parallel(10)*/ rbo_contract_id,
+      cast( contract_number as varchar2(66)) as contract_number,
+       plan_date,
+       plan_date_x,
+       total_plan_summa,
+       cnt_pmt_plan,
+       cnt_pmt,
+       day_pmt,
+       is_decl_early_p,
+       cast(0 as number) as is_card,
+       lead(plan_date_x) over (partition by rbo_contract_id order by plan_date_x) as next_plan_date_x
+  from M_RBO_PLAN_OPER_CREDIT
+ union all
+select /*+parallel(10)*/ rbo_contract_id,
+       cast( contract_number as varchar2(66)) as contract_number,
+       plan_date,
+       plan_date_x,
+       total_plan_summa,
+       cnt_pmt_plan,
+       cnt_pmt,
+       day_pmt,
+       is_decl_early_p,
+       cast(1 as number) as is_card,
+       lead(plan_date_x) over (partition by rbo_contract_id order by plan_date_x) as next_plan_date_x
+  from M_RBO_PLAN_OPER_CARD;
+grant select on U1.M_RBO_CONTRACT_PLAN_OPER to LOADDB;
+
+

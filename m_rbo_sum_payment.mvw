@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_RBO_SUM_PAYMENT
+build deferred
+refresh complete on demand
+as
+select cb.rfo_client_id, sum(nvl(p.pmt_avg,0)+nvl(p1.pmt_avg_10,0)) as total_pmt_cli
+from u1.m_rbo_contract_bas cb
+left join u1.m_rbo_contract_credit_pmt p on cb.rbo_contract_id = p.rbo_contract_id and p.date_fact_end is null
+left join u1.m_rbo_contract_card_pmt p1 on cb.rbo_contract_id = p1.rbo_contract_id and p1.date_end > sysdate and cb.status_code not in ('CLOSED','REDUMPED', 'TO_CLOSE', 'CLOSE')
+where cb.cred_program_code not in ('GU_AVTO','GU_AVTO_BU','AUTO','GU_AVTO_REF','GU_AVTO_ZALOG', 'PC_REFIN_RESTR')
+group by  cb.rfo_client_id;
+grant select on U1.M_RBO_SUM_PAYMENT to LOADDB;
+
+

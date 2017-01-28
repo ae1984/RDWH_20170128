@@ -1,0 +1,42 @@
+﻿create materialized view U1.M_TMP_D_DEFAULTS3
+refresh force on demand
+as
+select
+
+c.yy_mm_start_last,
+count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt,
+round(sum(c.max_debt_used)/1000000) as sales_mln, -- продажи
+sum(c.delinq_rate_pmt_1 * c.max_debt_used) as del_rate_pmt_1,
+sum(c.delinq_rate_b_w * c.max_debt_used) as del_rate_b_w,
+sum(c.total_debt_last_rep_new_b_w) as b_w_2,
+sum(c.delinq_rate_b * c.max_debt_used) as del_rate_b,
+sum(c.total_debt_last_rep_new_b) as del_rate_b_2,
+sum(c.delinq_rate_w * c.max_debt_used) as del_rate_w,
+sum(c.delinq_rate_g * c.max_debt_used) as del_rate_g,
+sum(c.delinq_rate_npl * c.max_debt_used) as del_rate_npl,
+sum(c.total_debt_last_rep_new_npl) as npl_2,
+sum(c.delinq_rate * c.max_debt_used) as del_rate,
+sum(c.max_debt_used) as total_used_sum,
+sum(case when c.yy_mm_start_last_date <= add_months(sysdate,-8) then c.delinq_rate_b_w * c.max_debt_used end) as del_rate_b_w_tolerance,
+sum(case when c.yy_mm_start_last_date <= add_months(sysdate,-8) then c.max_debt_used end) as total_used_sum_b_w_tolerance,   --b_w, считаем до -8 месяцев назад
+check_criterias,
+risky_goods_all_count,
+max_risky_goods_same_count,
+cred_level
+from M_CONTRACT_CAL_DEL c
+join m_tmp_d_risky_goods3 d1 on c.contract_number=d1.contract_number
+left join V_CONTRACT_CAL cc on cc.contract_number = c.contract_number and
+     cc.is_refin_restruct_first != 1
+where not exists (select null from M_FOLDER_CON_CANCEL f
+                  where f.folder_id = c.folder_id_first and f.is_refin = 1)
+
+group by c.yy_mm_start_last,
+check_criterias,
+risky_goods_all_count,
+max_risky_goods_same_count,
+cred_level
+having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_D_DEFAULTS3 to LOADDB;
+grant select on U1.M_TMP_D_DEFAULTS3 to LOADER;
+
+

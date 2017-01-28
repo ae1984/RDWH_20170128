@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_SC_SPOUSE_MOBILE_PHONE
+build deferred
+refresh force on demand
+as
+select t.rfo_client_id,
+       max(t.form_client_date) as form_client_date_last,
+       max(p.phone_number) keep (dense_rank last order by p.form_client_date) as phone_number,
+       max(p.phone_number_clear) keep (dense_rank last order by p.form_client_date) as phone_number_clear
+from u1.V_FORM_CLIENT_ALL_RFO t
+join u1.V_FORM_CLIENT_CONTACT_PHONE p on p.form_client_id = t.form_client_id and
+                                         p.phone_type = 'МОБИЛЬНЫЙ'
+group by t.rfo_client_id;
+grant select on U1.M_SC_SPOUSE_MOBILE_PHONE to LOADDB;
+grant select on U1.M_SC_SPOUSE_MOBILE_PHONE to LOAD_MO;
+
+

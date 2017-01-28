@@ -1,0 +1,57 @@
+﻿create materialized view U1.M_KASPISH_USERS
+build deferred
+refresh force on demand
+as
+select
+hjmpts,
+typepkstring,
+ownerpkstring,
+modifiedts,
+createdts,
+pk,
+uniqueid,
+description,
+name,
+p_profilepicture,
+p_ldapsearchbase,
+p_cn,
+--p_dn,
+p_lastlogin,
+passwd,
+p_logindisabled,
+defaultshippingaddress,
+p_userprofile,
+p_sessioncurrency,
+p_sessionlanguage,
+defaultpaymentaddress,
+p_passwordanswer,
+p_passwordquestion,
+p_hmclogindisabled,
+encode,
+p_europe1pricefactory_utg,
+p_europe1pricefactory_udg,
+p_europe1pricefactory_upg,
+p_ldaplogin,
+p_ldapaccount,
+p_domain,
+p_authorizedtounlockpages,
+aclts,
+propts,
+p_customerid,
+p_previewcatalogversions,
+p_type,
+p_title,
+p_defaultpaymentinfo,
+p_token,
+p_originaluid,
+p_bankcustomerid,
+p_globalcustomerid,
+p_forcepasswordchange,
+p_picture,
+p_backofficelogindisabled
+
+from kaspi.users@ks_std
+where rownum >= 0;
+grant select on U1.M_KASPISH_USERS to LOADDB;
+
+

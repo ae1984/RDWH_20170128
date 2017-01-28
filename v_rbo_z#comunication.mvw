@@ -1,0 +1,11 @@
+﻿create materialized view U1.V_RBO_Z#COMUNICATION
+refresh complete on demand
+as
+select t.id,
+       upper(t.c_value) as value,
+       upper(t.c_code)  as code
+from V_RBO_Z#COMUNICATION@rdwh11 t;
+grant select on U1.V_RBO_Z#COMUNICATION to LOADDB;
+grant select on U1.V_RBO_Z#COMUNICATION to LOADER;
+
+

@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_CLIENT_CAL_CONT_AMOUNT_CATEG
+refresh complete on demand
+as
+select
+                r.client_id,
+                min(r.contract_amount_categ) keep (dense_rank first order by r.start_date) as contract_amount_categ_first,-- r1
+                min(r.contract_amount_categ) keep (dense_rank last order by r.start_date) as contract_amount_categ_last, -- r1
+                max(r.pmt_in_rep_sum_by_cli) as client_pmt_max,
+                max(r.yy_mm_report) as yy_mm_report_max,
+                max(r.provision_in_rep_by_cli) as provision_max
+              from /*v_data_all d, */v_report_cal_1 r
+--              where r.id = d.id
+        --           where d.start_date is not null
+              group by r.client_id /*substr(ltrim(contract_no, 'R'),1,7)*/;
+grant select on U1.M_CLIENT_CAL_CONT_AMOUNT_CATEG to LOADDB;
+grant select on U1.M_CLIENT_CAL_CONT_AMOUNT_CATEG to LOADER;
+
+

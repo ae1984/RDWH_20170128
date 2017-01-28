@@ -1,0 +1,22 @@
+﻿create materialized view U1.V_JAN_TMP_01
+refresh force on demand
+as
+select a.*, b.iin_cnt_med, c.iin_cnt_avg from (
+select round(t.salary/150,-2) as sal_usd, count(distinct t.iin) as iin_cnt
+from V_G_ALL t
+group by round(t.salary/150,-2)
+) a
+left join (
+select round(t.cli_sal_med_all_ym/150,-2) as sal_usd, count(distinct t.iin) as iin_cnt_med
+from V_G_ALL t
+group by round(t.cli_sal_med_all_ym/150,-2)
+) b on b.sal_usd = a.sal_usd
+left join (
+select round(t.cli_sal_avg_all_ym/150,-2) as sal_usd, count(distinct t.iin) as iin_cnt_avg
+from V_G_ALL t
+group by round(t.cli_sal_avg_all_ym/150,-2)
+) c on c.sal_usd = a.sal_usd;
+grant select on U1.V_JAN_TMP_01 to LOADDB;
+grant select on U1.V_JAN_TMP_01 to LOADER;
+
+

@@ -1,0 +1,19 @@
+﻿create materialized view U1.V_TMP_JAN_D_05
+refresh force on demand
+as
+select
+    fpc.ph_work_all_order_avg_cat || ' # ' || fpc.ph_work_all_age_avg_cat as work_all_order_age,
+    fpc.ph_work_all_order_avg_cat, fpc.ph_work_all_age_avg_cat,
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate,
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1,
+    round(sum(c.max_debt_used) / 1000000, 1) as sales_mln,
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt
+from V_TMP_CONTRACT_CAL_DEL c
+join V_FOLDER_PHONE_CALC fpc on fpc.folder_id = c.folder_id_first
+--join V_CONTRACT_CAL cc on cc.contract_id = c.contract_id
+where (c.yms like '2013 - %' or c.yms in ('2014 - 01', '2014 - 02'))
+group by fpc.ph_work_all_order_avg_cat, fpc.ph_work_all_age_avg_cat having sum(c.max_debt_used) > 0;
+grant select on U1.V_TMP_JAN_D_05 to LOADDB;
+grant select on U1.V_TMP_JAN_D_05 to LOADER;
+
+

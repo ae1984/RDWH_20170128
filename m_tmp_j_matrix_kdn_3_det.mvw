@@ -1,0 +1,209 @@
+﻿create materialized view U1.M_TMP_J_MATRIX_KDN_3_DET
+refresh complete on demand
+as
+select td.yyyy as d_yyyy, td.text_yyyy_mm as d_yyyy_mm,
+       f.product_type as d_product_type, f.product as d_product, --f.is_categ_a, f.is_categ_b,
+       case when f.is_categ_a = 'КАТЕГОРИЯ А' then 'КАТЕГОРИЯ А'
+            when f.is_categ_b = 'КАТЕГОРИЯ Б' then 'КАТЕГОРИЯ Б'
+            else 'ДРУГИЕ' end as d_client_categ,
+--       f.is_client_new_by_con, f.is_credit_issued,
+/*       case when p1.rfo_contract_id is not null then 'PKB PRI PRESENT' else 'PKB PRI ABSENT' end as is_pkb_pri_present,
+       case when p1.pkb_primary_active_cons > 0 then 'PKB PRI WITH ACT CONS' else 'PKB PRI W/O ACT CONS' end as is_pkb_act_cons_present,
+       case when p1.active_kaspi_cons_cnt > 0 then 'PKB PRI WITH ACT KASPI CONS' else 'PKB PRI W/O ACT KASPI CONS' end as is_pkb_with_act_kaspi_cons,
+       case when p1.active_kaspi_cons_cnt >= p1.pkb_primary_active_cons then 'PKB PRI WITH ACT ONLY KASPI CONS'
+            else 'PKB PRI W/O ACT ONLY KASPI CONS' end as is_pkb_with_act_only_kas_cons,
+       case when p2.rfo_contract_id is not null then 'PKB STD/EXT PRESENT' else 'PKB STD/EXT ABSENT' end as is_pkb_std_ext_present,*/
+       case when g.gcvp_report_id is not null then 'GCVP PRESENT' else 'GCVP ABSENT' end as d_is_gcvp_exists,
+       case when g.gcvp_salary = 0 then 'GCVP SAL = 0' else 'GCVP SAL > 0' end as d_is_gcvp_sal_above_zero,
+/*       case when kf.form_client_id is not null then 'FORM PRESENT' else 'FORM ABSENT' end as is_form_present,
+       case when kc.rfo_contract_id is not null then 'KASPI OTHER CARDS PMT PRESENT'
+            else 'KASPI OTHER CARDS PMT ABSENT' end as is_kaspi_oth_cards_pmt_present,
+       case when kr.rfo_contract_id is not null then 'KASPI OTHER CREDITS PMT PRESENT'
+            else 'KASPI OTHER CREDITS PMT ABSENT' end as is_kaspi_oth_creds_pmt_present,
+       case when kp.pmt_avg is not null \*or kp.pmt_avg_07 is not null*\ or kp.pmt_avg_10 is not null then 'PMT PRESENT'
+                 else 'PMT ABSENT' end as is_pmt_present,     */
+--       ceil(months_between(b.date_plan_end, b.start_date) / 3) * 3 as contract_term_mon,
+--       ceil(b.contract_amount / 50000) * 50000 as contract_amount,
+       case when coalesce(greatest(kf.form_income_total, g.gcvp_salary),kf.form_income_total, g.gcvp_salary) <= sv.salary * 2 then 1
+                 else 0 end as d_is_kdn_regul_form_gcvp_max,
+       case when coalesce(greatest(kf.form_income_total, g.gcvp_salary), kf.form_income_total, g.gcvp_salary) > 0 then
+               ceil((coalesce(kp.pmt_avg,0) + /*coalesce(kp.pmt_avg_07,0) +*/ coalesce(kp.pmt_avg_10,0) + -- платеж по самому кредиту (по траншу или 10% по картам)
+                         coalesce(kc.kaspi_other_cards_pmt,0) + coalesce(kr.kaspi_other_creds_pmt,0) + -- другие кредиты каспи
+                         coalesce(p2.pkb_pmt_not_kaspi,0)) / -- платежи ПКБ не каспи
+                    coalesce(greatest(kf.form_income_total, g.gcvp_salary), kf.form_income_total, g.gcvp_salary) * 100 / 10) * 10 -- доходы (макс с анкеты и ГЦВП)
+            end as d_kdn_form_gcvp_max,
+/*       case when g.gcvp_salary <= sv.salary * 2 then 1 else 0 end as is_kdn_regul_gcvp,
+       case when g.gcvp_salary > 0 then
+               round((coalesce(kp.pmt_avg,0) + \*coalesce(kp.pmt_avg_07,0) +*\ coalesce(kp.pmt_avg_10,0) + -- платеж по самому кредиту (по траншу или 10% по картам)
+                         coalesce(kc.kaspi_other_cards_pmt,0) + coalesce(kr.kaspi_other_creds_pmt,0) + -- другие кредиты каспи
+                         coalesce(p2.pkb_pmt_not_kaspi,0)) / -- платежи ПКБ не каспи
+                    g.gcvp_salary * 100 / 5) * 5 -- доходы (ГЦВП)
+            end as kdn_gcvp,*/
+       ceil(kf.form_income_salary / 10000) * 10000 as d_form_income_salary,
+       ceil(kf.form_income_total / 10000) * 10000 as d_form_income_total,
+       ceil(g.gcvp_salary / 10000) * 10000 as d_gcvp_salary,
+
+       case when d.del_days_max_x > 60 then 'DEL 60 EVER' else 'NOT DEL 60 EVER' end as d_is_del_60_ever,
+       case when d.del_days_max_x > 0 then 'DEL 1 EVER' else 'NOT DEL 1 EVER' end as d_is_del_1_ever,
+       floor(fc.age_full_years / 5) * 5 as d_client_age,
+       fc.sex as d_client_sex,
+       case when d.total_debt_x_pmt_1_60 > 0 then 'FRAUD' else 'NOT FRAUD' end as d_is_fraud,
+
+-----------------------------
+
+       ---/ 10000) * 10000 as form_income_total,
+--       count(*) as cnt, --count(distinct f.claim_id) as claim_cnt, count(distinct f.rfo_contract_id) as rfo_con_cnt,
+       f.rfo_con_or_claim_id, -- кол-во заявок, включая онлайн
+--       count(distinct f.folder_id) as fld_cnt,
+       f.contract_amount as amount_requested,
+--       min(f.contract_amount) as amount_requested_min,
+--       max(f.contract_amount) as amount_requested_max,
+       ---
+       b.rbo_contract_id,
+       b.contract_number,
+       b.rbo_client_id,
+       f.a_date as folder_date_create,
+       f.rfo_client_id,
+       f.rfo_contract_id,
+
+--       count(distinct b.rbo_contract_id) as contract_cnt_dist,
+
+       d.max_debt_used_x as sales,
+--       min(d.max_debt_used_x) as amount_approved_min,
+--       max(d.max_debt_used_x) as amount_approved_max,
+
+/*       sum(case when d.del_days_x > 30 then d.total_debt_x end) / 1000000 as del_debt_30d_mln,
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_mln,
+       sum(case when d.del_days_x > 90 then d.total_debt_x end) / 1000000 as del_debt_90d_mln,
+       sum(case when d.del_days_max_x > 30 then d.total_debt_x end) / 1000000 as del_debt_30d_ever_mln,
+       sum(case when d.del_days_max_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_ever_mln,
+       sum(case when d.del_days_max_x > 90 then d.total_debt_x end) / 1000000 as del_debt_90d_ever_mln,
+       sum(d.total_debt_x_pmt_1_7) / 1000000 as pmt_1_7d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_1_7) / 1000000 as pmt_1_7d_sales_mln,*/
+       -----------------------------------------
+
+       case when coalesce(greatest(kf.form_income_total, g.gcvp_salary), kf.form_income_total, g.gcvp_salary) > 0 then
+               (coalesce(kp.pmt_avg,0) + /*coalesce(kp.pmt_avg_07,0) +*/ coalesce(kp.pmt_avg_10,0) + -- платеж по самому кредиту (по траншу или 10% по картам)
+                         coalesce(kc.kaspi_other_cards_pmt,0) + coalesce(kr.kaspi_other_creds_pmt,0) + -- другие кредиты каспи
+                         coalesce(p2.pkb_pmt_not_kaspi,0)) / -- платежи ПКБ не каспи
+                    coalesce(greatest(kf.form_income_total, g.gcvp_salary), kf.form_income_total, g.gcvp_salary) * 100 -- доходы (макс с анкеты и ГЦВП)
+            end as kdn_form_gcvp_max,
+
+       -----
+       coalesce(kp.pmt_avg,0) + /*coalesce(kp.pmt_avg_07,0) +*/ coalesce(kp.pmt_avg_10,0) + -- платеж по самому кредиту (по траншу или 10% по картам)
+                         coalesce(kc.kaspi_other_cards_pmt,0) + coalesce(kr.kaspi_other_creds_pmt,0) + -- другие кредиты каспи
+                         coalesce(p2.pkb_pmt_not_kaspi,0) as pmt_all,
+       kp.pmt_avg as pmt_avg,
+       kp.pmt_avg_10 as pmt_avg_10,
+       kc.kaspi_other_cards_pmt as kaspi_other_cards_pmt,
+       kr.kaspi_other_creds_pmt as kaspi_other_creds_pmt,
+       p2.pkb_pmt_not_kaspi as pkb_pmt_not_kaspi,
+       coalesce(greatest(kf.form_income_total, g.gcvp_salary), kf.form_income_total, g.gcvp_salary) as income_form_gcvp_max,
+       g.gcvp_salary as gcvp_salary,
+       kf.form_income_salary as form_income_salary,
+       kf.form_income_total as form_income_total,
+
+       sv.salary as salary_average
+from (
+  select 'ОНЛАЙН-КРЕДИТ' as product_type, 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(f.folder_date_create_mi) as a_date,
+         case when f.is_categ_a = 1 then 'КАТЕГОРИЯ А' when f.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+         case when f.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when f.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+         case when f.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when f.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+         case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+         f.rfo_contract_id as rfo_con_or_claim_id
+  from M_FOLDER_CON_CANCEL f
+  where f.process_name = 'ОНЛАЙН КРЕДИТ' and
+        f.claim_id is not null and
+--        f.folder_date_create_mi >= to_date('2014-01-01','yyyy-mm-dd') --to_date('2014-12-08','yyyy-mm-dd')
+        to_char(f.folder_date_create_mi,'yyyy-mm') = '2014-08'
+  union all
+  select 'ОНЛАЙН-КРЕДИТ' as product_type, 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(fo.folder_date_create_mi) as a_date,
+         case when fo.is_categ_a = 1 then 'КАТЕГОРИЯ А' when fo.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+         case when fo.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when fo.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+         case when fo.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when fo.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+         case when fo.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when fo.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         fo.claim_id, fo.contract_number, fo.rfo_client_id, fo.contract_amount, fo.folder_id, fo.form_client_id, fo.rfo_contract_id,
+         fo.claim_id as rfo_con_or_claim_id
+  from M_FOLDER_CON_CANCEL_ONLINE fo
+  where --fo.folder_date_create_mi >= to_date('2014-01-01','yyyy-mm-dd') --to_date('2014-12-08','yyyy-mm-dd')
+        to_char(fo.folder_date_create_mi,'yyyy-mm') = '2014-08'
+  union all
+  select f.product_type, f.cr_program_name as product, trunc(f.folder_date_create_mi) as a_date,
+         case when f.is_categ_a = 1 then 'КАТЕГОРИЯ А' when f.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+         case when f.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when f.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+         case when f.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when f.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+         case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+         f.rfo_contract_id as rfo_con_or_claim_id
+  from M_FOLDER_CON_CANCEL f
+  where f.process_name != 'ОНЛАЙН КРЕДИТ' and
+--        f.folder_date_create_mi >= to_date('2014-01-01','yyyy-mm-dd') --to_date('2014-12-08','yyyy-mm-dd')
+        to_char(f.folder_date_create_mi,'yyyy-mm') = '2014-08'
+) f
+join V_TIME_DAYS td on td.yyyy_mm_dd = f.a_date
+left join M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+left join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+---
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = f.form_client_id --
+left join M_TMP_J_MATRIX_KDN_1_PKB_1 p1 on p1.rfo_contract_id = f.rfo_contract_id
+left join M_TMP_J_MATRIX_KDN_1_PKB_2 p2 on p2.rfo_contract_id = f.rfo_contract_id
+left join M_TMP_J_MATRIX_KDN_1_GCVP g on g.rfo_contract_id = f.rfo_contract_id
+left join M_TMP_J_MATRIX_KDN_1_FORM kf on kf.rfo_contract_id = f.rfo_contract_id
+left join M_TMP_J_MATRIX_KDN_1_KAS_CARDS kc on kc.rfo_contract_id = f.rfo_contract_id
+left join M_TMP_J_MATRIX_KDN_1_KAS_CREDS kr on kr.rfo_contract_id = f.rfo_contract_id
+left join M_TMP_J_MATRIX_KDN_1_PMT kp on kp.rfo_contract_id = f.rfo_contract_id
+left join T_SALARY_AVERAGE sv on sv.ym_date = trunc(f.a_date,'mm')
+where b.rbo_contract_id is not null and --f.is_credit_issued = 'КРЕДИТ ВЫДАН'
+      f.product_type in ('ДЕНЬГИ','ТОВАРЫ','КАРТЫ','ОНЛАЙН-КРЕДИТ')
+/*group by td.yyyy, td.text_yyyy_mm,
+       f.product_type, f.product, --f.is_categ_a, f.is_categ_b,
+       case when f.is_categ_a = 'КАТЕГОРИЯ А' then 'КАТЕГОРИЯ А'
+            when f.is_categ_b = 'КАТЕГОРИЯ Б' then 'КАТЕГОРИЯ Б'
+            else 'ДРУГИЕ' end,
+--       f.is_client_new_by_con,  f.is_credit_issued,
+\*       case when p1.rfo_contract_id is not null then 'PKB PRI PRESENT' else 'PKB PRI ABSENT' end,
+       case when p1.pkb_primary_active_cons > 0 then 'PKB PRI WITH ACT CONS' else 'PKB PRI W/O ACT CONS' end,
+       case when p1.active_kaspi_cons_cnt > 0 then 'PKB PRI WITH ACT KASPI CONS' else 'PKB PRI W/O ACT KASPI CONS' end,
+       case when p1.active_kaspi_cons_cnt >= p1.pkb_primary_active_cons then 'PKB PRI WITH ACT ONLY KASPI CONS'
+            else 'PKB PRI W/O ACT ONLY KASPI CONS' end,
+       case when p2.rfo_contract_id is not null then 'PKB STD/EXT PRESENT' else 'PKB STD/EXT ABSENT' end,*\
+       case when g.gcvp_report_id is not null then 'GCVP PRESENT' else 'GCVP ABSENT' end,
+       case when g.gcvp_salary = 0 then 'GCVP SAL = 0' else 'GCVP SAL > 0' end,
+\*       case when kf.form_client_id is not null then 'FORM PRESENT' else 'FORM ABSENT' end,
+       case when kc.rfo_contract_id is not null then 'KASPI OTHER CARDS PMT PRESENT'
+            else 'KASPI OTHER CARDS PMT ABSENT' end,
+       case when kr.rfo_contract_id is not null then 'KASPI OTHER CREDITS PMT PRESENT'
+            else 'KASPI OTHER CREDITS PMT ABSENT' end,
+       case when kp.pmt_avg is not null \*or kp.pmt_avg_07 is not null*\ or kp.pmt_avg_10 is not null then 'PMT PRESENT'
+                 else 'PMT ABSENT' end,  *\
+--       ceil(months_between(b.date_plan_end, b.start_date) / 3) * 3,
+--       ceil(b.contract_amount / 50000) * 50000,
+       case when coalesce(greatest(kf.form_income_total, g.gcvp_salary),kf.form_income_total, g.gcvp_salary) <= sv.salary * 2 then 1
+                 else 0 end,
+       case when coalesce(greatest(kf.form_income_total, g.gcvp_salary), kf.form_income_total, g.gcvp_salary) > 0 then
+               ceil((coalesce(kp.pmt_avg,0) + \*coalesce(kp.pmt_avg_07,0) +*\ coalesce(kp.pmt_avg_10,0) + -- платеж по самому кредиту (по траншу или 10% по картам)
+                         coalesce(kc.kaspi_other_cards_pmt,0) + coalesce(kr.kaspi_other_creds_pmt,0) + -- другие кредиты каспи
+                         coalesce(p2.pkb_pmt_not_kaspi,0)) / -- платежи ПКБ не каспи
+                    coalesce(greatest(kf.form_income_total, g.gcvp_salary), kf.form_income_total, g.gcvp_salary) * 100 / 10) * 10 -- доходы (макс с анкеты и ГЦВП)
+            end,
+\*       case when g.gcvp_salary <= sv.salary * 2 then 1 else 0 end,
+       case when g.gcvp_salary > 0 then
+               round((coalesce(kp.pmt_avg,0) + \*coalesce(kp.pmt_avg_07,0) +*\ coalesce(kp.pmt_avg_10,0) + -- платеж по самому кредиту (по траншу или 10% по картам)
+                         coalesce(kc.kaspi_other_cards_pmt,0) + coalesce(kr.kaspi_other_creds_pmt,0) + -- другие кредиты каспи
+                         coalesce(p2.pkb_pmt_not_kaspi,0)) / -- платежи ПКБ не каспи
+                    g.gcvp_salary * 100 / 5) * 5 -- доходы (ГЦВП)
+            end*\
+       ceil(kf.form_income_salary / 10000) * 10000,
+       ceil(kf.form_income_total / 10000) * 10000,
+       ceil(g.gcvp_salary / 10000) * 10000,
+       case when d.del_days_max_x > 60 then 'DEL 60 EVER' else 'NOT DEL 60 EVER' end,
+       case when d.del_days_max_x > 0 then 'DEL 1 EVER' else 'NOT DEL 1 EVER' end,
+       floor(fc.age_full_years / 5) * 5,
+       fc.sex,
+       case when d.total_debt_x_pmt_1_60 > 0 then 'FRAUD' else 'NOT FRAUD' end  */
+--);
+grant select on U1.M_TMP_J_MATRIX_KDN_3_DET to LOADDB;
+grant select on U1.M_TMP_J_MATRIX_KDN_3_DET to LOADER;
+
+

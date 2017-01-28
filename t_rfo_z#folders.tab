@@ -1,0 +1,116 @@
+﻿create table U1.T_RFO_Z#FOLDERS
+(
+  id                 NUMBER not null,
+  c_n                VARCHAR2(16 CHAR),
+  c_docs             NUMBER,
+  c_business         NUMBER,
+  c_client           NUMBER,
+  c_result_oper      VARCHAR2(100 CHAR),
+  c_result_oper_note VARCHAR2(2000 CHAR),
+  c_als_src_folder   NUMBER,
+  c_kas_show_call    VARCHAR2(1 CHAR),
+  c_kas_doc_pack     NUMBER,
+  c_kas_envelope_num VARCHAR2(30 CHAR),
+  c_kas_bundle_num   VARCHAR2(30 CHAR),
+  c_kas_sys_ref      NUMBER,
+  c_kas_vid_delivery NUMBER,
+  c_kas_envelope     NUMBER,
+  sn                 NUMBER,
+  su                 NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RFO_Z#FOLDERS
+  is 'Папки';
+comment on column U1.T_RFO_Z#FOLDERS.c_n
+  is 'Номер';
+comment on column U1.T_RFO_Z#FOLDERS.c_docs
+  is 'Документы(COLLECTION в Z#RDOC)';
+comment on column U1.T_RFO_Z#FOLDERS.c_business
+  is 'Бизнес-процесс(FK на Z#BUS_PROCESS)';
+comment on column U1.T_RFO_Z#FOLDERS.c_client
+  is 'Клиент(FK на Z#CLIENT)';
+comment on column U1.T_RFO_Z#FOLDERS.c_result_oper
+  is 'Результат операции';
+comment on column U1.T_RFO_Z#FOLDERS.c_result_oper_note
+  is 'Результат операции (сообщение)';
+comment on column U1.T_RFO_Z#FOLDERS.c_kas_show_call
+  is 'KAS. Отобразить в колл-центре';
+comment on column U1.T_RFO_Z#FOLDERS.c_kas_doc_pack
+  is 'KAS. Пакет документов(COLLECTION в Z#PACK_DOC)';
+comment on column U1.T_RFO_Z#FOLDERS.c_kas_envelope_num
+  is 'KAS. Номер конверта';
+comment on column U1.T_RFO_Z#FOLDERS.c_kas_bundle_num
+  is 'KAS. Номер связки';
+comment on column U1.T_RFO_Z#FOLDERS.c_kas_sys_ref
+  is 'KAS. Система - источник(FK на Z#KAS_UNIVERSAL_D)';
+comment on column U1.T_RFO_Z#FOLDERS.c_kas_vid_delivery
+  is 'Вид выдачи(FK на Z#KAS_UNIVERSAL_D)';
+comment on column U1.T_RFO_Z#FOLDERS.c_kas_envelope
+  is 'KAS. Конверт(FK на Z#KAS_ENVELOPE)';
+create unique index U1.T_RFO_Z#FOLDERS_IND1 on U1.T_RFO_Z#FOLDERS (ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RFO_Z#FOLDERS_IND2 on U1.T_RFO_Z#FOLDERS (C_DOCS)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RFO_Z#FOLDERS_IND3 on U1.T_RFO_Z#FOLDERS (C_BUSINESS)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RFO_Z#FOLDERS_IND4 on U1.T_RFO_Z#FOLDERS (C_CLIENT)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#FOLDERS
+  add constraint T_RFO_Z#FOLDERS_PK primary key (ID);
+grant select on U1.T_RFO_Z#FOLDERS to LOADDB;
+

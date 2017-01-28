@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_CONTRACT_HISTORY
+refresh force on demand
+as
+with dt as (select /*+ parallel 30 */
+                   t.client_iin_last, max(t.client_id) as client_id
+            from V_CLIENT_CAL t
+            group by t.client_iin_last)
+select --+ parallel(30) parallel_index(30)
+       c.rfo_contract_id,
+       -- 2 года
+       count(distinct dg.contract_no) as con_any_bef_4y,
+       count(distinct case when dg.total_debt >= 10000 then dg.contract_no end) as con_debt10K_bef_4y,
+       max(dg.delinq_days) as del_days_any_max_bef_4y,
+       max(case when dg.total_debt >= 10000 then dg.delinq_days end) as del_days_debt10K_max_bef_4y,
+       count(distinct case when dg.total_debt >= 10000 then dg.yy_mm_report_date end) as active_mon_debt10K_bef_4y,
+       count(distinct case when dg.total_debt >= 10000 and nvl(dg.delinq_days,0) = 0
+                           then dg.yy_mm_report_date end) as good_active_mon_debt10K_bef_4y,
+       count(distinct case when dg.total_debt >= 10000 and dg.delinq_days > 0
+                           then dg.yy_mm_report_date end) as bad_active_mon_debt10K_bef_4y,
+       max(dg.contract_amount) as amount_max_bef_4y,
+       months_between(min(trunc(c.folder_date_create_mi,'mm')), max(dg.yy_mm_report_date)) - 1 as inactive_period_4y
+from M_FOLDER_CON_CANCEL c
+left join DT cl on cl.client_iin_last = c.iin
+left join V_DATA_ALL dg on dg.client_id = cl.client_id and dg.yy_mm_report_date < trunc(c.folder_date_create_mi,'mm') and
+                           dg.yy_mm_report_date >= add_months(trunc(c.folder_date_create_mi,'mm'), -48)
+group by c.rfo_contract_id;
+grant select on U1.M_CONTRACT_HISTORY to LOADDB;
+grant select on U1.M_CONTRACT_HISTORY to LOADER;
+
+

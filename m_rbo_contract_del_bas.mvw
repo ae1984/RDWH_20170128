@@ -1,0 +1,86 @@
+﻿create materialized view U1.M_RBO_CONTRACT_DEL_BAS
+build deferred
+refresh complete on demand
+as
+with dat_max_port as (select rp.rbo_contract_id,
+                             max(rp.total_debt) as total_debt_max,
+                             max(rp.delinq_days) as delinq_days_max,
+                             max(rp.delinq_amount) as delinq_amount_max,
+                             min(rp.delinq_date)   as delinq_date_min
+                        from u1.V_RBO_PORT rp
+                       group by rp.rbo_contract_id),
+    dat_max_refin as (select rfp.rbo_contract_id,
+                             max(rfp.total_debt_plus) as total_debt_plus_max,
+                             max(rfp.del_days_plus) as delinq_days_plus_max
+                        from M_RBO_REFIN_PORT rfp
+                       group by rfp.rbo_contract_id),
+    dat_prm as (select
+                       vp.rbo_contract_id,
+                       max(vp.total_debt) as total_debt_plus_max,
+                       max(vp.delinq_days) as delinq_days_plus_max
+                  from (
+                        select rbo_contract_id, min(min_refin_date) as min_refin_date
+                          from M_RBO_CONTR_AFTER_REF_PERCENT
+                         group by rbo_contract_id) mr
+                          join u1.V_RBO_PORT vp on vp.rbo_contract_id = mr.rbo_contract_id
+                                               and vp.rep_date < mr.min_refin_date
+                   group by vp.rbo_contract_id)
+select
+       dp.rep_date,    --отчетная дата
+       ca.rbo_contract_id,              --id договора
+       cast (case when lp.refin_rbo_contract_id is not null then 1
+                  when lg.rbo_contract_id_to is not null then 2
+                  else null end as number) as is_refin_contract,  --признак догова: 1 - рефинансированный договор, 2 - результирующий договор на текущий день
+       cast(case when refp.rbo_contract_id is not null then 1
+                 when rf.rbo_contract_id   is not null then 1
+                 else null end as number) as is_ever_refin_contract, --признак рефианасированного или результирующего договора когда либо
+       lp.rbo_contract_id_to,                                                         --id результирующего договора, на котором сейчас рефиананс
+       coalesce(lp.refin_date, lg.refin_date_to)             as refin_date,           --дата начала рефинансирования
+       coalesce(refp.min_refin_date,rf.min_refin_date)       as refin_date_first,     --дата первого рефинансирования
+       coalesce(lp.part_percent,lg.card_gu_percent)          as total_percent_x,      --процент от общей задолженности по рефинансируемым и результирующем договорам
+       rp.total_debt                                         as total_debt,           --общая задолженность договора
+       coalesce(refp.total_debt_plus,rp.total_debt)          as total_debt_x,         --общая рассчитанная задолженности с учетом рефинанса
+       rp.delinq_days                                        as del_days,             --количество дней по договору
+       case when refp.rbo_contract_id is not null then refp.del_days_plus
+            else rp.delinq_days end                          as del_days_x,           --количество дней по с учетом оживания
+       coalesce(rp.total_debt_max, pcm.total_debt_max)       as max_debt_used,        --максимальная задолженность по договору на отчетную дату
+       coalesce(refp.total_debt_max_plus,prm.total_debt_plus_max,
+                rp.total_debt_max,pcm.total_debt_max)        as max_debt_used_x,      --максимальная задолженность по договору на отчетную дату с учетом рефинанса
+       pcm.delinq_days_max                                   as del_days_max,         -- макс дней просрочки на исходном договоре
+       coalesce(greatest(coalesce(dat_prm.delinq_days_plus_max,prm.delinq_days_plus_max),
+                         coalesce(prm.delinq_days_plus_max,dat_prm.delinq_days_plus_max)),
+                pcm.delinq_days_max)                         as del_days_max_x,        -- макс дней просрочки с учетом рефинанса
+       rp.is_on_balance
+  from u1.M_RBO_CONTRACT_BAS ca
+  join (select max(rep_date) as rep_date from t_rbo_port) dp on 1 = 1
+  left join M_RBO_CONTR_REFIN_LINK_PERCENT lp on lp.refin_rbo_contract_id = ca.rbo_contract_id
+                                         and lp.date_change <= dp.rep_date
+                                         and coalesce(lp.date_change_end, trunc(sysdate)) >= dp.rep_date      --рефинансированные договора
+  left join ( select rbo_contract_id_to, date_change,date_change_end,card_gu_percent, refin_date_to, min_refin_date_to
+                from M_RBO_CONTR_REFIN_LINK_PERCENT
+               group by rbo_contract_id_to, date_change,date_change_end, card_gu_percent, refin_date_to, min_refin_date_to) lg    --данные по процентам на результируещем договороре
+                                                    on lg.rbo_contract_id_to = ca.rbo_contract_id
+                                                    and lg.date_change <= dp.rep_date
+                                                    and coalesce(lg.date_change_end, trunc(sysdate)) >= dp.rep_date
+  left join u1.V_RBO_PORT rp                 on rp.rbo_contract_id = ca.rbo_contract_id                ---остатки по исходным договорам
+                                            and rp.rep_date = dp.rep_date      --trunc(sysdate) - 10    меньше стоимость
+  left join M_RBO_REFIN_PORT refp on refp.rbo_contract_id = ca.rbo_contract_id              ---остатки по рефинансированным/результирующим договорам
+                                            and refp.rep_date = dp.rep_date
+  --подключаем данные по закрытым договорам
+  left join dat_max_port pcm  on pcm.rbo_contract_id = ca.rbo_contract_id
+  left join dat_max_refin prm on  prm.rbo_contract_id = ca.rbo_contract_id
+  left join dat_prm           on  dat_prm.rbo_contract_id = ca.rbo_contract_id
+  left join (select rbo_contract_id,
+                    min(min_refin_date) as min_refin_date
+              from (
+                    select distinct rbo_contract_id_to as rbo_contract_id, min_refin_date_to as min_refin_date
+                      from M_RBO_CONTR_REFIN_LINK_PERCENT
+                     union all
+                    select distinct refin_rbo_contract_id as rbo_contract_id, min_refin_date_to
+                      from M_RBO_CONTR_REFIN_LINK_PERCENT)
+              group by  rbo_contract_id) rf on rf.rbo_contract_id = ca.rbo_contract_id
+ where ca.begin_date <= dp.rep_date;
+grant select on U1.M_RBO_CONTRACT_DEL_BAS to LOADDB;
+grant select on U1.M_RBO_CONTRACT_DEL_BAS to LOADER;
+
+

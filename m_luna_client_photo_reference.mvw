@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_LUNA_CLIENT_PHOTO_REFERENCE
+refresh force on demand
+as
+select x.c_client_id as rfo_client_id,
+       max(x.photo_luna_id) keep (dense_rank last order by x.src_order) as photo_luna_id,
+       max(x.luna_cnt) keep (dense_rank last order by x.src_order) as luna_cnt,
+       max(x.src_order) as src_order
+from (
+    select t.c_client_id,
+           listagg(t.c_bin_id, ',') within group (order by t.c_bin_id desc) as photo_luna_id,
+           count(distinct t.c_bin_id) as luna_cnt,
+           0 as src_order
+    from risk_dsholpan.v_tmp_luna_etalon_1_5 t
+    group by t.c_client_id
+
+    union all
+    select t.c_client_id,
+           listagg(t.c_bin_id, ',') within group (order by t.c_bin_id desc) as photo_luna_id,
+           count(distinct t.c_bin_id) as luna_cnt,
+           1 as src_order
+    from risk_dsholpan.v_tmp_luna_etalon_6_100 t
+    group by t.c_client_id
+) x
+group by x.c_client_id;
+grant select on U1.M_LUNA_CLIENT_PHOTO_REFERENCE to LOADDB;
+grant select on U1.M_LUNA_CLIENT_PHOTO_REFERENCE to LOADER;
+grant select on U1.M_LUNA_CLIENT_PHOTO_REFERENCE to LOAD_MO;
+
+

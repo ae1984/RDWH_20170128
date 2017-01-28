@@ -1,0 +1,42 @@
+﻿create materialized view U1.M_ONL_CRED_ACTIVE_30D
+build deferred
+refresh force on demand
+as
+select c.c_client_ref as rfo_client_id,
+       c.c_folder_ref as folder_id,
+       c.id as claim_id,
+       c.c_buy_ref as buy_id,
+       s.c_code as status_code,
+       upper(tv.c_name) as tov_name,
+       upper(coalesce(kzt.tov_categ_code, kzt.c_code)) as tov_categ_code,
+       upper(coalesce(kzt.tov_categ_name, kzt.c_name)) as tov_categ_name,
+       b.c_date_create as buy_date_create,
+       b.c_total_amount as tov_price,
+       cmp.c_code as folder_status_code
+from u1.V_RFO_Z#KAS_ONLINE_CLAIM c
+join u1.V_RFO_Z#KAS_ONLINE_BUY b on c.c_buy_ref = b.id
+join u1.V_RFO_Z#STATUS_DOG s on s.id = b.c_state_id
+join u1.V_RFO_Z#PROD_INFO pi on pi.collection_id = b.c_prod_info
+join u1.V_RFO_Z#KAS_TOV_NAME tv on tv.id = pi.c_name_ref
+join u1.V_RFO_Z#KIND_ZAL_BODY kz on kz.id = pi.c_type_tov
+join u1.M_RFO_KIND_ZAL_BODY kzt on kzt.c_code = kz.c_code
+
+left join u1.V_RFO_Z#FOLDERS fld on fld.id = c.c_folder_ref
+left join u1.V_RFO_Z#CM_CHECKPOINT cp on cp.id = fld.id
+left join u1.V_RFO_Z#CM_POINT cmp on cmp.id = cp.c_point
+
+where b.c_date_create >= trunc(sysdate) - 31 /*and
+      not exists (select null
+                  from V_DWH_PORTFOLIO_CURRENT h
+                  where h.folder_id_first = c.c_folder_ref and
+                        h.is_credit_active = 0)*/
+ and
+       --upper(tn.c_name) = 'СМАРТФОНЫ' and
+       upper(s.c_code) not like '%CANCELED%' and
+       upper(s.c_code) not like '%REJECTED%' and
+       upper(s.c_code) not like '%TERMINATED%';
+grant select on U1.M_ONL_CRED_ACTIVE_30D to LOADDB;
+grant select on U1.M_ONL_CRED_ACTIVE_30D to LOADER;
+grant select on U1.M_ONL_CRED_ACTIVE_30D to LOAD_MO;
+
+

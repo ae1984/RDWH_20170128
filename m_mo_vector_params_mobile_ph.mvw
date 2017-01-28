@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_MO_VECTOR_PARAMS_MOBILE_PH
+build deferred
+refresh force on demand
+as
+select count(rfo_client_same_phone_id) as cnt_same_mob_phone,
+       form_client_id                  as form_client_id
+  from (
+         select cp.rfo_client_id  as rfo_client_id,
+                cp1.rfo_client_id as rfo_client_same_phone_id,
+                cp.form_client_id as form_client_id
+           from V_FORM_CLIENT_CONTACT_PHONE cp
+                left join V_FORM_CLIENT_CONTACT_PHONE cp1 on cp1.phone_number_clear = cp.phone_number_clear
+                                                         and   (cp1.form_client_id <> cp.form_client_id
+                                                         and     cp1.rfo_client_id <> cp.rfo_client_id)
+                                                         and         cp1.phone_type = cp.phone_type
+          where cp.phone_type in ('МОБИЛЬНЫЙ')
+          group by cp.folder_id, cp.rfo_client_id, cp1.rfo_client_id, cp.form_client_id
+       )
+ group by form_client_id;
+grant select on U1.M_MO_VECTOR_PARAMS_MOBILE_PH to LOADDB;
+
+

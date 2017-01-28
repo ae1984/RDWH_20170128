@@ -1,0 +1,133 @@
+﻿create materialized view U1.M_RBO_CONTRACT_BAS
+build deferred
+refresh complete on demand
+as
+select /*+ parallel(10)*/
+       pc.id                  as rbo_contract_id,
+       --cast(cdd.id as number) as rfo_contract_id,
+       pc.c_num_dog           as contract_number,
+       c.id                   as rbo_client_id,
+       cast(cl.rfo_client_id as number) as rfo_client_id,
+       cast (to_number(substr(ltrim(pc.c_num_dog,'R'),1,7)) as number) as client_id,
+       c.c_inn              as client_inn,
+       fl.folder_id_first   as folder_id_first,
+       pc.c_date_begin      as start_date_actual,
+       dat_debt.debt_date_first   as debt_begin_date,
+       pc.c_date_begin      as start_date,
+       pc.c_date_begin      as begin_date,
+       cast(null as date)   as set_revolve_date,
+       pc.c_date_ending     as date_plan_end,
+       pc.c_date_close      as date_fact_end,
+       cast(0 as number(1)) as is_card,
+       csp.c_code    as status_code,
+       csp.c_name    as status_name,
+       kpd.c_num_dog as gu_contract_number,
+       kpd.id        as gu_rbo_contract_id,
+       rd.x_dnp_name,
+       kc.c_code as tariff_plan_name_code,
+       kc.c_name as tariff_plan_name_name,
+       cp.c_code as cred_program_code,
+       cp.c_name as cred_program_name,
+       cp.product_type as product_type,
+       cp.c_code as cred_program_code_x,
+       cp.c_name as cred_program_name_x,
+       cp.product_type as product_type_x,
+       cast(null as date) as date_tarif,
+       pc.c_summa_dog as contract_amount,
+       case when csp.c_code in ('CLOSE','CLOSED','TO_CLOSE','PAID_IC','REDUMPED','CANCEL') then 0 else 1 end as is_credit_active,
+       cast(pu.create_username as varchar2(1200)) as create_username,
+       cast(null as date) as set_revolve_date_last,
+       cast(1 as number)  as is_credit_product
+  from V_RBO_Z#PR_CRED pc
+  join V_RBO_Z#CLIENT c on pc.c_client = c.id
+  join V_RBO_Z#KIND_CREDITS kc on pc.c_kind_credit = kc.id
+  join V_RBO_Z#CRED_PROGRAM cp on kc.c_cred_program = cp.id
+  join V_RBO_Z#COM_STATUS_PRD csp on csp.id = pc.c_com_status  --на 17-03-2015 164 договора с пустым статусом
+  left join V_RBO_Z#KAS_PC_DOG kpd on pc.c_kas_pc_dog_ref = kpd.id
+  left join M_CLIENT_LINK  cl on cl.rbo_client_id = c.id
+  /*left join (select distinct
+                    cd.c_num_dog,
+                    max(cd.id) keep (dense_rank last order by cd.id)
+                               over (partition by cd.c_num_dog) as id
+               from V_RFO_Z#CREDIT_DOG cd
+               join V_RFO_Z#FDOC       fd on fd.id = cd.id
+                                      and fd.class_id = 'CREDIT_DOG'
+               join V_RFO_Z#STATUS_DOG sd on sd.id = fd.c_status_doc
+                                      and sd.c_code not in ('RFO_CLOSE','PREPARE')
+             ) cdd on  cdd.c_num_dog = pc.c_num_dog*/
+  left join M_RBO_CONTRACT_BAS_PRE1 DAT_DEBT on dat_debt.rbo_contract_id = pc.id
+  left join V_CONTRACT_FOLDER_1ST_LINK_RFO fl on fl.contract_number = pc.c_num_dog
+  left join M_RBO_DEPART rd on rd.depart_id = pc.c_depart
+  left join M_RBO_CONTRACT_BAS_PRE2 pu on pu.collection_id = pc.c_prorerty_arr
+ where csp.c_code not in ('EDIT','CANCEL','SIGNED')
+ union all
+select /*+ parallel(10)*/ kpd.id                as rbo_contract_id,
+      -- cast(case when cdd.c_num_dog != kpd.c_num_dog and cdd.c_num_dog is not null then null else cdd.id end as number) as rfo_contract_id,
+       kpd.c_num_dog         as contract_number,
+       c.id                  as rbo_client_id,
+       cast(cl.rfo_client_id as number)  as rfo_client_id,
+       cast(to_number(substr(ltrim(kpd.c_num_dog,'R'),1,7)) as number) as client_id,
+       c.c_inn               as client_inn,
+       fl.folder_id_first    as folder_id_first,
+       kpd.c_date_set_revolv as start_date_actual,
+       dat_debt.debt_date_first as debt_begin_date,  --дата возникновения задолженности  kpd.c_date_debt_begin не совпадает
+       coalesce(kpd.c_date_set_revolv,kpd.c_date_begin) as start_date,
+       kpd.c_date_begin      as begin_date,
+       kpd.c_date_set_revolv as set_revolve_date,
+       cast(null as date)    as date_plan_end,
+       kpd.c_date_close      as date_fact_end,
+       cast(1 as number(1)) as is_card,
+       csp.c_code    as status_code,
+       csp.c_name    as status_name,
+       kpd.c_num_dog as gu_contract_number,
+       kpd.id        as gu_rbo_contract_id,
+       rd.x_dnp_name,
+       tp.c_code as tariff_plan_code,
+       tp.c_name as tariff_plan_name,
+       cp.c_code as cred_program_code,
+       cp.c_name as cred_program_name,
+       cp.product_type as product_type,
+       coalesce(th.programm_code,cp.c_code) as cred_program_code_x,
+       coalesce(th.programm_name,cp.c_name) as cred_program_name_x,
+       coalesce(cpx.product_type,cp.product_type) as product_type_x,
+       th.date_begin as date_tarif,
+       kpd.c_limit_sum as contract_amount,
+       case when csp.c_code in ('CLOSE','CLOSED','TO_CLOSE','PAID_IC','REDUMPED','CANCEL') then 0 else 1 end as is_credit_active,
+       kpd.c_create_user_name as create_username,
+       lh.date_begin          as set_revolve_date_last,
+       cast(case when cp.prod_belong_sign = 'CRED_CARD' or cp.c_code in ('PC_REFIN_RESTR','MONEY_KN_P','MONEY_CN','OSOB_CLIENT_MON')
+                 then 1 else 0 end as number)      as is_credit_product
+  from V_RBO_Z#KAS_PC_DOG kpd
+  join V_RBO_Z#CLIENT c on  kpd.c_client_ref = c.id
+  join V_RBO_Z#TARIF_PLAN tp on kpd.c_tarif_plan_ref = tp.id
+  join V_RBO_Z#CRED_PROGRAM cp on cp.id = tp.c_kas_cr_prog_ref
+  join V_RBO_Z#COM_STATUS_PRD csp on kpd.state_id = csp.c_code
+  left join M_CLIENT_LINK  cl on cl.rbo_client_id = c.id
+  /*left join (select distinct
+                    pd.c_num_dog,
+                    pd.c_id_back,
+                    max(pd.id) keep (dense_rank last order by pd.id)
+                           over (partition by pd.c_num_dog) as id
+               from V_RFO_Z#KAS_PC_DOG pd
+               join V_RFO_Z#FDOC       fd on fd.id = pd.id
+                                      and fd.class_id = 'KAS_PC_DOG'
+               join V_RFO_Z#STATUS_DOG sd on sd.id = fd.c_status_doc
+                                      and sd.c_code not in ('RFO_CLOSE')
+             ) cdd on replace(replace(trim(cdd.c_id_back),chr(10),''),chr(13),'') = to_char(kpd.id)*/
+   left join M_RBO_CONTRACT_TP_HIST th on th.rbo_contract_id = kpd.id        --добавляем историю по тарифному плану
+                                  and th.date_begin <= coalesce(kpd.c_date_set_revolv,kpd.c_date_begin)
+                                  and coalesce(th.date_end,trunc(sysdate)) >= coalesce(kpd.c_date_set_revolv,kpd.c_date_begin)
+   left join V_RBO_Z#CRED_PROGRAM cpx on cpx.c_code = th.programm_code
+   left join M_RBO_CONTRACT_BAS_PRE1 DAT_DEBT on dat_debt.rbo_contract_id = kpd.id
+   left join V_CONTRACT_FOLDER_1ST_LINK_RFO fl on fl.contract_number = kpd.c_num_dog
+   left join M_RBO_DEPART rd on rd.depart_id = kpd.c_depart_ref
+   left join M_CONTRACT_LIMIT_HST lh on lh.rbo_contract_id = kpd.id
+                                    and lh.date_begin <= trunc(sysdate)
+                                    and coalesce(lh.date_end,trunc(sysdate)) >= trunc(sysdate)
+ where csp.c_code not in ('EDIT','CANCEL','SIGNED') --исключаем "невыданные"
+   and cp.c_code != 'KASPI_KZ'                      --исключаем контракты по кошельку
+   and tp.c_code != 'GR_TEST_GRC'                  --исключаем контракты по тестовому ТП(2 договора);;;;;
+grant select on U1.M_RBO_CONTRACT_BAS to LOADDB;
+grant select on U1.M_RBO_CONTRACT_BAS to LOAD_MO;
+
+

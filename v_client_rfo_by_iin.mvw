@@ -1,0 +1,31 @@
+﻿create materialized view U1.V_CLIENT_RFO_BY_IIN
+refresh complete on demand
+as
+select /*+parallel(15) parallel_index(15) */
+         c.x_iin as
+     iin,
+         max(c.x_rnn) keep (dense_rank last order by c.id) as
+     rnn,
+         max(c.id) as
+     rfo_client_id,
+         max(upper(cp.c_last_name) || ' ' || upper(cp.c_first_name) || ' ' ||
+           upper(cp.c_sur_name)) keep (dense_rank last order by c.id) as
+     client_name,
+         max(upper(cp.c_last_name)) keep (dense_rank last order by c.id) as
+     last_name,
+         max(upper(cp.c_first_name)) keep (dense_rank last order by c.id) as
+     first_name,
+         max(upper(cp.c_sur_name)) keep (dense_rank last order by c.id) as
+     patronymic_name,
+         max(cp.c_date_pers) keep (dense_rank last order by c.id) as
+     birth_date,
+     count(*) as number_of_entries
+from V_RFO_Z#CLIENT c, V_RFO_Z#CL_PRIV cp
+where c.id = cp.id and
+      c.x_iin is not null
+group by c.x_iin;
+grant select on U1.V_CLIENT_RFO_BY_IIN to LOADDB;
+grant select on U1.V_CLIENT_RFO_BY_IIN to LOADER;
+grant select on U1.V_CLIENT_RFO_BY_IIN to RISK_VERIF;
+
+

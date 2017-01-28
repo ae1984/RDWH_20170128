@@ -1,0 +1,27 @@
+﻿create materialized view U1.V_CONTRACT_CAL_RR_TEST
+refresh complete on demand
+as
+select r.contract_number_old,
+       r.contract_number_new as contract_number_rr,
+       r.ref_res_first_yy_mm,
+       r.ref_res_first_date,
+       r.ref_res_last_date,
+       r.ref_res_count,
+       r.yy_mm_start_last_new as yy_mm_start_last_rr,
+       r.product_last_new as product_last_rr,
+       r.contract_amount_first_new as contract_amount_first_rr
+from M_TMP_CONTRACT_START_CON_ORD t
+join (
+    select ttt.* from M_REF_RESTR_CONS_ZHOMART_EXT ttt
+            join (
+                select t.ref_res_first_date, t.client_id, max(t.contract_number_new) as contract_number_new_max
+                from M_REF_RESTR_CONS_ZHOMART_EXT t
+                where t.contract_number_new != 'R2551134-001'
+                group by t.ref_res_first_date, t.client_id
+            ) x on x.contract_number_new_max = ttt.contract_number_new
+            where ttt.contract_number_old is not null
+) r on r.contract_number_old = t.contract_number;
+grant select on U1.V_CONTRACT_CAL_RR_TEST to LOADDB;
+grant select on U1.V_CONTRACT_CAL_RR_TEST to LOADER;
+
+

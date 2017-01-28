@@ -1,0 +1,56 @@
+﻿create table U1.T_RFO_Z#KAS_GKB_CI_BKP
+(
+  id                 NUMBER not null,
+  collection_id      NUMBER,
+  c_dog_type         VARCHAR2(300),
+  c_num_dog          VARCHAR2(150),
+  c_cr_purpose       VARCHAR2(300),
+  c_contr_status     VARCHAR2(600),
+  c_guarantee_type   VARCHAR2(300),
+  c_guarantee_val    VARCHAR2(150),
+  c_dog_class        VARCHAR2(600),
+  c_total_ammount    VARCHAR2(150),
+  c_instalments_num  VARCHAR2(30),
+  c_payments_period  VARCHAR2(300),
+  c_payments_method  VARCHAR2(300),
+  c_monthly_payment  VARCHAR2(60),
+  c_last_update      VARCHAR2(36),
+  c_type_of_founding VARCHAR2(600),
+  c_currency         VARCHAR2(30),
+  c_appl_date        VARCHAR2(36),
+  c_date_begin       VARCHAR2(36),
+  c_date_end         VARCHAR2(36),
+  c_fact_gash_date   VARCHAR2(36),
+  c_oustanding_num   VARCHAR2(30),
+  c_outstanding_sum  VARCHAR2(120),
+  c_overdue_sum      VARCHAR2(120),
+  c_subj_role        VARCHAR2(300),
+  c_fin_inst         VARCHAR2(600),
+  c_pc               NUMBER not null,
+  c_add_info         VARCHAR2(300),
+  c_amount           VARCHAR2(120),
+  c_credit_usage     VARCHAR2(300),
+  c_residual_amount  VARCHAR2(120),
+  c_credit_limit     VARCHAR2(120),
+  c_ovrd_instalments VARCHAR2(30),
+  c_dop_field        VARCHAR2(4000),
+  sn                 NUMBER,
+  su                 NUMBER,
+  c_cr_object        VARCHAR2(600),
+  c_pledge_type_val  NUMBER not null
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RFO_Z#KAS_GKB_CI_BKP to LOADDB;
+

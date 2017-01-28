@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_TMP_J_K_AA_RES
+refresh force on demand
+as
+select /*+ parallel 30 */
+t.deal_number aa_deal_number,
+t.x_client_id aa_deal_client_id,
+
+avg(c.c_pay_pkb) aa_pay_pkb,
+avg(c.c_sum_cred) aa_sum_cred,
+avg(c.c_month) aa_month,
+avg(c.c_own_inc) aa_own_inc,
+avg(c.c_couple_inc) aa_couple_inc,
+avg(c.c_other_inc) aa_other_inc,
+avg(c.c_gcvp_inc) aa_gcvp_inc,
+avg(c.c_num_dependant) aa_num_dependant,
+avg(c.c_couple_exists) aa_couple_exists,
+max(c.c_result) aa_result,
+avg(c.c_average_pay) aa_average_pay
+
+from V_DWH_PORTFOLIO_CURRENT t
+join V_RFO_Z#FOLDERS f on f.id = t.folder_id_first
+join V_RFO_Z#RDOC r on r.collection_id = f.c_docs
+join V_RFO_Z#KAS_AUTOCALC_RES c on c.id = r.c_doc
+where t.begin_date > to_date('01012010', 'ddmmyyyy')
+group by t.deal_number, t.x_client_id;
+grant select on U1.M_TMP_J_K_AA_RES to LOADDB;
+grant select on U1.M_TMP_J_K_AA_RES to LOADER;
+
+

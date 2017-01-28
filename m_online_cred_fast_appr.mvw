@@ -1,0 +1,75 @@
+﻿create materialized view U1.M_ONLINE_CRED_FAST_APPR
+build deferred
+refresh force on demand
+as
+select /*+ parallel(10) */
+       f.c_client rfo_client_id,
+       f.id rfo_folder_id,
+       cp.c_date_create folder_date_create,
+       --upper(cmp.c_name) folder_state_name,
+       cmp.c_code folder_state_code,
+       s.c_code online_buy_status_code,
+       --upper(s.c_name) online_buy_status_name,
+       count(distinct case when c.c_ver_date is not null then f.id end) as call_cnt,
+
+       n.c_name tov_name,
+       i.c_price tov_price,
+
+       case when ((s.c_code = 'ORDER_CANCELED') -- если статус покупки Заказ отменен
+                 or (s.c_code = 'CREDIT_REJECTED' and (cmp.c_code = 'CLOSE_CANCELED'  --'ОТМЕНЕНО'      --CLOSE_CANCELED
+                                         or cmp.c_code = 'ORDER_CANCELED'             --'ЗАКАЗ ОТМЕНЕН' --ORDER_CANCELED
+                                         or cmp.c_code = 'EXPIRE'                     --'ПРОСРОЧЕННАЯ'  --EXPIRE
+                                          ))) then 1 else 0 end is_goods_not_exists,
+
+       case when s.c_code = 'ORDER_COMPLETE' then 1 else 0 end is_goods_issued,
+       sd.c_code as contract_status_code,
+       c.c_monthly_pay as monthly_pay
+
+       ,
+       count(distinct his.id) as his_cnt,
+       count(distinct kd1.id) as is_need_sign,
+       max(sco.mo_sco_reject) as sco_reject
+
+from u1.V_RFO_Z#FOLDERS f
+join u1.V_RFO_Z#CM_CHECKPOINT cp on cp.id = f.id
+join u1.V_RFO_Z#CM_WAY cmw on cmw.id = cp.c_way
+join u1.V_RFO_Z#CM_POINT cmp on cmp.id = cp.c_point
+join u1.V_RFO_Z#RDOC rd on rd.collection_id = f.c_docs
+join u1.V_RFO_Z#FDOC fd on fd.id = rd.c_doc  and fd.class_id = 'CREDIT_DOG'
+join u1.V_RFO_Z#STATUS_DOG sd on sd.id = fd.c_status_doc
+
+join u1.V_RFO_Z#KAS_ONLINE_CLAIM c on c.c_folder_ref = f.id       --на папку выходим через заявку на онлайн
+join u1.V_RFO_Z#KAS_ONLINE_BUY b on c.c_buy_ref = b.id            --а статус смотрим на покупке!!!!!!!!!!!!
+join u1.V_RFO_Z#STATUS_DOG s on s.id = b.c_state_id
+join u1.V_RFO_Z#PROD_INFO i on i.collection_id = b.c_prod_info
+join u1.V_RFO_Z#KAS_TOV_NAME n on n.id = i.c_name_ref
+
+left join u1.V_RFO_Z#CM_HISTORY his on his.c_line_time > trunc(sysdate) - 12 and
+                                       his.collection_id = cp.c_history and
+                                       his.c_line = 23674817567 --Проверка АСОКР -> Оформление ГУ, т.е. прошел АСОКР успешно
+                                       /*his.c_user != 1381958681 and --ESB_USER
+                                       his.c_user != 305437784      --ПОЛЬЗОВАТЕЛЬ АВТОМАТИЧЕСКАЯ ОБРАБОТКА*/
+
+left join u1.V_RFO_Z#KAS_UNIVERSA_REF s1 on s1.collection_id = c.c_mng_vis_scen
+left join u1.V_RFO_Z#KAS_UNIVERSAL_D kd1 on s1.c_value = kd1.id
+left join u1.M_FOLDER_MO_SCO_REQUEST_2016 sco on sco.folder_id = f.id and
+                                                 sco.date_create > trunc(sysdate) - 12
+
+where trunc(cp.c_date_create) > trunc(sysdate) - 12 and trunc(cp.c_date_create) <trunc(sysdate)
+
+group by f.c_client,
+         f.id,
+         cp.c_date_create,
+         --cmp.c_name,
+         cmp.c_code,
+         s.c_code,
+         --s.c_name,
+         n.c_name,
+         i.c_price,
+         sd.c_code,
+         c.c_monthly_pay;
+grant select on U1.M_ONLINE_CRED_FAST_APPR to LOADDB;
+grant select on U1.M_ONLINE_CRED_FAST_APPR to LOADER;
+grant select on U1.M_ONLINE_CRED_FAST_APPR to LOAD_MO;
+
+

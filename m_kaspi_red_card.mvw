@@ -1,0 +1,62 @@
+﻿create materialized view U1.M_KASPI_RED_CARD
+build deferred
+refresh force on demand
+as
+select to_char(to_date(substr(fld_012,1,6),'yyyymm'),'yyyy-mm')   as mm_tran,
+       to_date(substr(fld_012,1,8),'yyyymmdd')                    as dd_tran,
+       to_date(substr(fld_012,1,16),'yyyymmddhh24miss')           as date_time_tran,
+       b.rbo_contract_id                                          as rbo_contract_id,
+       b.contract_number                                          as contract_number,
+       b.client_inn                                               as client_inn,
+       b.folder_id_first                                          as folder_id,
+       c.c_card_num                                               as c_card_num,
+       c.c_acc_num                                                as acc_num,
+       fld_004/100                                                as tran_amt,
+       case when fld_003 = 000000  then 'Оплата товаров и услуг'
+            when fld_003 = 010000  then 'Снятие наличных'
+            when fld_003 = 110000  then 'Квази кеш операция'
+            when fld_003 = 200000  then 'Возврат'
+            when fld_003 = 210000  then 'Пополнение'
+            when fld_003 = 260000  then 'Перевод денег на текущий счёт'
+            when fld_003 = 310000  then 'Запрос баланса'
+            when fld_003 = 700000  then 'Смена ПИН кода'
+            when fld_003 = 003000  then 'Оплата товаров и услуг с КК'
+            when fld_003 = 011000  then 'Снятие (сохранение счёта)'
+            when fld_003 = 012000  then 'Снятие чек счёта (выдача чека)'
+            when fld_003 = 013000  then 'Снятие со счёта КК'
+            when fld_003 = 311000  then 'Запрос баланса (сохранение счёта)'
+            when fld_003 = 312000  then 'Запрос баланса (чек счёт)'
+            when fld_003 = 313000  then 'Запрос баланса со счёта КК'
+            when fld_003 = 370000  then 'Минивыписка'
+       else fld_003 end                                           as operation,
+       fld_043                                                    as merchant,
+       fld_042                                                    as fld_042,
+       case when fld_041 like '3%' then 1 else 0 end              as is_pos_red,
+       fld_041 as pos_id,
+       case when fld_032 in ('417661','011540') then 1 else 0 end as is_kaspi_acquire,
+       --a.code                                                     as code_answer,
+       a.message                                                  as name_answer,
+       a.full_message                                             as full_name_answer,
+       s.card_type                                                as card_type,
+       v.currency                                                 as currency,
+       s.fld_039                                                  as action_code,
+       lim.credit_limit                                           as credit_limit
+  from U1.V_RBO_Z#KAS_PC_CARD c
+  join u1.tm_soap_notify            s on             c.c_acc_num = s.stip_fld_102_bank
+                                     and  s.iia_card_param_grp_1 = 'A57'
+  join U1.T_CARD_ACTION_CODE        a on                  a.code = s.fld_039
+  join U1.T_CARD_FLD_049_051        v on                  v.code = fld_049
+  left join U1.M_RBO_CONTRACT_BAS   b on          c.c_client_ref = b.rbo_client_id
+                                     and     b.cred_program_name = 'KASPI RED'
+                                     and b.set_revolve_date_last >= to_date('08.08.2016', 'dd.mm.yyyy')
+                                     and           b.status_name = 'РАБОТАЕТ'
+  left join ( select k.rbo_contract_id, k.credit_limit, min(k.rep_date)
+                from u1.m_dwh_kaspired_port k
+               where k.rep_date >= to_date('08.08.2016','dd.mm.yyyy')
+               group by k.rbo_contract_id,k.credit_limit ) lim on lim.rbo_contract_id = b.rbo_contract_id
+
+ where c.c_text like ('%KASPI RED%')
+   and c.c_date_take >= to_date('08.08.2016', 'dd.mm.yyyy');
+grant select on U1.M_KASPI_RED_CARD to LOADDB;
+
+

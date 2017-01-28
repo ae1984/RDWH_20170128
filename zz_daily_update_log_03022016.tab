@@ -1,0 +1,28 @@
+﻿create table U1.ZZ_DAILY_UPDATE_LOG_03022016
+(
+  id          NUMBER(32) not null,
+  process     VARCHAR2(500),
+  p_begin     TIMESTAMP(6),
+  p_end       TIMESTAMP(6),
+  p_detail    VARCHAR2(4000),
+  p_total_min VARCHAR2(10),
+  p_status    VARCHAR2(50),
+  p_date      DATE not null,
+  proc_type   VARCHAR2(50)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.ZZ_DAILY_UPDATE_LOG_03022016 to LOADDB;
+grant select on U1.ZZ_DAILY_UPDATE_LOG_03022016 to LOADER;
+

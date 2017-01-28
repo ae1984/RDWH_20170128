@@ -1,0 +1,79 @@
+﻿create materialized view U1.M_TMP_DI_ONLINE0
+refresh complete on demand
+as
+select
+trunc(f.c_date_create) as date_ratif,
+cl.id as claim_id,
+cl.c_folder_ref as folder_id,
+coalesce(t.rfo_client_id, t1.rfo_client_id) as rfo_client_id,
+to_char(f.c_date_create, 'yyyy-mm') as month_ratif,
+coalesce(t.folder_date_create_mi, t1.folder_date_create_mi) as folder_date_create_mi,
+/*case when coalesce(t.is_categ_a, t1.is_categ_a)=1 and need_update_ver_gu = 1 then 'Необходимо обновить ГУ'
+       when coalesce(t.is_categ_a, t1.is_categ_a)=1 and need_chng_fc = 1 then 'ИАД'
+       when coalesce(t.is_categ_a, t1.is_categ_a)=1 and need_open_gu = 1 then 'Необходимо оформить ГУ'
+       when coalesce(t.is_categ_a, t1.is_categ_a)=1 and need_verification = 1 then 'Нужна фотоверификация клиента'
+       when coalesce(t.is_categ_a, t1.is_categ_a)=1 and need_open_gu = 1 then 'Необходимо оформить ГУ'
+       when coalesce(t.is_categ_a, t1.is_categ_a)=1 and need_ask_pkb_gcvp = 1 then 'Необходимо согласие на ПКБ/ГЦВП'
+       when coalesce(t.is_categ_a, t1.is_categ_a)=1 and (need_fill_fc = 1 or need_fill_cl_data = 1) then 'Дозаполнение анкеты'
+       when coalesce(t.is_categ_a, t1.is_categ_a)=1 and need_asocr_chk = 1 then 'Необходима проверка Асокр'
+
+
+
+   when coalesce(t.is_categ_a, t1.is_categ_a)=0 and need_open_gu = 1 then 'Необходимо оформить ГУ'
+       when coalesce(t.is_categ_a, t1.is_categ_a)=0 and need_update_ver_gu = 1 then 'Необходимо обновить ГУ'
+       when coalesce(t.is_categ_a, t1.is_categ_a)=0 and need_chng_fc = 1 then 'ИАД'
+       when coalesce(t.is_categ_a, t1.is_categ_a)=0 and need_ask_pkb_gcvp = 1 then 'Необходимо согласие на ПКБ/ГЦВП'
+       when coalesce(t.is_categ_a, t1.is_categ_a)=0 and need_verification = 1 then 'Нужна фотоверификация клиента'
+       when coalesce(t.is_categ_a, t1.is_categ_a)=0 and (need_fill_fc = 1 or need_fill_cl_data = 1) then 'Дозаполнение анкеты'
+       when coalesce(t.is_categ_a, t1.is_categ_a)=0 and need_asocr_chk = 1 then 'Необходима проверка Асокр'
+       when coalesce(t.is_sign_require, t1.is_sign_require) = 0 then 'Без подписания'
+       else 'Other' end as is_sign_reason,*/
+
+
+case   when coalesce(t.is_sign_require, t1.is_sign_require) = 0 then 'Без подписания'
+       when need_open_gu = 1 then 'Необходимо оформить ГУ'
+       when need_update_ver_gu = 1 then 'Необходимо обновить ГУ'
+       when need_ask_pkb_gcvp = 1 then 'Необходимо согласие на ПКБ/ГЦВП'
+       when need_chng_fc = 1 then 'ИАД'
+       when (need_fill_fc = 1 or need_fill_cl_data = 1) then 'Дозаполнение анкеты'
+       when need_verification = 1 then 'Нужна фотоверификация клиента'
+       when need_asocr_chk = 1 then 'Необходима проверка Асокр'
+       else 'Other' end as is_sign_reason,
+
+case when need_open_gu = 0 and need_update_ver_gu = 0 and need_ask_pkb_gcvp = 0 and need_chng_fc = 1 then 1 else 0 end as is_iad,
+case when coalesce(t.is_sign_require, t1.is_sign_require) = 1 and
+          need_open_gu = 0 and
+          need_update_ver_gu = 0 and
+          need_ask_pkb_gcvp = 0 and
+          need_chng_fc = 0 and
+          need_fill_fc = 0 and
+          need_fill_cl_data = 0 and
+          need_verification = 1 then 1 else 0 end as is_verification,
+
+
+coalesce(t.is_sign_require, t1.is_sign_require) as is_sign_require,
+coalesce(t.is_categ_a, t1.is_categ_a) as is_categ_a,
+coalesce(t.is_client_new_by_con, t1.is_client_new_by_con) as is_client_new_by_con,
+case when cl.c_check_result is null then 'Одобрен на сайте'
+     when cl.c_check_result is not null then 'Отказан на сайте'
+       else 'Other' end as is_approved,
+case when t.is_credit_issued = 1  then 'Выдан'
+     when t.is_credit_issued = 0  then 'Не выдан' else 'Отказан на сайте' end as is_credit_issued,
+
+case when t.cancel_verificator = 1 then 1 else 0 end as is_verification_reject,
+
+case when cl.c_ver_date is not null then 1 else 0 end as is_ver_cal,
+case when d.id is null then 0 else 1 end as is_rfo_fast_approve
+
+from V_RFO_Z#KAS_ONLINE_CLAIM cl
+join V_RFO_Z#KAS_ONLINE_BUY f on cl.c_buy_ref = f.id
+join M_TMP_FOLDER_MANAGER m3 on m3.cliam_id = cl.id
+left join M_FOLDER_CON_CANCEL t on t.folder_id = cl.c_folder_ref and t.process_name = 'ОНЛАЙН КРЕДИТ'
+left join M_FOLDER_CON_CANCEL_ONLINE t1 on t1.claim_id = cl.id
+left join v_Rfo_Z#kas_Universal_d d on d.id = cl.c_check_route and
+                                       d.c_code = 'REPEAT_ORDER_FAST_APPROV'
+where trunc(f.c_date_create)>='08-12-2014' --and trunc(f.c_date_create)<='06-07-2015';
+grant select on U1.M_TMP_DI_ONLINE0 to LOADDB;
+grant select on U1.M_TMP_DI_ONLINE0 to LOADER;
+
+

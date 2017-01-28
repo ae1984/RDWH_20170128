@@ -1,0 +1,21 @@
+﻿create table U1.T_UPD_ECO_ONL
+(
+  iin         VARCHAR2(256),
+  rfo_id      NUMBER,
+  onl         NUMBER,
+  date_update DATE
+)
+tablespace USERS
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+nologging;
+grant select on U1.T_UPD_ECO_ONL to LOADDB;
+

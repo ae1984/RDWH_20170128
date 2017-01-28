@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_CLN_CHANG
+refresh force on demand
+as
+select /*+ parallel(15) */
+  fch.amount as fpch_amount,
+  fch.children as fpch_children,
+  fch.dependants as fpch_dependants,
+  fch.education as fpch_education,
+  fch.marital_status as fpch_marital_status,
+  fch.real_estate_relation as fpch_real_estate_relation,
+  fch.salary as fpch_salary,
+  fch.salary_add as fpch_salary_add,
+  fch.salary_spouse as fpch_salary_spouse,
+  fch.term_duration as fpch_term_duration,
+  x.contract_number
+  from m_folder_con_miner x
+left join V_FORM_PAR_CHANGES fch on fch.folder_id = x.folder_id;
+grant select on U1.M_FOLDER_CON_MINER_CLN_CHANG to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER_CLN_CHANG to LOADER;
+
+

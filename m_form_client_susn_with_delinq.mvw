@@ -1,0 +1,52 @@
+﻿create materialized view U1.M_FORM_CLIENT_SUSN_WITH_DELINQ
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30 */  *
+  from (select /*+ parallel(15) parallel_index(15) */
+               fc.id as form_client_id,
+               fd.c_doc_date as form_client_date,
+               f.c_client    as rfo_client_id,
+               fc.x_rnn as rnn,
+               fc.x_iin as iin,
+               f.id as folder_id,
+               decode(fc.c_add_doc#type,7054566767,1,0) as vov,
+               decode(fc.c_add_doc#type,7054566890,1,0) as invalid,
+               case when fc.c_sex#0 = 1 and months_between(trunc(sysdate), fc.c_date_birth)/12 >= 63 then 1
+                    when fc.c_sex#0 = 2 and to_char(sysdate,'yyyy') < '2018' and months_between(trunc(sysdate), fc.c_date_birth)/12 >= 58 then 1
+                    when fc.c_sex#0 = 2 and to_char(sysdate,'yyyy') = '2018' and months_between(trunc(sysdate), fc.c_date_birth)/12 >= 58.5 then 1
+                    when fc.c_sex#0 = 2 and to_char(sysdate,'yyyy') = '2019' and months_between(trunc(sysdate), fc.c_date_birth)/12 >= 59 then 1
+                    when fc.c_sex#0 = 2 and to_char(sysdate,'yyyy') = '2020' and months_between(trunc(sysdate), fc.c_date_birth)/12 >= 59.5 then 1
+                    when fc.c_sex#0 = 2 and to_char(sysdate,'yyyy') = '2021' and months_between(trunc(sysdate), fc.c_date_birth)/12 >= 60 then 1
+                    when fc.c_sex#0 = 2 and to_char(sysdate,'yyyy') = '2022' and months_between(trunc(sysdate), fc.c_date_birth)/12 >= 60.5 then 1
+                    when fc.c_sex#0 = 2 and to_char(sysdate,'yyyy') = '2023' and months_between(trunc(sysdate), fc.c_date_birth)/12 >= 61 then 1
+                    when fc.c_sex#0 = 2 and to_char(sysdate,'yyyy') = '2024' and months_between(trunc(sysdate), fc.c_date_birth)/12 >= 61.5 then 1
+                    when fc.c_sex#0 = 2 and to_char(sysdate,'yyyy') = '2025' and months_between(trunc(sysdate), fc.c_date_birth)/12 >= 62 then 1
+                    when fc.c_sex#0 = 2 and to_char(sysdate,'yyyy') = '2026' and months_between(trunc(sysdate), fc.c_date_birth)/12 >= 62.5 then 1
+                    when fc.c_sex#0 = 2 and to_char(sysdate,'yyyy') >= '2027' and months_between(trunc(sysdate), fc.c_date_birth)/12 >= 63 then 1
+
+                 else 0 end as pens,
+               --oralman
+               case when fc.c_quant_child in (3630785, 8821146, 8821147) then 1 else 0 end as many_children,
+               case when fc.c_family in (188404, 188405) then 1
+                    when fc.c_family = 48935 and fc.c_quant_child in (3630783, 3630784, 3630785, 8821146, 8821147) then 1
+                    else 0 end as not_full_family
+          from V_RFO_Z#FORM_CLIENT fc
+          join V_RFO_Z#FDOC fd   on fd.id = fc.id and fd.class_id = 'FORM_CLIENT'
+          join V_RFO_Z#RDOC rd   on rd.c_doc = fd.id
+          join V_RFO_Z#FOLDERS f on f.c_docs = rd.collection_id and exists (select 1
+                                                                              from t_rbo_port rp
+                                                                              join m_rbo_contract_bas cb on cb.rbo_contract_id = rp.rbo_contract_id
+                                                                             where rp.rep_date = to_date('01.09.2016', 'dd.mm.yyyy')
+                                                                               and rp.delinq_days > 0
+                                                                               and cb.rfo_client_id = f.c_client
+                                                                               and cb.folder_id_first = f.id
+                                                                               and cb.contract_number not like '%CRD%')) tt1
+ where vov > 0 or
+       invalid > 0 or
+       pens > 0 or
+       many_children > 0 or
+       not_full_family > 0;
+grant select on U1.M_FORM_CLIENT_SUSN_WITH_DELINQ to LOADDB;
+
+

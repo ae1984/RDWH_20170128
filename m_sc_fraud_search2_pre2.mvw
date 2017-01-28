@@ -1,0 +1,45 @@
+﻿create materialized view U1.M_SC_FRAUD_SEARCH2_PRE2
+build deferred
+refresh force on demand
+as
+select xx.rfo_client_id as rfo_client_id,
+
+       count(case when trunc(xx.date_create) >= trunc(sysdate) - 30 and xx.date_create < trunc(sysdate)
+                       and xx.is_credit_rejected = 1
+                  then xx.claim_id end)           as count_fail_online_30_d,
+
+       nvl(max(case when trunc(xx.date_create) >= trunc(sysdate) - 90 and xx.date_create < trunc(sysdate)
+                then nvl(xx.total_amount, 0) end), 0) as max_sum_online_ekt_3_m,
+       nvl(min(case when trunc(xx.date_create) >= trunc(sysdate) - 90 and xx.date_create < trunc(sysdate)
+                then nvl(xx.total_amount, 0) end), 0) as min_sum_online_ekt_3_m,
+       nvl(avg(case when trunc(xx.date_create) >= trunc(sysdate) - 90 and xx.date_create < trunc(sysdate)
+                then nvl(xx.total_amount, 0) end), 0) as avg_sum_online_ekt_3_m,
+       /*nvl(max(case when trunc(xx.date_create) >= trunc(sysdate) - 90 and xx.date_create < sysdate
+                then nvl(xx.total_amount, 0) end), 0) as max_sum_online_ekt_3_m_x_v2, */
+
+       nvl(max(case when trunc(xx.date_create) >= trunc(sysdate) - 90 and xx.date_create < trunc(sysdate)
+                then xx.cnt_claim_days end), 0)           as max_count_app_onl_day,
+       nvl(avg(case when trunc(xx.date_create) >= trunc(sysdate) - 90 and xx.date_create < trunc(sysdate)
+                then xx.cnt_claim_days end), 0)  as avg_count_app_onl_day,
+       count(distinct case when trunc(xx.date_create) >= trunc(sysdate) - 30 and xx.date_create < trunc(sysdate)
+                           then xx.rfo_shop_id end) as count_shops_on_client,
+       nvl(max(case when trunc(xx.date_create) >= trunc(sysdate) - 90 and xx.date_create < trunc(sysdate)
+                then xx.cnt_categ_days end), 0)           as count_category_3_m
+from (
+      select t.rfo_client_id,
+             tt.claim_id                                                            as claim_id,
+             tt.date_create                                                         as date_create,
+             count(tt.claim_id) over (partition by t.rfo_client_id, trunc(tt.date_create)) as cnt_claim_days,
+             nvl(tt.total_amount, 0)                                                as total_amount,
+             tt.rfo_shop_id,
+             tt.is_credit_rejected,
+             count(distinct ed.tov_categ_code)  over (partition by t.rfo_client_id, trunc(tt.date_create)) as cnt_categ_days
+        from u1.V_CLIENT_RFO_BY_ID t
+        left join u1.M_FOLDER_CON_CANCEL_ONLINE_1 tt on tt.rfo_client_id = t.rfo_client_id
+                                                    and tt.date_create < sysdate
+        left join u1.V_CONTRACT_EKT_DWH_ONLINE    ed on ed.claim_id = tt.claim_id
+     ) xx
+group by xx.rfo_client_id;
+grant select on U1.M_SC_FRAUD_SEARCH2_PRE2 to LOADDB;
+
+

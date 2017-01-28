@@ -1,0 +1,23 @@
+﻿create table U1.T_RDWH_DELINQ_DAYS
+(
+  day_min       NUMBER(10),
+  day_max       NUMBER(10),
+  name          VARCHAR2(15),
+  prod          VARCHAR2(20),
+  is_on_balance NUMBER(1)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.T_RDWH_DELINQ_DAYS to LOADDB;
+grant select on U1.T_RDWH_DELINQ_DAYS to LOADER;
+

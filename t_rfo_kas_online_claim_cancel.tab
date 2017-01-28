@@ -1,0 +1,23 @@
+﻿create table U1.T_RFO_KAS_ONLINE_CLAIM_CANCEL
+(
+  id          NUMBER,
+  claim_id    NUMBER,
+  rule        VARCHAR2(1000),
+  rule_result VARCHAR2(1000),
+  full_txt    VARCHAR2(4000)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.T_RFO_KAS_ONLINE_CLAIM_CANCEL to LOADDB;
+grant select on U1.T_RFO_KAS_ONLINE_CLAIM_CANCEL to LOADER;
+

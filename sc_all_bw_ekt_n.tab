@@ -1,0 +1,31 @@
+﻿create table U1.SC_ALL_BW_EKT_N
+(
+  score_forward        VARCHAR2(5),
+  score_backward       VARCHAR2(6),
+  yy_mm_start_last     VARCHAR2(9),
+  is_client_new_by_con NUMBER,
+  con_cnt              NUMBER,
+  sales                NUMBER,
+  sales_mln            NUMBER,
+  delinq_max_debt_used NUMBER,
+  b_w                  NUMBER,
+  is_del_60_plus       NUMBER,
+  is_bw                NUMBER,
+  max_debt_used        NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.SC_ALL_BW_EKT_N to LOADDB;
+grant select on U1.SC_ALL_BW_EKT_N to LOADER;
+

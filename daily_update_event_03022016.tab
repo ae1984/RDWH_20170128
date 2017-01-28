@@ -1,0 +1,24 @@
+﻿create table U1.DAILY_UPDATE_EVENT_03022016
+(
+  id          NUMBER(32) not null,
+  event       VARCHAR2(50) not null,
+  e_detail    VARCHAR2(500),
+  e_date      DATE not null,
+  e_timestamp TIMESTAMP(6) not null
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.DAILY_UPDATE_EVENT_03022016 to LOADDB;
+grant select on U1.DAILY_UPDATE_EVENT_03022016 to LOADER;
+

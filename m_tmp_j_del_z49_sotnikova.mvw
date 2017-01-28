@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_TMP_J_DEL_Z49_SOTNIKOVA
+refresh force on demand
+as
+select '2013 - 01' as mon, 27.20 as del_rate_b_w from dual union all
+select '2013 - 02' as mon, 30.80 as del_rate_b_w from dual union all
+select '2013 - 03' as mon, 24.90 as del_rate_b_w from dual union all
+select '2013 - 04' as mon, 32.80 as del_rate_b_w from dual union all
+select '2013 - 05' as mon, 25 as del_rate_b_w from dual union all
+select '2013 - 06' as mon, 12.90 as del_rate_b_w from dual union all
+select '2013 - 07' as mon, 23.60 as del_rate_b_w from dual union all
+select '2013 - 08' as mon, 25.20 as del_rate_b_w from dual union all
+select '2013 - 09' as mon, 19.40 as del_rate_b_w from dual union all
+select '2013 - 10' as mon, 40 as del_rate_b_w from dual union all
+select '2013 - 11' as mon, 40 as del_rate_b_w from dual union all
+select '2013 - 12' as mon, 29.50 as del_rate_b_w from dual;
+grant select on U1.M_TMP_J_DEL_Z49_SOTNIKOVA to LOADDB;
+grant select on U1.M_TMP_J_DEL_Z49_SOTNIKOVA to LOADER;
+
+

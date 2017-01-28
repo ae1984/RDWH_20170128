@@ -1,0 +1,141 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_V3
+build deferred
+refresh force on demand
+as
+select
+  /*+ parallel(20) */
+  x.contract_number,
+  fol_min.pos_type_rfo,
+  fol_min.pos_parther,
+  ced.shop_name,
+  fc.fact_address_district,
+  fc.fact_address_street,
+  fc.fact_address_house||case when fc.fact_address_house_part is not null then '__'||fc.fact_address_house_part end as fact_address_house_full,
+  fc.fact_address_house||case when fc.fact_address_house_part is not null then '__'||fc.fact_address_house_part end
+  || case when fc.fact_address_flat is not null then '__'||fc.fact_address_flat end as fact_address_house_flat,
+  case when (fc.fact_address_house is not null or fc.fact_address_house_part is not null) and
+      fc.fact_address_flat is not null then 1 else 0 end as fact_address_is_appartment,
+  fc.fact_address_flat,
+  fc.c_address_equal as address_equal,
+  fch.amount as fpch_amount,
+  fch.children as fpch_children,
+  fch.dependants as fpch_dependants,
+  fch.education as fpch_education,
+  fch.marital_status as fpch_marital_status,
+  fch.real_estate_relation as fpch_real_estate_relation,
+  fch.salary as fpch_salary,
+  fch.salary_add as fpch_salary_add,
+  fch.salary_spouse as fpch_salary_spouse,
+  fch.term_duration as fpch_term_duration,
+  ai.model_year_max_mark as avto_model_year_max_mark,
+/*  case when to_char(substr(regexp_replace(nvl(fc.iin,'111111111111'),'[^[[:digit:]]]*'),5,2)||'.'||substr(regexp_replace(nvl(fc.iin,'111111111111'),'[^[[:digit:]]]*'),3,2)||'.'||
+       case when substr(regexp_replace(nvl(fc.iin,'111111111111'),'[^[[:digit:]]]*'),7,1) = 3 or substr(regexp_replace(nvl(fc.iin,'111111111111'),'[^[[:digit:]]]*'),7,1) = 4 then 19
+       when substr(regexp_replace(nvl(fc.iin,'111111111111'),'[^[[:digit:]]]*'),7,1) = 5 or substr(regexp_replace(nvl(fc.iin,'111111111111'),'[^[[:digit:]]]*'),7,1) = 6 then 20 end
+       ||substr(regexp_replace(nvl(fc.iin,'111111111111'),'[^[[:digit:]]]*'),1,2),'dd.mm.yyyy') = fc.birth_date then 1 else 0 end as IS_BIRTHDATE_FALSE,*/
+  xxx.con_any_bef_4y,
+  xxx.con_debt10k_bef_4y,
+  xxx.del_days_any_max_bef_4y,
+  xxx.del_days_debt10k_max_bef_4y,
+  xxx.active_mon_debt10k_bef_4y,
+  xxx.good_active_mon_debt10k_bef_4y,
+  xxx.bad_active_mon_debt10k_bef_4y,
+  xxx.amount_max_bef_4y,
+  xxx.inactive_period_4y as cli_inactive_period_4y,
+  ced.initial_payment as initial_payment,
+  k5.kdn_simple_rbo,
+  k5.kdn_simple_nom_rate,
+  k5.kdn_form_salary_max,
+  cl.is_iin_valid as IS_IIN_CHECK_SUM_RIGHT,
+  oper_cod.mobile_operator,
+  oper_cod.mobile_length_phones,
+  ced.shop_name||'__'||fch.expert_name as TP_MP,
+  mdc.start_cli_delinq_month_cnt,
+  mdc.start_cli_max_delinq_days,
+  --x.pkb_report_status||'__'||x.deal_status as pkb_report_deal_status,
+  vpr.report_status||'_'||ca.status_name as pkb_report_deal_status,
+ fol_min.FLD_CREATE_QUICKNESS
+from M_FOLDER_CON_MINER x
+left join V_CLIENT_RFO_BY_ID cl on x.rfo_client_id = cl.rfo_client_id
+left join V_PKB_REPORT vpr on vpr.folder_id = x.folder_id
+left join M_RBO_CONTRACT_BAS ca on ca.contract_number = x.contract_number
+left join (
+            select listagg(a.operator,';') within group (order by a.operator) as mobile_operator,
+                   listagg(a.length_phone,';') within group (order by a.operator) as mobile_length_phones,
+                   a.folder_date, a.form_client_id
+            from (
+                  select nvl(q.operator,'НЕИЗВЕСТНО') as operator , w.phone_number,
+                         phone_pars(w.phone_number) as length_phone,
+                         w.folder_date, w.form_client_id
+                  from (
+                       select distinct
+                            case when length(t.phone_number) <= 10 then substr(t.phone_number,1,3)
+                            when length(t.phone_number) >= 11 then substr(t.phone_number,2,3) end cod,
+                            t.phone_number, t.folder_date, t.form_client_id
+                       from V_FORM_CLIENT_CONTACT_PHONE t where t.phone_type like '%МОБИЛЬНЫЙ%'
+                            ) w
+                  left join T_MOBILE_OPER q on q.cod = w.cod
+                 ) a
+            group by a.folder_date, a.form_client_id
+          ) oper_cod on oper_cod.form_client_id = x.form_client_id
+--left join V_POS po on po.pos_code = x.dept_number
+--left join v_shop sh on po.pos_code = sh.pos_code and sh.is_active = 1
+left join  V_FORM_CLIENT_ALL_RFO fc on  fc.form_client_id = x.form_client_id
+left join (select au.iin, a.folder_id, au.model_year_max_mark
+          from M_AUTO_IIN_INFO_all au
+          join (
+                select au.iin, fol.folder_id, max(au.send_date) as send_date
+                from M_FOLDER_CON_MINER fol
+                join V_CLIENT_RFO_BY_ID cli on fol.rfo_client_id = cli.rfo_client_id
+                join M_AUTO_IIN_INFO_all au on au.iin = nvl(cli.iin,cli.rnn)
+                                               and au.send_date <= fol.folder_date_create
+                group by au.iin, fol.folder_id
+                ) a on au.iin = a.iin and au.send_date = a.send_date
+           ) ai on ai.iin = fc.iin and ai.folder_id = x.folder_id
+--   left join v_rfo_z#form_client rfc on rfc.x_iin = fc.iin or rfc.x_rnn = fc.rnn
+left join M_CONTRACT_PARAM_KDN5 k5 on k5.deal_number = x.contract_number
+left join V_FORM_PAR_CHANGES fch on fch.folder_id = x.folder_id
+left join M_CONTRACT_HISTORY xxx on xxx.rfo_contract_id = x.rfo_contract_id
+left join (select sum(nvl(ce.initial_payment,0)) as initial_payment, ce.contract_number, ce.shop_name
+            from V_CONTRACT_EKT_DWH ce
+          group by ce.contract_number, ce.shop_name) ced on ced.contract_number = x.contract_number
+left join (
+          select distinct b.yy_mm_report, b.contract_number, b.client_id, b.start_cli_max_delinq_days, c.start_cli_delinq_month_cnt
+                  from (
+                 select a.*, max(a.delinq_days_old) over (partition by a.client_id order by a.rank_by_cli range between unbounded preceding and 1 preceding) start_cli_max_delinq_days
+                  from (
+                       select ww.yy_mm_report, ww.contract_number, ww.client_id, ww.delinq_days_old,
+                              dense_rank() over (partition by ww.client_id order by ww.yy_mm_report_num) rank_by_cli,
+                              dense_rank() over (partition by ww.contract_number order by ww.yy_mm_report_num) rank_by_con
+                       from V_PORTFOLIO ww
+                       --where ww.client_id = 2293091
+                       ) a
+                       ) b
+          join (
+          select b.yy_mm_report, b.client_id,
+                 sum(b.delinq_month) over (partition by b.client_id order by b.rank_by_cli range between unbounded preceding and 1 preceding) start_cli_delinq_month_cnt
+           from (
+                 select distinct a.yy_mm_report,a.client_id,a.rank_by_cli,max(a.delinq_month) as delinq_month
+                 from (
+                       select ww.yy_mm_report, ww.client_id, case when ww.delinq_days_old > 0 then 1 else 0 end as delinq_month,
+                              dense_rank() over (partition by ww.client_id order by ww.yy_mm_report_num) rank_by_cli
+                       from V_PORTFOLIO ww
+                       --where ww.client_id = 2293091
+                       ) a
+                 group by a.yy_mm_report,a.client_id,a.rank_by_cli
+                 ) b
+                 ) c on b.client_id = c.client_id and b.yy_mm_report = c.yy_mm_report
+          where b.rank_by_con = 1
+          ) mdc on mdc.contract_number = x.contract_number
+left join (
+          select
+            case when lag(f.expert_num_tab) over(partition by f.client_id order by f.folder_create_date) = f.expert_num_tab then
+            round((f.folder_create_date - (lag(f.folder_create_date) over(partition by f.client_id order by f.folder_create_date)))*24*60,2) end as FLD_CREATE_QUICKNESS,
+            f.folder_id,
+            po.pos_type_rfo,
+            po.partner as pos_parther
+          from V_FOLDER_ALL f
+          left join V_POS po on po.pos_code = f.pos_code
+          ) fol_min on fol_min.folder_id = x.folder_id;
+grant select on U1.M_FOLDER_CON_MINER_V3 to LOADDB;
+
+

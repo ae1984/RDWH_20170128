@@ -1,0 +1,55 @@
+﻿create table U1.T_RDWH_INCREM_CHECK_PARAM
+(
+  id          NUMBER(10),
+  table_name  VARCHAR2(100),
+  select_tbl  VARCHAR2(2000),
+  where_tbl   VARCHAR2(2000),
+  source_name VARCHAR2(100),
+  select_txt  VARCHAR2(2000),
+  where_txt   VARCHAR2(2000),
+  is_used     NUMBER(1)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RDWH_INCREM_CHECK_PARAM
+  is 'Настроечная таблица для проверки инкрементальной загрузки';
+comment on column U1.T_RDWH_INCREM_CHECK_PARAM.table_name
+  is 'Название инкрементальной таблицы';
+comment on column U1.T_RDWH_INCREM_CHECK_PARAM.select_tbl
+  is 'Текст запроса из инкрементальной таблицы';
+comment on column U1.T_RDWH_INCREM_CHECK_PARAM.where_tbl
+  is 'Текст условия для инкрементальной таблицы';
+comment on column U1.T_RDWH_INCREM_CHECK_PARAM.source_name
+  is 'Название источника';
+comment on column U1.T_RDWH_INCREM_CHECK_PARAM.select_txt
+  is 'Текст запроса из источника';
+comment on column U1.T_RDWH_INCREM_CHECK_PARAM.where_txt
+  is 'Текст условия для источника';
+alter table U1.T_RDWH_INCREM_CHECK_PARAM
+  add constraint T_RDWH_INCREM_CHECK_PARAM_UK1 unique (TABLE_NAME)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.T_RDWH_INCREM_CHECK_PARAM_UK1 nologging;
+grant select on U1.T_RDWH_INCREM_CHECK_PARAM to LOADDB;
+

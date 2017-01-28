@@ -1,0 +1,57 @@
+﻿create materialized view U1.V_TMP_PHOTO_TEST_7
+using no index
+refresh complete on demand
+as
+select
+a.rfo_client_id,
+a.folder_id,
+a.folder_date_create,
+a.folder_state,
+a.process_name,
+a.iin,
+max(a.photo_date) keep (dense_rank first order by a.photo_date) as photo_date,
+max(a.photo_name) keep (dense_rank first order by a.photo_date) as photo_name,
+max(a.c_uid) keep (dense_rank first order by a.photo_date) as c_uid,
+max(b.folder_id) keep (dense_rank first order by b.folder_date_create) as folder_id_prev,
+max(b.folder_date_create) keep (dense_rank first order by b.folder_date_create) as folder_date_create_prev,
+max(c.photo_date) keep (dense_rank first order by c.photo_date) as photo_date_prev,
+max(c.c_uid) keep (dense_rank first order by c.photo_date) as c_uid_prev
+from (
+select distinct a.rfo_client_id,
+a.folder_id,
+a.folder_date_create,
+a.folder_state,
+a.process_name,
+c.iin,
+d.photo_date,
+d.photo_name,
+d.c_uid
+from T_SHOLPAN_TST2 t
+join v_folder_all_rfo a on t.g = a.folder_id
+join v_verification b on t.g = b.folder_id
+join V_CLIENT_RFO_BY_ID c on a.rfo_client_id = c.rfo_client_id
+join V_CLIENT_IMAGES d on c.iin = d.iin
+and trunc(b.verif_doc_date)-trunc(d.photo_date)=0
+and d.photo_date > a.folder_date_create
+and trunc(a.folder_date_create, 'hh') = trunc(d.photo_date, 'hh')
+and d.photo_name not like '%DOC_UD_LICHNOST%'
+and d.photo_name not like '%УД%'
+where f not in (select iin from V_TMP_PHOTO_TEST_1)
+and g is not null) a
+join v_folder_all_rfo b on a.rfo_client_id = b.rfo_client_id
+join V_CLIENT_IMAGES c on b.rfo_client_id = c.rfo_client_id
+and c.photo_name not like '%DOC_UD_LICHNOST%'
+and c.photo_name not like '%УД%'
+and trunc(b.folder_date_create, 'hh') = trunc(c.photo_date, 'hh')
+where a.rfo_client_id not in (select rfo_client_id from V_TMP_PHOTO_TEST_6)
+group by
+a.rfo_client_id,
+a.folder_id,
+a.folder_date_create,
+a.folder_state,
+a.process_name,
+a.iin;
+grant select on U1.V_TMP_PHOTO_TEST_7 to LOADDB;
+grant select on U1.V_TMP_PHOTO_TEST_7 to LOADER;
+
+

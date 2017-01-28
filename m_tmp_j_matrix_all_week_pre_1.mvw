@@ -1,0 +1,51 @@
+﻿create materialized view U1.M_TMP_J_MATRIX_ALL_WEEK_PRE_1
+build deferred
+refresh complete on demand
+as
+select /*+parallel(2)*/ 'ОНЛАЙН-КРЕДИТ' as product_type, 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(f.folder_date_create_mi) as a_date,
+       f.is_categ_a,
+       f.is_categ_b,
+       f.is_client_new_by_con,
+       case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+       f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+       f.rfo_contract_id as rfo_con_or_claim_id,
+       f.x_dnp_name as city, f.x_dnp_region as region,
+       f.cancel_prescoring, f.cancel_middle_office, f.cancel_controller, f.cancel_client, f.cancel_manager,
+       f.cancel_cpr_aa, f.cancel_verificator, f.cancel_undefined, f.is_aa_reject,
+       f.folder_state, f.pos_name, f.shop_name
+from u1.M_FOLDER_CON_CANCEL f
+where f.process_name = 'ОНЛАЙН КРЕДИТ' and
+      f.claim_id is not null and
+      f.folder_date_create_mi >= to_date('2013-01-01','yyyy-mm-dd')
+union all
+select /*+parallel(2)*/ 'ОНЛАЙН-КРЕДИТ' as product_type, 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(fo.folder_date_create_mi) as a_date,
+       fo.is_categ_a,
+       fo.is_categ_b,
+       fo.is_client_new_by_con,
+       case when fo.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when fo.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+       fo.claim_id, fo.contract_number, fo.rfo_client_id, fo.contract_amount, fo.folder_id, fo.form_client_id, fo.rfo_contract_id,
+       fo.claim_id as rfo_con_or_claim_id,
+       fo.x_dnp_name as city, fo.x_dnp_region as region,
+       fo.cancel_prescoring, fo.cancel_middle_office, fo.cancel_controller, fo.cancel_client, fo.cancel_manager,
+       fo.cancel_cpr_aa, fo.cancel_verificator, fo.cancel_undefined, fo.is_aa_reject,
+       fo.folder_state, fo.pos_name, fo.shop_name
+from u1.M_FOLDER_CON_CANCEL_ONLINE fo
+where fo.folder_date_create_mi >= to_date('2013-01-01','yyyy-mm-dd')
+union all
+select /*+parallel(2)*/ f.product_type, f.cr_program_name as product, trunc(f.folder_date_create_mi) as a_date,
+       f.is_categ_a,
+       f.is_categ_b,
+       f.is_client_new_by_con,
+       case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+       f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+       f.rfo_contract_id as rfo_con_or_claim_id,
+       f.x_dnp_name as city, f.x_dnp_region as region,
+       f.cancel_prescoring, f.cancel_middle_office, f.cancel_controller, f.cancel_client, f.cancel_manager,
+       f.cancel_cpr_aa, f.cancel_verificator, f.cancel_undefined, f.is_aa_reject,
+       f.folder_state, f.pos_name, f.shop_name
+from u1.M_FOLDER_CON_CANCEL f
+where f.process_name != 'ОНЛАЙН КРЕДИТ' and
+      f.folder_date_create_mi >= to_date('2013-01-01','yyyy-mm-dd');
+grant select on U1.M_TMP_J_MATRIX_ALL_WEEK_PRE_1 to LOADDB;
+
+

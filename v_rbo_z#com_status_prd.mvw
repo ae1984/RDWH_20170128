@@ -1,0 +1,16 @@
+﻿create materialized view U1.V_RBO_Z#COM_STATUS_PRD
+build deferred
+refresh complete on demand
+as
+select
+       tt.id,
+       tt.c_code,
+       upper(tt.c_name) as c_name,
+       tt.c_short_name_usb,
+       tt.c_color,
+       tt.c_end
+ from rdwh.V_RBO_Z#COM_STATUS_PRD@rdwh_exd tt;
+grant select on U1.V_RBO_Z#COM_STATUS_PRD to LOADDB;
+grant select on U1.V_RBO_Z#COM_STATUS_PRD to LOADER;
+
+

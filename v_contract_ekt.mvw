@@ -1,0 +1,49 @@
+﻿create materialized view U1.V_CONTRACT_EKT
+refresh complete on demand
+as
+select
+     c.c_num_dog as contract_number,
+     cc.pos_code_first as pos_code,
+     p.pos_name,
+--     cc.yy_mm_start_debt as start_month,
+     cc.yy_mm_start_first as start_month,
+     cc.start_date_first as start_date,
+     cc.end_date_first as end_date,
+     cc.end_date_first - cc.start_date_first as contract_term_days,
+     round((cc.end_date_first - cc.start_date_first)/30,0) as contract_term_months,
+     upper(i.c_producer) as producer,
+     upper(i.c_name) as product_name,
+     upper(i.c_model) as product_model,
+     i.c_quant as quantity,
+     i.c_cost as goods_cost,
+     i.c_bill_summ as bill_sum,
+     i.c_price as goods_price,
+     cc.contract_amount_first as contract_amount,
+     k.c_name as product_type_name,
+--     cc.client_rnn_first as client_rnn,
+     cl.x_rnn as client_rnn,
+     cl.x_iin as client_iin,
+         upper(clp.c_last_name) || ' ' ||
+         upper(clp.c_first_name) || ' ' ||
+         upper(clp.c_sur_name) as
+     client_name,
+     c.c_shop as rfo_shop_id
+from V_RFO_Z#PROD_INFO i, V_RFO_Z#CREDIT_DOG c, V_CONTRACT_CAL cc,
+     V_RFO_Z#KIND_ZAL_BODY k, V_POS p, V_RFO_Z#CLIENT cl, V_RFO_Z#CL_PRIV clp,
+          (select max(cd1q.id) as max_id from V_RFO_Z#CREDIT_DOG cd1q
+              where cd1q.c_num_dog is not null
+              group by cd1q.c_num_dog) cd_max -- для получения актуальных данных
+where c.c_d#type_cred#prod#prod_info11 = i.collection_id and
+cd_max.max_id = c.id and
+c.c_num_dog = cc.contract_number and
+k.id = i.c_type_tov and
+p.pos_code = cc.pos_code_first and
+cl.id = c.c_client_ref and
+cl.id = clp.id and
+--to_char(cc.start_date_first,'yyyy - mm') = (select max(yy_mm_report) from v_data_all) and
+--c.c_num_dog = 'R1446589-001/CRD-3' and
+cc.product_first = 'ТК';
+grant select on U1.V_CONTRACT_EKT to LOADDB;
+grant select on U1.V_CONTRACT_EKT to LOADER;
+
+

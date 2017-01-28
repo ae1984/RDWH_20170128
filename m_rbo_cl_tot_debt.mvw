@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_RBO_CL_TOT_DEBT
+build deferred
+refresh force on demand
+as
+select b.rfo_client_id,sum(dd.total_debt) as total_debt
+from u1.m_rbo_contract_bas b
+join (select d.rbo_client_id,d.rbo_contract_id,
+       nvl(d.total_debt,0)+nvl(k.total_debt,0) as total_debt
+  from  u1.m_rbo_contract_del d
+  left join u1.m_dwh_kaspired_port k on k.rbo_contract_id=d.rbo_contract_id
+                                     and d.rep_date=k.rep_date) dd on dd.rbo_contract_id=b.rbo_contract_id
+group by b.rfo_client_id;
+grant select on U1.M_RBO_CL_TOT_DEBT to LOADDB;
+
+

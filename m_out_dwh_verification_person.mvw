@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_OUT_DWH_VERIFICATION_PERSON
+build deferred
+refresh force on demand
+as
+select id,
+       account_name,
+       active,
+       display_name,
+       guid,
+       last_active,
+       mail,
+       org_unit_guid,
+       tabnum,
+       segmentgroup_id,
+       current_verifier_type,
+       employeegroup_id,
+       agent_id,
+       agent_pass,
+       segmentgroupcontact_id,
+       segmentgroupphoto_id,
+       use_hot_keys
+  from verificator.H_PERSON@verifais;
+grant select on U1.M_OUT_DWH_VERIFICATION_PERSON to LOADDB;
+grant select on U1.M_OUT_DWH_VERIFICATION_PERSON to LOADER;
+
+

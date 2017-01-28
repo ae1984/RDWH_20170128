@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_PARAMS_FOR_MODEL_PRE_8
+build deferred
+refresh force on demand
+as
+select /*+parallel(5)*/
+        cln.rfo_client_id
+       ,cln.app_id
+       ,cln.folder_date_create_mi
+       ,count(distinct def.rfo_client_id) as DELAY_CONTACT_CNT
+       ,case when count(distinct def.rfo_client_id)>0 then 1 else 0 end as DELAY_CONTACT_FLAG
+from M_PARAMS_FOR_MODEL_PRE_0 cln--V_CLIENT_RFO_BY_ID cln
+left join V_FORM_CLIENT_CONTACT_PHONE cph on cph.phone_number=cln.phone_mobile and cph.rfo_client_id<>cln.rfo_client_id
+                                        and cph.form_client_date<trunc(cln.folder_date_create_mi) and cph.phone_type_simple='КОНТАКТ'
+left join M_PARAMS_FOR_MODEL_PRE_1 def on def.rfo_client_id=cph.rfo_client_id and def.rep_date<trunc(cln.folder_date_create_mi)
+where cln.folder_date_create_mi >= to_date('01.01.2015','dd.mm.yyyy')
+group by cln.rfo_client_id
+       ,cln.app_id
+       ,cln.folder_date_create_mi;
+grant select on U1.M_PARAMS_FOR_MODEL_PRE_8 to LOADDB;
+
+

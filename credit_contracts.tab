@@ -1,0 +1,26 @@
+﻿create table U1.CREDIT_CONTRACTS
+(
+  credit_contract_id NUMBER(21) not null,
+  num_credit         VARCHAR2(50) not null,
+  starting_date      DATE not null,
+  ending_date        DATE not null,
+  sum_of_credit      NUMBER(21,2) not null,
+  currency           VARCHAR2(8) not null,
+  product_id         NUMBER(21)
+)
+tablespace USERS_ARC
+  pctfree 10
+  initrans 1
+  maxtrans 255
+nologging;
+alter table U1.CREDIT_CONTRACTS
+  add primary key (CREDIT_CONTRACT_ID)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255;
+alter index U1.SYS_C0014996 nologging;
+grant select on U1.CREDIT_CONTRACTS to LOADDB;
+grant select on U1.CREDIT_CONTRACTS to LOADER;
+

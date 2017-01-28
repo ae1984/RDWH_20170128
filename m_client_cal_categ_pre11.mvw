@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_CLIENT_CAL_CATEG_PRE11
+build deferred
+refresh force on demand
+as
+select /*+ parallel(3)*/ f.rfo_client_id,
+               max(d2.x_amount) as amount_max_before,
+               count(distinct d2.deal_number) as prev_con_closed_cnt
+          from u1.V_CLIENT_RFO_BY_ID f
+          left join u1.V_DWH_PORTFOLIO_CURRENT d2 on d2.client_iin = f.iin
+                                                     and d2.x_is_credit_issued = 1
+                                                     and d2.actual_end_date is not null
+                                                     and d2.x_start_date_actual is not null
+                                                     and d2.x_product_type != 'ОПТИМИЗАЦИЯ'
+          group by f.rfo_client_id;
+

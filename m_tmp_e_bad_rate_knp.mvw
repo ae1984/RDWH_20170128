@@ -1,0 +1,42 @@
+﻿create materialized view U1.M_TMP_E_BAD_RATE_KNP
+refresh complete on demand
+as
+select *
+from (
+  (select ti.yyyy_mm,
+         x.is_bad,
+         x.cnt
+  from v_time_months ti
+  left join
+      (select t3.yy_mm_report_date, t3.is_bad, count(*) cnt
+       from (
+          select t2.*
+          from (
+            select /*+ noparallel */ t.*,
+            to_date(t.yy_mm_start, 'yyyy - mm') yy_mm_start_date,
+            to_date(t.yy_mm_report, 'yyyy - mm') yy_mm_report_date,
+            case when t.client_status in ('B','W') then 1 else 0 end is_bad,
+            case when t.total_debt > 0 and t.planned_pmt_month = 1 and t.delinq_days > 7 and t.delinq_days < 31 then 1 else 0 end is_bad_pmt_1
+            from v_portfolio t
+          ) t2
+          join m_folder_con_miner m on m.contract_number = t2.contract_number
+                                       and m."CR_PROGRAM_NAME" like 'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ'
+          where (t2.yy_mm_start_date >= to_date('20100101', 'yyyymmdd')
+              and t2.yy_mm_start_date < to_date('20131201', 'yyyymmdd'))
+            and (
+                --t2.yy_mm_report_date >= to_date('20100101', 'yyyymmdd') and
+                t2.yy_mm_report_date < to_date('20140501', 'yyyymmdd'))
+              ) t3
+       group by t3.yy_mm_report_date, t3.is_bad
+      ) x on x.yy_mm_report_date = ti.yyyy_mm
+  where ti.yyyy_mm >= to_date('20100101', 'yyyymmdd')
+    and ti.yyyy_mm < to_date('20140501', 'yyyymmdd')
+  ) y
+) pivot (
+sum(cnt)
+for is_bad in (0, 1)
+  );
+grant select on U1.M_TMP_E_BAD_RATE_KNP to LOADDB;
+grant select on U1.M_TMP_E_BAD_RATE_KNP to LOADER;
+
+

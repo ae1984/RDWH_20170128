@@ -1,0 +1,99 @@
+﻿create materialized view U1.V_POS
+using no index
+refresh complete on demand
+as
+select x.*,
+       nvl(x.dnp_region, rd2.dnp_region) as x_dnp_region
+from (
+select t.pos_code,
+       substr(t.pos_code,1,7) as branch_code,
+       t.pos_num,
+       --trim(t.pos_name) as pos_name,
+       translate(trim(t.pos_name),
+                 chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+                 chr(53390)||chr(53380)||chr(53381),
+                 chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+                 chr(53936)||chr(53906)||chr(53922)) as pos_name,
+       t.is_active,
+         -- наш очищенный тип подразделения, начинаем формировать
+         case when t.pos_code <> '001-123-264' and (t.pos_name like 'ОТДЕЛЕНИЕ%' or t.pos_name like 'ОТД-Е%' or tt.c_code = 'OTDELENIE'
+           or (t.pos_code in ('001-116-386','001-112-704','001-115-416','001-131-540','001-112-712','001-140-684','001-101-230','001-108-485',
+                              '001-900-339','001-123-227','001-123-263','001-900-320')))
+             then 'ОТДЕЛЕНИЕ' end as pos_type,
+       t.c_kas_rbo_type as pos_type_rbo,
+       tt.c_code as pos_type_rfo,
+       upper(a.c_place) as pos_city,
+       upper(nc1.c_name) as pos_city_kladr,
+       upper(a.c_region) as pos_region,
+       cr.c_code as pos_region_code,
+       upper(cr.c_name) as pos_region_kladr,
+       upper(a.c_district) as pos_district,
+       upper(ra.c_name) as pos_district_kladr,
+       d.c_code as dnp_code,
+       upper(d.c_name) as dnp_name,
+       upper(rd.c_name) as dnp_region,
+       upper(nvl(d.c_name,b.city_name)) as x_dnp_name,
+       rp.partner as partner_manual,
+       case
+         when (upper(t.pos_name) like '%ARENA%S%' /*or upper(t.pos_name) like '%СУЛПАК%'*/) then 'СУЛПАК'
+         when (upper(t.pos_name) like '%NEO АЗИЯ%' /*or upper(t.pos_name) like '%ТЕХНОДОМ%' or
+               upper(t.pos_name) like '%TECHNODOM%'*/) then 'ТЕХНОДОМ'
+         when upper(t.pos_name) like '%GULSER%' then 'АЛСЕР' --   when upper(t.pos_name) like '%ALSER%' then 'ALSER'
+         when upper(t.pos_name) like '%ПЛАНЕТА ЭЛ%' then 'ПЛАНЕТА ЭЛ-КИ'
+         when (upper(t.pos_name) like '%МЕЧТА%' or upper(t.pos_name) like '%ЭЛЕКТРОНИКА%Е%1%' or
+               upper(t.pos_name) like '%МАГАЗИНЫ ЭЛЕКТРОНИКИ%') then 'МЕЧТА'
+---
+         when (upper(t.pos_name) like '%ЭЛ СИ ТР%ЙД%' or upper(t.pos_name) like '%LC TRADE%') then 'ЛОГИКОМ'
+         when upper(t.pos_name) like '%БЕЛЫЙ ВЕТЕР%' then 'БЕЛЫЙ ВЕТЕР'
+         when upper(t.pos_name) like 'БИС%' then 'БИС'
+         when upper(t.pos_name) like '%БИПЭК АВТО%' then 'БИПЭК АВТО'
+         when upper(t.pos_name) like '%ВИРАЖ%' then 'ВИРАЖ'
+         when upper(t.pos_name) like '%ЕВРОСЕТЬ%' then 'ЕВРОСЕТЬ'
+         when upper(t.pos_name) like '%ШЕРИФ АВТО%' then 'ШЕРИФ АВТО'
+         when upper(t.pos_name) like '%АЗИЯ СВЯЗНОЙ%' then 'АЗИЯ СВЯЗНОЙ'
+         when upper(t.pos_name) like '%АКТОБЕ ЭЛЕКТРОНИКС%' then 'АКТОБЕ ЭЛЕКТРОНИКС'
+         when upper(t.pos_name) like '%АЗИЯ АВТО%' then 'АЗИЯ АВТО'
+         when upper(t.pos_name) like '%ПЛАНЕТА-59%' then 'ПЛАНЕТА-59'
+         when upper(t.pos_name) like '%БЕЛАЯ%ТЕХНИКА%' then 'БЕЛАЯ ТЕХНИКА'
+         when (upper(t.pos_name) like '%FOR%A TRADE%' or upper(t.pos_name) like '%ФОРА ТРЕЙД%') then 'FORA TRADE'
+---
+         when (upper(t.pos_name) like 'ИП%' or upper(t.pos_name) like 'ЧП%') then 'ИП'
+         when upper(t.pos_name) like 'ТОО%' then 'ДРУГИЕ ТОО'
+         end as
+       partner
+from (select t1.c_code as pos_code,
+             max(t1.c_num) keep (dense_rank first order by nvl(t1.c_not_active,-1)) as pos_num,
+             max(upper(t1.c_name)) keep (dense_rank first order by nvl(t1.c_not_active,-1)) as pos_name,
+             max(a1.id) keep (dense_rank first order by nvl(t1.c_not_active,-1)) as address_id,
+             max(t1.c_upravl_dnp_ref) keep (dense_rank first order by nvl(t1.c_not_active,-1)) as c_upravl_dnp_ref,
+             max(t1.c_type_depart) keep (dense_rank first order by nvl(t1.c_not_active,-1)) as c_type_depart,
+             max(t1.c_kas_rbo_type) keep (dense_rank first order by nvl(t1.c_not_active,-1)) as c_kas_rbo_type,
+             case when min(nvl(t1.c_not_active,0)) < 1 then 1 else 0 end as is_active
+          from V_RFO_Z#STRUCT_DEPART t1, V_RFO_Z#adresses a1
+          where a1.collection_id(+) = t1.c_addresses
+               and t1.c_code != '1'
+               and t1.c_code != '001-999'
+          group by t1.c_code) t,
+    V_RFO_z#kas_upravl_dnp d, V_RFO_z#kas_region_dnp rd,
+    V_RFO_Z#adresses a, V_RFO_Z#TYPE_STRUCT_DEP tt, V_RFO_z#names_city nc1, V_RFO_z#code_region cr,
+    V_RFO_z#region_area ra,
+    v_branch b,
+    REF_POS rp
+where d.id(+) = t.c_upravl_dnp_ref and rd.id(+) = d.c_region_ref and
+ a.id(+) = t.address_id and tt.id(+) = t.c_type_depart
+ and nc1.id(+) = a.c_place_ref and cr.id(+) = a.c_region_ref and
+ ra.id(+) = a.c_district_ref and
+ b.dep_code(+) = substr(t.pos_code,1,7) and
+ rp.pos_code(+) = t.pos_code
+) x
+left join (select upper(d.c_name) as dnp_name, upper(rd.c_name) as dnp_region
+            from V_RFO_z#kas_upravl_dnp d
+            join V_RFO_z#kas_region_dnp rd on rd.id = d.c_region_ref
+) rd2 on rd2.dnp_name = x.x_dnp_name;
+grant select on U1.V_POS to DNP;
+grant select on U1.V_POS to DTS_USER;
+grant select on U1.V_POS to LOADER;
+grant select on U1.V_POS to LOAD_MO;
+grant select on U1.V_POS to RISK_VERIF;
+
+

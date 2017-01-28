@@ -1,0 +1,39 @@
+﻿create materialized view U1.M_RSON_CIRCLE_1_CON_DEL_T_A2
+refresh complete on demand
+as
+select distinct a.contract_number
+       from  u1.M_RSON_CIRCLE_1_CON_DEL_A_2  a
+       join (
+       selecT circle_1_cli_cnt,perc_del_days_max_by_cli from
+(select cl.perc_del_days_max_by_cli,
+                       cl.circle_1_cli_cnt,
+                       -- ПРОВЕРКА
+                       count(*) as con_cnt,
+                       count(distinct c.contract_id) as con_dist_cnt, -- проверка - если эти два поля равны, значит выборка верна
+                       round(sum(c.max_debt_used) / 1000000) as sales_mln, -- продажи
+                       sum(c.max_debt_used) as sales, -- продажи,
+                       round(sum(c.delinq_rate_b_w * c.max_debt_used) /
+                             sum(c.max_debt_used),
+                             1) as del_rate_b_W
+
+                  from M_CONTRACT_CAL_DEL c
+                  join V_CONTRACT_CAL cc
+                    on cc.contract_number = c.contract_number
+                   and cc.is_refin_restruct_first != 1
+                  join u1.M_RSON_CIRCLE_1_CON_DEL_A_2 cl
+                    on /*cl.rfo_client_id = c.rfo_client_id*/
+                 cl.contract_number = c.contract_number
+                 where not exists (select null
+                          from M_FOLDER_CON_CANCEL f
+                         where f.folder_id = c.folder_id_first
+                           and f.is_refin = 1)
+                   and cl.circle_1_cli_cnt > 2
+                   and c.yy_mm_start_last >= '2012 - 08'
+                     and c.yy_mm_start_last <= '2013 - 06'
+                 group by cl.perc_del_days_max_by_cli, cl.circle_1_cli_cnt
+                having sum(c.max_debt_used) > 0 and count(c.contract_number) >= 30) where del_rate_b_W>=40) b on a.circle_1_cli_cnt = b.circle_1_cli_cnt
+                 and a.perc_del_days_max_by_cli >= b.perc_del_days_max_by_cli and a.perc_del_days_max_by_cli>30;
+grant select on U1.M_RSON_CIRCLE_1_CON_DEL_T_A2 to LOADDB;
+grant select on U1.M_RSON_CIRCLE_1_CON_DEL_T_A2 to LOADER;
+
+

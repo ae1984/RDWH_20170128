@@ -1,0 +1,11 @@
+﻿create materialized view U1.V_CONTRACT_ALL_RFO
+build deferred
+refresh force on demand
+as
+select * from V_CONTRACT_ALL_RFO_PRE1 t
+union
+select * from V_CONTRACT_ALL_RFO_PRE2 t;
+grant select on U1.V_CONTRACT_ALL_RFO to LOADDB;
+grant select on U1.V_CONTRACT_ALL_RFO to LOADER;
+
+

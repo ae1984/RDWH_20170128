@@ -1,0 +1,96 @@
+﻿create materialized view U1.M_RSON_CIRCLE_1_CON_DEL_SH_5
+refresh complete on demand
+as
+select h.rfo_client_id,
+       contract_number,
+       h.circle_1_cli_cnt,
+       /*case
+         when h.perc_del_days_max_by_cli = 0 then
+          0
+         when h.perc_del_days_max_by_cli > 0 and
+              h.perc_del_days_max_by_cli <= 5 then
+          5
+         when h.perc_del_days_max_by_cli > 5 and
+              h.perc_del_days_max_by_cli <= 10 then
+          10
+         when h.perc_del_days_max_by_cli > 10 and
+              h.perc_del_days_max_by_cli <= 15 then
+          15
+         when h.perc_del_days_max_by_cli > 15 and
+              h.perc_del_days_max_by_cli <= 20 then
+          20
+         when h.perc_del_days_max_by_cli > 20 and
+              h.perc_del_days_max_by_cli <= 25 then
+          25
+         when h.perc_del_days_max_by_cli > 25 and
+              h.perc_del_days_max_by_cli <= 30 then
+          30
+         when h.perc_del_days_max_by_cli > 30 and
+              h.perc_del_days_max_by_cli <= 35 then
+          35
+         when h.perc_del_days_max_by_cli > 35 and
+              h.perc_del_days_max_by_cli <= 40 then
+          40
+         when h.perc_del_days_max_by_cli > 40 and
+              h.perc_del_days_max_by_cli <= 45 then
+          45
+         when h.perc_del_days_max_by_cli > 45 and
+              h.perc_del_days_max_by_cli <= 50 then
+          50
+         when h.perc_del_days_max_by_cli > 50 and
+              h.perc_del_days_max_by_cli <= 55 then
+          55
+         when h.perc_del_days_max_by_cli > 55 and
+              h.perc_del_days_max_by_cli <= 60 then
+          60
+         when h.perc_del_days_max_by_cli > 60 and
+              h.perc_del_days_max_by_cli <= 65 then
+          65
+         when h.perc_del_days_max_by_cli > 65 and
+              h.perc_del_days_max_by_cli <= 70 then
+          70
+         when h.perc_del_days_max_by_cli > 70 and
+              h.perc_del_days_max_by_cli <= 75 then
+          75
+         when h.perc_del_days_max_by_cli > 75 and
+              h.perc_del_days_max_by_cli <= 80 then
+          80
+         when h.perc_del_days_max_by_cli > 80 and
+              h.perc_del_days_max_by_cli <= 85 then
+          85
+         when h.perc_del_days_max_by_cli > 85 and
+              h.perc_del_days_max_by_cli <= 90 then
+          90
+         when h.perc_del_days_max_by_cli > 90 and
+              h.perc_del_days_max_by_cli <= 95 then
+          95
+         when h.perc_del_days_max_by_cli > 95 then
+          100
+       end*/ perc_del_days_max_by_cli,yy_mm_start_last
+  from (select a2.rfo_client_id,
+               a2.contract_number,a2.yy_mm_start_last,
+               count(distinct d.client_id) as circle_1_cli_cnt,
+               sum(case
+                     when d.max_del_days > 60 then
+                      1
+                     else
+                      0
+                   end) / count(distinct d.client_id) * 100 as perc_del_days_max_by_cli
+          from M_RSON_CIRCLE_1_CON_CNT3_1 a2
+          join (select a.contract_number,
+                       b.client_id,
+                      max(b.delinq_days) as max_del_days
+                 from M_RSON_CIRCLE_1_CON_CNT3_1 a
+                 join v_portfolio b
+                   on a.client_id_link = b.client_id
+                  and b.yy_mm_report < a.yy_mm_start_last --не оракулы
+                  and b.yy_mm_report >= to_char(to_date(yy_mm_start_last, 'yyyy - mm') - 720,'yyyy-mm')
+                group by a.contract_number,
+                         b.client_id) d
+            on a2.client_id_link = d.client_id
+           and a2.contract_number = d.contract_number
+         group by a2.rfo_client_id, a2.contract_number,a2.yy_mm_start_last) h;
+grant select on U1.M_RSON_CIRCLE_1_CON_DEL_SH_5 to LOADDB;
+grant select on U1.M_RSON_CIRCLE_1_CON_DEL_SH_5 to LOADER;
+
+

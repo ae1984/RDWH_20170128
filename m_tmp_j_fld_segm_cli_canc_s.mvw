@@ -1,0 +1,82 @@
+﻿create materialized view U1.M_TMP_J_FLD_SEGM_CLI_CANC_S
+refresh complete on demand
+as
+select tm.text_yyyy_mm as mon, /*t.product_type,*/
+       count(distinct t.rfo_contract_id) as con_cnt,
+       count(distinct t.rfo_client_id) as cli_cnt,
+/*       round(count(case when t.is_credit_issued = 1 then t.rfo_contract_id end) /
+                      count(*) * 100, 2) as approval_rate_by_con,
+
+       round(count(distinct case when t.is_credit_issued = 1 then t.rfo_client_id end) /
+                      count(distinct t.rfo_client_id) * 100, 2) as approval_rate_by_cli,
+
+       round(sum(case when t.is_credit_issued = 1 then t.contract_amount end) / 1000000) as sales_mln,*/
+
+       --sum(fc.amount) / count(distinct t.rfo_contract_id) * count(distinct t.rfo_client_id) as sales_to_be,
+
+       count(distinct case when t.cancel_prescoring = 1 then t.rfo_contract_id end) /
+                      count(distinct t.rfo_contract_id) as rej_rate_by_prescoring,
+       count(distinct case when t.cancel_middle_office = 1 then t.rfo_contract_id end) /
+                      count(distinct t.rfo_contract_id) as rej_rate_by_middle_office,
+       count(distinct case when t.cancel_manager = 1 then t.rfo_contract_id end) /
+                      count(distinct t.rfo_contract_id) as rej_rate_by_manager,
+       count(distinct case when t.cancel_client = 1 then t.rfo_contract_id end) /
+                      count(distinct t.rfo_contract_id) as rej_rate_by_client,
+       count(distinct case when t.cancel_cpr_aa = 1 then t.rfo_contract_id end) /
+                      count(distinct t.rfo_contract_id) as rej_rate_by_cpr_aa,
+       count(distinct case when t.cancel_verificator = 1 then t.rfo_contract_id end) /
+                      count(distinct t.rfo_contract_id) as rej_rate_by_verificator,
+       count(distinct case when t.cancel_controller = 1 then t.rfo_contract_id end) /
+                      count(distinct t.rfo_contract_id) as rej_rate_by_controller,
+       count(distinct case when t.cancel_undefined = 1 then t.rfo_contract_id end) /
+                      count(distinct t.rfo_contract_id) as rej_rate_by_undefined
+
+from M_FOLDER_CON_CANCEL t
+join V_TIME_MINUTES tm on tm.yyyy_mm_dd_hh_mi = t.folder_date_create_mi
+join V_FOLDER_ALL_RFO fa on fa.folder_id = t.folder_id
+join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = fa.form_client_id
+join M_TMP_J_FLD_PREV_CON_CLOSED pcc on pcc.rfo_contract_id = t.rfo_contract_id
+join M_TMP_J_FLD_PREV_CON_DEL_CLHST pd on pd.rfo_contract_id = t.rfo_contract_id
+join M_TMP_J_FLD_PREV_OPT fo on fo.rfo_contract_id = t.rfo_contract_id
+where t.is_refin = 0 and --t.is_point_active = 0 and
+      --t.is_credit_issued = 0 and
+      tm.yyyy_mm_num >= 201201 and tm.yyyy_mm_num < 201504 and
+      t.product_type in ('ДЕНЬГИ','ТОВАРЫ') and
+      not exists (select null -- клиенты не получили кредит в месяце
+            from M_FOLDER_CON_CANCEL tt
+            where tt.is_refin = 0 and tt.is_credit_issued = 1 and
+                  tt.rfo_client_id = t.rfo_client_id and
+                  trunc(tt.folder_date_create_mi,'mm') = trunc(t.folder_date_create_mi,'mm')) and
+
+       -- для расчета насколько вырастут продажи
+/*       t.cancel_middle_office is not null and
+       t.cancel_prescoring is null and
+       t.cancel_manager is null and
+       t.cancel_client is null and
+       t.cancel_cpr_aa is null and
+       t.cancel_verificator is null and
+       t.cancel_controller is null and
+       t.cancel_undefined is null and */
+
+      -- sel_1:
+/*      pcc.prev_con_closed_cnt >= 2 and -- +
+      coalesce(pd.prev_con_del_days_max,0) <= 15 and -- +
+      t.contract_amount <= pcc.amount_max_before -- */
+      -- sel_2:
+      pcc.prev_con_closed_cnt >= 2 and -- +
+      coalesce(pd.prev_con_del_days_max,0) <= 15 and -- +
+      fo.is_optimized_before = 0 and -- +
+      pd.fact_pmt_mon_before >= 12 and -- +
+      pd.is_active_12_mon_before = 1 -- +
+      -- sel_3:
+/*      pcc.prev_con_closed_cnt >= 2 and -- +
+      coalesce(pd.prev_con_del_days_max,0) <= 15 and -- +
+      fo.is_optimized_before = 0 and -- +
+      pd.fact_pmt_mon_before >= 12 and -- +
+      pd.is_active_12_mon_before = 1 and -- +
+      t.contract_amount <= pcc.amount_max_before -- */
+group by tm.text_yyyy_mm/*, t.product_type*/;
+grant select on U1.M_TMP_J_FLD_SEGM_CLI_CANC_S to LOADDB;
+grant select on U1.M_TMP_J_FLD_SEGM_CLI_CANC_S to LOADER;
+
+

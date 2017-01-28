@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_SC_FRAUD_SEARCH_PRE8
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30 */
+       rfo_client_id,
+       round(max(total_sum_pay_cred_3_m) / 3) as avg_sum_pay_cred_3_m
+from (
+    select f.rfo_client_id,
+           p.rbo_contract_id,
+           p.date_oper,
+           sum(p.principal + p.interest + p.commiss + p.fine) over (partition by f.rfo_client_id order by p.date_oper desc
+                           range between 90 preceding and current row) as total_sum_pay_cred_3_m
+    from u1.V_CLIENT_RFO_BY_ID f
+    join u1.M_RBO_CONTRACT_BAS b on b.rfo_client_id = f.rfo_client_id
+    join u1.T_CONTRACT_INCOME_PRE p on p.rbo_contract_id = b.rbo_contract_id and
+                                    p.date_oper between add_months(trunc(sysdate),-3) and trunc(sysdate)
+) group by rfo_client_id;
+grant select on U1.M_SC_FRAUD_SEARCH_PRE8 to LOADDB;
+
+

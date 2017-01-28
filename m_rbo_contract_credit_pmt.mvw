@@ -1,0 +1,73 @@
+﻿create materialized view U1.M_RBO_CONTRACT_CREDIT_PMT
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       cc.rbo_client_id,
+       cc.rfo_client_id,
+       --cc.rfo_contract_id,
+       cc.rbo_contract_id,
+       cc.contract_number,
+       cc.folder_id_first,
+       cc.begin_date as date_begin,
+       coalesce(x.date_plan_end,cc.date_plan_end) as date_plan_end,
+       cc.date_fact_end,
+       round(months_between(coalesce(x.date_plan_end,cc.date_plan_end),cc.begin_date)) as period,
+       coalesce(x.plan_pmt_first_sum,y.plan_pmt_first_sum) as plan_pmt_first_sum,
+       coalesce(x.plan_pmt_first_date,y.plan_pmt_first_date) as plan_pmt_first_date,
+       coalesce(x.summa_plan_pay,y.summa_plan_pay) as summa_plan_pay,
+       case when coalesce(round(months_between(coalesce(x.date_plan_end,cc.date_plan_end),cc.begin_date)),0) = 0
+            then coalesce(x.summa_plan_pay,y.summa_plan_pay)
+            else coalesce(round(x.summa_plan_pay/round(months_between(coalesce(x.date_plan_end,cc.date_plan_end),cc.begin_date)),2),
+                          round(y.summa_plan_pay/round(months_between(coalesce(x.date_plan_end,cc.date_plan_end),cc.begin_date)),2))
+       end as pmt_avg,
+       coalesce(x.is_from_history,y.is_from_history) as is_from_history,
+       cc.is_card as is_card
+from u1.M_RBO_CONTRACT_BAS cc
+left join (-- с историей
+    select a.rbo_contract_id,
+           sum(p.c_summa) as summa_plan_pay,
+           sum(case when p.c_date = a.pl_oper_hist_oper_date_min then p.c_summa else 0 end) as plan_pmt_first_sum,
+           min(pl_oper_hist_oper_date_min) as plan_pmt_first_date,
+           max(p.c_date) as date_plan_end,
+           1 as is_from_history
+    from (select c.id as rbo_contract_id,
+                 min(ph.c_pln_opr_arr_stat) as pl_oper_hist_arr_stat_min,
+                 min(p.c_date) keep (dense_rank first order by ph.c_pln_opr_arr_stat) as pl_oper_hist_oper_date_min
+          from u1.V_RBO_Z#PR_CRED c
+          join u1.V_RBO_Z#PLAN_OPER_HIST ph on ph.collection_id = c.c_lst_plan_pay_hst
+          join u1.T_RBO_Z#PLAN_OPER p       on p.collection_id = ph.c_pln_opr_arr_stat
+          join u1.V_RBO_Z#VID_OPER_DOG vod  on vod.id = p.c_oper
+                                        and vod.c_code not in ('ВЫДАЧА_КРЕДИТА','KAS_AI_ISSUE')
+          group by c.id
+    ) a
+    join u1.T_RBO_Z#PLAN_OPER p       on p.collection_id = a.pl_oper_hist_arr_stat_min
+    join u1.V_RBO_Z#VID_OPER_DOG vod  on vod.id = p.c_oper
+                                  and vod.c_code not in ('ВЫДАЧА_КРЕДИТА','KAS_AI_ISSUE')
+    group by a.rbo_contract_id
+) x on x.rbo_contract_id = cc.rbo_contract_id
+left join (-- без истории
+    select a.rbo_contract_id,
+           sum(p.c_summa) as summa_plan_pay,
+           sum(case when p.c_date = a.pl_oper_date_min then p.c_summa else 0 end) as plan_pmt_first_sum,
+           min(a.pl_oper_date_min) as plan_pmt_first_date,
+           0 as is_from_history
+    from (select c.id as rbo_contract_id,
+                 min(c.c_list_plan_pay) as list_plan_pay_min,
+                 min(p.c_date) as pl_oper_date_min
+          from u1.V_RBO_Z#PR_CRED c
+          join u1.T_RBO_Z#PLAN_OPER p       on p.collection_id = c.c_list_plan_pay
+          join u1.V_RBO_Z#VID_OPER_DOG vod  on vod.id = p.c_oper
+                                        and vod.c_code not in ('ВЫДАЧА_КРЕДИТА','KAS_AI_ISSUE')
+           group by c.id
+         ) a
+    join u1.T_RBO_Z#PLAN_OPER p       on p.collection_id = a.list_plan_pay_min
+    join u1.V_RBO_Z#VID_OPER_DOG vod  on vod.id = p.c_oper
+                                  and vod.c_code not in ('ВЫДАЧА_КРЕДИТА','KAS_AI_ISSUE')
+    group by a.rbo_contract_id
+) y on y.rbo_contract_id = cc.rbo_contract_id
+where cc.is_card = 0;
+grant select on U1.M_RBO_CONTRACT_CREDIT_PMT to LOADDB;
+grant select on U1.M_RBO_CONTRACT_CREDIT_PMT to LOADER;
+
+

@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_PARAMS_FOR_MODEL_PRE_11
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/ tt.*,
+       count(case
+               when tt.cl_ord = 1 then
+                tt.rfo_client_id
+             end) over(partition by tt.mask_cellphone order by trunc(tt.folder_date_create_mi) range between unbounded preceding and 1 preceding) as mobile_popularity
+from (select t.*
+             ,row_number() over(partition by t.rfo_client_id, t.mask_cellphone order by t.folder_date_create_mi) as cl_ord
+      from U1.M_PARAMS_FOR_MODEL_PRE_0 t) tt;
+grant select on U1.M_PARAMS_FOR_MODEL_PRE_11 to LOADDB;
+
+

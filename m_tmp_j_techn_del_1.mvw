@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_TMP_J_TECHN_DEL_1
+refresh complete on demand
+as
+select to_char(c.x_start_date_actual,'yyyy-mm') as start_mon, c.prod_type,
+       f.job_position,
+       ---
+       count(*) as cnt, count(distinct c.deal_number) as con_cnt,
+       sum(d.max_debt_used_x) / 1000000 as sales,
+       sum(case when d.del_days_x > 7 then d.total_debt_x end) / 1000000 as debt_del_7_mln,
+       sum(case when d.del_days_x > 90 then d.total_debt_x end) / 1000000 as debt_del_90_mln
+from V_DWH_PORTFOLIO_CURRENT c
+left join M_RBO_CONTRACT_BAS b on b.contract_number = c.deal_number
+left join RISK_MVERA.M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+join V_FOLDER_ALL_RFO a on a.folder_id = c.folder_id_first
+join V_FORM_CLIENT_ALL_RFO f on f.form_client_id = a.form_client_id
+where c.x_is_credit_issued = 1 and
+      c.x_start_date_actual >= to_date('2014-01-01','yyyy-mm-dd')
+group by to_char(c.x_start_date_actual,'yyyy-mm'), c.prod_type,
+         f.job_position;
+grant select on U1.M_TMP_J_TECHN_DEL_1 to LOADDB;
+grant select on U1.M_TMP_J_TECHN_DEL_1 to LOADER;
+
+

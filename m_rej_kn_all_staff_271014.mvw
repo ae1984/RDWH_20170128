@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_REJ_KN_ALL_STAFF_271014
+refresh force on demand
+as
+select /*+ no_parallel*/
+       distinct t.contract_number
+
+from U1.M_FOLDER_CON_MINER t
+left join u1.v_client_rfo_by_id t1 on t.rfo_client_id = t1.rfo_client_id
+left join u1.m_zup_1c_staff_out t2 on t1.iin = t2.iin
+                                   and t2.hiring_date <= t.folder_date_create
+                                   and (t2.firing_date > t.folder_date_create
+                                       or t2.firing_date is null)
+
+
+where ( upper(t.cr_program_name) like '%КРЕДИТ НАЛИЧН%' or
+        upper(t.cr_program_name) like '%КРЕДИТ - НАЛИЧН%' or
+        upper(t.cr_program_name) like '%ОСОБЕННЫЙ КЛИЕНТ - КН%'
+      ) and
+      t2.iin is not null;
+grant select on U1.M_REJ_KN_ALL_STAFF_271014 to LOADDB;
+grant select on U1.M_REJ_KN_ALL_STAFF_271014 to LOADER;
+
+

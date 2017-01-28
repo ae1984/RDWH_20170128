@@ -1,0 +1,10 @@
+﻿create materialized view U1.M_RBO_CONTRACT_REFIN_LINK_PRE1
+build deferred
+refresh force on demand
+as
+select /*+parallel(20)*/ rp.rbo_contract_id, min(rp.rep_date) as refin_date_return, rl.refin_date
+                  from M_RBO_CONTRACT_REFIN_LINK_PRE rl
+                  join u1.V_RBO_PORT rp on rp.rbo_contract_id = rl.refin_rbo_contract_id
+                                       and rp.rep_date >= rl.refin_date
+                 group by rp.rbo_contract_id, rl.refin_date;
+

@@ -1,0 +1,35 @@
+﻿create table U1.ZZ_DATA_PROVISION_DEL_ALL
+(
+  client_name      VARCHAR2(100),
+  contract_no      VARCHAR2(20),
+  product_type     VARCHAR2(150),
+  start_date       DATE,
+  end_date         DATE,
+  delinq_days      NUMBER(38),
+  contract_amount  NUMBER(38),
+  yy_mm_report     VARCHAR2(9),
+  total_debt       NUMBER(38),
+  principal        NUMBER(38),
+  interest         NUMBER(38),
+  principal_del    NUMBER(38),
+  interest_del     NUMBER(38),
+  commission       NUMBER(38),
+  commission_del   NUMBER(38),
+  iin              VARCHAR2(12),
+  report_file_name VARCHAR2(100)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 4096M
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.ZZ_DATA_PROVISION_DEL_ALL to LOADDB;
+grant select on U1.ZZ_DATA_PROVISION_DEL_ALL to LOADER;
+

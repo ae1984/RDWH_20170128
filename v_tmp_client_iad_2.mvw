@@ -1,0 +1,16 @@
+﻿create materialized view U1.V_TMP_CLIENT_IAD_2
+using no index
+refresh complete on demand
+as
+select rfo_client_id,
+       max(folder_id) keep (dense_rank last order by folder_date) as folder_id,
+       max(folder_date) keep (dense_rank last order by folder_date) as folder_date,
+       max(phone_number) keep (dense_rank last order by folder_date) as phone_number,
+       max(form_client_date) keep (dense_rank last order by folder_date) as form_client_date
+from V_FORM_CLIENT_CONTACT_PHONE
+where phone_type = 'МОБИЛЬНЫЙ'
+group by rfo_client_id;
+grant select on U1.V_TMP_CLIENT_IAD_2 to LOADDB;
+grant select on U1.V_TMP_CLIENT_IAD_2 to LOADER;
+
+

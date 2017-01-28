@@ -1,0 +1,43 @@
+﻿create table U1.T_RBO_Z#MAIN_DOCUM_EXCH3
+(
+  id               NUMBER,
+  state_id         VARCHAR2(48),
+  c_req_man#inn    VARCHAR2(48),
+  c_document_date  DATE,
+  c_date_prov      DATE,
+  c_sum_nt         NUMBER,
+  c_quit_doc       NUMBER,
+  c_sum            NUMBER,
+  c_rate_dt        NUMBER,
+  c_sum_po         NUMBER,
+  c_rate_kt        NUMBER,
+  c_vid_doc        NUMBER,
+  c_valuta         NUMBER,
+  c_valuta_po      NUMBER,
+  c_acc_dt         NUMBER,
+  c_acc_kt         NUMBER,
+  c_date_doc       DATE,
+  c_date_val       DATE,
+  c_astr_date_prov DATE,
+  c_prov_user      NUMBER,
+  c_depart         NUMBER,
+  c_type_mess      NUMBER,
+  c_document_num   NUMBER,
+  c_nazn           VARCHAR2(4000)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RBO_Z#MAIN_DOCUM_EXCH3 to LOADDB;
+grant select on U1.T_RBO_Z#MAIN_DOCUM_EXCH3 to LOADER;
+

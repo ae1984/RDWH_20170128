@@ -1,0 +1,568 @@
+﻿create materialized view U1.V_DWH_PORTFOLIO_CURRENT
+build deferred
+refresh force on demand
+as
+select /*+ parallel(15) parallel_index(15) */
+  vv.*,
+/*       max(vv.delinq_days_old) over (partition by x_client_id) as
+  x_delinq_days,*/
+       to_char(x_start_date,'yyyy - mm') as
+  yy_mm_start,
+  f.folder_id_first,
+      case when vv.prod_type in ('КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ','ЛУЧШИЙ КЛИЕНТ НАЛИЧНЫМИ',
+                                  'ОСОБЕННЫЙ КЛИЕНТ - КН','ОСОБЕННЫЙ КЛИЕНТ -КН 15','ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ',
+                                  'ЭКСПРЕСС-КРЕДИТЫ (ДЕНЬГИ)','СМЕНА КК НА КН') then 'ДЕНЬГИ'
+            when vv.prod_type in ('PC.ПОСТОЯННЫЙ КЛИЕНТ','ЗАРПЛАТНЫЕ КАРТЫ','КАРТА ВКЛАДЧИКА',
+                                  'ЛУЧШИЙ КЛИЕНТ','ОВЕРДРАФТЫ','ОСОБЕННЫЙ КЛИЕНТ - КК','РЕВОЛЬВЕРНЫЕ КАРТЫ',
+                                  'ПРОСТАЯ КАРТА') then 'КАРТЫ'
+            when vv.prod_type in ('АВТОКРЕДИТОВАНИЕ','АВТОКРЕДИТЫ','АВТОКРЕДИТОВАНИЕ БУ') then 'АВТО'
+            when vv.prod_type in ('ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)','ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)','АВТОЗАПЧАСТИ',
+                                  'КРЕДИТ НА УСЛУГИ','КРЕДИТ НА ПОКУПКИ','КРЕДИТ НА ПОКУПКУ (СТАНДАРТ)') then 'ТОВАРЫ'
+            when vv.prod_type in ('РЕФИНАНСИРОВАНИЕ/РЕСТРУКТУРИЗАЦИЯ','РЕФИНАНСИРОВАНИЕ АВТОКРЕДИТА') then 'ОПТИМИЗАЦИЯ'
+            else 'ДРУГОЕ' end as
+  x_product_type,
+
+       case when vv.prod_type in ('РЕФИНАНСИРОВАНИЕ/РЕСТРУКТУРИЗАЦИЯ','РЕФИНАНСИРОВАНИЕ АВТОКРЕДИТА') then 1 else 0 end as
+  x_is_refin_prod_type, -- надо проверить связь с restruct_type
+
+  decode(vv.x_is_card,1,vv.set_revolving_date,0,vv.begin_date) as x_start_date_actual,
+       case when vv.deal_status in ('ВВЕДЕН','ОТКАЗ','ПОДПИСАН') or vv.deal_status is null then 0 else 1 end as
+  x_is_credit_issued,
+
+  case when p.plan_pmt_first_sum > 0 then 1 else 0 end as is_pmt_rbo,
+
+    case
+       when /*x.end_date is null and nvl(x.contract_amount,0) > 0 and*/ vv.x_amount > 0 then
+         case when p.plan_pmt_first_sum > 0 then p.plan_pmt_first_sum -- сперва берем с РБО по траншам
+              when vv.prod_type = 'ПРОСТАЯ КАРТА' then
+                decode(vv.prod_name,'ПРОСТАЯ КАРТА 6/50',10000,
+                                    'ПРОСТАЯ КАРТА 1/50',6000,
+                                    'ПРОСТАЯ КАРТА 1/100',12000,
+                                    'ПРОСТАЯ КАРТА 2/100',7700,
+                                    'ПРОСТАЯ КАРТА 1/150',17500,
+                                    'ПРОСТАЯ КАРТА 2/150',11300,
+                                    'ПРОСТАЯ КАРТА (A)',10000,
+                                    'ПРОСТАЯ КАРТА (B)',10000,
+                                    'ПРОСТАЯ КАРТА (C)',10000,
+                                    'ПРОСТАЯ КАРТА 1/200',23500,
+                                    'ПРОСТАЯ КАРТА 2/200',15000,
+                                    'ПРОСТАЯ КАРТА 1/250',29000,
+                                    'ПРОСТАЯ КАРТА 2/250',18500,
+                                    'ПРОСТАЯ КАРТА 1/300',34500,
+                                    'ПРОСТАЯ КАРТА 2/300',22000,
+                                    'ПРОСТАЯ КАРТА 2/350',25000,
+                                    'ПРОСТАЯ КАРТА 2/400',29000,
+                                    'ПРОСТАЯ КАРТА 2/450',32000,
+                                    'ПРОСТАЯ КАРТА 2/500',36000,
+
+                                    'КАРТА СОТРУДНИКА 6/50',10000,
+                                    'КАРТА СОТРУДНИКА 1/50',6000,
+                                    'КАРТА СОТРУДНИКА 1/100',12000,
+                                    'КАРТА СОТРУДНИКА 2/100',7700,
+                                    'КАРТА СОТРУДНИКА 1/150',17500,
+                                    'КАРТА СОТРУДНИКА 2/150',11300,
+                                    'КАРТА СОТРУДНИКА (A)',10000,
+                                    'КАРТА СОТРУДНИКА (B)',10000,
+                                    'КАРТА СОТРУДНИКА (C)',10000,
+                                    'КАРТА СОТРУДНИКА 1/200',23500,
+                                    'КАРТА СОТРУДНИКА 2/200',15000,
+                                    'КАРТА СОТРУДНИКА 1/250',29000,
+                                    'КАРТА СОТРУДНИКА 2/250',18500,
+                                    'КАРТА СОТРУДНИКА 1/300',34500,
+                                    'КАРТА СОТРУДНИКА 2/300',22000,
+                                    'КАРТА СОТРУДНИКА 2/350',25000,
+                                    'КАРТА СОТРУДНИКА 2/400',29000,
+                                    'КАРТА СОТРУДНИКА 2/450',32000,
+                                    'КАРТА СОТРУДНИКА 2/500',36000
+                                     )
+            when vv.x_is_card = 1 then
+                round(vv.x_amount * 0.07, 0)
+
+            /*case when vv.x_is_card = 1 and coalesce(p1.product,p2.product,'UNKNOWN') in ('КК', 'ХК', 'ПРК') then
+                    \*case when x.contract_amount * 0.07 < 5000
+                         then 5000 else*\ round(vv.x_amount * 0.07, 0)
+                    \*end*\
+                when vv.x_is_card = 1 and coalesce(p1.product,p2.product,'UNKNOWN') in ('ЛК', 'ПК', 'ЗК') then
+                    \*case when x.total_debt * 0.07 < 5000
+                         then 5000 else*\ round(vv.x_total_debt * 0.07, 0)*/
+                    /*end*/
+--           end
+--       when round(months_between(x.end_date, x.start_date)) > 0 and x.total_debt > 0 then
+           /*case*/
+                when vv.x_is_card = 0 and vv.rate_value is not null and vv.rate_value != 0 and
+                     round(months_between(vv.plan_end_date, vv.x_start_date)) > 0
+                then
+                   round(vv.x_amount/(1 - 1/
+                      power((1 + vv.rate_value/1200), round(months_between(vv.plan_end_date, vv.x_start_date))) --- !
+                   )*vv.rate_value/1200, 0)
+
+                when vv.x_is_card = 0 and (vv.rate_value is null or vv.rate_value = 0) and
+                     vv.deal_number != 'R1517451-002/CRD-3' and
+                     round(months_between(vv.plan_end_date, vv.x_start_date)) > 0 and
+                     r.rate_value_default > 0
+                  then
+                   round(vv.x_amount/(1 - 1/
+                      power((1 + r.rate_value_default/1200), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                   )*r.rate_value_default/1200, 0)
+                when vv.deal_number = 'R1517451-002/CRD-3' then null
+
+                  /* case when coalesce(p1.product,p2.product) = 'КНП' then
+                             round(vv.x_amount/(1 - 1/
+                                  power((1 + 0.33/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                              )*0.33/12, 0)
+                       when coalesce(p1.product,p2.product) = 'ТК' then
+                            round(vv.x_amount/(1 - 1/
+                                power((1 + 0.15/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                             )*0.15/12, 0)
+                       when coalesce(p1.product,p2.product) in ('ЛКН', 'ПКН') then
+                            round(vv.x_amount/(1 - 1/
+                               power((1 + 0.56/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                            )*0.56/12, 0)
+                        when coalesce(p1.product,p2.product) = 'КН' then
+                            round(vv.x_amount/(1 - 1/
+                                 power((1 + 0.37/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                             )*0.37/12, 0)
+                       when coalesce(p1.product,p2.product) = 'КН-15' then
+                            round(vv.x_amount/(1 - 1/
+                                 power((1 + 0.57/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                            )*0.57/12, 0)
+                      when coalesce(p1.product,p2.product) = 'ЭКД' then
+                           round(vv.x_amount/(1 - 1/
+                                power((1 + 0.57/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                           )*0.57/12, 0)
+                      when coalesce(p1.product,p2.product) in ('АВТО', 'АВТО_БУ') then
+                           round(vv.x_amount/(1 - 1/
+                                 power((1 + 0.21/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                           )*0.21/12, 0)
+                     end*/
+              end
+           end as
+  pmt,
+
+      case
+       when /*x.end_date is null and nvl(x.contract_amount,0) > 0 and*/ vv.x_amount > 0 then
+         case when vv.prod_type = 'ПРОСТАЯ КАРТА' then
+                decode(vv.prod_name,'ПРОСТАЯ КАРТА 6/50',10000,
+                                    'ПРОСТАЯ КАРТА 1/50',6000,
+                                    'ПРОСТАЯ КАРТА 1/100',12000,
+                                    'ПРОСТАЯ КАРТА 2/100',7700,
+                                    'ПРОСТАЯ КАРТА 1/150',17500,
+                                    'ПРОСТАЯ КАРТА 2/150',11300,
+                                    'ПРОСТАЯ КАРТА (A)',10000,
+                                    'ПРОСТАЯ КАРТА (B)',10000,
+                                    'ПРОСТАЯ КАРТА (C)',10000,
+                                    'ПРОСТАЯ КАРТА 1/200',23500,
+                                    'ПРОСТАЯ КАРТА 2/200',15000,
+                                    'ПРОСТАЯ КАРТА 1/250',29000,
+                                    'ПРОСТАЯ КАРТА 2/250',18500,
+                                    'ПРОСТАЯ КАРТА 1/300',34500,
+                                    'ПРОСТАЯ КАРТА 2/300',22000,
+                                    'ПРОСТАЯ КАРТА 2/350',25000,
+                                    'ПРОСТАЯ КАРТА 2/400',29000,
+                                    'ПРОСТАЯ КАРТА 2/450',32000,
+                                    'ПРОСТАЯ КАРТА 2/500',36000,
+
+                                    'КАРТА СОТРУДНИКА 6/50',10000,
+                                    'КАРТА СОТРУДНИКА 1/50',6000,
+                                    'КАРТА СОТРУДНИКА 1/100',12000,
+                                    'КАРТА СОТРУДНИКА 2/100',7700,
+                                    'КАРТА СОТРУДНИКА 1/150',17500,
+                                    'КАРТА СОТРУДНИКА 2/150',11300,
+                                    'КАРТА СОТРУДНИКА (A)',10000,
+                                    'КАРТА СОТРУДНИКА (B)',10000,
+                                    'КАРТА СОТРУДНИКА (C)',10000,
+                                    'КАРТА СОТРУДНИКА 1/200',23500,
+                                    'КАРТА СОТРУДНИКА 2/200',15000,
+                                    'КАРТА СОТРУДНИКА 1/250',29000,
+                                    'КАРТА СОТРУДНИКА 2/250',18500,
+                                    'КАРТА СОТРУДНИКА 1/300',34500,
+                                    'КАРТА СОТРУДНИКА 2/300',22000,
+                                    'КАРТА СОТРУДНИКА 2/350',25000,
+                                    'КАРТА СОТРУДНИКА 2/400',29000,
+                                    'КАРТА СОТРУДНИКА 2/450',32000,
+                                    'КАРТА СОТРУДНИКА 2/500',36000
+                                     )
+            when vv.x_is_card = 1 then
+                round(vv.x_amount * 0.07, 0)
+
+            /*case when vv.x_is_card = 1 and coalesce(p1.product,p2.product,'UNKNOWN') in ('КК', 'ХК', 'ПРК') then
+                    \*case when x.contract_amount * 0.07 < 5000
+                         then 5000 else*\ round(vv.x_amount * 0.07, 0)
+                    \*end*\
+                when vv.x_is_card = 1 and coalesce(p1.product,p2.product,'UNKNOWN') in ('ЛК', 'ПК', 'ЗК') then
+                    \*case when x.total_debt * 0.07 < 5000
+                         then 5000 else*\ round(vv.x_total_debt * 0.07, 0)*/
+                    /*end*/
+--           end
+--       when round(months_between(x.end_date, x.start_date)) > 0 and x.total_debt > 0 then
+           /*case*/
+                when vv.x_is_card = 0 and vv.rate_value is not null and vv.rate_value != 0 and
+                     round(months_between(vv.plan_end_date, vv.x_start_date)) > 0
+                then
+                   round(vv.x_amount/(1 - 1/
+                      power((1 + vv.rate_value/1200), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                   )*vv.rate_value/1200, 0)
+
+                when vv.x_is_card = 0 and (vv.rate_value is null or vv.rate_value = 0) and
+                           vv.deal_number != 'R1517451-002/CRD-3' and
+                           round(months_between(vv.plan_end_date, vv.x_start_date)) > 0 and
+                           r.rate_value_default > 0
+                then
+                   round(vv.x_amount/(1 - 1/
+                      power((1 + r.rate_value_default/1200), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                   )*r.rate_value_default/1200, 0)
+
+                when vv.deal_number = 'R1517451-002/CRD-3' then null
+
+                  /* case when coalesce(p1.product,p2.product) = 'КНП' then
+                             round(vv.x_amount/(1 - 1/
+                                  power((1 + 0.33/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                              )*0.33/12, 0)
+                       when coalesce(p1.product,p2.product) = 'ТК' then
+                            round(vv.x_amount/(1 - 1/
+                                power((1 + 0.15/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                             )*0.15/12, 0)
+                       when coalesce(p1.product,p2.product) in ('ЛКН', 'ПКН') then
+                            round(vv.x_amount/(1 - 1/
+                               power((1 + 0.56/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                            )*0.56/12, 0)
+                        when coalesce(p1.product,p2.product) = 'КН' then
+                            round(vv.x_amount/(1 - 1/
+                                 power((1 + 0.37/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                             )*0.37/12, 0)
+                       when coalesce(p1.product,p2.product) = 'КН-15' then
+                            round(vv.x_amount/(1 - 1/
+                                 power((1 + 0.57/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                            )*0.57/12, 0)
+                      when coalesce(p1.product,p2.product) = 'ЭКД' then
+                           round(vv.x_amount/(1 - 1/
+                                power((1 + 0.57/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                           )*0.57/12, 0)
+                      when coalesce(p1.product,p2.product) in ('АВТО', 'АВТО_БУ') then
+                           round(vv.x_amount/(1 - 1/
+                                 power((1 + 0.21/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                           )*0.21/12, 0)
+                     end*/
+              end
+           end as
+  pmt_nom_rate,
+
+
+
+        case
+       when /*x.end_date is null and nvl(x.contract_amount,0) > 0 and*/ vv.x_total_debt > 0 then
+           case when coalesce(p1.product,p2.product) in ('КК', 'ХК', 'ПРК') then
+                    /*case when x.contract_amount * 0.07 < 5000
+                         then 5000 else*/ round(vv.x_amount * 0.07, 0)
+                    /*end*/
+                when coalesce(p1.product,p2.product) in ('ЛК', 'ПК', 'ЗК') then
+                    /*case when x.total_debt * 0.07 < 5000
+                         then 5000 else*/ round(vv.x_total_debt * 0.07, 0)
+                    /*end*/
+--           end
+--       when round(months_between(x.end_date, x.start_date)) > 0 and x.total_debt > 0 then
+           /*case*/
+                when coalesce(p1.product,p2.product) = 'КНП' and  round(months_between(vv.plan_end_date, vv.x_start_date)) > 0  then
+                   round(vv.x_amount/(1 - 1/
+                      power((1 + 0.33/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                   )*0.33/12, 0)
+                when coalesce(p1.product,p2.product) = 'ТК' and  round(months_between(vv.plan_end_date, vv.x_start_date)) > 0  then
+                   round(vv.x_amount/(1 - 1/
+                      power((1 + 0.15/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                   )*0.15/12, 0)
+                when coalesce(p1.product,p2.product) in ('ЛКН', 'ПКН') and  round(months_between(vv.plan_end_date, vv.x_start_date)) > 0  then
+                   round(vv.x_amount/(1 - 1/
+                      power((1 + 0.56/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                   )*0.56/12, 0)
+                when coalesce(p1.product,p2.product) = 'КН' and  round(months_between(vv.plan_end_date, vv.x_start_date)) > 0  then
+                   round(vv.x_amount/(1 - 1/
+                      power((1 + 0.37/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                   )*0.37/12, 0)
+                when coalesce(p1.product,p2.product) = 'КН-15'  and  round(months_between(vv.plan_end_date, vv.x_start_date)) > 0 then
+                   round(vv.x_amount/(1 - 1/
+                      power((1 + 0.57/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                   )*0.57/12, 0)
+               when coalesce(p1.product,p2.product) = 'ЭКД'  and  round(months_between(vv.plan_end_date, vv.x_start_date)) > 0 then
+                   round(vv.x_amount/(1 - 1/
+                      power((1 + 0.57/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                   )*0.57/12, 0)
+                when coalesce(p1.product,p2.product) in ('АВТО', 'АВТО_БУ') and  round(months_between(vv.plan_end_date, vv.x_start_date)) > 0  then
+                   round(vv.x_amount/(1 - 1/
+                      power((1 + 0.21/12), round(months_between(vv.plan_end_date, vv.x_start_date)))
+                   )*0.21/12, 0)
+             end
+     end as
+  pmt_old,
+
+       case when vv.deal_status in ('ЗАКРЫТ', 'ЗАКРЫТО', 'ПОМЕЧЕН К ЗАКРЫТИЮ', 'ОПЛАЧЕН СК', 'ОТКАЗ', 'ПОГАШЕН ДОСРОЧНО')
+            then 0 else 1 end as
+  is_credit_active
+
+
+from ( --------------------------------
+select
+  t.cdhd_rep_date as rep_date,
+      translate(upper(t.cdhd_client_name),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  client_name,
+  t.cdhd_client_rnn as client_rnn,
+  t.cdhd_client_iin as client_iin,
+  t.cdhd_deal_number as deal_number,
+  t.cdhd_currency as currency,
+  t.cdhd_begin_date as begin_date,
+  t.cdhd_plan_end_date as plan_end_date,
+  t.cdhd_actual_end_date as actual_end_date,
+  t.cdhd_set_revolving_date as set_revolving_date,
+  upper(t.cdhd_deal_status) as deal_status,
+  t.cdhd_card_limit as card_limit,
+  null as amount,--
+  t.cdhd_rate_value as rate_value,
+  upper(t.cdhd_prod_name) as prod_name,
+  upper(t.cdhd_prod_type) as prod_type,
+  /*case when t.cdhd_pc_vnb_ovrd_cred is not null or
+            t.cdhd_pc_vnb_ovrd_overlimit is not null or
+            t.cdhd_pc_vnb_ovrd_overdraft is not null or
+            t.cdhd_pc_vnb_ovrd_prc_cred is not null then 'W'
+       else
+  'Y' end as is_on_balance, */
+  case when t.cdhd_pc_vnb_ovrd_cred > 0 or
+            t.cdhd_pc_vnb_ovrd_overlimit > 0 or
+            t.cdhd_pc_vnb_ovrd_overdraft > 0 or
+            t.cdhd_pc_vnb_ovrd_prc_cred > 0 then 'W'
+       else
+  'Y' end as is_on_balance,
+  upper(t.cdhd_dept_name) as dept_name,
+  t.cdhd_dept_number as dept_number,
+  upper(t.cdhd_unp_name) as unp_name,
+  t.cdhd_unp_number as unp_number,
+  upper(t.cdhd_fil_name) as fil_name,
+  t.cdhd_fil_number as fil_number,
+        translate(upper(t.cdhd_create_empl_name),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  create_empl_name,
+  t.cdhd_create_empl_number as create_empl_number,
+      translate(upper(t.cdhd_empl_name),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  sign_empl_name,
+  t.cdhd_empl_number as sign_empl_number,
+--  fcd_dcard_gid,
+--  fcd_as_of_date,
+  t.cdhd_pc_cred as principal,
+  t.cdhd_pc_prc as interest,
+  t.cdhd_pc_overlimit as overlimit,
+  t.cdhd_pc_overdraft as overdraft,
+
+  t.cdhd_pc_vnb_ovrd_cred as w_principal_del,
+  t.cdhd_pc_vnb_ovrd_overlimit as w_overlimit_del,
+  t.cdhd_pc_vnb_ovrd_overdraft as w_overdraft_del,
+  t.cdhd_pc_vnb_ovrd_prc_cred as w_interest_del,
+
+  t.cdhd_pc_ovrd_cred as principal_del,
+  t.cdhd_pc_ovrd_prc as interest_del,
+  t.cdhd_pc_ovrd_overlimit as overlimit_del,
+  t.cdhd_pc_ovrd_overdraft as overdraft_del,
+  t.cdhd_to_ovrd_date as delinq_begin_date,
+      t.cdhd_ovrd_days as
+  delinq_days_old,
+      t.cdhd_cl_to_ovrd_date as --------------
+  delinq_start_date,
+
+  t.cdhd_available_balance as available_balance,
+  t.cdhd_vnb_flag as vnb_flag,
+  t.cdhd_vnb_date as vnb_date,
+  t.cdhd_restruct_type as restruct_type,
+  t.cdhd_restruct_count as restruct_count,
+  t.cdhd_clnt_gid as clnt_gid,
+  t.cdhd_dcard_gid as contract_gid,
+  to_number(t.cdhd_client_rfo_id) as rfo_client_id,
+
+  -- x поля
+      t.cdhd_cl_ovrd_days as --------------
+  x_delinq_days,
+      case when t.cdhd_card_limit is null or t.cdhd_card_limit = 0 then con.contract_amount_max else t.cdhd_card_limit end as
+  x_amount,
+      nvl(t.cdhd_set_revolving_date, t.cdhd_begin_date) as
+  x_start_date,
+      nvl(t.cdhd_pc_cred,0) +
+      nvl(t.cdhd_pc_prc,0) +
+      nvl(t.cdhd_pc_overlimit,0) +
+      nvl(t.cdhd_pc_overdraft,0) +
+      nvl(t.cdhd_pc_ovrd_cred,0) +
+      nvl(t.cdhd_pc_ovrd_prc,0) +
+      nvl(t.cdhd_pc_ovrd_overlimit,0) +
+      nvl(t.cdhd_pc_ovrd_overdraft,0) +
+      nvl(t.cdhd_pc_vnb_ovrd_cred,0) +
+      nvl(t.cdhd_pc_vnb_ovrd_prc_cred,0) +
+      nvl(t.cdhd_pc_vnb_ovrd_overlimit,0) +
+      nvl(t.cdhd_pc_vnb_ovrd_overdraft,0) as
+  x_total_debt,
+      nvl(t.cdhd_pc_ovrd_cred,0) +
+      nvl(t.cdhd_pc_ovrd_prc,0) +
+      nvl(t.cdhd_pc_ovrd_overlimit,0) +
+      nvl(t.cdhd_pc_ovrd_overdraft,0) +
+      nvl(t.cdhd_pc_vnb_ovrd_cred,0) +
+      nvl(t.cdhd_pc_vnb_ovrd_prc_cred,0) +
+      nvl(t.cdhd_pc_vnb_ovrd_overlimit,0) +
+      nvl(t.cdhd_pc_vnb_ovrd_overdraft,0) as
+  x_delinq_amount,
+      1 as
+  x_is_card,
+      to_number(substr(ltrim(t.cdhd_deal_number,'R'),1,7)) as
+  x_client_id
+--from DWH_SAN.DM_CARDSDAILY_HD@DWH_SAN_PROD t
+from U1.V_DWH_PORT_CARDS t
+left join U1.V_CONTRACT_CAL con on con.contract_number = t.cdhd_deal_number
+--from DM_CARDSDAILY_HD t
+--where t.cdhd_rep_date = trunc(sysdate) - 1
+where upper(t.cdhd_prod_name) not like 'ТЕСТ_%'
+union all --------------------------------------------------------------------
+select
+  s.exhd_rep_date as rep_date,
+        translate(upper(s.exhd_client_name),
+            chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+            chr(53390)||chr(53380)||chr(53381),
+            chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+            chr(53936)||chr(53906)||chr(53922)) as
+  client_name,
+  s.exhd_client_rnn as client_rnn,
+  s.exhd_client_iin as client_iin,
+  s.exhd_deal_number as deal_number,
+  s.exhd_currency as currency,
+  s.exhd_begin_date as begin_date,
+  s.exhd_plan_end_date as plan_end_date,
+  s.exhd_actual_end_date as actual_end_date,
+  null as set_revolving_date,--
+  upper(s.exhd_deal_status) as deal_status,
+  null as card_limit,
+  s.exhd_amount as amount,
+  s.exhd_rate_value as rate_value,
+  upper(s.exhd_prod_name) as prod_name,
+  upper(s.exhd_prod_type) as prod_type,
+  /*case when s.exhd_vnb_ovrd_cred is not null or
+            s.exhd_vnb_ovrd_prc is not null or
+            s.exhd_vnb_comm is not null then 'W'
+       when s.exhd_old_ovd_scheme is null then 'Y'
+       when s.exhd_old_ovd_scheme = 'N' then 'Y'
+       when s.exhd_old_ovd_scheme = 'Y' then 'I' end
+  as is_on_balance,*/
+  case when s.exhd_vnb_ovrd_cred > 0 or
+            s.exhd_vnb_ovrd_prc > 0 or
+            s.exhd_vnb_comm > 0 then 'W'
+       when s.exhd_old_ovd_scheme is null then 'Y'
+       when s.exhd_old_ovd_scheme = 'N' then 'Y'
+       when s.exhd_old_ovd_scheme = 'Y' then 'I' end
+  as is_on_balance,
+  upper(s.exhd_dept_name) as dept_name,
+  s.exhd_dept_number as dept_number,
+  upper(s.exhd_unp_name) as unp_name,
+  s.exhd_unp_number as unp_number,
+  upper(s.exhd_fil_name) as fil_name,
+  s.exhd_fil_number as fil_number,
+        translate(upper(s.exhd_create_empl_name),
+            chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+            chr(53390)||chr(53380)||chr(53381),
+            chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+            chr(53936)||chr(53906)||chr(53922)) as
+  create_empl_name,
+  s.exhd_create_empl_number as create_empl_number,
+        translate(upper(s.exhd_sign_empl_name),
+            chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+            chr(53390)||chr(53380)||chr(53381),
+            chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+            chr(53936)||chr(53906)||chr(53922)) as
+  sign_empl_name,
+  s.exhd_sign_empl_number as sign_empl_number,
+  --fgu_as_of_date,
+  s.exhd_fgu_cred as principal,
+  s.exhd_fgu_prc as interest,
+  null as overlimit,
+  null as overdraft,
+  s.exhd_vnb_ovrd_cred as w_principal_del,
+  null as w_overlimit_del,
+  null as w_overdraft_del,
+  s.exhd_vnb_ovrd_prc + s.exhd_vnb_comm as w_interest_del,
+  --fgu_prc_prc,
+  --fgu_prc_com,
+  s.exhd_fgu_ovrd_cred as principal_del,
+  s.exhd_fgu_ovrd_prc as interest_del,
+  null as overlimit_del,
+  null as overdraft_del,
+  --fgu_ovrd_prc_prc,
+  --fgu_ovrd_prc_com,
+  s.exhd_to_ovrd_date as delinq_begin_date,
+      s.exhd_ovrd_days as
+  delinq_days_old,
+      s.exhd_cl_to_ovrd_date as --------------
+  delinq_start_date,
+
+  null as available_balance,
+  s.exhd_vnb_flag as vnb_flag,
+  s.exhd_vnb_date as vnb_date,
+  null as restruct_type,
+  null as restruct_count,
+  s.exhd_clnt_gid as clnt_gid,
+  s.exhd_dcard_gid as contract_gid,
+  to_number(s.exhd_client_rfo_id) as rfo_client_id,
+
+  -- x поля
+      s.exhd_cl_ovrd_days as --------------
+  x_delinq_days,
+      s.exhd_amount as
+  x_amount,
+      s.exhd_begin_date as
+  x_start_date,
+      nvl(s.exhd_fgu_cred,0) +
+      nvl(s.exhd_fgu_prc,0) +
+      nvl(s.exhd_fgu_ovrd_cred,0) +
+      nvl(s.exhd_fgu_ovrd_prc,0) +
+      nvl(s.exhd_vnb_ovrd_cred,0) +
+      nvl(s.exhd_vnb_ovrd_prc,0) +
+      nvl(s.exhd_vnb_comm,0) as
+  x_total_debt,
+      nvl(s.exhd_fgu_ovrd_cred,0) +
+      nvl(s.exhd_fgu_ovrd_prc,0) +
+      nvl(s.exhd_vnb_ovrd_cred,0) +
+      nvl(s.exhd_vnb_ovrd_prc,0) +
+      nvl(s.exhd_vnb_comm,0) as
+  x_delinq_amount,
+      0 as
+  x_is_card,
+      to_number(substr(ltrim(s.exhd_deal_number,'R'),1,7)) as
+  x_client_id
+  --from DWH_SAN.DM_SPGU_HD@DWH_SAN_PROD s
+  --from DM_SPGU_HD s
+from U1.V_DWH_PORT_CREDITS s
+--where s.exhd_rep_date = trunc(sysdate) - 1
+) vv
+left join U1.V_CONTRACT_FOLDER_1ST_LINK_RFO f on f.contract_number = vv.deal_number
+left join U1.REF_PRODUCTS p1 on p1.product_program = vv.prod_name
+left join U1.REF_PRODUCTS p2 on p2.product_program = vv.prod_type
+--left join REF_RATE_VALUE r on r.prod_name = vv.prod_name
+left join (select t.prod_name,
+                  max(t.rate_value) keep (dense_rank last order by t.x_total_debt) as rate_value_default
+           from (select upper(s.exhd_prod_name) as prod_name, s.exhd_rate_value as rate_value,
+                        sum(nvl(s.exhd_fgu_cred,0) +
+                            nvl(s.exhd_fgu_prc,0) +
+                            nvl(s.exhd_fgu_ovrd_cred,0) +
+                            nvl(s.exhd_fgu_ovrd_prc,0)) as x_total_debt
+                 from V_DWH_PORT_CREDITS s
+                 where s.exhd_rate_value is not null
+                 group by upper(s.exhd_prod_name), s.exhd_rate_value
+                 ) t
+           group by t.prod_name) r on r.prod_name = vv.prod_name
+left join U1.M_RBO_PMT_FIRST p on p.contract_number = vv.deal_number;
+grant select on U1.V_DWH_PORTFOLIO_CURRENT to DTS_USER;
+grant select on U1.V_DWH_PORTFOLIO_CURRENT to LOADDB;
+grant select on U1.V_DWH_PORTFOLIO_CURRENT to LOADER;
+grant select on U1.V_DWH_PORTFOLIO_CURRENT to RISK_VERIF;
+
+

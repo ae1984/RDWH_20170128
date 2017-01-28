@@ -1,0 +1,39 @@
+﻿create materialized view U1.V_REPORT_CAL_2
+refresh complete on demand
+as
+select
+  x.id,
+  x.report_month_all_contracts,
+      MONTHS_BETWEEN(to_date(x.report_month_all_contracts,'yyyy - mm'), to_date('2002 - 12','yyyy - mm'))
+  as report_month_all_contracts_n,
+  x.new_total_debt,
+  x.max_debt_used,
+  x.folder_id_first,
+  x.total_debt,
+  x.report_year,
+  x.delinq_amount
+from (
+select
+  d.id,
+      case when d.yy_mm_report = cc.yy_mm_report_max then md.yy_mm_report_max_all
+      else d.yy_mm_report end
+  as report_month_all_contracts,
+      case when d.yy_mm_report = cc.yy_mm_report_max and d.yy_mm_report = md.yy_mm_report_max_all then d.total_debt
+      when d.yy_mm_report = cc.yy_mm_report_max then 0
+      else d.total_debt end
+  as new_total_debt,
+  max(d.total_debt) over (partition by d.contract_no order by d.yy_mm_report range unbounded preceding) as max_debt_used,
+  cfl1.folder_id_first,
+  d.total_debt,
+  to_number(substr(d.yy_mm_report, 1, 4)) as report_year,
+  d.delinq_amount
+from v_data_all d, v_contract_cal cc,
+     (select max(yy_mm_report) as yy_mm_report_max_all from v_data_all) md,
+     V_CONTRACT_FOLDER_1ST_LINK_RFO cfl1
+where cc.contract_number = d.contract_no and
+      d.contract_no = cfl1.contract_number(+)
+) x;
+grant select on U1.V_REPORT_CAL_2 to LOADDB;
+grant select on U1.V_REPORT_CAL_2 to LOADER;
+
+

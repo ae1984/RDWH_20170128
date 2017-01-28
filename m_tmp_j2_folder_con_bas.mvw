@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_TMP_J2_FOLDER_CON_BAS
+build deferred
+refresh complete on demand
+as
+select /*+parallel(1)*/ * from u1.M_TMP_J2_FOLDER_CON_BAS_PRE_1
+  union all
+  select /*+parallel(1)*/ * from u1.M_TMP_J2_FOLDER_CON_BAS_PRE_2
+  union all
+  select /*+parallel(1)*/ * from u1.M_TMP_J2_FOLDER_CON_BAS_PRE_3;
+grant select on U1.M_TMP_J2_FOLDER_CON_BAS to LOADDB;
+
+

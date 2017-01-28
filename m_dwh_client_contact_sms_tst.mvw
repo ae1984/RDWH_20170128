@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_DWH_CLIENT_CONTACT_SMS_TST
+build deferred
+refresh complete on demand
+as
+select   s.clctsms_gid as id,
+         to_number(cl.clnt$rbo_source_pk)  as rbo_client_id,
+       --  mc.rfo_client_id,
+         cl.clnt_inn,
+         s.clctsms_as_of_date as phone_date,
+         s.clctsms_cont_info_desc as phone_number,
+         upper(ds.CLNT_CONT_STATUS_CODE) as status_code,
+         upper(ds.CLNT_CONT_STATUS_NAME) as status_name,
+         UPPER(R.clnt_cont_result_name) as result_name,
+         upper(s.clctsms_result_desc) as result_desc,
+         upper(ct.CLNT_CONT_THEME_NAME) as cont_theme,
+         s.clctsms_request_desc as text,
+         cl.clnt_name,
+         s.clctsms_system_cd  as system_name
+ from  DWH_MAIN.ACC_CLIENT_CONTACT_SMS@DWH_PROD2 s
+  join DWH_RAN.REF_CLIENT_V@DWH_PROD2 cl on cl.clnt_gid = s.clctsms_clnt_gid and cl.clnt$end_date = to_date('31/12/9999','dd/mm/yyyy') -- берем только активную запись
+  left join DWH_MAIN.DICT_CLNT_CONT_RESULT@DWH_PROD2 r on r.clnt_cont_result_cd = s.clctsms_clnt_cont_result_cd
+  left join DWH_MAIN.DICT_CLNT_CONT_STATUS@DWH_PROD2 ds on ds.clnt_cont_status_cd = s.clctsms_clnt_cont_status_cd -- справочник статусов контакта с клиентом
+  left join DWH_MAIN.DICT_CLNT_CONT_THEME@DWH_PROD2 ct on ct.clnt_cont_theme_cd = s.clctsms_CLNT_CONT_THEME_CD
+ --  left join m_client_link mc on mc.rbo_client_id = to_number(cl.clnt$rbo_source_pk)
+ where s.clctsms_error_text is null;
+grant select on U1.M_DWH_CLIENT_CONTACT_SMS_TST to LOADDB;
+grant select on U1.M_DWH_CLIENT_CONTACT_SMS_TST to LOADER;
+
+

@@ -1,0 +1,34 @@
+﻿create materialized view U1.M_OUT_STAFF_CON_ACTIVE
+refresh complete on demand
+as
+select trim(upper(s.direct_name||' '||s.depart_name||' '||s.office_name||' '||s.divis_name)) as department, -- подразделение
+       trim(upper(s.position_name)) as position, -- должность
+       c.client_name as name,                -- ФИО менеджера
+       to_date(s.birthdate_txt,'dd.mm.yyyy') as birthdate,   -- дата рождения менеджера
+       c.client_iin as iin,                  -- ИИН менеджера
+       c.deal_number as contract_number,     -- номер договора
+       c.prod_type as product,               -- тип продукта
+       c.begin_date,                         -- дата начала договора
+       c.delinq_days_old as delinq_days_old, -- просрочка по договору
+       c.x_delinq_amount as delinq_amount,   -- просроченная сумма
+       c.x_total_debt as total_debt,         -- общая задолженность
+       c.x_amount as amount,                 -- сумма договора
+       c.pmt,                                -- ежемесячный платеж
+       ccp.phone_type,                       -- тип контакта
+       ccp.contact_relation,                 -- отношение контактного лица
+       ccp.contact_surname || ' ' || ccp.contact_first_name || ' ' || ccp.contact_patronymic as contact_name, -- ФИО контактного лица
+       ccp.phone_number,                     -- номер контакта
+       s.mobile_phone,                       -- номер мобильного телефона сотрудника из базы HR
+       s.home_phone,                         -- номер домашнего телефона сотрудника из базы HR
+       s.home_address                        -- домашний адрес сотрудника из базы HR
+from u1.M_ZUP_1C_STAFF s
+join u1.V_DWH_PORTFOLIO_CURRENT c on c.client_iin = s.tax_id
+left join u1.V_FORM_CLIENT_CONTACT_PHONE ccp on ccp.folder_id = c.folder_id_first
+where s.firing_date_txt is null and
+      c.x_is_credit_issued = 1 and c.is_credit_active = 1 and
+      c.x_delinq_days > 0;
+grant select on U1.M_OUT_STAFF_CON_ACTIVE to AIDA;
+grant select on U1.M_OUT_STAFF_CON_ACTIVE to LOADDB;
+grant select on U1.M_OUT_STAFF_CON_ACTIVE to LOADER;
+
+

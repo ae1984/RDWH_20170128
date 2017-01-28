@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_DWH_SHOP_USER
+refresh force on demand
+as
+select /*+ noparallel */
+       user_id as shop_user_id,
+       user_name as shop_user_name,
+       user_kaspikz_id as user_id
+  from dwh_stage.S43_USER@dwh_prod2;
+grant select on U1.M_DWH_SHOP_USER to LOADDB;
+grant select on U1.M_DWH_SHOP_USER to LOADER;
+
+

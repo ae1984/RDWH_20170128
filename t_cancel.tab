@@ -1,0 +1,60 @@
+﻿create table U1.T_CANCEL
+(
+  cancel_id                   NUMBER,
+  folder_id                   NUMBER,
+  rfo_client_id               NUMBER,
+  cancel_date                 DATE,
+  cancel_level                VARCHAR2(30),
+  cancel_type_group           VARCHAR2(63),
+  cancel_type_code            VARCHAR2(128),
+  cancel_type_name            VARCHAR2(750),
+  scorecard                   VARCHAR2(15),
+  cancel_notes                VARCHAR2(4000),
+  user_login                  VARCHAR2(90),
+  user_num_tab                VARCHAR2(30),
+  overdue_amount_total_cancel NUMBER,
+  overdue_amount_cutoff       NUMBER,
+  overdue_amount_total_pkb    VARCHAR2(300),
+  user_id                     NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+create index U1.T_CANCEL_IND1 on U1.T_CANCEL (FOLDER_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_CANCEL_IND2 on U1.T_CANCEL (CANCEL_DATE)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_CANCEL to LOADDB;
+grant select on U1.T_CANCEL to LOADER;
+

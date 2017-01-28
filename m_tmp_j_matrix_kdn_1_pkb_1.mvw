@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_TMP_J_MATRIX_KDN_1_PKB_1
+refresh complete on demand
+as
+select fcc.rfo_contract_id,
+       max(p.report_id) as pkb_primary_report_id,
+       max(p.active_contracts) keep (dense_rank last order by p.report_id) as pkb_primary_active_cons,
+       max(coalesce(fcc.prev_con_cnt - fcc.prev_con_closed_cnt, 0)) as active_kaspi_cons_cnt
+from M_FOLDER_CON_CANCEL fcc
+join V_PKB_REPORT p on
+          p.report_type = 'ПЕРВИЧНЫЙ' and
+          (
+              p.folder_id = fcc.folder_id or
+              (
+                  p.report_iin_rnn = fcc.iin and
+                  (
+                       p.rfo_report_date >= trunc(fcc.folder_date_create_mi) - 60 and
+                       p.rfo_report_date <= trunc(fcc.folder_date_create_mi)
+                  )
+              )
+          )
+group by fcc.rfo_contract_id;
+grant select on U1.M_TMP_J_MATRIX_KDN_1_PKB_1 to LOADDB;
+grant select on U1.M_TMP_J_MATRIX_KDN_1_PKB_1 to LOADER;
+
+

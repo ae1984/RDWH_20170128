@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_SC_FRAUD_SEARCH2_PRE6
+build deferred
+refresh force on demand
+as
+select t.rfo_client_id,
+       nvl(min(case when trunc(tt.date_create) >= trunc(sysdate) - 30 and tt.date_create < trunc(sysdate)
+                     and tt.product_type = 'ДЕНЬГИ'
+                then nvl(tt.total_amount, 0) end), 0) as min_sum_appl_kn_30_d,
+
+       nvl(max(case when  trunc(tt.date_create) >= trunc(sysdate) - 30 and tt.date_create < trunc(sysdate)
+                     and tt.product_type = 'ДЕНЬГИ'
+               then nvl(tt.total_amount, 0) end),0) as max_sum_appl_kn_30_d,
+
+       count(case when trunc(tt.date_create) >= trunc(sysdate) - 30 and tt.date_create < trunc(sysdate)
+                       and tt.is_credit_rejected = 1
+                  then tt.claim_id end)          as count_fail_30_d
+
+       , count(distinct case when trunc(tt.date_create) >= trunc(sysdate) - 30 and tt.date_create < trunc(sysdate)
+                                  and tt.product_type = 'ДЕНЬГИ'
+                             then tt.claim_id end) as count_appl_kn_30_d
+from u1.V_CLIENT_RFO_BY_ID t
+left  join (select rfo_client_id, claim_id, date_create,
+                   is_credit_rejected, total_amount, 'ОНЛАЙН' as product_type
+            from u1.M_FOLDER_CON_CANCEL_ONLINE_1
+           union all
+          select rfo_client_id, rfo_contract_id as claim_id, folder_date_create_mi as date_create,
+                 case when mf.folder_state like '%ОТКАЗ%' then 1 else 0 end as is_credit_rejected,
+                 mf.contract_amount as total_amount, mf.product_type
+            from u1.M_FOLDER_CON_CANCEL mf
+           where mf.process_name != 'ОНЛАЙН КРЕДИТ') tt on tt.rfo_client_id = t.rfo_client_id
+                                                           and tt.date_create >= trunc(sysdate) - 30
+                                                           and tt.date_create < trunc(sysdate)
+
+group by t.rfo_client_id;
+grant select on U1.M_SC_FRAUD_SEARCH2_PRE6 to LOADDB;
+
+

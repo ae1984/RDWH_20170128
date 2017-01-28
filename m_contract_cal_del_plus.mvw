@@ -1,0 +1,35 @@
+﻿create materialized view U1.M_CONTRACT_CAL_DEL_PLUS
+refresh complete on demand
+as
+select -- представление, которое рассчитывает показатели просрочки для исходных договоров с учетом рефинансирования
+       -- (их закрытия и перехода задолженности на карту). используя связку рефинансированных договоров с их результирующими
+       -- картами (куда произошел рефинанс), продолжается жизнь исходных договоров, при этом результирующие карты
+       -- исключаются из выборки. под продолжением жизни понимается продолжение жизни договороа в качестве карты,
+       -- с переносом её просрочки на исходный договор.
+       -- находится максимальное кол-во дней просрочки в исходном и результирующем договоре.
+       -- эти показатели (особенно del60+) могут исползоваться в качестве таргета плохой/хороший по соц просрочке
+       t.contract_number, -- номер исходного договора
+       coalesce(greatest(t.delinq_days_max,d.delinq_days_max),t.delinq_days_max,d.delinq_days_max) as delinq_days_max_plus,
+       case when coalesce(greatest(t.delinq_days_max,d.delinq_days_max),t.delinq_days_max,d.delinq_days_max) > 30 then 1
+            else 0 end as is_del_30_plus,
+       case when coalesce(greatest(t.delinq_days_max,d.delinq_days_max),t.delinq_days_max,d.delinq_days_max) > 60 then 1
+            else 0 end as is_del_60_plus,
+       case when coalesce(greatest(t.delinq_days_max,d.delinq_days_max),t.delinq_days_max,d.delinq_days_max) > 90 then 1
+            else 0 end as is_del_npl_plus, -- органичение этого параметра вызвано тем, что некоторые договора постоянно
+                                           -- оптимизируются и NPL не достигается, хотя они безусловно "плохие"
+       t.delinq_days_max as delinq_days_max, -- макс дней просрочки на исходном договоре
+       d.delinq_days_max as delinq_days_max_to, -- макс дней просрочки на результирующем договоре
+       r.sp_date_min as spec_offer_date,
+       d.contract_number as contract_number_to, -- на какой договор произошел рефинанс
+       case when d.contract_number is not null then 1 else 0 end as is_refin,
+       r.restr_type, -- тип рефинанса HARD/SOFT
+       r.restructing_type_code
+from V_CONTRACT_CAL t
+left join M_CONTRACT_REFIN_LINK r on r.deal_number = t.contract_number
+left join V_CONTRACT_CAL d on d.contract_number = r.deal_number_to -- договора, на которые произошел рефинанс
+where not exists (select null from M_CONTRACT_REFIN_LINK r2 -- исключение результирующих карт из выборки
+                      where r2.deal_number_to = t.contract_number);
+grant select on U1.M_CONTRACT_CAL_DEL_PLUS to LOADDB;
+grant select on U1.M_CONTRACT_CAL_DEL_PLUS to LOADER;
+
+

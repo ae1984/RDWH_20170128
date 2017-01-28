@@ -1,0 +1,36 @@
+﻿create materialized view U1.M_CONTRACT_PAYMENT_DAYOPEN
+refresh complete on demand
+as
+select /*+ parallel(30)*/
+        a.x_client_id,
+        a.contract_number,
+        a.contract_status,
+        a.prod_type,
+        a.amount,
+        a.pmt,
+        a.begin_date,
+        a.x_start_date_actual,
+        a.plan_end_date,
+        a.actual_end_date,
+        a.create_empl_number,
+        a.dcard_number,
+        listagg(to_char(a.as_of_date,'dd.mm.yyyy'), ', ') within group (order by a.x_client_id, a.contract_number) as as_of_date,
+        listagg(a.oper_payment_name, ', ') within group (order by a.x_client_id, a.contract_number) as operation_type_name,
+        sum(a.amount_eq) as amount_eq
+   from M_CONTRACT_PAYMENT_DAYOPEN_PRE a
+  group by a.x_client_id,
+        a.contract_number,
+        a.contract_status,
+        a.prod_type,
+        a.amount,
+        a.pmt,
+        a.begin_date,
+        a.x_start_date_actual,
+        a.plan_end_date,
+        a.actual_end_date,
+        a.create_empl_number,
+        a.dcard_number;
+grant select on U1.M_CONTRACT_PAYMENT_DAYOPEN to LOADDB;
+grant select on U1.M_CONTRACT_PAYMENT_DAYOPEN to LOADER;
+
+

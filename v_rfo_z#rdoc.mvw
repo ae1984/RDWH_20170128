@@ -1,0 +1,15 @@
+﻿create materialized view U1.V_RFO_Z#RDOC
+using no index
+refresh complete on demand
+as
+select /*+ driving_site(t)*/
+       t.c_doc,
+       t.collection_id
+  from ibs.Z#RDOC@rfo_snap t
+ group by t.c_doc,
+       t.collection_id;
+grant select on U1.V_RFO_Z#RDOC to ITS_USER;
+grant select on U1.V_RFO_Z#RDOC to LOADDB;
+grant select on U1.V_RFO_Z#RDOC to LOADER;
+
+

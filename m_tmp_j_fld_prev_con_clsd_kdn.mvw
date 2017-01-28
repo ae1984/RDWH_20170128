@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_TMP_J_FLD_PREV_CON_CLSD_KDN
+refresh complete on demand
+as
+select t.rfo_contract_id,
+       max(k2.kdn_form_salary_max) as prior_con_kdn_max,
+       avg(k2.kdn_form_salary_max) as prior_con_kdn_avg
+from M_FOLDER_CON_CANCEL t
+left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = t.iin and
+                                       d.actual_end_date < trunc(t.folder_date_create_mi) and
+                                       d.x_is_credit_issued = 1 and
+                                       d.x_product_type != 'ОПТИМИЗАЦИЯ'
+left join M_CONTRACT_PARAM_KDN5C k2 on k2.deal_number = d.deal_number
+group by t.rfo_contract_id;
+grant select on U1.M_TMP_J_FLD_PREV_CON_CLSD_KDN to LOADDB;
+grant select on U1.M_TMP_J_FLD_PREV_CON_CLSD_KDN to LOADER;
+
+

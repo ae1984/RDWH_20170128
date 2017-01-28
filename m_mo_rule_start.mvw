@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_MO_RULE_START
+refresh force on demand
+as
+select xx.code_int as par_code,
+       min(dp.name) keep (dense_rank first order by b.date_apply) as par_name,
+       min(trunc(b.date_apply)) as min_date_start
+from M_FOLDER_MO_CANCEL_LAST_PRE_D xx
+join v_mo_d_par dp on dp.code_int = xx.code_int
+join v_mo_batch b on b.id = dp.batch_id
+where xx.code_int != 'SC_MIXED_RES_PRE'
+group by xx.code_int
+
+union all
+select 'SC_MIXED_RES_PRE' par_code,
+       'СМЕШАННАЯ ПРОВЕРКА' par_name,
+       to_date('11042014', 'ddmmyyyy')
+from dual;
+grant select on U1.M_MO_RULE_START to LOADDB;
+grant select on U1.M_MO_RULE_START to LOADER;
+
+

@@ -1,0 +1,31 @@
+﻿create table U1.NT_OBJ_DEL_20161111
+(
+  sdt              DATE,
+  object_name      VARCHAR2(128) not null,
+  cnt_startsql_avg NUMBER,
+  cnt_user         NUMBER,
+  is_u1            NUMBER,
+  cnt_sql_max      NUMBER,
+  cnt_obj_by_sql   NUMBER,
+  is_table         NUMBER,
+  is_view          NUMBER,
+  is_mview         NUMBER,
+  delta_avg        NUMBER,
+  numrows_min      NUMBER,
+  numrows_max      NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_OBJ_DEL_20161111 to LOADDB;
+

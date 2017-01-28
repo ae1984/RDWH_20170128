@@ -1,0 +1,122 @@
+﻿create materialized view U1.M_RFO_FRAUD_CASH_TERMINAL
+build deferred
+refresh force on demand
+as
+select t.claim_id,
+       t.rfo_client_id,
+       t.date_create,
+       nvl(
+          sum(
+              case
+                when trunc(ct.document_date) >= trunc(t.date_create) - 90
+                 and trunc(ct.document_date) < trunc(t.date_create)
+                 and ((ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'БЕЗНАЛИЧНОЕ ПОПОЛНЕНИЕ')
+                  or (ct.product = 'KRED_PERS' and ct.cash_oper_name = 'ДОСРОЧНОЕ ГАШЕНИЕ КРЕДИТА')
+                  or (ct.product = null and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                  or (ct.product = 'KRED_PERS' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                  or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')) then
+                     ct.amount
+              end),
+       0)             as sum_pay_cred_3_m,
+
+
+       nvl(
+          sum(
+              case
+                when trunc(ct.document_date) >= trunc(t.date_create) - 90
+                 and ct.document_date < t.date_create
+                 and ((ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'БЕЗНАЛИЧНОЕ ПОПОЛНЕНИЕ')
+                  or (ct.product = 'KRED_PERS' and ct.cash_oper_name = 'ДОСРОЧНОЕ ГАШЕНИЕ КРЕДИТА')
+                  or (ct.product = null and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                  or (ct.product = 'KRED_PERS' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                  or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')) then
+                     ct.amount
+              end),
+       0)             as sum_pay_cred_3_m_x,
+
+       count(
+              case
+                when trunc(ct.document_date) >= trunc(t.date_create) - 90
+                 and trunc(ct.document_date) < trunc(t.date_create)
+                 and ((ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'БЕЗНАЛИЧНОЕ ПОПОЛНЕНИЕ')
+                  or (ct.product = 'KRED_PERS' and ct.cash_oper_name = 'ДОСРОЧНОЕ ГАШЕНИЕ КРЕДИТА')
+                  or (ct.product = null and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                  or (ct.product = 'KRED_PERS' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                  or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                  or (ct.product = 'DEPOSIT_PRIV' and ct.cash_oper_name = 'БЕЗНАЛИЧНОЕ ПОПОЛНЕНИЕ')
+                  or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'БЕЗНАЛИЧНОЕ ПОПОЛНЕНИЕ КОШЕЛЬКОВ')
+                  or (ct.product = 'DEPOSIT_PRIV' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                  or (ct.product = 'PARTNERS' and ct.cash_oper_name = 'ОПЛАТА ПОСТАВЩИКОВ УСЛУГ')
+                  or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'ОПЛАТА ЧЕРЕЗ ТМ')
+                  or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'ПОПОЛНЕНИЕ ЗП КАРТЫ')) then
+                     ct.acash_doc_id
+              end)    as terminal_share_count,
+
+          count(
+              case
+                when trunc(ct.document_date) >= trunc(t.date_create) - 90
+                 and ct.document_date < t.date_create
+                 and ((ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'БЕЗНАЛИЧНОЕ ПОПОЛНЕНИЕ')
+                  or (ct.product = 'KRED_PERS' and ct.cash_oper_name = 'ДОСРОЧНОЕ ГАШЕНИЕ КРЕДИТА')
+                  or (ct.product = null and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                  or (ct.product = 'KRED_PERS' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                  or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                  or (ct.product = 'DEPOSIT_PRIV' and ct.cash_oper_name = 'БЕЗНАЛИЧНОЕ ПОПОЛНЕНИЕ')
+                  or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'БЕЗНАЛИЧНОЕ ПОПОЛНЕНИЕ КОШЕЛЬКОВ')
+                  or (ct.product = 'DEPOSIT_PRIV' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                  or (ct.product = 'PARTNERS' and ct.cash_oper_name = 'ОПЛАТА ПОСТАВЩИКОВ УСЛУГ')
+                  or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'ОПЛАТА ЧЕРЕЗ ТМ')
+                  or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'ПОПОЛНЕНИЕ ЗП КАРТЫ')) then
+                     ct.acash_doc_id
+              end)   as terminal_share_count_x,
+
+       count(
+          case
+            when trunc(ct.document_date) >= trunc(t.date_create) - 90
+             and trunc(ct.document_date) < trunc(t.date_create)
+             and ((ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'БЕЗНАЛИЧНОЕ ПОПОЛНЕНИЕ')
+                  or (ct.product = 'KRED_PERS' and ct.cash_oper_name = 'ДОСРОЧНОЕ ГАШЕНИЕ КРЕДИТА')
+                  or (ct.product = null and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                  or (ct.product = 'KRED_PERS' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                  or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                  or (ct.product = 'DEPOSIT_PRIV' and ct.cash_oper_name = 'БЕЗНАЛИЧНОЕ ПОПОЛНЕНИЕ')
+                  or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'БЕЗНАЛИЧНОЕ ПОПОЛНЕНИЕ КОШЕЛЬКОВ')
+                  or (ct.product = 'DEPOSIT_PRIV' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                  or (ct.product = 'PARTNERS' and ct.cash_oper_name = 'ОПЛАТА ПОСТАВЩИКОВ УСЛУГ')
+                  or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'ОПЛАТА ЧЕРЕЗ ТМ')
+                  or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'ПОПОЛНЕНИЕ ЗП КАРТЫ')
+                  or (ct.product = 'PARTNERS' and ct.cash_oper_name = 'ОПЛАТА ПОСТАВЩИКОВ УСЛУГ' and ct.nasn_pay = substr(co.c_numb, 2, 10))
+                 ) then
+                 ct.acash_doc_id
+          end)   as terminal_share_count_mobile,
+
+       count(
+          case
+            when trunc(ct.document_date) >= trunc(t.date_create) - 90
+             and ct.document_date < t.date_create
+             and ((ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'БЕЗНАЛИЧНОЕ ПОПОЛНЕНИЕ')
+              or (ct.product = 'KRED_PERS' and ct.cash_oper_name = 'ДОСРОЧНОЕ ГАШЕНИЕ КРЕДИТА')
+              or (ct.product = null and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+              or (ct.product = 'KRED_PERS' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+              or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+              or (ct.product = 'DEPOSIT_PRIV' and ct.cash_oper_name = 'БЕЗНАЛИЧНОЕ ПОПОЛНЕНИЕ')
+              or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'БЕЗНАЛИЧНОЕ ПОПОЛНЕНИЕ КОШЕЛЬКОВ')
+              or (ct.product = 'DEPOSIT_PRIV' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+              or (ct.product = 'PARTNERS' and ct.cash_oper_name = 'ОПЛАТА ПОСТАВЩИКОВ УСЛУГ')
+              or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'ОПЛАТА ЧЕРЕЗ ТМ')
+              or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'ПОПОЛНЕНИЕ ЗП КАРТЫ')
+              or (ct.product = 'PARTNERS' and ct.cash_oper_name = 'ОПЛАТА ПОСТАВЩИКОВ УСЛУГ' and ct.nasn_pay = substr(co.c_numb, 2, 10))) then
+                 ct.acash_doc_id
+          end)   as terminal_share_count_mobile_x
+
+from u1.M_FOLDER_CON_CANCEL_ONLINE_1 t
+join U1.M_CLIENT_LINK    cl on cl.rfo_client_id = t.rfo_client_id
+join u1.M_CASH_TERMINAL  ct on ct.rbo_client_id = cl.rbo_client_id
+                           and ct.document_date < t.date_create
+join u1.v_rbo_z#client    c on c.id = cl.rbo_client_id
+left join u1.v_rbo_z#contacts co on co.collection_id = c.c_contacts
+                                and co.c_affirmed = 1
+group by t.claim_id, t.rfo_client_id, t.date_create;
+grant select on U1.M_RFO_FRAUD_CASH_TERMINAL to LOADDB;
+
+

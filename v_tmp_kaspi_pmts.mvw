@@ -1,0 +1,15 @@
+﻿create materialized view U1.V_TMP_KASPI_PMTS
+using no index
+refresh complete on demand
+as
+select user_id,
+       min(reg_date) as first_pmt_date,
+       max(reg_date) as last_pmt_date,
+       count(distinct id) as cnt_pmts,
+       sum(amount) as amount_pmts
+from u1.m_kaspikz_pay_pay_info
+group by user_id;
+grant select on U1.V_TMP_KASPI_PMTS to LOADDB;
+grant select on U1.V_TMP_KASPI_PMTS to LOADER;
+
+

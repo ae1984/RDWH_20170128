@@ -1,0 +1,82 @@
+﻿create materialized view U1.M_PKB_REPORT_ACTIVE_PARAM1C
+refresh force on demand
+as
+select x.*
+from (
+    select --+ parallel(30) parallel_index(30)
+        /*
+        Берем только активные договора ПКБ
+        */
+        p.id as report_id,
+        trunc(fd.c_doc_date) as report_date,
+        fd.c_doc_date as report_date_time,
+        fld.id as folder_id,
+        p.c_rnn as iin_rnn,
+        nvl(s.id, c.id) as pkb_merged_contract_id,
+        p.c_rpt_type,
+        case when p.c_rpt_type = 4 then 'СТАНДАРТНЫЙ'
+             when p.c_rpt_type = 6 then 'РАСШИРЕННЫЙ'
+             else 'ПЕРВИЧНЫЙ' end as report_type,
+        case when p.c_status = 'SubjectNotFound' then 'БЕКИ' else upper(p.c_status) end as report_status,
+        case when p.c_pkb_report_ref is not null then 1 else 0 end as is_from_cache,
+        p.c_si_noec as active_contracts_raw,
+         case when p.c_si_noec like '%(%' then
+             to_number(REPLACE(substr(p.c_si_noec,1,instr(p.c_si_noec,'(')-2),'.',','))
+         when p.c_si_noec is not null then
+             to_number(p.c_si_noec) end as active_contracts,
+        p.c_si_notc as closed_contracts_raw,
+         case when p.c_si_notc like '%(%' then
+             to_number(REPLACE(substr(p.c_si_notc,1,instr(p.c_si_notc,'(')-2),'.',','))
+         when p.c_si_notc is not null then
+             to_number(p.c_si_notc) end as
+        closed_contracts,
+        p.c_si_tod as total_debt_raw,
+        get_pkb_debt_from_text_test(p.c_si_tod,trunc(fd.c_doc_date)) as total_debt,
+        p.c_si_tdo as delinq_amount_raw,
+        get_pkb_debt_from_text_test(p.c_si_tdo,trunc(fd.c_doc_date)) as delinq_amount,
+        ---------
+        /*case when p.c_ci = c.collection_id or s.c_value is not null then 'АКТИВНЫЙ'
+         when p.c_closed_ci = c.collection_id then 'ЗАКРЫТЫЙ' end as pkb_contract_status,*/
+
+        upper(nvl(c.c_contr_status, s.c_value)) as contract_status, --
+        case when coalesce(c.c_contr_status, s.c_value) not like '% - %' then upper(coalesce(c.c_contr_status, s.c_value))
+             else upper(substr(coalesce(c.c_contr_status, s.c_value),0,
+                     instr(coalesce(c.c_contr_status, s.c_value),' - ') - 1)) end as contract_status_clean,
+        c.c_monthly_payment as monthly_payment_raw,
+        get_pkb_debt_from_text_test(c.c_monthly_payment,trunc(fd.c_doc_date)) as monthly_payment,
+        c.c_last_update,
+        c.c_currency,
+        c.c_appl_date,
+        c.c_date_begin,
+        c.c_date_end,
+        c.c_fact_gash_date,
+        c.c_outstanding_sum as outstanding_sum_raw,
+        get_pkb_debt_from_text_test(c.c_outstanding_sum,trunc(fd.c_doc_date)) as outstanding_sum,
+        c.c_overdue_sum as overdue_sum_raw,
+        get_pkb_debt_from_text_test(c.c_overdue_sum,trunc(fd.c_doc_date)) as overdue_sum,
+        upper(c.c_subj_role) as c_subj_role,
+        upper(c.c_fin_inst) as c_fin_inst,
+        c.c_amount,
+        get_pkb_debt_from_text_test(c.c_amount,trunc(fd.c_doc_date)) as amount,
+        c.c_credit_usage,
+        c.c_residual_amount,
+        c.c_credit_limit as credit_limit_raw,
+        get_pkb_debt_from_text_test(c.c_credit_limit,trunc(fd.c_doc_date)) as credit_limit,
+        c.c_ovrd_instalments
+    from V_RFO_Z#PKB_REPORT p
+    left join V_RFO_Z#KAS_PKB_CI c on c.collection_id = p.c_ci /*or c.collection_id = p.c_closed_ci*/ --Берем только активные договора ПКБ
+    left join (select s2.collection_id,
+                      min(s2.id) id,
+                      min(s2.c_value) keep (dense_rank first order by s2.id) c_value
+               from V_RFO_Z#KAS_STRING_250 s2
+               group by s2.collection_id) s on s.collection_id = p.c_agre_statuses and p.c_rpt_type  = 2
+    join V_RFO_Z#FDOC fd on fd.id = p.id and fd.class_id = 'PKB_REPORT'
+    left join V_RFO_Z#RDOC rd on rd.c_doc = p.id
+    left join V_RFO_Z#FOLDERS fld on fld.c_docs = rd.collection_id
+) x
+where (x.c_rpt_type = 2 and x.active_contracts = 1) --в расчетах учитываются ПЕРВИЧНЫЙ если есть 1 активный кредит
+      or x.c_rpt_type in (4, 6)                     --ну и все СТАНДАРТНЫЕ и РАСШИРЕННЫЕ;
+grant select on U1.M_PKB_REPORT_ACTIVE_PARAM1C to LOADDB;
+grant select on U1.M_PKB_REPORT_ACTIVE_PARAM1C to LOADER;
+
+

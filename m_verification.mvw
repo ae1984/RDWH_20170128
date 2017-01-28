@@ -1,0 +1,58 @@
+﻿create materialized view U1.M_VERIFICATION
+build deferred
+refresh complete on demand
+as
+select /*+ parallel(30) */
+       v.id as verification_id,  --Идентификатор верификации
+       v.verification_id as rfo_verification_id,
+       v.client_id as rfo_client_id,  --Идентификатор клиента в РФО(FK на z#client)
+       d.folder_id as demand_folder_id,
+       v.folders_id as verify_folder_id,
+       p.person_tabnum,
+       v.from_rfo_to_is as send_to_verification_dtm,  --Время получения заявки в ИС.Дата и время отправки на верификацию
+       p.close_time as verification_date ,                   --Дата верификации
+       cast (upper(decode(p.verify_result,0,'Отказ',1,'Подтверждён','Не определено')) as varchar2(200)) as verification_status,
+       p.verification_type as verification_type_id,
+       p.open_time         as demand_open_dtm,
+       p.close_time        as demand_close_dtm,
+       s.open_time         as smart_script_begin_dtm,
+       s.close_time        as smart_script_finish_dtm,
+       round((d.verif_demand_date_in - d.verif_demand_date_out) * 24 * 60 * 60) as time_work_demand,
+       round((d.verif_date_create - v.from_rfo_to_is) * 24 * 60 * 60)           as time_wait_in_stock_demand,
+       round((s.close_time - s.open_time) * 24 * 60 * 60)                       as smart_script_work_time,
+       v.segment_group     as segment_group,
+       v.verify_group,
+       p.employee_group,
+       v.verify_pr_cr,
+       s.script_name as smart_script_name,
+       s.schema_type as verification_scheme,
+       cast (case when p.repeat_photo = 1 then 'ПЕРЕФОТОГРАФИРОВАНИЕ'
+                  else upper(decode(s.schema_result,1, 'Успех' ,0,'Отказ', 'Не успех'))
+              end as varchar2(200)) as smart_script_result,
+       cast(to_number(q.code) as number) as smart_script_step_code,
+       q.code||'. '||q.name as smart_script_step_name,
+       q.text as question,
+       upper(a.name) as answer_name,
+       upper(a.value) as answer_text,
+       v.verify_status as verification_result_id,
+       sd.c_name       as verification_result_name,
+       cast (va.inserted_date as date) as inserted_date
+  from U1.M_OUT_DWH_VERIFICATION    v
+  join U1.M_OUT_DWH_PROCESS         p on p.verification_id = v.id
+  join U1.M_OUT_DWH_SCHEMA          s on s.process_id = p.id
+  join U1.M_OUT_VERIFICATION_DEMAND d on d.verification_demand_id = v.verification_id
+
+  join U1.M_OUT_DWH_VALID_VERIFICATION vv on v.Verification_Id=vv.rfo_verification_id
+
+  join U1.M_OUT_DWH_SEGMENT_GROUP              sg on (( p.verification_type='CONTACT' and vv.segmentgroupcontact_id = sg.id ) or ( p.verification_type='PHOTO' and vv.segmentgroupphoto_id=sg.id )) or ( vv.segmentgroup_id=sg.id )
+  join U1.M_OUT_DWH_VERIFY_GROUP            vg on v.verify_group = vg.code
+  join U1.M_OUT_DWH_VERIFY_CR_PROG   vc on v.verify_pr_cr = vc.code
+
+  left join U1.T_OUT_DWH_QUESTION        q on q.schema_id = s.id
+  left join U1.M_OUT_DWH_VAR             a on a.question_id = q.id
+  left join u1.M_OUT_DWH_VERIFICATION_ADD va on va.rfo_verification_id = v.verification_id and trunc(cast (va.inserted_date as date)) = trunc(p.open_time)
+  left join u1.V_RFO_Z#STATUS_DOG       sd on sd.c_code = v.verify_status;
+grant select on U1.M_VERIFICATION to LOADDB;
+grant select on U1.M_VERIFICATION to RISK_VERIF;
+
+

@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_12
+build deferred
+refresh force on demand
+as
+select
+         t.rfo_client_id
+         ,t.date_create
+         ,t.claim_id
+         ,count(distinct a.rbo_contract_id) as COUNT_KASPI_GOLD_ACTIVE
+         ,count(distinct a1.rbo_contract_id) as COUNT_KASPI_GOLD_ACTIVE_t1
+    from M_FOLDER_CON_CANCEL_ONLINE_1 t
+    join m_rbo_contract_bas a on
+           a.rfo_client_id = t.rfo_client_id
+           and a.cred_program_code = 'ZP_KASPI_GOLD'
+           and a.start_date <=t.date_create
+           and nvl(a.date_fact_end,sysdate+1) > t.date_create
+    left join m_rbo_contract_bas a1 on
+           a1.rfo_client_id = t.rfo_client_id
+           and a1.cred_program_code = 'ZP_KASPI_GOLD'
+           and a1.start_date <=trunc(t.date_create)-1
+           and nvl(a1.date_fact_end,sysdate+1) > t.date_create
+    group by
+          t.rfo_client_id
+         ,t.date_create
+         ,t.claim_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_12 to LOADDB;
+
+

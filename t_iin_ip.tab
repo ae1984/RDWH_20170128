@@ -1,0 +1,32 @@
+﻿create table U1.T_IIN_IP
+(
+  sdt     DATE,
+  rfo_id  NUMBER,
+  iin     VARCHAR2(48),
+  ip_flag NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_IIN_IP
+  is 'Признак ИП по ФЛ (ИИН)';
+comment on column U1.T_IIN_IP.sdt
+  is 'дата и время добавления записи';
+comment on column U1.T_IIN_IP.rfo_id
+  is 'РФО ID';
+comment on column U1.T_IIN_IP.iin
+  is 'ИИН';
+comment on column U1.T_IIN_IP.ip_flag
+  is 'флаг';
+grant select on U1.T_IIN_IP to LOADDB;
+

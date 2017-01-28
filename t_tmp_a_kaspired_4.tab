@@ -1,0 +1,27 @@
+﻿create table U1.T_TMP_A_KASPIRED_4
+(
+  folder_id             NUMBER,
+  scor_reject           NUMBER,
+  appr_by_iin           NUMBER,
+  appr_by_mobile        NUMBER,
+  appr_by_partn         NUMBER,
+  client_is_employer    NUMBER,
+  kaspi_red_limit       NUMBER,
+  client_category       VARCHAR2(2048),
+  client_category_union VARCHAR2(2048)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_A_KASPIRED_4 to LOADDB;
+

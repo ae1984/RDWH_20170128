@@ -1,0 +1,28 @@
+﻿create table U1.T_KATE_KASPISHOP_TMP
+(
+  order_number    VARCHAR2(50),
+  status          VARCHAR2(50),
+  document_type   VARCHAR2(50),
+  document_number VARCHAR2(50),
+  last_name       VARCHAR2(200),
+  middle_name     VARCHAR2(200),
+  first_name      VARCHAR2(200),
+  app_creat_date  VARCHAR2(50),
+  customer_id     VARCHAR2(200)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_KATE_KASPISHOP_TMP to LOADDB;
+grant select on U1.T_KATE_KASPISHOP_TMP to LOADER;
+

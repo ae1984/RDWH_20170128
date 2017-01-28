@@ -1,0 +1,47 @@
+﻿create materialized view U1.M_FOLDER_CON_LINK
+build deferred
+refresh complete on demand
+as
+select /*+ parallel 30*/
+       cc.rfo_contract_id,
+       cc.claim_id,
+       cc.rfo_con_or_claim_id as app_id,
+       cc.folder_id,
+       cc.rfo_client_id,
+       cc.iin,
+       cc.rnn,
+       nvl(kpd.id,pc.id) as rbo_contract_id,
+       nvl(kpd.c_client_ref,pc.c_client) as rbo_client_id,
+       pkb.kb_report_id,
+       pkb.kb_report_ex_id,
+       pkb.kb_report_st_id,
+       pkb.kb_report_pr_id,
+       pkb_fld.kb_report_fld_id,
+       pkb.pkb_report_id,
+       pkb.pkb_report_ex_id,
+       pkb.pkb_report_st_id,
+       pkb.pkb_report_pr_id,
+       pkb_fld.pkb_report_fld_id,
+       pkb.gkb_report_id,
+       pkb.gkb_report_ex_id,
+       pkb.gkb_report_st_id,
+       pkb.gkb_report_pr_id,
+       pkb_fld.gkb_report_fld_id,
+       pkb.report_id_rfo as kb_report_id_rfo,
+       gcvp.gcvp_report_id,
+       gcvp.gcvp_rep_id_rfo,
+       gcvp.org_bin_last,
+       gcvp.org_bin_max_pmt,
+       cc.form_client_id,
+       cc.expert_id,
+       cc.contract_number
+from M_MATRIX_BASE cc
+left join M_FOLDER_CON_LINK_PRE2 pkb on pkb.folder_id = cc.folder_id -- данные по КБ
+left join M_FOLDER_CON_LINK_PRE3 pkb_fld on pkb_fld.folder_id = cc.folder_id -- данные по КБ по привязке к папке при выдаче
+left join M_FOLDER_CON_LINK_PRE gcvp on gcvp.folder_id = cc.folder_id --данные по ГЦВП
+left join V_CONTRACT_FOLDER_1ST_LINK_RFO cf on cf.folder_id_first = cc.folder_id and cf.contract_number = cc.contract_number --Для того, чтобы правильно связать с РБО используем folder_id
+left join V_RBO_Z#KAS_PC_DOG kpd on kpd.c_num_dog = cf.contract_number
+left join V_RBO_Z#PR_CRED pc on pc.c_num_dog = cf.contract_number;
+grant select on U1.M_FOLDER_CON_LINK to LOADDB;
+
+

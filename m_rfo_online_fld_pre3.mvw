@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_RFO_ONLINE_FLD_PRE3
+refresh complete on demand
+as
+select /*+ driving_site(x) first_rows*/
+ *
+  from (select /*+ driving_site(cs) no_merge*/ rd.collection_id, p.c_prop as cr_program_id, sd.c_code
+             from IBS.Z#KAS_PC_DOG@RFO      cd2,
+                  IBS.Z#PROPERTIES@RFO      p,
+                  IBS.Z#KAS_CARD_SCHEME@RFO cs,
+                  IBS.z#PROD_PROPERTY@RFO   pr,
+                  IBS.Z#PROPERTY_GRP@RFO    gr,
+                  IBS.Z#STATUS_DOG@RFO      sd,
+                  IBS.Z#FDOC@RFO            fd,
+                  IBS.Z#RDOC@RFO            rd
+            where cs.c_add_prop = p.collection_id
+              and gr.id = pr.c_group_prop
+              and gr.c_code = 'KAS_CRED_PROGRAM'
+              and p.c_prop = pr.id
+              and cs.id = cd2.c_pc_scheme
+              and fd.id = cd2.id
+              and sd.id = fd.c_status_doc
+              and fd.id = rd.c_doc
+              and fd.class_id = 'KAS_PC_DOG'
+              and fd.c_doc_date > sysdate - 2 / 24) x;
+grant select on U1.M_RFO_ONLINE_FLD_PRE3 to LOADDB;
+grant select on U1.M_RFO_ONLINE_FLD_PRE3 to LOADER;
+
+

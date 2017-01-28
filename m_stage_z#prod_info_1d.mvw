@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_STAGE_Z#PROD_INFO_1D
+build deferred
+refresh force on demand
+as
+select * from rdwh.V_RFO_Z#PROD_INFO_1D@rdwh_exd;
+grant select on U1.M_STAGE_Z#PROD_INFO_1D to LOADDB;
+
+

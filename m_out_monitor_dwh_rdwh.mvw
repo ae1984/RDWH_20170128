@@ -1,0 +1,79 @@
+﻿create materialized view U1.M_OUT_MONITOR_DWH_RDWH
+build deferred
+refresh force on demand
+as
+select
+  dd1,dd2,mm,scorecard_num,RDWH_cli_cat,MO_cli_cat,
+  case
+    when RDWH_cli_cat='RDWH cat A' and MO_cli_cat='MO cat A' then 'RDWH=MO'
+    when RDWH_cli_cat='RDWH cat B' and MO_cli_cat='MO cat B' then 'RDWH=MO'
+    when RDWH_cli_cat='RDWH cat C' and MO_cli_cat='MO cat C' then 'RDWH=MO'
+    when RDWH_cli_cat='RDWH cat D' and MO_cli_cat='MO cat D' then 'RDWH=MO'
+    else 'RDWH<>MO'
+  end is_equal,
+  cnt_cli
+from (
+    select
+      to_char(f.folder_date_create_mi,'yyyy-mm-dd') as dd1,
+      to_char(f.folder_date_create_mi,'dd') as dd2,
+      to_char(f.folder_date_create_mi,'yyyy-mm') as mm,
+      scorecard_num,
+      case
+        when is_categ_a=1 then 'RDWH cat A'
+        when is_categ_b=1 then 'RDWH cat B'
+        when is_client_new_by_con=0 then 'RDWH cat C'
+        when is_client_new_by_con=1 then 'RDWH cat D'
+      end as RDWH_cli_cat,
+      case
+        when sc_is_categ_a=1 then 'MO cat A'
+        when sc_is_categ_b=1 then 'MO cat B'
+        when sc_is_client_new_by_con=0 then 'MO cat C'
+        when sc_is_client_new_by_con=1 then 'MO cat D'
+      end as MO_cli_cat,
+      count(distinct f.rfo_client_id) as cnt_cli
+    from u1.m_folder_con_cancel f
+    join (
+        select
+          m1.folder_id,
+          max(m1.rfolder_id) as rfolder_id,
+          max(m1.scorecard_num) keep (dense_rank last order by m1.rfolder_id) as scorecard_num
+        from u1.m_folder_mo_sco_request_2016 m1
+        where m1.scorecard_num in (50,2,22,17,9,8,81)
+        group by m1.folder_id
+        ) m on m.folder_id=f.folder_id
+    left join (
+      select
+        s.rfolder_id,
+        max(case when p.code_int='SC_IS_CATEG_A' then s.value_number end) as SC_IS_CATEG_A,
+        max(case when p.code_int='SC_IS_CATEG_B' then s.value_number end) as SC_IS_CATEG_B,
+        max(case when p.code_int='SC_IS_CLIENT_NEW_BY_CON' then s.value_number end) as SC_IS_CLIENT_NEW_BY_CON
+      from u1.t_mo_rfolder_par_value_2016 s
+      join u1.v_mo_d_par p on p.id=s.d_par_id and p.code_int in (
+        'SC_IS_CATEG_A',
+        'SC_IS_CATEG_B',
+        'SC_IS_CLIENT_NEW_BY_CON'
+           )
+      group by s.rfolder_id
+    ) p on p.rfolder_id=m.rfolder_id
+    where f.folder_date_create_mi>=to_date('01.09.2016','dd.mm.yyyy')
+    group by
+      to_char(f.folder_date_create_mi,'yyyy-mm-dd'),
+      to_char(f.folder_date_create_mi,'dd'),
+      to_char(f.folder_date_create_mi,'yyyy-mm'),
+      scorecard_num,
+      case
+        when is_categ_a=1 then 'RDWH cat A'
+        when is_categ_b=1 then 'RDWH cat B'
+        when is_client_new_by_con=0 then 'RDWH cat C'
+        when is_client_new_by_con=1 then 'RDWH cat D'
+      end,
+      case
+        when sc_is_categ_a=1 then 'MO cat A'
+        when sc_is_categ_b=1 then 'MO cat B'
+        when sc_is_client_new_by_con=0 then 'MO cat C'
+        when sc_is_client_new_by_con=1 then 'MO cat D'
+      end
+);
+grant select on U1.M_OUT_MONITOR_DWH_RDWH to LOADDB;
+
+

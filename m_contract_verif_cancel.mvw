@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_CONTRACT_VERIF_CANCEL
+build deferred
+refresh force on demand
+as
+select /*+ parallel 5 */
+       ca.rfo_contract_id,
+       ca.folder_id as contract_folder_id,
+       ca.rfo_client_id as contract_client_id,
+       ca.contract_number,
+       far.folder_date_create as contract_folder_date,
+       ca.contract_amount,
+       fcr.c_summa as contract_folder_summa,
+
+       fa.rfo_client_id as folder_client_id,
+       fa.folder_id,
+       fa.folder_date_create,
+       fc.c_summa as folder_summa,
+       ct.c_code as cancel_code
+
+  from u1.v_contract_all_rfo ca
+  join u1.v_folder_all_rfo far on far.folder_id = ca.folder_id
+  join u1.v_rfo_z#form_client fcr on fcr.id = far.form_client_id
+
+  join u1.v_folder_all_rfo fa on fa.folder_id <> ca.folder_id and ca.rfo_client_id = fa.rfo_client_id
+       and fa.folder_date_create >= trunc(far.folder_date_create)-1 and fa.folder_date_create < trunc(far.folder_date_create)
+  join u1.v_rfo_z#form_client fc on fc.id = fa.form_client_id and fc.c_summa > 250000
+  join u1.V_RFO_Z#KAS_CANCEL kc on kc.c_folders = fa.folder_id
+  join u1.V_RFO_Z#KAS_CANCEL_TYPES ct  on ct.id = kc.c_type and ct.c_code in ('VERIFICATION_CONTACT','VERIFICATION_PHOTO')
+
+ where ca.cr_program_code = 'EC_GOODS'
+       and ca.contract_date >= to_date('01.01.2015','dd.mm.yyyy')
+       and ca.contract_amount < 250000
+       and ca.is_credit_issued = 1;
+grant select on U1.M_CONTRACT_VERIF_CANCEL to LOADDB;
+grant select on U1.M_CONTRACT_VERIF_CANCEL to LOADER;
+
+

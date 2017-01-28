@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_CLIENT_SCO_BEHAV_1
+refresh force on demand
+as
+select t.rfo_client_id,
+       count(distinct t.folder_id) as cancel_cnt
+from M_FOLDER_CON_CANCEL_BASE t
+where t.folder_date_create_mi >= trunc(sysdate) - 60 and
+      t.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ',
+                            'КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ',
+                            'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ',
+                            'ЛУЧШИЙ КЛИЕНТ – НАЛИЧНЫЕ') and
+      t.is_credit_issued = 0
+group by t.rfo_client_id;
+grant select on U1.M_CLIENT_SCO_BEHAV_1 to LOADDB;
+grant select on U1.M_CLIENT_SCO_BEHAV_1 to LOADER;
+grant select on U1.M_CLIENT_SCO_BEHAV_1 to LOAD_MO;
+
+

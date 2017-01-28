@@ -1,0 +1,162 @@
+﻿create materialized view U1.M_SCCL_RBO_DEP_PAR2
+build deferred
+refresh force on demand
+as
+select y.rfo_client_id
+
+       ,sum(case when y.dep_active_days_30d > 0
+                       then round(y.dep_balance_sum_30d/y.dep_active_days_30d) end) as dep_balance_30d_avg
+
+       ,sum(case when y.dep_active_days_usd_30d > 0
+                            and y.currency != 'KZT'
+                       then round(y.dep_balance_sum_usd_30d/y.dep_active_days_usd_30d) end) as dep_balance_usd_30d_avg
+
+       ,sum(case when y.dep_active_days_month_30d > 0
+                       then round(y.dep_balance_sum_month_30d/y.dep_active_days_month_30d) end) as dep_balance_month_30d_avg
+
+from (
+      select /*+ paralell(30) */
+             cl.rfo_client_id
+             --am.folder_date_create_mi,
+             ,t.rbo_contract_id
+             ,t.currency
+
+             ,coalesce(round(sum(case when dep.date_doc_prov >= trunc(sysdate) - 30 --берем в необходимом промежутке
+                                    --если дата предыдущая на операции меньше левой границы
+                                    --то это первая запись. Необходимо остаток предыдущий умножить на разницу в днях между левой границей и датой операции
+                                    then case when dep.date_doc_prov_pre < trunc(sysdate) - 30
+                                              then (dep.amount_sum_pre * coalesce(dep.curs_value, 1) * (dep.date_doc_prov - (trunc(sysdate) - 30))) +
+                                                --добавляем сумму остатка с первой операции до следующей
+                                                   (dep.amount_sum * coalesce(dep.curs_value, 1) * (least(dep.date_doc_prov_post, trunc(sysdate)) - dep.date_doc_prov))
+                                        --иначе для остальных умножаем остаток на разницу в днях между датой операции и датой следующей операции
+                                        else dep.amount_sum * coalesce(dep.curs_value, 1) * (least(dep.date_doc_prov_post, trunc(sysdate)) - dep.date_doc_prov) end
+                                end)),0) as dep_balance_sum_30d
+
+             ,coalesce(round(sum(case when dep.date_doc_prov >= trunc(sysdate) - 30
+                                     then case when dep.date_doc_prov_pre < trunc(sysdate) - 30
+                                               then (dep.date_doc_prov - (trunc(sysdate) - 30)) +
+                                                   (least(dep.date_doc_prov_post, trunc(sysdate)) - dep.date_doc_prov)
+                                          else (least(dep.date_doc_prov_post, trunc(sysdate)) - dep.date_doc_prov) end
+                                end)),0) as dep_active_days_30d
+
+
+             ,coalesce(round(sum(case when dep.date_doc_prov >= trunc(sysdate) - 30 --берем в необходимом промежутке
+                                         and dep.contract_currency != 'KZT'
+                                    --если дата предыдущая на операции меньше левой границы
+                                    --то это первая запись. Необходимо остаток предыдущий умножить на разницу в днях между левой границей и датой операции
+                                    then case when dep.date_doc_prov_pre < trunc(sysdate) - 30
+                                              then (dep.amount_sum_pre * coalesce(dep.curs_value, 1) * (dep.date_doc_prov - (trunc(sysdate) - 30))) +
+                                                --добавляем сумму остатка с первой операции до следующей
+                                                   (dep.amount_sum * coalesce(dep.curs_value, 1) * (least(dep.date_doc_prov_post, trunc(sysdate)) - dep.date_doc_prov))
+                                        --иначе для остальных умножаем остаток на разницу в днях между датой операции и датой следующей операции
+                                        else dep.amount_sum * coalesce(dep.curs_value, 1) * (least(dep.date_doc_prov_post, trunc(sysdate)) - dep.date_doc_prov) end
+                                end)),0) as dep_balance_sum_usd_30d
+
+             ,coalesce(round(sum(case when dep.date_doc_prov >= trunc(sysdate) - 30
+                                          and dep.contract_currency != 'KZT'
+                                     then case when dep.date_doc_prov_pre < trunc(sysdate) - 30
+                                               then (dep.date_doc_prov - (trunc(sysdate) - 30)) +
+                                                   (least(dep.date_doc_prov_post, trunc(sysdate)) - dep.date_doc_prov)
+                                          else (least(dep.date_doc_prov_post, trunc(sysdate)) - dep.date_doc_prov) end
+                                end)),0) as dep_active_days_usd_30d
+
+             --
+             ,coalesce(round(sum(case when dep.date_doc_prov >= trunc(sysdate, 'mm') - 30 --берем в необходимом промежутке
+                                    --если дата предыдущая на операции меньше левой границы
+                                    --то это первая запись. Необходимо остаток предыдущий умножить на разницу в днях между левой границей и датой операции
+                                    then case when dep.date_doc_prov_pre < trunc(sysdate, 'mm') - 30
+                                              then (dep.amount_sum_pre * coalesce(dep.curs_value, 1) * (dep.date_doc_prov - (trunc(sysdate, 'mm') - 30))) +
+                                                --добавляем сумму остатка с первой операции до следующей
+                                                   (dep.amount_sum * coalesce(dep.curs_value, 1) * (least(dep.date_doc_prov_post, trunc(sysdate, 'mm')) - dep.date_doc_prov))
+                                        --иначе для остальных умножаем остаток на разницу в днях между датой операции и датой следующей операции
+                                        else dep.amount_sum * coalesce(dep.curs_value, 1) * (least(dep.date_doc_prov_post, trunc(sysdate, 'mm')) - dep.date_doc_prov) end
+                                end)),0) as dep_balance_sum_month_30d
+
+             ,coalesce(round(sum(case when dep.date_doc_prov >= trunc(sysdate, 'mm') - 30
+                                     then case when dep.date_doc_prov_pre < trunc(sysdate, 'mm') - 30
+                                               then (dep.date_doc_prov - (trunc(sysdate, 'mm') - 30)) +
+                                                   (least(dep.date_doc_prov_post, trunc(sysdate, 'mm')) - dep.date_doc_prov)
+                                          else (least(dep.date_doc_prov_post, trunc(sysdate, 'mm')) - dep.date_doc_prov) end
+                                end)),0) as dep_active_days_month_30d
+
+
+      from u1.V_CLIENT_RFO_BY_ID cl
+      join U1.M_RBO_CONTRACT_DEPOSIT_BAS t on t.rfo_client_id = cl.rfo_client_id
+                                                   --and t.begin_date < trunc(sysdate)
+                                                   and t.is_has_timeout = 1
+      left join (
+              select --x.rfo_client_id,
+                     x.rbo_client_id,
+                     x.rbo_contract_id,
+                     x.contract_currency,
+                     x.date_doc_prov,
+                     x.amount_sum,
+                     x.curs_value,
+
+                     --остаток с пердыдущей операции
+                     lag(x.amount_sum, 1, x.amount_sum) over (partition by x.rbo_contract_id order by x.date_doc_prov) as amount_sum_pre,
+                  --   lag(x.contract_currency) over (partition by x.rbo_contract_id order by x.date_doc_prov) as
+                     --дата предыдущей операции
+                     lag(x.date_doc_prov, 1, x.date_doc_prov) over (partition by x.rbo_contract_id order by x.date_doc_prov) as date_doc_prov_pre,
+                     --дата следующей операции
+                     lead(x.date_doc_prov, 1, x.date_doc_prov) over (partition by x.rbo_contract_id order by x.date_doc_prov) as date_doc_prov_post/*,
+                      --остаток с пердыдущей операции USD
+                     case lag(x.amount_sum, 1, x.amount_sum) over (partition by x.rbo_contract_id order by x.date_doc_prov) as amount_sum_pre,
+                     --дата предыдущей операции
+                     lag(x.date_doc_prov, 1, x.date_doc_prov) over (partition by x.rbo_contract_id order by x.date_doc_prov) as date_doc_prov_pre,
+                     --дата следующей операции
+                     lead(x.date_doc_prov, 1, x.date_doc_prov) over (partition by x.rbo_contract_id order by x.date_doc_prov) as date_doc_prov_post*/
+              from (
+                   select --группируем по дате операции
+                          t3.rbo_client_id,
+                          t3.rbo_contract_id,
+                          t3.contract_currency,
+                          t3.date_doc_prov,
+
+                          max(t3.curs_value) keep (dense_rank last order by t3.fact_oper_id) as curs_value,
+
+                          --последний остаток на дату операции
+                          max(t3.amount_sum) keep (dense_rank last order by t3.fact_oper_id) as amount_sum
+                   from (
+                          select tt.rbo_client_id,
+                                 tt.rbo_contract_id,
+                                 tt.contract_currency,
+                                 tt.date_doc_prov,
+
+                                 tt.main_docum_id,
+                                 tt.fact_oper_id,
+
+
+                                 tt.is_dt_ct,
+                                 tt.amount_oper,
+
+                                 cc.curs_value,
+
+                                 --расчитываем остаток на дату операции
+                                 sum(tt.amount_oper*decode(tt.is_dt_ct, 0, 1, 1, -1)) over (partition by tt.rbo_contract_id order by tt.fact_oper_id
+                                                                                            rows between unbounded preceding and current row) as amount_sum
+                          from U1.T_CONTRACT_DEPN_OPER_ALL tt
+                          left join U1.V_RBO_Z#VID_OPER_DOG v on v.c_code = tt.oper_dog_code
+                          left join u1.M_RBO_COURSES cc on cc.date_recount = trunc(tt.date_doc_prov)
+                                                           and cc.currency = tt.contract_currency
+                                                           and tt.contract_currency != 'KZT'
+
+                          where v.c_check_oper_depn_cli = 1 --только клиентские операции
+                   ) t3
+                   group by t3.rbo_client_id,
+                            t3.rbo_contract_id,
+                            t3.contract_currency,
+                            t3.date_doc_prov
+              ) x
+      ) dep on dep.rbo_contract_id = t.rbo_contract_id/* and
+               dep.date_doc_prov >= trunc(sysdate, 'mm') - 30*/
+      --where am.rfo_client_id = 9960545157
+      group by cl.rfo_client_id,
+               t.rbo_contract_id,
+               t.currency
+) y
+group by y.rfo_client_id;
+grant select on U1.M_SCCL_RBO_DEP_PAR2 to LOADDB;
+grant select on U1.M_SCCL_RBO_DEP_PAR2 to RTS_RDWH;
+
+

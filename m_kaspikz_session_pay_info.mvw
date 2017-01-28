@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_KASPIKZ_SESSION_PAY_INFO
+build deferred
+refresh complete on demand
+as
+select ppi.id as pay_info_id,
+       ppi.user_id,
+       lhr.session_id,
+       ppi.reg_date,
+       sc.alias_val as service_categ_code,
+       sc.name_val  as service_categ_name,
+       s.alias_val  as service_code,
+       ppi.amount   as pay_amount,
+       ppi.amount_fee as pay_amount_fee,
+       ppi.currency   as pay_currency,
+       ppi.bonus_amount as pay_bonus_amount
+  from T_KASPIKZ_PAY_PAY_INFO  ppi
+  join (select session_id, user_id, to_char(hr.date_start,'dd-mm-yyyy hh24:mi') as date_start
+          from T_KASPIKZ_LOG_HTTP_REQUEST hr
+         group by session_id, user_id, to_char(hr.date_start,'dd-mm-yyyy hh24:mi')) lhr on lhr.user_id = ppi.user_id
+                                                                                       and lhr.date_start = to_char(ppi.reg_date,'dd-mm-yyyy hh24:mi')
+  join  M_KASPIKZ_PAY_SERVICES       s on s.id = ppi.service_id
+  join  M_KASPIKZ_PAY_SERVICE_CATEG sc on sc.id = s.service_category_id;
+grant select on U1.M_KASPIKZ_SESSION_PAY_INFO to LOADDB;
+grant select on U1.M_KASPIKZ_SESSION_PAY_INFO to LOAD_MO;
+
+

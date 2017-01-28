@@ -1,0 +1,18 @@
+﻿create table U1.T_S02_Z#KAS_STATE_HST
+(
+  id               NUMBER,
+  c_obj_ref        VARCHAR2(128),
+  c_from_state_ref NUMBER,
+  c_to_state_ref   NUMBER,
+  c_op_date        DATE,
+  c_date_time      DATE,
+  c_num            NUMBER(7)
+)
+tablespace USERS_ARC
+  pctfree 10
+  initrans 1
+  maxtrans 255
+nologging;
+grant select on U1.T_S02_Z#KAS_STATE_HST to LOADDB;
+grant select on U1.T_S02_Z#KAS_STATE_HST to LOADER;
+

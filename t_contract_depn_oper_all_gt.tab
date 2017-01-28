@@ -1,0 +1,26 @@
+﻿create table U1.T_CONTRACT_DEPN_OPER_ALL_GT
+(
+  fact_oper_id NUMBER,
+  row_status   VARCHAR2(1)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_CONTRACT_DEPN_OPER_ALL_GT
+  is 'Временная таблица для инкрементальной загрузки данных в T_CONTRACT_DEPN_OPER_ALL';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL_GT.fact_oper_id
+  is 'Ссылка на идентификатор операции(FK на z#fact_oper.id)';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL_GT.row_status
+  is 'Признак измнеения:I-insert,U-update,D-delete';
+grant select on U1.T_CONTRACT_DEPN_OPER_ALL_GT to LOADDB;
+grant select on U1.T_CONTRACT_DEPN_OPER_ALL_GT to LOADER;
+

@@ -1,0 +1,56 @@
+﻿create table U1.T_RBO_CONTRACT_PORTFOLIO_SNAP
+(
+  rep_date               DATE,
+  yy_mm_report           VARCHAR2(9),
+  rbo_client_id          NUMBER,
+  rbo_contract_id        NUMBER,
+  rfo_contract_id        NUMBER,
+  rfo_client_id          NUMBER,
+  contract_number        VARCHAR2(66),
+  start_date_actual      DATE,
+  yy_mm_start_date_act   VARCHAR2(9),
+  start_date             DATE,
+  yy_mm_start_date       VARCHAR2(9),
+  debt_begin_date        DATE,
+  cred_program_code      VARCHAR2(48),
+  cred_program_name      VARCHAR2(300),
+  cred_program_code_x    VARCHAR2(48),
+  cred_program_name_x    VARCHAR2(300),
+  x_dnp_name             VARCHAR2(300),
+  is_card                NUMBER(1),
+  is_refin_contract      NUMBER,
+  is_ever_refin_contract NUMBER,
+  rbo_contract_id_to     NUMBER(21),
+  refin_date             DATE,
+  refin_date_first       DATE,
+  refin_percent          NUMBER,
+  ppm                    NUMBER,
+  num_stmt               NUMBER,
+  total_debt             NUMBER(21,2),
+  total_debt_x           NUMBER,
+  del_days               NUMBER(21),
+  del_days_x             NUMBER,
+  max_debt_used          NUMBER,
+  max_debt_used_x        NUMBER,
+  del_days_max           NUMBER,
+  del_days_max_x         NUMBER,
+  del_days_cli_max       NUMBER,
+  del_days_cli_max_x     NUMBER,
+  is_on_balance          VARCHAR2(1),
+  contract_amount        NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RBO_CONTRACT_PORTFOLIO_SNAP to LOADDB;
+

@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_KASPIKZ_PAY_SERVICE_CATEG
+build deferred
+refresh complete on demand
+as
+select cast(t.intId as number(10)) as id,
+       cast(t.vchExternalId as varchar2(100)) as external_id,
+       upper(cast(t.vchName as varchar2(100))) as name_val,
+       upper(cast(t.vchAlias as varchar2(100))) as alias_val
+  from s37.tb_Payments_ServiceCategories@rdwh_exd t;
+grant select on U1.M_KASPIKZ_PAY_SERVICE_CATEG to LOADDB;
+grant select on U1.M_KASPIKZ_PAY_SERVICE_CATEG to LOADER;
+
+

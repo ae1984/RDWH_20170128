@@ -1,0 +1,56 @@
+﻿create materialized view U1.M_AUTO_KOLESA_KZ_DATA_ANL_T
+build deferred
+refresh force on demand
+as
+select y.*,
+       case when y.akk_id = id_a or
+                 y.akk_id = id_c or
+                 y.akk_id = id_b
+            then 1 else 0 end as is_alt
+from (
+    select x.*,
+           max(x.akk_id) keep (dense_rank last order by case when x.akk_price<=(x.a+x.c)/2 and x.rn<x.cnt_act then x.akk_price end nulls first,x.akk_id)
+                         over (partition by x.akk_data_id) as id_b,
+           max(x.akk_price) keep (dense_rank last order by case when x.akk_price<=(x.a+x.c)/2 and x.rn<x.cnt_act then x.akk_price end nulls first,x.akk_id)
+                            over (partition by x.akk_data_id) as b,
+
+           round((x.a+x.c)/2) as ac2
+    from (
+          select
+                t.akk_data_id,
+                t.avg_price,
+                a.akk_id,
+                a.akk_price,
+
+                t.akk_brend,
+                t.akk_model,
+                t.akk_year_car,
+                t.akk_drive,
+                to_number(replace(t.akk_engine_volume, ',', '.')) akk_engine_volume,
+                t.akk_kpp_type,
+                t.akk_body_type,
+                a.akk_fuel as akk_fuel_type,
+
+
+                count(*) over (partition by t.akk_data_id) as cnt_act,
+                row_number() over (partition by t.akk_data_id order by a.akk_price,a.akk_id) as rn,
+
+                min(a.akk_price) over (partition by t.akk_data_id) as a,
+                max(a.akk_price) over (partition by t.akk_data_id) as c,
+
+                min(a.akk_id) keep (dense_rank first order by a.akk_price) over (partition by t.akk_data_id) as id_a,
+                max(a.akk_id) keep (dense_rank last order by a.akk_price) over (partition by t.akk_data_id) as id_c
+          from M_AUTO_KOLESA_KZ_DATA_T t
+          join M_AUTO_KOLESA_KZ_DATA_SUB_T a on a.akk_data_id=t.akk_data_id and a.akk_active_bool=1 and t.confidence_level=1
+          order by t.akk_data_id, a.akk_price, a.akk_id
+    ) x
+    where x.cnt_act >= 5
+) y
+where case when y.akk_id = id_a or
+                 y.akk_id = id_c or
+                 y.akk_id = id_b
+            then 1 else 0 end > 0;
+grant select on U1.M_AUTO_KOLESA_KZ_DATA_ANL_T to LOADDB;
+grant select on U1.M_AUTO_KOLESA_KZ_DATA_ANL_T to LOAD_MO;
+
+

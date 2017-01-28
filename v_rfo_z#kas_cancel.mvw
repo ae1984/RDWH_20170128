@@ -1,0 +1,20 @@
+﻿create materialized view U1.V_RFO_Z#KAS_CANCEL
+refresh complete on demand
+as
+select kc.id,
+        kc.c_date,
+        kc.c_type,
+        kc.c_client,
+        kc.c_folders,
+        kc.c_user,
+        kc.c_note,
+        kc.c_active,
+        kc.c_bp_ref,
+        kc.c_hist_err_level,
+        kc.sn,
+        kc.su
+   from ibs.Z#KAS_CANCEL@rfo_snap kc;
+grant select on U1.V_RFO_Z#KAS_CANCEL to LOADDB;
+grant select on U1.V_RFO_Z#KAS_CANCEL to LOADER;
+
+

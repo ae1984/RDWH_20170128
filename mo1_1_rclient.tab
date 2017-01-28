@@ -1,0 +1,29 @@
+﻿create table U1.MO1_1_RCLIENT
+(
+  id              NUMBER not null,
+  inn             VARCHAR2(12),
+  rnn             VARCHAR2(12),
+  name_last       VARCHAR2(100),
+  name_first      VARCHAR2(100),
+  name_patronymic VARCHAR2(100),
+  date_birth      DATE,
+  rfo_client_id   NUMBER,
+  date_create     TIMESTAMP(6) not null,
+  date_update     TIMESTAMP(6)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO1_1_RCLIENT to LOADDB;
+grant select on U1.MO1_1_RCLIENT to LOADER;
+

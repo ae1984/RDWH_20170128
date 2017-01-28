@@ -1,0 +1,24 @@
+﻿create table U1.V_MO_PROCESS_IN_PAR_1113
+(
+  v_mo_process_id NUMBER not null,
+  param_code_int  VARCHAR2(128) not null,
+  value_number    NUMBER,
+  value_text      VARCHAR2(1024),
+  value_date      TIMESTAMP(6)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.V_MO_PROCESS_IN_PAR_1113 to LOADDB;
+grant select on U1.V_MO_PROCESS_IN_PAR_1113 to LOADER;
+

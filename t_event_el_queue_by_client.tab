@@ -1,0 +1,37 @@
+﻿create table U1.T_EVENT_EL_QUEUE_BY_CLIENT
+(
+  client_iin                  VARCHAR2(64 CHAR),
+  client_dwh_id               VARCHAR2(40 CHAR),
+  source_system_id            VARCHAR2(4 CHAR),
+  event_date                  DATE,
+  office_name                 VARCHAR2(10 CHAR),
+  ticket                      VARCHAR2(10 CHAR),
+  servicetype_name            VARCHAR2(10 CHAR),
+  arrived                     DATE,
+  start_serving               DATE,
+  end_of_service              DATE,
+  queue_type                  VARCHAR2(50 CHAR),
+  waiting_time                NUMBER,
+  service_time                NUMBER,
+  user_name                   VARCHAR2(40 CHAR),
+  event_el_queue_by_client_id VARCHAR2(40 CHAR),
+  customer_text               VARCHAR2(250 CHAR),
+  customer_number             VARCHAR2(100 CHAR)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select, insert, update, delete on U1.T_EVENT_EL_QUEUE_BY_CLIENT to ETL;
+grant select on U1.T_EVENT_EL_QUEUE_BY_CLIENT to LOADDB;
+grant select on U1.T_EVENT_EL_QUEUE_BY_CLIENT to RTDM_USER;
+

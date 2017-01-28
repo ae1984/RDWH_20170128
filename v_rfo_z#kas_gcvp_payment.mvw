@@ -1,0 +1,31 @@
+﻿create materialized view U1.V_RFO_Z#KAS_GCVP_PAYMENT
+refresh complete on demand
+as
+select /*+parallel(15)*/
+  x.id,
+  x.collection_id,
+  x.c_payment_date,
+  x.c_organization,
+  x.c_org_rnn,
+  x.c_org_bik,
+  x.c_payment_sum,
+  x.c_org_bin,
+  case when length(x.x_org_rnn) = 12 and (length(x.x_org_bin) != 12 or x_org_bin is null)
+       then x_org_rnn end as x_org_rnn,
+  case when length(x.x_org_bin) = 12 then x_org_bin end as x_org_bin
+from (
+select p.*,
+          case when g.c_statement_date < to_date('2013-01-03','yyyy-mm-dd')
+              then p.c_org_rnn else p.c_org_bin end as
+      x_org_rnn,
+          case when g.c_statement_date >= to_date('2013-01-03','yyyy-mm-dd')
+              then p.c_org_rnn else p.c_org_bin end as
+      x_org_bin
+from V_RFO_Z#KAS_GCVP_PAYMENT_RAW p, V_RFO_Z#KAS_GCVP_REPORT g
+where p.collection_id = g.c_payments_arr
+) x;
+grant select on U1.V_RFO_Z#KAS_GCVP_PAYMENT to LOADDB;
+grant select on U1.V_RFO_Z#KAS_GCVP_PAYMENT to LOADER;
+grant select on U1.V_RFO_Z#KAS_GCVP_PAYMENT to RISK_VERIF;
+
+

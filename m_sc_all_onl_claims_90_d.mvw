@@ -1,0 +1,48 @@
+﻿create materialized view U1.M_SC_ALL_ONL_CLAIMS_90_D
+build deferred
+refresh force on demand
+as
+select
+       t.rfo_client_id                                               as rfo_client_id,
+       t.folder_id                                                   as folder_id,
+       t.claim_id                                                    as claim_id,
+       ff.is_credit_issued                                           as is_credit_issued,
+       ed.product_model                                              as tov_model,
+       ed.tov_name_code                                              as tov_category,
+       ed.tov_categ_code                                             as tov_category_code,
+       dp.p_name                                                     as delivery,
+       t.total_amount                                                as tov_price,
+       t.rfo_shop_id                                                 as rfo_shop_id,
+       cnt_claim_days                                                as sum_of_claims,
+       x.date_create                                                 as claim_date_create,
+       x.is_credit_rejected                                          as is_credit_rejected,
+       x.cnt_claim_days                                              as cnt_claim_days,
+       x.cnt_categ_days                                              as cnt_categ_days,
+       c.c_form_client_st#mobile#numb                                as mobile,
+       coalesce(cm.c_date_create, t.date_create)                     as folder_date_create
+from u1.M_FOLDER_CON_CANCEL_ONLINE_1 t
+left join u1.v_rfo_z#cm_checkpoint cm on cm.id = t.folder_id
+left join (select t.rfo_client_id,
+             tt.claim_id                                                            as claim_id,
+             tt.date_create                                                         as date_create,
+             count(tt.claim_id) over (partition by t.rfo_client_id, trunc(tt.date_create)) as cnt_claim_days,
+             tt.is_credit_rejected,
+             tt.rfo_shop_id,
+             count(distinct ed.tov_categ_code)  over (partition by t.rfo_client_id, trunc(tt.date_create)) as cnt_categ_days
+        from u1.V_CLIENT_RFO_BY_ID t
+        left join u1.M_FOLDER_CON_CANCEL_ONLINE_1 tt on tt.rfo_client_id = t.rfo_client_id
+                                                    and tt.date_create < trunc(sysdate)
+        left join u1.V_CONTRACT_EKT_DWH_ONLINE    ed on ed.claim_id = tt.claim_id) x on x.claim_id = t.claim_id
+left join u1.V_RFO_Z#KAS_ONLINE_CLAIM c on c.id = t.claim_id
+left join u1.V_CONTRACT_EKT_DWH_ONLINE ed on ed.claim_id = t.claim_id
+left join u1.M_FOLDER_CON_CANCEL ff on ff.claim_id = t.claim_id
+left  join u1.M_KASPISH_ORDERS ko on ko.code = t.process_id
+left  join u1.M_KASPISH_ENUMERATIONVALUES st on st.pk = ko.p_cancellationreason
+left  join u1.M_KASPISH_ENUMERATIONVALUESLP stp on stp.itempk = st.pk and stp.langpk = 8796093317152
+left  join u1.M_KASPISH_DELIVERYMODES d on d.pk = ko.deliverymodepk
+left  join u1.M_KASPISH_DELIVERYMODESLP dp on dp.itempk = d.pk and dp.langpk = 8796093317152
+where t.date_create >= trunc(sysdate) - 90;
+grant select on U1.M_SC_ALL_ONL_CLAIMS_90_D to LOADDB;
+grant select on U1.M_SC_ALL_ONL_CLAIMS_90_D to LOAD_MO;
+
+

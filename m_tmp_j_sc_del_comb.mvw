@@ -1,0 +1,94 @@
+﻿create materialized view U1.M_TMP_J_SC_DEL_COMB
+refresh force on demand
+as
+select * from (
+select
+       floor(m.contract_amount / 100000) * 100000 as contract_amount,
+       m.pkb_report_status,
+       m.cli_age_basing_on_con_mon_fl,
+       m.cli_age_based_on_fld_mon_fl,
+       floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10 as sal_gcvp_to_sal_form,
+       m.start_total_fact_pmts_by_cli,
+       m.pkb_active_contracts,
+       m.pkb_closed_contracts,
+       floor(m.gcvp_salary / 30000) * 30000 as gcvp_salary,
+       floor(m.inc_total / 30000) * 30000 as inc_total,
+       floor(m.exp_total / 10000) * 10000 as exp_total,
+       floor(m.pkb_total_debt / 100000) * 100000 as pkb_total_debt,
+       floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5 as gcvp_last_pmt_days_ago_floor,
+       m.gcvp_pmts_per_day_max,
+       floor(m.contract_term_months / 3) * 3 as contract_term_months,
+       m.marital_status,
+       m.children,
+       m.org_sector,
+       m.real_estate_relation,
+       floor(m.kdn_our_this_con / 10) * 10 as kdn_our_this_con,
+       floor(m.kdn_our_all_cons / 10) * 10 as kdn_our_all_cons,
+       floor(m.con_amount_in_rep_sum_by_cli / 100000) * 100000 as con_amount_in_rep_sum_by_cli,
+       floor(work_expr_last_place_mon_floor / 3) * 3 as work_expr_last_place_mon_floor,
+       floor(m.age_full_years / 5) * 5 as age_full_years,
+       m.cancel_fld_count_in_48h,
+       m.sex,
+       m.client_patronymic_type, --- отчетсво
+       m.education,
+       m.time_day_num_of_week,
+       m.time_num_hour,
+       m.x_dnp_region,
+       m.x_dnp_name,
+       m.reg_address_city,
+       m.cr_program_name,
+--       m.is_card,
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate,
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1,
+    round(sum(c.max_debt_used) / 1000000) as sales_mln,
+    sum(c.max_debt_used) as sales,
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt,
+    round(sum(c.delinq_rate_b * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b,
+    round(sum(c.delinq_rate_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_w,
+    round(sum(c.delinq_rate_g * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_g
+from V_TMP_CONTRACT_CAL_DEL_NEW c
+join M_FOLDER_CON_MINER_X m on m.contract_id = c.contract_id
+where (c.yms like '2013 - %' or c.yms like '2012 - %' or c.yms like '2011 - %')
+      --and m.is_test = 0
+group by rollup (
+       floor(m.contract_amount / 100000) * 100000,
+       m.pkb_report_status,
+       m.cli_age_basing_on_con_mon_fl,
+       m.cli_age_based_on_fld_mon_fl,
+       floor(m.sal_gcvp_to_sal_form_prc_floor / 10) * 10,
+       m.start_total_fact_pmts_by_cli,
+       m.pkb_active_contracts,
+       m.pkb_closed_contracts,
+       floor(m.gcvp_salary / 30000) * 30000,
+       floor(m.inc_total / 30000) * 30000,
+       floor(m.exp_total / 10000) * 10000,
+       floor(m.pkb_total_debt / 100000) * 100000,
+       floor(m.gcvp_last_pmt_days_ago_floor / 5) * 5,
+       m.gcvp_pmts_per_day_max,
+       floor(m.contract_term_months / 3) * 3,
+       m.marital_status,
+       m.children,
+       m.org_sector,
+       m.real_estate_relation,
+       floor(m.kdn_our_this_con / 10) * 10,
+       floor(m.kdn_our_all_cons / 10) * 10,
+       floor(m.con_amount_in_rep_sum_by_cli / 100000) * 100000,
+       floor(work_expr_last_place_mon_floor / 3) * 3,
+       floor(m.age_full_years / 5) * 5,
+       m.cancel_fld_count_in_48h,
+       m.sex,
+       m.client_patronymic_type, --- отчетсво
+       m.education,
+       m.time_day_num_of_week,
+       m.time_num_hour,
+       m.x_dnp_region,
+       m.x_dnp_name,
+       m.reg_address_city,
+       m.cr_program_name
+      )
+having sum(c.max_debt_used) > 0
+) where con_cnt >= 10;
+grant select on U1.M_TMP_J_SC_DEL_COMB to LOADDB;
+grant select on U1.M_TMP_J_SC_DEL_COMB to LOADER;
+
+

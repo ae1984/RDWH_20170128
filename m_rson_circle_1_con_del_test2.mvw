@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_RSON_CIRCLE_1_CON_DEL_TEST2
+refresh complete on demand
+as
+select distinct c.contract_number
+  from M_CONTRACT_CAL_DEL c
+  join V_CONTRACT_CAL cc
+    on cc.contract_number = c.contract_number
+   and cc.is_refin_restruct_first != 1
+  join u1.M_RSON_CIRCLE_1_CON_DEL cl
+    on /*cl.rfo_client_id = c.rfo_client_id*/
+ cl.contract_number = c.contract_number
+  join (select link as link, min(perc) as perc
+          from T_TMP_RSON_A_DEL
+         group by link) p
+    on p.link = cl.circle_1_cli_cnt
+   and cl.perc_del_days_max_by_cli >= p.perc
+ where not exists (select null
+          from M_FOLDER_CON_CANCEL f
+         where f.folder_id = c.folder_id_first
+           and f.is_refin = 1);
+grant select on U1.M_RSON_CIRCLE_1_CON_DEL_TEST2 to LOADDB;
+grant select on U1.M_RSON_CIRCLE_1_CON_DEL_TEST2 to LOADER;
+
+

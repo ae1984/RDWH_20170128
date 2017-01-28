@@ -1,0 +1,117 @@
+﻿create materialized view U1.M_RKATE_MATRIX_ESTIM
+build deferred
+refresh force on demand
+as
+select time_day,
+       mm,
+       yyyy,
+       row_number() over (partition by folder_id order by line_time) as npp,
+       line_time,
+       point_fromfrom_name,
+       point_from_name,
+       point_to_name,
+       line_time2,
+       oz_time,
+       process_code,
+       folder_id,
+       user_name,
+       depart_name,
+       rfo_contract_id,
+       cr_program_name,
+       amount,
+       brand,
+       model,
+       prod_year,
+       vin
+from ( select  h.history_id,
+               round(h.line_time,'hh24') as time_day,
+               d.yyyy,
+               d.mm,
+               lag(h.point_from_name,1,0) over (partition by h.folder_id order by h.line_time)  as  point_fromfrom_name,
+               h.point_from_name,
+               h.point_to_name,
+               lag(h.line_time,1,null) over (partition by h.folder_id order by h.line_time) line_time2,
+               h.line_time,
+               ceil(( h.line_time - lag(h.line_time,1,h.line_time) over (partition by h.folder_id order by h.line_time))*24*60)  as oz_time,
+               fa.process_code,
+               fa.process_name,
+               h.folder_id,
+               h.user_name,
+               u.c_name_depart as depart_name,
+               c.rfo_contract_id,
+               c.cr_program_name,
+               ceil(c.contract_amount/10000)*10000 as amount,
+               c.brand,
+               c.model,
+               c.prod_year,
+               c.vin
+        from V_FOLDER_ALL_HISTORY h
+        join V_FOLDER_ALL_RFO fa on h.folder_id = fa.folder_id
+        join V_TIME_DAYS d on d.yyyy_mm_dd = trunc(h.line_time)
+        left join V_RFO_Z#USER u on u.id = h.user_id
+        left join V_CONTRACT_ALL_RFO_AUTO c on c.folder_id = fa.folder_id
+        where fa.process_code = 'KAS_AUTO_CRED_PRIV_PC'
+           and fa.folder_date_create >= to_date('01-01-2013','dd-mm-yyyy')
+           and h.line_time >= fa.folder_date_create
+           and (h.point_to_name = 'ОЦЕНКА ЗАЛОГА' or h.point_from_name = 'ОЦЕНКА ЗАЛОГА')
+      )
+where point_from_name =  'ОЦЕНКА ЗАЛОГА'
+union all
+select time_day,
+       mm,
+       yyyy,
+       row_number() over (partition by folder_id order by line_time) as npp,
+       line_time,
+       point_fromfrom_name,
+       point_from_name,
+       point_to_name,
+       line_time2,
+       oz_time,
+       process_code,
+       folder_id,
+       user_name,
+       depart_name,
+       rfo_contract_id,
+       cr_program_name,
+       amount,
+       brand,
+       model,
+       prod_year,
+       vin
+from ( select  h.history_id,
+               round(h.line_time,'hh24') as time_day,
+               d.yyyy,
+               d.mm,
+               lag(h.point_from_name,1,0) over (partition by h.folder_id order by line_time)  as  point_fromfrom_name,
+               h.point_from_name,
+               h.point_to_name,
+               lag(h.line_time,1,null) over (partition by h.folder_id order by line_time) line_time2,
+               h.line_time,
+               ceil(( h.line_time - lag(h.line_time,1,h.line_time) over (partition by h.folder_id order by line_time))*24*60)  as oz_time,
+               fa.process_code,
+               fa.process_name,
+               h.folder_id,
+               h.user_name,
+               u.c_name_depart as depart_name,
+               c.rfo_contract_id,
+               c.cr_program_name,
+               ceil(c.contract_amount/10000)*10000 as amount,
+               c.brand,
+               c.model,
+               c.prod_year,
+               c.vin
+        from V_FOLDER_ALL_HISTORY h
+        join V_FOLDER_ALL_RFO fa on h.folder_id = fa.folder_id
+        join V_TIME_DAYS d on d.yyyy_mm_dd = trunc(h.line_time)
+        left join V_RFO_Z#USER u on u.id = h.user_id
+        left join V_CONTRACT_ALL_RFO_AUTO c on c.folder_id = fa.folder_id
+        where fa.process_code = 'KAS_ZAL_EST'
+           and fa.folder_date_create >= to_date('01-01-2013','dd-mm-yyyy')
+           and h.line_time >= fa.folder_date_create
+           and (point_to_name = 'ОЦЕНКА ЗАЛОГА' or point_from_name = 'ОЦЕНКА ЗАЛОГА')
+      )
+where point_from_name =  'ОЦЕНКА ЗАЛОГА';
+grant select on U1.M_RKATE_MATRIX_ESTIM to LOADDB;
+grant select on U1.M_RKATE_MATRIX_ESTIM to LOADER;
+
+

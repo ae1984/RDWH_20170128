@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_TMP_R_AUTO_MO_SCO
+refresh force on demand
+as
+select count (*) from (select c.folder_id
+from m_folder_con_cancel c
+join (
+     select distinct (x.folder_id)
+     from (
+          select /*+ noparallel */ distinct (t.folder_id) --, count(t.folder_id) /*, count(distinct t.folder_id)*/
+          from M_FOLDER_MO_SCO_REQUEST_2015 t
+union all
+select /*+ noparallel */ distinct (t.folder_id) --, count(t.folder_id) /*, count(distinct t.folder_id)*/
+from M_FOLDER_MO_SCO_REQUEST_2014 t
+) x ) q on q.folder_id = c.folder_id
+where c.cr_program_name like 'АВТОКРЕДИТ%');
+grant select on U1.M_TMP_R_AUTO_MO_SCO to LOADDB;
+grant select on U1.M_TMP_R_AUTO_MO_SCO to LOADER;
+
+

@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_REJ_AUTO_GAI_010814
+refresh force on demand
+as
+select /*+ no_parallel*/ distinct t.contract_number
+from U1.M_FOLDER_CON_MINER t
+left join u1.m_Folder_Con_Miner_V3 t1 on t.contract_number = t1.contract_number
+where  t.cr_program_name like 'АВТОКРЕДИТОВАНИЕ%'
+        and (   upper(t1.avto_model_year_max_mark) = 'VOLKSWAGEN'
+             or  upper(t1.avto_model_year_max_mark) = 'AUDI'
+             or t1.avto_model_year_max_mark is null
+        )
+        and (  upper(t.x_dnp_name) = 'АЛМАТЫ'
+            or upper(t.x_dnp_name) = 'АКТАУ'
+            or upper(t.x_dnp_name) = 'ШЫМКЕНТ'
+            or upper(t.x_dnp_name) = 'АКТОБЕ'
+            or upper(t.x_dnp_name) = 'УСТЬ-КАМЕНОГОРСК'
+        )
+        and ( (t.contract_amount >= 1000000 and t.contract_amount <= 1500000)
+            or t.contract_amount > 2500000)
+        and t.sal_gcvp_to_sal_form_prc_floor < 5
+        and upper(t.real_estate_relation) <> 'ДРУГОЕ'
+        and t.age_full_years < 45
+        and (  t.children = '1'
+            or t.children = '3'
+            or upper(t.children) = 'НЕТ'
+        )
+        and t.cli_age_basing_on_con_mon_fl <= 6;
+grant select on U1.M_REJ_AUTO_GAI_010814 to LOADDB;
+grant select on U1.M_REJ_AUTO_GAI_010814 to LOADER;
+
+

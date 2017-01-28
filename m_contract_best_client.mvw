@@ -1,0 +1,123 @@
+﻿create materialized view U1.M_CONTRACT_BEST_CLIENT
+refresh force on demand
+as
+select q.client_id,                     -- client_id
+       q.contract_number,               --
+       q.yy_mm_start,                   -- yms
+       q.start_con_month_cnt_by_cli,    -- кол-во месяцев с момента первого договора по клиенту на момент выдачи кредита
+       q.start_con_del_days_by_cli,     -- кол-во дней просрочки по клиенту на момент выдачи кредита
+       q.start_con_del_days_by_cli_6mm, -- максимальное кол-во дней просрочки за 6 месяцев по клиенту на момент выдачи кредита
+       q.start_con_in_mo_bl_by_cli,     -- был ли в ЧС МО на момент выдачи кредита
+       q.start_con_in_rfo_bl_by_cli,    -- был ли в ЧС РФО на момент выдачи кредита
+       q.start_con_is_hard_by_cli,      -- была ли HARD оптимизация на момент выдачи кредита
+       q.con_is_hard,                   -- договор является HARD оптимизацией
+       q.start_max_con_term_by_cli,     -- максимальноая продолжителдьность предыдущих договоров по клиенту (кол-во месяцев) на момент выдачи кредита
+
+       case when nvl(start_con_del_days_by_cli, 0) = 0
+             and nvl(start_con_month_cnt_by_cli, 0) >= 6
+             and nvl(start_con_del_days_by_cli_6mm, 0) < 30
+             and nvl(start_con_is_hard_by_cli, 0) = 0
+             and nvl(start_con_in_mo_bl_by_cli, 0) = 0
+             and nvl(start_con_in_rfo_bl_by_cli, 0) = 0
+             and nvl(start_max_con_term_by_cli, 0) >= 75
+            then 1 else 0 end start_con_lk_by_cli -- признак ЛК продажников на момент выдачи кредита
+from (
+    select yy.*,
+           z.start_max_con_term_by_cli
+    from
+    (
+        select y.client_id,
+               y.contract_no contract_number,
+               min(yy_mm_start) keep (dense_rank first order by yy_mm_report_num) yy_mm_start,
+               min(rank_by_cli_prev) keep (dense_rank first order by yy_mm_report_num) start_con_month_cnt_by_cli,
+               min(delinq_days_prev) keep (dense_rank first order by yy_mm_report_num) start_con_del_days_by_cli,
+               min(delinq_days_6m) keep (dense_rank first order by yy_mm_report_num) start_con_del_days_by_cli_6mm,
+               min(is_cli_in_mo_bl_prev) keep (dense_rank first order by yy_mm_report_num) start_con_in_mo_bl_by_cli,
+               min(is_cli_in_rfo_bl_prev) keep (dense_rank first order by yy_mm_report_num) start_con_in_rfo_bl_by_cli,
+               min(is_cli_ref_res_prev) keep (dense_rank first order by yy_mm_report_num) start_con_is_hard_by_cli,
+               min(is_cli_ref_res) keep (dense_rank first order by yy_mm_report_num) con_is_hard
+        from (
+            select xx.*,
+                   --находим предыдущий rank_by_cli по rank_by_cli
+                   max(xx.rank_by_cli) over (partition by xx.client_id order by xx.rank_by_cli
+                                                                             range between 1 preceding and 1 preceding) rank_by_cli_prev,
+                   --находим предыдущий deliq_days по rank_by_cli
+                   max(xx.delinq_days) over (partition by xx.client_id order by xx.rank_by_cli
+                                                                             range between 1 preceding and 1 preceding) delinq_days_prev,
+                   --находим максимальный deliq_days по rank_by_cli за последние 6 мес
+                   max(xx.delinq_days) over (partition by xx.client_id order by xx.rank_by_cli
+                                                                             range between 6 preceding and 1 preceding) delinq_days_6m,
+                   --находим предыдущий is_cli_in_mo_bl по rank_by_cli
+                   max(xx.is_cli_in_mo_bl) over (partition by xx.client_id order by xx.rank_by_cli
+                                                                                 range between 1 preceding and 1 preceding) is_cli_in_mo_bl_prev,
+
+                   --находим предыдущий is_cli_in_rfo_bl по rank_by_cli
+                   max(xx.is_cli_in_rfo_bl) over (partition by xx.client_id order by xx.rank_by_cli
+                                                                                 range between 1 preceding and 1 preceding) is_cli_in_rfo_bl_prev,
+
+                   --находим предыдущий is_cli_ref_res по rank_by_cli
+                   max(xx.is_cli_ref_res) over (partition by xx.client_id order by xx.rank_by_cli
+                                                                             range between 1 preceding and 1 preceding) is_cli_ref_res_prev
+            from (
+                select
+                       x.client_id,
+                       x.contract_no,
+                       x.yy_mm_report,
+                       x.yy_mm_report_num,
+                       x.yy_mm_start,
+                       x.delinq_days,
+                       x.rank_by_cli,
+
+                       case when mo_bl.client_id is null then 0 else 1 end is_cli_in_mo_bl,
+
+                       case when rfo_bl.client_id is null then 0 else
+                         --в РФО не заполнена Дата добавления в ЧС, поэтому считаем, если просрочка была >=90, то он был в ЧС со след месяца
+                         case when delinq_days >= 120 then 1 else 0 end
+                       end is_cli_in_rfo_bl,
+
+                       case when r.ref_res_count > 0 then 1 else 0 end is_cli_ref_res
+
+                from (select t.*,
+                             --Пронумеруем записи по клиенту, отсортировав по дате отчета
+                             --У записей с одинаковым YMR будет одинаковая цифра.
+                             dense_rank() over (partition by t.client_id order by t.yy_mm_report_num) rank_by_cli
+                     from V_DATA_ALL t) x
+
+                left join M_CLIENT_MO_BL_HIST mo_bl on mo_bl.client_id = x.client_id
+                                                    and x.yy_mm_report_date >= trunc(mo_bl.add_date, 'mm')
+                                                    and (mo_bl.delete_date is null or x.yy_mm_report_date < trunc(mo_bl.delete_date, 'mm'))
+
+                left join M_CLIENT_RFO_BL_HIST rfo_bl on rfo_bl.client_id = x.client_id
+                                                      --в РФО не заполена Дата добавления в ЧС, поэтому считаем до удаления клиент был в ЧС
+                                                      and (rfo_bl.add_date is null or x.yy_mm_report_date >= trunc(rfo_bl.add_date, 'mm'))
+                                                      and (rfo_bl.delete_date is null or x.yy_mm_report_date < trunc(rfo_bl.delete_date, 'mm'))
+
+                left join (select t.contract_number,
+                                 min(trunc(t.spof_end_date, 'mm')) as ref_res_first_date,
+                                 max(trunc(t.spof_end_date, 'mm')) as ref_res_last_date,
+                                 count(distinct trunc(t.spof_end_date, 'mm')) as ref_res_count
+                          from M_DWH_ACC_SPECIAL_OFFER_CON t
+                          where t.spof_spec_offer_status_cd in ('WORK','EXECUTED','DEFAULT')
+                                and t.restr_prior = 1
+                          group by t.contract_number) r on r.contract_number = x.contract_no
+            ) xx
+        ) y
+        group by y.client_id,
+                 y.contract_no
+    ) yy
+    left join (select  t.x_client_id,
+                       t.deal_number,
+                       max(round(tt.actual_end_date - tt.begin_date)) start_max_con_term_by_cli
+                from V_DWH_PORTFOLIO_CURRENT t
+                left join V_DWH_PORTFOLIO_CURRENT tt on tt.x_client_id = t.x_client_id
+                                                     and tt.actual_end_date < trunc(t.begin_date)
+                                                     and tt.x_is_credit_issued = 1
+                                                     and tt.x_product_type != 'ОПТИМИЗАЦИЯ'
+                                                     and tt.deal_number != t.deal_number
+              group by t.x_client_id,
+                       t.deal_number) z on z.deal_number = yy.contract_number
+) q;
+grant select on U1.M_CONTRACT_BEST_CLIENT to LOADDB;
+grant select on U1.M_CONTRACT_BEST_CLIENT to LOADER;
+
+

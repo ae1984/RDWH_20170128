@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_RFO_TEST_Z#RDOC
+using no index
+refresh force on demand
+as
+select /*+ driving_site(t)*/
+       t.c_doc,
+       t.collection_id
+  from ibs.Z#RDOC@rfo_test t
+ group by t.c_doc,
+       t.collection_id;
+grant select on U1.V_RFO_TEST_Z#RDOC to LOADDB;
+grant select on U1.V_RFO_TEST_Z#RDOC to LOADER;
+
+

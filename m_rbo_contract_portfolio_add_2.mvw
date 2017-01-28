@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_RBO_CONTRACT_PORTFOLIO_ADD_2
+build deferred
+refresh force on demand
+as
+select /*+ parallel (30)*/a1.rbo_contract_id,
+       a1.rep_date,
+       max(ch.delinq_days_in_month) as prev_con_del_days_max,
+       count(distinct case when ch.fact_pmts_in_month > 0 then ch.yyyy_mm_num end) as fact_pmt_mon_before, ---
+       count(distinct case when ch.yyyy_mm_num >= to_number(to_char(add_months(a1.rep_date,-12),'yyyymm')) and
+                                ch.fact_pmts_in_month > 0 then ch.yyyy_mm_num end) as fact_pmt_mon_before_12_mon
+from u1.M_RBO_CONTRACT_PORTFOLIO_ADD_1 a1
+left join u1.V_CLIENT_CAL cc on cc.client_iin_last = a1.client_iin
+left join u1.V_CLIENT_HISTORY ch on ch.client_id = cc.client_id and
+                                 ch.text_yyyy_mm < to_char(a1.rep_date,'yyyy - mm')
+group by a1.rbo_contract_id,a1.rep_date;
+grant select on U1.M_RBO_CONTRACT_PORTFOLIO_ADD_2 to LOADDB;
+grant select on U1.M_RBO_CONTRACT_PORTFOLIO_ADD_2 to LOADER;
+
+

@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_MO_ONL_CRED_ACTIVE
+refresh force on demand
+as
+select o.c_client_ref as rfo_client_id,
+       f.id as folder_id,
+       o.id as claim_id,
+       b.id as buy_id,
+       upper(i.c_name) as prod_name,
+       upper(tn.c_code) as tov_code,
+       upper(tn.c_name) as tov_name,
+       upper(sd.c_code) as status_code,
+       upper(sd.c_name) as status_name
+from u1.V_RFO_Z#FOLDERS f
+join u1.V_RFO_Z#KAS_ONLINE_CLAIM o on o.c_folder_ref = f.id
+join u1.V_RFO_Z#KAS_ONLINE_BUY b on o.c_buy_ref = b.id
+join u1.V_RFO_Z#STATUS_DOG sd on sd.id = b.c_state_id
+join u1.V_RFO_Z#PROD_INFO i on i.collection_id = b.c_prod_info
+join u1.V_RFO_Z#KAS_TOV_NAME tn on tn.id = i.c_name_ref
+where  b.c_date_create >= trunc(sysdate) - 30 and
+       --upper(tn.c_name) = 'СМАРТФОНЫ' and
+       upper(sd.c_code) not like '%CANCELED%' and
+       upper(sd.c_code) not like '%REJECTED%' and
+       upper(sd.c_code) not like '%TERMINATED%';
+grant select on U1.M_MO_ONL_CRED_ACTIVE to LOADDB;
+grant select on U1.M_MO_ONL_CRED_ACTIVE to LOADER;
+grant select on U1.M_MO_ONL_CRED_ACTIVE to LOAD_MO;
+
+

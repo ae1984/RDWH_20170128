@@ -1,0 +1,24 @@
+﻿create table U1.NT_OBJECTS_STAT_HIST
+(
+  sdt           DATE,
+  object_type   VARCHAR2(23),
+  object_name   VARCHAR2(128),
+  created       DATE,
+  last_ddl_time DATE,
+  status        VARCHAR2(7)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_OBJECTS_STAT_HIST to LOADDB;
+

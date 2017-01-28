@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_DWH_KOLESA_DICT_ARR_NEW
+build deferred
+refresh force on demand
+as
+select kolesa_dict_arr_id,
+      kolesa_dict_arr_adv_id,
+      kolesa_dict_arr_type,
+      kolesa_dict_arr_code,
+      kolesa_dict_arr_value,
+      kolesa_dict_arr_date
+from DWH_STAGE.S64_KOLESA_DICT_ARR@RDWH_EXD;
+grant select on U1.M_DWH_KOLESA_DICT_ARR_NEW to LOADDB;
+
+

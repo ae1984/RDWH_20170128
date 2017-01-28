@@ -1,0 +1,38 @@
+﻿create materialized view U1.M_TMP_OFFLINE_SMS_CALLS_CPR
+refresh force on demand
+as
+select
+t.iin,
+t.folder_date_create_mi as date_ratif,
+x.plan_pmt_date_first,
+t.folder_id,
+t.rfo_client_id,
+t.contract_number,
+t.is_categ_a,
+t.is_sign_require,
+t.is_client_new_by_con,
+case when fpd0.is_fpd_0>0 then 1 else 0 end as fpd0,
+case when fpd7.is_fpd_7>0 then 1 else 0 end as fpd7,
+case when spd.is_spd>0 then 1 else 0 end as spd,
+case when d.x_delinq_days>0 then 1 else 0 end as is_del0,
+case when d.x_delinq_days>7 then 1 else 0 end as is_del7,
+case when d.x_delinq_days>14 then 1 else 0 end as is_del14
+
+from M_FOLDER_CON_CANCEL t
+join V_DWH_PORTFOLIO_CURRENT d on t.folder_id = d.folder_id_first and
+                                  d.deal_number = t.contract_number and
+                                  d.x_is_credit_issued = 1 and
+                                  d.prod_type = 'ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)'
+left join (select distinct deal_number, plan_pmt_date_first
+           from M_FPD_SPD_PRE) x on x.deal_number = t.contract_number
+
+left join m_tmp_contract_fpd0 fpd0 on fpd0.deal_number = d.deal_number
+left join m_tmp_contract_fpd7 fpd7 on fpd7.deal_number = d.deal_number
+left join m_tmp_contract_spd spd on spd.deal_number = d.deal_number
+where t.process_name != 'ОНЛАЙН КРЕДИТ' and
+      trunc(t.folder_date_create_mi)>= '15-01-2015' and trunc(t.folder_date_create_mi)<= '16-01-2015' and
+      t.is_credit_issued = 1;
+grant select on U1.M_TMP_OFFLINE_SMS_CALLS_CPR to LOADDB;
+grant select on U1.M_TMP_OFFLINE_SMS_CALLS_CPR to LOADER;
+
+

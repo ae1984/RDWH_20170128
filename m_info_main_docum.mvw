@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_INFO_MAIN_DOCUM
+build deferred
+refresh force on demand
+as
+select r.collection_id,
+        md.c_summa as main_doc_summa,
+        max(md.id)              as doc_main_max_id,
+        max(md.c_name_dt)       keep (dense_rank first order by md.id desc)  as name_dt,
+        max(md.c_name_kt)       keep (dense_rank first order by md.id desc) as name_kt,
+        max(md.c_acc_dt)        keep (dense_rank first order by md.id desc) as acc_dt,
+        max(md.c_acc_kt)        keep (dense_rank first order by md.id desc) as acc_ct,
+        max(md.c_nazn)          keep (dense_rank first order by md.id desc) as main_doc_nazn,
+        max(md.c_type_main_doc) keep (dense_rank first order by md.id desc) as main_doc_type,
+        --max(md.c_summa)         keep (dense_rank first order by md.id desc) as main_doc_summa,
+        max(md.c_kas_doc_id_ext) keep (dense_rank first order by md.id desc) as rbo_main_doc_id
+   from u1.V_RFO_Z#RDOC       r
+   join u1.V_RFO_Z#FDOC       f on  f.id = r.c_doc
+                                and f.class_id = 'MAIN_DOCUM'
+   join u1.V_RFO_Z#MAIN_DOCUM md on md.id = f.id
+  group by  r.collection_id, md.c_summa;
+grant select on U1.M_INFO_MAIN_DOCUM to LOADDB;
+
+

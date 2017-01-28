@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_LUNA_CLIENT_PHOTO_REFERENCE3
+build deferred
+refresh force on demand
+as
+select a.c_client_id as rfo_client_id,
+       a.c_bin_id as photo_luna_id,
+       2 as cl_photo_cnt
+from (select * from u1.m_tmp_luna_etalon_tmp2
+      union all
+      select * from u1.m_tmp_luna_etalon_tmp3) a
+join u1.v_client_rfo_by_id b on a.c_client_id = b.rfo_client_id --and iin is not null
+join U1.V_CLIENT_TAX ct on b.iin = ct.iin
+                        and trim(b.client_name) = trim(ct.c_name)
+                        and case when to_number(substr(ct.iin,5,2)) > 0 and to_number(substr(ct.iin,5,2)) < 32 and
+                                 to_number(substr(ct.iin,7,1)) in (1,2,3,4,5,6)
+                                 and substr(ct.iin,3,2) > 0 and  substr(ct.iin,3,2) < 13
+                            then
+                               case when substr(ct.iin,7,1) in ('5','6') then '20'
+                                            when substr(ct.iin,7,1) in ('3','4') then '19'
+                                            when substr(ct.iin,7,1) in ('1','2') then '18' end ||
+                                       substr(ct.iin,1,2) || '-' ||
+                                       substr(ct.iin,3,2) || '-' || substr(ct.iin,5,2)
+                                       end =  to_char(b.birth_date, 'yyyy-mm-dd')
+join u1.v_rfo_z#cl_priv tr on tr.id = a.c_client_id and (tr.c_pasport#date_end - trunc(sysdate))/7 >= 2
+where a.cnt_exist_photo > 1
+      and min_similarity >= 95
+      and max_similarity < 100
+      and cl_photo_mm_diff > 1;
+grant select on U1.M_LUNA_CLIENT_PHOTO_REFERENCE3 to LOADDB;
+grant select on U1.M_LUNA_CLIENT_PHOTO_REFERENCE3 to LOAD_MO;
+
+

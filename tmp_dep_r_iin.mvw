@@ -1,0 +1,26 @@
+﻿create materialized view U1.TMP_DEP_R_IIN
+refresh force on demand
+as
+select * from (select x.c_inn,
+      (case when x.c_saldo_out_kzt<=0 then '0'
+            when x.c_saldo_out_kzt>0 and x.c_saldo_out_kzt<=20000 then '000-020'
+            when x.c_saldo_out_kzt >20000 and x.c_saldo_out_kzt<=50000 then '020-050'
+            when x.c_saldo_out_kzt>50000 and x.c_saldo_out_kzt<=100000 then '050-100'
+            when x.c_saldo_out_kzt>100000 and x.c_saldo_out_kzt<=300000 then '100-300'
+            when x.c_saldo_out_kzt>300000 and x.c_saldo_out_kzt<=500000 then '300-500'
+            when x.c_saldo_out_kzt>500000 and x.c_saldo_out_kzt<=1000000 then '500-1млн'
+            when x.c_saldo_out_kzt>1000000 then '>1млн'
+            when x.c_saldo_out_kzt is null then 'blank' end) as c_saldo_out_kzt_cat
+from (select /*+ noparallel */ t.c_inn,
+             sum(case when t.c_cur_short = 'EUR' then t.c_saldo_out * 211.5
+                   when t.c_cur_short = 'USD' then t.c_saldo_out * 185.5
+                   when t.c_cur_short = 'KZT' then t.c_saldo_out end) as c_saldo_out_kzt
+       from M_RBO_PORT_DEPN_TST t
+       where t.mm_yyyy_date = '01-2015'
+       group by t.c_inn
+       order by  t.mm_yyyy_date)x)
+       where c_inn is not null;
+grant select on U1.TMP_DEP_R_IIN to LOADDB;
+grant select on U1.TMP_DEP_R_IIN to LOADER;
+
+

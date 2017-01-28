@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_SCCL_RBO_BAS_PAR
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       cl.rfo_client_id
+
+       ,coalesce(case when count(case when t1.is_card = 0 then t1.rbo_contract_id end) > 0
+                      then sum(case when t1.is_card = 0 then round(months_between(t1.date_plan_end, t1.begin_date), 0) end) /
+                           count(case when t1.is_card = 0 then t1.rbo_contract_id end)
+                 end, 0) as avg_term_cred_plan
+
+       ,count(case when t1.product_type = 'ДЕНЬГИ' then t1.rbo_contract_id end)  as rbo_kn_cnt
+
+from u1.V_CLIENT_RFO_BY_ID cl
+left join U1.M_RBO_CONTRACT_BAS t1 on t1.rfo_client_id = cl.rfo_client_id
+group by cl.rfo_client_id;
+grant select on U1.M_SCCL_RBO_BAS_PAR to LOADDB;
+grant select on U1.M_SCCL_RBO_BAS_PAR to LOAD_MO;
+grant select on U1.M_SCCL_RBO_BAS_PAR to RTS_RDWH;
+
+

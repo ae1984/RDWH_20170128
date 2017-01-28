@@ -1,0 +1,33 @@
+﻿create materialized view U1.M_RBO_CONTRACT_DATA_PMT_BUFF2
+build deferred
+refresh force on demand
+as
+select /*+parallel(30)*/
+        mp.rep_date
+       ,po.rbo_contract_id as po_rbo_contract_id
+       ,mp.rbo_contract_id
+       ,po.plan_date_x
+       ,po.plan_date
+       ,po.cnt_pmt_plan
+
+       ,mp.rbo_contract_id as mp_rbo_contract_id
+       ,mp.total_debt_plus
+       ,mp.total_debt_max_plus
+       ,mp.del_days_plus
+
+       ,mp.rep_date-po.plan_date_x as diff_dt_x
+       ,mp.rep_date-po.plan_date as diff_dt
+from u1.M_RBO_CONTRACT_DATA_PMT_BUFF0 po
+left join u1.M_RBO_REFIN_PORT mp on mp.rbo_contract_id = po.rbo_contract_id
+                  and mp.rep_date in (
+                     po.plan_date_x
+                     ,po.plan_date_x + 1
+                     ,po.plan_date_x + 7
+                     ,po.plan_date_x + 15
+                     ,po.plan_date_x + 16
+                     ,po.plan_date_x + 30
+                     ,po.plan_date_x + 60
+                     ,po.plan_date_x + 90
+                     ,po.plan_date
+                  );
+

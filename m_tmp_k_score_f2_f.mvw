@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_TMP_K_SCORE_F2_F
+refresh complete on demand
+as
+select a.*,
+       round(t.regr_glm_7_90_pred, 3) inc_pred_target,
+       round(round(t.regr_glm_7_90_pred, 3)*10000) inc_pred,
+ case when round(t.regr_glm_7_90_pred, 3) > 0 then
+                round((coalesce(a.contract_pmt,0) + coalesce(a.other_deal_pmt,0) + coalesce(a.pkb_pmt,0)) /
+                          round(round(t.regr_glm_7_90_pred, 3)*10000) * 100, 2)
+            else 99999999 end as kdn_pred,
+
+
+case when round(t.regr_glm_7_90_pred, 3)*10000 < coalesce(sv.salary_double, 0) then 1 else 0 end as is_kdn_regulated_pred
+
+from dm.OUTPUT_78_90 t
+join u1.M_TMP_J_K5_FOLDER a on a.folder_id = t.folder_id
+left join T_SALARY_AVERAGE sv on sv.ym_str = a.yy_mm_start_b;
+grant select on U1.M_TMP_K_SCORE_F2_F to LOADDB;
+grant select on U1.M_TMP_K_SCORE_F2_F to LOADER;
+
+

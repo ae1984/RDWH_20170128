@@ -1,0 +1,42 @@
+﻿create materialized view U1.M_TMP_J_1002
+refresh force on demand
+as
+select --+ parallel 30
+           --p.id, /*rf.id as rfolder_id, rf.rfo_folder_id,*/
+--          ppv.value_number as folder_id,
+          p.id, p.folder_id,
+          dp.code_int as par_code,
+          dp.name as par_name
+    from /*MO_PROCESS p
+    join*/ M_TMP_J_1002_2
+    /*( -- находим максимальные id процессов по папке
+        select ppv.value_number as folder_id,
+               max(p.id) as id
+        from MO_PROCESS p
+        join MO_PROCESS_PAR_VALUE ppv on ppv.process_id = p.id and ppv.d_par_id = 1010 -- IN_SCO_FOLDER_ID
+        where p.d_process_id = 1000 and -- MO_SCO
+              ppv.value_number is not null
+        group by ppv.value_number
+    )*/ p --on p2.process_id_max = p.id
+    join MO_CALC c on c.process_id = p.id
+    join MO_CALC_PAR_VALUE cpv on cpv.calc_id = c.id and cpv.value_number = 1
+    join V_MO_D_PAR dp on dp.id = cpv.d_par_id --and dp.code_int like 'MO_SCO_REJECT_PRE_%'-- and dp.status = 1
+                          --and dp.code_int --like 'SC_RISK_ORG_RES_PRE'
+                          /*in (select distinct dp.code_int\* as par_code, dp.name as par_name*\ from V_MO_D_PAR dp
+            join V_MO_D_CALC_PAR cp on cp.d_par_code = dp.code_int and cp.is_out = 1
+            join V_MO_D_CALC dc on dc.code = cp.d_calc_code and
+                  (dc.d_calc_group_code like 'SC_%' or dc.d_calc_group_code in ('AR1_EKT','AR1_KN','AR1_KN15_LKN_PKN','AR1_KNP'))
+            where dp.code_int like '%_RES_PRE%' or
+                  --dp.code_int like 'MO_SCO_REJECT_PRE_%' or ---- интересно посмотреть
+                  dp.code_int in ('CLIENT_BL_EXISTS_SCO', 'CLIENT_DOC_BL_EXISTS',
+                                  'RISK_AUTO_AMOUNT_BEKI_GCVP', 'SC_RISK_EKT_UNMARRIED_BEKI_LOW_SAL',
+                                  'SC_RISK_KN_KDN_HIGH_INCOME', 'SC_RISK_KN_KDN_LOW_INCOME',
+                                  'SC_AR1_KN15_LKN_PKN','SC_AR1_EKT','SC_AR1_KN','SC_AR1_KNP',
+                                  'SC_2_KN_RULES_SET_J1','SC_22_ANTIFRAUD_201405','SC_8_ANTIFRAUD_201405',
+                                  'SC_17_ANTIFRAUD_201406','SC_CHECK_MAN_REJ', 'SC_AUTO_GAI_NO_GCVP'
+                                  ))*/
+    join M_TMP_J_1002_1 xx on xx.code_int = dp.code_int;
+grant select on U1.M_TMP_J_1002 to LOADDB;
+grant select on U1.M_TMP_J_1002 to LOADER;
+
+

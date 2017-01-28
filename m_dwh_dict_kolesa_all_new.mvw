@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_DWH_DICT_KOLESA_ALL_NEW
+build deferred
+refresh force on demand
+as
+select id,
+      c_type_code,
+      c_type_name,
+      c_code,
+      c_name,
+      c_parent,
+      change_date
+from DWH_STAGE.S64_DICT_KOLESA_ALL@RDWH_EXD;
+grant select on U1.M_DWH_DICT_KOLESA_ALL_NEW to LOADDB;
+
+

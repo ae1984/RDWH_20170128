@@ -1,0 +1,56 @@
+﻿create materialized view U1.M_TMP_DI_EMPLOYEE3
+refresh force on demand
+as
+select
+
+c.yy_mm_start_last,
+count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt,
+sum(c.max_debt_used) as sales, -- продажи
+sum(c.delinq_rate_pmt_1 * c.max_debt_used) as del_rate_pmt_1,
+sum(c.delinq_rate_b_w * c.max_debt_used) as del_rate_b_w,
+sum(c.total_debt_last_rep_new_b_w) as b_w_2,
+sum(c.delinq_rate_b * c.max_debt_used) as del_rate_b,
+sum(c.total_debt_last_rep_new_b) as del_rate_b_2,
+sum(c.delinq_rate_w * c.max_debt_used) as del_rate_w,
+sum(c.delinq_rate_g * c.max_debt_used) as del_rate_g,
+sum(c.delinq_rate_npl * c.max_debt_used) as del_rate_npl,
+sum(c.total_debt_last_rep_new_npl) as npl_2,
+sum(c.delinq_rate * c.max_debt_used) as del_rate,
+sum(c.max_debt_used) as total_used_sum,
+sum(case when c.yy_mm_start_last_date <= add_months(sysdate,-8) then c.delinq_rate_b_w * c.max_debt_used end) as del_rate_b_w_tolerance,
+sum(case when c.yy_mm_start_last_date <= add_months(sysdate,-8) then c.max_debt_used end) as total_used_sum_b_w_tolerance,   --b_w, считаем до -8 месяцев назад
+count(distinct cc.iin) as employee_num,
+prod_name,
+prod_type,
+case
+  when contract_count=1 then '1'
+  when contract_count=2 then '2'
+  when contract_count=3 then '3'
+  when contract_count>=4 then '>=4'
+  when contract_count=0 then 'No active credit'
+ else 'Other' end as contract_count,
+cc.is_credit_active
+from M_CONTRACT_CAL_DEL c
+join m_tmp_di_employee2 cc on c.contract_number=cc.deal_number
+join m_tmp_di_employee2_1 pc on cc.iin=pc.iin
+left join V_CONTRACT_CAL ccc on ccc.contract_number = c.contract_number and
+     ccc.is_refin_restruct_first != 1
+where not exists (select null from M_FOLDER_CON_CANCEL f
+                  where f.folder_id = c.folder_id_first and f.is_refin = 1)
+
+group by c.yy_mm_start_last,
+prod_name,
+prod_type,
+case
+  when contract_count=1 then '1'
+  when contract_count=2 then '2'
+  when contract_count=3 then '3'
+  when contract_count>=4 then '>=4'
+  when contract_count=0 then 'No active credit'
+ else 'Other' end,
+cc.is_credit_active
+having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_DI_EMPLOYEE3 to LOADDB;
+grant select on U1.M_TMP_DI_EMPLOYEE3 to LOADER;
+
+

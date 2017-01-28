@@ -1,0 +1,10 @@
+﻿create materialized view U1.M_CITY_POS
+build deferred
+refresh force on demand
+as
+select /*+ no_parallel*/ p.pos_city AS CITY,count(p.pos_name) AS CNT from v_pos p
+group by p.pos_city;
+grant select on U1.M_CITY_POS to LOADDB;
+grant select on U1.M_CITY_POS to LOADER;
+
+

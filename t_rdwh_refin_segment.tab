@@ -1,0 +1,38 @@
+﻿create table U1.T_RDWH_REFIN_SEGMENT
+(
+  id              NUMBER(32),
+  segment_name    VARCHAR2(200),
+  is_well_frst_6m NUMBER(1),
+  is_well_plp     NUMBER(1),
+  is_well_last_6m NUMBER(1),
+  is_well_last_1m NUMBER(1)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RDWH_REFIN_SEGMENT
+  is 'Служебная таблица для определения сегмента оптимизации по параметрам';
+comment on column U1.T_RDWH_REFIN_SEGMENT.id
+  is 'Идентификатор';
+comment on column U1.T_RDWH_REFIN_SEGMENT.segment_name
+  is 'Название сегмента';
+comment on column U1.T_RDWH_REFIN_SEGMENT.is_well_frst_6m
+  is 'Признак выздоровления в первые 6 месяцев после оптимизации (1-выздоровел,0-не выздоровел,2-не полный период)';
+comment on column U1.T_RDWH_REFIN_SEGMENT.is_well_plp
+  is 'Признак выздоровления PLP (1-выздоровел,0-не выздоровел)';
+comment on column U1.T_RDWH_REFIN_SEGMENT.is_well_last_6m
+  is 'Признак выздоровления в последние 6 месяцев (1-выздоровел,0-не выздоровел,2-не полный период)';
+comment on column U1.T_RDWH_REFIN_SEGMENT.is_well_last_1m
+  is 'Признак выздоровления в последний месяц (1-выздоровел,0-не выздоровел,2-не полный период)';
+grant select on U1.T_RDWH_REFIN_SEGMENT to LOADDB;
+

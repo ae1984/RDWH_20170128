@@ -1,0 +1,54 @@
+﻿create table U1.T_MO_RFOLDER_DD
+(
+  id              NUMBER not null,
+  rclient_id      NUMBER,
+  date_create     TIMESTAMP(6) default systimestamp not null,
+  date_update     TIMESTAMP(6),
+  is_active       NUMBER(1) default 0 not null,
+  create_duration NUMBER,
+  update_duration NUMBER,
+  rfo_folder_id   NUMBER,
+  external_id     NUMBER,
+  d_process_code  VARCHAR2(128)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+create index U1.T_MO_RFOLDER_DD_IDX1 on U1.T_MO_RFOLDER_DD (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_MO_RFOLDER_DD_IDX2 on U1.T_MO_RFOLDER_DD (DATE_CREATE)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_MO_RFOLDER_DD to LOADDB;
+grant select on U1.T_MO_RFOLDER_DD to LOADER;
+

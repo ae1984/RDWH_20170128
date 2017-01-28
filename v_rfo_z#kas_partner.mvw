@@ -1,0 +1,23 @@
+﻿create materialized view U1.V_RFO_Z#KAS_PARTNER
+refresh force on demand
+as
+select  id,
+        sn,
+        su,
+        c_code,
+        upper(c_name) as c_name,
+        c_email,
+        c_orgs,
+        c_stype,
+        c_audit#rcv_file,
+        c_audit#create,
+        c_audit#edit,
+        c_audit#date_create,
+        c_audit#date_edit,
+        c_audit#from_rout,
+        c_audit#op_date,
+        c_audit#key_valid
+from IBS.Z#KAS_PARTNER@RFO_SNAP;
+grant select on U1.V_RFO_Z#KAS_PARTNER to LOADDB;
+
+

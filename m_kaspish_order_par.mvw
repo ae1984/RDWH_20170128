@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_KASPISH_ORDER_PAR
+build deferred
+refresh force on demand
+as
+select
+       x.*,
+
+       upper(substr(x.p_mes_aspnet_ses_id, aspnet_ses_id_inf + 1, aspnet_ses_id_inl - aspnet_ses_id_inf - 2)) as aspnet_session_id,
+       substr(x.p_mes_user_agent, user_agent_inf + 1, user_agent_inl - user_agent_inf - 2) as user_agent,
+       substr(x.p_mes_nsclient_ip, nsclient_ip_inf + 1, nsclient_ip_inl - nsclient_ip_inf - 2) as nsclient_ip
+from (
+    select tt.*,
+
+           instr(tt.p_mes_aspnet_ses_id, '''', 1, 3) aspnet_ses_id_inf,
+           instr(tt.p_mes_aspnet_ses_id, '}', 1, 1) aspnet_ses_id_inl,
+
+           instr(tt.p_mes_user_agent, '''', 1, 3) user_agent_inf,
+           instr(tt.p_mes_user_agent, '}', 1, 1) user_agent_inl,
+
+           instr(tt.p_mes_nsclient_ip, '''', 1, 3) nsclient_ip_inf,
+           instr(tt.p_mes_nsclient_ip, '}', 1, 1) nsclient_ip_inl
+
+    from (
+        select e.pk,
+               e.p_order,
+
+               regexp_substr(e.p_message, '(\{code=''ASPNET_SESSIONID'', value=''.*?\})', 1, 1) as p_mes_aspnet_ses_id,
+               regexp_substr(e.p_message, '(\{code=''USER_AGENT'', value=''.*?\})', 1, 1) as p_mes_user_agent,
+               regexp_substr(e.p_message, '(\{code=''NSCLIENT_IP'', value=''.*?\})', 1, 1) as p_mes_nsclient_ip
+
+
+        from u1.M_KASPISH_ORDERHISTORYENTRIES e
+        where upper(e.p_description) = 'LOAN REQUESTED'
+
+    /*    where --e.p_message like '%SESSION%'
+        o.pk = 8822909730861*/
+
+    --and st.typepkstring = '8796111863890'
+    --order by e.createdts
+   ) tt
+) x;
+grant select on U1.M_KASPISH_ORDER_PAR to LOADDB;
+
+

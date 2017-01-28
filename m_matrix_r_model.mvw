@@ -1,0 +1,185 @@
+﻿create materialized view U1.M_MATRIX_R_MODEL
+build deferred
+refresh complete on demand
+as
+select  /*+ parallel (30)*/
+       tdc.yyyy as con_yyyy, tdc.text_yyyy_mm as con_text_yyyy_mm,
+       f.product_type,
+       f.product,
+       f.is_client_new_by_con,
+       pkb1.report_status as rep_stat,
+       f.is_credit_issued,
+       f.city,
+       f.folder_id,
+       f.rfo_client_id,
+       f.rfo_contract_id,
+       f.form_client_id,
+       b.contract_number,
+       b.status_name,
+       b.create_username,
+       case when f.contract_amount<=35000 then '000-035'
+            when f.contract_amount>35000 and f.contract_amount<=50000 then '035-050'
+            when f.contract_amount>50000 and f.contract_amount<=100000 then '050-100'
+            when f.contract_amount>100000 and f.contract_amount<=250000 then '100-250'
+            when f.contract_amount>250000 and f.contract_amount<=350000 then '250-350'
+            when f.contract_amount>350000 and f.contract_amount<=500000 then '350-500'
+            when f.contract_amount>500000 and f.contract_amount<=1000000 then '500-1mln'
+            when f.contract_amount>1000000 and f.contract_amount<=1500000 then '1-1.5mln'
+            when f.contract_amount>1500000 and f.contract_amount<=2500000 then '1.5-2.5mln'
+            when f.contract_amount>2500000 then '>2.5mln' end as con_amount_сat,
+
+       case when  g.salary <=2000 then 0 else 1 end as gsvp_sal_cat,
+       case when f.is_categ_a = 'КАТЕГОРИЯ А' then 'CAT А'
+            when f.is_categ_b = 'КАТЕГОРИЯ Б' then 'CAT B'
+            when f.is_client_new_by_con = 'КЛИЕНТ ПОВТОРНЫЙ' then 'CAT C'
+            when f.is_client_new_by_con = 'КЛИЕНТ НОВЫЙ' then 'CAT D'
+            end as client_category,
+       ---------------------------------
+       count(*) as cnt,
+       count(distinct f.rfo_con_or_claim_id) as rfo_con_or_claim_cnt, -- кол-во заявок, включая онлайн
+       ---
+       sum(f.contract_amount) / 1000000 as amount_requested_mln,
+       ---
+       sum(d.max_debt_used_x) / 1000000 as sales_mln,
+       sum(case when d.del_days_x > 7  then d.total_debt_x end) / 1000000 as del_debt_7d_mln,
+       sum(case when d.del_days_x > 30 then d.total_debt_x end) / 1000000 as del_debt_30d_mln,
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_mln,
+       sum(case when d.del_days_x > 90 then d.total_debt_x end) / 1000000 as del_debt_90d_mln,
+
+       sum(case when d.del_days_max_x > 30 then d.total_debt_x end) / 1000000 as del_debt_30d_ever_mln,
+       sum(case when d.del_days_max_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_ever_mln,
+       sum(case when d.del_days_max_x > 90 then d.total_debt_x end) / 1000000 as del_debt_90d_ever_mln,
+
+       sum(d.total_debt_x_pmt_1_0) / 1000000 as pmt_1_0d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_1_0) / 1000000 as pmt_1_0d_sales_mln,
+       sum(d.total_debt_x_pmt_1_7) / 1000000 as pmt_1_7d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_1_7) / 1000000 as pmt_1_7d_sales_mln,
+       sum(d.total_debt_x_pmt_2_7) / 1000000 as pmt_2_7d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_2_7) / 1000000 as pmt_2_7d_sales_mln,
+       sum(d.total_debt_x_pmt_3_7) / 1000000 as pmt_3_7d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_3_7) / 1000000 as pmt_3_7d_sales_mln,
+       sum(d.total_debt_x_pmt_4_7) / 1000000 as pmt_4_7d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_4_7) / 1000000 as pmt_4_7d_sales_mln,
+       sum(d.total_debt_x_pmt_5_7) / 1000000 as pmt_5_7d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_5_7) / 1000000 as pmt_5_7d_sales_mln,
+       sum(d.total_debt_x_pmt_6_7) / 1000000 as pmt_6_7d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_6_7) / 1000000 as pmt_6_7d_sales_mln,
+
+       sum(d.total_debt_x_pmt_1_30) / 1000000 as pmt_1_30d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_1_30) / 1000000 as pmt_1_30d_sales_mln,
+       sum(d.total_debt_x_pmt_1_60) / 1000000 as pmt_1_60d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_1_60) / 1000000 as pmt_1_60d_sales_mln
+
+
+from (
+  select 'ОНЛАЙН-КРЕДИТ' as product_type, 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(f.folder_date_create_mi) as a_date,
+         case when f.is_categ_a = 1 then 'КАТЕГОРИЯ А' when f.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+         case when f.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when f.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+         case when f.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when f.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+         case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         case when f.is_sign_require = 1 then 'С ПОДПИСАНИЕМ' when f.is_sign_require = 0 then 'БЕЗ ПОДПИСАНИЯ' end as is_signing_required,
+         f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+         f.rfo_contract_id as rfo_con_or_claim_id, f.shop_code, f.pos_code, f.pos_name,
+         f.x_dnp_name as city, f.x_dnp_region as region,
+         f.cancel_prescoring, f.cancel_middle_office, f.cancel_controller, f.cancel_client, f.cancel_manager,
+         f.cancel_cpr_aa, f.cancel_verificator, f.cancel_undefined, f.is_aa_reject, max(f.folder_date_create_mi) over (partition by f.pos_code)  max_date,
+         f.iin
+  from u1.M_FOLDER_CON_CANCEL f
+  where f.process_name = 'ОНЛАЙН КРЕДИТ' and
+        f.claim_id is not null and
+        f.folder_date_create_mi >= to_date('2013-01-01','yyyy-mm-dd') --to_date('2014-12-08','yyyy-mm-dd')
+  union all
+  select 'ОНЛАЙН-КРЕДИТ' as product_type, 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(fo.folder_date_create_mi) as a_date,
+         case when fo.is_categ_a = 1 then 'КАТЕГОРИЯ А' when fo.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+         case when fo.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when fo.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+         case when fo.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when fo.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+         case when fo.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when fo.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         case when fo.is_sign_require = 1 then 'С ПОДПИСАНИЕМ' when fo.is_sign_require = 0 then 'БЕЗ ПОДПИСАНИЯ' end as is_signing_required,
+         fo.claim_id, fo.contract_number, fo.rfo_client_id, fo.contract_amount, fo.folder_id, fo.form_client_id, fo.rfo_contract_id,
+         fo.claim_id as rfo_con_or_claim_id, fo.shop_code, fo.pos_code, fo.pos_name,
+         fo.x_dnp_name as city, fo.x_dnp_region as region,
+         fo.cancel_prescoring, fo.cancel_middle_office, fo.cancel_controller, fo.cancel_client, fo.cancel_manager,
+         fo.cancel_cpr_aa, fo.cancel_verificator, fo.cancel_undefined, fo.is_aa_reject, max(fo.folder_date_create_mi) over (partition by fo.pos_code)  max_date,
+         fo.iin
+  from u1.M_FOLDER_CON_CANCEL_ONLINE fo
+  where fo.folder_date_create_mi >= to_date('2013-01-01','yyyy-mm-dd') --to_date('2014-12-08','yyyy-mm-dd')
+  union all
+  select f.product_type, f.cr_program_name as product, trunc(f.folder_date_create_mi) as a_date,
+         case when f.is_categ_a = 1 then 'КАТЕГОРИЯ А' when f.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+         case when f.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when f.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+         case when f.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when f.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+         case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         case when f.is_sign_require = 1 then 'С ПОДПИСАНИЕМ' when f.is_sign_require = 0 then 'БЕЗ ПОДПИСАНИЯ' end as is_signing_required,
+         f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+         f.rfo_contract_id as rfo_con_or_claim_id, f.shop_code, f.pos_code, f.pos_name,
+         f.x_dnp_name as city, f.x_dnp_region as region,
+         f.cancel_prescoring, f.cancel_middle_office, f.cancel_controller, f.cancel_client, f.cancel_manager,
+         f.cancel_cpr_aa, f.cancel_verificator, f.cancel_undefined, f.is_aa_reject, max(f.folder_date_create_mi) over (partition by f.pos_code)  max_date,
+         f.iin
+  from u1.M_FOLDER_CON_CANCEL f
+  where f.process_name != 'ОНЛАЙН КРЕДИТ' and
+        f.folder_date_create_mi >= to_date('2013-01-01','yyyy-mm-dd') --to_date('2014-12-08','yyyy-mm-dd')
+) f
+join u1.V_TIME_DAYS td on td.yyyy_mm_dd = f.a_date
+left join u1.M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+left join u1.V_TIME_DAYS tdc on tdc.yyyy_mm_dd = b.start_date
+left join u1.M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+-------------------------    ПКБ_НОВЫЙ
+left join u1.V_PKB_REPORT_ALL pkb1 on pkb1.iin_rnn = f.iin and pkb1.report_source = 'ПКБ'
+
+-------------------------    ГЦВП
+left join (select fcc.rfo_contract_id, max(v.gcvp_rep_id) as gcvp_max_id
+          from u1.V_GCVP_REPORT v
+          join u1.M_FOLDER_CON_CANCEL fcc on fcc.iin = v.client_iin and
+               (v.rep_date >= trunc(fcc.folder_date_create_mi) - 60 and v.rep_date <= trunc(fcc.folder_date_create_mi))
+          where v.error_code = 0
+          group by fcc.rfo_contract_id
+) gm on gm.rfo_contract_id = f.rfo_contract_id
+left join (select v.gcvp_rep_id, max(v.salary) as salary,
+                  max(v.pmts_count_from_rep) as gcvp_pmts_count_from_rep
+          from u1.V_GCVP_REPORT v
+          group by v.gcvp_rep_id
+) g on g.gcvp_rep_id = gm.gcvp_max_id
+--------------------------
+
+where a_date >= to_date('2013-01-01','yyyy-mm-dd')
+      --f.product_type = 'АВТО'
+      --b.rbo_contract_id is not null
+                       --  КРЕДИТ ВЫДАН
+
+group by tdc.yyyy, tdc.text_yyyy_mm,
+       f.product_type,
+       f.product,
+       f.is_client_new_by_con,
+       pkb1.report_status,
+       f.is_credit_issued,
+       f.city,
+       f.folder_id,
+       f.rfo_client_id,
+       f.rfo_contract_id,
+       f.form_client_id,
+       b.contract_number,
+       b.status_name,
+       b.create_username,
+       case when f.contract_amount<=35000 then '000-035'
+            when f.contract_amount>35000 and f.contract_amount<=50000 then '035-050'
+            when f.contract_amount>50000 and f.contract_amount<=100000 then '050-100'
+            when f.contract_amount>100000 and f.contract_amount<=250000 then '100-250'
+            when f.contract_amount>250000 and f.contract_amount<=350000 then '250-350'
+            when f.contract_amount>350000 and f.contract_amount<=500000 then '350-500'
+            when f.contract_amount>500000 and f.contract_amount<=1000000 then '500-1mln'
+            when f.contract_amount>1000000 and f.contract_amount<=1500000 then '1-1.5mln'
+            when f.contract_amount>1500000 and f.contract_amount<=2500000 then '1.5-2.5mln'
+            when f.contract_amount>2500000 then '>2.5mln' end,
+
+
+       case when  g.salary <=2000 then 0 else 1 end,
+       case when f.is_categ_a = 'КАТЕГОРИЯ А' then 'CAT А'
+            when f.is_categ_b = 'КАТЕГОРИЯ Б' then 'CAT B'
+            when f.is_client_new_by_con = 'КЛИЕНТ ПОВТОРНЫЙ' then 'CAT C'
+            when f.is_client_new_by_con = 'КЛИЕНТ НОВЫЙ' then 'CAT D'
+            end;
+grant select on U1.M_MATRIX_R_MODEL to LOADDB;
+grant select on U1.M_MATRIX_R_MODEL to LOADER;
+
+

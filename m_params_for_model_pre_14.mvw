@@ -1,0 +1,125 @@
+﻿create materialized view U1.M_PARAMS_FOR_MODEL_PRE_14
+build deferred
+refresh complete on demand
+as
+with qqq as(
+  select
+          m.rfo_client_id
+         ,m.form_client_id
+         ,m.rfo_con_or_claim_id
+         ,m.folder_id
+         ,p.phone_number
+         ,p.phone_type
+         ,m.folder_date_create_mi
+         ,t.plan_date_x_pmt_4
+         ,t.total_debt_pmt_4_60
+  from M_RBO_CONTRACT_DEL t
+  join M_MATRIX_BASE m on m.rfo_client_id=t.rfo_client_id --and t.plan_date_x_pmt_4 between add_months(trunc(m.folder_date_create_mi),-12) and trunc(m.folder_date_create_mi)
+  join V_FORM_CLIENT_CONTACT_PHONE p on p.form_client_id=m.form_client_id
+  where t.total_debt_pmt_4_60>0 --and t.PLAN_DATE_X_PMT_4
+        and m.folder_date_create_mi>=to_date('01.01.2015','dd.mm.yyyy')
+),
+aaa as
+(
+  select t.folder_id, t.folder_date, t.rfo_client_id
+        ,count(distinct a.rfo_client_id) as cnt_pmt_4_60_1
+        ,count(distinct b.rfo_client_id) as cnt_pmt_4_60_2
+  from V_FORM_CLIENT_CONTACT_PHONE t
+  left join (
+    select t.phone_number,t.rfo_client_id, min(t.folder_date_create_mi)as dt
+    from qqq t
+    group by t.phone_number,t.rfo_client_id
+  ) a on a.phone_number=t.phone_number and a.rfo_client_id<>t.rfo_client_id and a.dt between add_months(trunc(t.folder_date),-12) and trunc(t.folder_date)
+  left join (
+    select t.phone_number,t.rfo_client_id,t.phone_type, min(t.folder_date_create_mi)as dt
+    from qqq t
+    group by t.phone_number,t.rfo_client_id,t.phone_type
+  ) b on b.phone_number=t.phone_number and b.rfo_client_id<>t.rfo_client_id and b.phone_type=t.phone_type and b.dt between add_months(trunc(t.folder_date),-12) and trunc(t.folder_date)
+  group by t.folder_id, t.folder_date, t.rfo_client_id
+) ,
+aaa1 as
+(
+  select t.folder_id, t.folder_date, t.rfo_client_id,
+         sum(nvl(cnt_pmt_4_60_1,0)) as cnt_pmt_4_60_1A
+  from (
+       select t.folder_id, t.folder_date, t.rfo_client_id, t.phone_number
+              ,count(distinct a.rfo_client_id) as cnt_pmt_4_60_1
+      from V_FORM_CLIENT_CONTACT_PHONE t
+      left join (
+                select t.phone_number,t.rfo_client_id, min(t.folder_date_create_mi)as dt
+                from qqq t
+                group by t.phone_number,t.rfo_client_id
+                ) a on a.phone_number=t.phone_number and trunc(a.dt) between add_months(trunc(t.folder_date),-12) and trunc(t.folder_date)
+      group by t.folder_id, t.folder_date, t.rfo_client_id, t.phone_number)t
+  group by  t.folder_id, t.folder_date, t.rfo_client_id
+),
+aaa2 as (
+  select t.folder_id, t.folder_date, t.rfo_client_id,
+         sum(nvl(cnt_pmt_4_60_2,0)) as cnt_pmt_4_60_2A
+  from(
+      select t.folder_id, t.folder_date, t.rfo_client_id, t.phone_number
+              ,count(distinct b.rfo_client_id) as cnt_pmt_4_60_2
+      from V_FORM_CLIENT_CONTACT_PHONE t
+      left join (
+                select t.phone_number,t.rfo_client_id, min(t.folder_date_create_mi)as dt,t.phone_type
+                from qqq t
+                group by t.phone_number,t.rfo_client_id,t.phone_type
+                ) b on b.phone_number=t.phone_number and b.phone_type=t.phone_type and trunc(b.dt) between add_months(trunc(t.folder_date),-12) and trunc(t.folder_date)
+      group by t.folder_id, t.folder_date, t.rfo_client_id, t.phone_number, t.phone_type)t
+  group by  t.folder_id, t.folder_date, t.rfo_client_id
+),
+www as (
+  select /*+parallel(5)*/
+      v.client_id as rfo_client_id
+      ,v.folders_id
+      ,v.folders_date
+      ,c.numb_cont
+      ,case when s.schema_result is null then 1 else 0 end as is_null
+      ,case when s.schema_result =0 then 1 else 0 end as is_zero
+  from u1.m_out_dwh_verification v
+  join u1.m_out_dwh_process p on v.id = p.verification_id
+  join u1.m_out_dwh_schema s on s.process_id = p.id
+  join u1.m_OUT_DWH_CONTACT c on c.id = s.contact_id
+  where p.verification_type = 'CONTACT' --and c.numb_cont='8727'
+       --and v.iin='840502300717'
+
+),
+ppp as (
+  select  /*+parallel(15)*/
+       f.rfo_con_or_claim_id
+     , f.folder_id
+     , count (distinct zero_contact) as zero_contact_cnt
+     , count (distinct null_contact) as null_contact_cnt
+  from M_MATRIX_BASE f
+  left join V_FORM_CLIENT_CONTACT_PHONE p on p.form_client_id=f.form_client_id
+  left join (
+    select
+        v.client_id as rfo_client_id
+        ,v.folders_id
+        ,v.folders_date
+        ,c.numb_cont
+        ,case when s.schema_result=0 then v.client_id end as zero_contact
+        ,case when s.schema_result is null then v.client_id end as null_contact
+    from u1.m_out_dwh_verification v
+    join u1.m_out_dwh_process p on v.id = p.verification_id
+    join u1.m_out_dwh_schema s on s.process_id = p.id and (s.schema_result is null or s.schema_result=0 )
+    join u1.m_OUT_DWH_CONTACT c on c.id = s.contact_id
+    where p.verification_type = 'CONTACT' --and c.numb_cont='8727'
+  ) a on /*a.rfo_client_id=f.rfo_client_id and */a.numb_cont=p.phone_number and a.folders_date< trunc(f.folder_date_create_mi)
+  where f.folder_date_create_mi>=to_date('01.01.2015','dd.mm.yyyy')
+  group by f.rfo_con_or_claim_id
+     , f.folder_id
+)
+select  ppp.rfo_con_or_claim_id
+     ,ppp.zero_contact_cnt
+     ,ppp.null_contact_cnt
+     ,aaa.*
+     ,aaa1.cnt_pmt_4_60_1A
+     ,aaa2.cnt_pmt_4_60_2A
+from ppp
+left join aaa on aaa.folder_id=ppp.folder_id
+left join aaa1 on aaa1.folder_id=ppp.folder_id
+left join aaa2 on aaa2.folder_id=ppp.folder_id;
+grant select on U1.M_PARAMS_FOR_MODEL_PRE_14 to LOADDB;
+
+

@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_2
+refresh force on demand
+as
+select
+         t.rfo_client_id
+         ,t.date_create
+         ,t.claim_id
+         ,count(distinct case when b.date_create>=trunc(t.date_create)-30 and b.date_create < trunc(t.date_create) and b.folder_id is null then b.claim_id end) as COUNT_APPLICATIONS_30_D
+         ,count(distinct case when b.date_create>=trunc(t.date_create)-30 and b.folder_id is null then b.claim_id end) as COUNT_APPLICATIONS_30_D_X
+
+         ,count(distinct case when b.date_create>=add_months(trunc(t.date_create),-3) and b.date_create < trunc(t.date_create) then trunc(b.date_create) end) as COUNT_DAY_APP_ONL
+
+         ,count(distinct case when b.date_create>=trunc(t.date_create)-30 and b.date_create < trunc(t.date_create) and b.folder_id is null and upper(b.status_name) like '%ОТКАЗ%' then b.claim_id end) as COUNT_FAIL_30_D
+         ,nvl(max(distinct case when b.date_create>=add_months(trunc(t.date_create),-3) and b.date_create < trunc(t.date_create) then b.total_amount end),0) as MAX_SUM_ONLINE_EKT_3_M
+from M_FOLDER_CON_CANCEL_ONLINE_1 t
+left join M_FOLDER_CON_CANCEL_ONLINE_1 b on b.rfo_client_id = t.rfo_client_id and b.date_create < t.date_create
+group by
+     t.rfo_client_id
+     ,t.date_create
+     ,t.claim_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_2 to LOADDB;
+
+

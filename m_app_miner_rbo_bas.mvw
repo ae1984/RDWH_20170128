@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_APP_MINER_RBO_BAS
+build deferred
+refresh force on demand
+as
+select am.app_id
+
+       ,coalesce(case when count(case when t1.is_card = 0 then t1.rbo_contract_id end) > 0
+                      then sum(case when t1.is_card = 0 then round(months_between(t1.date_plan_end, t1.begin_date), 0) end) /
+                           count(case when t1.is_card = 0 then t1.rbo_contract_id end)
+                 end, 0) as avg_term_cred_plan
+
+       ,count(case when t1.product_type = 'ДЕНЬГИ' then t1.rbo_contract_id end)  as rbo_kn_cnt
+
+from U1.M_APP_MINER_BAS am
+left join U1.M_RBO_CONTRACT_BAS t1 on t1.rfo_client_id = am.rfo_client_id
+                                      and t1.begin_date < trunc(am.folder_date_create_mi)
+
+where am.folder_date_create_mi >= to_date('2015-01-01','yyyy-mm-dd')
+group by am.app_id;
+grant select on U1.M_APP_MINER_RBO_BAS to LOADDB;
+
+

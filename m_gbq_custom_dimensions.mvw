@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_GBQ_CUSTOM_DIMENSIONS
+build deferred
+refresh force on demand
+as
+select id,
+      hit_id,
+      dim_index,
+      dim_value,
+      idate
+from GBQ.GBQ_CUSTOM_DIMENSIONS@KSVISIT;
+grant select on U1.M_GBQ_CUSTOM_DIMENSIONS to LOADDB;
+
+

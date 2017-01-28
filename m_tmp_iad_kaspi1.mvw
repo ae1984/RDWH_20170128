@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_TMP_IAD_KASPI1
+using no index
+refresh complete on demand
+as
+select a.*,
+lag(mob_num, 1) over (partition by expert_name order by mob_num) as prev_num
+from M_TMP_IAD_KASPI a
+group by
+EXPERT_NAME,
+EXPERT_LOGIN,
+MOB_NUM,
+FLD_DATE,
+REG_DATE;
+grant select on U1.M_TMP_IAD_KASPI1 to LOADDB;
+grant select on U1.M_TMP_IAD_KASPI1 to LOADER;
+
+

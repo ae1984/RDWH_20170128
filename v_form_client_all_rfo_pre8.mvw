@@ -1,0 +1,15 @@
+﻿create materialized view U1.V_FORM_CLIENT_ALL_RFO_PRE8
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/
+       distinct pr7.collection_id, listagg(pp7.c_name,';') within group (order by pr7.collection_id) as prop_name
+             from V_RFO_Z#PROPERTIES pr7
+             join V_RFO_Z#PROD_PROPERTY pp7 on pp7.id = pr7.c_prop
+                                           and pp7.c_group_prop = pr7.c_group_prop
+             join V_RFO_Z#PROPERTY_GRP pg7  on pg7.id = pr7.c_group_prop
+             where pg7.c_code = 'NEDVIZHIMOST' --Отношение к жилищу 8823273 -- NEDVIZHIMOST
+             group by pr7.collection_id;
+grant select on U1.V_FORM_CLIENT_ALL_RFO_PRE8 to LOADDB;
+
+

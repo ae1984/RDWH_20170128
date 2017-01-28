@@ -1,0 +1,270 @@
+﻿create table U1.T_RFO_Z#PKB_REPORT
+(
+  id                             NUMBER not null,
+  c_status                       VARCHAR2(20 CHAR),
+  c_rnn                          VARCHAR2(12 CHAR),
+  c_sic                          VARCHAR2(16 CHAR),
+  c_dateofbirth                  VARCHAR2(10 CHAR),
+  c_gender                       VARCHAR2(15 CHAR),
+  c_education                    VARCHAR2(70 CHAR),
+  c_matrialstatus                VARCHAR2(25 CHAR),
+  c_fiuniquenumberid             VARCHAR2(50 CHAR),
+  c_surname                      VARCHAR2(100 CHAR),
+  c_name                         VARCHAR2(100 CHAR),
+  c_fathersname                  VARCHAR2(100 CHAR),
+  c_birthname                    VARCHAR2(100 CHAR),
+  c_cityofbirth                  VARCHAR2(25 CHAR),
+  c_regionofbirth                VARCHAR2(70 CHAR),
+  c_countryofbirth               VARCHAR2(50 CHAR),
+  c_registrationid               VARCHAR2(15 CHAR),
+  c_street                       VARCHAR2(400 CHAR),
+  c_city                         VARCHAR2(100 CHAR),
+  c_zipcode                      VARCHAR2(16 CHAR),
+  c_region                       VARCHAR2(100 CHAR),
+  c_addressinserted              VARCHAR2(10 CHAR),
+  c_number_house                 VARCHAR2(50 CHAR),
+  c_b_classification             VARCHAR2(50 CHAR),
+  c_resident                     VARCHAR2(20 CHAR),
+  c_s_position                   VARCHAR2(50 CHAR),
+  c_citizenship                  VARCHAR2(50 CHAR),
+  c_s_employment                 VARCHAR2(50 CHAR),
+  c_f_citizenship                VARCHAR2(50 CHAR),
+  c_eag                          VARCHAR2(200 CHAR),
+  c_nsoc                         VARCHAR2(250 CHAR),
+  c_nsoa                         VARCHAR2(250 CHAR),
+  c_contactinfo                  VARCHAR2(500 CHAR),
+  c_dateofrptissue               VARCHAR2(10 CHAR),
+  c_si_noec                      VARCHAR2(100 CHAR),
+  c_si_tod                       VARCHAR2(100 CHAR),
+  c_si_notc                      VARCHAR2(100 CHAR),
+  c_si_tdo                       VARCHAR2(100 CHAR),
+  c_si_nora                      VARCHAR2(100 CHAR),
+  c_si_noi                       VARCHAR2(50 CHAR),
+  c_patent                       VARCHAR2(40 CHAR),
+  c_agre_statuses                NUMBER,
+  c_ci                           NUMBER,
+  c_rpt_type                     NUMBER(2),
+  c_si_debtor#noec#total         VARCHAR2(100 CHAR),
+  c_si_debtor#noec#instalment_cr VARCHAR2(50 CHAR),
+  c_si_debtor#noec#cards         VARCHAR2(50 CHAR),
+  c_btor#noec#noninstalment_cr47 VARCHAR2(50 CHAR),
+  c_si_debtor#notc#total         VARCHAR2(100 CHAR),
+  c_si_debtor#notc#instalment_cr VARCHAR2(50 CHAR),
+  c_si_debtor#notc#cards         VARCHAR2(50 CHAR),
+  c_btor#notc#noninstalment_cr51 VARCHAR2(50 CHAR),
+  c_si_debtor#nora#total         VARCHAR2(100 CHAR),
+  c_si_debtor#nora#instalment_cr VARCHAR2(50 CHAR),
+  c_si_debtor#nora#cards         VARCHAR2(50 CHAR),
+  c_btor#nora#noninstalment_cr55 VARCHAR2(50 CHAR),
+  c_si_debtor#tod#total          VARCHAR2(100 CHAR),
+  c_si_debtor#tod#instalment_cr  VARCHAR2(50 CHAR),
+  c_si_debtor#tod#cards          VARCHAR2(50 CHAR),
+  c_ebtor#tod#noninstalment_cr59 VARCHAR2(50 CHAR),
+  c_si_debtor#tdo#total          VARCHAR2(100 CHAR),
+  c_si_debtor#tdo#instalment_cr  VARCHAR2(50 CHAR),
+  c_si_debtor#tdo#cards          VARCHAR2(50 CHAR),
+  c_ebtor#tdo#noninstalment_cr63 VARCHAR2(50 CHAR),
+  c_si_debtor#noi                VARCHAR2(50 CHAR),
+  c_si_debtor#noi_1              VARCHAR2(50 CHAR),
+  c_si_debtor#noi_2              VARCHAR2(50 CHAR),
+  c_si_debtor#noi_3              VARCHAR2(50 CHAR),
+  c_si_guarantor#noec#total      VARCHAR2(100 CHAR),
+  c_arantor#noec#instalment_cr69 VARCHAR2(50 CHAR),
+  c_si_guarantor#noec#cards      VARCHAR2(50 CHAR),
+  c_ntor#noec#noninstalment_cr71 VARCHAR2(50 CHAR),
+  c_si_guarantor#notc#total      VARCHAR2(100 CHAR),
+  c_arantor#notc#instalment_cr73 VARCHAR2(50 CHAR),
+  c_si_guarantor#notc#cards      VARCHAR2(50 CHAR),
+  c_ntor#notc#noninstalment_cr75 VARCHAR2(50 CHAR),
+  c_si_guarantor#nora#total      VARCHAR2(100 CHAR),
+  c_arantor#nora#instalment_cr77 VARCHAR2(50 CHAR),
+  c_si_guarantor#nora#cards      VARCHAR2(50 CHAR),
+  c_ntor#nora#noninstalment_cr79 VARCHAR2(50 CHAR),
+  c_si_guarantor#tod#total       VARCHAR2(100 CHAR),
+  c_uarantor#tod#instalment_cr81 VARCHAR2(50 CHAR),
+  c_si_guarantor#tod#cards       VARCHAR2(50 CHAR),
+  c_antor#tod#noninstalment_cr83 VARCHAR2(50 CHAR),
+  c_si_guarantor#tdo#total       VARCHAR2(100 CHAR),
+  c_uarantor#tdo#instalment_cr85 VARCHAR2(50 CHAR),
+  c_si_guarantor#tdo#cards       VARCHAR2(50 CHAR),
+  c_antor#tdo#noninstalment_cr87 VARCHAR2(50 CHAR),
+  c_si_guarantor#noi             VARCHAR2(50 CHAR),
+  c_si_guarantor#noi_1           VARCHAR2(50 CHAR),
+  c_si_guarantor#noi_2           VARCHAR2(50 CHAR),
+  c_si_guarantor#noi_3           VARCHAR2(50 CHAR),
+  c_id_doc_arr                   NUMBER,
+  c_closed_ci                    NUMBER,
+  c_dop_field                    CLOB,
+  c_pkb_report_ref               NUMBER,
+  c_error_status                 NUMBER,
+  c_rep_source                   NUMBER(1),
+  c_si_subj_role                 NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on column U1.T_RFO_Z#PKB_REPORT.c_status
+  is 'Статус';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_rnn
+  is 'РНН';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_sic
+  is 'СИК';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_dateofbirth
+  is 'Дата рождения';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_gender
+  is 'Пол';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_education
+  is 'Образование';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_matrialstatus
+  is 'Семейное положение';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_fiuniquenumberid
+  is 'Уникальный номер финансового учреждения';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_surname
+  is 'Фамилия в настоящее время';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_name
+  is 'Имя';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_fathersname
+  is 'Отчество';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_birthname
+  is 'Фамилия по рождению';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_cityofbirth
+  is 'Место рождения (город)';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_regionofbirth
+  is 'Место рождения (область, район)';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_countryofbirth
+  is 'Место рождения (код страны)';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_registrationid
+  is 'Регистрационный код';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_street
+  is 'Улица';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_city
+  is 'Город';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_zipcode
+  is 'Почтовый индекс';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_region
+  is 'Регион';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_addressinserted
+  is 'Дата получения адреса';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_number_house
+  is 'Номер дома';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_b_classification
+  is 'Классификация заемщика';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_resident
+  is 'Резидент';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_s_position
+  is 'Позиция клиента';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_citizenship
+  is 'Гражданство';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_s_employment
+  is 'Характер занятости клиента';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_f_citizenship
+  is 'Гражданство иностранца';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_eag
+  is 'Сектор занятости клиента';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_nsoc
+  is 'Негативный статус клиента';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_nsoa
+  is 'Негативный статус договора';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_contactinfo
+  is 'Контактная информация';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_dateofrptissue
+  is 'Дата выдачи отчета';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_si_noec
+  is 'Кол-во действующих договоров';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_si_tod
+  is 'Общая непогашенная сумма';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_si_notc
+  is 'Кол-во зaвepшeнных договоров';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_si_tdo
+  is 'Сумма просроченных взносов';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_si_nora
+  is 'Кол-во отказанных заявлений';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_si_noi
+  is 'Количество запросов (12м)';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_patent
+  is 'Номер патента';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_agre_statuses
+  is 'Статусы договоров(COLLECTION в Z#KAS_STRING_250)';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_ci
+  is 'Действующие договора(COLLECTION в Z#KAS_PKB_CI)';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_rpt_type
+  is 'Тип отчета';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_id_doc_arr
+  is 'Документы удостоверяющие личность(COLLECTION в Z#KAS_PKB_ID_DOC)';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_closed_ci
+  is 'Закрытые договора(COLLECTION в Z#KAS_PKB_CI)';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_dop_field
+  is 'Дополнительные поля';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_pkb_report_ref
+  is 'Ссылка на оригинал ПКБ(FK на Z#PKB_REPORT)';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_rep_source
+  is 'Источник отчета: 0 - ПКБ; 1 - ГКБ';
+comment on column U1.T_RFO_Z#PKB_REPORT.c_si_subj_role
+  is 'Общая информация по роли(COLLECTION в Z#KAS_PKB_SI)';
+create index U1.T_RFO_Z#PKB_REPORT_IND1 on U1.T_RFO_Z#PKB_REPORT (C_RNN)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RFO_Z#PKB_REPORT_IND2 on U1.T_RFO_Z#PKB_REPORT (C_STATUS, C_DATEOFRPTISSUE)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RFO_Z#PKB_REPORT_IND3 on U1.T_RFO_Z#PKB_REPORT (C_PKB_REPORT_REF)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#PKB_REPORT
+  add constraint PK_T_RFO_Z#PKB_REPORT_ID primary key (ID)
+  using index 
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.PK_T_RFO_Z#PKB_REPORT_ID nologging;
+grant select on U1.T_RFO_Z#PKB_REPORT to LOADDB;
+grant select on U1.T_RFO_Z#PKB_REPORT to LOADER;
+

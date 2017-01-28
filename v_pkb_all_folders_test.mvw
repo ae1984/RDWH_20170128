@@ -1,0 +1,9 @@
+﻿create materialized view U1.V_PKB_ALL_FOLDERS_TEST
+refresh force on demand
+as
+select * from V_PKB_ALL t where t.contract_status like 'ПРОСРОЧЕННАЯ ЗАДОЛЖЕННОСТЬ%' or   --183414  32904
+t.contract_status like '%РАЗРЯД УБЫТКОВ%';
+grant select on U1.V_PKB_ALL_FOLDERS_TEST to LOADDB;
+grant select on U1.V_PKB_ALL_FOLDERS_TEST to LOADER;
+
+

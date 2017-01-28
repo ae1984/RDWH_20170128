@@ -1,0 +1,33 @@
+﻿create table U1.T_RFO_Z#PROPERTIES_ONLINE
+(
+  id            NUMBER not null,
+  c_date_beg    DATE,
+  c_date_end    DATE,
+  c_prop        NUMBER,
+  c_str         VARCHAR2(4000),
+  c_group_prop  NUMBER,
+  c_v_date      DATE,
+  c_num         NUMBER(20,4),
+  collection_id NUMBER,
+  c_bool        VARCHAR2(3),
+  class_id      VARCHAR2(48),
+  c_obj         VARCHAR2(384),
+  c_date_audit  DATE,
+  sn            NUMBER,
+  su            NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RFO_Z#PROPERTIES_ONLINE to LOADDB;
+

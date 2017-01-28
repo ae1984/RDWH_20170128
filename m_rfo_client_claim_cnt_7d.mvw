@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_RFO_CLIENT_CLAIM_CNT_7D
+build deferred
+refresh force on demand
+as
+select oc.c_form_client_st#inn as cli_iin,
+                  s.id               as rfo_partner_id,
+                  count(1)                as appl_count_7d
+
+          from u1.T_RFO_Z#KAS_ONLINE_CLAIM oc
+          join u1.T_RFO_Z#KAS_ONLINE_BUY   ob on oc.c_buy_ref = ob.id
+          join u1.T_RFO_Z#SHOPS            s  on s.id = ob.c_shop
+          where trunc(ob.c_date_create) > trunc(sysdate - 7)
+          group by oc.c_form_client_st#inn,s.id;
+grant select on U1.M_RFO_CLIENT_CLAIM_CNT_7D to LOADDB;
+
+

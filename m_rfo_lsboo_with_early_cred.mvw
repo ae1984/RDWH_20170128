@@ -1,0 +1,41 @@
+﻿create materialized view U1.M_RFO_LSBOO_WITH_EARLY_CRED
+build deferred
+refresh force on demand
+as
+selecT /*+ parallel 30*/
+       c.rbo_contract_id,
+       c.folder_id_first,
+       c.client_inn,
+       t.client_name,
+       t.date_add,
+       c.start_date,
+       c.cred_program_name,
+       c.status_name,
+       c.contract_number,
+       c.contract_amount,
+       vp.rep_date,
+       vp.delinq_amount,
+       vp.delinq_amount_w,
+       vp.delinq_days
+  from M_RBO_CONTRACT_BAS c
+ join (select min(to_date(date_add_text,'dd-mm-yyyy')) as date_add,
+               iin,
+               max(surname || ' ' || first_name || ' ' || patronymic) as client_name
+        from V_RFO_BLACK_LIST
+        where note in ('А0000013','A0000013')
+        group by iin) t on t.iin = c.client_inn
+  left join (select  t.rbo_contract_id,
+                     max(t.rep_date) as rep_date,
+                     max(t.delinq_amount) keep (dense_rank last order by t.rep_date) as delinq_amount,
+                     max(t.w_principal_del +w_interest_del+w_overlimit_del+w_overlimit_interest_del+w_overdraft_del +w_overdraft_interest_del ) keep (dense_rank last order by t.rep_date) as delinq_amount_w,
+                     max(t.delinq_days) keep (dense_rank last order by t.rep_date) as delinq_days
+             from v_rbo_port t
+             group by t.rbo_contract_id) vp on vp.rbo_contract_id = c.rbo_contract_id
+ where trunc(c.start_date) < t.date_add
+   and c.is_credit_issued = 1
+   and c.contract_amount > 0
+   and c.date_fact_end is null;
+grant select on U1.M_RFO_LSBOO_WITH_EARLY_CRED to LOADDB;
+grant select on U1.M_RFO_LSBOO_WITH_EARLY_CRED to LOADER;
+
+

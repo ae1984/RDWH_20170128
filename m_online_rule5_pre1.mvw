@@ -1,0 +1,38 @@
+﻿create materialized view U1.M_ONLINE_RULE5_PRE1
+build deferred
+refresh force on demand
+as
+select t3.*
+
+       ,(request_cnt+request_cnt_1d) as request_cnt_x
+       ,(mo_reject_cnt+mo_reject_cnt_1d) as mo_reject_cnt_x
+from (
+      select t2.*
+
+             ,count(t2.claim_id) over (partition by t2.rfo_client_id, trunc(t2.date_create) order by ord_1d range between (ord_1d-1) preceding and 1 preceding) as request_cnt_1d
+             ,count(case when t2.mo_sco_reject = 1 then t2.claim_id end) over (partition by t2.rfo_client_id, trunc(t2.date_create) order by ord_1d range between (ord_1d-1) preceding and 1 preceding) as mo_reject_cnt_1d
+
+      from (
+            select t.claim_id,
+                   t.date_create,
+                   t.rfo_client_id
+
+                   ,r.mo_sco_reject
+
+                   ,count(t.claim_id) over (partition by t.rfo_client_id order by trunc(t.date_create) range between 30 preceding and 1 preceding) as request_cnt
+                   ,count(case when r.mo_sco_reject = 1 then t.claim_id end) over (partition by t.rfo_client_id order by trunc(t.date_create) range between 30 preceding and 1 preceding) as mo_reject_cnt
+
+                   ,dense_rank() over (partition by t.rfo_client_id, trunc(t.date_create) order by t.date_create) as ord_1d
+            from u1.M_FOLDER_CON_CANCEL_ONLINE_1 t
+            left join (select rr.folder_id,
+                              max(rr.date_create) as date_create,
+                              max(rr.mo_sco_reject) keep (dense_rank last order by rr.date_create) as mo_sco_reject
+                       from u1.V_FOLDER_MO_SCO_REQUEST rr
+                       where ((rr.scorecard_num = 8 and rr.system_source = 3) or rr.scorecard_num = 81)
+                       group by rr.folder_id) r on r.folder_id = t.folder_id
+            --where t.rfo_client_id = 31393192
+      ) t2
+) t3;
+grant select on U1.M_ONLINE_RULE5_PRE1 to LOADDB;
+
+

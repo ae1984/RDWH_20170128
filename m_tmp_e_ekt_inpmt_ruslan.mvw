@@ -1,0 +1,48 @@
+﻿create materialized view U1.M_TMP_E_EKT_INPMT_RUSLAN
+refresh force on demand
+as
+select td.yyyy, td.text_yyyy_mm, td.text_yyyy_mm_dd,
+       f.cr_program_name, f.is_categ_a, f.is_client_new_by_con, f.is_credit_issued,
+       --case when t.initial_payment > 0 then 'с ПВ'
+       --     when t.initial_payment = 0 then 'без ПВ' end is_inpmt_exist,
+       p.partner, --s.org_name,
+       t.initial_payment/b.contract_amount as inpmt_share,
+       b.contract_amount,
+       ---
+       count(*) as cnt, count(distinct f.rfo_contract_id) as rfo_con_cnt, -- проверка: должны совпадать
+       sum(f.contract_amount) / 1000000 as amount_requested_mln,
+       ---
+       count(b.contract_number) as con_cnt,
+       count(distinct b.contract_number) as con_dist_cnt,
+       sum(d.max_debt_used_x) / 1000000 as sales_mln,
+       sum(case when d.del_days_x > 7  then d.total_debt_x end) / 1000000 as debt_del_7_mln,
+       sum(case when d.del_days_x > 30 then d.total_debt_x end) / 1000000 as debt_del_30_mln,
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as debt_del_60_mln,
+       sum(case when d.del_days_x > 90 then d.total_debt_x end) / 1000000 as debt_del_90_mln
+from u1.M_FOLDER_CON_CANCEL f
+join u1.V_TIME_DAYS td on td.yyyy_mm_dd = trunc(f.folder_date_create_mi)
+left join u1.M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+left join u1.M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+--- далее добавляйте какие вам нужны вьюшки и параметры
+left join u1.V_CONTRACT_EKT_DWH t on t.rfo_contract_id = f.rfo_contract_id
+left join u1.V_POS p on p.pos_code = t.pos_code
+--left join u1.V_SHOP s on s.shop_code = f.shop_code
+where trunc(f.folder_date_create_mi) >= to_date('2014-01-01','yyyy-mm-dd') and
+      ((t.product_name like '%ТЕЛЕФОН%' and t.product_name like '%МОБИЛ%') or (t.product_name like '%ТЕЛЕФОН%' and t.product_name like '%СОТОВ%') or
+      t.product_name like '%СМАРТФОН%' or t.product_name like '%SMARTFON%' or t.product_name like '%SMARTPHONE%' or t.product_name like '%MOBILNYYTELEFON%' or t.product_name like '%MOB_TEL%' or
+      t.product_name like '%MOBILE PHONE%' or t.product_name like '%TELEFONSOTOVYY%' or t.product_name like '%IPHONE%' or t.product_name like '%TSMOBILNYYETELEFONY%' or (t.product_name like '%GSM%' and t.product_name like '%SAMSUNG%') or
+      t.product_name like '%GSMLG%' or t.product_name like '%GSMHTC%' or (t.product_name like '%GSM%' and t.product_name like '%HTC%') or t.product_name like '%GSMNOKIA%' or (t.product_name like '%GSM%' and t.product_name like '%NOKIA%') or
+      t.product_name like '%СОТ.ТЕЛ.%' or t.product_name like '%СОТ. ТЕЛ.%') and t.product_name not like '%ЧЕХОЛ%' and t.product_name not like '%ЧЕХЛ%' and t.product_name not like '%ПАКЕТ%' and t.product_name not like '%УСТАНОВКА%' and
+      t.product_name not like '%АКСЕС%' and t.product_name not like '%PAKET%' and t.product_name not like '%ДЛЯ%' and t.product_name not like '%TAB%' and t.product_name not like '%UPRAVLENIYE%' and t.product_name not like '%УПРАВЛЕНИЕ%' and
+      t.product_name not like '%ТЕСТИРОВАНИЕ%' and t.product_name not like '%НАУШН%' and t.product_name not like '%КАБЕЛЬ%' and t.product_name not like '%CABLE%' and t.product_name not like '%CHEHOL%'
+group by td.yyyy, td.text_yyyy_mm, td.text_yyyy_mm_dd,
+         f.cr_program_name, f.is_categ_a, f.is_client_new_by_con, f.is_credit_issued,
+         --case when t.initial_payment > 0 then 'с ПВ'
+         --   when t.initial_payment = 0 then 'без ПВ' end,
+         p.partner, --s.org_name
+         t.initial_payment/b.contract_amount,
+         b.contract_amount;
+grant select on U1.M_TMP_E_EKT_INPMT_RUSLAN to LOADDB;
+grant select on U1.M_TMP_E_EKT_INPMT_RUSLAN to LOADER;
+
+

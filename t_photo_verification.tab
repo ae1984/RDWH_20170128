@@ -1,0 +1,55 @@
+﻿create table U1.T_PHOTO_VERIFICATION
+(
+  photo_id         NUMBER,
+  rfo_client_id    NUMBER,
+  folder_id        NUMBER,
+  gender           NUMBER,
+  is_rogue         VARCHAR2(20),
+  photo_date       DATE,
+  client_born_date NUMBER,
+  region_id        NUMBER,
+  photo_source     NUMBER,
+  photo_name       VARCHAR2(100),
+  file_name        VARCHAR2(20)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_PHOTO_VERIFICATION
+  is 'Фото по заявкам';
+comment on column U1.T_PHOTO_VERIFICATION.photo_id
+  is 'ID фото';
+comment on column U1.T_PHOTO_VERIFICATION.rfo_client_id
+  is 'ID клиент РФО';
+comment on column U1.T_PHOTO_VERIFICATION.folder_id
+  is 'ID заявки';
+comment on column U1.T_PHOTO_VERIFICATION.gender
+  is 'Пол';
+comment on column U1.T_PHOTO_VERIFICATION.is_rogue
+  is 'Признак мошенник';
+comment on column U1.T_PHOTO_VERIFICATION.photo_date
+  is 'Дата заведения заявки в формате (Дата создания фотографии)  ';
+comment on column U1.T_PHOTO_VERIFICATION.client_born_date
+  is 'Год рождения клиента';
+comment on column U1.T_PHOTO_VERIFICATION.region_id
+  is 'Регион заведения заявки';
+comment on column U1.T_PHOTO_VERIFICATION.photo_source
+  is 'Источник происхождения фото изображения';
+comment on column U1.T_PHOTO_VERIFICATION.photo_name
+  is 'Имя файла-фотоизображения';
+comment on column U1.T_PHOTO_VERIFICATION.file_name
+  is 'Имя файла источника';
+grant select on U1.T_PHOTO_VERIFICATION to LOADDB;
+grant select on U1.T_PHOTO_VERIFICATION to LOADER;
+grant select on U1.T_PHOTO_VERIFICATION to RISK_VERIF;
+

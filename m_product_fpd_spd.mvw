@@ -1,0 +1,50 @@
+﻿create materialized view U1.M_PRODUCT_FPD_SPD
+build deferred
+refresh force on demand
+as
+select
+       substr(to_char(d.start_date,'dd-mm-yyyy'), 1, 2) as day_,
+       substr(to_char(d.start_date,'dd-mm-yyyy'), 4, 2) as month_,
+       substr(to_char(d.start_date,'dd-mm-yyyy'), 7, 4) as year_,
+       trunc(d.start_date)        as date_,
+       d.contract_number,
+       cp.product_type,
+       cp.prod,
+       case when vfa.process_code = 'ONLINE_CRED' then 1 else 0 end as is_online,
+       coalesce(fcc.is_categ_a,0) as is_categ_a,
+       coalesce(fcc.is_categ_b,0) as is_categ_b,
+       count(1) as count_check,
+       count(distinct d.contract_number) as count_contract,
+       sum(cdp.total_debt_pmt_1_0) as total_debt_sum_fpd0,
+       sum(d.total_debt_pmt_1_0)   as def_agr_vol_fpd0,
+       sum(case when d.total_debt_pmt_1_0 > 0 then 1 else 0 end) as def_agr_cnt_fpd0,
+       sum(cdp.total_debt_pmt_1_7) as total_debt_sum_fpd7,
+       sum(d.total_debt_pmt_1_7)   as def_agr_vol_fpd7,
+       sum(case when d.total_debt_pmt_1_7 > 0 then 1 else 0 end) as def_agr_cnt_fpd7,
+       sum(cdp.total_debt_pmt_1_30) as total_debt_sum_fpd30,
+       sum(d.total_debt_pmt_1_30)   as def_agr_vol_fpd30,
+       sum(case when d.total_debt_pmt_1_30 > 0 then 1 else 0 end) as def_agr_cnt_fpd30,
+       sum(cdp.total_debt_pmt_2_0) as total_debt_sum_spd,
+       sum(d.total_debt_pmt_2_0)   as def_agr_vol_spd,
+       sum(case when d.total_debt_pmt_2_0 > 0 then 1 else 0 end) as def_agr_cnt_spd
+  from M_RBO_CONTRACT_DEL    d
+  join M_RBO_CONTRACT_BAS      cb on cb.rbo_contract_id = d.rbo_contract_id
+  join V_RBO_Z#CRED_PROGRAM cp on cp.c_code = d.cred_program_code
+  left join M_RBO_CONTRACT_DATA_PMT cdp on cdp.rbo_contract_id = d.rbo_contract_id
+  left join V_FOLDER_ALL_RFO    vfa on vfa.folder_id = cb.folder_id_first
+  left join M_FOLDER_CON_CANCEL fcc on fcc.contract_number = cb.contract_number
+ where d.start_date >= to_date('01-01-2010','dd-mm-yyyy')
+ group by substr(to_char(d.start_date,'dd-mm-yyyy'), 1, 2),
+       substr(to_char(d.start_date,'dd-mm-yyyy'), 4, 2),
+       substr(to_char(d.start_date,'dd-mm-yyyy'), 7, 4),
+       trunc(d.start_date),
+       d.contract_number,
+       cp.product_type,
+       cp.prod,
+       case when vfa.process_code = 'ONLINE_CRED' then 1 else 0 end,
+       coalesce(fcc.is_categ_a,0),
+       coalesce(fcc.is_categ_b,0);
+grant select on U1.M_PRODUCT_FPD_SPD to LOADDB;
+grant select on U1.M_PRODUCT_FPD_SPD to LOADER;
+
+

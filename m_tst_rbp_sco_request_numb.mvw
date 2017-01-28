@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_TST_RBP_SCO_REQUEST_NUMB
+refresh force on demand
+as
+select str.id,
+        str.sco_request_id,
+        str.field_code,
+        str.field_name,
+        (case
+          when str.field_code in ('CRD_PAY_CUR') then
+           ta.pmt
+          when str.field_code in ('TERM_CRED') then
+           ta.term_gr
+          when str.field_code in ('SUMMA_CRED') then
+           ta.new_sum_issued
+          else
+           str.value
+        end) as value
+   from m_tst_RBP_SCO_REQUEST s
+   join MO_SCO_REQUEST_NUMB str
+     on str.sco_request_id = s.id
+   join risk_aaman.M_RBP_RES_BEF_CC_NEW1 ta
+     on ta.folder_id = s.folder_id;
+grant select on U1.M_TST_RBP_SCO_REQUEST_NUMB to LOADDB;
+grant select on U1.M_TST_RBP_SCO_REQUEST_NUMB to LOAD_MO;
+
+

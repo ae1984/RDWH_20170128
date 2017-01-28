@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_SCCL_RFO_FORM_CL_PAR3
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       t.rfo_client_id,
+       t.phone_number,
+
+       count(distinct t.folder_id) as app_cnt
+from u1.V_FORM_CLIENT_CONTACT_PHONE t
+where t.phone_type_simple = 'КОНТАКТ'
+group by t.rfo_client_id,
+         t.phone_number;
+grant select on U1.M_SCCL_RFO_FORM_CL_PAR3 to LOADDB;
+grant select on U1.M_SCCL_RFO_FORM_CL_PAR3 to LOAD_MO;
+
+

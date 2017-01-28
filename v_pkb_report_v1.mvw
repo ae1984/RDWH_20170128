@@ -1,0 +1,33 @@
+﻿create materialized view U1.V_PKB_REPORT_V1
+build deferred
+using no index
+refresh complete on demand
+as
+with x as (
+     select /*+ parallel(15) parallel_index(15) */ pr.*, fd.c_doc_date from V_RFO_Z#PKB_REPORT pr
+     join V_RFO_Z#FDOC fd on fd.id = pr.id and fd.class_id = 'PKB_REPORT'
+     where pr.c_status != 'NoAction'
+)
+select distinct /*+ parallel(15) parallel_index(15) */
+     pr.id as report_id,
+     fld.id as folder_id,
+
+     case when cla.c_parameters not like '%[SAS_CMP#%' then 1
+          when cla.c_parameters like '%[SAS_CMP#%' then 0
+          else null end as is_daytime,
+     decode(pr.c_rep_source, 1, 'ГКБ', 'ПКБ') as report_source
+from x pr
+
+     left join V_RFO_Z#RDOC rd on rd.c_doc = pr.id
+     left join V_RFO_Z#FOLDERS fld on fld.c_docs = rd.collection_id
+
+     left join (select qq.c_parameters,qq.c_date_create,qq.c_datlast,qq.c_rnn,qq.c_type,qq.id_report from V_RFO_Z#KAS_CLAIM qq
+                join
+               (select q.id_report,q.c_rnn,min(q.c_date_create) as c_date_create from V_RFO_Z#KAS_CLAIM_pkb q
+                group by q.id_report,q.c_rnn)q on (qq.id_report = q.id_report and qq.c_rnn = q.c_rnn) and qq.c_date_create = q.c_date_create
+               ) cla on cla.c_rnn = pr.c_rnn and pr.c_doc_date >= cla.c_date_create
+                        and pr.c_doc_date <= cla.c_datlast and cla.c_type = 'PKB_REPORT';
+grant select on U1.V_PKB_REPORT_V1 to LOADDB;
+grant select on U1.V_PKB_REPORT_V1 to LOADER;
+
+

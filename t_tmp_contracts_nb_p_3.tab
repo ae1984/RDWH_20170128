@@ -1,0 +1,29 @@
+﻿create table U1.T_TMP_CONTRACTS_NB_P_3
+(
+  c_name                  VARCHAR2(500),
+  c_type                  VARCHAR2(50),
+  c_rnn                   VARCHAR2(255),
+  c_iin                   VARCHAR2(255),
+  type_of_fin             VARCHAR2(500),
+  contract_code           VARCHAR2(255),
+  agreement_number        VARCHAR2(255),
+  contract_date_begin     DATE,
+  outstanding_amount      NUMBER,
+  currency                VARCHAR2(100),
+  date_of_receip_inf_cntr DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_CONTRACTS_NB_P_3 to LOADDB;
+

@@ -1,0 +1,23 @@
+﻿create table U1.ZZ_CONT_FOR_PORTFOL
+(
+  date_end             VARCHAR2(20),
+  contract_number      VARCHAR2(50),
+  common_current_debts VARCHAR2(50),
+  restructur           VARCHAR2(50)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.ZZ_CONT_FOR_PORTFOL to LOADDB;
+grant select on U1.ZZ_CONT_FOR_PORTFOL to LOADER;
+

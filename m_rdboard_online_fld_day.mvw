@@ -1,0 +1,60 @@
+﻿create materialized view U1.M_RDBOARD_ONLINE_FLD_DAY
+refresh force on demand
+as
+select /*+ parallel(5)*/
+       t.folder_id,
+       t.folder_number,
+       t.rfo_contract_id,
+       t.c_date_create as folder_date_create,
+       t.c_client as rfo_client_id,
+       t.c_inn as client_iin,
+       t.c_num_dog as contract_number,
+       t.c_info_cred#summa_cred as contract_amount,
+       t.cr_program_name,
+
+       upper(cmp.c_name) as folder_state,
+
+       sd.c_code as pos_code,
+       upper(sd.c_name) as pos_name,
+       --u.c_username,
+       t.c_create_user,
+       upper(u.c_name) as expert_name,
+       c.hiring_date,
+       upper(ca.c_value) as expert_position,
+
+       upper(cmw.c_name) as route_name
+
+
+
+
+       /*case
+         when upper(trim(vc.question)) like '%СРАВНИТЬ%4%ФОТОГРАФИИ%КЛИЕНТА%' then 'QUESTION_1'
+         when upper(trim(vc.question)) like '%НА%ДОКУМЕНТЕ%УД%ЛИЧНОСТИ%И%ФОТО%КЛИЕНТА%ИЗОБРАЖЕН%ОДИН%ЧЕЛОВЕК%' then 'QUESTION_2'
+         when upper(trim(vc.question)) like '%С%ФОТО%ИЗ%ПРЕДЫДУЩЕЙ%ЗАЯВКИ%' then 'QUESTION_3'
+         when upper(trim(vc.question)) like '%ФОТО%КЛИЕНТА%И%ФОТО%ДОКУМЕНТА%ЦВЕТНЫЕ%(ПОХОЖИ%НА%ОРИГИНАЛ)%' then 'QUESTION_4'
+         when upper(trim(vc.question)) like '%ФОТО%КЛИЕНТА%И%ФОТО%ДОКУМЕНТА%ЦВЕТНЫЕ%' then 'QUESTION_5'
+       else
+          'UNKNOWN'
+       end as question
+
+       , case when tt.folder_id = t.folder_id then 1 else 0 end as is_folder_fraud
+       , tt.**/
+from u1.M_RFO_ONLINE_FLD_DAY t
+/*join u1.M_OUT_DWH_VERIF_CANCEL_DAY vc on vc.folder_id = t.folder_id and
+                                      (upper(trim(vc.question)) like '%СРАВНИТЬ%4%ФОТОГРАФИИ%КЛИЕНТА%' or
+                                       upper(trim(vc.question)) like '%НА%ДОКУМЕНТЕ%УД%ЛИЧНОСТИ%И%ФОТО%КЛИЕНТА%ИЗОБРАЖЕН%ОДИН%ЧЕЛОВЕК%' or
+                                       upper(trim(vc.question)) like '%С%ФОТО%ИЗ%ПРЕДЫДУЩЕЙ%ЗАЯВКИ%' or
+                                       upper(trim(vc.question)) like '%ФОТО%КЛИЕНТА%И%ФОТО%ДОКУМЕНТА%ЦВЕТНЫЕ%(ПОХОЖИ%НА%ОРИГИНАЛ)%' or
+                                       upper(trim(vc.question)) like '%ФОТО%КЛИЕНТА%И%ФОТО%ДОКУМЕНТА%ЦВЕТНЫЕ%')*/
+join u1.V_RFO_Z#STRUCT_DEPART sd on sd.id = t.c_st_depart
+join V_RFO_Z#CM_WAY cmw on cmw.id = t.c_way
+join u1.V_RFO_Z#USER u on u.id = t.c_create_user
+left join u1.M_ZUP_1C_STAFF_OUT2 c on c.tab_num = u.c_num_tab
+left join V_RFO_Z#CASTA ca on ca.id = u.c_casta
+join V_RFO_Z#CM_POINT cmp on cmp.id = t.c_point
+/*left join u1.M_RDBOARD_ONLINE_FLD_DAY tt on tt.c_create_user = t.c_create_user and
+                                        tt.c_date_create >= t.c_date_create*/;
+grant select on U1.M_RDBOARD_ONLINE_FLD_DAY to LOADDB;
+grant select on U1.M_RDBOARD_ONLINE_FLD_DAY to LOADER;
+
+

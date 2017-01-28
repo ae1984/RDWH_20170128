@@ -1,0 +1,43 @@
+﻿create table U1.CANCEL_TYPES_RFO
+(
+  id           NUMBER not null,
+  c_code       VARCHAR2(60),
+  c_type       VARCHAR2(60),
+  c_name       VARCHAR2(750),
+  c_priority   VARCHAR2(30),
+  c_term_arr   NUMBER not null,
+  c_err_level  VARCHAR2(30),
+  is_by_client NUMBER(1),
+  is_automatic NUMBER(1)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create unique index U1.CANCEL_TYPES_RFO_PK_IND on U1.CANCEL_TYPES_RFO (ID)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.CANCEL_TYPES_RFO
+  add constraint CANCEL_TYPES_RFO_PK primary key (ID);
+grant select on U1.CANCEL_TYPES_RFO to LOADDB;
+grant select on U1.CANCEL_TYPES_RFO to LOADER;
+

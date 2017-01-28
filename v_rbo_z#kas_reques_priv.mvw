@@ -1,0 +1,8 @@
+﻿create materialized view U1.V_RBO_Z#KAS_REQUES_PRIV
+build deferred
+refresh force on demand
+as
+select * from V_RBO_DEV_Z#KAS_REQUES_PRIV@rdwh11;
+grant select on U1.V_RBO_Z#KAS_REQUES_PRIV to LOADDB;
+
+

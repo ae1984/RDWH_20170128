@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_TMP_J_FLD_PREV_OPT
+refresh complete on demand
+as
+select t.rfo_contract_id,
+       count(distinct o.spof_end_date) as prior_optim_count,
+       case when count(distinct o.spof_end_date) > 0 then 1 else 0 end as is_optimized_before
+from M_FOLDER_CON_CANCEL t
+left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = t.iin and d.x_is_credit_issued = 1
+left join M_DWH_ACC_SPECIAL_OFFER_CON o on o.contract_number = d.deal_number and
+                                           o.spof_spec_offer_status_cd in ('EXECUTED','DEFAULT','WORK') and
+                                           o.spof_end_date < trunc(t.folder_date_create_mi)
+group by t.rfo_contract_id;
+grant select on U1.M_TMP_J_FLD_PREV_OPT to LOADDB;
+grant select on U1.M_TMP_J_FLD_PREV_OPT to LOADER;
+
+

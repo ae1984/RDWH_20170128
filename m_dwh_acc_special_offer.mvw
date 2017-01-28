@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_DWH_ACC_SPECIAL_OFFER
+refresh complete on demand
+as
+select /*+parallel(15) driving_site(a)*/ acc.*,
+       rest2.restructing_type_code,
+       upper(rest2.restructing_type_name) as restructing_type_name,
+       rest2.restr_type,
+       rest2.restr_prior
+from DWH_MAIN.ACC_SPECIAL_OFFER@DWH_PROD2 acc
+join M_DWH_DICT_RESTRUCTING_TYPE rest2 on
+                rest2.restructing_type_cd = acc.spof_restructing_type_cd
+                and rest2.restr_type in ('HARD','SOFT');
+grant select on U1.M_DWH_ACC_SPECIAL_OFFER to LOADDB;
+grant select on U1.M_DWH_ACC_SPECIAL_OFFER to LOADER;
+
+

@@ -1,0 +1,37 @@
+﻿create table U1.EMAIL_CODE
+(
+  code          VARCHAR2(32) not null,
+  descr         VARCHAR2(256),
+  email_subject VARCHAR2(256)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+alter table U1.EMAIL_CODE
+  add constraint EMAIL_CODE_PK primary key (CODE)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.EMAIL_CODE_PK nologging;
+grant select on U1.EMAIL_CODE to LOADDB;
+grant select on U1.EMAIL_CODE to LOADER;
+

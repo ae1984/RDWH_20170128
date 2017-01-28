@@ -1,0 +1,70 @@
+﻿create materialized view U1.M_CLIENT_HISTORY_BARCODE_PRE1
+refresh force on demand
+as
+select /*+ parallel 30 */
+           y.yyyy_mm_num,
+           y.text_yyyy_mm,
+           cast(y.client_id as number) as client_id,
+           y.cli_row_rank,
+           y.pmt_h,
+           y.pmt_h_new,
+           y.opt_h,
+           y.opt_order_h,
+           y.pmt_up_h,
+           cast(case when y.opt_h = 1 then 'R'
+                when y.pmt_up_h = 1 then 'U'
+           else to_char(y.pmt_h) end as varchar2(1)) as pmt_full_h,
+
+           cast(case when y.opt_h = 1 then 'R'
+                when y.pmt_up_h = 1 then 'U'
+           else to_char(y.pmt_h_new) end as varchar2(1)) as pmt_full_h_new,
+
+           cast(case when y.opt_h = 1 then 'R'
+           else to_char(y.pmt_h_new) end as varchar2(1)) as pmt_full_h_3
+
+    from (
+        select t.yyyy_mm_num,
+               t.text_yyyy_mm,
+               to_number(t.client_id) as client_id,
+
+               dense_rank() over (partition by t.client_id order by t.yyyy_mm_num) cli_row_rank,
+
+               --История по дням просрочки
+               cast(case when t.total_debt_in_month = 0 then 0
+                    else case when t.delinq_days_in_month > 0 then 2
+                              else 1
+                         end
+               end as varchar2(1)) as pmt_h,
+
+               cast(case when t.total_debt_in_month = 0 then 0
+                    else case when t.delinq_days_in_month >= 1 and t.delinq_days_in_month < 31 then 2
+                              when t.delinq_days_in_month >= 31 then 3
+                              else 1
+                         end
+               end as varchar2(1)) as pmt_h_new,
+
+               --История по оптимизации
+               cast(case when rr.client_id is null then 0 else 1 end as varchar2(1)) as opt_h,
+               cast(case when rr.opt_order is null then 0 else opt_order end as varchar2(3)) as opt_order_h,
+
+               --История увеличения платежа
+               cast(case when t.max_pmt_prev_rep > 0 then
+                    case when round((t.max_pmt - t.max_pmt_prev_rep)/t.max_pmt_prev_rep, 2) >= 0.5 then 1 else 0 end
+                    else 0 end as varchar2(1)) as pmt_up_h
+        from V_CLIENT_HISTORY t
+        left join (select x.client_id,
+                          x.rr_date,
+                          x.r_cnt,
+                          rank() over (partition by x.client_id order by trunc(x.rr_date, 'mm')) opt_order
+                   from (select r.client_id,
+                                trunc(r.spof_end_date, 'mm') rr_date,
+                                count(1) r_cnt
+                         from M_CONTRACT_REF_RESTR r
+                         group by r.client_id, trunc(r.spof_end_date, 'mm'))
+                         x) rr on rr.client_id = to_number(t.client_id)
+                              and rr.rr_date = to_date(t.text_yyyy_mm, 'yyyy - mm')
+    ) y;
+grant select on U1.M_CLIENT_HISTORY_BARCODE_PRE1 to LOADDB;
+grant select on U1.M_CLIENT_HISTORY_BARCODE_PRE1 to LOADER;
+
+

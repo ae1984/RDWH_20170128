@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_TMP_R_MAN_RISKY_EVENT
+refresh force on demand
+as
+select f.expert_name, c.yy_mm_start_last,
+       count(distinct c.contract_number) as con_cnt_d,
+       count(*) as con_cnt,
+       count(distinct v.contract_number) as risky_con_cnt,
+       round(count(distinct v.contract_number) /
+            count(distinct c.contract_number) * 100, 2) as risky_con_rate_round,
+       count(distinct v.contract_number) /
+            count(distinct c.contract_number) * 100 as risky_con_rate,
+
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate, -- просрочка всего по-старому
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1, -- USE THIS! - просрочка 1-го платежа
+    round(sum(c.delinq_rate_frd_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_frd_1, -- USE THIS! - просрочка фрод
+
+    round(sum(c.delinq_rate_pmt_2_x1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_2_x1,
+    round(sum(c.delinq_rate_pmt_2_01 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_2_01,
+    round(sum(c.delinq_rate_pmt_3_xx1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_3_xx1,
+    round(sum(c.delinq_rate_pmt_3_001 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_3_001,
+    round(sum(c.delinq_rate_pmt_4_xxx1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_4_xxx1,
+    round(sum(c.delinq_rate_pmt_4_0001 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_4_0001,
+
+        round(sum(c.max_debt_used) / 1000000) as sales_mln, -- USE THIS! - продажи, млн
+    round(sum(c.max_debt_used)) as sales, -- продажи
+
+    round(sum(c.profit) / 1000000) as profit_mln, -- USE THIS! - прибыль, млн (доход - расход)
+    sum(c.profit) as profit,
+    round(sum(c.delinq_rate_b_w * c.max_debt_used) /
+        sum(c.max_debt_used),1) as del_rate_b_w -- USE THIS! - просрочка всего по-новому
+
+from M_CONTRACT_CAL_DEL c
+join V_FOLDER_ALL f on c.folder_id_first = f.folder_id
+join V_POS p on p.pos_code = f.pos_code and p.pos_type = 'ОТДЕЛЕНИЕ'
+left join M_CASH_TRANSACTIONS_RBO_VERA_1 v on c.contract_number = v.contract_number and
+                                       v.credit_product_card_num is not null and
+                                       v.credit_product_deposit_num is null and v.pmt_cnt = 3
+where c.yy_mm_start_last like '2013 - %' or c.yy_mm_start_last like '2014 - %'
+group by f.expert_name, c.yy_mm_start_last
+having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_R_MAN_RISKY_EVENT to LOADDB;
+grant select on U1.M_TMP_R_MAN_RISKY_EVENT to LOADER;
+
+

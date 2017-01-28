@@ -1,0 +1,24 @@
+﻿create table U1.TMP_PURSHARED_T2
+(
+  id       NUMBER,
+  purchase NUMBER,
+  income   NUMBER(10,7),
+  age      NUMBER,
+  zip      NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.TMP_PURSHARED_T2 to LOADDB;
+grant select on U1.TMP_PURSHARED_T2 to LOADER;
+

@@ -1,0 +1,59 @@
+﻿create materialized view U1.M_KASPIKZ_PAY
+build deferred
+refresh complete on demand
+as
+select /*+ parallel(30)*/
+  ppi.id as pay_info_id,
+  ppi.user_id,
+  ppi.reg_date as pay_date,
+  ppi.amount as pay_amount,
+  ppi.amount_fee as pay_amount_fee,
+  ppi.currency,
+  ppi.bonus_amount as pay_bonus_amount,
+  pip.category_name,
+  pip.service_name,
+  pip.pay_param,
+  pip.pay_param_clear,
+  pip.pay_service_param,
+  kl.login_val as client_phone_number,
+  replace(kl.login_val,'X','') as client_phone_number_clear,
+  nvl(kl.login_val_next,substr(kl.login_val_prev,-10,10)) as login_val, --current login
+  to_number(replace(u.rfo_id,'X','')) as rfo_client_id,
+  u.rbo_id as rbo_client_id,
+  u.client_name as client_name,
+  u.bank_prof_iin  as client_prof_iin,
+  u.inn,
+  u.rnn,
+  u.date_of_birth,
+  u.is_blocked,
+  ppi.cur_pay_inf_hist,
+  ppi.is_prov,
+  ppi.deposit_account_number
+from U1.T_KASPIKZ_PAY_PAY_INFO ppi
+left join U1.M_KASPIKZ_USERS_ALL u on u.user_id = ppi.user_id
+--                                   and u.rfo_id is not null
+left join (
+  select
+    ppi.id as pay_info_id,
+    sc.alias_val as category_name,
+    s.alias_val  as service_name,
+    listagg(nvl(sp.alias_val,'')||': '||nvl(pip.str_value,''),'; ') within group (order by sp.id) pay_param,
+    listagg(case when upper(sp.alias_val) = 'НОМЕР ТЕЛЕФОНА' and regexp_like(pip.str_value,'^8[[:digit:]]{10}$')
+         then regexp_replace(pip.str_value,'(^8)([[:digit:]]{10})$', '\2')
+         else pip.str_value
+      end ,';')  within group (order by sp.id) as pay_param_clear,
+    LISTAGG(sp.alias_val,'; ') WITHIN GROUP (order by sp.id) as pay_service_param
+  from u1.T_KASPIKZ_PAY_PAY_INFO ppi
+  left join u1.M_KASPIKZ_PAY_SERVICES s                          on s.id = ppi.service_id
+  left join u1.M_KASPIKZ_PAY_SERVICE_CATEG sc                    on sc.id = s.service_category_id
+  left join u1.T_KASPIKZ_PAY_PAYINFOPARAMS pip                   on pip.pay_info_id = ppi.id
+  left join u1.M_KASPIKZ_PAY_SERVICE_PARAMS sp                   on pip.service_params_id = sp.id
+  group by
+    ppi.id,
+    sc.alias_val,
+    s.alias_val
+) pip on pip.pay_info_id = ppi.id
+left join u1.M_KASPIKZ_LOGINS kl on kl.user_id = u.user_id;
+grant select on U1.M_KASPIKZ_PAY to LOADDB;
+
+

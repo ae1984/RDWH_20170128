@@ -1,0 +1,83 @@
+﻿create table U1.T_KASPIKZ_TRANSF_TRANSFER
+(
+  id                     NUMBER(20),
+  dep_agreement_id       NUMBER(20),
+  agreement_id           NUMBER(20),
+  card_id                NUMBER(20),
+  transfer_sum           NUMBER(19,5),
+  currency               VARCHAR2(255),
+  external_id            VARCHAR2(255),
+  create_date            DATE,
+  accept_date            DATE,
+  last_modification_date DATE,
+  declare_id             VARCHAR2(255),
+  is_state               NUMBER(3),
+  end_state              NUMBER(10),
+  state_description      VARCHAR2(4000),
+  tarif_sum              NUMBER(19,5),
+  sender_account_saldo   NUMBER(19,5),
+  receiver_account_saldo NUMBER(19,5),
+  rate_val               NUMBER(19,5),
+  depart                 VARCHAR2(255),
+  user_id                NUMBER(20),
+  old_dep_agreement_id   NUMBER(20),
+  old_card_id            NUMBER(20),
+  is_payment_transfer    NUMBER(3),
+  old_reciev_dep_agr_id  NUMBER(20),
+  payment_id             NUMBER(20),
+  source_account_id      NUMBER(20),
+  destination_account_id NUMBER(20)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.id
+  is 'Идентификатор таблицы';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.card_id
+  is ' ';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.transfer_sum
+  is 'Сумма перевода';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.currency
+  is 'Валюта';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.external_id
+  is 'Внешний ID';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.create_date
+  is 'Дата создания';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.accept_date
+  is 'Дата подтверждения';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.last_modification_date
+  is 'Дата последнего изменения';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.state_description
+  is 'Текстовое описание статуса';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.tarif_sum
+  is ' ';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.sender_account_saldo
+  is 'Сальдо отправителя';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.receiver_account_saldo
+  is 'Сальдо получателя';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.depart
+  is ' ';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.user_id
+  is 'ID клиента в ИО';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.is_payment_transfer
+  is 'Прошел ли платеж';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.old_reciev_dep_agr_id
+  is ' ';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.payment_id
+  is 'ID платежа';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.source_account_id
+  is 'ID продукта отправителя';
+comment on column U1.T_KASPIKZ_TRANSF_TRANSFER.destination_account_id
+  is 'ID продутка получателя';
+grant select on U1.T_KASPIKZ_TRANSF_TRANSFER to LOADDB;
+grant select on U1.T_KASPIKZ_TRANSF_TRANSFER to LOADER;
+

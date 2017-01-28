@@ -1,0 +1,38 @@
+﻿create materialized view U1.M_TMP_J_SYS_MON_MATRIX_1
+refresh complete on demand
+as
+select to_char(f.folder_date_create_mi, 'yyyy') as a_year, to_char(f.folder_date_create_mi, 'yyyy-mm') as a_mon,
+       to_char(f.folder_date_create_mi,'yyyy-mm-dd') as a_day,
+       f.x_dnp_name, f.pos_code, f.expert_name, f.process_name, f.cr_program_name,
+       ---
+       count(*) as cnt, count(distinct f.rfo_contract_id) as rfo_con_cnt,
+       count(distinct f.folder_id) as fld_cnt,
+       count(distinct f.rfo_client_id) as cli_cnt,
+       sum(f.contract_amount) / 1000000 as amount_requested_mln,
+       ---
+       count(distinct case when p.report_status = 'БЕКИ' then f.folder_id end) as pkb_beki_fld_cnt,
+       count(distinct case when coalesce(g.salary,0) < 15000 then f.folder_id end) as gcvp_sal_015K_fld_cnt,
+       count(distinct case when p.report_status = 'БЕКИ' and coalesce(g.salary,0) < 15000
+                      then f.folder_id end) as pkb_beki_gcvp_sal_015K_fld_cnt,
+       ---
+       count(distinct c.deal_number) as con_cnt,
+       sum(d.max_debt_used_x) / 1000000 as sales_mln,
+       sum(case when d.del_days_x > 7 then d.total_debt_x end) / 1000000 as debt_del_7_mln,
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as debt_del_60_mln,
+       sum(case when d.del_days_x > 90 then d.total_debt_x end) / 1000000 as debt_del_90_mln
+from M_FOLDER_CON_CANCEL f
+left join V_DWH_PORTFOLIO_CURRENT c on c.folder_id_first = f.folder_id and c.deal_number = f.contract_number and
+                                       c.x_is_credit_issued = 1
+left join M_RBO_CONTRACT_BAS b on b.contract_number = c.deal_number
+left join RISK_MVERA.M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+left join V_PKB_REPORT p on p.folder_id = f.folder_id
+left join V_GCVP_REPORT g on g.folder_id = f.folder_id
+where f.folder_date_create_mi >= to_date('2015-01-01','yyyy-mm-dd')
+group by to_char(f.folder_date_create_mi, 'yyyy'), to_char(f.folder_date_create_mi, 'yyyy-mm'),
+         to_char(f.folder_date_create_mi,'yyyy-mm-dd'),
+         f.x_dnp_name, f.pos_code, f.expert_name, f.process_name, f.cr_program_name
+--);
+grant select on U1.M_TMP_J_SYS_MON_MATRIX_1 to LOADDB;
+grant select on U1.M_TMP_J_SYS_MON_MATRIX_1 to LOADER;
+
+

@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_STAGE_S40_EXPORTEVENTDATA
+refresh force on demand
+as
+select change_date,
+      audit_id,
+      event_index,
+      date_val,
+      office_nr,
+      office_guid,
+      service_type_nr,
+      cashier_nr,
+      user_nr,
+      ticket_nr,
+      icu,
+      feedback,
+      customer_text,
+      attended_customer,
+      take_ticket_time,
+      forward_ticket_time,
+      end_of_service_ticket_time,
+      errand_type,
+      waiting_time,
+      service_time
+from DWH_STAGE.S40_EXPORTEVENTDATA@RDWH_EXD;
+grant select on U1.M_STAGE_S40_EXPORTEVENTDATA to DNP;
+grant select on U1.M_STAGE_S40_EXPORTEVENTDATA to LOADDB;
+grant select on U1.M_STAGE_S40_EXPORTEVENTDATA to LOADER;
+
+

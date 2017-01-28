@@ -1,0 +1,35 @@
+﻿create materialized view U1.V_FPD_0_45
+refresh force on demand
+as
+select x.REP_DATE,x.DEBT,x.COUNT_CLIENT, sum(x.debt_fpd) as debt_fpd,
+sum(x.del_rate_fpd_45) as del_rate_fpd_45 from (
+select b."REP_DATE",
+       b."DEBT",
+       b."COUNT_CLIENT",
+       a.debt_fpd,
+       --a.count_client_fpd7,
+       round(a.debt_fpd/b.debt*100,2) as del_rate_fpd_45
+       --round(a.count_client_fpd7/b.count_client*100,2) as proz_count_client
+from (
+select t.rep_date,
+       sum(t.debt)as debt,
+       sum(t.count_client)as count_client
+from V_DWH_PORT_FPD_SPD_FPD7 t
+where t.sales_num<>0
+group by t.rep_date
+) b
+join (
+select t.start_date,
+       case when t.fpd_num = 1 and t.delinq_days > 0 and t.delinq_days < 8 then sum(t.debt) * 0.45
+       else sum(t.debt) end as debt_fpd
+       --sum(t.count_client)as count_client_fpd7
+from V_DWH_PORT_FPD_SPD_FPD7 t
+where t.fpd_num <> 0
+group by t.start_date,t.fpd_num,t.delinq_days
+) a on b.REP_DATE = a.start_date
+) x group by x.REP_DATE,x.DEBT,x.COUNT_CLIENT;
+grant select on U1.V_FPD_0_45 to LOADDB;
+grant select on U1.V_FPD_0_45 to LOADER;
+grant select on U1.V_FPD_0_45 to LOAD_RDWH_PROD;
+
+

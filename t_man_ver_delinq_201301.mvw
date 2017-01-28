@@ -1,0 +1,34 @@
+﻿create materialized view U1.T_MAN_VER_DELINQ_201301
+refresh force on demand
+as
+select v.expert_name,
+       v.verificator_name,
+       v.del_rate,
+       v.del_rate_pmt_1,
+       v.sales_mln,
+       v.con_cnt,
+       v.con_dist_cnt,
+       case when v.expert_name like '%БЛОК%' then 0 else 1 end as expert_work,
+       case when v.verificator_name like '%БЛОК%' then 0 else 1 end as verificator_work
+from (select
+    x.expert_name,
+    x.verificator_name,
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate,
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1,
+    round(sum(c.max_debt_used) / 1000000, 1) as sales_mln,
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt -- кол-во договоров + проверка
+from V_TMP_CONTRACT_CAL_DEL c
+join (
+select  /*+ noparallel */
+fld.expert_name, fld.verificator_name, t.contract_id
+from V_CONTRACT_CAL t
+join v_folder_all fld on fld.folder_id = t.folder_id_first
+where t.start_date_first >= to_date('01012010', 'ddmmyyyy')
+) x on x.contract_id = c.contract_id
+group by x.expert_name, x.verificator_name
+having sum(c.max_debt_used) > 0
+) v;
+grant select on U1.T_MAN_VER_DELINQ_201301 to LOADDB;
+grant select on U1.T_MAN_VER_DELINQ_201301 to LOADER;
+
+

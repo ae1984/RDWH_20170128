@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_KASPISH_PRODUCTSLP
+build deferred
+refresh force on demand
+as
+select ITEMPK,
+       ITEMTYPEPK,
+       LANGPK,
+       P_DESCRIPTION,
+       P_NAME,
+       P_SEGMENT,
+       P_MANUFACTURERTYPEDESCRIPTION,
+       P_ARTICLESTATUS,
+       P_SUMMARY,
+       P_STYLE,
+       P_SIZE,
+       P_COLOR
+  from kaspi.productslp@ks_std
+ where rownum > 0;
+grant select on U1.M_KASPISH_PRODUCTSLP to LOADDB;
+
+

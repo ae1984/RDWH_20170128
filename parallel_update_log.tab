@@ -1,0 +1,23 @@
+﻿create table U1.PARALLEL_UPDATE_LOG
+(
+  id         NUMBER,
+  table_name VARCHAR2(4000),
+  start_date DATE,
+  end_date   DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.PARALLEL_UPDATE_LOG to LOADDB;
+grant select on U1.PARALLEL_UPDATE_LOG to LOADER;
+

@@ -1,0 +1,7 @@
+﻿create sequence U1.MONTHLY_UPDATE_EVENT_SEQ
+minvalue 1
+maxvalue 9999999999999999999999999999
+start with 310
+increment by 1
+nocache;
+

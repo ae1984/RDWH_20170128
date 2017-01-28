@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_TMP_E_REF_P3
+refresh force on demand
+as
+select sp21.contract_number,
+       min(sp21.restr_type) keep (dense_rank first order by sp21.spof_end_date) restr_type_first,
+       min(sp21.spof_end_date) first_restr_date,
+       max(sp21.spof_end_date) last_restr_date
+from M_TMP_E_REF_P2 sp21
+group by sp21.contract_number;
+grant select on U1.M_TMP_E_REF_P3 to LOADDB;
+grant select on U1.M_TMP_E_REF_P3 to LOADER;
+
+

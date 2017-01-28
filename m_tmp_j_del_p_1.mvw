@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_TMP_J_DEL_P_1
+refresh force on demand
+as
+select t.rep_date, count(*) as cnt, count(distinct t.rbo_contract_id) as cnt_dist,
+       sum(t.total_debt) as debt_all,
+       sum(case when t.delinq_days > 7 then t.total_debt end) as debt_del_8,
+       sum(case when t.delinq_days > 7 and t.delinq_days <= 30 then t.total_debt end) as debt_del_8_30,
+       sum(case when t.delinq_days > 30 and t.delinq_days <= 60 then t.total_debt end) as debt_del_31_60,
+       sum(case when t.delinq_days > 60 and t.delinq_days <= 90 then t.total_debt end) as debt_del_61_90,
+       sum(case when t.delinq_days > 90 and t.delinq_days <= 180 then t.total_debt end) as debt_del_91_180,
+       sum(case when t.delinq_days > 180 and t.delinq_days <= 360 then t.total_debt end) as debt_del_181_360,
+       sum(case when t.delinq_days > 360 then t.total_debt end) as debt_del_361,
+
+       sum(case when t.delinq_days > 7 then t.total_debt end) / sum(t.total_debt) as del_8_rate,
+       sum(case when t.delinq_days > 7 and t.delinq_days <= 30 then t.total_debt end) / sum(t.total_debt) as del_8_30_rate,
+       sum(case when t.delinq_days > 30 and t.delinq_days <= 60 then t.total_debt end) / sum(t.total_debt) as del_31_60_rate,
+       sum(case when t.delinq_days > 60 and t.delinq_days <= 90 then t.total_debt end) / sum(t.total_debt) as del_61_90_rate,
+       sum(case when t.delinq_days > 90 and t.delinq_days <= 180 then t.total_debt end) / sum(t.total_debt) as del_91_180_rate,
+       sum(case when t.delinq_days > 180 and t.delinq_days <= 360 then t.total_debt end) / sum(t.total_debt) as del_181_360_rate,
+       sum(case when t.delinq_days > 360 then t.total_debt end) / sum(t.total_debt) as del_361_rate
+from T_RBO_PORT t
+where t.rep_date >= to_date('2013','yyyy')
+group by t.rep_date;
+grant select on U1.M_TMP_J_DEL_P_1 to LOADDB;
+grant select on U1.M_TMP_J_DEL_P_1 to LOADER;
+
+

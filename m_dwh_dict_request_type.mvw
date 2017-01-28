@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_DWH_DICT_REQUEST_TYPE
+build deferred
+refresh force on demand
+as
+select
+  request_type_cd,
+  request_type$change_date,
+  request_type$row_status,
+  request_type$audit_id ,
+  request_type$hash,
+  request_type$source,
+  request_type$provider,
+  request_type$source_pk,
+  request_type_code,
+  request_type_name
+ from DWH_MAIN.DICT_REQUEST_TYPE@RDWH_EXD;
+

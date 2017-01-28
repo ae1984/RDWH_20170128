@@ -1,0 +1,107 @@
+﻿create materialized view U1.M_CLIENT_PKB_OTHER_BANK_DEAL
+refresh complete on demand
+as
+select *
+  from (select /*+parallel(vr,16) parallel(re,16) parallel(a,16)*/
+
+         re.folder_id as folder_id, -- Папка,
+         re.iin_rnn as iin_rnn, --ИИН
+         case
+           when upper(re.c_fin_inst) like '%КАЗКОМ%' then
+            'KKB'
+           when upper(re.c_fin_inst) like '%НАРОД%' then
+            'HAL'
+           when upper(re.c_fin_inst) like '%БТА%' then
+            'BTA'
+           when upper(re.c_fin_inst) like '%БАНК Ц%' then
+            'BСС'
+           when upper(re.c_fin_inst) like '%АТФ%' then
+            'ATF'
+           when upper(re.c_fin_inst) like '%АЛЬЯНС%' then
+            'ALI'
+           when upper(re.c_fin_inst) like '%ЕВРАЗ%' then
+            'EUR'
+           when upper(re.c_fin_inst) like '%KASPI%' then
+            'KSP'
+           when upper(re.c_fin_inst) like '%СБЕРБАНК%' then
+            'SBR'
+           when upper(re.c_fin_inst) like '%СИТИБАНК%' then
+            'CTB'
+           when upper(re.c_fin_inst) like '%НУРБАНК%' then
+            'NUR'
+           when upper(re.c_fin_inst) like '%ЦЕСНАБАНК%' then
+            'CSN'
+           when upper(re.c_fin_inst) like '%HSBC%' then
+            'HSB'
+           when upper(re.c_fin_inst) like '%ТЕМ%' then
+            'TMB'
+           when upper(re.c_fin_inst) like '%RBS%' then
+            'RBS'
+           when upper(re.c_fin_inst) like '%ЖИЛСТРОЙ%' then
+            'JSB'
+           when upper(re.c_fin_inst) like '%АЛЬФА%' then
+            'ALF'
+           when upper(re.c_fin_inst) like '%КАЗИНВЕСТ%' then
+            'INV'
+           when upper(re.c_fin_inst) like '%ЭКСИМ%' then
+            'EMB'
+           when upper(re.c_fin_inst) like '%DELTA%' then
+            'DLT'
+           when upper(re.c_fin_inst) like '%КИТАЯ%' then
+            'KIT'
+           when upper(re.c_fin_inst) like '%АСТАНА%' then
+            'AST'
+           when upper(re.c_fin_inst) like '%ВТБ%' then
+            'VTB'
+           when upper(re.c_fin_inst) like '%МЕТРОКОМ%' then
+            'MTK'
+           when upper(re.c_fin_inst) like '%ХОУМ КРЕДИТ БАНК%' then
+            'HCB'
+           when upper(re.c_fin_inst) like '%ТПБ%' then
+            'TPB'
+           when upper(re.c_fin_inst) like '%ASIACREDIT%' then
+            'AKB'
+           when upper(re.c_fin_inst) like '%БАНКПОЗИТИВ%' then
+            'BPV'
+           when upper(re.c_fin_inst) like '%КЗИ%' then
+            'KZI'
+           when upper(re.c_fin_inst) like '%KASSA NOVA%' then
+            'BKN'
+           when upper(re.c_fin_inst) like '%RBK%' then
+            'RBK'
+           when upper(re.c_fin_inst) like '%ШИНХАН%' then
+            'SHB'
+           when upper(re.c_fin_inst) like '%АЛЬ-ХИЛЯЛЬ%' then
+            'ICL'
+           when upper(re.c_fin_inst) like '%ДАНАБАНК%' then
+            'DNB'
+           when upper(re.c_fin_inst) like '%ТАИБ%' then
+            'TAI'
+           when upper(re.c_fin_inst) like '%QAZAQ%' then
+            'QAZ'
+           when upper(re.c_fin_inst) like '%АЛТЫН%' then
+            'KAB'
+           when upper(re.c_fin_inst) like '%ЗАМАН%' then
+            'ZAM'
+           when upper(re.c_fin_inst) like '%ПАКИСТАНА%' then
+            'PAK'
+         --else ' '
+         end as bank, -- Банк,
+
+         max(re.report_id) as report_id, --id последнего ПКБ отчета
+         max(re.report_date_time) as report_date_time --,  --дата последнего ПКБ отчета
+
+          from v_pkb_all re
+
+         where re.report_type in ('РАСШИРЕННЫЙ', 'СТАНДАРТНЫЙ') -- вид ПКБ отчета
+
+         group by re.iin_rnn, re.folder_id, upper(re.c_fin_inst))
+
+       pivot(count(bank) for bank in ('KKB' as "KKB", 'HAL' as "HAL", 'BTA' as "BTA", 'BСС' as "BСС", 'ATF' as "ATF", 'ALI' as "ALI", 'EUR' as "EUR", 'KSP' as "KSP", 'SBR' as "SBR", 'CTB' as "CTB", 'NUR' as "NUR", 'CSN' as "CSN",
+       'HSB' as "HSB", 'TMB' as "TMB", 'RBS' as "RBS", 'JSB' as "JSB", 'ALF' as "ALF", 'INV' as "INV", 'EMB' as "EMB", 'DLT' as "DLT", 'KIT' as "KIT", 'AST' as "AST", 'VTB' as "VTB", 'MTK' as "MTK", 'HCB' as "HCB", 'TPB' as "TPB",
+       'AKB' as "AKB", 'BPV' as "BPV", 'KZI' as "KZI", 'BKN' as "BKN", 'RBK' as "RBK", 'SHB' as "SHB", 'ICL' as "ICL", 'DNB' as "DNB", 'TAI' as "TAI", 'QAZ' as "QAZ", 'KAB' as "KAB", 'ZAM' as "ZAM", 'PAK' as "PAK" /*,' ' as "?"*/)
+);
+grant select on U1.M_CLIENT_PKB_OTHER_BANK_DEAL to LOADDB;
+grant select on U1.M_CLIENT_PKB_OTHER_BANK_DEAL to LOADER;
+
+

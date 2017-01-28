@@ -1,0 +1,13 @@
+﻿create global temporary table U1.T_OUT_DWH_QUESTION_VERIFICATOR
+(
+  id             NUMBER(19),
+  code           VARCHAR2(255),
+  name           VARCHAR2(255),
+  text           CLOB,
+  schema_id      NUMBER(19),
+  portition_date TIMESTAMP(6)
+)
+on commit preserve rows;
+grant select on U1.T_OUT_DWH_QUESTION_VERIFICATOR to LOADDB;
+grant select on U1.T_OUT_DWH_QUESTION_VERIFICATOR to LOADER;
+

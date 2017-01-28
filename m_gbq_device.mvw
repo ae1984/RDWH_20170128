@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_GBQ_DEVICE
+build deferred
+refresh force on demand
+as
+select ID,
+      HIT_ID,
+      IP,
+      USER_AGENT,
+      FLASH_VERSION,
+      JAVA_ENABLED,
+      LANGUAGE,
+      SCREEN_COLORS,
+      SCREEN_RESOLUTION,
+      IDATE
+from GBQ.GBQ_DEVICE@KSVISIT;
+grant select on U1.M_GBQ_DEVICE to LOADDB;
+
+

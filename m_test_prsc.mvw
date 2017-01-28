@@ -1,0 +1,206 @@
+﻿create materialized view U1.M_TEST_PRSC
+refresh force on demand
+as
+selecT * from (select (t.folder_date_create_mi) as mon,t.folder_id, PRSC_CL_FORM_CONTACTS_CNT,
+           PRSC_CL_PRIV_CONTACTS_CNT, IN_SCO_CRED_PROGRAM,IN_SCO_NUM_SCORING,
+                                                IN_SCO_PKB_SUM_OVERD_PAY, PRSC_ACTIVE_KASPI_CONTRACTS,
+                                                IN_SCO_PKB_NUM_CONTRCTS,
+
+
+       --prsc_client_age_res_pre
+       case when coalesce(t.prsc_client_age_res_pre, 0) > 0 and coalesce(m.prsc_client_age_res_pre, 0) > 0 then 1  -- cовпало
+            when coalesce(t.prsc_client_age_res_pre, 0) > coalesce(m.prsc_client_age_res_pre, 0) then 2    ---рфо да, мо нет
+            when coalesce(t.prsc_client_age_res_pre, 0) < coalesce(m.prsc_client_age_res_pre, 0) then 3 --мо да, рфо нет
+       else 0 end as prsc_client_age_res_pre, -- оба нет
+
+       case when coalesce(t.verification_rating, 0) > 0 and
+                 (coalesce(m.prsc_ph_mob_mob_res_pre, 0) > 0 or
+                  coalesce(m.prsc_ph_home_home_res_pre, 0) > 0 or
+                  coalesce(m.prsc_ph_cont_cont_res_pre, 0) > 0) then 1
+
+            when coalesce(t.verification_rating, 0) > 0 and
+                 (coalesce(m.prsc_ph_mob_mob_res_pre, 0) = 0 and
+                  coalesce(m.prsc_ph_home_home_res_pre, 0) = 0 and
+                  coalesce(m.prsc_ph_cont_cont_res_pre, 0) = 0) then 2
+
+            when coalesce(t.verification_rating, 0) = 0 and
+                 (coalesce(m.prsc_ph_mob_mob_res_pre, 0) > 0 or
+                  coalesce(m.prsc_ph_home_home_res_pre, 0) > 0 or
+                  coalesce(m.prsc_ph_cont_cont_res_pre, 0) > 0) then 3
+       else 0 end as prsc_ph_counter,
+
+       case when coalesce(t.gcvp_pkb_crd_ovd_cur, 0) > 0 and coalesce(m.prsc_overdue_exist_res_pre, 0) > 0 then 1
+            when coalesce(t.gcvp_pkb_crd_ovd_cur, 0) > coalesce(m.prsc_overdue_exist_res_pre, 0) then 2
+            when coalesce(t.gcvp_pkb_crd_ovd_cur, 0) < coalesce(m.prsc_overdue_exist_res_pre, 0) then 3
+       else 0 end as gcvp_pkb_crd_ovd_cur,
+
+       case when coalesce(t.pkb_crd_overdue_cur, 0) > 0 and coalesce(m.prsc_overdue_exist_res_pre, 0) > 0 then 1
+            when coalesce(t.pkb_crd_overdue_cur, 0) > coalesce(m.prsc_overdue_exist_res_pre, 0) then 2
+            when coalesce(t.pkb_crd_overdue_cur, 0) < coalesce(m.prsc_overdue_exist_res_pre, 0) then 3
+       else 0 end as pkb_crd_overdue_cur,
+
+       case when coalesce(t.gcvp_pkb_crd_status, 0) > 0 and coalesce(m.prsc_pkb_negat_stat_res_pre, 0) > 0 then 1
+            when coalesce(t.gcvp_pkb_crd_status, 0) > coalesce(m.prsc_pkb_negat_stat_res_pre, 0) then 2
+            when coalesce(t.gcvp_pkb_crd_status, 0) < coalesce(m.prsc_pkb_negat_stat_res_pre, 0) then 3
+       else 0 end as gcvp_pkb_crd_status,
+
+       case when coalesce(t.gcvp_pkb_act_crd_cnt, 0) > 0 and coalesce(m.prsc_gcvp_pkb_act_cont_res_pre, 0) > 0 then 1
+            when coalesce(t.gcvp_pkb_act_crd_cnt, 0) > coalesce(m.prsc_gcvp_pkb_act_cont_res_pre, 0) then 2
+            when coalesce(t.gcvp_pkb_act_crd_cnt, 0) < coalesce(m.prsc_gcvp_pkb_act_cont_res_pre, 0) then 3
+       else 0 end as gcvp_pkb_act_crd_cnt,
+
+       case when coalesce(t.gcvp_days_elaps_over, 0) > 0 and coalesce(m.prsc_gcvp_days_elapsed_res_pre, 0) > 0 then 1
+            when coalesce(t.gcvp_days_elaps_over, 0) > coalesce(m.prsc_gcvp_days_elapsed_res_pre, 0) then 2
+            when coalesce(t.gcvp_days_elaps_over, 0) < coalesce(m.prsc_gcvp_days_elapsed_res_pre, 0) then 3
+       else 0 end as gcvp_days_elaps_over,
+
+       case when coalesce(t.prsc_resident_res_pre, 0) > 0 and coalesce(m.prsc_resident_res_pre, 0) > 0 then 1
+            when coalesce(t.prsc_resident_res_pre, 0) > coalesce(m.prsc_resident_res_pre, 0) then 2
+            when coalesce(t.prsc_resident_res_pre, 0) < coalesce(m.prsc_resident_res_pre, 0) then 3
+       else 0 end as prsc_resident_res_pre,
+
+       case when coalesce(t.gcvp_sal_less, 0) > 0 and coalesce(m.prsc_gcvp_salary_res_pre, 0) > 0 then 1
+            when coalesce(t.gcvp_sal_less, 0) > coalesce(m.prsc_gcvp_salary_res_pre, 0) then 2
+            when coalesce(t.gcvp_sal_less, 0) < coalesce(m.prsc_gcvp_salary_res_pre, 0) then 3
+       else 0 end as gcvp_sal_less,
+
+       case when coalesce(t.prsc_cln_4d8m_res_pre, 0) > 0 and coalesce(m.prsc_cln_4d8m_res_pre, 0) > 0 then 1
+            when coalesce(t.prsc_cln_4d8m_res_pre, 0) > coalesce(m.prsc_cln_4d8m_res_pre, 0) then 2
+            when coalesce(t.prsc_cln_4d8m_res_pre, 0) < coalesce(m.prsc_cln_4d8m_res_pre, 0) then 3
+       else 0 end as prsc_cln_4d8m_res_pre,
+
+       case when coalesce(t.contact_phone_counter, 0) > 0 and coalesce(m.prsc_cl_contacts_res_pre, 0) > 0 then 1
+            when coalesce(t.contact_phone_counter, 0) > coalesce(m.prsc_cl_contacts_res_pre, 0) then 2
+            when coalesce(t.contact_phone_counter, 0) < coalesce(m.prsc_cl_contacts_res_pre, 0) then 3
+       else 0 end as contact_phone_counter,
+
+       case when coalesce(t.refusal_part_in_act, 0) > 0 and coalesce(m.prsc_contact_absence_res_pre, 0) > 0 then 1
+            when coalesce(t.refusal_part_in_act, 0) > coalesce(m.prsc_contact_absence_res_pre, 0) then 2
+            when coalesce(t.refusal_part_in_act, 0) < coalesce(m.prsc_contact_absence_res_pre, 0) then 3
+       else 0 end as refusal_part_in_act,
+
+       case when (coalesce(t.pkb_crd_status_1, 0) > 0 or coalesce(t.pkb_crd_status_3, 0) > 0) and
+                 (coalesce(m.prsc_pkb_negat_stat_res_pre, 0) > 0) then 1
+
+            when (coalesce(t.pkb_crd_status_1, 0) > 0 or coalesce(t.pkb_crd_status_3, 0) > 0) and
+                 (coalesce(m.prsc_pkb_negat_stat_res_pre, 0) = 0) then 2
+
+            when (coalesce(t.pkb_crd_status_1, 0) = 0 and coalesce(t.pkb_crd_status_3, 0) = 0) and
+                 (coalesce(m.prsc_pkb_negat_stat_res_pre, 0) > 0) then 3
+       else 0 end as pkb_crd_status_1_3,
+
+       case when coalesce(t.pkb_act_crd_cnt1, 0) > 0 and coalesce(m.prsc_gcvp_pkb_act_cont_res_pre, 0) > 0 then 1
+            when coalesce(t.pkb_act_crd_cnt1, 0) > coalesce(m.prsc_gcvp_pkb_act_cont_res_pre, 0) then 2
+            when coalesce(t.pkb_act_crd_cnt1, 0) < coalesce(m.prsc_gcvp_pkb_act_cont_res_pre, 0) then 3
+       else 0 end as pkb_act_crd_cnt1,
+
+       case when coalesce(t.cln_money_cred_exist, 0) > 0 and coalesce(m.prsc_prod_matrix_res_pre, 0) > 0 then 1
+            when coalesce(t.cln_money_cred_exist, 0) > coalesce(m.prsc_prod_matrix_res_pre, 0) then 2
+            when coalesce(t.cln_money_cred_exist, 0) < coalesce(m.prsc_prod_matrix_res_pre, 0) then 3
+       else 0 end as cln_money_cred_exist,
+
+       count(distinct t.folder_id) fld_cnt
+from M_FOLDER_RFO_PRESCO_tst t
+join M_FOLDER_MO_PRESCO_tst m on m.in_sco_folder_id = t.folder_id --and (IN_SCO_SYSTEM_SOURCE != 'BPM')
+/*and m.in_sco_folder_id = h.folder_id*/
+group by (t.folder_date_create_mi),t.folder_id,IN_SCO_CRED_PROGRAM,IN_SCO_NUM_SCORING,
+                                                IN_SCO_PKB_SUM_OVERD_PAY,  PRSC_ACTIVE_KASPI_CONTRACTS,
+                                                IN_SCO_PKB_NUM_CONTRCTS,
+
+           PRSC_CL_FORM_CONTACTS_CNT,
+           PRSC_CL_PRIV_CONTACTS_CNT,
+
+       case when coalesce(t.prsc_client_age_res_pre, 0) > 0 and coalesce(m.prsc_client_age_res_pre, 0) > 0 then 1
+            when coalesce(t.prsc_client_age_res_pre, 0) > coalesce(m.prsc_client_age_res_pre, 0) then 2
+            when coalesce(t.prsc_client_age_res_pre, 0) < coalesce(m.prsc_client_age_res_pre, 0) then 3
+       else 0 end,
+
+       case when coalesce(t.verification_rating, 0) > 0 and
+                 (coalesce(m.prsc_ph_mob_mob_res_pre, 0) > 0 or
+                  coalesce(m.prsc_ph_home_home_res_pre, 0) > 0 or
+                  coalesce(m.prsc_ph_cont_cont_res_pre, 0) > 0) then 1
+
+            when coalesce(t.verification_rating, 0) > 0 and
+                 (coalesce(m.prsc_ph_mob_mob_res_pre, 0) = 0 and
+                  coalesce(m.prsc_ph_home_home_res_pre, 0) = 0 and
+                  coalesce(m.prsc_ph_cont_cont_res_pre, 0) = 0) then 2
+
+            when coalesce(t.verification_rating, 0) = 0 and
+                 (coalesce(m.prsc_ph_mob_mob_res_pre, 0) > 0 or
+                  coalesce(m.prsc_ph_home_home_res_pre, 0) > 0 or
+                  coalesce(m.prsc_ph_cont_cont_res_pre, 0) > 0) then 3
+       else 0 end,
+
+       case when coalesce(t.gcvp_pkb_crd_ovd_cur, 0) > 0 and coalesce(m.prsc_overdue_exist_res_pre, 0) > 0 then 1
+            when coalesce(t.gcvp_pkb_crd_ovd_cur, 0) > coalesce(m.prsc_overdue_exist_res_pre, 0) then 2
+            when coalesce(t.gcvp_pkb_crd_ovd_cur, 0) < coalesce(m.prsc_overdue_exist_res_pre, 0) then 3
+       else 0 end,
+
+       case when coalesce(t.pkb_crd_overdue_cur, 0) > 0 and coalesce(m.prsc_overdue_exist_res_pre, 0) > 0 then 1
+            when coalesce(t.pkb_crd_overdue_cur, 0) > coalesce(m.prsc_overdue_exist_res_pre, 0) then 2
+            when coalesce(t.pkb_crd_overdue_cur, 0) < coalesce(m.prsc_overdue_exist_res_pre, 0) then 3
+       else 0 end,
+
+       case when coalesce(t.gcvp_pkb_crd_status, 0) > 0 and coalesce(m.prsc_pkb_negat_stat_res_pre, 0) > 0 then 1
+            when coalesce(t.gcvp_pkb_crd_status, 0) > coalesce(m.prsc_pkb_negat_stat_res_pre, 0) then 2
+            when coalesce(t.gcvp_pkb_crd_status, 0) < coalesce(m.prsc_pkb_negat_stat_res_pre, 0) then 3
+       else 0 end,
+
+       case when coalesce(t.gcvp_pkb_act_crd_cnt, 0) > 0 and coalesce(m.prsc_gcvp_pkb_act_cont_res_pre, 0) > 0 then 1
+            when coalesce(t.gcvp_pkb_act_crd_cnt, 0) > coalesce(m.prsc_gcvp_pkb_act_cont_res_pre, 0) then 2
+            when coalesce(t.gcvp_pkb_act_crd_cnt, 0) < coalesce(m.prsc_gcvp_pkb_act_cont_res_pre, 0) then 3
+       else 0 end,
+
+       case when coalesce(t.gcvp_days_elaps_over, 0) > 0 and coalesce(m.prsc_gcvp_days_elapsed_res_pre, 0) > 0 then 1
+            when coalesce(t.gcvp_days_elaps_over, 0) > coalesce(m.prsc_gcvp_days_elapsed_res_pre, 0) then 2
+            when coalesce(t.gcvp_days_elaps_over, 0) < coalesce(m.prsc_gcvp_days_elapsed_res_pre, 0) then 3
+       else 0 end,
+
+       case when coalesce(t.prsc_resident_res_pre, 0) > 0 and coalesce(m.prsc_resident_res_pre, 0) > 0 then 1
+            when coalesce(t.prsc_resident_res_pre, 0) > coalesce(m.prsc_resident_res_pre, 0) then 2
+            when coalesce(t.prsc_resident_res_pre, 0) < coalesce(m.prsc_resident_res_pre, 0) then 3
+       else 0 end,
+
+       case when coalesce(t.gcvp_sal_less, 0) > 0 and coalesce(m.prsc_gcvp_salary_res_pre, 0) > 0 then 1
+            when coalesce(t.gcvp_sal_less, 0) > coalesce(m.prsc_gcvp_salary_res_pre, 0) then 2
+            when coalesce(t.gcvp_sal_less, 0) < coalesce(m.prsc_gcvp_salary_res_pre, 0) then 3
+       else 0 end,
+
+       case when coalesce(t.prsc_cln_4d8m_res_pre, 0) > 0 and coalesce(m.prsc_cln_4d8m_res_pre, 0) > 0 then 1
+            when coalesce(t.prsc_cln_4d8m_res_pre, 0) > coalesce(m.prsc_cln_4d8m_res_pre, 0) then 2
+            when coalesce(t.prsc_cln_4d8m_res_pre, 0) < coalesce(m.prsc_cln_4d8m_res_pre, 0) then 3
+       else 0 end,
+
+       case when coalesce(t.contact_phone_counter, 0) > 0 and coalesce(m.prsc_cl_contacts_res_pre, 0) > 0 then 1
+            when coalesce(t.contact_phone_counter, 0) > coalesce(m.prsc_cl_contacts_res_pre, 0) then 2
+            when coalesce(t.contact_phone_counter, 0) < coalesce(m.prsc_cl_contacts_res_pre, 0) then 3
+       else 0 end,
+
+       case when coalesce(t.refusal_part_in_act, 0) > 0 and coalesce(m.prsc_contact_absence_res_pre, 0) > 0 then 1
+            when coalesce(t.refusal_part_in_act, 0) > coalesce(m.prsc_contact_absence_res_pre, 0) then 2
+            when coalesce(t.refusal_part_in_act, 0) < coalesce(m.prsc_contact_absence_res_pre, 0) then 3
+       else 0 end,
+
+       case when (coalesce(t.pkb_crd_status_1, 0) > 0 or coalesce(t.pkb_crd_status_3, 0) > 0) and
+                 (coalesce(m.prsc_pkb_negat_stat_res_pre, 0) > 0) then 1
+
+            when (coalesce(t.pkb_crd_status_1, 0) > 0 or coalesce(t.pkb_crd_status_3, 0) > 0) and
+                 (coalesce(m.prsc_pkb_negat_stat_res_pre, 0) = 0) then 2
+
+            when (coalesce(t.pkb_crd_status_1, 0) = 0 and coalesce(t.pkb_crd_status_3, 0) = 0) and
+                 (coalesce(m.prsc_pkb_negat_stat_res_pre, 0) > 0) then 3
+       else 0 end,
+
+       case when coalesce(t.pkb_act_crd_cnt1, 0) > 0 and coalesce(m.prsc_gcvp_pkb_act_cont_res_pre, 0) > 0 then 1
+            when coalesce(t.pkb_act_crd_cnt1, 0) > coalesce(m.prsc_gcvp_pkb_act_cont_res_pre, 0) then 2
+            when coalesce(t.pkb_act_crd_cnt1, 0) < coalesce(m.prsc_gcvp_pkb_act_cont_res_pre, 0) then 3
+       else 0 end,
+
+       case when coalesce(t.cln_money_cred_exist, 0) > 0 and coalesce(m.prsc_prod_matrix_res_pre, 0) > 0 then 1
+            when coalesce(t.cln_money_cred_exist, 0) > coalesce(m.prsc_prod_matrix_res_pre, 0) then 2
+            when coalesce(t.cln_money_cred_exist, 0) < coalesce(m.prsc_prod_matrix_res_pre, 0) then 3
+       else 0 end) where /*pkb_crd_overdue_cur*/prsc_ph_counter in  (/*1,2,*/3)/* and foldeR_id =101426750227*/ and IN_SCO_NUM_SCORING=81
+         and trunc(mon)>trunc(sysdate-4);
+grant select on U1.M_TEST_PRSC to LOADDB;
+
+

@@ -1,0 +1,18 @@
+﻿create materialized view U1.V_SCO_OLD_CARDS_COMPARE
+refresh force on demand
+as
+with c2 as (select t.card_id, t.param_id, t.rules, t.x_coefficient, t.x_weight, t.calculation from V_SCO_CARDS_PARAMS_RULES t where t.card_id = 2),
+c18 as (select t.card_id, t.param_id, t.rules, t.x_coefficient, t.x_weight, t.calculation from V_SCO_CARDS_PARAMS_RULES t where t.card_id = 18),
+c22 as (select t.card_id, t.param_id, t.rules, t.x_coefficient, t.x_weight, t.calculation from V_SCO_CARDS_PARAMS_RULES t where t.card_id = 22)
+--select * from (
+select  c2.param_id as c2_param_id, c18.param_id as c18_param_id, c22.param_id as c22_param_id,
+        c2.rules as c2_rules, c18.rules as c18_rules, c22.rules as c22_rules,
+        c2.x_coefficient as c2_x_coefficient, c18.x_coefficient as c18_x_coefficient, c22.x_coefficient as c22_x_coefficient,
+        c2.x_weight as c2_x_weight, c18.x_weight as c18_x_weight, c22.x_weight as c22_x_weight,
+        c2.calculation as c2_calculation, c18.calculation as c18_calculation, c22.calculation as c22_calculation
+from c2 full outer join c18 on c18.param_id = c2.param_id and c18.rules = c2.rules
+full outer join c22 on c22.param_id = c2.param_id and c22.rules = c2.rules;
+grant select on U1.V_SCO_OLD_CARDS_COMPARE to LOADDB;
+grant select on U1.V_SCO_OLD_CARDS_COMPARE to LOADER;
+
+

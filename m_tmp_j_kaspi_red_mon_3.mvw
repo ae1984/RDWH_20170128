@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_TMP_J_KASPI_RED_MON_3
+build deferred
+refresh complete on demand
+as
+select f.id as fld_id,
+       c.*
+from ibs.Z#FOLDERS@rfo f
+join ibs.Z#CM_CHECKPOINT@rfo cp on cp.id = f.id
+join ibs.Z#KAS_CANCEL@rfo c on c.c_folders = f.id
+where f.c_business = 77835269256 and -- KASPI_RED
+      cp.c_date_create > trunc(sysdate);
+grant select on U1.M_TMP_J_KASPI_RED_MON_3 to LOADDB;
+
+

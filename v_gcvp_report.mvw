@@ -1,0 +1,136 @@
+﻿create materialized view U1.V_GCVP_REPORT
+build deferred
+refresh complete on demand
+as
+select /*+parallel(15) parallel_index(15) */
+         x.gcvp_rep_id,
+         y.folder_id,
+         x.rep_date,
+         trunc(x.rep_date_fd) as rep_date_fd,
+         x.client_rnn,
+         x.client_iin,
+         x.error_code,
+         x.salary,
+         x.max_pmt_date, x.min_pmt_date,
+         x.pmts_count_from_rep,
+         x.pmts_count_all,
+         x.pmts_count_10d, x.pmts_count_20d, x.pmts_count_30d,
+         x.pmts_count_40d, x.pmts_count_50d, x.pmts_count_60d,
+         x.rep_pmt_max_date_diff,
+         x.rep_pmt_min_date_diff,
+         x.org_count,
+         z.pmts_per_day_max,
+         z.pmts_per_day_max_date,
+         z.pmts_per_day_max_org_rnn_bin,
+         z.min_org_pmt_date,
+         x.orig_report_id,
+         x.is_from_cache,
+         x.org_bin_last,
+         x.org_rnn_last,
+         x.client_surname,
+         x.client_name,
+         x.client_middlename,
+         x.dateofbirth,
+         x.avg_gcvp_payment,
+         nvl2(mo.collection_id,1,0) as is_report_from_mo,
+         xx.list_organization
+  from (
+      select r.id as gcvp_rep_id,
+             r.c_add_prop,
+             r.c_payments_arr,
+             max(trunc(r.c_statement_date)) as rep_date,
+             fd.c_doc_date as rep_date_fd,
+             max(r.x_client_rnn) as client_rnn,
+             max(r.x_client_iin) as client_iin,
+             max(r.c_error_code) as error_code,
+             round(max(r.c_sal),0) as salary,
+             max(p.c_payment_date) as max_pmt_date,
+             min(p.c_payment_date) as min_pmt_date,
+             max(r.c_payment_qty) as pmts_count_from_rep,
+             count(p.id) as pmts_count_all,
+             count(case when r.c_statement_date - p.c_payment_date < 10 then p.id end) as pmts_count_10d,
+             count(case when r.c_statement_date - p.c_payment_date < 20 then p.id end) as pmts_count_20d,
+             count(case when r.c_statement_date - p.c_payment_date < 30 then p.id end) as pmts_count_30d,
+             count(case when r.c_statement_date - p.c_payment_date < 40 then p.id end) as pmts_count_40d,
+             count(case when r.c_statement_date - p.c_payment_date < 50 then p.id end) as pmts_count_50d,
+             count(case when r.c_statement_date - p.c_payment_date < 60 then p.id end) as pmts_count_60d,
+             max(trunc(r.c_statement_date)) - max(p.c_payment_date) as rep_pmt_max_date_diff,
+             max(trunc(r.c_statement_date)) - min(p.c_payment_date) as rep_pmt_min_date_diff,
+             count(distinct p.c_organization) as org_count,
+             max(r.c_gcvp_report_ref) as orig_report_id,
+             case when max(r.c_gcvp_report_ref) is not null then 1 else 0 end as is_from_cache,
+             max(p.x_org_bin) keep (dense_rank last order by p.c_payment_date) as org_bin_last,
+             max(p.x_org_rnn) keep (dense_rank last order by p.c_payment_date) as org_rnn_last,
+             max(r.c_surname) as client_surname,
+             max(r.c_name) as client_name,
+             max(r.c_middlename) as client_middlename,
+             max(r.c_dateofbirth) as dateofbirth,
+             max(r.c_avg_gcvp_payment) as avg_gcvp_payment
+      from u1.V_RFO_Z#KAS_GCVP_REPORT r
+      join u1.V_RFO_Z#FDOC fd on fd.id = r.id
+      left join u1.V_RFO_Z#KAS_GCVP_PAYMENT p on p.collection_id = r.c_payments_arr
+      group by r.id, r.c_add_prop, r.c_payments_arr,fd.c_doc_date
+  ) x
+  left join (
+    select distinct r.id as gcvp_rep_id, f.id as folder_id -- только связанные с заявками
+      from u1.V_RFO_Z#KAS_GCVP_REPORT r
+      left join u1.V_RFO_Z#FDOC fd on fd.id = r.id
+      left join u1.V_RFO_Z#RDOC rd on rd.c_doc = fd.id
+      left join u1.V_RFO_Z#FOLDERS f on f.c_docs = rd.collection_id
+  ) y on y.gcvp_rep_id = x.gcvp_rep_id
+  left join (
+    select ggg.gcvp_rep_id,
+           ggg.pmts_per_day_max,
+           ggg.pmts_per_day_max_date,
+           ggg.pmts_per_day_max_org_rnn_bin,
+           gggo.min_org_pmt_date
+    from (
+        select gg.gcvp_rep_id, max(pmt_count) as pmts_per_day_max,
+               max(gg.pmt_date) keep (dense_rank last
+                    order by gg.pmt_count) as pmts_per_day_max_date,
+               max(gg.org_rnn_bin) keep (dense_rank last
+                    order by gg.pmt_count) as pmts_per_day_max_org_rnn_bin
+        from (
+            select r.id as gcvp_rep_id,
+                   p.c_payment_date as pmt_date,
+                   p.x_org_rnn || p.x_org_bin as org_rnn_bin,
+                   count(p.id) as pmt_count
+            from u1.V_RFO_Z#KAS_GCVP_REPORT r
+            join u1.V_RFO_Z#KAS_GCVP_PAYMENT p on p.collection_id = r.c_payments_arr
+            group by r.id, p.c_payment_date, p.x_org_rnn || p.x_org_bin
+            ) gg group by gg.gcvp_rep_id
+    ) ggg join (
+        select r.id as gcvp_rep_id,
+               p.x_org_rnn || p.x_org_bin as org_rnn_bin,
+               min(p.c_payment_date) as min_org_pmt_date
+        from u1.V_RFO_Z#KAS_GCVP_REPORT r
+        join u1.V_RFO_Z#KAS_GCVP_PAYMENT p on p.collection_id = r.c_payments_arr
+        group by r.id, p.x_org_rnn || p.x_org_bin
+    ) gggo on gggo.org_rnn_bin = ggg.pmts_per_day_max_org_rnn_bin and gggo.gcvp_rep_id = ggg.gcvp_rep_id
+  ) z on z.gcvp_rep_id = x.gcvp_rep_id
+left join (select distinct pa.collection_id
+             from u1.T_RFO_Z#PROPERTIES pa
+             join u1.V_RFO_Z#PROPERTY_GRP  pg on pa.c_group_prop = pg.id
+                                              and pg.c_code = 'GCVP_FROM_MO'
+                                              and pa.c_bool = 1) mo on mo.collection_id = x.c_add_prop
+left join (select collection_id,
+                  listagg(c_organization, ';') within group (order by c_organization) as list_organization
+            from (
+                  select collection_id,
+                         c_organization,
+                         max_pay_date,
+                         dense_rank() over (partition by collection_id order by max_pay_date desc, c_organization) as dense_cnt
+                    from (
+                          select distinct
+                                 collection_id,
+                                 c_organization,
+                                 max(c_payment_date) over (partition by collection_id, c_organization) as max_pay_date
+                            from u1.V_RFO_Z#KAS_GCVP_PAYMENT gp
+                          )
+                 )
+           where dense_cnt <= 20  --взято из-за того, что вылетаем за пределы varchar2(2000)
+           group by collection_id) xx on xx.collection_id = x.c_payments_arr;
+grant select on U1.V_GCVP_REPORT to LOADDB;
+grant select on U1.V_GCVP_REPORT to RISK_VERIF;
+
+

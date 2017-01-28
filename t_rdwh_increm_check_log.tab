@@ -1,0 +1,56 @@
+﻿create table U1.T_RDWH_INCREM_CHECK_LOG
+(
+  table_name   VARCHAR2(100),
+  check_date   DATE,
+  check_result NUMBER,
+  table_cnt    NUMBER,
+  source_cnt   NUMBER,
+  error_text   VARCHAR2(4000),
+  max_value    VARCHAR2(200)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RDWH_INCREM_CHECK_LOG
+  is 'Таблица логирования проверок инкрементальной загрузки';
+comment on column U1.T_RDWH_INCREM_CHECK_LOG.table_name
+  is 'Название таблицы';
+comment on column U1.T_RDWH_INCREM_CHECK_LOG.check_date
+  is 'Дата проверки';
+comment on column U1.T_RDWH_INCREM_CHECK_LOG.check_result
+  is 'Результат проверки(1 - все правильно, 0- ошибка)';
+comment on column U1.T_RDWH_INCREM_CHECK_LOG.table_cnt
+  is 'Количество записей в таблице';
+comment on column U1.T_RDWH_INCREM_CHECK_LOG.source_cnt
+  is 'Количество записей в источнике';
+comment on column U1.T_RDWH_INCREM_CHECK_LOG.error_text
+  is 'Текст ошибки';
+comment on column U1.T_RDWH_INCREM_CHECK_LOG.max_value
+  is 'Максимальное значение в таблице';
+alter table U1.T_RDWH_INCREM_CHECK_LOG
+  add constraint T_RDWH_INCREM_CHECK_LOG_UNQ unique (TABLE_NAME, CHECK_DATE)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.T_RDWH_INCREM_CHECK_LOG_UNQ nologging;
+grant select on U1.T_RDWH_INCREM_CHECK_LOG to LOADDB;
+

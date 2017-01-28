@@ -1,0 +1,27 @@
+﻿create table U1.NT_SQL_STATUS_HIST2
+(
+  sdt                 DATE,
+  sql_id              VARCHAR2(13),
+  sql_exec_start      DATE,
+  sql_plan_hash_value NUMBER,
+  cnt                 NUMBER,
+  cnt_process         NUMBER,
+  done                NUMBER,
+  executing           NUMBER,
+  percent_done        NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_SQL_STATUS_HIST2 to LOADDB;
+

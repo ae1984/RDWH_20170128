@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_20161209
+build deferred
+refresh complete on demand
+as
+select /*+parallel(30)*/
+  x.rfo_contract_id                ,
+  /**/x.folder_id                      ,
+  x.contract_number                ,
+  x.contract_id                    ,
+  x.rfo_client_id                  ,
+  x.form_client_id                 ,
+  x.folder_date_create             ,
+  x.is_credit_issued               ,
+--  x.is_bad                         ,
+
+  /**/x.sex                            ,
+  /**/x.education                      ,
+  /**/x.marital_status                 ,
+  /**/x.children                       ,
+  /**/x.is_bank_account_exists         ,
+  /**/x.real_estate_relation           ,
+  /**/x.work_expr_last_place_mon_floor ,
+  /**/x.age_full_years                 ,
+  /**/x.contract_term_months           ,
+  /**/x.pkb_closed_contracts           ,
+  /**/x.pkb_total_debt                 ,
+  /**/x.gcvp_salary                    ,
+  /**/x.gcvp_last_pmt_days_ago_floor   ,
+  /**/x.gcvp_first_pmt_days_ago_floor  ,
+  /**/x.gcvp_pmts_count_from_rep       ,
+  /**/x.gcvp_org_count_by_name         ,
+  /**/x.gcvp_pmts_per_day_max          ,
+  /**/x.org_gcvp_maxpmtd_age_mon_floor ,
+  /**/x.sal_gcvp_to_sal_form_prc_floor ,
+  /**/case when x.start_con_del_days_max_by_cli is null then 0 else x.start_con_del_days_max_by_cli end as  start_con_del_days_max_by_cli,
+  /**/x.start_num_of_con_by_cli        ,
+  /**/case when cli_age_basing_on_con < 0 then 0 else cli_age_basing_on_con end as cli_age_basing_on_con          ,
+  /**/case when cli_age_based_on_fld < 0 then 0 else cli_age_based_on_fld end as cli_age_based_on_fld
+from M_FOLDER_CON_MINER_4_20161209 x
+left join M_CONTRACT_START_CON_ORD_X y on y.contract_number = x.contract_number
+left join M_FOLDER_CON_MINER_6_20161209 p on p.contract_number = x.contract_number;
+grant select on U1.M_FOLDER_CON_MINER_20161209 to LOADDB;
+
+

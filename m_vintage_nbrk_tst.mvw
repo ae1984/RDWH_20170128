@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_VINTAGE_NBRK_TST
+build deferred
+refresh force on demand
+as
+select t.cred_program_code_x,
+                            t.cred_program_name_x,
+                            t.yy_mm_start_date,
+                            t.yy_mm_report,
+                            t.yy_mm_report_last,
+                            count(distinct t.rfo_client_id ) as count_distinct_clients,
+                            count(distinct case when t.total_debt>0 then t.rfo_client_id else 0 end ) as count_clients_w_dbt,
+                            Case when nvl(t.DEL_DAYS_MAX_X,0) <= 90 then 'OK'
+                                 when nvl(t.DEL_DAYS_MAX_X,0) > 90 then 'NPL'
+                            end as long_delinq,
+                            vd.quarter,
+                            trunc(t.rep_date,'mm') as report_date
+                      from u1.M_RBO_CONTRACT_PORTFOLIO t
+                      join V_TIME_DAYS vd on vd.yyyy_mm_dd = t.start_date
+                      group by
+                            t.cred_program_code_x,
+                            t.cred_program_name_x,
+                            t.yy_mm_start_date,
+                            t.yy_mm_report,
+                            t.yy_mm_report_last,
+                            Case when nvl(t.DEL_DAYS_MAX_X,0) <= 90 then 'OK'
+                                 when nvl(t.DEL_DAYS_MAX_X,0) > 90 then 'NPL'
+                            end ,
+                            vd.quarter,
+                            trunc(t.rep_date,'mm');
+grant select on U1.M_VINTAGE_NBRK_TST to LOADDB;
+
+

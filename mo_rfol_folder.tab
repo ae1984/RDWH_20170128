@@ -1,0 +1,52 @@
+﻿create table U1.MO_RFOL_FOLDER
+(
+  foldr_id                     NUMBER not null,
+  foldr_c_n                    VARCHAR2(48),
+  foldr_client                 NUMBER,
+  foldr_result_oper            VARCHAR2(300),
+  foldr_result_oper_note       VARCHAR2(4000),
+  bproc_id                     NUMBER,
+  bproc_code                   VARCHAR2(300),
+  bproc_name                   VARCHAR2(4000),
+  kunid_id__kas_vid_delivery   NUMBER,
+  kunid_code__kas_vid_delivery VARCHAR2(120),
+  kunid_name__kas_vid_delivery VARCHAR2(750),
+  kunid_id__kas_sys_ref        NUMBER,
+  kunid_code__kas_sys_ref      VARCHAR2(120),
+  kunid_name__kas_sys_ref      VARCHAR2(750),
+  cmchp_date_create            DATE,
+  cmway_id                     NUMBER,
+  cmway_name                   VARCHAR2(300),
+  cmway_code                   VARCHAR2(75),
+  cmpnt_id                     NUMBER,
+  cmpnt_name                   VARCHAR2(300),
+  cmpnt_code                   VARCHAR2(90),
+  userx_id                     NUMBER,
+  userx_username               VARCHAR2(90),
+  userx_name                   VARCHAR2(300),
+  stdpt_id                     NUMBER,
+  stdpt_code                   VARCHAR2(150),
+  stdpt_name                   VARCHAR2(600),
+  kudnp_id                     NUMBER,
+  kudnp_code                   VARCHAR2(48),
+  kudnp_name                   VARCHAR2(300),
+  krdnp_id                     NUMBER,
+  krdnp_name                   VARCHAR2(300),
+  cmpnt_priority               VARCHAR2(30)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO_RFOL_FOLDER to LOADDB;
+grant select on U1.MO_RFOL_FOLDER to LOADER;
+

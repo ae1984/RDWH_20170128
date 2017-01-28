@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_APP_MINER_CLIENT_BARCODE
+build deferred
+refresh force on demand
+as
+select am.app_id,
+
+       regexp_count( case
+                       when cl.pmt_full_code_3 is not null and cl.text_yyyy_mm_end >= tm.yyyy_mm_prev then
+                         substr(cl.pmt_full_code_3,1,length(cl.pmt_full_code_3) -
+                         abs(months_between(to_date(cl.yyyy_mm_num_end || '01', 'yyyymmdd'), to_date(tm.yyyy_mm_num || '01', 'yyyymmdd'))) -1)
+                     end, 'R') as br_r_cnt,
+
+       regexp_count( case
+                       when cl.pmt_full_code_3 is not null and cl.text_yyyy_mm_end >= tm.yyyy_mm_prev then
+                         substr(cl.pmt_full_code_3, 1, length(cl.pmt_full_code_3) -
+                         abs(months_between(to_date(cl.yyyy_mm_num_end || '01', 'yyyymmdd'), to_date(tm.yyyy_mm_num || '01', 'yyyymmdd'))) -1)
+										 end, '(R.*?0.*?)') as br_r_closed_cnt,
+
+       cl.pmt_full_code_3 --Штрих-код истории просрочек с учетом оптимизации с разделением просрочки до 30 и после 31 дня
+
+from u1.M_APP_MINER_BAS am
+left join u1.M_CLIENT_BARCODE cl on cl.client_id = substr(ltrim(am.contract_number, 'R'),1,7)
+left join (select t.*,
+                  to_char(add_months(to_date(t.yyyy_mm_num || '01', 'yyyymmdd'), -1), 'yyyy - mm') as yyyy_mm_prev
+           from u1.V_TIME_MONTHS t) tm on tm.text_yyyy_mm = to_char(am.folder_date_create,'yyyy - mm')
+where am.folder_date_create >= to_date('01012015', 'ddmmyyyy')
+--and t.rfo_client_id = 22792275
+--order by t.folder_date_create_mi;
+grant select on U1.M_APP_MINER_CLIENT_BARCODE to LOADDB;
+
+

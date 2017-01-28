@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_TMP_J_ONLINE_113
+refresh complete on demand
+as
+select /*distinct f.rfo_contract_id, f.expert_name, f.folder_date_create_mi, f.shop_name, f.iin, f.contract_amount,
+       f.is_credit_issued, f.is_sign_require, f.is_categ_a, f.rfo_client_id,
+       ur.device_id, ur.user_agent, ur.nc_client_ip_dec,*/
+
+       distinct f.rfo_client_id, ur.device_id, f.x_dnp_name
+
+from u1.V_RFO_Z#KAS_ONLINE_BUY ob
+join u1.V_RFO_Z#KAS_ONLINE_CLAIM oc on ob.id = oc.c_buy_ref
+join u1.T_KASPIKZ_USER_REQUEST ur on oc.c_form_client_st#inn = ur.client_inn and trunc(ob.c_date_create) = trunc(ur.date_start)
+join M_FOLDER_CON_CANCEL f on f.claim_id = oc.id
+join (
+select distinct t.rfo_client_id
+from V_FOLDER_ALL_RFO t
+where t.expert_name = 'МУСАЕВ РИШАТ РАШИДИНОВИЧ'
+) cc on cc.rfo_client_id = f.rfo_client_id
+where ob.c_date_create > to_date('01.11.2015','dd.mm.yyyy');
+grant select on U1.M_TMP_J_ONLINE_113 to LOADDB;
+
+

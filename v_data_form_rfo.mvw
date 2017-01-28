@@ -1,0 +1,47 @@
+﻿create materialized view U1.V_DATA_FORM_RFO
+refresh force on demand
+as
+select
+  fld.id as folder_id,
+--  cln.id as client_id,
+--  fc.id as form_id,
+  max(fc.x_iin) as form_client_iin,
+  max(fc.x_rnn) as form_client_rnn,
+  to_char(fd.c_doc_date,'dd.mm.yyyy') as form_date,
+  avg(decode(tdc.id, 3719898, idc.c_summa, null)) as inc_sal,
+  avg(decode(tdc.id, 8822634, idc.c_summa, null)) as inc_sal_add,
+  avg(decode(tdc.id, 8822633, idc.c_summa, null)) as inc_sal_spouse,
+  avg(decode(tdc.id, 8822635, idc.c_summa, null)) as inc_rent,
+  avg(decode(tdc.id, 8822636, idc.c_summa, null)) as inc_pension_benefits,
+  avg(decode(tdc.id, 8822637, idc.c_summa, null)) as inc_interest,
+  avg(decode(tdc.id, 8822638, idc.c_summa, null)) as exp_utilities,
+  avg(decode(tdc.id, 8822639, idc.c_summa, null)) as exp_transport,
+  avg(decode(tdc.id, 8822640, idc.c_summa, null)) as exp_children,
+  avg(decode(tdc.id, 8822641, idc.c_summa, null)) as exp_nutrition,
+  avg(decode(tdc.id, 8822642, idc.c_summa, null)) as exp_clothes,
+  avg(decode(tdc.id, 8822701, idc.c_summa, null)) as exp_obligations,
+  avg(decode(tdc.id, 109168685, idc.c_summa, null)) as exp_other
+from
+  V_RFO_Z#FORM_CLIENT fc,
+  V_RFO_Z#FDOC fd,
+  V_RFO_Z#RDOC rd,
+  V_RFO_Z#FOLDERS fld,
+  V_RFO_z#INFO_DT_CR idc,
+  V_RFO_Z#TYPE_DT_CR tdc,
+  V_RFO_Z#CLIENT cln
+where
+  fc.id = fd.id and
+  fd.class_id = 'FORM_CLIENT' and
+  rd.c_doc = fd.id and
+  rd.collection_id = fld.c_docs and
+  tdc.id = idc.c_type_info and
+  fc.c_info_dt_cr = idc.collection_id and
+  cln.id = fld.c_client -- and
+--  fd.c_doc_date > to_date('01.05.2012','dd.mm.yyyy') and
+--  fd.c_doc_date < to_date('01.06.2012','dd.mm.yyyy')
+group by
+  fld.id, cln.id, fc.id, to_char(fd.c_doc_date,'dd.mm.yyyy');
+grant select on U1.V_DATA_FORM_RFO to LOADDB;
+grant select on U1.V_DATA_FORM_RFO to LOADER;
+
+

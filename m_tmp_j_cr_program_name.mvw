@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_TMP_J_CR_PROGRAM_NAME
+refresh force on demand
+as
+select m.cr_program_name as value, --!
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate,
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1,
+    round(sum(c.max_debt_used)) as sales,
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt
+from V_TMP_CONTRACT_CAL_DEL c
+join M_FOLDER_CON_MINER m on m.contract_id = c.contract_id
+where c.yms like '2013 - %'
+group by m.cr_program_name --!
+having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_J_CR_PROGRAM_NAME to LOADDB;
+grant select on U1.M_TMP_J_CR_PROGRAM_NAME to LOADER;
+
+

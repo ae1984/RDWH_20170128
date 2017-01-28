@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_TMP_J_DEL_REP_M2
+refresh complete on demand
+as
+select to_char(t.rep_date,'yyyy') as rep_year,
+       to_char(t.rep_date,'yyyy-mm') as rep_mon,
+       trunc(t.rep_date) as rep_date, t.prod_type,
+       floor(months_between(t.rep_date, c.x_start_date)) as contract_age_months,
+       sum(t.total_debt) / 1000000 as debt_mln,
+       sum(case when t.delinq_days > 0 then t.total_debt end) / 1000000 as debt_del_1_mln,
+       sum(case when t.delinq_days > 7 then t.total_debt end) / 1000000 as debt_del_8_mln,
+       sum(case when t.delinq_days > 30 then t.total_debt end) / 1000000 as debt_del_31_mln,
+       sum(case when t.delinq_days > 60 then t.total_debt end) / 1000000 as debt_del_61_mln,
+       sum(case when t.delinq_days > 90 then t.total_debt end) / 1000000 as debt_del_91_mln
+from DWH_PORT t
+join V_DWH_PORTFOLIO_CURRENT c on c.deal_number = t.deal_number and c.x_is_credit_issued = 1
+where t.rep_date >= to_date('2013-01-01','yyyy-mm-dd')
+group by to_char(t.rep_date,'yyyy'), to_char(t.rep_date,'yyyy-mm'),
+       trunc(t.rep_date), t.prod_type,
+       floor(months_between(t.rep_date, c.x_start_date));
+grant select on U1.M_TMP_J_DEL_REP_M2 to LOADDB;
+grant select on U1.M_TMP_J_DEL_REP_M2 to LOADER;
+
+

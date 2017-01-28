@@ -1,0 +1,57 @@
+﻿create table U1.T_CON_REFIN_LINK_PERCENT_PRE
+(
+  rbo_contract_id_to    NUMBER(21) not null,
+  refin_rbo_contract_id NUMBER(21) not null,
+  date_change           DATE not null,
+  date_change_end       DATE,
+  refin_summa           NUMBER(21,2) not null,
+  refin_date            DATE not null,
+  total_debt            NUMBER not null,
+  part_percent          NUMBER(21,4) not null
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_CON_REFIN_LINK_PERCENT_PRE
+  is 'Предрасчитанная доля суммы задолженности рефинансированного договора от суммы задолженности результирующего договора(карты ГУ)';
+comment on column U1.T_CON_REFIN_LINK_PERCENT_PRE.rbo_contract_id_to
+  is 'Идентификатор результирующего договора(карты ГУ)';
+comment on column U1.T_CON_REFIN_LINK_PERCENT_PRE.refin_rbo_contract_id
+  is 'Идентификатор рефинансированного договора';
+comment on column U1.T_CON_REFIN_LINK_PERCENT_PRE.date_change
+  is 'Дата начала изменения процента';
+comment on column U1.T_CON_REFIN_LINK_PERCENT_PRE.date_change_end
+  is 'Дата окончания изменения процента';
+comment on column U1.T_CON_REFIN_LINK_PERCENT_PRE.refin_summa
+  is 'Сумма рефинанса на дату refin_date';
+comment on column U1.T_CON_REFIN_LINK_PERCENT_PRE.refin_date
+  is 'Дата рефинанса';
+comment on column U1.T_CON_REFIN_LINK_PERCENT_PRE.total_debt
+  is 'Остаток задолженности на карте на дату изменения процента date_change';
+comment on column U1.T_CON_REFIN_LINK_PERCENT_PRE.part_percent
+  is 'Доля суммы задолженности рефинансированного договора(В процентах)';
+create index U1.T_CON_REFIN_PERCENT_PRE_IND1 on U1.T_CON_REFIN_LINK_PERCENT_PRE (RBO_CONTRACT_ID_TO)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_CON_REFIN_LINK_PERCENT_PRE to LOADDB;
+grant select on U1.T_CON_REFIN_LINK_PERCENT_PRE to LOADER;
+

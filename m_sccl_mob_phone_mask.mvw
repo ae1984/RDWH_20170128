@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_SCCL_MOB_PHONE_MASK
+build deferred
+refresh force on demand
+as
+select count(distinct rfo_client_id) as cln_cnt, t.mask_cellphone
+from U1.M_PARAMS_FOR_MODEL_PRE_0 t
+group by t.mask_cellphone;
+grant select on U1.M_SCCL_MOB_PHONE_MASK to LOADDB;
+grant select on U1.M_SCCL_MOB_PHONE_MASK to LOAD_MO;
+
+

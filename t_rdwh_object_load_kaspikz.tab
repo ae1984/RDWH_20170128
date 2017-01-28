@@ -1,0 +1,32 @@
+﻿create table U1.T_RDWH_OBJECT_LOAD_KASPIKZ
+(
+  object_name          VARCHAR2(50),
+  priority             NUMBER,
+  object_type          VARCHAR2(50),
+  reference_from_event VARCHAR2(50)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RDWH_OBJECT_LOAD_KASPIKZ
+  is 'Служебная таблица для загрузки KASPIKZ';
+comment on column U1.T_RDWH_OBJECT_LOAD_KASPIKZ.object_name
+  is 'Название объекта';
+comment on column U1.T_RDWH_OBJECT_LOAD_KASPIKZ.priority
+  is 'Приоритет';
+comment on column U1.T_RDWH_OBJECT_LOAD_KASPIKZ.object_type
+  is 'Тап объекта';
+comment on column U1.T_RDWH_OBJECT_LOAD_KASPIKZ.reference_from_event
+  is 'Зависимость от события';
+grant select on U1.T_RDWH_OBJECT_LOAD_KASPIKZ to LOADDB;
+

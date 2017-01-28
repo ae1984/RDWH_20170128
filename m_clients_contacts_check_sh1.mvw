@@ -1,0 +1,40 @@
+﻿create materialized view U1.M_CLIENTS_CONTACTS_CHECK_SH1
+refresh force on demand
+as
+select distinct a.*,
+       --case when d.folder_id is not null and d.contact_surname = a1.name_last and d.contact_first_name = a1.name_first then 1 else 0 end as in_other_cli_fold,
+       --max(case when d.folder_id is not null and d.contact_surname = a1.name_last and d.contact_first_name = a1.name_first then folder_date end) keep (dense_rank last order by folder_date) as max_date_other_cli_cont,
+       max(case when d.folder_id is not null and d.contact_surname = a1.name_last and d.contact_first_name = a1.name_first then folder_date end) as max_date_other_cli_cont,
+       count(distinct case when d.folder_id is not null and d.contact_surname = a1.name_last and d.contact_first_name = a1.name_first then d.rfo_client_id end) as cnt_other_cli_cont
+from M_CLIENTS_CONTACTS_CHECK_SH a
+join V_CLIENT_RFO_BY_ID a1 on a.rfo_client_id = a1.rfo_client_id
+left join V_FORM_CLIENT_CONTACT_PHONE d on d.phone_type = 'КОНТАКТ-МОБИЛЬНЫЙ' and a.mobile_number_clear = substr(d.phone_number, 2, 10)----Указан как контакт-мобильный у других
+group by
+        a.RFO_CLIENT_ID,
+        a.RBO_CLIENT_ID,
+        a.IIN,
+        a.MOBILE_NUMBER_CLEAR,
+        a.COUNT_IN_CONTACTS,
+        a.MAX_PAY_DATE,
+        a.HAVE_KASPI_LOGIN,
+        a.HAVE_OTHER_KASPI_LOGIN,
+        a.THIS_MAX_CALL_DATE,
+        a.OTHER_MAX_CALL_DATE,
+        a.OTHER_CLIENT_HAS_CALL,
+        a.SUCCESS_OUT_CALL,
+        a.MAX_SEND_DATE,
+        a.PHOTO_VERIFICATION_CANCEL,
+        a.HAVE_CREDIT,
+        a.HAVE_DEPOSIT,
+        a.FOLDERS_COUNT,
+        a.LAST_FOLDER_DATE,
+        a.LAST_SUCCESS_FOLDER_DATE,
+        a.TEXT,
+        a.MAX_AUDIT,
+        a.active_deposit,
+        a.pay_terminal,
+        a.last_pay_terminal_date;
+grant select on U1.M_CLIENTS_CONTACTS_CHECK_SH1 to LOADDB;
+grant select on U1.M_CLIENTS_CONTACTS_CHECK_SH1 to LOADER;
+
+

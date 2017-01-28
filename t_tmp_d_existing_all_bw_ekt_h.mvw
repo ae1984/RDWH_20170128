@@ -1,0 +1,81 @@
+﻿create materialized view U1.T_TMP_D_EXISTING_ALL_BW_EKT_H
+refresh force on demand
+as
+select
+sc.contract_number,
+sc.is_bad,
+sc.score_prev,
+sc.scorecard_points,
+tt.is_client_new_by_con,
+case when  tt.iin != xxxxx.iin then 'TK - одноразовый'
+     when tt.iin = x.iin then 'TK + КН'
+     when tt.iin = xx.iin then 'TK + ТК'
+     when tt.iin = xxx.iin then 'TK + Оптимизация'
+     when tt.iin = xxxx.iin then 'TK + АВТО'
+
+   else 'TK+' end as tk_history
+
+
+from T_TMP_D_EXISTING_ALL_BW_EKT sc
+join m_folder_con_cancel tt on tt.contract_number = sc.contract_number and tt.is_client_new_by_con=0
+left join (select distinct d.client_iin as iin
+            from T_TMP_D_EXISTING_ALL_BW_EKT sc
+            join m_folder_con_cancel t on t.contract_number = sc.contract_number
+            left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = t.iin and
+                                                   d.x_start_date_actual > trunc(t.folder_date_create_mi) and
+                                                   d.x_is_credit_issued = 1 and
+                                                   d.x_product_type in ('ДЕНЬГИ')
+
+
+) x on x.iin = tt.iin
+
+
+left join (select distinct d.client_iin as iin
+            from T_TMP_D_EXISTING_ALL_BW_EKT sc
+            join m_folder_con_cancel t on t.contract_number = sc.contract_number
+            left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = t.iin and
+                                                   d.x_start_date_actual > trunc(t.folder_date_create_mi) and
+                                                   d.x_is_credit_issued = 1 and
+                                                   d.x_product_type not in ('ДЕНЬГИ') and
+                                                   d.x_product_type not in ('АВТО') and
+                                                   d.x_product_type not in ('КАРТЫ') and
+                                                   d.x_product_type in ('ТОВАРЫ')
+
+
+) xx on xx.iin = tt.iin
+
+
+left join (select distinct d.client_iin as iin
+            from T_TMP_D_EXISTING_ALL_BW_EKT sc
+            join m_folder_con_cancel t on t.contract_number = sc.contract_number
+            left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = t.iin and
+                                                   d.x_start_date_actual > trunc(t.folder_date_create_mi) and
+                                                   d.x_is_credit_issued = 1 and
+                                                   d.x_product_type in ('ОПТИМИЗАЦИЯ')
+
+
+) xxx on xxx.iin = tt.iin
+
+left join (select distinct d.client_iin as iin
+            from T_TMP_D_EXISTING_ALL_BW_EKT sc
+            join m_folder_con_cancel t on t.contract_number = sc.contract_number
+            left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = t.iin and
+                                                   d.x_start_date_actual > trunc(t.folder_date_create_mi) and
+                                                   d.x_is_credit_issued = 1 and
+                                                   d.x_product_type in ('АВТО')
+
+
+) xxxx on xxxx.iin = tt.iin
+
+
+left join (select distinct d.client_iin as iin
+            from T_TMP_D_EXISTING_ALL_BW_EKT sc
+            join m_folder_con_cancel t on t.contract_number = sc.contract_number
+            left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = t.iin and
+                                                   d.x_start_date_actual > trunc(t.folder_date_create_mi) and
+                                                   d.x_is_credit_issued = 1
+) xxxxx on xxxxx.iin = tt.iin;
+grant select on U1.T_TMP_D_EXISTING_ALL_BW_EKT_H to LOADDB;
+grant select on U1.T_TMP_D_EXISTING_ALL_BW_EKT_H to LOADER;
+
+

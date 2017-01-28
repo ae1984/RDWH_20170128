@@ -1,0 +1,27 @@
+﻿create table U1.T_RFO_Z#GKB_FDOC_BKP
+(
+  id            NUMBER not null,
+  class_id      VARCHAR2(48),
+  c_num         VARCHAR2(150),
+  c_doc_date    DATE,
+  c_parent_fdoc NUMBER,
+  c_status_doc  NUMBER,
+  c_date_audit  DATE,
+  sn            NUMBER,
+  su            NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RFO_Z#GKB_FDOC_BKP to LOADDB;
+

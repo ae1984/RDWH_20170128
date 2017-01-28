@@ -1,0 +1,52 @@
+﻿create materialized view U1.M_TMP_J_D_REP_2
+refresh force on demand
+as
+select a.*, b.sales_mln, b.con_cnt
+from (
+select p.yy_mm_report,
+       count(distinct p.contract_number) as contracts_all_cnt,
+       count(distinct case when p.delinq_days > 0 then p.contract_number end) as contracts_del_cnt,
+
+       round(count(distinct case when p.delinq_days > 0 then p.contract_number end) /
+              count(distinct p.contract_number) * 100, 2) as del_rate_by_cons,
+       round(count(distinct case when p.delinq_days >= 8 then p.contract_number end) /
+              count(distinct p.contract_number) * 100, 2) as del_rate_by_cons_7d,
+
+       round(count(distinct case when p.planned_pmt_month = 1 and p.delinq_days > 0 then p.contract_number end) /
+              count(distinct case when p.planned_pmt_month = 1 then p.contract_number end) * 100, 2) as del_rate_by_cons_pmt_1,
+
+       round(count(distinct case when p.planned_pmt_month = 1 and p.delinq_days > 7 then p.contract_number end) /
+              count(distinct case when p.planned_pmt_month = 1 then p.contract_number end) * 100, 2) as del_rate_by_cons_pmt_1_7d,
+
+       round(count(distinct case when p.planned_pmt_month < 5 and p.delinq_days > 0 then p.contract_number end) /
+              count(distinct case when p.planned_pmt_month < 5 then p.contract_number end) * 100, 2) as del_rate_by_cons_pmt_1234,
+       round(count(distinct case when p.planned_pmt_month >= 5 and p.delinq_days > 0 then p.contract_number end) /
+              count(distinct case when p.planned_pmt_month >= 5 then p.contract_number end) * 100, 2) as del_rate_by_cons_pmt_5_more,
+
+       round(count(distinct case when p.planned_pmt_month = 2 and p.delinq_days > 0 then p.contract_number end) /
+              count(distinct case when p.planned_pmt_month = 2 then p.contract_number end) * 100, 2) as del_rate_by_cons_pmt_2,
+       round(count(distinct case when p.planned_pmt_month = 3 and p.delinq_days > 0 then p.contract_number end) /
+              count(distinct case when p.planned_pmt_month = 3 then p.contract_number end) * 100, 2) as del_rate_by_cons_pmt_3,
+       round(count(distinct case when p.planned_pmt_month = 4 and p.delinq_days > 0 then p.contract_number end) /
+              count(distinct case when p.planned_pmt_month = 4 then p.contract_number end) * 100, 2) as del_rate_by_cons_pmt_4,
+       case when count(distinct case when p.planned_pmt_month = 5 then p.contract_number end) > 0 then
+              round(count(distinct case when p.planned_pmt_month = 5 and p.delinq_days > 0 then p.contract_number end) /
+                     count(distinct case when p.planned_pmt_month = 5 then p.contract_number end) * 100, 2)
+            end as del_rate_by_cons_pmt_5,
+       case when count(distinct case when p.planned_pmt_month = 6 then p.contract_number end) > 0 then
+              round(count(distinct case when p.planned_pmt_month = 6 and p.delinq_days > 0 then p.contract_number end) /
+                     count(distinct case when p.planned_pmt_month = 6 then p.contract_number end) * 100, 2)
+            end as del_rate_by_cons_pmt_6,
+       case when count(distinct case when p.planned_pmt_month = 7 then p.contract_number end) > 0 then
+              round(count(distinct case when p.planned_pmt_month = 7 and p.delinq_days > 0 then p.contract_number end) /
+                     count(distinct case when p.planned_pmt_month = 7 then p.contract_number end) * 100, 2)
+            end as del_rate_by_cons_pmt_7
+from V_PORTFOLIO p
+join V_DATA_ALL d on d.id = p.id
+where p.report_year in (2013, 2014) and d.contract_amount > 0
+group by p.yy_mm_report
+) a join M_TMP_J_DEL_2_ALL b on b.yy_mm_start_last = a.yy_mm_report;
+grant select on U1.M_TMP_J_D_REP_2 to LOADDB;
+grant select on U1.M_TMP_J_D_REP_2 to LOADER;
+
+

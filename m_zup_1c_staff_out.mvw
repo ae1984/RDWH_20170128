@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_ZUP_1C_STAFF_OUT
+refresh complete on demand
+as
+select t.tax_id iin,
+       to_date(t.hiring_date_txt, 'dd/mm/yyyy') hiring_date,
+       to_date(t.firing_date_txt, 'dd/mm/yyyy') firing_date
+from M_ZUP_1C_STAFF t
+where not t.tax_id is null
+group by t.tax_id, t.hiring_date_txt, t.firing_date_txt;
+grant select on U1.M_ZUP_1C_STAFF_OUT to LOADDB;
+grant select on U1.M_ZUP_1C_STAFF_OUT to LOADER;
+grant select on U1.M_ZUP_1C_STAFF_OUT to LOAD_MO;
+grant select on U1.M_ZUP_1C_STAFF_OUT to RISK_VERIF;
+
+

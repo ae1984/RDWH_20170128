@@ -1,0 +1,50 @@
+﻿create table U1.RBO_Z#MAIN_DOCUM
+(
+  id               NUMBER not null,
+  state_id         VARCHAR2(16),
+  c_document_date  DATE,
+  c_acc_dt         NUMBER,
+  c_acc_kt         NUMBER,
+  c_date_doc       DATE,
+  c_sum            NUMBER(17,2),
+  c_valuta         NUMBER,
+  c_valuta_po      NUMBER,
+  c_vid_doc        NUMBER,
+  c_sum_po         NUMBER(17,2),
+  c_astr_date_prov DATE,
+  c_sum_nt         NUMBER(17,2),
+  c_quit_doc       NUMBER,
+  c_rate_dt        NUMBER(20,6),
+  c_rate_kt        NUMBER(20,6),
+  c_req_man#inn    VARCHAR2(100)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+create unique index U1.RBO_Z#MAIN_DOCUM_PK_IND on U1.RBO_Z#MAIN_DOCUM (ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.RBO_Z#MAIN_DOCUM
+  add constraint RBO_Z#MAIN_DOCUM_PK primary key (ID);
+grant select on U1.RBO_Z#MAIN_DOCUM to LOADDB;
+grant select on U1.RBO_Z#MAIN_DOCUM to LOADER;
+

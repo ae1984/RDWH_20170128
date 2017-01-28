@@ -1,0 +1,72 @@
+﻿create materialized view U1.M_TMP_DI_ONLINE3
+refresh complete on demand
+as
+select
+
+onl.claim_id,
+onl.rfo_client_id,
+onl.month_ratif,
+onl.is_sign_reason,
+onl.is_sign_require,
+onl.is_categ_a,
+onl.is_client_new_by_con,
+onl.is_approved,
+onl.is_credit_issued,
+onl.is_verification_reject,
+date_ratif,
+case when onl.is_verification = 1 then
+  case when mn.is_verif_manager = 1 or mn.is_verif_manager_old = 1 then 'У клиента есть прошлые фрод-отказы'
+       when mn.is_verif_manager_by_purse = 1 then 'Проверка по кошельку'
+       when is_ver_cal = 1 then 'Отправлен на верификацию при звонке' else 'Other' end
+         end as is_verif_reason,
+
+/*case when onl.is_iad = 1 then
+ case when f.is_fc_mobile_diff = 1 then 'ИАД по номеру моб.тел.'
+      when f.is_fc_fio_diff = 1 and f.is_fc_doc_diff = 1 then 'ИАД по ФИО и паспортным данным'
+      when f.is_fc_fio_diff = 1 then 'ИАД по ФИО'
+      when f.is_fc_doc_diff = 1 then 'ИАД по паспортным данным'
+      when f.is_fc_sex_exists = 0 then 'ИАД - не заполнен пол'
+       else 'Other' end
+        end as is_iad_reason*/
+
+case when onl.is_iad = 1 then
+case
+
+/*        --f3
+     --when f3.is_fc_mobile_diff = 1 then 'ИАД по номеру моб.тел. 3'
+     when f3.is_fc_fio_diff = 1 and f3.is_fc_doc_diff = 1 then 'ИАД по ФИО и паспортным данным 3'
+     when f3.is_fc_fio_diff = 1 then 'ИАД по ФИО 3'
+     when f3.is_fc_doc_diff = 1 then 'ИАД по паспортным данным 3'
+     when f3.is_fc_sex_exists = 0 then 'ИАД - не заполнен пол 3'*/
+
+     --f
+     when f.is_fc_mobile_diff = 1 then 'ИАД по номеру моб.тел.'
+     when f.is_fc_fio_diff = 1 and f.is_fc_doc_diff = 1 and f3.is_fc_fio_diff = 1 and f3.is_fc_doc_diff = 1 then 'ИАД по ФИО и паспортным данным'
+     when f.is_fc_fio_diff = 1 and f3.is_fc_fio_diff = 1 then 'ИАД по ФИО'
+     when f.is_fc_doc_diff = 1 and f3.is_fc_doc_diff = 1  then 'ИАД по паспортным данным'
+     --when f.is_fc_sex_exists = 0 and f3.is_fc_sex_exists = 0 then 'ИАД - не заполнен пол'
+
+    --f2
+     when f22.is_mob_change = 1 then 'ИАД по номеру моб.тел. 2'
+     when f2.fio_passport = 1 then 'ИАД по ФИО и паспортным данным 2'
+     when f2.fio = 1 then 'ИАД по ФИО 2'
+     when f2.passport_data = 1 then 'ИАД по паспортным данным 2'
+     when f2.is_sex_exists = 0 then 'ИАД - не заполнен пол 2'
+
+
+
+     --when is_ver_cal = 1 then 'ИАД - после звонка'
+     else 'Other' end
+end as is_iad_reason
+
+
+from M_TMP_DI_ONLINE0 onl
+left join m_folder_con_cancel_add4 mn on mn.claim_id = onl.claim_id
+left join M_TMP_GK_IAD_MOBILE_F f on f.claim_id = onl.claim_id
+left join M_TMP_GK_IAD f2 on f2.folder_id = onl.folder_id
+left join M_TMP_GK_IAD_MOBILE f22 on f22.folder_id = onl.folder_id
+left join M_TMP_GK_IAD_DEP f3 on f3.claim_id = onl.claim_id;
+grant select on U1.M_TMP_DI_ONLINE3 to LOADDB;
+grant select on U1.M_TMP_DI_ONLINE3 to LOADER;
+
+

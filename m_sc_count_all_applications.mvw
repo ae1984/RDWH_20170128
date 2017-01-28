@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_SC_COUNT_ALL_APPLICATIONS
+build deferred
+refresh complete on demand
+as
+select /*+parallel(1)*/ rfo_client_id , count(distinct rfo_con_or_claim_id) as COUNT_APPLICATION
+  from (select f.rfo_contract_id as rfo_con_or_claim_id, f.rfo_client_id
+          from u1.M_FOLDER_CON_CANCEL f
+         where f.process_name = 'ОНЛАЙН КРЕДИТ'
+           and f.claim_id is not null
+        union all select fo.claim_id as rfo_con_or_claim_id, fo.rfo_client_id
+                     from u1.M_FOLDER_CON_CANCEL_ONLINE fo
+        union all select f.rfo_contract_id as rfo_con_or_claim_id, f.rfo_client_id
+                     from u1.M_FOLDER_CON_CANCEL f
+                    where f.process_name != 'ОНЛАЙН КРЕДИТ'
+        union all select r.folder_id as rfo_con_or_claim_id, r.rfo_client_id
+                     from u1.M_FOLDER_CON_CANCEL_KSPRED r)
+   group by rfo_client_id;
+grant select on U1.M_SC_COUNT_ALL_APPLICATIONS to LOADDB;
+grant select on U1.M_SC_COUNT_ALL_APPLICATIONS to LOAD_MO;
+
+

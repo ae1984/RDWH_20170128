@@ -1,0 +1,28 @@
+﻿create table U1.T_RBO_CONTRACT_DATA_PMT_BUFF2
+(
+  rep_date           DATE,
+  rbo_contract_id    NUMBER,
+  plan_date_x        DATE,
+  plan_date          DATE,
+  cnt_pmt_plan       NUMBER,
+  mp_rbo_contract_id NUMBER(21),
+  total_debt_plus    NUMBER,
+  del_days_plus      NUMBER,
+  diff_dt_x          NUMBER,
+  diff_dt            NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RBO_CONTRACT_DATA_PMT_BUFF2 to LOADDB;
+

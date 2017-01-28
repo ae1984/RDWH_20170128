@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_TMP_J_BWC
+refresh complete on demand
+as
+select a.*, tt.pmt, tt.is_credit_active, tt.x_product_type, tt.x_is_card, tt.prod_type, tt.x_amount,
+       ceil(months_between(trunc(tt.plan_end_date,'mm'), trunc(tt.x_start_date,'mm'))) as term_plan,
+       ceil(months_between(trunc(coalesce(tt.actual_end_date, tt.plan_end_date),'mm'), trunc(tt.x_start_date,'mm'))) as term_plan_with_closed,
+       ceil(months_between(trunc(coalesce(tt.actual_end_date, sysdate - 1),'mm'), trunc(tt.x_start_date,'mm'))) as term_fact,
+       tt.x_start_date, to_char(tt.x_start_date,'yyyy - mm') as x_start_yyyy_mm,
+       tt.folder_id_first, tt.client_iin, tt.x_client_id, tt.rfo_client_id
+from (
+    select t.deal_number,
+           case when min(h.client_id) is not null then 1 else 0 end as is_bwc,
+           ceil(months_between(coalesce(min(to_date(h.text_yyyy_mm,'yyyy - mm')), trunc(min(t.actual_end_date),'mm')),
+                          trunc(min(t.x_start_date),'mm')
+                    )) as term_without_bwc, -- для закрытых
+           ceil(months_between(coalesce(min(to_date(h.text_yyyy_mm,'yyyy - mm')), trunc(min(t.actual_end_date),'mm'),trunc(sysdate - 1,'mm')),
+                          trunc(min(t.x_start_date),'mm')
+                    )) as term_without_bwc_for_all, -- для всех
+           min(to_date(h.text_yyyy_mm,'yyyy - mm')) as bwc_month_min
+    from V_DWH_PORTFOLIO_CURRENT t
+    left join V_CLIENT_HISTORY h on h.client_id = t.x_client_id and h.client_status in ('B','W') and
+                           to_date(h.text_yyyy_mm,'yyyy - mm') >= trunc(t.x_start_date,'mm') and
+                           to_date(h.text_yyyy_mm,'yyyy - mm') <= trunc(coalesce(t.actual_end_date, t.plan_end_date),'mm')
+    where t.x_is_credit_issued = 1
+    group by t.deal_number
+) a join V_DWH_PORTFOLIO_CURRENT tt on tt.deal_number = a.deal_number;
+grant select on U1.M_TMP_J_BWC to LOADDB;
+grant select on U1.M_TMP_J_BWC to LOADER;
+
+

@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_APP_MINER_RBO_PORT2
+build deferred
+refresh force on demand
+as
+select am.app_id,
+
+       max(case when rp.rep_date >= trunc(am.folder_date_create_mi) - 365
+                     and rp.delinq_amount >= 1000
+                then rp.delinq_days_cli end) as del_days_1y_max
+
+from U1.M_APP_MINER_BAS am
+join U1.M_CLIENT_LINK cl on cl.rfo_client_id = am.rfo_client_id
+join U1.T_RBO_PORT rp on rp.rbo_client_id = cl.rbo_client_id
+                         and rp.rep_date >= to_date('2015-01-01','yyyy-mm-dd') - 365
+                         and rp.rep_date < trunc(am.folder_date_create_mi)
+where am.folder_date_create_mi >= to_date('2015-01-01','yyyy-mm-dd')
+group by am.app_id;
+grant select on U1.M_APP_MINER_RBO_PORT2 to LOADDB;
+
+

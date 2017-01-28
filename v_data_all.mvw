@@ -1,0 +1,140 @@
+﻿create materialized view U1.V_DATA_ALL
+refresh complete on demand
+as
+select
+      y.id,
+      y.yy_mm_report,
+      y.yy_mm_report_num,
+      y.yy_mm_report_date,
+      y.report_date,
+      y.contract_no,
+      y.client_id,
+      y.rnn,
+      y.iin,
+      y.client_name,
+      y.product,
+      y.product_refin,
+      y.product_programm,
+      y.contract_amount,
+      y.yy_mm_start,
+      y.start_date,
+      y.set_revolving_date,
+      y.end_date,
+      y.total_debt,
+      y.delinq_days,
+      y.pos_code,
+      y.branch_name,
+      y.expert_name,
+      y.delinq_amount,
+      y.delinq_days_old,
+      y.contract_status,
+      y.contract_status_prev,
+      y.is_card
+ from
+ (select /*+parallel(15) parallel_index(15) */
+    d.id,
+    d.yy_mm_report,
+        to_number(substr(d.yy_mm_report,1,4)||substr(d.yy_mm_report,8,2)) as
+    yy_mm_report_num,
+        to_date(d.yy_mm_report, 'yyyy - mm') as
+    yy_mm_report_date,
+    x.min_yy_mm_rep_date,----new
+    null as report_date,
+    d.contract_no,
+        substr(ltrim(d.contract_no, 'R'),1,7) as
+    client_id,
+    d.rnn,
+--    d.iin,
+    nvl(d.iin, rc.iin) as iin,
+        translate(upper(d.client_name),chr(53388)||chr(53384)||chr(53383)||
+        chr(53904)||chr(53390)||chr(53380)||chr(53381),'???????') as
+    client_name,
+--    d.client_name,
+--    d.product,
+    nvl(rp.product, 'UNKNOWN') as product,
+    nvl(rp.product_refin, 'UNKNOWN') as product_refin,
+    d.product_programm,
+    d.contract_amount,
+    d.yy_mm_start,
+    d.start_date,
+    null as set_revolving_date,
+    d.end_date,
+    d.total_debt,
+    d2.delinq_days_max_client as delinq_days,
+    d.pos_code,
+    d.branch_name,
+    d.expert_name,
+        round(nvl(d.el_principal_del,0) + nvl(d.el_interest_del,0) + nvl(d.cc_principal_del,0) +
+        nvl(d.cc_overlimit_del,0) + nvl(d.cc_overdraft_del,0) + nvl(d.cc_interest_del,0),0) as
+    delinq_amount,
+    d.delinq_days as delinq_days_old,
+    null as contract_status,
+    null as contract_status_prev,
+    case when d.end_date is null then 1 else 0 end as is_card,
+    dwh.actual_end_date,--new
+    dwh.begin_date--new
+from DATA_ALL d
+join (select da.yy_mm_report,
+             substr(ltrim(da.contract_no,'R'),1,7) as client_id,
+             max(da.delinq_days) as delinq_days_max_client
+          from DATA_ALL da
+          group by da.yy_mm_report,
+                   substr(ltrim(da.contract_no,'R'),1,7)
+      ) d2 on d2.yy_mm_report = d.yy_mm_report and
+              d2.client_id = substr(ltrim(d.contract_no,'R'),1,7)
+left join REF_PRODUCTS rp on rp.product_program = d.product_programm
+left join (select t.x_rnn as rnn,
+                max(t.x_iin) keep (dense_rank last order by t.id) as iin
+            from V_RFO_Z#CLIENT t
+            where t.x_rnn is not null and
+                  t.class_id = 'CL_PRIV'
+            group by t.x_rnn
+           ) rc on rc.rnn = d.rnn
+left join(select da.contract_no, min(to_date(da.yy_mm_report, 'yyyy - mm')) as min_yy_mm_rep_date
+          from DATA_ALL da
+          group by da.contract_no) x on x.contract_no = d.contract_no
+ left join V_DWH_PORTFOLIO_CURRENT dwh on dwh.deal_number = d.contract_no
+where to_date(d.yy_mm_report, 'yyyy - mm') < to_date('2012-12-01','yyyy-mm-dd'))y
+where not (y.actual_end_date is not null and y.yy_mm_report_date != y.min_yy_mm_rep_date and
+            to_date(y.yy_mm_report, 'yyyy - mm') > y.actual_end_date) and
+      not (y.yy_mm_report < to_char(y.begin_date,'yyyy - mm'))
+
+
+union all
+
+select /*+parallel(15) parallel_index(15) */
+      dw.id,
+      dw.yy_mm_report,
+         to_number(substr(dw.yy_mm_report,1,4)||substr(dw.yy_mm_report,8,2)) as
+      yy_mm_report_num,
+      dw.yy_mm_report_date,
+      dw.report_date,
+      dw.contract_no,
+      dw.client_id,
+      dw.rnn,
+      dw.iin,
+      dw.client_name,
+      dw.product,
+      dw.product_refin,
+      dw.product_programm,
+      dw.contract_amount,
+      dw.yy_mm_start,
+      dw.start_date,
+      dw.set_revolving_date,
+      dw.end_date,
+      dw.total_debt,
+      dw.delinq_days,
+      dw.pos_code,
+      dw.branch_name,
+      dw.expert_name,
+      dw.delinq_amount,
+      dw.delinq_days_old,
+      dw.deal_status as contract_status,
+      dw.deal_status_prev as contract_status_prev,
+      dw.is_card
+from V_DATA_ALL_DWH dw
+where dw.yy_mm_report != '2012 - 11';
+grant select on U1.V_DATA_ALL to LOADDB;
+grant select on U1.V_DATA_ALL to LOADER;
+
+

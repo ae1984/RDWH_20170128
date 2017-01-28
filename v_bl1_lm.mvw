@@ -1,0 +1,63 @@
+﻿create materialized view U1.V_BL1_LM
+using no index
+refresh force on demand
+as
+select
+    case when REGEXP_LIKE(t.lockcause,'^[[:alpha:]-\\ \/\.\"\?\+\,\(\)\=\*\№]+$') then ( -- если не числовое значение
+             case
+                  when REGEXP_LIKE(upper(t.lockcause),'УБИЙСТ') then 96
+                  when REGEXP_LIKE(upper(t.lockcause),'ТЯЖК|ПРИЧИ|ТЕЛЕС') then 103
+                  when REGEXP_LIKE(upper(t.lockcause),'ИЗНОС|ИЗНАС|СЕКС|НАСИЛЬСТ') then 121
+                  when REGEXP_LIKE(upper(t.lockcause),'РАЗВРАЩ') then 124
+                  when REGEXP_LIKE(upper(t.lockcause),'ШПИОНАЖ') then 166
+                  when REGEXP_LIKE(upper(t.lockcause),'КРАЖА') then 175
+                  when REGEXP_LIKE(upper(t.lockcause),'ХИЩЕН') then 176
+                  when REGEXP_LIKE(upper(t.lockcause),'МОШ-ВО|МОШ.|МОШОН') then 177
+                  when REGEXP_LIKE(upper(t.lockcause),'ГРАБ') then 178
+                  when REGEXP_LIKE(upper(t.lockcause),'РАЗБ') then 179
+                  when REGEXP_LIKE(upper(t.lockcause),'ВЫМОГ|ВЫМАГ') then 181
+                  when REGEXP_LIKE(upper(t.lockcause),'ПРЕДПРИН') then 190
+                  when REGEXP_LIKE(upper(t.lockcause),'САМОУП') then 327
+                  when REGEXP_LIKE(upper(t.lockcause),'ПОБЕГ') then 358
+                  when REGEXP_LIKE(upper(t.lockcause),'ХУЛ') then 257
+                  when REGEXP_LIKE(upper(t.lockcause),'НАРК') then 259
+                  when REGEXP_LIKE(upper(t.lockcause),'ОРУЖ|ОГНЕС') then 251
+                  when REGEXP_LIKE(upper(t.lockcause),'ПРОСТИТ|ПРИТОН|СВОДН') then 271
+             end)
+         when REGEXP_LIKE(upper(t.lockcause),'КОАП') then -- если коап
+               (to_number(REGEXP_SUBSTR(t.lockcause,'[0-9]+')) + 1000000000)
+         else to_number(REGEXP_SUBSTR(t.lockcause,'[0-9]+')) end as
+lock_article,
+t.lockcause, t.lockname, substr(t.lockdate,1,10) as lockdate, t.remark,
+upper(trim(m.f)) as surname, upper(trim(m.i)) as first_name, upper(trim(m.o)) as patronymic,
+substr(m.born,1,10) as birth_date, upper(m.bornsite) as birth_place--,
+--upper(m.adres) as address
+from V_LOCKS@L28 t, V_MAIN@L28 m
+where m.recid = t.recid and
+     not REGEXP_LIKE(upper(t.lockcause),'^.*РФ|УКРАИ|КИРГ.|КЫРГ|УК КР|УЗБЕК|ТАДЖ+*$') and ( -- только кз и
+            not REGEXP_LIKE(t.lockcause,'^[[:alpha:]-\\ \/\.\"\?\+\,\(\)\=\*\№]+$') -- не буквенные, или со словами:
+            or REGEXP_LIKE(upper(t.lockcause),'КОАП')
+            or REGEXP_LIKE(upper(t.lockcause),'УБИЙСТ')
+            or REGEXP_LIKE(upper(t.lockcause),'ТЯЖК|ПРИЧИ|ТЕЛЕС')
+            or REGEXP_LIKE(upper(t.lockcause),'ИЗНОС|ИЗНАС|СЕКС|НАСИЛЬСТ')
+            or REGEXP_LIKE(upper(t.lockcause),'РАЗВРАЩ')
+            or REGEXP_LIKE(upper(t.lockcause),'ШПИОНАЖ')
+            or REGEXP_LIKE(upper(t.lockcause),'КРАЖА')
+            or REGEXP_LIKE(upper(t.lockcause),'ХИЩЕН')
+            or REGEXP_LIKE(upper(t.lockcause),'МОШ-ВО|МОШ.|МОШОН')
+            or REGEXP_LIKE(upper(t.lockcause),'ГРАБ')
+            or REGEXP_LIKE(upper(t.lockcause),'РАЗБ')
+            or REGEXP_LIKE(upper(t.lockcause),'ВЫМОГ|ВЫМАГ')
+            or REGEXP_LIKE(upper(t.lockcause),'ПРЕДПРИН')
+            or REGEXP_LIKE(upper(t.lockcause),'САМОУП')
+            or REGEXP_LIKE(upper(t.lockcause),'ПОБЕГ')
+            or REGEXP_LIKE(upper(t.lockcause),'ХУЛ')
+            or REGEXP_LIKE(upper(t.lockcause),'НАРК')
+            or REGEXP_LIKE(upper(t.lockcause),'ОРУЖ|ОГНЕС')
+            or REGEXP_LIKE(upper(t.lockcause),'ПРОСТИТ|ПРИТОН|СВОДН')
+           )
+     and to_date(substr(t.lockdate,1,10),'yyyy-mm-dd') > to_date('1997-07-16','yyyy-mm-dd');
+grant select on U1.V_BL1_LM to LOADDB;
+grant select on U1.V_BL1_LM to LOADER;
+
+

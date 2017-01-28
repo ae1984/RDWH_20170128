@@ -1,0 +1,40 @@
+﻿create table U1.T_AUTO_KOLESA_KZ_DATA
+(
+  akk_brend                     VARCHAR2(255 CHAR),
+  akk_model                     VARCHAR2(255 CHAR),
+  akk_year_car                  NUMBER,
+  akk_drive                     VARCHAR2(1020),
+  akk_engine_volume             NUMBER,
+  akk_kpp_type                  VARCHAR2(1020),
+  akk_body_type                 VARCHAR2(1020),
+  akk_price                     NUMBER,
+  median                        NUMBER,
+  std                           NUMBER,
+  count_price_confidence        NUMBER,
+  advert_cnt                    NUMBER,
+  count_price_confidence_50     NUMBER,
+  avg_price                     NUMBER,
+  price_year_down               NUMBER,
+  price_year_up                 NUMBER,
+  year_price_confidence         NUMBER,
+  transmission_price_confidence NUMBER,
+  price_other_kpp               NUMBER,
+  confidence_level              NUMBER,
+  price_correction              NUMBER,
+  yyyy_mm_dd                    DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_AUTO_KOLESA_KZ_DATA to LOADDB;
+

@@ -1,0 +1,111 @@
+﻿create materialized view U1.M_TMP_DI_DEL_ONLINE_VS_POS
+refresh complete on demand
+as
+select -- ПРОСРОЧКА ПО ДНЯМ - ОНЛАЙН И POS - по дате заявки
+           td.text_yyyy_mm_dd_week_day,
+           td.week_text_online_credit,
+           t.is_sign_require,
+           t.is_categ_a,
+           t.is_client_new_by_con,
+           t.x_dnp_name,
+           case when t.process_name = 'ОНЛАЙН КРЕДИТ' then 'ОНЛАЙН КРЕДИТ'
+                                                           else 'ЭКТ' end as channel,
+           count(*) as cnt,
+           count(distinct d.deal_number) as con_cnt,
+           count(distinct d.client_iin) as cli_cnt,
+           sum(case when t.process_name = 'ОНЛАЙН КРЕДИТ' then d.amount end)/1000000 as sales_mln,
+
+           sum(case when t.process_name = 'ОНЛАЙН КРЕДИТ' then coalesce(case when d.x_delinq_days > 0 then d.x_total_debt end,0) end) as onl_del_1_rate_by_vol,
+           sum(case when t.process_name = 'ОНЛАЙН КРЕДИТ' then d.amount end) as onl_total_del_1_rate_by_vol,
+           sum(case when t.process_name = 'ОНЛАЙН КРЕДИТ' then
+                    case when trunc(t.folder_date_create_mi) <= add_months(trunc(sysdate),-1) - 10 then
+                       case when d.x_delinq_days > 7 then d.x_total_debt else 0 end end end) as onl_del_7_rate_by_vol,
+           sum(case when t.process_name = 'ОНЛАЙН КРЕДИТ' then
+                    case when trunc(t.folder_date_create_mi) <= add_months(trunc(sysdate),-1) - 10 then d.amount end end) as onl_total_del_7_rate_by_vol,
+
+
+           sum(case when t.process_name = 'ОНЛАЙН КРЕДИТ' then
+                    case when trunc(t.folder_date_create_mi) <= add_months(trunc(sysdate),-1) - 10 then
+                       case when d.x_delinq_days > 14 then d.x_total_debt else 0 end end end) as onl_del_14_rate_by_vol,
+           sum(case when t.process_name = 'ОНЛАЙН КРЕДИТ' then
+                    case when trunc(t.folder_date_create_mi) <= add_months(trunc(sysdate),-1) - 10 then d.amount end end) as onl_total_del_14_rate_by_vol,
+
+
+
+
+
+           sum(case when t.process_name != 'ОНЛАЙН КРЕДИТ' then coalesce(case when d.x_delinq_days > 0 then d.x_total_debt end,0) end) as pos_del_1_rate_by_vol,
+           sum(case when t.process_name != 'ОНЛАЙН КРЕДИТ' then d.amount end) as pos_total_del_1_rate_by_vol,
+           sum(case when t.process_name != 'ОНЛАЙН КРЕДИТ' then
+                    case when trunc(t.folder_date_create_mi) <= add_months(trunc(sysdate),-1) - 10 then
+                       case when d.x_delinq_days > 7 then d.x_total_debt else 0 end end end) as pos_del_7_rate_by_vol,
+
+           sum(case when t.process_name != 'ОНЛАЙН КРЕДИТ' then
+                    case when trunc(t.folder_date_create_mi) <= add_months(trunc(sysdate),-1) - 10 then d.amount end end) as pos_total_del_7_rate_by_vol,
+
+
+           sum(case when t.process_name != 'ОНЛАЙН КРЕДИТ' then
+                    case when trunc(t.folder_date_create_mi) <= add_months(trunc(sysdate),-1) - 10 then
+                       case when d.x_delinq_days > 14 then d.x_total_debt else 0 end end end) as pos_del_14_rate_by_vol,
+
+           sum(case when t.process_name != 'ОНЛАЙН КРЕДИТ' then
+                    case when trunc(t.folder_date_create_mi) <= add_months(trunc(sysdate),-1) - 10 then d.amount end end) as pos_total_del_14_rate_by_vol,
+
+
+------fpd0
+           sum(case when t.process_name = 'ОНЛАЙН КРЕДИТ' then case when fpd0.is_fpd_0>0 then d.amount else 0 end end) as fpd0_del_online,
+           sum(case when t.process_name != 'ОНЛАЙН КРЕДИТ' then case when fpd0.is_fpd_0>0 then d.amount else 0 end end) as fpd0_del_pos,
+
+------fpd7
+           sum(case when t.process_name = 'ОНЛАЙН КРЕДИТ' then case when fpd7.is_fpd_7>0 then d.amount else 0 end end) as fpd7_del_online,
+           sum(case when t.process_name != 'ОНЛАЙН КРЕДИТ' then case when fpd7.is_fpd_7>0 then d.amount else 0 end end) as fpd7_del_pos,
+
+
+------spd
+           sum(case when t.process_name = 'ОНЛАЙН КРЕДИТ' then case when spd.is_spd>0 then d.amount else 0 end end) as spd_del_online,
+           sum(case when t.process_name != 'ОНЛАЙН КРЕДИТ' then case when spd.is_spd>0 then d.amount else 0 end end) as spd_del_pos,
+-----total
+
+           sum(case when t.process_name = 'ОНЛАЙН КРЕДИТ' then d.amount end) as total_sum_online,
+           sum(case when t.process_name != 'ОНЛАЙН КРЕДИТ' then d.amount end) as total_sum_pos
+
+
+
+-----2nd, 3rd payments
+
+
+
+
+
+from M_FOLDER_CON_CANCEL t
+join V_DWH_PORTFOLIO_CURRENT d on t.folder_id = d.folder_id_first and
+                                  d.x_is_credit_issued = 1 and
+                                  d.begin_date >= to_date('2014-12-08','yyyy-mm-dd') and
+                                  d.prod_type = 'ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)'
+join V_TIME_DAYS td on td.yyyy_mm_dd = trunc(t.folder_date_create_mi)
+--join m_contract_cal_del cc on cc.contract_number = d.deal_number
+left join m_tmp_contract_fpd0 fpd0 on fpd0.deal_number = d.deal_number
+left join m_tmp_contract_fpd7 fpd7 on fpd7.deal_number = d.deal_number
+left join m_tmp_contract_spd spd on spd.deal_number = d.deal_number
+
+/*left join
+(select distinct cl.rfo_client_id, count(ca.phone_number) as call_cnt
+from v_dwh_soft_collection_calls ca
+join m_client_link cl on cl.rbo_client_id=ca.rbo_client_id
+where trunc(ca.phone_date)>='01-01-2015'
+group by cl.rfo_client_id) x on x.rfo_client_id=t.rfo_client_id
+*/
+group by
+           td.text_yyyy_mm_dd_week_day,
+           td.week_text_online_credit,
+           t.is_sign_require,
+           t.is_categ_a,
+           t.is_client_new_by_con,
+           t.x_dnp_name,
+           case when t.process_name = 'ОНЛАЙН КРЕДИТ' then 'ОНЛАЙН КРЕДИТ'
+                                                           else 'ЭКТ' end
+having sum(d.amount) > 0;
+grant select on U1.M_TMP_DI_DEL_ONLINE_VS_POS to LOADDB;
+grant select on U1.M_TMP_DI_DEL_ONLINE_VS_POS to LOADER;
+
+

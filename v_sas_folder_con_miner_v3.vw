@@ -1,0 +1,50 @@
+﻿create or replace force view u1.v_sas_folder_con_miner_v3 as
+select /*+ parallel 5 */
+pos_type_rfo,
+pos_parther,
+shop_name,
+fact_address_district,
+fact_address_street,
+fact_address_house_full,
+fact_address_house_flat,
+fact_address_is_appartment,
+fact_address_flat,
+address_equal,
+fpch_amount,
+fpch_children,
+fpch_dependants,
+fpch_education,
+fpch_marital_status,
+fpch_real_estate_relation,
+fpch_salary,
+fpch_salary_add,
+fpch_salary_spouse,
+fpch_term_duration,
+avto_model_year_max_mark,
+con_any_bef_4y,
+con_debt10k_bef_4y,
+del_days_any_max_bef_4y,
+del_days_debt10k_max_bef_4y,
+active_mon_debt10k_bef_4y,
+good_active_mon_debt10k_bef_4y,
+bad_active_mon_debt10k_bef_4y,
+amount_max_bef_4y,
+cli_inactive_period_4y,
+initial_payment,
+kdn_simple_rbo,
+kdn_simple_nom_rate,
+kdn_form_salary_max,
+is_iin_check_sum_right,
+mobile_operator,
+mobile_length_phones,
+tp_mp,
+start_cli_delinq_month_cnt,
+start_cli_max_delinq_days,
+pkb_report_deal_status,
+contract_number
+from u1.M_FOLDER_CON_MINER_V3  t;
+grant select on U1.V_SAS_FOLDER_CON_MINER_V3 to IT6_USER;
+grant select on U1.V_SAS_FOLDER_CON_MINER_V3 to LOADDB;
+grant select on U1.V_SAS_FOLDER_CON_MINER_V3 to LOADER;
+
+

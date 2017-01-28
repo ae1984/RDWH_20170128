@@ -1,0 +1,265 @@
+﻿create table U1.TM_SOAP_NOTIFY_TESTMOS
+(
+  fld_001                      VARCHAR2(8),
+  fld_002                      VARCHAR2(19),
+  fld_003                      CHAR(6),
+  fld_004                      NUMBER(12),
+  fld_005                      NUMBER(12),
+  fld_006                      NUMBER(12),
+  fld_007                      CHAR(14),
+  fld_008                      NUMBER(8),
+  fld_009                      NUMBER(16,9),
+  fld_010                      NUMBER(16,9),
+  fld_011                      CHAR(6),
+  fld_012                      CHAR(14),
+  fld_013                      CHAR(4),
+  fld_014                      CHAR(4),
+  fld_015                      CHAR(14),
+  fld_016                      CHAR(4),
+  fld_017                      CHAR(4),
+  fld_018                      CHAR(4),
+  fld_019                      CHAR(3),
+  fld_020                      CHAR(3),
+  fld_021                      CHAR(3),
+  fld_022                      CHAR(12),
+  fld_023                      CHAR(3),
+  fld_024                      CHAR(3),
+  fld_025                      CHAR(4),
+  fld_026                      CHAR(4),
+  fld_027                      NUMBER(1),
+  fld_028                      CHAR(14),
+  fld_029                      NUMBER(3),
+  fld_030                      NUMBER(12),
+  fld_031                      VARCHAR2(99),
+  fld_032                      VARCHAR2(11),
+  fld_033                      VARCHAR2(11),
+  fld_034                      VARCHAR2(28),
+  fld_035                      VARCHAR2(37),
+  fld_036                      VARCHAR2(104),
+  fld_037                      CHAR(12),
+  fld_038                      CHAR(6),
+  fld_039                      CHAR(3),
+  fld_040                      CHAR(3),
+  fld_041                      CHAR(8),
+  fld_042                      CHAR(15),
+  fld_043                      VARCHAR2(99),
+  fld_044                      VARCHAR2(99),
+  fld_045                      VARCHAR2(76),
+  fld_046                      VARCHAR2(204),
+  fld_047                      VARCHAR2(999),
+  fld_048                      VARCHAR2(999),
+  fld_049                      CHAR(3),
+  fld_050                      CHAR(3),
+  fld_051                      CHAR(3),
+  fld_052                      VARCHAR2(32 CHAR),
+  fld_053                      RAW(48),
+  fld_054                      VARCHAR2(360),
+  fld_055                      RAW(600),
+  fld_056                      VARCHAR2(11),
+  fld_057                      CHAR(3),
+  fld_058                      VARCHAR2(11),
+  fld_059                      VARCHAR2(999),
+  fld_060                      VARCHAR2(999),
+  fld_061                      VARCHAR2(999),
+  fld_062                      VARCHAR2(999),
+  fld_063                      VARCHAR2(999),
+  fld_064                      RAW(8),
+  fld_065                      RAW(8),
+  fld_066                      VARCHAR2(204),
+  fld_067                      NUMBER(2),
+  fld_068                      CHAR(3),
+  fld_069                      CHAR(3),
+  fld_070                      CHAR(3),
+  fld_071                      CHAR(8),
+  fld_072                      VARCHAR2(999),
+  fld_073                      CHAR(14),
+  fld_074                      NUMBER(10),
+  fld_075                      NUMBER(10),
+  fld_076                      NUMBER(10),
+  fld_077                      NUMBER(10),
+  fld_078                      NUMBER(10),
+  fld_079                      NUMBER(10),
+  fld_080                      NUMBER(10),
+  fld_081                      NUMBER(10),
+  fld_082                      NUMBER(10),
+  fld_083                      NUMBER(10),
+  fld_084                      NUMBER(10),
+  fld_085                      NUMBER(10),
+  fld_086                      NUMBER(16),
+  fld_087                      NUMBER(16),
+  fld_088                      NUMBER(16),
+  fld_089                      NUMBER(16),
+  fld_090                      NUMBER(10),
+  fld_091                      CHAR(3),
+  fld_092                      CHAR(3),
+  fld_093                      VARCHAR2(11),
+  fld_094                      VARCHAR2(11),
+  fld_095                      VARCHAR2(99),
+  fld_096                      RAW(999),
+  fld_097                      NUMBER(16),
+  fld_098                      CHAR(25),
+  fld_099                      VARCHAR2(11),
+  fld_100                      VARCHAR2(11),
+  fld_101                      VARCHAR2(17),
+  fld_102                      VARCHAR2(28),
+  fld_103                      VARCHAR2(28),
+  fld_104                      VARCHAR2(100),
+  fld_105                      NUMBER(16),
+  fld_106                      NUMBER(16),
+  fld_107                      NUMBER(10),
+  fld_108                      NUMBER(10),
+  fld_109                      VARCHAR2(144),
+  fld_110                      VARCHAR2(144),
+  fld_111                      VARCHAR2(999),
+  fld_112                      VARCHAR2(999),
+  fld_113                      VARCHAR2(999),
+  fld_114                      VARCHAR2(999),
+  fld_115                      VARCHAR2(999),
+  fld_116                      VARCHAR2(999),
+  fld_117                      VARCHAR2(999),
+  fld_118                      VARCHAR2(999),
+  fld_119                      VARCHAR2(999),
+  fld_120                      VARCHAR2(999),
+  fld_121                      VARCHAR2(999),
+  fld_122                      VARCHAR2(999),
+  fld_123                      VARCHAR2(999),
+  fld_124                      VARCHAR2(999),
+  fld_125                      VARCHAR2(999),
+  fld_126                      VARCHAR2(999),
+  fld_127                      VARCHAR2(999),
+  fld_128                      RAW(8),
+  accum_amount                 VARCHAR2(999),
+  stip_accum_amount_cred       VARCHAR2(999),
+  stip_accum_amount_norm       VARCHAR2(999),
+  iia_deal_own                 VARCHAR2(999),
+  iia_deal_wofee               VARCHAR2(999),
+  iia_deal_credit              VARCHAR2(999),
+  iia_account_credit_limit     VARCHAR2(999),
+  iia_account_initial_amount   VARCHAR2(999),
+  iia_account_bonus_amount     VARCHAR2(999),
+  iia_account_locked_amount    VARCHAR2(999),
+  iia_account_available_amount VARCHAR2(999),
+  iia_account_available_after  VARCHAR2(999),
+  call_mode                    VARCHAR2(999),
+  stan_internal                CHAR(6),
+  card_type                    CHAR(2),
+  row_numb                     NUMBER(11),
+  request_date                 DATE,
+  batch_owner                  CHAR(15),
+  msg_type                     VARCHAR2(999),
+  rsw_acq_bank                 VARCHAR2(999),
+  resident                     VARCHAR2(999),
+  stip_client_id               VARCHAR2(999),
+  iia_card_param_grp_1         VARCHAR2(999),
+  iia_account_ccy              VARCHAR2(999),
+  iia_account_id               VARCHAR2(999),
+  stip_fld_102_bank            VARCHAR2(20),
+  change_date                  DATE default SYSDATE,
+  id                           NUMBER(19)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.FLD_002_TESTMOS on U1.TM_SOAP_NOTIFY_TESTMOS (FLD_002)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_CHANGE_DAT_TESTMOS on U1.TM_SOAP_NOTIFY_TESTMOS (CHANGE_DATE)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_FLD_012_TESTMOS on U1.TM_SOAP_NOTIFY_TESTMOS (FLD_012)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_IIA_CARD_P_TESTMOS on U1.TM_SOAP_NOTIFY_TESTMOS (IIA_CARD_PARAM_GRP_1)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_STIP_TESTMOS on U1.TM_SOAP_NOTIFY_TESTMOS (STIP_FLD_102_BANK)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.STIP_CLIENT_ID_TESTMOS on U1.TM_SOAP_NOTIFY_TESTMOS (STIP_CLIENT_ID)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.TM_SOAP_NOTI_ID_TESTMOS on U1.TM_SOAP_NOTIFY_TESTMOS (ID)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.TM_SOAP_NOTIFY_TESTMOS to LOADDB;
+

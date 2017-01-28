@@ -1,0 +1,26 @@
+﻿create materialized view U1.T_TMP_D_TK_PLUS_ONLINE
+refresh force on demand
+as
+select
+td.text_yyyy_mm_dd_week_day,
+td.week_text_online_credit,
+t.is_sign_require,
+t.is_categ_a,
+t.is_client_new_by_con,
+t.x_dnp_name,
+t.folder_date_create_mi,
+case when t.process_name = 'ОНЛАЙН КРЕДИТ' then 'ОНЛАЙН КРЕДИТ'
+                                                           else 'ЭКТ' end as channel,
+t.contract_number,
+t.iin
+
+from M_FOLDER_CON_CANCEL t
+join V_DWH_PORTFOLIO_CURRENT d on t.folder_id = d.folder_id_first and
+                                  d.x_is_credit_issued = 1 and
+                                  d.begin_date >= to_date('2014-12-08','yyyy-mm-dd') and
+                                  d.prod_type = 'ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)'
+join V_TIME_DAYS td on td.yyyy_mm_dd = trunc(t.folder_date_create_mi);
+grant select on U1.T_TMP_D_TK_PLUS_ONLINE to LOADDB;
+grant select on U1.T_TMP_D_TK_PLUS_ONLINE to LOADER;
+
+

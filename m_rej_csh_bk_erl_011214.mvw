@@ -1,0 +1,33 @@
+﻿create materialized view U1.M_REJ_CSH_BK_ERL_011214
+refresh force on demand
+as
+select distinct xx.contract_number/*,
+       xx.is_credit_exists_61_prev,
+       xx.is_pkb_status_beki_prev*/
+from (
+select x.*,
+       max(x.is_pre_close_61) OVER (partition by x.rfo_client_id ORDER BY x.folder_date_create_mi RANGE BETWEEN 61 PRECEDING AND 1 PRECEDING) AS is_credit_exists_61_prev,
+       max(x.is_pkb_status_beki_61) OVER (partition by x.rfo_client_id ORDER BY x.folder_date_create_mi RANGE BETWEEN 61 PRECEDING AND 1 PRECEDING) AS is_pkb_status_beki_prev
+from (
+     select c.*,
+           (case when d.actual_end_date - d.begin_date <= 61
+                 then 1
+                 else 0
+            end) as is_pre_close_61,
+           (case m.pkb_report_status when 'БЕКИ'
+                                     then 1
+                                     else 0
+            end) as is_pkb_status_beki_61
+    from u1.m_folder_con_miner m
+    join u1.m_folder_con_cancel c on c.contract_number = m.contract_number
+    left join u1.v_dwh_portfolio_current d on d.deal_number = c.contract_number
+    where c.is_credit_issued = 1 and
+          c.product_type = 'ДЕНЬГИ'
+    ) x
+) xx
+where xx.is_credit_exists_61_prev > 0 and
+xx.is_pkb_status_beki_prev > 0;
+grant select on U1.M_REJ_CSH_BK_ERL_011214 to LOADDB;
+grant select on U1.M_REJ_CSH_BK_ERL_011214 to LOADER;
+
+

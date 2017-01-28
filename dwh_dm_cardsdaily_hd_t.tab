@@ -1,0 +1,36 @@
+﻿create table U1.DWH_DM_CARDSDAILY_HD_T
+(
+  cdhd_rep_date              DATE,
+  cdhd_deal_number           VARCHAR2(250 CHAR),
+  cdhd_begin_date            DATE,
+  cdhd_set_revolving_date    DATE,
+  cdhd_prod_type             VARCHAR2(255 CHAR),
+  cdhd_pc_cred               NUMBER,
+  cdhd_pc_overlimit          NUMBER,
+  cdhd_pc_overdraft          NUMBER,
+  cdhd_pc_prc                NUMBER,
+  cdhd_pc_ovrd_cred          NUMBER,
+  cdhd_pc_ovrd_overlimit     NUMBER,
+  cdhd_pc_ovrd_overdraft     NUMBER,
+  cdhd_pc_ovrd_prc           NUMBER,
+  cdhd_ovrd_days             NUMBER,
+  cdhd_pc_vnb_ovrd_cred      NUMBER,
+  cdhd_pc_vnb_ovrd_overdraft NUMBER,
+  cdhd_pc_vnb_ovrd_overlimit NUMBER,
+  cdhd_pc_vnb_ovrd_prc_cred  NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.DWH_DM_CARDSDAILY_HD_T to LOADDB;
+grant select on U1.DWH_DM_CARDSDAILY_HD_T to LOADER;
+

@@ -1,0 +1,37 @@
+﻿create table U1.ZZ_T_KASPIRED_REF_INVOICE
+(
+  artbinv_id                     NUMBER not null,
+  artbinv_gid                    NUMBER,
+  artbinv$start_date             DATE,
+  artbinv$end_date               DATE,
+  artbinv$row_status             CHAR(4),
+  artbinv$audit_id               NUMBER,
+  artbinv$hash                   NUMBER,
+  artbinv$source                 VARCHAR2(16),
+  artbinv$change_date            DATE,
+  artbinv$provider               VARCHAR2(320),
+  artbinv$source_pk              VARCHAR2(4000),
+  artbinv_deal_gid               NUMBER,
+  artbinv_external_deal_gid      VARCHAR2(100 CHAR),
+  artbinv_invoice_payment_amount NUMBER,
+  artbinv_invoice_date           DATE,
+  artbinv_invoice_payment_date   DATE,
+  artbinv_num_invoice            VARCHAR2(50 CHAR),
+  artbinv_fact_payment_date      DATE,
+  artbinv_invoice_status_cd      NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.ZZ_T_KASPIRED_REF_INVOICE to LOADDB;
+

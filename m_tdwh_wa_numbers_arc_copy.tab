@@ -1,0 +1,27 @@
+﻿create table U1.M_TDWH_WA_NUMBERS_ARC_COPY
+(
+  id                 NUMBER not null,
+  mob_num            NUMBER,
+  mob_num_clear      VARCHAR2(4000),
+  is_whatsapp_number NUMBER(1),
+  last_seen_date     DATE,
+  last_check_date    DATE,
+  client_dwh_id      VARCHAR2(120),
+  idate              DATE not null
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.M_TDWH_WA_NUMBERS_ARC_COPY to LOADDB;
+grant select on U1.M_TDWH_WA_NUMBERS_ARC_COPY to LOADER;
+

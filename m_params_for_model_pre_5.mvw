@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_PARAMS_FOR_MODEL_PRE_5
+build deferred
+refresh force on demand
+as
+select  /*+parallel(5)*/
+        cln.rfo_client_id
+       ,cln.app_id
+       ,cln.folder_date_create_mi
+       ,cln.phone_mobile
+       ,min(kpay.pay_date) as DAYS_FROM_FIRST_MOB_PAY_KASPI
+       ,count(distinct case when kpay.pay_date>=trunc(cln.folder_date_create_mi)-180 then kpay.pay_info_id end) as PMT_QTY_KASPI
+       ,sum(kpay.pay_amount) as TTL_PMT_AMT_KASPI
+       ,count(distinct kpay.pay_info_id) as CNT_PMT_KASPI
+
+from M_PARAMS_FOR_MODEL_PRE_0 cln--V_CLIENT_RFO_BY_ID cln
+left join M_KASPIKZ_PAY kpay on kpay.rfo_client_id=cln.rfo_client_id and kpay.is_prov=1 and
+                                kpay.category_name = 'MOBILE'  and
+                                kpay.pay_param_clear=substr(trim(cln.phone_mobile),2,10) and
+                                kpay.pay_date <trunc(cln.folder_date_create_mi) and
+                                kpay.pay_date >= trunc(cln.folder_date_create_mi)-180
+where cln.folder_date_create_mi >= to_date('01.01.2015','dd.mm.yyyy')
+group by cln.rfo_client_id,cln.app_id,cln.folder_date_create_mi
+        ,cln.phone_mobile;
+grant select on U1.M_PARAMS_FOR_MODEL_PRE_5 to LOADDB;
+
+

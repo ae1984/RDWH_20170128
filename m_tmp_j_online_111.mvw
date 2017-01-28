@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_TMP_J_ONLINE_111
+refresh complete on demand
+as
+select device_id,
+       count(distinct ob.c_process_id) as all_appl,
+       count(distinct oc.c_client_ref) as all_appl_cl
+from u1.V_RFO_Z#KAS_ONLINE_BUY ob
+join u1.V_RFO_Z#KAS_ONLINE_CLAIM oc on ob.id = oc.c_buy_ref
+left join u1.T_KASPIKZ_USER_REQUEST ur on oc.c_form_client_st#inn = ur.client_inn and trunc(ob.c_date_create) = trunc(ur.date_start)
+where ob.c_date_create > to_date('01.11.2015','dd.mm.yyyy')
+group by device_id
+having count(distinct oc.c_client_ref) > 5;
+grant select on U1.M_TMP_J_ONLINE_111 to LOADDB;
+
+

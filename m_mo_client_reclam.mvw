@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_MO_CLIENT_RECLAM
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30)*/ t.rfo_client_id
+  from M_RFO_FOLDERS_RECLAM t
+ where t.c_date_create is not null
+   and t.folder_state = 'НА РЕКЛАМАЦИЮ'
+   and t.type_recl_name in ('НЕВЕРНО УКАЗАНА ДАТА ВЫДАЧИ УД.Л/ПАСПОРТ',
+                        'НЕВЕРНО УКАЗАН ОРГАН ВЫДАЧИ УД.Л/ПАСПОРТ', 'НЕВЕРНЫЕ ДАННЫЕ В ДОКУМЕНТЕ', 'НЕВЕРНАЯ ДАТА  ДОКУМЕНТА',
+                        'НЕВЕРНО УКАЗАН НОМЕР УД.Л/ПАСПОРТ', 'НЕВЕРНО УКАЗАНА ДАТА РОЖДЕНИЯ', 'НЕВЕРНЫЕ ДАННЫЕ УД.ЛИЧ В ДОКУМЕНТЕ',
+                        'НЕТ СООТВЕТСТВИЯ В ДОК./ИИН',
+                        'НЕТ СООТВЕТСТВИЯ В ДОК./УД.Л/ПАСПОРТ',
+                        'НЕТ СООТВЕТСТВИЯ В ДОК./ФИО КЛИЕНТА',
+                        'НЕТ СООТВЕТСТВИЯ В ДОК./ФИО КЛИЕНТА В СИСТЕМЕ')
+ group by t.rfo_client_id;
+grant select on U1.M_MO_CLIENT_RECLAM to LOADDB;
+grant select on U1.M_MO_CLIENT_RECLAM to LOAD_MO;
+
+

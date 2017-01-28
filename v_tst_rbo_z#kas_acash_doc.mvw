@@ -1,0 +1,12 @@
+﻿create materialized view U1.V_TST_RBO_Z#KAS_ACASH_DOC
+refresh complete on demand
+as
+select /*+ driving_site */*
+from V_RBO_Z#KAS_ACASH_DOC@RDWH11 a
+--where trunc(a.c_document_date) >= to_date('03/01/2013','dd/mm/yyyy') and trunc(a.c_document_date) <= to_date('15/06/2014','dd/mm/yyyy');
+--where trunc(a.c_document_date) >= to_date('03/01/2013','dd/mm/yyyy') and trunc(a.c_document_date) <= to_date('06/08/2014','dd/mm/yyyy');
+where trunc(a.c_document_date) >= to_date('16/03/2015','dd/mm/yyyy') and trunc(a.c_document_date) <= sysdate;
+grant select on U1.V_TST_RBO_Z#KAS_ACASH_DOC to LOADDB;
+grant select on U1.V_TST_RBO_Z#KAS_ACASH_DOC to LOADER;
+
+

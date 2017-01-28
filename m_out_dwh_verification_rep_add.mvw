@@ -1,0 +1,101 @@
+﻿create materialized view U1.M_OUT_DWH_VERIFICATION_REP_ADD
+build deferred
+refresh force on demand
+as
+with comment_new as (
+  select /*+ parallel 5 */
+         row_number() over (partition by verification_id, verification_type order by id desc) as rn__,
+         verification_id,
+         verification_type,
+         cpr_text,
+         manager_text
+    from u1.M_OUT_DWH_VERIFICATION_COMMENT
+)
+
+select /*+ parallel 5 */
+       mod(dense_rank() over (order by v.id), 2)                                 as highlight,
+       dense_rank() over (order by v.id)                                         as "ROWNUM",
+       case
+         when dense_rank() over (partition by v.id, vp.verification_type, trunc(vp.close_time) ORDER BY vp.close_time) = 1 then
+           'Вход'
+         when dense_rank() over (partition by v.id, vp.verification_type, trunc(vp.close_time) ORDER BY vp.close_time) != 1 then
+           'Повтор'
+       end                                                                       as mark,
+       p.display_name                                                            as verificator_fio,
+       case
+         when mc.id is null then
+           regexp_replace(c.last_name, '\W', '?')||' '||regexp_replace(c.first_name, '\W', '?')||' '||regexp_replace(c.sur_name, '\W', '?')
+         else
+           regexp_replace(mc.last_name, '\W', '?')||' '||regexp_replace(mc.first_name, '\W', '?')||' '||regexp_replace(mc.sur_name, '\W', '?')
+       end                                                                       as client_fio,
+       case
+         when (m_v.inserted_date is null) then
+           to_char(v.inserted_date, 'yyyy-mm-dd hh24:mi:ss')
+        else
+          to_char(m_v.inserted_date, 'yyyy-mm-dd hh24:mi:ss')
+       end                                                                       as accept_datetime,
+       to_char(vp.close_time, 'yyyy-mm-dd hh24:mi:ss')                           as accept_date,
+       case
+         when vp.verify_result = '1' and vp.repeat_photo = '0' then
+           'Подтверждён'
+         when vp.verify_result = '0' then
+           'Отказ'
+       end                                                                       as verification_status,
+       vp.verification_type                                                      as verification_type,
+       to_char(vp.open_time, 'yyyy-mm-dd hh24:mi:ss')                            as open_time,
+     to_char(vp.close_time, 'yyyy-mm-dd hh24:mi:ss')                             as close_time,
+     to_char(date'2012-01-01' + (vp.close_time-vp.open_time), 'hh24:mi:ss')      as process_time,
+     case
+       when vp.verification_type='CONTACT' and sg1.name is not null then
+         sg1.name
+       when vp.verification_type='PHOTO' and sg2.name is not null then
+         sg2.name
+       else
+         sg3.name
+     end                                                                         as segment_group,
+     vc.name                                                                     as product,
+     case
+       when mc.iin is null then
+         c.iin
+       else
+         mc.iin
+     end                                                                         as client_iin,
+     case
+       when m_v.folders_id is null then
+         v.folders_id
+       else m_v.folders_id
+     end                                                                         as folder_id,
+     s.name                                                                      as script_name,
+     vg.name                                                                     as vector_group,
+     eg.name                                                                     as employee_group,
+     cmt.cpr_text                                                                as verificator_comment,
+     cmt.manager_text                                                            as manager_comment,
+     case
+       when (vp.PERSON_ID is null) and (vp.SCRIPTREV_ID is null) and (vp.PROCESSFV_ID is null) then
+         'Да'
+       else
+         'Нет'
+     end                                                                         as cashe,
+     vp.repeat_photo                                                             as repeat_photo
+from u1.M_OUT_DWH_VERIFICATION_FOLDER v
+     inner join u1.M_OUT_DWH_VERIFICATION_PROCESS  vp on    vp.verification_id = v.id
+     inner join u1.M_OUT_DWH_VALID_VERIFICATION    vv on    vv.verification_id = v.id
+     inner join u1.M_OUT_DWH_VERIFICATION_CLIENT    c on                  c.id = v.owner_id
+     inner join u1.M_OUT_DWH_VERIFY_GROUP          vg on                 vg.id = v.verifyGroup_id
+     inner join u1.M_OUT_DWH_VERIFY_CR_PROG        vc on                 vc.id = v.verifyCreditProgram_id
+     inner join u1.comment_new                    cmt on   cmt.verification_id = v.id
+                                                     and cmt.verification_type = vp.verification_type
+                                                     and              cmt.rn__ = 1
+     left join u1.M_OUT_DWH_VERIFICATION_SCRIPT     s on                  s.id = vp.scriptrev_id
+     left join u1.M_OUT_DWH_VERIFICATION_PERSON     p on                  p.id = vp.person_id
+     left join u1.M_OUT_DWH_VERIFY_EMP_GROUP       eg on                 eg.id = p.employeeGroup_id
+
+     left join u1.M_OUT_DWH_VERIFICATION_CLIENTM   mc on            vp.mclient = mc.id
+     left join u1.M_OUT_DWH_VERIFICATION_ADD      m_v on      vp.mverification = m_v.id
+
+     left join u1.M_OUT_DWH_SEGMENT_GROUP         sg1 on                sg1.id = vv.segmentgroupcontact_id
+     left join u1.M_OUT_DWH_SEGMENT_GROUP         sg2 on                sg2.id = vv.segmentgroupphoto_id
+     left join u1.M_OUT_DWH_SEGMENT_GROUP         sg3 on                sg3.id = vv.segmentgroup_id;
+grant select on U1.M_OUT_DWH_VERIFICATION_REP_ADD to LOADDB;
+
+

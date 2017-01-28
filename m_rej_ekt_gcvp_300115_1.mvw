@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_REJ_EKT_GCVP_300115_1
+refresh force on demand
+as
+select t.contract_number
+from U1.M_FOLDER_CON_MINER t
+where upper(t.cr_program_name) = 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР'
+  and t.contract_amount > 500000
+  and upper(t.x_dnp_name) = 'КАСКЕЛЕН'
+  and ( upper(t.children) = 'НЕТ' or
+        upper(t.children) is null)
+  and upper(t.pkb_report_status) = 'OK';
+grant select on U1.M_REJ_EKT_GCVP_300115_1 to LOADDB;
+grant select on U1.M_REJ_EKT_GCVP_300115_1 to LOADER;
+
+

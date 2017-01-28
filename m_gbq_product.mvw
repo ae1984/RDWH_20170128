@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_GBQ_PRODUCT
+build deferred
+refresh force on demand
+as
+select id,
+      hit_id,
+      is_impression,
+      impression_list,
+      brand,
+      price,
+      quantity,
+      sku,
+      variant,
+      category,
+      name,
+      position,
+      coupon,
+      idate
+from GBQ.GBQ_PRODUCT@KSVISIT;
+grant select on U1.M_GBQ_PRODUCT to LOADDB;
+
+

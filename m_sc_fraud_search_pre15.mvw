@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_SC_FRAUD_SEARCH_PRE15
+build deferred
+refresh force on demand
+as
+select /*+ parallel(5) */
+       t.rfo_client_id as rfo_client_id,
+       count(distinct case when c.cash_reg_group in ('Внешнии терминалы "Касса 24"','Street Терминалы Каспи банка')
+                                and c.document_date >= add_months(trunc(sysdate),-3)
+                           then c.acash_doc_id end) as ex_terminal_share_count,
+
+       count(distinct case when c.document_date >= add_months(trunc(sysdate),-3)
+                      then c.acash_doc_id end) as terminal_share_count
+
+from u1.V_CLIENT_RFO_BY_ID b
+left join u1.M_RBO_CONTRACT_BAS           t on b.rfo_client_id = t.rfo_client_id
+left join u1.M_CASH_TERMINAL              c on c.rbo_client_id = t.rbo_client_id
+group by t.rfo_client_id;
+grant select on U1.M_SC_FRAUD_SEARCH_PRE15 to LOADDB;
+
+

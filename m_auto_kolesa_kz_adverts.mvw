@@ -1,0 +1,55 @@
+﻿create materialized view U1.M_AUTO_KOLESA_KZ_ADVERTS
+build deferred
+refresh force on demand
+as
+select x.akk_data_id,
+       x.avg_price,
+       /*max(x.akk_id) as */x.akk_id,
+       /*max(x.akk_price) keep (dense_rank last order by x.akk_id) as*/ x.akk_price,
+       x.akk_brend,
+       x.akk_model,
+       x.akk_year_car,
+       x.akk_drive,
+       x.akk_engine_volume,
+       x.akk_kpp_type,
+       x.akk_body_type,
+       /*max(x.akk_fuel_type) keep (dense_rank last order by x.akk_id) as*/ x.akk_fuel_type,
+
+       x.rn
+       --,x.akk_data_price_id
+from (
+      select
+            t.akk_data_id,
+            t.avg_price,
+            a.akk_id,
+            a.akk_price,
+            t.akk_brend,
+            t.akk_model,
+            t.akk_year_car,
+            t.akk_drive,
+            t.akk_engine_volume,
+            t.akk_kpp_type,
+            t.akk_body_type,
+            a.akk_fuel as akk_fuel_type,
+
+            a.akk_data_price_id,
+
+            count(*) over (partition by t.akk_data_id) as cnt_act,
+            row_number() over (partition by t.akk_data_id order by a.akk_price,a.akk_id) as rn
+
+            --count(distinct a.akk_data_price_id) over (partition by t.akk_data_id) as cnt_act,
+            --max(a.advert_cnt) as advert_cnt,
+
+            --min(a.akk_data_price_id) over (partition by t.akk_data_id) as akk_data_price_min,
+            --max(a.akk_data_price_id) over (partition by t.akk_data_id) as akk_data_price_max
+
+      from u1.M_AUTO_KOLESA_KZ_DATA_T t
+      join u1.M_AUTO_KOLESA_KZ_DATA_SUB_T a on a.akk_data_id = t.akk_data_id
+                                               and a.akk_active_bool = 1
+                                               and t.confidence_level = 1
+) x
+where x.cnt_act >= 3;
+grant select on U1.M_AUTO_KOLESA_KZ_ADVERTS to LOADDB;
+grant select on U1.M_AUTO_KOLESA_KZ_ADVERTS to LOAD_MO;
+
+

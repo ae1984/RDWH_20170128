@@ -1,0 +1,29 @@
+﻿create materialized view U1.V_TMP_CON_PRIOR_APPROVED_FLD_T
+refresh force on demand
+as
+select c.contract_number, c.client_iin_last, c.start_date_last,
+       max(cl.rfo_client_id) as rfo_client_id,
+       count(distinct cl.rfo_client_id) as rfo_client_id_cnt,
+       count(distinct f.folder_id) as prior_fld_all_cnt,
+       count(distinct case when f.is_credit_process = 1 then f.folder_id end) as prior_credit_fld_all_cnt,
+       count(distinct case when f.is_credit_process = 1 and f.is_credit_issued = 1
+                      then f.folder_id end) as prior_credit_fld_approved_cnt,
+       count(distinct case when f.is_credit_process = 1 and f.is_credit_issued = 0
+                      then f.folder_id end) as prior_credit_fld_rejected_cnt,
+
+       trunc(max(case when f.is_credit_process = 1 then f.folder_date_create end)) as prior_credit_fld_date_max,
+       trunc(max(case when f.is_credit_process = 1 and f.is_credit_issued = 1
+                      then f.folder_date_create end)) as prior_credit_fld_appr_date_max,
+       trunc(max(case when f.is_credit_process = 1 and f.is_credit_issued = 0
+                      then f.folder_date_create end)) as prior_credit_fld_rej_date_max,
+
+       max(f.folder_id) as folder_id_max,
+       max(case when f.is_credit_process = 1 then f.folder_id end) as credit_folder_id_max
+from V_CONTRACT_CAL c
+left join V_CLIENT_RFO_BY_IIN cl on cl.iin = c.client_iin_last
+left join V_FOLDER_ALL_RFO f on f.rfo_client_id = cl.rfo_client_id and trunc(f.folder_date_create) < c.start_date_last
+group by c.contract_number, c.client_iin_last, c.start_date_last;
+grant select on U1.V_TMP_CON_PRIOR_APPROVED_FLD_T to LOADDB;
+grant select on U1.V_TMP_CON_PRIOR_APPROVED_FLD_T to LOADER;
+
+

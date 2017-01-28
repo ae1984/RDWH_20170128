@@ -1,0 +1,63 @@
+﻿create materialized view U1.M_TMP_J_SC_DEL_A_REJ_CONS
+refresh force on demand
+as
+select m.contract_number from M_FOLDER_CON_MINER_X m -- ok
+where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+          m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')/* and m.is_test = 1*/ and
+          m.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ','ЛУЧШИЙ КЛИЕНТ – НАЛИЧНЫЕ','ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ') and
+      exists (select null from M_TMP_J_SC_DEL_COMB_A_KN15 co where co.profit < 0 and
+                                    co.profit_rate < -10 and co.sales >= 15000000 and
+           co.contract_term_months = floor(m.contract_term_months / 12) * 12 and
+           co.sal_gcvp_to_sal_form = floor(case when m.sal_gcvp_to_sal_form_prc_floor >= 100 then 100
+                      else sal_gcvp_to_sal_form_prc_floor end / 5) * 5 and
+--           co.pkb_report_status = m.pkb_report_status and
+           co.client_new_fresh_old = m.client_new_fresh_old and
+           co.contract_amount_categ_first = m.contract_amount_categ_first and
+           co.x_dnp_name = m.x_dnp_name
+      )
+union all
+select m.contract_number from M_FOLDER_CON_MINER_X m -- ok
+where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+          m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')/* and m.is_test = 1*/ and
+          m.cr_program_name in (/*'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР') and--,*/'КРЕДИТ НАЛИЧНЫМИ'/*,'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ'*/) and
+      exists (select null from M_TMP_J_SC_DEL_COMB_A_KN co where co.profit < 0 and co.sales >= 15000000 and
+           co.contract_term_months = floor(m.contract_term_months / 12) * 12 and
+           co.sal_gcvp_to_sal_form = floor(case when m.sal_gcvp_to_sal_form_prc_floor >= 100 then 100
+                      else sal_gcvp_to_sal_form_prc_floor end / 5) * 5 and
+--           co.pkb_report_status = m.pkb_report_status and
+           co.client_new_fresh_old = m.client_new_fresh_old and
+           co.contract_amount_categ_first = m.contract_amount_categ_first and
+           co.x_dnp_name = m.x_dnp_name
+      )
+union all
+select m.contract_number from M_FOLDER_CON_MINER_X m -- ok
+where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+          m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')/* and m.is_test = 1*/ and
+          m.cr_program_name in (/*'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР') and--,'КРЕДИТ НАЛИЧНЫМИ'*/'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ') and
+      exists (select null from M_TMP_J_SC_DEL_COMB_A_KNP co where co.profit < 0 and co.sales >= 15000000 and
+           co.contract_term_months = floor(m.contract_term_months / 12) * 12 and
+           co.sal_gcvp_to_sal_form = floor(case when m.sal_gcvp_to_sal_form_prc_floor >= 100 then 100
+                      else sal_gcvp_to_sal_form_prc_floor end / 5) * 5 and
+--           co.pkb_report_status = m.pkb_report_status and
+           co.client_new_fresh_old = m.client_new_fresh_old and
+           co.contract_amount_categ_first = m.contract_amount_categ_first and
+           co.x_dnp_name = m.x_dnp_name
+      )
+union all
+select m.contract_number from M_FOLDER_CON_MINER_X m -- ok
+where (m.yy_mm_start_last like '2011 - %' or m.yy_mm_start_last like '2012 - %' or
+          m.yy_mm_start_last like '2013 - %' or m.yy_mm_start_last like '2014 - %')/* and m.is_test = 1*/ and
+          m.cr_program_name in ('ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР') and--,'КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ') and
+      exists (select null from M_TMP_J_SC_DEL_COMB_A co where co.profit < 0 and co.sales >= 15000000 and
+           co.contract_term_months = floor(m.contract_term_months / 12) * 12 and
+           co.sal_gcvp_to_sal_form = floor(case when m.sal_gcvp_to_sal_form_prc_floor >= 100 then 100
+                      else sal_gcvp_to_sal_form_prc_floor end / 5) * 5 and
+--           co.pkb_report_status = m.pkb_report_status and
+           co.client_new_fresh_old = m.client_new_fresh_old and
+           co.contract_amount_categ_first = m.contract_amount_categ_first and
+           co.x_dnp_name = m.x_dnp_name
+      );
+grant select on U1.M_TMP_J_SC_DEL_A_REJ_CONS to LOADDB;
+grant select on U1.M_TMP_J_SC_DEL_A_REJ_CONS to LOADER;
+
+

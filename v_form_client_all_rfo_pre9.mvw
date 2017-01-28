@@ -1,0 +1,12 @@
+﻿create materialized view U1.V_FORM_CLIENT_ALL_RFO_PRE9
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/
+      distinct pr8.collection_id, pr8.c_bool as prop_name
+             from V_RFO_Z#PROPERTIES pr8
+             join V_RFO_Z#PROPERTY_GRP pg8  on pg8.id = pr8.c_group_prop
+             where pg8.c_code = 'GARAZH'       --Наличие гаража 8822897 -- GARAZH;
+grant select on U1.V_FORM_CLIENT_ALL_RFO_PRE9 to LOADDB;
+
+

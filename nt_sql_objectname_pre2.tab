@@ -1,0 +1,21 @@
+﻿create table U1.NT_SQL_OBJECTNAME_PRE2
+(
+  sdt         DATE,
+  object_name VARCHAR2(128) not null,
+  owner       VARCHAR2(128) not null
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_SQL_OBJECTNAME_PRE2 to LOADDB;
+

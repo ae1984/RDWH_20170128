@@ -1,0 +1,34 @@
+﻿create table U1.INS_CONTRACT
+(
+  policy_num          VARCHAR2(30),
+  pledge_contract_num VARCHAR2(30),
+  branch_code         VARCHAR2(3),
+  insured_name        VARCHAR2(150),
+  insured_rnn         VARCHAR2(12),
+  agent_name          VARCHAR2(150),
+  agent_rnn           VARCHAR2(12),
+  sign_date           DATE,
+  start_date          DATE,
+  end_date            DATE,
+  ins_amount          NUMBER(38),
+  premium_amount      NUMBER(38),
+  ins_class           VARCHAR2(100),
+  commission          NUMBER(38),
+  region              VARCHAR2(100)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.INS_CONTRACT to LOADDB;
+grant select on U1.INS_CONTRACT to LOADER;
+

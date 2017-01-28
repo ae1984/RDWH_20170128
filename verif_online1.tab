@@ -1,0 +1,25 @@
+﻿create table U1.VERIF_ONLINE1
+(
+  folder_id           NUMBER,
+  is_sign_require     NUMBER,
+  verification_scheme VARCHAR2(255),
+  verification_date   DATE,
+  question            VARCHAR2(4000),
+  answer_id           NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.VERIF_ONLINE1 to LOADDB;
+grant select on U1.VERIF_ONLINE1 to LOADER;
+

@@ -1,0 +1,24 @@
+﻿create materialized view U1.V_RBO_Z#KAS_MEASURE_PRC
+build deferred
+refresh force on demand
+as
+select id,
+       c_entity_name,
+       c_op_name,
+       c_process_id,
+       c_user_ref,
+       c_object_id,
+       c_object_class,
+       c_param1,
+       c_param2,
+       c_param3,
+       c_param4,
+       c_param5,
+       c_begin_date,
+       c_end_date,
+       sn,
+       su
+  from S01.Z#KAS_MEASURE_PRC@RDWH_EXD;
+grant select on U1.V_RBO_Z#KAS_MEASURE_PRC to LOADDB;
+
+

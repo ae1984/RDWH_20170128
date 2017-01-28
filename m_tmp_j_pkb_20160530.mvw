@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_TMP_J_PKB_20160530
+refresh complete on demand
+as
+select
+   t.id
+   ,t.c_rnn as iin
+   ,t.c_pkb_report_ref
+   --,t.*
+from ibs.Z#PKB_REPORT@rfo t
+where t.id > 84395433180 --это последний ID в RDWH поле индексное
+      --and rownum <=10 --фильтр которые предотвращает падение баз, для полных данных его нужно убрать;
+grant select on U1.M_TMP_J_PKB_20160530 to LOADDB;
+
+

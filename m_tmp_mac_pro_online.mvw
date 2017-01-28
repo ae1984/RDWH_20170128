@@ -1,0 +1,49 @@
+﻿create materialized view U1.M_TMP_MAC_PRO_ONLINE
+refresh force on demand
+as
+select
+--ekt.producer,
+--ekt.product_name,
+--ekt.product_type_name,
+--ekt.shop_name,
+t.shop_name,
+t.x_dnp_name,
+trunc(t.folder_date_create_mi) as date_ratif,
+to_char(t.folder_date_create_mi, 'yyyy - mm') as month_ratif,
+case when trunc(t.folder_date_create_mi)>= to_date('28.01.2015','dd.mm.yyyy') and trunc(t.folder_date_create_mi)<= to_date('13.03.2015','dd.mm.yyyy') then 1 else 0 end as is_cntrl_gr,
+td.week_num_online_credit,
+t.is_credit_issued,
+sum(t.contract_amount),
+avg(t.contract_amount),
+count(distinct cl.id) as req_cnt,
+count(t.rfo_contract_id) as con_cnt,
+count(t.rfo_client_id) as cli_cnt,
+------fspd
+           sum(case when fpd0.is_fpd_0>0 then t.contract_amount else 0 end) as fpd0_del,
+           sum(case when fpd7.is_fpd_7>0 then t.contract_amount else 0 end) as fpd7_del,
+           sum(case when spd.is_spd>0 then t.contract_amount else 0 end) as spd_del,
+-----total
+           sum(t.contract_amount) as total_sum
+
+
+from V_RFO_Z#KAS_ONLINE_CLAIM cl
+join V_RFO_Z#KAS_ONLINE_BUY f on cl.c_buy_ref = f.id
+join m_folder_con_cancel t on t.claim_id = cl.id and t.process_name = 'ОНЛАЙН КРЕДИТ'
+--join V_CONTRACT_EKT_DWH ekt on ekt.contract_number = t.contract_number
+join V_TIME_DAYS td on td.yyyy_mm_dd = trunc(t.folder_date_create_mi)
+left join m_tmp_contract_fpd0 fpd0 on fpd0.deal_number = t.contract_number
+left join m_tmp_contract_fpd7 fpd7 on fpd7.deal_number = t.contract_number
+left join m_tmp_contract_spd spd on spd.deal_number = t.contract_number
+
+group by
+t.shop_name,
+t.x_dnp_name,
+trunc(t.folder_date_create_mi) ,
+to_char(t.folder_date_create_mi, 'yyyy - mm') ,
+case when trunc(t.folder_date_create_mi)>= to_date('28.01.2015','dd.mm.yyyy') and trunc(t.folder_date_create_mi)<= to_date('13.03.2015','dd.mm.yyyy') then 1 else 0 end,
+td.week_num_online_credit,
+t.is_credit_issued;
+grant select on U1.M_TMP_MAC_PRO_ONLINE to LOADDB;
+grant select on U1.M_TMP_MAC_PRO_ONLINE to LOADER;
+
+

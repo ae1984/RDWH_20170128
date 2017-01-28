@@ -1,0 +1,102 @@
+﻿create table U1.T_KASPIKZ_LOG_HTTP_REQUEST
+(
+  id                 NUMBER not null,
+  method             VARCHAR2(100),
+  referer_id         NUMBER,
+  uri_id             NUMBER,
+  user_agent_id      NUMBER,
+  user_id            NUMBER,
+  session_id         NUMBER,
+  asp_session_id     VARCHAR2(100),
+  date_start         DATE,
+  process_time       NUMBER,
+  server_name        VARCHAR2(100),
+  request_trace_guid VARCHAR2(2000),
+  client_ip          VARCHAR2(64),
+  nc_client_ip       VARCHAR2(64),
+  raw_uri_id         NUMBER,
+  actual_uri_id      NUMBER,
+  request_parameters VARCHAR2(4000),
+  security_tag_id    NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_KASPIKZ_LOG_HTTP_REQUEST
+  is 'Журнал HTTP запроcов с временем, именем сервера, и IP пользователя/клиента';
+comment on column U1.T_KASPIKZ_LOG_HTTP_REQUEST.id
+  is 'Идентификатор таблицы';
+comment on column U1.T_KASPIKZ_LOG_HTTP_REQUEST.method
+  is 'Метод запроса';
+comment on column U1.T_KASPIKZ_LOG_HTTP_REQUEST.referer_id
+  is 'Ссылка на справочник хостов, адрес реферрала, с которого пришел запрос';
+comment on column U1.T_KASPIKZ_LOG_HTTP_REQUEST.uri_id
+  is 'Ссылка на справочник, адрес запрашиваемого ресурса(FK на T_KASPIKZ_LOG_URI)';
+comment on column U1.T_KASPIKZ_LOG_HTTP_REQUEST.user_agent_id
+  is 'Ссылка на справочник, строка юзерагент браузера(FK на T_KASPIKZ_LOG_USER_AGENT)';
+comment on column U1.T_KASPIKZ_LOG_HTTP_REQUEST.user_id
+  is 'ID клиента в ИО';
+comment on column U1.T_KASPIKZ_LOG_HTTP_REQUEST.session_id
+  is 'ID сессии';
+comment on column U1.T_KASPIKZ_LOG_HTTP_REQUEST.date_start
+  is 'Дата посещения ИО';
+comment on column U1.T_KASPIKZ_LOG_HTTP_REQUEST.server_name
+  is 'Сервер, на котором в это время был пользователь';
+comment on column U1.T_KASPIKZ_LOG_HTTP_REQUEST.client_ip
+  is 'IP внутреннего сервера';
+comment on column U1.T_KASPIKZ_LOG_HTTP_REQUEST.nc_client_ip
+  is 'IP клиента';
+comment on column U1.T_KASPIKZ_LOG_HTTP_REQUEST.request_parameters
+  is 'Параметры POST запроса';
+comment on column U1.T_KASPIKZ_LOG_HTTP_REQUEST.security_tag_id
+  is 'Ссылка на id в M_KASPIKZ_LOG_SECURITYTAG';
+create index U1.KASPIKZ_LOG_HTTP_REQUEST_IND1 on U1.T_KASPIKZ_LOG_HTTP_REQUEST (SESSION_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_KASPIKZ_LOG_HTTP_REQ_IND2 on U1.T_KASPIKZ_LOG_HTTP_REQUEST (USER_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create unique index U1.T_KASPIKZ_LOG_HTTP_REQ_IND3 on U1.T_KASPIKZ_LOG_HTTP_REQUEST (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_KASPIKZ_LOG_HTTP_REQUEST to LOADDB;
+

@@ -1,0 +1,212 @@
+﻿create materialized view U1.M_FOLDER_CANCEL_BARCODE
+build deferred
+refresh force on demand
+as
+select y2.FOLDER_ID,
+     y2.REJECT_CODE,
+     y2.RFO_CONTRACT_ID,
+     y2.CONTRACT_NUMBER,
+     y2.IS_DUMMY,
+     r.CODE_INT,
+     r.PAR_NAME,
+     r.RULE_ORDER,
+     r.RULE_ORDER_DESC,
+     r.BARCODE
+
+  from (
+      select y.folder_id,
+             y.reject_code,
+
+             max(y.rfo_contract_id) keep (dense_rank first order by y.is_card) as rfo_contract_id,
+             max(y.contract_number) keep (dense_rank first order by y.is_card) as contract_number,
+             max(y.is_credit_issued) as is_dummy
+
+             --,listagg(y.reject_code, ',') within group (order by r.rule_order_desc_2) as reject_codes
+      from (
+          select x.folder_id,
+                 x.rfo_contract_id,
+                 x.contract_number,
+                 x.is_credit_issued,
+                 x.is_card,
+                 x.reject_code
+
+          from (
+
+                select f.folder_id,
+                       f.rfo_contract_id,
+                       f.contract_number,
+                       f.is_credit_issued,
+                       f.is_card,
+
+                       mot.reject_code
+                from u1.m_folder_con_cancel f
+                join (select distinct
+                             mo.folder_id,
+                             mo.par_code as reject_code
+                      from U1.M_FOLDER_MO_CANCEL_LAST mo
+                      where mo.is_rejecting = 1 and
+                            mo.par_code not like 'MO_SCO_REJECT%') mot on mot.folder_id = f.folder_id
+
+                union
+                select f.folder_id,
+                       f.rfo_contract_id,
+                       f.contract_number,
+                       f.is_credit_issued,
+                       f.is_card,
+
+                       prescot.reject_code
+                from u1.m_folder_con_cancel f
+                join (select /*+ parallel 30 */
+                                 folder_id,
+                                 case when t.cancel_type_code = 'PKB_ACT_CRD_CNT1'         then 'RFO_PRESCO_PKB_ACT_CRD'
+                                      when t.cancel_type_code = 'КОЛ_СТАЦ_ТЕЛЕФОНОВ'       then 'RFO_PRESCO_CALL_STAT_TEL'
+                                      when t.cancel_type_code = 'НЕ_РЕЗИДЕНТ'              then 'RFO_PRESCO_NONRESIDENT'
+                                      when t.cancel_type_code = 'ВОЗРАСТ_НЕДОПУСТИМ'       then 'RFO_PRESCO_AGE_NOT_APPLIC'
+                                      when t.cancel_type_code = 'GCVP_SAL_LESS'            then 'RFO_PRESCO_GCVP_SAL_LESS'
+                                      when t.cancel_type_code = 'GCVP_DAYS_ELAPS_OVER'     then 'RFO_PRESCO_GCVP_DAYS_ELAPS'
+                                      when t.cancel_type_code = 'PKB_CRD_OVERDUE_CUR'      then 'RFO_PRESCO_PKB_CRD_OVERDUE'
+                                      when t.cancel_type_code = 'ПОПЫТОК_БОЛЕЕ_4Д8М30'     then 'RFO_PRESCO_ATMPTS_4D8M30'
+                                      when t.cancel_type_code = 'CLN_MAX_DELAY'            then 'RFO_PRESCO_CLN_MAX_DELAY'
+                                      when t.cancel_type_code = 'CLN_MONEY_CRED_EXIST'     then 'RFO_PRESCO_MONEY_CRED_EXIST'
+                                      when t.cancel_type_code = 'VERIFICATION_RATING'      then 'RFO_PRESCO_VERIF_RATING'
+                                      when t.cancel_type_code = 'REFUSAL_PART_IN_ACT'      then 'RFO_PRESCO_REF_PART_IN_ACT'
+                                 end as reject_code
+                          from U1.T_CANCEL t
+                          join (
+                              select distinct
+                                     t.cancel_code,
+                                     t.cancel_type
+                              from U1.V_RFO_CANCEL_TYPES_ALL t
+                              where t.cancel_type in ('AUTO','GCVP') and
+                                    t.cancel_error_level = 1 and
+                                    t.cancel_code not in ('VERIFICATION_CONTACT',
+                                                          'VERIFICATION_PHOTO',
+                                                          'AA_CALC_4_3RD_LOAN',
+                                                          'BL_REJECT_ASOKR')
+                               ) c on c.cancel_code  = t.cancel_type_code and c.cancel_type = t.cancel_type_group
+                          where t.cancel_level = 1
+                                and folder_id is not null
+
+                          and t.cancel_type_code in (
+                           'PKB_ACT_CRD_CNT1',-- then 1 else 0 end) > 0 then 1 else 0 end as "(1)PKB_ACT_CRD",--1
+                           'КОЛ_СТАЦ_ТЕЛЕФОНОВ',-- then 1 else 0 end) > 0 then 1 else 0 end as "(2)CALL_STAT_TEL",--2
+                           'НЕ_РЕЗИДЕНТ',-- then 1 else 0 end) > 0 then 1 else 0 end as "(3)NONRESIDENT",--3
+                           'ВОЗРАСТ_НЕДОПУСТИМ',-- then 1 else 0 end) > 0 then 1 else 0 end as "(4)AGE_NOT_APPLIC",--4
+                           'GCVP_SAL_LESS',-- then 1 else 0 end) > 0 then 1 else 0 end as "(5)GCVP_SAL_LESS",--5
+                           'GCVP_DAYS_ELAPS_OVER',-- then 1 else 0 end) > 0 then 1 else 0 end as "(6)GCVP_DAYS_ELAPS",--6
+                           'PKB_CRD_OVERDUE_CUR',-- then 1 else 0 end) > 0 then 1 else 0 end as "(7)PKB_CRD_OVERDUE",--7
+                           'ПОПЫТОК_БОЛЕЕ_4Д8М30',-- then 1 else 0 end) > 0 then 1 else 0 end as "(8)ATMPTS_4D8M30",--8
+                           'CLN_MAX_DELAY',-- then 1 else 0 end) > 0 then 1 else 0 end as "(9)CLN_MAX_DELAY",--9
+                           'CLN_MONEY_CRED_EXIST',-- then 1 else 0 end) > 0 then 1 else 0 end as "(10)MNY_CRED_EXIS",--10
+                           'VERIFICATION_RATING',-- then 1 else 0 end) > 0 then 1 else 0 end as "(11)VERIF_RATING",--11
+                           'REFUSAL_PART_IN_ACT'-- then 1 else 0 end) > 0 then 1 else 0 end as "(12)REF_PART_IN_AC",--12
+                          )) prescot on prescot.folder_id = f.folder_id
+
+                union
+                select f.folder_id,
+                       f.rfo_contract_id,
+                       f.contract_number,
+                       f.is_credit_issued,
+                       f.is_card,
+
+                       aat.reject_code
+                from u1.m_folder_con_cancel f
+                join (select /*+ parallel 30 */
+                                 distinct
+
+                                 --t.rfo_contract_id,
+                                 t.folder_id,
+
+                                 case when t.auto_calc_result in ('НЕТ ДАТЫ ОКОНЧ ВИДА НА ЖИТЕЛЬСТВО',
+                                                                  'У КЛИЕНТА НАСТУПИЛА ДАТА ОКОНЧАНИЯ ВИДА НА ЖИТЕЛЬСТВО')
+                                                              then 'RFO_AA_VID_NA_ZHITEL'
+
+                                      when t.auto_calc_result in ('ПЕНСИОННЫЙ ВОЗРАСТ')
+                                                              then 'RFO_AA_PENS_AGE'
+
+                                      when t.auto_calc_result in ('ИЗМЕНИТЬ СРОК ДО 39 МЕС ИЛИ ПВ=50%',
+                                                                  'ТРЕБУЕТСЯ ИЗМЕНИТЬ СРОК ИЛИ ВНЕСТИ ПВ',
+                                                                  'ТРЕБУЕТСЯ ВНЕСТИ ПВ')
+                                                              then 'RFO_AA_DP_AUTO'
+
+                                      when t.auto_calc_result in ('ОТКАЗ ПО ВЕРИФИКАЦИИ')
+                                                              then 'RFO_AA_VERIFICATION'
+
+                                      when t.auto_calc_result in ('ОШИБКА','СУММА ПРОСРОЧКИ БОЛЬШЕ МАКС','НЕТ ОТЧЕТА ПКБ','СТАТУС ПО ЗАКР ЗАЙМУ','СТАТУС ПО ТЕК ЗАЙМУ',
+                                                                  'У КЛИЕНТА ЕСТЬ ТЕКУЩИЙ ЗАЙМ, ПО КОТОРОМУ НЕТ АКТУАЛЬНОЙ ИНФОРМАЦИИ В PKB.',
+                                                                  'ФОРМА РАСЧЕТА ПО ЗАКР ЗАЙМУ', 'ТЕК ЗАЙМ БЕЗ АКТУАЛЬНО ИНФО В ПКБ','НЕПОГАШ СУММА ПО ЗАКР ЗАЙМУ','КЛАСС ПО ЗАКР ЗАЙМУ','КЛАСС ПО ТЕК ЗАЙМУ',
+                                                                  'ИПОТЕКА В KASPI','НЕПОГАШЕННЫЙ ТЕК ЗАЙМ','НЕПОГАШЕННЫЙ ТЕК ЗАЙМ KASPI','ПОСРОЧКА ПО ЗАКР ЗАЙМУ', 'ПОСРОЧКА ПО ТЕК ЗАЙМУ')
+                                                              then 'RFO_AA_PKB'
+
+                                      when t.auto_calc_result in ('НЕТ ОТЧЕТА ГЦВП','КОЛ-ВО ДНЕЙ МЕЖДУ НАЧИСЛЕНИЯМИ','КОЛ-ВО ДНЕЙ ПОСЛЕ НАЧИСЛЕНИЯ','КОЛ-ВО НАЧИСЛЕНИЙ','ЛК. КОЛ-ВО ДНЕЙ ПОСЛЕ НАЧИСЛЕНИЯ',
+                                                                  'РАБОТОДАТЕЛЬ ФИЗ ЛИЦО')
+                                                              then 'RFO_AA_GCVP'
+
+                                      when t.auto_calc_result in ('БЕКИ','ОТКАЗ','ОТКАЗ АЛЬТЕРНАТИВА','НЕ НАЙДЕН СРОК',
+                                                                  'НЕ УДАЛОСЬ ПОЛУЧИТЬ СУММУ СТРАХОВОЙ КОММИССИИ, ТРЕБУЕТСЯ РУЧНОЙ РАСЧЕТ')
+                                                              then 'RFO_AA_CALCUL_KN'
+
+                                      when t.auto_calc_result in ('ДОКУМЕНТ "KAS. РЕЗУЛЬТАТ АВТОМАТИЧЕСКОГО КАЛЬКУЛЯТОРА" НЕ СОЗДАН','ДОКУМЕНТ ЛKAS. РЕЗУЛЬТАТ АВТОМАТИЧЕСКОГО КАЛЬКУЛЯТОРА» НЕ СОЗДАН',
+                                                                  'ДОКУМЕНТ С РЕЗУЛЬТАТОМ НЕ СОЗДАН')
+                                                              then 'RFO_AA_DOC_NOT_CREAT'
+
+                                 end as reject_code
+
+
+                          from u1.v_contract_all_rfo t
+                          where t.contract_date >= to_date('01012013', 'ddmmyyyy')
+                                and t.auto_calc_result in (
+                                'НЕТ ДАТЫ ОКОНЧ ВИДА НА ЖИТЕЛЬСТВО', 'У КЛИЕНТА НАСТУПИЛА ДАТА ОКОНЧАНИЯ ВИДА НА ЖИТЕЛЬСТВО',--) then 1 else 0 end)>0 then 1 else 0 end as "(67)VID_NA_ZHITEL",
+                                'ПЕНСИОННЫЙ ВОЗРАСТ',--) then 1 else 0 end) > 0 then 1 else 0 end as "(68)PENS_AGE",
+                                'ИЗМЕНИТЬ СРОК ДО 39 МЕС ИЛИ ПВ=50%','ТРЕБУЕТСЯ ИЗМЕНИТЬ СРОК ИЛИ ВНЕСТИ ПВ','ТРЕБУЕТСЯ ВНЕСТИ ПВ',--) then 1 else 0 end)>0 then 1 else 0 end  as "(69)DP_AUTO",
+                                'ОТКАЗ ПО ВЕРИФИКАЦИИ',--) then 1 else 0 end)>0 then 1 else 0 end  as "(70)VERIFICATION",
+                                'ОШИБКА','СУММА ПРОСРОЧКИ БОЛЬШЕ МАКС','НЕТ ОТЧЕТА ПКБ','СТАТУС ПО ЗАКР ЗАЙМУ','СТАТУС ПО ТЕК ЗАЙМУ','У КЛИЕНТА ЕСТЬ ТЕКУЩИЙ ЗАЙМ, ПО КОТОРОМУ НЕТ АКТУАЛЬНОЙ ИНФОРМАЦИИ В PKB.',
+                                         'ФОРМА РАСЧЕТА ПО ЗАКР ЗАЙМУ',
+                                         'ТЕК ЗАЙМ БЕЗ АКТУАЛЬНО ИНФО В ПКБ','НЕПОГАШ СУММА ПО ЗАКР ЗАЙМУ','КЛАСС ПО ЗАКР ЗАЙМУ','КЛАСС ПО ТЕК ЗАЙМУ',
+                                         'ИПОТЕКА В KASPI','НЕПОГАШЕННЫЙ ТЕК ЗАЙМ','НЕПОГАШЕННЫЙ ТЕК ЗАЙМ KASPI','ПОСРОЧКА ПО ЗАКР ЗАЙМУ', 'ПОСРОЧКА ПО ТЕК ЗАЙМУ',--) then 1 else 0 end)>0 then 1 else 0 end  as "(71)PKB",
+                                'НЕТ ОТЧЕТА ГЦВП','КОЛ-ВО ДНЕЙ МЕЖДУ НАЧИСЛЕНИЯМИ','КОЛ-ВО ДНЕЙ ПОСЛЕ НАЧИСЛЕНИЯ','КОЛ-ВО НАЧИСЛЕНИЙ','ЛК. КОЛ-ВО ДНЕЙ ПОСЛЕ НАЧИСЛЕНИЯ','РАБОТОДАТЕЛЬ ФИЗ ЛИЦО',--) then 1 else 0 end)>0 then 1 else 0 end  as "(72)GCVP",
+                                'БЕКИ','ОТКАЗ','ОТКАЗ АЛЬТЕРНАТИВА','НЕ НАЙДЕН СРОК','НЕ УДАЛОСЬ ПОЛУЧИТЬ СУММУ СТРАХОВОЙ КОММИССИИ, ТРЕБУЕТСЯ РУЧНОЙ РАСЧЕТ',--) then 1 else 0 end)>0 then 1 else 0 end  as "(73)CALCUL_KN",
+                                'ДОКУМЕНТ "KAS. РЕЗУЛЬТАТ АВТОМАТИЧЕСКОГО КАЛЬКУЛЯТОРА" НЕ СОЗДАН','ДОКУМЕНТ ЛKAS. РЕЗУЛЬТАТ АВТОМАТИЧЕСКОГО КАЛЬКУЛЯТОРА» НЕ СОЗДАН','ДОКУМЕНТ С РЕЗУЛЬТАТОМ НЕ СОЗДАН'--) then 1 else 0 end)>0 then 1 else 0 end  as "(74)DOC_NOT_CREAT",
+                                )) aat on aat.folder_id = f.folder_id
+
+                union
+                select f.folder_id,
+                       f.rfo_contract_id,
+                       f.contract_number,
+                       f.is_credit_issued,
+                       f.is_card,
+
+                       postt.reject_code
+                from u1.m_folder_con_cancel f
+                join (select /*+ parallel 30 */
+                                 f.folder_id,
+
+                                 case when sum(nvl(f.cancel_manager,0)+nvl(f.cancel_cpr_aa,0)+nvl(f.cancel_verificator,0))>0 and sum(nvl(f.is_aa_reject,0)) < 1
+                                           then 'RFO_POST_MANUAL'
+                                 end as reject_code
+
+
+                          from u1.m_folder_con_cancel f
+                          where f.folder_date_create_mi >= to_date('01012013', 'ddmmyyyy')
+                          group by f.folder_id) postt on postt.folder_id = f.folder_id
+          ) x
+          where x.reject_code is not null
+                --and x.reject_code not like 'MO_SCO_REJECT%'
+                /*and x.folder_id = --2213088035
+                                  1451024402*/
+
+      ) y
+      group by y.folder_id,
+               y.reject_code
+               --y.rfo_contract_id,
+               --y.contract_number,
+               --y.is_credit_issued
+  ) y2
+  left join M_CANCEL_ORDER_D r on r.code_int = y2.reject_code
+  /*group by y2.folder_id,
+           y2.rfo_contract_id,
+           y2.contract_number,
+           y2.is_dummy*/;
+grant select on U1.M_FOLDER_CANCEL_BARCODE to LOADDB;
+
+

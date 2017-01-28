@@ -1,0 +1,119 @@
+﻿create materialized view U1.V_RFO_PROCESSES_30_DAYS
+build deferred
+refresh complete on demand
+as
+select /*+parallel(30) parallel_index(30) */
+      bp7.id as process_id,
+      bp7.c_code as process_code,
+      upper(bp7.c_name) as process_name,
+          case when bp7.c_code in (
+                      'OPEN_CRED_PRIV_PC',
+                      'KAS_AUTO_CRED_PRIV_PC',
+                      'KAS_CREDIT_CASH_PRIV_PC',
+                      'SET_REVOLV',
+                      'KAS_OPEN_CRED_PRIV_MIN',
+                      'KAS_AUTO_CRED_PRIV',
+                      'OPEN_PC',
+                      'KAS_CREDIT_CASH_PRIV',
+                      'OPEN_CRED_PRIV',
+                      'OPEN_TRANSH',
+                      'OPEN_CRED_PRIV_CRL',
+                      'OPEN_CRED_PRIV_OLD',
+                      'KAS_PC_RATES',
+                      'ONLINE_CRED',
+                      'KASPI_RED'
+             ) then 1 end as
+      is_credit_process,
+      min(cp.c_date_create) as fld_date_min,
+      max(cp.c_date_create) as fld_date_max,
+      count(distinct cp.id) as fld_cnt_30d,
+      count(distinct case when uc.c_username = 'ESB_USER' then cp.id end) as fld_cnt_30d_not_day_dec,
+
+      max(mo.is_exists) as MO_SCO_exists,
+      round(count(distinct mo.rfo_folder_id)/count(distinct f7.id)*100,2) as MO_SCO_perc,
+
+      max(rfd1.is_exists) as KAS_PC_DOG_exists,
+      round(count(rfd1.id)/count(f7.id)*100,2) as KAS_PC_DOG_perc,
+      max(rfd2.is_exists) as CREDIT_DOG_exists,
+      round(count(rfd2.id)/count(f7.id)*100,2) as CREDIT_DOG_perc,
+      max(rfd3.is_exists) as FORM_CLIENT_exists,
+      round(count(rfd3.id)/count(f7.id)*100,2) as FORM_CLIENT_perc,
+      max(rfd4.is_exists) as KAS_MONITORING_exists,
+      round(count(rfd4.id)/count(f7.id)*100,2) as KAS_MONITORING_perc,
+      max(rfd5.is_exists) as PKB_REPORT_exists,
+      round(count(rfd5.id)/count(f7.id)*100,2) as PKB_REPORT_perc,
+      max(rfd6.is_exists) as KAS_GCVP_REPORT_exists,
+      round(count(rfd6.id)/count(f7.id)*100,2) as KAS_GCVP_REPORT_perc,
+      max(rfd7.is_exists) as KAS_VERIFICATION_exists,
+      round(count(rfd7.id)/count(f7.id)*100,2) as KAS_VERIFICATION_perc,
+      max(rfd9.is_exists) as KAS_DECISION_exists,
+      round(count(rfd9.id)/count(f7.id)*100,2) as KAS_DECISION_perc,
+      max(rfd10.is_exists) as REQ_EDIT_CL_PRIV_exists,
+      round(count(rfd10.id)/count(f7.id)*100,2) as REQ_EDIT_CL_PRIV_perc,
+
+      max(rfd11.is_exists) as OTHER_DOC_exists,
+      round(count(rfd11.id)/count(f7.id)*100,2) as OTHER_DOC_perc
+from V_RFO_Z#FOLDERS f7
+join V_RFO_Z#CM_CHECKPOINT cp on cp.id = f7.id and cp.c_date_create > trunc(sysdate) - 30
+join V_RFO_Z#BUS_PROCESS bp7 on bp7.id = f7.c_business
+left join V_RFO_Z#USER uc on uc.id = cp.c_create_user
+left join (
+    select distinct ppv1.value_number as rfo_folder_id, 1 as is_exists
+    from MO_PROCESS p
+    join MO_PROCESS_PAR_VALUE ppv1 on ppv1.process_id = p.id and ppv1.d_par_id = 1010 -- IN_SCO_FOLDER_ID
+    where p.date_start > trunc(sysdate) - 90 and p.d_process_id = 1000 -- MO_SCO
+) mo on mo.rfo_folder_id = f7.id
+
+left join (select rd.collection_id, fd.id, 1 as is_exists
+                 from V_RFO_Z#RDOC rd join V_RFO_Z#FDOC fd
+                      on fd.id = rd.c_doc and fd.class_id = 'KAS_PC_DOG') rfd1
+            on rfd1.collection_id = f7.c_docs
+left join (select rd.collection_id, fd.id, 1 as is_exists
+                 from V_RFO_Z#RDOC rd join V_RFO_Z#FDOC fd
+                      on fd.id = rd.c_doc and fd.class_id = 'CREDIT_DOG') rfd2
+            on rfd2.collection_id = f7.c_docs
+left join (select rd.collection_id, fd.id, 1 as is_exists
+                 from V_RFO_Z#RDOC rd join V_RFO_Z#FDOC fd
+                      on fd.id = rd.c_doc and fd.class_id = 'FORM_CLIENT') rfd3
+            on rfd3.collection_id = f7.c_docs
+left join (select rd.collection_id, fd.id, 1 as is_exists
+                 from V_RFO_Z#RDOC rd join V_RFO_Z#FDOC fd
+                      on fd.id = rd.c_doc and fd.class_id = 'KAS_MONITORING') rfd4
+            on rfd4.collection_id = f7.c_docs
+left join (select rd.collection_id, fd.id, 1 as is_exists
+                 from V_RFO_Z#RDOC rd join V_RFO_Z#FDOC fd
+                      on fd.id = rd.c_doc and fd.class_id = 'PKB_REPORT') rfd5
+            on rfd5.collection_id = f7.c_docs
+left join (select rd.collection_id, fd.id, 1 as is_exists
+                 from V_RFO_Z#RDOC rd join V_RFO_Z#FDOC fd
+                      on fd.id = rd.c_doc and fd.class_id = 'KAS_GCVP_REPORT') rfd6
+            on rfd6.collection_id = f7.c_docs
+left join (select rd.collection_id, fd.id, 1 as is_exists
+                 from V_RFO_Z#RDOC rd join V_RFO_Z#FDOC fd
+                      on fd.id = rd.c_doc and fd.class_id = 'KAS_VERIFICATION') rfd7
+            on rfd7.collection_id = f7.c_docs
+left join (select rd.collection_id, fd.id, 1 as is_exists
+                 from V_RFO_Z#RDOC rd join V_RFO_Z#FDOC fd
+                      on fd.id = rd.c_doc and fd.class_id = 'KAS_DECISION') rfd9
+            on rfd9.collection_id = f7.c_docs
+left join (select rd.collection_id, fd.id, 1 as is_exists
+                 from V_RFO_Z#RDOC rd join V_RFO_Z#FDOC fd
+                      on fd.id = rd.c_doc and fd.class_id = 'REQ_EDIT_CL_PRIV') rfd10
+            on rfd10.collection_id = f7.c_docs
+left join (select rd.collection_id, fd.id, 1 as is_exists
+                 from V_RFO_Z#RDOC rd join V_RFO_Z#FDOC fd
+                      on fd.id = rd.c_doc and fd.class_id not in (
+                            'KAS_PC_DOG',
+                            'CREDIT_DOG',
+                            'FORM_CLIENT',
+                            'KAS_MONITORING',
+                            'PKB_REPORT',
+                            'KAS_GCVP_REPORT',
+                            'KAS_VERIFICATION',
+                            'KAS_DECISION',
+                            'REQ_EDIT_CL_PRIV')) rfd11
+            on rfd11.collection_id = f7.c_docs
+group by bp7.id, bp7.c_code, bp7.c_name;
+grant select on U1.V_RFO_PROCESSES_30_DAYS to LOADDB;
+
+

@@ -1,0 +1,67 @@
+﻿create materialized view U1.M_APP_MINER_FORM_CLIENT2
+build deferred
+refresh complete on demand
+as
+select /*+ parallel(10) */
+       fa.app_id,
+       fa.rfo_client_id,
+       fa.folder_id,
+
+       fa.form_client_id,
+       fa.form_client_date,
+
+       case when substr(trim(fa.phone_mobile), 2, 3) = '701' then 3
+            when substr(trim(fa.phone_mobile), 2, 3) = '702' then 2
+            when substr(trim(fa.phone_mobile), 2, 3) = '705' then 2
+            when substr(trim(fa.phone_mobile), 2, 3) = '771' then 2
+            when substr(trim(fa.phone_mobile), 2, 3) = '775' then 2
+            when substr(trim(fa.phone_mobile), 2, 3) = '776' then 2
+            when substr(trim(fa.phone_mobile), 2, 3) = '777' then 2
+            when substr(trim(fa.phone_mobile), 2, 3) = '778' then 2
+            when substr(trim(fa.phone_mobile), 2, 3) = '700' then 1
+            when substr(trim(fa.phone_mobile), 2, 3) = '707' then 1
+            when substr(trim(fa.phone_mobile), 2, 3) = '708' then 1
+            when substr(trim(fa.phone_mobile), 2, 3) = '747' then 1
+       end as operator_value,
+
+       (case when substr(trim(fa.phone_mobile), 5, 7)like'%0%' then 1 else 0 end)
+        +(case when substr(trim(fa.phone_mobile), 5, 7)like'%1%' then 1 else 0 end)
+        +(case when substr(trim(fa.phone_mobile), 5, 7)like'%2%' then 1 else 0 end)
+        +(case when substr(trim(fa.phone_mobile), 5, 7)like'%3%' then 1 else 0 end)
+        +(case when substr(trim(fa.phone_mobile), 5, 7)like'%4%' then 1 else 0 end)
+        +(case when substr(trim(fa.phone_mobile), 5, 7)like'%5%' then 1 else 0 end)
+        +(case when substr(trim(fa.phone_mobile), 5, 7)like'%6%' then 1 else 0 end)
+        +(case when substr(trim(fa.phone_mobile), 5, 7)like'%7%' then 1 else 0 end)
+        +(case when substr(trim(fa.phone_mobile), 5, 7)like'%8%' then 1 else 0 end)
+        +(case when substr(trim(fa.phone_mobile), 5, 7)like'%9%' then 1 else 0 end) as unique_sumbol_qty,
+
+
+       case when substr(fa.phone_mobile,2,3) in ( '701'
+                                                       ,'702'
+                                                       ,'705'
+                                                       ,'771'
+                                                       ,'775'
+                                                       ,'776'
+                                                       ,'777'
+                                                       ,'778'
+                                                       ,'700'
+                                                       ,'707'
+                                                       ,'708'
+                                                       ,'747'
+                                                     )
+            then
+                replace(replace(replace(replace(replace(replace(replace(substr(fa.phone_mobile,5,7), substr(substr(fa.phone_mobile,5,7),1,1), 'A'),
+                                                                substr(substr(fa.phone_mobile,5,7),2,1), 'B'),
+                                                        substr(substr(fa.phone_mobile,5,7),3,1), 'C'),
+                                                substr(substr(fa.phone_mobile,5,7),4,1), 'D'),
+                                        substr(substr(fa.phone_mobile,5,7),5,1), 'X'),
+                                substr(substr(fa.phone_mobile,5,7),6,1), 'Y'),
+                        substr(substr(fa.phone_mobile,5,7),7,1),'Z')
+
+            else '-------' end as mask_cellphone
+
+
+from u1.M_APP_MINER_FORM_CLIENT fa;
+grant select on U1.M_APP_MINER_FORM_CLIENT2 to LOADDB;
+
+

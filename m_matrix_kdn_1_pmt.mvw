@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_MATRIX_KDN_1_PMT
+build deferred
+refresh complete on demand
+as
+select fcc.rfo_contract_id, -- платежи - есть только по выданным
+       p.pmt_avg,
+       pc.pmt_avg_07, pc.pmt_avg_10
+from M_FOLDER_CON_CANCEL fcc
+left join M_RBO_CONTRACT_CREDIT_PMT p on p.contract_number = fcc.contract_number
+left join M_RBO_CONTRACT_CARD_PMT pc on pc.contract_number = fcc.contract_number and
+                                        pc.date_begin <= trunc(fcc.folder_date_create_mi) and
+                                        pc.date_end >= trunc(fcc.folder_date_create_mi);
+grant select on U1.M_MATRIX_KDN_1_PMT to LOADDB;
+grant select on U1.M_MATRIX_KDN_1_PMT to LOADER;
+
+

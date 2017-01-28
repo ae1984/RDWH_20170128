@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_KASPIKZ_LOG_MANAGER_SESS
+build deferred
+refresh force on demand
+as
+select t."id" as id,
+       t."ManagerId" as manager_id,
+       t."GUID" as session_guid,
+       to_date(to_char(t."DateTime",'dd.mm.yyyy hh24:mi:ss'), 'dd.mm.yyyy hh24:mi:ss')as date_time
+from "dbo"."log_KaspiManagerSessions"@"db_kr2" t;
+grant select on U1.M_KASPIKZ_LOG_MANAGER_SESS to LOADDB;
+
+

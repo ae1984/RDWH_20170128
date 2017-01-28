@@ -1,0 +1,115 @@
+﻿create materialized view U1.M_CONTRACT_PARAM_KDN5
+refresh force on demand
+as
+select --+ parallel(30) parallel_index(30)
+       case when a.form_income_total > 0 then
+                round((coalesce(a.contract_pmt,0) + coalesce(b.other_deal_pmt,0) + coalesce(c.pkb_pmt,0)) /
+                          a.form_income_total * 100, 2)
+            else 99999999 end as kdn_form,
+
+       case when a.form_income_gcvp_salary_max > 0 then
+                round((coalesce(a.contract_pmt,0) + coalesce(b.other_deal_pmt,0) + coalesce(c.pkb_pmt,0)) /
+                          a.form_income_gcvp_salary_max * 100, 2)
+            else 99999999 end as kdn_form_salary_max,
+
+       case when a.salary_gcvp > 0 then
+                round((coalesce(a.contract_pmt,0) + coalesce(b.other_deal_pmt,0) + coalesce(c.pkb_pmt,0)) /
+                          a.salary_gcvp * 100, 2)
+            else 99999999 end as kdn_gcvp_salary,
+
+       case when a.form_income_gcvp_salary_max > 0 then
+                round((coalesce(a.contract_pmt,0) + coalesce(b.other_deal_pmt,0)/* + coalesce(c.pkb_pmt,0)*/) /
+                          a.form_income_gcvp_salary_max * 100, 2)
+            else 99999999 end as kdn_kaspi,
+
+       case when a.form_income_gcvp_salary_max > 0 then
+                round((/*coalesce(a.contract_pmt,0) + coalesce(b.other_deal_pmt,0) + */coalesce(c.pkb_pmt,0)) /
+                          a.form_income_gcvp_salary_max * 100, 2)
+            else 99999999 end as kdn_other,
+
+       case when a.form_income_gcvp_salary_max > 0 then
+                round((coalesce(a.contract_pmt_v2,0) + coalesce(b.other_deal_pmt_v2,0) + coalesce(c.pkb_pmt_v2,0)) /
+                          a.form_income_gcvp_salary_max * 100, 2)
+            else 99999999 end as kdn_nb_v2,
+
+       case when a.form_income_gcvp_salary_max > 0 then
+                round((coalesce(a.contract_pmt_v2,0) + coalesce(b.other_deal_pmt_v2,0)/* + coalesce(c.pkb_pmt_new,0)*/) /
+                          a.form_income_gcvp_salary_max * 100, 2)
+            else 99999999 end as kdn_nb_kaspi_v2,
+
+       case when a.form_income_gcvp_salary_max > 0 then
+                round((/*coalesce(a.contract_pmt_new,0) + coalesce(b.other_deal_pmt_new,0) + */coalesce(c.pkb_pmt_v2,0)) /
+                          a.form_income_gcvp_salary_max * 100, 2)
+            else 99999999 end as kdn_nb_other_v2,
+
+
+       case when a.form_income_total < nvl(sv.salary_double, 99999999)then 1 else 0 end as is_kdn_regulated_sal_form,
+       case when a.form_income_gcvp_salary_max < nvl(sv.salary_double, 99999999) then 1 else 0 end as is_kdn_regulated_sal_max,
+       case when a.salary_gcvp < nvl(sv.salary_double, 99999999) then 1 else 0 end as is_kdn_regulated_sal_gcvp,
+
+       a.deal_number,
+       a.client_iin,
+       a.x_client_id,
+       a.prod_type,
+       a.x_start_date,
+       a.yy_mm_start,
+       a.x_is_refin_prod_type,
+       a.begin_date,
+       a.yy_mm_start_b,
+       a.rfo_client_id,
+       a.folder_id_first,
+       a.form_client_id,
+       a.form_client_found_type,
+       a.form_client_age_days,
+       a.gcvp_rep_id,
+       a.gcvp_rep_found_type,
+       a.gcvp_age_days,
+       a.pkb_rep_id,
+       a.pkb_rep_found_type,
+       a.pkb_age_days,
+       a.is_error,
+       a.form_income_total,
+       a.form_inc_sal,
+       a.form_inc_sal_add,
+       a.form_inc_sal_spouse,
+       a.form_inc_rent,
+       a.form_inc_pension_benefits,
+       a.form_inc_interest,
+       a.form_income_gcvp_salary_max,
+       a.contract_pmt,
+       a.salary_gcvp,
+       a.is_open_after_x,
+       a.is_ref_res,
+       a.is_pmt_rise,
+       a.contract_number_new,
+       a.is_result_open_after_x,
+       a.is_result_ref_res,
+       a.is_ref_hard,
+       a.is_ref_hard_same_day,
+       b.other_deal_pmt, b.other_written_off_con_count, b.other_delinq_con_count,
+       b.other_ok_con_count, b.other_con_count, b.other_dist_con_count,
+       c.pkb_pmt, c.pkb_pmt_wo_st_ext, c.pkb_pmt_wo_prim, c.pkb_pmt_del_st_ext,
+       c.pkb_pmt_del_prim, c.pkb_pmt_no_del_st_ext, c.outstanding_sum,
+       c.overdue_sum, c.monthly_payment_limit_max, c.monthly_payment_wo_limit,
+       c.monthly_payment_by_limit,
+       sv.salary_double avg_salary_limit,
+
+       case when a.form_income_gcvp_salary_max > 0 then
+           round((coalesce(pc.pmt,0) + coalesce(b.other_deal_pmt,0)) /
+                   coalesce(a.form_income_gcvp_salary_max,0) * 100, 2)
+       else 99999999 end as kdn_simple_rbo,
+
+       case when a.form_income_gcvp_salary_max > 0 then
+           round((coalesce(pc.pmt_nom_rate,0) + coalesce(b.other_deal_pmt,0)) /
+                       coalesce(a.form_income_gcvp_salary_max,0) * 100, 2)
+       else 99999999 end as kdn_simple_nom_rate
+
+from M_CONTRACT_PARAM_KDN1 a
+join V_DWH_PORTFOLIO_CURRENT pc on a.deal_number = pc.deal_number
+left join M_CONTRACT_PARAM_KDN2 b on b.deal_number = a.deal_number
+left join M_PKB_REPORT_PARAM2 c on c.report_id = a.pkb_rep_id
+left join T_SALARY_AVERAGE sv on sv.ym_str = a.yy_mm_start;
+grant select on U1.M_CONTRACT_PARAM_KDN5 to LOADDB;
+grant select on U1.M_CONTRACT_PARAM_KDN5 to LOADER;
+
+

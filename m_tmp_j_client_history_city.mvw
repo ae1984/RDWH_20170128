@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_TMP_J_CLIENT_HISTORY_CITY
+refresh complete on demand
+as
+select a.*, coalesce(b.city,'UNKNOWN') as city,
+       bb.is_del_pmt_1, bb.is_del_pmt_2, bb.is_del_pmt_3, bb.is_del_pmt_4
+from (
+    select c.client_iin_last as iin,
+           t.text_yyyy_mm,
+           max(c.client_id) as client_id,
+           max(t.delinq_days_in_month) as del_days,
+           max(t.pmt_in_month) as pmt,
+           max(t.total_debt_in_month) as total_debt,
+           max(t.number_of_con_in_month) as number_of_con_in_month
+    from V_CLIENT_HISTORY t
+    join V_CLIENT_CAL c on c.client_id = t.client_id
+    where t.text_yyyy_mm >= '2014 - 01'
+    group by c.client_iin_last, t.text_yyyy_mm
+) a left join (
+    select t.client_iin,
+           max(t.unp_name) keep (dense_rank last order by t.begin_date) as city
+    from V_DWH_PORTFOLIO_CURRENT t
+    where t.x_is_credit_issued = 1
+    group by t.client_iin
+) b on b.client_iin = a.iin
+left join (
+    select cd.client_id,
+           case when max(cd.delinq_days_pmt_1) > 7 then 1 else 0 end as is_del_pmt_1,
+           case when max(cd.delinq_days_pmt_2) > 7 then 1 else 0 end as is_del_pmt_2,
+           case when max(cd.delinq_days_pmt_3) > 7 then 1 else 0 end as is_del_pmt_3,
+           case when max(cd.delinq_days_pmt_4) > 7 then 1 else 0 end as is_del_pmt_4
+    from M_CONTRACT_CAL_DEL cd
+    group by cd.client_id
+) bb on bb.client_id = a.client_id;
+grant select on U1.M_TMP_J_CLIENT_HISTORY_CITY to LOADDB;
+grant select on U1.M_TMP_J_CLIENT_HISTORY_CITY to LOADER;
+
+

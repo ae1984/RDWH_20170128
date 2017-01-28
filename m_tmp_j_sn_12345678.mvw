@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_TMP_J_SN_12345678
+refresh complete on demand
+as
+select count(*) as cnt, count(distinct fld.c_client) as cli_cnt, count(distinct fld.id) as fld_cnt
+from V_RFO_Z#FORM_CLIENT fc, V_RFO_Z#FDOC fd, V_RFO_Z#RDOC rd, V_RFO_Z#FOLDERS fld,
+     V_RFO_Z#PROPERTIES p, V_RFO_Z#PROPERTY_GRP pg, V_RFO_Z#CM_CHECKPOINT cp
+where fd.id = fc.id and fd.class_id = 'FORM_CLIENT' and
+     rd.c_doc = fd.id and rd.collection_id = fld.c_docs and
+     fc.c_add_prop = p.collection_id and p.c_group_prop = pg.id and cp.id = fld.id and
+     pg.c_code = 'KAS_WIFE_PHONE_MOBILE' and p.c_str is not null and
+     REGEXP_LIKE(trim(p.c_str),'^[0-9]+$') and
+     cp.c_date_create >= to_date('2015-01-01','yyyy-mm-dd');
+grant select on U1.M_TMP_J_SN_12345678 to LOADDB;
+grant select on U1.M_TMP_J_SN_12345678 to LOADER;
+
+

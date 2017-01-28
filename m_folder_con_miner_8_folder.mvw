@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_8_FOLDER
+refresh force on demand
+as
+select f2.folder_id,
+       max(t.pre_amount_rest) keep (dense_rank last order by t.yy_mm_start) pre_amount_rest,
+       max(t.ymr_paid_sal_count) keep (dense_rank last order by t.yy_mm_start) ymr_paid_sal_count,
+       max(t.ymr_paid_sal_count_all_con) keep (dense_rank last order by t.yy_mm_start) ymr_paid_sal_count_all_con
+from M_FOLDER_CON_CANCEL f2
+left join v_client_cal c on c.client_iin_last = f2.iin
+left join M_FOLDER_CON_MINER_6 t on t.client_id = c.client_id and
+                                    to_date(t.yy_mm_start, 'yyyy - mm') < f2.folder_date_create_mi
+where f2.folder_date_create_mi > to_date('2010-01-01','yyyy-mm-dd')
+  and f2.is_credit_issued = 0
+group by  f2.folder_id;
+grant select on U1.M_FOLDER_CON_MINER_8_FOLDER to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER_8_FOLDER to LOADER;
+
+

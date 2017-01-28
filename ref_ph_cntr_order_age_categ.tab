@@ -1,0 +1,61 @@
+﻿create table U1.REF_PH_CNTR_ORDER_AGE_CATEG
+(
+  amount_from NUMBER,
+  amount_to   NUMBER,
+  categ       VARCHAR2(10)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.REF_PH_CNTR_ORDER_AGE_C_IND1 on U1.REF_PH_CNTR_ORDER_AGE_CATEG (AMOUNT_FROM)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.REF_PH_CNTR_ORDER_AGE_C_IND2 on U1.REF_PH_CNTR_ORDER_AGE_CATEG (AMOUNT_TO)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.REF_PH_CNTR_ORDER_AGE_C_IND3 on U1.REF_PH_CNTR_ORDER_AGE_CATEG (AMOUNT_FROM, AMOUNT_TO)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.REF_PH_CNTR_ORDER_AGE_CATEG to LOADDB;
+grant select on U1.REF_PH_CNTR_ORDER_AGE_CATEG to LOADER;
+

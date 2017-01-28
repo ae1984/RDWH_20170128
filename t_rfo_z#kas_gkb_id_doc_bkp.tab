@@ -1,0 +1,32 @@
+﻿create table U1.T_RFO_Z#KAS_GKB_ID_DOC_BKP
+(
+  id              NUMBER not null,
+  collection_id   NUMBER,
+  c_info_type     VARCHAR2(150),
+  c_name          VARCHAR2(300),
+  c_issuance_date VARCHAR2(36),
+  c_reg_date      VARCHAR2(36),
+  c_issuance_loc  VARCHAR2(150),
+  c_rank          VARCHAR2(60),
+  c_expire_date   VARCHAR2(36),
+  c_num           VARCHAR2(300),
+  c_source        VARCHAR2(300),
+  sn              NUMBER,
+  su              NUMBER,
+  c_fio           VARCHAR2(765)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RFO_Z#KAS_GKB_ID_DOC_BKP to LOADDB;
+

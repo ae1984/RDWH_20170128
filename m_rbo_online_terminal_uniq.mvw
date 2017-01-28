@@ -1,0 +1,40 @@
+﻿create materialized view U1.M_RBO_ONLINE_TERMINAL_UNIQ
+refresh complete on demand
+as
+select min(f.id) keep(dense_rank first order by f.c_document_date) id,
+       -- LISTAGG(f.id, '; ') WITHIN GROUP(order by f.id) as id_list,
+       min(f.c_document_date) keep(dense_rank first order by f.c_document_date) c_document_date,
+       min(f.pt) keep(dense_rank first order by f.c_document_date) pt,
+       min(f.name_object) keep(dense_rank first order by f.c_document_date) name_object,
+       min(f.reg_addres) keep(dense_rank first order by f.c_document_date) reg_addres,
+       f.c_inn,
+       f.c_name,
+       min(f.c_numb) keep(dense_rank first order by f.c_document_date) c_numb,
+       --   min(f.c_nazn) keep (dense_rank first order by f.c_document_date) c_nazn,
+       --   min(f.c_amount) keep (dense_rank first order by f.c_document_date) c_amount,
+       --  LISTAGG(to_char(f.c_document_date, 'dd.mm.yyy HH24:MI:SS'), '; ') WITHIN GROUP(order by f.id) as c_doc_date_list,
+       LISTAGG(f.c_nazn, '; ') WITHIN GROUP(order by f.id) as c_nazn_list,
+       LISTAGG(f.c_amount, '; ') WITHIN GROUP(order by f.id) as c_amount_list,
+       activ.prod_type_list
+  from M_RBO_ONLINE_TERMINAL_PRE3 f
+  left join M_NPS_CL_ACTIV_PRODUCT activ
+    on activ.client_iin = f.c_inn
+ where not exists (select null
+          from T_NPS_CLIENT_PHONED_ALL k
+         where insert_date < sysdate - 1 / 24
+           and k.client_iin = f.c_inn)
+    and not exists (select null
+          from M_ZUP_1C_STAFF_OUT pe
+         where pe.iin = f.c_inn
+           and pe.firing_date is null)
+---вырежим тех клиентов кому уже звонили;
+ group by /*f.pt,
+          f.name_object,
+          f.reg_addres,*/ f.c_inn,
+          f.c_name,
+          activ.prod_type_list /*,
+          f.c_numb*/;
+grant select on U1.M_RBO_ONLINE_TERMINAL_UNIQ to LOADDB;
+grant select on U1.M_RBO_ONLINE_TERMINAL_UNIQ to LOADER;
+
+

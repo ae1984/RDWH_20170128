@@ -1,0 +1,111 @@
+﻿create materialized view U1.M_PKB_REPORT_PARAM2
+build deferred
+refresh force on demand
+as
+select --+ parallel(30) parallel_index(30)
+       p.report_id,
+       coalesce(p1.pkb_pmt,0) + coalesce(p2.pkb_pmt,0) + coalesce(p3.pkb_pmt,0) +
+            coalesce(p4.pkb_pmt,0) + coalesce(p5.pkb_pmt,0) as pkb_pmt,
+       coalesce(p1.pkb_pmt,0) + coalesce(p2.pkb_pmt,0) + coalesce(p3.pkb_pmt,0) +
+            coalesce(p4.pkb_pmt,0) + coalesce(p5.pkb_pmt_v2,0) as pkb_pmt_v2,
+       coalesce(p1.pkb_pmt,0) as pkb_pmt_wo_st_ext,
+       coalesce(p2.pkb_pmt,0) as pkb_pmt_wo_prim,
+       coalesce(p3.pkb_pmt,0) as pkb_pmt_del_st_ext,
+       coalesce(p4.pkb_pmt,0) as pkb_pmt_del_prim,
+       coalesce(p5.pkb_pmt,0) as pkb_pmt_no_del_st_ext,
+
+       coalesce(p1.outstanding_sum,0) + coalesce(p2.total_debt,0) as outstanding_sum,
+       coalesce(p1.overdue_sum,0) + coalesce(p2.delinq_amount,0) + coalesce(p3.overdue_sum,0) + coalesce(p4.pkb_pmt,0) as overdue_sum,
+       coalesce(p3.monthly_payment,0) + coalesce(p5.pkb_pmt_max,0) as monthly_payment_limit_max,
+       coalesce(p3.monthly_payment,0) + coalesce(p5.pkb_pmt_wo_limit,0) as monthly_payment_wo_limit,
+       coalesce(p3.monthly_payment,0) + coalesce(p5.pkb_pmt_by_limit,0) as monthly_payment_by_limit
+from (select report_id from T_PKB_REPORT group by report_id) p
+left join (-- 1a - списанные
+           select t.report_id,
+                  sum(coalesce(t.outstanding_sum,0) + coalesce(t.overdue_sum,0)) as pkb_pmt,
+                  sum(coalesce(t.outstanding_sum,0)) as outstanding_sum,
+                  sum(coalesce(t.overdue_sum,0)) as overdue_sum
+             from T_PKB_REPORT t
+            where t.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ') and
+                  t.pkb_contract_status = 'АКТИВНЫЙ' and
+                 (t.fin_inst is null or (
+                  upper(t.fin_inst) not like '%KASPI%' and   -- договора kaspi в ПКБ не смотрим
+                  upper(t.fin_inst) not like '%КАСПИ%')) and -- пустое значение оставляем для первичных, но
+                                                               -- по первичным будет флаг is_error, но тут первичных не будет :)
+                 (t.contract_status like 'ССУДНАЯ ЗАДОЛЖЕННОСТЬ СПИСАНА ЗА БАЛАНС%' or -- списанные за баланс
+                  t.contract_status like '%ЗАДОЛЖЕННОСТЬ СПИСАНА НА УБЫТКИ%' or
+                  t.contract_status like 'ССУДА ПЕРЕВЕДЕНА В РАЗРЯД УБЫТКОВ%')
+         group by t.report_id
+) p1 on p1.report_id = p.report_id
+left join (-- 1b - списанные
+  select t.report_id,
+         coalesce(t.total_debt,0) + coalesce(t.delinq_amount,0) as pkb_pmt,
+         coalesce(t.total_debt,0) as total_debt,
+         coalesce(t.delinq_amount,0) as delinq_amount
+    from T_PKB_REPORT t
+   where t.report_type in ('ПЕРВИЧНЫЙ')
+     and t.active_contracts = 1  -- если отчет первичный и 1 акт договор
+     and t.pkb_contract_status = 'АКТИВНЫЙ' and
+        (t.fin_inst is null or (
+        upper(t.fin_inst) not like '%KASPI%' and   -- договора kaspi в ПКБ не смотрим
+        upper(t.fin_inst) not like '%КАСПИ%')) and -- пустое значение оставляем для первичных, но
+                                                     -- по первичным будет флаг is_error
+        (t.contract_status like 'ССУДНАЯ ЗАДОЛЖЕННОСТЬ СПИСАНА ЗА БАЛАНС%' or -- списанные за баланс
+        t.contract_status like '%ЗАДОЛЖЕННОСТЬ СПИСАНА НА УБЫТКИ%' or
+        t.contract_status like 'ССУДА ПЕРЕВЕДЕНА В РАЗРЯД УБЫТКОВ%')
+) p2 on p2.report_id = p.report_id
+left join (-- 2a - на просрочке
+  select t.report_id,
+         sum(coalesce(t.monthly_payment,0) + coalesce(t.overdue_sum,0)) as pkb_pmt,
+         sum(coalesce(t.monthly_payment,0)) as monthly_payment,
+         sum(coalesce(t.overdue_sum,0)) as overdue_sum
+  from T_PKB_REPORT t
+  where t.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ') and
+        t.pkb_contract_status = 'АКТИВНЫЙ' and
+        (t.fin_inst is null or (
+        upper(t.fin_inst) not like '%KASPI%' and   -- договора kaspi в ПКБ не смотрим
+        upper(t.fin_inst) not like '%КАСПИ%')) and -- пустое значение оставляем для первичных, но
+                                                     -- по первичным будет флаг is_error? но первичный здесь нет
+        t.contract_status_clean like 'ПРОСР%ЧЕННАЯ ЗАДОЛЖЕННОСТЬ%'
+  group by t.report_id
+) p3 on p3.report_id = p.report_id
+left join (-- 2b - на просрочке
+  select t.report_id,
+         t.delinq_amount as pkb_pmt
+  from T_PKB_REPORT t
+  where t.report_type in ('ПЕРВИЧНЫЙ') --если отчет первичный и 1 акт договор
+    and t.active_contracts = 1
+    and t.pkb_contract_status = 'АКТИВНЫЙ' and
+        (t.fin_inst is null or (
+        upper(t.fin_inst) not like '%KASPI%' and   -- договора kaspi в ПКБ не смотрим
+        upper(t.fin_inst) not like '%КАСПИ%')) and -- пустое значение оставляем для первичных, но
+                                                     -- по первичным будет флаг is_error
+        t.contract_status_clean like 'ПРОСР%ЧЕННАЯ ЗАДОЛЖЕННОСТЬ%'
+) p4 on p4.report_id = p.report_id
+left join (-- 3a - не на просрочке и не списанные
+  select t.report_id,
+         sum(case when nvl(t.monthly_payment,0) = 0 then nvl(t.credit_limit,0) * 0.07
+                  else nvl(t.monthly_payment,0) end) as pkb_pmt,
+         sum(case when nvl(t.monthly_payment,0) = 0 then nvl(t.credit_limit,0) * 0.1
+                  else nvl(t.monthly_payment,0) end) as pkb_pmt_v2,
+         sum(nvl(t.credit_limit,0) * 0.07) as pkb_pmt_by_limit,
+         sum(nvl(t.monthly_payment,0)) as pkb_pmt_wo_limit,
+         sum(case when nvl(t.credit_limit,0) * 0.07 > nvl(t.monthly_payment,0) then nvl(t.credit_limit,0) * 0.07
+                  else nvl(t.monthly_payment,0) end) as pkb_pmt_max
+  from T_PKB_REPORT t
+  where t.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ') and
+        t.pkb_contract_status = 'АКТИВНЫЙ' and
+        (t.fin_inst is null or (
+              upper(t.fin_inst) not like '%KASPI%' and   -- договора kaspi в ПКБ не смотрим
+              upper(t.fin_inst) not like '%КАСПИ%')) and -- пустое значение оставляем для первичных, но
+                                                           -- по первичным будет флаг is_error
+        (t.contract_status not like 'ССУДНАЯ ЗАДОЛЖЕННОСТЬ СПИСАНА ЗА БАЛАНС%' and
+        t.contract_status not like '%ЗАДОЛЖЕННОСТЬ СПИСАНА НА УБЫТКИ%' and
+        t.contract_status not like 'ССУДА ПЕРЕВЕДЕНА В РАЗРЯД УБЫТКОВ%' and
+        t.contract_status_clean not like 'ПРОСР%ЧЕННАЯ ЗАДОЛЖЕННОСТЬ%')
+   group by t.report_id
+) p5 on p5.report_id = p.report_id;
+grant select on U1.M_PKB_REPORT_PARAM2 to LOADDB;
+grant select on U1.M_PKB_REPORT_PARAM2 to LOADER;
+
+

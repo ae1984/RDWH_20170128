@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_CLIENT_NEW_IN_LAST_REP_MONTH
+refresh force on demand
+as
+select
+        c.client_iin_first as IIN,
+        c.client_rnn_first as RNN,
+        to_char(c.start_date_first, 'yyyymmdd') as "DATE"
+from v_client_cal c
+where to_char(c.start_date_first, 'yyyy - mm') =
+       (select max(yy_mm_report) from v_data_all);
+grant select on U1.V_CLIENT_NEW_IN_LAST_REP_MONTH to LOADDB;
+grant select on U1.V_CLIENT_NEW_IN_LAST_REP_MONTH to LOADER;
+
+

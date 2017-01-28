@@ -1,0 +1,53 @@
+﻿create materialized view U1.V_TMP_PHOTO_TEST_3
+using no index
+refresh complete on demand
+as
+select distinct
+a.*,
+dq.verif_doc_date,
+d.RFO_CLIENT_ID as RFO_CLIENT_ID_prev,
+d.IIN as iin_prev,
+d.NAME_LAST as NAME_LAST_prev,
+d.NAME_FIRST as NAME_FIRST_prev,
+d.PHOTO_DATE as PHOTO_DATE_prev,
+d.PHOTO_NAME as PHOTO_NAME_prev,
+d.C_UID as C_UID_prev
+from
+(
+select a.*,
+max(b.folder_id) keep (dense_rank last order by b.folder_date_create) as folder_id_prev,
+max(b.folder_date_create) keep (dense_rank last order by b.folder_date_create) as folder_date_prev,
+max(b.folder_state) keep (dense_rank last order by b.folder_date_create) as folder_state_prev,
+max(b.process_name) keep (dense_rank last order by b.folder_date_create) as process_name_prev
+from V_TMP_PHOTO_TEST_2 a
+join v_folder_all_rfo b on a.rfo_client_id = b.rfo_client_id and a.folder_date_create > b.folder_date_create
+group by
+a.rfo_client_id,
+a.folder_id,
+a.folder_date_create,
+a.folder_state,
+a.process_name,
+a.iin,
+a.photo_date,
+a.photo_name,
+a.c_uid
+) a
+join v_verification dq on a.folder_id_prev = dq.folder_id and dq.verif_photo_result = 'ОДОБРЕНИЕ'
+join V_CLIENT_IMAGES d on a.iin = d.iin
+and a.rfo_client_id = d.rfo_client_id
+and trunc(dq.verif_doc_date)-trunc(d.photo_date)=0
+and d.photo_name not like '%DOC_UD_LICHNOST%'
+and d.photo_name not like '%УД%'
+and a.c_uid <> d.c_uid
+and a.photo_date <> d.photo_date
+and d.photo_date < a.photo_date
+and trunc(d.photo_date)<> trunc(a.photo_date)
+where a.folder_state_prev in ('АРХИВ',
+'АРХИВ С ОШИБКАМИ',
+'КРЕДИТ ВЫДАН',
+'ПОДТВЕРЖДЕНА',
+'ОТПРАВЛЕНО В ЦА');
+grant select on U1.V_TMP_PHOTO_TEST_3 to LOADDB;
+grant select on U1.V_TMP_PHOTO_TEST_3 to LOADER;
+
+

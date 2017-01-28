@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_CRED_CALC_DELINQ_DAYS_PRE2
+build deferred
+refresh force on demand
+as
+select /*+parallel(10)*/ tab.rbo_cred_id,
+                    --tab.collection_id,
+                    tab.d_fo,
+                    sum(case when (tab.n_var_q = 2 and is_revers = 0) or (tab.n_var_q = 3 and is_revers = 1) then n_sum_fo end) n_ovrd_to,
+                    sum(case when (tab.n_var_q = 3 and is_revers = 0) or (tab.n_var_q = 2 and is_revers = 1) then n_sum_fo end) n_ovrd_from,
+                    tab.c_date_close
+              from  M_CRED_CALC_DELINQ_DAYS_PRE1 tab
+              group by tab.rbo_cred_id, tab.collection_id, tab.d_fo, tab.c_date_close;
+grant select on U1.M_CRED_CALC_DELINQ_DAYS_PRE2 to LOADDB;
+
+

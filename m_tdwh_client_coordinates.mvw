@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_TDWH_CLIENT_COORDINATES
+refresh force on demand
+as
+select * from EGOV.VW_CLIENT_COORDINATES@TDWH2;
+grant select on U1.M_TDWH_CLIENT_COORDINATES to LOADDB;
+grant select on U1.M_TDWH_CLIENT_COORDINATES to LOADER;
+
+

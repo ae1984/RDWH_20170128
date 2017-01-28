@@ -1,0 +1,88 @@
+﻿create materialized view U1.M_TMP_J_ONLINE_MATRIX_X_1
+refresh complete on demand
+as
+select td.text_yyyy_mm, td.week_text_online_credit, td.text_yyyy_mm_dd_week_day,
+       f.online_or_pos, f.is_categ_a, f.is_client_new_by_con, f.is_credit_issued, f.is_sign_require,
+       fc.age_full_years, fc.sex, fc.education, fc.marital_status, fc.children,
+       substr(trim(fc.patronymic),-2) as client_patronymic_type,
+       round(fc.inc_sal / 10000) * 10000 as inc_sal, -- fc.amount,
+       round(f.contract_amount / 10000) * 10000 as amount_requested,
+       round(g.salary / 10000) * 10000 as gcvp_salary,
+       p.report_status,
+       round(d.max_debt_used_x / 10000) * 10000 as amount_approved,
+       ---
+       count(1) as cnt, count(distinct f.claim_id) as claim_cnt, count(distinct f.rfo_contract_id) as rfo_con_cnt,
+       count(distinct f.rfo_con_or_claim_id) as rfo_con_or_claim_cnt,
+       count(distinct f.folder_id) as fld_cnt,
+       sum(f.contract_amount) / 1000000 as amount_requested_mln,
+       min(f.contract_amount) as amount_requested_min,
+       max(f.contract_amount) as amount_requested_max,
+       ---
+       count(distinct b.rbo_contract_id) as con_cnt,
+       sum(d.max_debt_used_x) / 1000000 as sales_mln,
+       min(d.max_debt_used_x) as amount_approved_min,
+       max(d.max_debt_used_x) as amount_approved_max,
+
+       sum(case when d.del_days_x > 7  then d.total_debt_x end) / 1000000 as debt_del_7_mln,
+       sum(case when d.del_days_x > 30 then d.total_debt_x end) / 1000000 as debt_del_30_mln,
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as debt_del_60_mln,
+       sum(case when d.del_days_x > 90 then d.total_debt_x end) / 1000000 as debt_del_90_mln
+from (
+  select 'ONLINE' as online_or_pos, trunc(f.folder_date_create_mi) as a_date, f.is_categ_a, f.is_client_new_by_con,
+         f.is_credit_issued, f.is_sign_require,
+         f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+         f.rfo_contract_id as rfo_con_or_claim_id
+  from M_FOLDER_CON_CANCEL f
+  where f.process_name = 'ОНЛАЙН КРЕДИТ' and
+        f.claim_id is not null and
+        f.folder_date_create_mi >= to_date('2014-12-08','yyyy-mm-dd')
+  union all
+  select 'ONLINE' as online_or_pos, trunc(fo.folder_date_create_mi) as a_date, fo.is_categ_a, fo.is_client_new_by_con,
+         fo.is_credit_issued, fo.is_sign_require,
+         fo.claim_id, fo.contract_number, fo.rfo_client_id, fo.contract_amount, fo.folder_id, fo.form_client_id, fo.rfo_contract_id,
+         fo.claim_id as rfo_con_or_claim_id
+  from M_FOLDER_CON_CANCEL_ONLINE fo
+  where fo.folder_date_create_mi >= to_date('2014-12-08','yyyy-mm-dd')
+  union all
+  select 'POS' as online_or_pos, trunc(f.folder_date_create_mi) as a_date, f.is_categ_a, f.is_client_new_by_con,
+         f.is_credit_issued, f.is_sign_require,
+         f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+         f.rfo_contract_id as rfo_con_or_claim_id
+  from M_FOLDER_CON_CANCEL f
+  where f.process_name != 'ОНЛАЙН КРЕДИТ' and
+        f.cr_program_name = 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР' and
+        f.folder_date_create_mi >= to_date('2014-12-08','yyyy-mm-dd')
+) f
+join V_TIME_DAYS td on td.yyyy_mm_dd = f.a_date
+left join M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+left join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+---
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = f.form_client_id
+--left join V_CONTRACT_EKT_DWH e on e.rfo_contract_id = t.rfo_contract_id
+left join V_PKB_REPORT p on p.folder_id = f.folder_id
+left join (select fcc.rfo_contract_id, max(v.gcvp_rep_id) as gcvp_max_id
+          from V_GCVP_REPORT v
+          join M_FOLDER_CON_CANCEL fcc on fcc.iin = v.client_iin and
+               (v.rep_date >= trunc(fcc.folder_date_create_mi) - 60 and v.rep_date <= trunc(fcc.folder_date_create_mi))
+          where v.error_code = 0
+          group by fcc.rfo_contract_id
+) gm on gm.rfo_contract_id = f.rfo_contract_id
+left join (select v.gcvp_rep_id, max(v.salary) as salary,
+                  max(v.pmts_count_from_rep) as gcvp_pmts_count_from_rep
+          from V_GCVP_REPORT v
+          group by v.gcvp_rep_id
+) g on g.gcvp_rep_id = gm.gcvp_max_id
+group by td.text_yyyy_mm, td.week_text_online_credit, td.text_yyyy_mm_dd_week_day,
+       f.online_or_pos, f.is_categ_a, f.is_client_new_by_con, f.is_credit_issued, f.is_sign_require,
+       fc.age_full_years, fc.sex, fc.education, fc.marital_status, fc.children,
+       substr(trim(fc.patronymic),-2),
+       round(fc.inc_sal / 10000) * 10000, -- fc.amount,
+       round(f.contract_amount / 10000) * 10000,
+       round(g.salary / 10000) * 10000,
+       p.report_status,
+       round(d.max_debt_used_x / 10000) * 10000
+--);
+grant select on U1.M_TMP_J_ONLINE_MATRIX_X_1 to LOADDB;
+grant select on U1.M_TMP_J_ONLINE_MATRIX_X_1 to LOADER;
+
+

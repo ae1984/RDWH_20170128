@@ -1,0 +1,41 @@
+﻿create table U1.NT_RDWH_NUM_REPEAT_OBJ
+(
+  dt                 DATE,
+  owner              VARCHAR2(100),
+  object_type        VARCHAR2(100),
+  object_name        VARCHAR2(100),
+  repeat_object_type VARCHAR2(100),
+  repeat_object_name VARCHAR2(100),
+  num_repeat         NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_RDWH_NUM_REPEAT_OBJ
+  is 'RDWH2.0 Количество используемых объектов в схеме по исх.кодам';
+comment on column U1.NT_RDWH_NUM_REPEAT_OBJ.dt
+  is 'Дата снятия показаний';
+comment on column U1.NT_RDWH_NUM_REPEAT_OBJ.owner
+  is 'Владелец объекта';
+comment on column U1.NT_RDWH_NUM_REPEAT_OBJ.object_type
+  is 'Тип объекта';
+comment on column U1.NT_RDWH_NUM_REPEAT_OBJ.object_name
+  is 'Имя объекта';
+comment on column U1.NT_RDWH_NUM_REPEAT_OBJ.repeat_object_type
+  is 'Тип повторяющегося объекта';
+comment on column U1.NT_RDWH_NUM_REPEAT_OBJ.repeat_object_name
+  is 'Имя повторяющегося объекта';
+comment on column U1.NT_RDWH_NUM_REPEAT_OBJ.num_repeat
+  is 'Число повторов';
+grant select on U1.NT_RDWH_NUM_REPEAT_OBJ to LOADDB;
+

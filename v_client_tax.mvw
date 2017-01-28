@@ -1,0 +1,22 @@
+﻿create materialized view U1.V_CLIENT_TAX
+refresh complete on demand
+as
+select p.c_iin_bin as iin,
+       p.c_rnn as rnn,
+       upper(p.c_name) as c_name,
+       pp.remove_tax_reg_date,
+       nvl2(pp.remove_tax_reg_date, 1, 0) as is_remove_tax_reg,
+       p.c_date_last_upd as update_date
+from V_RFO_Z#KAS_NB_TAXPAYER p,
+     (select max(id) as last_id,
+                 max(c_date_remov_reg) keep (dense_rank last order by c_date_last_upd asc) as
+             remove_tax_reg_date
+         from V_RFO_Z#KAS_NB_TAXPAYER
+         where c_taxpayer_type = 0
+               and c_iin_bin is not null
+         group by c_iin_bin) pp
+where p.id = pp.last_id;
+grant select on U1.V_CLIENT_TAX to LOADDB;
+grant select on U1.V_CLIENT_TAX to LOADER;
+
+

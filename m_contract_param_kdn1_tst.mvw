@@ -1,0 +1,152 @@
+﻿create materialized view U1.M_CONTRACT_PARAM_KDN1_TST
+build deferred
+refresh complete on demand
+as
+select --+ parallel(30) parallel_index(30)
+  distinct -- т.к. строки множатся из-за связок
+  c.deal_number, c.client_iin, c.x_client_id, c.prod_type,
+  c.x_start_date, c.yy_mm_start, c.x_is_refin_prod_type,
+  c.begin_date,
+  to_char(c.begin_date, 'yyyy - mm') yy_mm_start_b,
+  c.rfo_client_id,
+  c.folder_id_first,
+  fc.form_client_id,
+  fc_link.form_client_found_type,
+  case when fc_link.form_client_age_days = 99999999 then null
+       else fc_link.form_client_age_days end form_client_age_days,
+  g.gcvp_rep_id,
+  gcvp_link.gcvp_rep_found_type,
+  gcvp_link.gcvp_age_days,
+  p.report_id as pkb_rep_id,
+  pkb_link.pkb_rep_found_type,
+  pkb_link.pkb_age_days,
+      case when fc.form_client_id is null or -- не нашли анкету
+                coalesce(c.pmt, c.pmt_old) is null or -- нет платежа по выдаваемому договору
+                (pkb_link.pkb_rep_found_type in (4,5,6,7) and -- или нашли только первичный
+                     not (pkb_link.pkb_rep_found_type in (4,5) and -- за исключением случаев, когда нашли первичный недавно
+                          p.report_type = 'ПЕРВИЧНЫЙ' and
+                          coalesce(p.active_contracts,0) in (0, 1))) -- и кол-во действующих договоров = 0 или 1
+           then 1 else 0 end as
+  is_error, -- ошибки, которые препятсвуют расчету КДН
+  -- доходы с анкеты
+  coalesce(fc.inc_sal,0) + coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) + coalesce(fc.inc_rent,0) +
+       coalesce(fc.inc_pension_benefits,0) + coalesce(fc.inc_interest,0) as form_income_total,
+  coalesce(fc.inc_sal,0) as form_inc_sal,
+  coalesce(fc.inc_sal_add,0) as form_inc_sal_add,
+  coalesce(fc.inc_sal_spouse,0) as form_inc_sal_spouse,
+  coalesce(fc.inc_rent,0) as form_inc_rent,
+  coalesce(fc.inc_pension_benefits,0) as form_inc_pension_benefits,
+  coalesce(fc.inc_interest,0) as form_inc_interest,
+
+  case when coalesce(g.salary,0) > coalesce(fc.inc_sal,0) then
+                 coalesce(g.salary,0) + coalesce(fc.inc_sal_spouse,0) + coalesce(fc.inc_rent,0) +
+                 coalesce(fc.inc_pension_benefits,0) + coalesce(fc.inc_interest,0) + coalesce(fc.inc_sal_add,0)
+            else
+                 coalesce(fc.inc_sal,0) + coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) + coalesce(fc.inc_rent,0) +
+                 coalesce(fc.inc_pension_benefits,0) + coalesce(fc.inc_interest,0)
+            end as form_income_gcvp_salary_max,
+  -- платеж по договору
+  coalesce(c.pmt, c.pmt_old) as contract_pmt, -- для 134 не указана ставка, для берем pmt_old, если есть
+  c.x_amount*0.1 as contract_pmt_v2,
+  -- зарплата с ГЦВП
+  coalesce(g.salary,0) as salary_gcvp,
+  --данные о том, что договор был рефинансирован
+  case when trunc(c.begin_date) < to_date('01.04.2014', 'dd.mm.yyyy') then 0 else 1 end is_open_after_x,
+  case when re.deal_number is not null and re.sp_date_min < to_date('01.04.2014', 'dd.mm.yyyy') then 1
+       when re.deal_number is not null and re.sp_date_min >= to_date('01.04.2014', 'dd.mm.yyyy') then 2
+   else 0 end is_ref_res,
+   case when re.deal_number is not null then
+        case when c.pmt >= re.pmt then 0 else 1 end
+   else 0 end is_pmt_rise,
+   re.deal_number_to as contract_number_new,
+  --данные о том, что этот договор, на который был сделан рефинанс
+  case when cr.deal_number_to is not null and trunc(cr.begin_date) >= to_date('01.04.2014', 'dd.mm.yyyy')
+       then 1 else 0 end is_result_open_after_x,
+  case when cr.deal_number_to is not null and cr.sp_date_last < to_date('01.04.2014', 'dd.mm.yyyy') then 1
+       when cr.deal_number_to is not null and cr.sp_date_last >= to_date('01.04.2014', 'dd.mm.yyyy') then 2
+  else 0 end is_result_ref_res,
+  --
+  case when x.deal_number is not null then 1 else 0 end as is_ref_hard,
+  case when x_sd.deal_number is not null then 1 else 0 end as is_ref_hard_same_day
+from V_DWH_PORTFOLIO_CURRENT c
+-- ищем анкету
+left join (select c2.deal_number,
+                  max(coalesce(fc1.form_client_id, fc2.form_client_id,
+                               fc3.form_client_id)) as form_client_id,
+                  case when max(fc1.form_client_id) is not null then 1
+                       when max(fc2.form_client_id) is not null then 2
+                       when max(fc3.form_client_id) is not null then 3 else 0 end as form_client_found_type,
+                  case when max(fc1.form_client_id) is not null then max(c2.x_start_date_actual) - max(trunc(fc1.form_client_date))
+                       when max(fc2.form_client_id) is not null then max(c2.x_start_date_actual) - max(trunc(fc2.form_client_date))
+                       when max(fc3.form_client_id) is not null then max(c2.x_start_date_actual) - max(trunc(fc3.form_client_date))
+                            else  null end as form_client_age_days
+            from V_DWH_PORTFOLIO_CURRENT c2
+            left join V_FOLDER_ALL_RFO f on f.folder_id = c2.folder_id_first
+            left join V_FORM_CLIENT_ALL_RFO fc1 on fc1.form_client_id = f.form_client_id                  -- ищем анкету в папке
+            left join V_FORM_CLIENT_ALL_RFO fc2 on fc2.iin = c2.client_iin and                            -- или ищем последнюю анкету до договора по ИИН клиента
+                                                   trunc(fc2.form_client_date) <= c2.x_start_date_actual
+            left join V_FORM_CLIENT_ALL_RFO fc3 on fc3.rnn = c2.client_rnn and                            -- или ищем последнюю анкету до договора по РНН клиента
+                                                   trunc(fc3.form_client_date) <= c2.x_start_date_actual
+            group by c2.deal_number
+) fc_link on fc_link.deal_number = c.deal_number
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = fc_link.form_client_id
+-- ищем гцвп
+left join (select c3.deal_number,
+                  max(coalesce(g1.gcvp_rep_id, g2.gcvp_rep_id, g3.gcvp_rep_id)) as gcvp_rep_id,
+                  case when max(g1.gcvp_rep_id) is not null then 1
+                       when max(g2.gcvp_rep_id) is not null then 2
+                       when max(g3.gcvp_rep_id) is not null then 3 else 0 end as gcvp_rep_found_type,
+                  case when max(g1.gcvp_rep_id) is not null then max(c3.x_start_date_actual) - max(g1.rep_date)
+                       when max(g2.gcvp_rep_id) is not null then max(c3.x_start_date_actual) - max(g2.rep_date)
+                       when max(g3.gcvp_rep_id) is not null then max(c3.x_start_date_actual) - max(g3.rep_date)
+                            else null end as gcvp_age_days
+            from V_DWH_PORTFOLIO_CURRENT c3
+            left join V_GCVP_REPORT g1 on g1.folder_id = c3.folder_id_first     -- ищем гцвп в папке
+            left join V_GCVP_REPORT g2 on g2.client_iin = c3.client_iin and
+                                          g2.rep_date <= c3.x_start_date_actual -- или ищем последний гцвп до договора по ИИН клиента
+            left join V_GCVP_REPORT g3 on g3.client_rnn = c3.client_rnn and
+                                          g3.rep_date <= c3.x_start_date_actual -- или ищем последний гцвп до договора по РНН клиента
+            group by c3.deal_number
+) gcvp_link on gcvp_link.deal_number = c.deal_number
+left join V_GCVP_REPORT g on g.gcvp_rep_id = gcvp_link.gcvp_rep_id
+-- ищем пкб
+left join M_CONTRACT_PARAM_KDN1_PRE pkb_link on pkb_link.deal_number = c.deal_number
+left join V_PKB_REPORT p on p.report_id = pkb_link.pkb_rep_id
+-- проверяем был ли данный договор рефинансирован
+left join (
+           select rl.deal_number,
+                  rl.sp_date_min,
+                  pc_to.pmt,
+                  rl.deal_number_to
+             from M_CONTRACT_REFIN_LINK rl
+             join V_DWH_PORTFOLIO_CURRENT pc_to  on rl.deal_number_to = pc_to.deal_number) re on re.deal_number = c.deal_number
+--проверяем, что на данный договор был сделан рефинанс с другого
+left join (
+           select rl.deal_number_to,
+                  pc.begin_date,
+                  max(rl.sp_date_min) as sp_date_last
+             from M_CONTRACT_REFIN_LINK rl
+             join V_DWH_PORTFOLIO_CURRENT pc on pc.deal_number = rl.deal_number_to
+            group by rl.deal_number_to, pc.begin_date) cr on cr.deal_number_to = c.deal_number
+--
+left join (select distinct dc.begin_date, dc.deal_number -- были договора закрытые досрочно в день выдачи или на след.день?
+            from V_DWH_PORTFOLIO_CURRENT dc
+            join V_DWH_PORTFOLIO_CURRENT dc2 on dc2.client_iin = dc.client_iin and
+                                                dc2.actual_end_date - dc.begin_date in (0,1) and
+                                                (dc.prod_name like 'РЕФИНАНС%' or dc.prod_name like 'ИНДИВИДУАЛЬНЫЙ%')
+            ) x on x.deal_number = c.deal_number
+--
+left join (select distinct dc.begin_date, dc.deal_number      -- были договора закрытые досрочно в день выдачи?
+            from V_DWH_PORTFOLIO_CURRENT dc
+            join V_DWH_PORTFOLIO_CURRENT dc2 on dc2.client_iin = dc.client_iin and
+                                                dc2.actual_end_date - dc.begin_date in (0) and
+                                                (dc.prod_name like 'РЕФИНАНС%' or dc.prod_name like 'ИНДИВИДУАЛЬНЫЙ%')
+          ) x_sd on x_sd.deal_number = c.deal_number
+where -- выбираем только те договора, по которым должен быть КДН - выданные, с лимитом или суммой
+      c.x_is_credit_issued = 1 and
+      c.x_start_date_actual is not null and
+      c.x_amount > 0 and
+      c.x_start_date_actual >= to_date('20100101','yyyymmdd');
+grant select on U1.M_CONTRACT_PARAM_KDN1_TST to LOADDB;
+
+

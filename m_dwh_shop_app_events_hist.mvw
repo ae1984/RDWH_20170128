@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_DWH_SHOP_APP_EVENTS_HIST
+refresh force on demand
+as
+select /*+ noparallel */
+       application_events_hist_id,
+       user_id,
+       create_date,
+       app_events_date_end,
+       app_events_date_begin,
+       app_theme,
+       app_text,
+       reverse_sequence_number,
+       user_application_id
+  from dwh_stage.S43_APPLICATION_EVENTS_HIST@dwh_prod2;
+grant select on U1.M_DWH_SHOP_APP_EVENTS_HIST to LOADDB;
+grant select on U1.M_DWH_SHOP_APP_EVENTS_HIST to LOADER;
+
+

@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_RFO_KAS_CLIENT_SIGN
+build deferred
+refresh force on demand
+as
+select/*+parallel(1)*/ oc.id,
+       case when count(kd1.id)>1 then '1' else '0' end as is_sign_require
+from u1.T_RFO_Z#KAS_ONLINE_BUY ob
+join u1.T_RFO_Z#KAS_ONLINE_CLAIM oc on oc.c_buy_ref = ob.id
+left join u1.T_RFO_Z#KAS_UNIVERSA_REF s1 on s1.collection_id = oc.c_mng_vis_scen
+left join u1.T_RFO_Z#KAS_UNIVERSAL_D kd1 on kd1.id = s1.c_value
+where  ob.c_date_create > trunc(sysdate)
+group by oc.id;
+grant select on U1.M_RFO_KAS_CLIENT_SIGN to LOADDB;
+
+

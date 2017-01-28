@@ -1,0 +1,31 @@
+﻿CREATE MATERIALIZED VIEW U1.V_TMP_NEB_CONTACT_PHONES
+REFRESH COMPLETE ON DEMAND
+AS
+SELECT  con.C_CONTACT#NUMB as phone,
+        trunc(min(f.c_doc_date)) as date_create_min,
+        trunc(max(f.c_doc_date)) as date_create_max,
+        max(gr.c_type_cont#code) as contact_type,
+        max(case when  gr.C_ACCEPTED = 1 then 1
+                 when  gr.C_NOT_ACCEPTED = 1 then 0 end) as
+        is_valid_by_verification,
+        max(fa.expert_name) keep (dense_rank first order by f.c_doc_date) as manager_first,
+        max(fa.expert_name) keep (dense_rank last order by f.c_doc_date) as manager_last
+  FROM V_RFO_Z#KAS_VERIFICATION v, v_rfo_z#client c, v_rfo_z#fdoc f,
+       v_rfo_Z#KAS_VER_CON_GRID gr, v_rfo_Z#KAS_VER_CONT con,
+       v_rfo_z#rdoc rd, v_folder_all_rfo fa
+WHERE v.c_client_ref = c.ID
+   AND f.ID = v.ID
+   AND v.C_VERIFY_CONTACTS = gr.collection_id
+   AND gr.id = con.id
+   and con.c_contact#type = 23068 -- PHONE
+   and gr.c_type_cont#code = 'CONT_PERS' -- только контактные лица
+   and rd.c_doc = f.id
+   and fa.fld_c_docs = rd.collection_id
+--   and c.id = 4959428991
+   and not exists (select null from V_RFO_Z#CONTACTS cc where cc.c_numb = con.c_contact#numb
+       and (cc.c_allow_cc_2 = 0 or cc.c_allow_collection = 0 or cc.c_activ = 0))
+group by con.C_CONTACT#NUMB;
+grant select on U1.V_TMP_NEB_CONTACT_PHONES to LOADDB;
+grant select on U1.V_TMP_NEB_CONTACT_PHONES to LOADER;
+
+

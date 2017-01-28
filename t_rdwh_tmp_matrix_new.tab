@@ -1,0 +1,85 @@
+﻿create table U1.T_RDWH_TMP_MATRIX_NEW
+(
+  yyyy                         NUMBER,
+  quarter                      VARCHAR2(7),
+  text_yyyy_mm                 VARCHAR2(9),
+  week_text                    VARCHAR2(15),
+  text_yyyy_mm_dd_week_day     VARCHAR2(19),
+  con_yyyy                     NUMBER,
+  con_quarter                  VARCHAR2(7),
+  con_text_yyyy_mm             VARCHAR2(9),
+  con_week_text                VARCHAR2(15),
+  con_text_yyyy_mm_dd_week_day VARCHAR2(19),
+  rfo_con_or_claim_id          NUMBER,
+  rfo_con_claim_type           VARCHAR2(6),
+  folder_con_date              DATE,
+  folder_con_date_time         DATE,
+  folder_id                    NUMBER,
+  contract_number              VARCHAR2(300),
+  contract_amount              NUMBER,
+  process_code                 VARCHAR2(300),
+  process_name                 VARCHAR2(4000),
+  rfo_client_id                NUMBER,
+  iin                          VARCHAR2(36),
+  rnn                          VARCHAR2(36),
+  product                      VARCHAR2(750),
+  product_type                 VARCHAR2(22),
+  folder_date_create_mi        DATE,
+  cancel_prescoring            NUMBER,
+  cancel_middle_office         NUMBER,
+  cancel_controller            NUMBER,
+  cancel_client                NUMBER,
+  cancel_manager               NUMBER,
+  cancel_cpr_aa                NUMBER,
+  cancel_verificator           NUMBER,
+  cancel_undefined             NUMBER,
+  is_aa_approved               NUMBER,
+  is_aa_reject                 NUMBER,
+  rfo_con_or_claim_not_rej     NUMBER,
+  is_credit_issued_rfo         VARCHAR2(17),
+  is_credit_issued_rbo         VARCHAR2(17),
+  rbo_contract_id              NUMBER,
+  contract_amount_rbo          NUMBER,
+  is_on_balance                NUMBER(1),
+  sales                        NUMBER,
+  del_debt_7d                  NUMBER,
+  del_debt_30d                 NUMBER,
+  del_debt_60d                 NUMBER,
+  del_debt_90d                 NUMBER,
+  del_debt_30d_ever            NUMBER,
+  del_debt_60d_ever            NUMBER,
+  del_debt_90d_ever            NUMBER,
+  pmt_1_0d_del_debt            NUMBER,
+  pmt_1_0d_sales               NUMBER,
+  pmt_1_7d_del_debt            NUMBER,
+  pmt_1_7d_sales               NUMBER,
+  pmt_2_7d_del_debt            NUMBER,
+  pmt_2_7d_sales               NUMBER,
+  pmt_3_7d_del_debt            NUMBER,
+  pmt_3_7d_sales               NUMBER,
+  pmt_4_7d_del_debt            NUMBER,
+  pmt_4_7d_sales               NUMBER,
+  pmt_5_7d_del_debt            NUMBER,
+  pmt_5_7d_sales               NUMBER,
+  pmt_6_7d_del_debt            NUMBER,
+  pmt_6_7d_sales               NUMBER,
+  pmt_1_30d_del_debt           NUMBER,
+  pmt_1_30d_sales              NUMBER,
+  pmt_1_60d_del_debt           NUMBER,
+  pmt_1_60d_sales              NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RDWH_TMP_MATRIX_NEW to LOADDB;
+

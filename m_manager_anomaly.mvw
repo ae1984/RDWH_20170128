@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_MANAGER_ANOMALY
+build deferred
+refresh complete on demand
+as
+select /*+ parallel 30*/
+       td.text_yyyy_mm_dd_week_day as d_app_day,
+       f.expert_name,
+       f.product_type,
+       max(f.city) keep (dense_rank last order by f.a_date) as city,
+       count(*) as cnt,
+       count(distinct f.rfo_con_or_claim_id) as rfo_con_cnt,
+       count(distinct f.rfo_client_id) as rfo_client_cnt,
+       sum(d.max_debt_used_x) as sales
+from u1.m_matrix_base f
+join u1.V_TIME_DAYS td on td.yyyy_mm_dd = f.a_date
+left join u1.M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id
+                                  and b.contract_number = f.contract_number
+left join u1.M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+where f.a_date >= trunc(sysdate) -32
+group by td.text_yyyy_mm_dd_week_day,
+       f.expert_name,
+       f.product_type,
+       f.city;
+grant select on U1.M_MANAGER_ANOMALY to LOADDB;
+grant select on U1.M_MANAGER_ANOMALY to RISK_VERIF;
+
+

@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_FOLDER_MO_OTHER_DEAL_2016
+build deferred
+refresh force on demand
+as
+select *
+from (
+    select /*+ parallel 30 */
+           r.id rfolder_id,
+           r.date_create,
+           dp.code_int,
+           t.value_number
+    from mo_rfolder r
+    join mo_rfolder_par_value t on t.rfolder_id = r.id
+    join v_mo_d_par dp on dp.id = t.d_par_id
+                          and dp.code_int in ('IN_SCO_FOLDER_ID',
+                                              'IN_SCO_CLIENT_ID',
+                                              'SC_OTHER_DEAL_PMT'
+                                              )
+    where r.date_create >= to_date('01-01-2016', 'dd-mm-yyyy')
+          and r.date_create < to_date('01-01-2017', 'dd-mm-yyyy')
+          /*and r.id = 35894176*/
+) pivot (
+    max(value_number)
+    for code_int in ('IN_SCO_FOLDER_ID' as folder_id,
+                     'IN_SCO_CLIENT_ID' as rfo_client_id,
+                     'SC_OTHER_DEAL_PMT' as other_deal_pmt)
+)
+where folder_id is not null;
+grant select on U1.M_FOLDER_MO_OTHER_DEAL_2016 to LOADDB;
+grant select on U1.M_FOLDER_MO_OTHER_DEAL_2016 to LOADER;
+
+

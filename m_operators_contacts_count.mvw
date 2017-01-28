@@ -1,0 +1,52 @@
+﻿create materialized view U1.M_OPERATORS_CONTACTS_COUNT
+build deferred
+refresh force on demand
+as
+with tt as (select /*+ parallel 10 */
+                   cp.phone_type,
+                   cp.phone_number_clear
+              from V_FORM_CLIENT_CONTACT_PHONE cp
+             where cp.phone_type in('МОБИЛЬНЫЙ','КОНТАКТ-МОБИЛЬНЫЙ')
+            group by cp.phone_type,
+                     cp.phone_number_clear)
+
+select /*+ parallel 10 */
+       cpo.phone_code,
+       cpm.cnt as mobile,
+       cpo.cnt as contact_mobile
+  from (select case
+                 when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                 when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                 when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                 when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+
+                 else 'OTHER' end as phone_code,
+               count(*) as cnt
+          from tt cp
+         where cp.phone_type = 'КОНТАКТ-МОБИЛЬНЫЙ'
+        group by case
+                   when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                   when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                   when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                   when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                   else 'OTHER' end) cpo
+full outer join (select case
+                          when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                          when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                          when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                          when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+
+                          else 'OTHER' end as phone_code,
+                        count(*) as cnt
+                   from tt cp
+                  where cp.phone_type = 'МОБИЛЬНЫЙ'
+                 group by case
+                            when substr(cp.phone_number_clear,1,3) in (701,702,775,778,772) then 'K-CELL, ACTIV'
+                            when substr(cp.phone_number_clear,1,3) in (707,747) then 'NEO,TELE2'
+                            when substr(cp.phone_number_clear,1,3) in (700,708) then 'DALACOM,PATHWORD,ALTEL'
+                            when substr(cp.phone_number_clear,1,3) in (705,777,771,776) then 'BEELINE'
+                            else 'OTHER' end) cpm on cpo.phone_code = cpm.phone_code;
+grant select on U1.M_OPERATORS_CONTACTS_COUNT to LOADDB;
+grant select on U1.M_OPERATORS_CONTACTS_COUNT to LOADER;
+
+

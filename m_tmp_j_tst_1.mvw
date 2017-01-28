@@ -1,0 +1,10 @@
+﻿create materialized view U1.M_TMP_J_TST_1
+refresh complete on demand
+as
+select 'a' as a_name from dual union all
+select 'b' as a_name from dual union all
+select 'cccc23' as a_name from dual;
+grant select on U1.M_TMP_J_TST_1 to LOADDB;
+grant select on U1.M_TMP_J_TST_1 to LOADER;
+
+

@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_TMP_J_MATRIX_ALL_WEEK_PRE_4
+build deferred
+refresh complete on demand
+as
+select /*+parallel(2)*/ a.id as claim_id,
+       case when coalesce(t.is_credit_issued, t1.is_credit_issued) = 0 and
+                 (
+                     coalesce(t.cancel_prescoring, t1.cancel_prescoring) = 1 or
+                     coalesce(t.cancel_middle_office, t1.cancel_middle_office) = 1 or
+                     coalesce(t.cancel_cpr_aa, t1.cancel_cpr_aa) = 1 or
+                     (coalesce(t.cancel_undefined, t1.cancel_undefined) = 1 and t.folder_state not in ('ЗАКАЗ ОТМЕНЕН','ОТМЕНЕНО', 'ПРОСРОЧЕННАЯ')) or
+                     (coalesce(t.cancel_manager, t1.cancel_manager) = 1 and xx.folder_id is not null) or
+                     coalesce(t.cancel_verificator, t1.cancel_verificator) = 1
+                 ) and
+                 coalesce(t.folder_state, coalesce(t1.folder_state, 'ПУСТО')) not in ('НА ВЫДАЧЕ ТОВАРА', 'ЗАПОЛНЕНИЕ АНКЕТЫ КЛИЕНТА', 'ПРОСРОЧЕННАЯ', 'СОГЛАСИЕ ПКБ/ГЦВП')
+             then 1
+             else 0
+       end as is_rejected_by_risks,
+       op.ga_client_id,
+       o.device_cat_by_phone_30d as online_device_cat,
+       o.device_subcat_by_phone_30d as online_device_subcat
+from u1.V_RFO_Z#KAS_ONLINE_CLAIM a
+join u1.V_RFO_Z#KAS_ONLINE_BUY f on a.c_buy_ref = f.id
+left join u1.M_FOLDER_CON_CANCEL t on t.claim_id = a.id and
+                                      t.process_name = 'ОНЛАЙН КРЕДИТ'
+left join u1.M_FOLDER_CON_CANCEL_ONLINE t1 on t1.claim_id = a.id
+left join u1.M_TMP_J_MATRIX_ALL_WEEK_PRE_3 xx on xx.folder_id = a.c_folder_ref
+left join u1.M_ONLINE_DEVICE_PRE op on op.order_id =f.c_process_id
+left join u1.M_ONLINE_DEVICE o on o.ga_client_id = op.ga_client_id and o.yyyy_mm_dd = op.order_date;
+grant select on U1.M_TMP_J_MATRIX_ALL_WEEK_PRE_4 to LOADDB;
+
+

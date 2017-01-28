@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_DWH_DICT_CLNT_CONT_THEME
+build deferred
+refresh force on demand
+as
+select
+  clnt_cont_theme_cd ,
+  clnt_cont_theme$change_date,
+  clnt_cont_theme$row_status,
+  clnt_cont_theme$audit_id ,
+  clnt_cont_theme$hash,
+  clnt_cont_theme_name,
+  clnt_cont_theme_code,
+  clnt_cont_theme$source,
+  clnt_cont_theme$provider,
+  clnt_cont_theme$source_pk,
+  clnt_cont_theme_parent_cd,
+  clnt_cont_theme_description,
+  clnt_cont_theme_attr1,
+  clnt_cont_theme_attr2
+from DWH_MAIN.DICT_CLNT_CONT_THEME@RDWH_EXD;
+

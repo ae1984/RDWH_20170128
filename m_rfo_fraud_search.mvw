@@ -1,0 +1,143 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30)*/
+    fo.rfo_client_id
+    ,fo.date_create
+    ,fo.claim_id
+    ,fo.shop_code
+    ,fo.shop_name
+    ,fo.status_code
+    ,fo.status_name
+    ,fo.process_id
+
+    --V_FORM_CLIENT_ALL_RFO
+    ,t19.income_form
+    ,t19.income_form_all
+
+    --M_RFO_FRAUD_SEARCH_1
+    ,t.age
+    ,t.reg_kaspikz_length
+    ,t.reg_kaspikz_length_v3
+    ,t.avg_sum_pay_kspkz_30_d
+    ,t.count_month_kaspikz_6_m
+    ,t.count_pay_kspkz_30_d
+    ,t.count_serv_kspkz_6_m
+    ,t.kommunalka_kaspikz_6_m
+
+    ,t.count_mob_kspkz
+    --,t.count_mob_kspkz_x
+    ,t.sum_pay_kspkz_30_d
+    --,t.sum_pay_kspkz_30_d_x
+    ,t.share_month_kaspikz_6_m
+
+    ,g.session_ksp_last_6_mnth
+    ,g.session_ksp_last_6_mnth_t1
+
+    ,a.count_day_app_onl
+    ,a.max_sum_online_ekt_3_m
+
+    ,f.count_appl_kn_30_d
+    ,f.count_fail_kn_30_d
+    ,f.max_sum_appl_kn_30_d
+
+    /*,f2.count_appl_kn_30_d as count_appl_kn_30_d2
+    ,f2.count_fail_kn_30_d as count_fail_kn_30_d2
+    ,f2.max_sum_appl_kn_30_d as max_sum_appl_kn_30_d2*/
+
+    ,a.count_fail_30_d+f.count_fail_30_d as count_fail_30_d
+    ,coalesce(a.count_applications_30_d,0)+coalesce(f.count_applications_30_d,0) as count_applications_30_d
+    ,coalesce(a.count_applications_30_d_x,0)+coalesce(f.count_applications_30_d_x,0) as count_applications_30_d_x
+
+    /*,a.count_fail_30_d+f2.count_fail_30_d as count_fail_30_d2
+    ,coalesce(a.count_applications_30_d,0)+coalesce(f2.count_applications_30_d,0) as count_applications_30_d2
+    ,coalesce(a.count_applications_30_d_x,0)+coalesce(f2.count_applications_30_d_x,0) as count_applications_30_d_x2*/
+
+    ,c.max_count_fail_onl_day --max(c.COUNT_FAIL_ONL_DAY) as MAX_COUNT_FAIL_ONL_DAY
+
+    ,d.last_year_max_delay
+    ,d.last_year_max_delay_t1
+--    ,e.delinq_amount_sum as PKB_DEBT_KZT
+    ,e.total_debt as pkb_debt_kzt
+
+    ,i.salary as income_gcvp
+    ,i.days_last_gcvp
+    ,t19.income_form - i.salary as diff_zp_form_gcvp
+    ,t19.income_form_all - i.salary as diff_zp_form_all_gcvp
+
+    ,j.avg_sum_pay_cred_3_m
+    ,j.avg_sum_pay_cred_3_m_t1
+
+    ,k.count_visit_guest
+
+    /*,k2.count_visit_guest    as count_visit_guest2
+    ,k2.count_visit_guest_x  as count_visit_guest_x2
+    ,k2.count_visit_client   as count_visit_client2
+    ,k2.count_visit_client_x as count_visit_client_x2*/
+
+    ,l.count_salary_6_m
+    ,l.count_salary_6_m_t1
+    ,case when m.count_kaspi_gold_active > 0 then 1 else 0 end as kaspi_gold_active
+    ,case when m.count_kaspi_gold_active_t1 > 0 then 1 else 0 end as kaspi_gold_active_t1
+
+    ,n.max_tov_categ_code
+    ,n.max_count_category_day
+    ,n1.max_tov_categ_code_t1
+    ,n1.max_count_category_day_t1
+    ,n2.count_category_3_m
+    ,n2.count_category_3_m_x
+
+    ,o.max_prod_models_day
+    ,o.max_count_models_day
+    ,o1.max_prod_models_day_t1
+    ,o1.max_count_models_day_t1
+
+    ,p.ex_terminal_share_count
+    ,p1.ex_terminal_share_count_t1
+    ,s.fail_share_30_d_count
+    ,p.terminal_share_count
+    ,s.share_30_d_count
+    ,case when p.terminal_share_count = 0 then 0 else p.ex_terminal_share_count/p.terminal_share_count*100 end as ex_terminal_share
+    ,case when p1.terminal_share_count_t1 = 0 then 0 else p1.ex_terminal_share_count_t1/p1.terminal_share_count_t1*100 end as ex_terminal_share_t1
+    ,case when s.share_30_d_count = 0 then 0 else  s.fail_share_30_d_count/s.share_30_d_count*100 end as fail_share_30_d
+
+    ,q.avg_zp_h
+    /*,q2.avg_zp_h as avg_zp_h2
+    ,q2.max_zp_h as max_zp_h2*/
+    ,r.ii
+
+from u1.M_FOLDER_CON_CANCEL_ONLINE_1 fo
+left join u1.M_RFO_FRAUD_SEARCH_19 t19 on t19.claim_id = fo.claim_id
+--Онлайн заявка - Параметры по kaspi.kz
+left join u1.M_RFO_FRAUD_SEARCH_1 t on t.claim_id = fo.claim_id
+
+left join u1.M_RFO_FRAUD_SEARCH_2 a  on a.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_3 c  on c.claim_id = fo.claim_id --c.rfo_client_id = t.rfo_client_id and c.date_create >= t.date_create-30 and c.date_create < t.date_create
+left join u1.M_RFO_FRAUD_SEARCH_10 d on d.claim_id = fo.claim_id
+--left join M_RFO_FRAUD_SEARCH_4 e  on e.claim_id = t.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_4_B e  on e.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_5_PREV f on f.claim_id = fo.claim_id
+--left join u1.M_RFO_FRAUD_SEARCH_5 f2 on f2.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_6 g  on g.claim_id = fo.claim_id
+--left join M_RFO_FRAUD_SEARCH_7 i  on i.claim_id = t.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_7_B i  on i.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_8 j  on j.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_9_PREV k  on k.claim_id = fo.claim_id
+--left join u1.M_RFO_FRAUD_SEARCH_9 k2  on k2.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_11 l on l.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_12 m on m.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_13 n on n.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_13_A n1 on n1.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_13_2 n2 on n2.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_14 o on o.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_14_A o1 on o1.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_15 p on p.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_15_A p1 on p1.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_16_PREV q on q.claim_id = fo.claim_id
+--left join u1.M_RFO_FRAUD_SEARCH_16 q2 on q2.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_17 r on r.claim_id = fo.claim_id
+left join u1.M_RFO_FRAUD_SEARCH_18 s on s.claim_id = fo.claim_id;
+grant select on U1.M_RFO_FRAUD_SEARCH to LOADDB;
+
+

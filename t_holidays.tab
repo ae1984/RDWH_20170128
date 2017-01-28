@@ -1,0 +1,33 @@
+﻿create table U1.T_HOLIDAYS
+(
+  data         DATE,
+  day_weekends NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+create unique index U1.DATA_INDX on U1.T_HOLIDAYS (TRUNC(DATA))
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_HOLIDAYS to LOADDB;
+grant select on U1.T_HOLIDAYS to LOADER;
+

@@ -1,0 +1,120 @@
+﻿create table U1.T_RBO_Z#KAS_PLAN_EPS
+(
+  id                 NUMBER not null,
+  collection_id      NUMBER,
+  c_date             DATE,
+  c_days             NUMBER,
+  c_debt_od_plan     NUMBER(17,2),
+  c_sum_prc_pln_date NUMBER(17,2),
+  c_sum_od_plan      NUMBER(17,2),
+  c_sum_prc_plan     NUMBER(17,2),
+  c_sum_plan_pay     NUMBER(17,2),
+  c_profit_eps       NUMBER(20,4),
+  c_amort_cost       NUMBER(20,4),
+  c_amort_comiss     NUMBER(20,4),
+  c_debt_od          NUMBER(20,4),
+  c_debt_prc         NUMBER(20,4),
+  c_debt_ovrd_od     NUMBER(20,4),
+  c_debt_ovrd_prc    NUMBER(20,4),
+  c_debt_prc_od      NUMBER(20,4),
+  c_saldo_1434       NUMBER(20,4),
+  c_saldo_1435       NUMBER(20,4),
+  c_rate_prc_provis  NUMBER(20,4),
+  c_sum_provis       NUMBER(20,4),
+  c_sum_def_profit   NUMBER(20,4),
+  c_amort_cost_r     NUMBER(20,4),
+  c_profit_eps_r     NUMBER(20,4),
+  c_profit_fact      NUMBER(20,4),
+  c_amort_cost_3     NUMBER(20,4),
+  c_amort_com_calc   NUMBER(20,4),
+  c_amort_com_dif    NUMBER(20,4),
+  c_sum_1773         NUMBER(20,4),
+  sn                 NUMBER,
+  su                 NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RBO_Z#KAS_PLAN_EPS
+  is 'KAS. Плановые операции амортизации доходов по ЭПС';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_date
+  is 'Дата';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_days
+  is 'Количество дней';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_debt_od_plan
+  is 'Плановая задолженность по ОД на дату';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_sum_prc_pln_date
+  is 'Сумма процентов из графика на дату';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_sum_od_plan
+  is 'Сумма ОД из графика';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_sum_prc_plan
+  is 'Сумма процентов из графика';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_sum_plan_pay
+  is 'Ежемесячный платёж клиента';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_profit_eps
+  is 'Доход по ЭПС от АС-1';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_amort_cost
+  is 'Амортизированная стоимость АС-1';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_amort_comiss
+  is 'Амортизация комиссии';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_debt_od
+  is 'Задолженность по ОД';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_debt_prc
+  is 'Задолженность по процентам';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_debt_ovrd_od
+  is 'Задолженность по просроченному ОД';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_debt_ovrd_prc
+  is 'Задолженность по просроченным процентам';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_debt_prc_od
+  is 'Задолженность по процентам на просроченный ОД';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_saldo_1434
+  is 'Сальдо счёта 1434';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_saldo_1435
+  is 'Сальдо счёта 1435';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_rate_prc_provis
+  is 'Коэффициент провизий за прошлый период';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_sum_provis
+  is 'Сумма рассчитанных провизий';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_sum_def_profit
+  is 'Сумма корректировки до эффективного дохода';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_amort_cost_r
+  is 'Амортизированная стоимость АС-2';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_profit_eps_r
+  is 'Доход по ЭПС от АС-2';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_profit_fact
+  is 'Доход по ЭПС фактический';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_amort_cost_3
+  is 'Амортизированная стоимость АС-3';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_amort_com_calc
+  is 'Амортизация комиссии 1434/1435';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_amort_com_dif
+  is 'Амортизация разницы';
+comment on column U1.T_RBO_Z#KAS_PLAN_EPS.c_sum_1773
+  is 'Сумма 1773';
+create unique index U1.T_RBO_Z#KAS_PLAN_EPS_IDX1 on U1.T_RBO_Z#KAS_PLAN_EPS (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RBO_Z#KAS_PLAN_EPS
+  add constraint T_RBO_Z#KAS_PLAN_EPS_PK primary key (ID);
+grant select on U1.T_RBO_Z#KAS_PLAN_EPS to LOADDB;
+

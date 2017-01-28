@@ -1,0 +1,6 @@
+﻿create or replace force view u1.v_test as
+select "ID","YY_MM_REPORT","YY_MM_REPORT_DATE","CONTRACT_NO","CLIENT_ID","RNN","CLIENT_NAME","PRODUCT","PRODUCT_PROGRAMM","CONTRACT_AMOUNT","YY_MM_START","START_DATE","END_DATE","TOTAL_DEBT","DELINQ_DAYS","POS_CODE","BRANCH_NAME","EXPERT_NAME" from v_data_all;
+grant select on U1.V_TEST to LOADDB;
+grant select on U1.V_TEST to LOADER;
+
+

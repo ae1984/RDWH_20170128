@@ -1,0 +1,32 @@
+﻿create table U1.NT_RDWH_DEPENDENCIES
+(
+  owner                VARCHAR2(128) not null,
+  name                 VARCHAR2(128) not null,
+  type                 VARCHAR2(18),
+  referenced_owner     VARCHAR2(128),
+  referenced_name      VARCHAR2(128),
+  referenced_type      VARCHAR2(18),
+  referenced_link_name VARCHAR2(128),
+  dependency_type      VARCHAR2(4)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_RDWH_DEPENDENCIES
+  is 'Создана для Дастана с помощью
+create table NT_RDWH_DEPENDENCIES as
+select * from SYS.DBA_DEPENDENCIES t
+where t.OWNER = ''U1''';
+grant select on U1.NT_RDWH_DEPENDENCIES to LOADDB;
+grant select on U1.NT_RDWH_DEPENDENCIES to RISK_SDASTAN;
+

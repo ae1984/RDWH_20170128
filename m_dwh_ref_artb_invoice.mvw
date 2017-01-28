@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_DWH_REF_ARTB_INVOICE
+build deferred
+refresh force on demand
+as
+select artbinv_id,
+       artbinv_gid,
+       artbinv$start_date,
+       artbinv$end_date,
+       artbinv$row_status,
+       artbinv$audit_id,
+       artbinv$hash,
+       artbinv$source,
+       artbinv$change_date,
+       artbinv$provider,
+       artbinv$source_pk,
+       artbinv_deal_gid,
+       artbinv_external_deal_gid,
+       artbinv_invoice_payment_amount,
+       artbinv_invoice_date,
+       artbinv_invoice_payment_date,
+       artbinv_num_invoice,
+       artbinv_fact_payment_date,
+       artbinv_invoice_status_cd
+  from DWH_MAIN.REF_ARTB_INVOICE@RDWH_EXD;
+grant select on U1.M_DWH_REF_ARTB_INVOICE to LOADDB;
+
+

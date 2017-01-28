@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_SC_ACTIV_KASPI_RED_KN_BY_MOB
+build deferred
+refresh force on demand
+as
+select distinct(fm.c_mobile#numb) as mobile, 'KASPI RED' as prod
+from u1.v_rfo_z#folders fd
+join u1.v_rfo_z#rdoc r on r.collection_id = fd.c_docs
+left join u1.v_rfo_z#form_client fm on fm.id = r.c_doc
+where exists
+(select m.rfo_contract_id from U1.M_FOLDER_CON_CANCEL m where m.form_client_id =  fm.id and
+        m.product_type = 'KASPI RED' and m.contract_status_code not in ('REJECTED','CANCEL','CLOSED','REDUMPED','ANNUL', 'PREPARE'))
+union
+select distinct(fm.c_mobile#numb) as mobile, 'MONEY' as prod
+from u1.v_rfo_z#folders fd
+join u1.v_rfo_z#rdoc r on r.collection_id = fd.c_docs
+left join u1.v_rfo_z#form_client fm on fm.id = r.c_doc
+where exists
+(select m.rfo_contract_id from U1.M_FOLDER_CON_CANCEL m where m.form_client_id =  fm.id and
+        m.product_type = 'ДЕНЬГИ' and m.contract_status_code not in ('REJECTED','CANCEL','CLOSED','REDUMPED','ANNUL', 'PREPARE'));
+grant select on U1.M_SC_ACTIV_KASPI_RED_KN_BY_MOB to LOADDB;
+grant select on U1.M_SC_ACTIV_KASPI_RED_KN_BY_MOB to LOAD_MO;
+
+

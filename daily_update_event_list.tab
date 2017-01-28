@@ -1,0 +1,20 @@
+﻿create table U1.DAILY_UPDATE_EVENT_LIST
+(
+  process VARCHAR2(50),
+  event   VARCHAR2(50)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.DAILY_UPDATE_EVENT_LIST to LOADDB;
+

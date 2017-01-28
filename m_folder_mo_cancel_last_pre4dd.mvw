@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_FOLDER_MO_CANCEL_LAST_PRE4DD
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30 */
+       c.folder_id,
+       c.rfolder_id,
+       c.par_code,
+       c.par_name,
+       max(c.is_rejecting) as is_rejecting,
+       max(c.reject_prior) as reject_prior
+from u1.M_FOLDER_MO_CANCEL_LAST_PRE2DD c
+where c.par_code = 'SC_KN_MATRIX_CAT_A_RES_PRE' and
+      not exists (select null
+                  from u1.M_FOLDER_MO_CANCEL_LAST_PRE2 cc
+                  where cc.rfolder_id = c.rfolder_id and
+                        cc.par_code = 'SC_IS_DEPART_RBP')
+group by c.folder_id,
+         c.rfolder_id,
+         c.par_code,
+         c.par_name;
+grant select on U1.M_FOLDER_MO_CANCEL_LAST_PRE4DD to LOADDB;
+
+

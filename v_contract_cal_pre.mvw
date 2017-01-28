@@ -1,0 +1,279 @@
+﻿create materialized view U1.V_CONTRACT_CAL_PRE
+build deferred
+refresh force on demand
+as
+select /*+parallel(30)*/ distinct c.*,
+                        max(r.rfo_client_id) over(partition by r.contract_number) as rfo_client_id_x
+          from (select /*-- parallel(30) parallel_index(30) */
+                 c.*,
+
+                 d5.product_start_last,
+
+                 r1.is_card,
+                 r1.contract_amount_categ_first,
+                 r1.contract_amount_categ_last,
+                 r1.delinq_type_last,
+
+                 cccc.client_rnn_first,
+                 cccc.client_rnn_last,
+
+                 cccc_iin.client_iin_first,
+                 cccc_iin.client_iin_last,
+
+                 to_char(c.start_date_first, 'yyyy - mm') as yy_mm_start_first,
+                 MONTHS_BETWEEN(to_date(to_char(c.start_date_first,
+                                                'yyyy - mm'),
+                                        'yyyy - mm'),
+                                to_date('2002 - 12', 'yyyy - mm')) as yy_mm_start_first_num,
+                 to_char(c.start_date_first, 'yyyy') as start_year_first,
+                 c.end_date_first - c.start_date_first as contract_term_days_first,
+                 round(MONTHS_BETWEEN(c.end_date_first, c.start_date_first),
+                       0) as contract_term_months_first,
+
+                 to_char(c.start_date_last, 'yyyy - mm') as yy_mm_start_last,
+                 MONTHS_BETWEEN(to_date(to_char(c.start_date_last,
+                                                'yyyy - mm'),
+                                        'yyyy - mm'),
+                                to_date('2002 - 12', 'yyyy - mm')) as yy_mm_start_last_num,
+                 to_char(c.start_date_last, 'yyyy') as start_year_last,
+                 c.end_date_last - c.start_date_last as contract_term_days_last,
+                 round(MONTHS_BETWEEN(c.end_date_last, c.start_date_last), 0) as contract_term_months_last,
+
+                 cc.fact_pmts,
+                 cc.planned_pmts,
+                 cc.pmt_max      as pmt,
+
+                 cc.start_con_amount_max_by_cli,
+                 cc.start_con_del_days_max_by_cli,
+                 cc.start_tot_debt_all_con_by_cli,
+                 cc.start_num_of_con_by_cli_pr_rep,
+                 cc.start_num_of_con_by_cli,
+                 cc.start_total_fact_pmts_by_cli,
+                 cc.start_total_plan_pmts_by_cli,
+                 cc.start_total_plan_pmts_by_cli -
+                 cc.start_total_fact_pmts_by_cli as start_total_undone_pmts_by_cli,
+                 cc.start_pmt_max_by_cli,
+                 cc.start_pmt_pr_rep_by_cli,
+                 d1.delinq_days as first_pmt_delinq,
+                 d4.delinq_days_max as four_pmts_delinq_max,
+
+                 -- << 2012-09-20
+
+                 nvl(cc.provision_max, 0) as provision_max,
+                 nvl(ccc.provision_last_rep, 0) as provision_last_rep, -- 2014-04-03 провизии в последнем отчете
+
+                 nvl(ccc.contract_amount_last_rep, 0) as contract_amount_last_rep,
+                 nvl(ccc.total_debt_last_rep, 0) as total_debt_last_rep,
+                 nvl(ccc.delinq_days_last_rep, 0) as delinq_days_last_rep,
+
+                 cfl1.folder_id_first,
+
+                 ccccc.start_num_of_fol_all,
+                 ccccc.start_num_of_fol_1_month,
+
+                 max(c.contract_number) over(partition by c.client_id order by c.start_date_first rows between 1 preceding and 1 preceding) as prev_con_num_by_start_date,
+                 min(c.contract_number) over(partition by c.client_id order by start_date_first rows between 1 following and 1 following) as next_con_num_by_start_date, -- OK
+
+                 max(c.contract_number) over(partition by c.client_id order by c.yy_mm_report_max, c.start_date_first rows between 1 preceding and 1 preceding) as prev_con_num_by_yymm_last,
+                 min(c.contract_number) over(partition by c.client_id order by c.yy_mm_report_max, c.start_date_first rows between 1 following and 1 following) as next_con_num_by_yymm_last, -- OK
+
+                 max(c.start_date_first) over(partition by c.client_id order by c.start_date_first rows between 1 preceding and 1 preceding) as prev_con_st_date_by_start_date,
+                 max(c.start_date_first) over(partition by c.client_id order by c.yy_mm_report_max, c.start_date_first rows between 1 preceding and 1 preceding) as prev_con_st_date_by_yymm_last,
+
+                 max(c.product_first) over(partition by c.client_id order by c.start_date_first rows between 1 preceding and 1 preceding) as prev_con_prod_first_by_std,
+                 max(c.product_first) over(partition by c.client_id order by c.yy_mm_report_max, c.start_date_first rows between 1 preceding and 1 preceding) as prev_con_prod_first_by_yml,
+
+                 max(c.total_debt_first) over(partition by c.client_id order by c.start_date_first rows between 1 preceding and 1 preceding) as prev_con_tot_debt_first_by_std,
+                 max(c.total_debt_first) over(partition by c.client_id order by c.yy_mm_report_max, c.start_date_first rows between 1 preceding and 1 preceding) as prev_con_tot_debt_first_by_yml,
+
+                 c6.yy_mm_start_debt,
+
+                 c_pkb.pkb_pmt_active_all_sum,
+                 c_pkb.pkb_pmt_active_good_sum,
+                 c_pkb.pkb_total_debt
+
+                  from (select d.contract_no as contract_number,
+                               substr(ltrim(contract_no, 'R'), 1, 7) as client_id,
+
+                               min(d.product) keep(dense_rank first order by d.yy_mm_report) as product_first,
+                               min(d.product_refin) keep(dense_rank first order by d.yy_mm_report) as product_refin_first,
+                               min(d.product_programm) keep(dense_rank first order by d.yy_mm_report) as product_program_first,
+                               min(d.start_date) /*keep (dense_rank first order by d.yy_mm_report)*/ as start_date_first,
+                               min(d.end_date) /*keep (dense_rank first order by d.yy_mm_report)*/ as end_date_first,
+                               min(d.contract_amount) keep(dense_rank first order by d.yy_mm_report) as contract_amount_first,
+                               min(d.expert_name) keep(dense_rank first order by d.yy_mm_report) as expert_name_first,
+                               min(d.pos_code) keep(dense_rank first order by d.yy_mm_report) as pos_code_first,
+                               min(d.branch_name) keep(dense_rank first order by d.yy_mm_report) as branch_name_first,
+
+                               min(d.product) keep(dense_rank last order by d.yy_mm_report) as product_last,
+                               min(d.product_refin) keep(dense_rank last order by d.yy_mm_report) as product_refin_last,
+                               min(d.product_programm) keep(dense_rank last order by d.yy_mm_report) as product_program_last,
+                               max(d.start_date) /*keep (dense_rank last order by d.yy_mm_report)*/ as start_date_last,
+                               max(d.end_date) /*keep (dense_rank last order by d.yy_mm_report)*/ as end_date_last,
+                               min(d.contract_amount) keep(dense_rank last order by d.yy_mm_report) as contract_amount_last,
+
+                               min(d.yy_mm_report) as yy_mm_report_min,
+                               max(d.yy_mm_report) as yy_mm_report_max,
+                               max(d.total_debt) as max_debt_used,
+                               max(d.delinq_days) as delinq_days_max,
+                               min(d.delinq_days) keep(dense_rank last order by d.yy_mm_report) as delinq_days_last,
+                               max(d.contract_amount) as contract_amount_max,
+
+                               max(rp.is_refin_restruct) keep(dense_rank first order by d.yy_mm_report) as is_refin_restruct_first,
+                               max(rp.is_refin_restruct) keep(dense_rank last order by d.yy_mm_report) as is_refin_restruct_last,
+                               max(rp.is_refin_restruct) as is_refin_restruct_ever, --была ли когда-либо рестр/реф
+
+                               max(rp.first_pmt_days) keep(dense_rank first order by d.yy_mm_report) as first_pmt_days_first,
+                               max(rp.first_pmt_days) keep(dense_rank last order by d.yy_mm_report) as first_pmt_days_last,
+
+                               max(rp.first_pmt_days_refin) keep(dense_rank first order by d.yy_mm_report) as first_pmt_days_refin_first,
+                               max(rp.first_pmt_days_refin) keep(dense_rank last order by d.yy_mm_report) as first_pmt_days_refin_last,
+
+                               max(d.total_debt) keep(dense_rank first order by d.yy_mm_report) as total_debt_first,
+                               max(d.total_debt) keep(dense_rank last order by d.yy_mm_report) as total_debt_last
+                          from v_data_all d, ref_products rp
+                         WHERE rp.product_program(+) = d.product_programm
+                         group by d.contract_no) c,
+                       (select r111.contract_number,
+                               r111.is_card as is_card,
+                               min(r111.contract_amount_categ) keep(dense_rank first order by r111.yy_mm_report) as contract_amount_categ_first,
+                               min(r111.contract_amount_categ) keep(dense_rank last order by r111.yy_mm_report) as contract_amount_categ_last,
+                               min(r111.delinq_type) keep(dense_rank last order by r111.yy_mm_report) as delinq_type_last
+                          from v_report_cal_1 r111
+                         group by r111.contract_number, r111.is_card) r1,
+                       (select r11.contract_number,
+                               max(r11.fact_pmts) as fact_pmts,
+                               max(r11.planned_pmt_month) as planned_pmts,
+                               max(r11.pmt_in_rep) as pmt_max,
+
+                               min(r11.pr_rep_con_amount_max_by_cli) keep(dense_rank first order by r11.report_month) as start_con_amount_max_by_cli,
+
+                               min(r11.pr_rep_con_del_days_max_by_cli) keep(dense_rank first order by r11.report_month) as start_con_del_days_max_by_cli,
+
+                               min(r11.pr_rep_tot_debt_all_con_by_cli) keep(dense_rank first order by r11.report_month) as start_tot_debt_all_con_by_cli,
+
+                               min(r11.pr_rep_number_of_con_by_cli) keep(dense_rank first order by r11.report_month) as start_num_of_con_by_cli_pr_rep,
+
+                               count(r11.contract_number) over(partition by min(r11.client_id) order by min(r11.start_date) range between unbounded preceding and 1 preceding) as start_num_of_con_by_cli,
+
+                               min(r11.pr_rep_total_fact_pmts_by_cli) keep(dense_rank first order by r11.report_month) as start_total_fact_pmts_by_cli,
+
+                               min(r11.pr_rep_total_plan_pmts_by_cli) keep(dense_rank first order by r11.report_month) as start_total_plan_pmts_by_cli,
+
+                               min(r11.pr_rep_pmt_max_by_cli) keep(dense_rank first order by r11.report_month) as start_pmt_max_by_cli,
+
+                               max(r11.pr_rep_pmt_in_rep_sum_by_cli) keep(dense_rank first order by r11.report_month) as start_pmt_pr_rep_by_cli,
+
+                               max(r11.provision) as provision_max
+
+                          from v_report_cal_1 r11
+                         group by r11.contract_number) cc, -------------------------------------------------------
+                       (select d1.contract_number,
+                               max(d1.contract_amount) as contract_amount_last_rep,
+                               max(d1.total_debt) as total_debt_last_rep,
+                               max(d1.delinq_days) as delinq_days_last_rep,
+                               max(d1.provision) as provision_last_rep
+                          from v_report_cal_1 d1
+                         where d1.yy_mm_report =
+                               (select max(yy_mm_report) from v_data_all)
+                         group by d1.contract_number) ccc,
+                       (select d2.contract_no as contract_number,
+                               min(d2.rnn) keep(dense_rank first order by d2.yy_mm_report) as client_rnn_first,
+                               min(d2.rnn) keep(dense_rank last order by d2.yy_mm_report) as client_rnn_last
+                          from v_data_all d2
+                         where d2.rnn is not null
+                         group by d2.contract_no) cccc,
+                       (select d2.contract_no as contract_number,
+                               min(d2.iin) keep(dense_rank first order by d2.yy_mm_report) as client_iin_first,
+                               min(d2.iin) keep(dense_rank last order by d2.yy_mm_report) as client_iin_last
+                          from v_data_all d2
+                         where d2.iin is not null
+                         group by d2.contract_no) cccc_iin,
+                       V_CONTRACT_FOLDER_1ST_LINK_RFO cfl1,
+                       (select y.contract_number,
+                               count(y.folder_id) - 1 as start_num_of_fol_all,
+                               (min(y.start_num_of_fol_1_month)
+                                keep(dense_rank last order by
+                                     y.folder_create_date)) - 1 as start_num_of_fol_1_month
+                          from (select c.contract_number,
+                                       --                 c.client_rnn_first,
+                                       --                 c.start_date_first,
+                                       f.folder_id,
+                                       f.folder_create_date,
+                                       --                 f.is_credit_issued,
+                                       count(f.folder_id) over(partition by c.contract_number order by f.folder_create_date range between 30 preceding and current row) as start_num_of_fol_1_month ------------------------
+                                  from (select d.contract_no as contract_number,
+                                               min(d.start_date) as start_date_first,
+                                               min(d.iin) keep(dense_rank first order by d.yy_mm_report) as client_iin_first
+                                          from v_data_all d
+                                         where d.iin is not null
+                                         group by d.contract_no) c,
+                                       v_folder_all f,
+                                       V_CONTRACT_FOLDER_1ST_LINK_RFO cfl
+                                 where c.client_iin_first = f.client_iin(+)
+                                   and c.contract_number =
+                                       cfl.contract_number(+)
+                                   and cfl.folder_id_first >= f.folder_id) y
+                         group by y.contract_number) ccccc,
+                       (select d25.contract_no as contract_number,
+                               min(d25.yy_mm_report) keep(dense_rank first order by d25.yy_mm_report) as yy_mm_start_debt
+                          from v_data_all d25
+                         where d25.total_debt > 0
+                         group by d25.contract_no) c6,
+                       (select r1.contract_number,
+                               max(p.pmt_active_all_sum)  as pkb_pmt_active_all_sum,
+                               max(p.pmt_active_good_sum) as pkb_pmt_active_good_sum,
+                               max(p.total_debt)          as pkb_total_debt
+                          from V_CONTRACT_FOLDER_1ST_LINK_RFO r1
+                          join v_pkb_report p
+                            on p.folder_id = r1.folder_id_first
+                         group by r1.contract_number/*,
+                                  p.pmt_active_all_sum,
+                                  p.pmt_active_good_sum,
+                                  p.total_debt*/) c_pkb, ---group by добавлен для утсранения дублей
+                       (select r.contract_number,
+                               max(r.delinq_days) as delinq_days
+                          from V_REPORT_CAL_1 r
+                         where r.planned_pmt_month = 1
+                         group by r.contract_number) d1,
+                       (select r.contract_number,
+                               max(r.delinq_days) as delinq_days_max
+                          from V_REPORT_CAL_1 r
+                         where r.planned_pmt_month >= 1
+                           and r.planned_pmt_month <= 4
+                         group by r.contract_number) d4,
+                       (select da6.contract_no as contract_number,
+                               min(da6.product) keep(dense_rank first order by da6.yy_mm_report_num) as product_start_last -- первый продукт с yy_mm_start_last
+                          from V_DATA_ALL da6
+                          join (select da5.contract_no,
+                                      to_char(max(da5.start_date), 'yyyy - mm') as yy_mm_start_last
+                                 from V_DATA_ALL da5
+                                group by da5.contract_no) da7
+                            on da7.contract_no = da6.contract_no
+                           and da7.yy_mm_start_last = da6.yy_mm_start
+                         group by da6.contract_no) d5
+                 where c.contract_number = r1.contract_number
+                   and c.contract_number = cc.contract_number(+)
+                   and c.contract_number = ccc.contract_number(+)
+                   and c.contract_number = cccc.contract_number(+)
+                   and c.contract_number = cccc_iin.contract_number(+)
+                   and c.contract_number = cfl1.contract_number(+)
+                   and c.contract_number = ccccc.contract_number(+)
+                   and c.contract_number = c6.contract_number(+)
+                   and c.contract_number = c_pkb.contract_number(+)
+                   and c.contract_number = d1.contract_number(+)
+                   and c.contract_number = d4.contract_number(+)
+                   and c.contract_number = d5.contract_number(+)
+                ) c
+
+          left join V_CONTRACT_ALL_RFO r
+            on c.contract_number = r.contract_number
+           and r.contract_status_name not in
+               ('ПОДГОТОВКА',
+                'ОТКАЗ',
+                'ПОДГОТОВКА К УСТНОВКЕ РЕВОЛЬВЕРНОСТИ',
+                'СЛУЖЕБНОЕ')
+           and r.contract_number is not null;
+grant select on U1.V_CONTRACT_CAL_PRE to LOADDB;
+
+

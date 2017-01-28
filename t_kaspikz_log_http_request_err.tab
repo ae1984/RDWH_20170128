@@ -1,0 +1,21 @@
+﻿create table U1.T_KASPIKZ_LOG_HTTP_REQUEST_ERR
+(
+  id           NUMBER,
+  client_ip    VARCHAR2(64),
+  nc_client_ip VARCHAR2(64)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_KASPIKZ_LOG_HTTP_REQUEST_ERR to LOADDB;
+

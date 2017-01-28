@@ -1,0 +1,29 @@
+﻿create table U1.MO_RFOL_FORM_CONTACT
+(
+  contp_id         NUMBER not null,
+  foldr_id         NUMBER,
+  foldr_client     NUMBER,
+  contp_last_name  VARCHAR2(300),
+  contp_first_name VARCHAR2(300),
+  contp_sur_name   VARCHAR2(300),
+  contp_phone#numb VARCHAR2(300),
+  contp_relation   VARCHAR2(300),
+  formc_id         NUMBER,
+  contp_mob_number VARCHAR2(300)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO_RFOL_FORM_CONTACT to LOADDB;
+grant select on U1.MO_RFOL_FORM_CONTACT to LOADER;
+

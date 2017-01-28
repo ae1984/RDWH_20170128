@@ -1,0 +1,43 @@
+﻿create materialized view U1.M_FOLDER_MO_CANCEL_LAST_PRE3DD
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30 */
+       c.folder_id,
+       c.rfolder_id,
+       c.par_code,
+       c.par_name,
+       max(c.is_rejecting) as is_rejecting,
+       max(c.reject_prior) as reject_prior
+from u1.M_FOLDER_MO_CANCEL_LAST_PRE2DD c
+where c.par_code = 'SC_MIXED_RES_PRE'
+group by c.folder_id,
+         c.rfolder_id,
+         c.par_code,
+         c.par_name
+union
+--отдельно отрабатываем по смешанной проверке,
+--т.к. сначала не было смешанной проврки
+--и параметр завели позже включения правила
+select --+ parallel 30
+       f.folder_id,
+       t.rfolder_id,
+       'SC_MIXED_RES_PRE' as par_code,
+       'СМЕШАННАЯ ПРОВЕРКА' as par_name,
+       1 as is_rejecting,
+       max(t.reject_prior) as reject_prior
+from u1.M_FOLDER_CON_CANCEL_BASE f
+join u1.M_FOLDER_MO_CANCEL_LAST_PRE2DD t on t.folder_id = f.folder_id
+where f.cr_program_name = 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР' and
+      extract(year from f.folder_date_create_mi) in (2013, 2014)
+      and not exists (select null from u1.M_FOLDER_MO_CANCEL_LAST_PRE2 tt where tt.folder_id = f.folder_id and tt.par_code = 'SC_MIXED_RES_PRE')
+group by f.folder_id, t.rfolder_id
+having sum(case when t.par_code in ('SC_RISK_NOT_VIRGIN_RES_PRE', --'РИСКОВЫЕ НЕ БЕКИ (СКОРИНГ)',
+                                    'RISKY_GOODS_RES_PRE', --'РИСК. ТОВАРЫ - РЕЗУЛЬТАТ (ДО КГ)',
+                                    'SC_8_RV_COMB_RES_PRE', --'КОМБИНИР. ПРОВЕРКА - РЕЗУЛЬТАТ (ДО КГ)',
+                                    'SC_8_RV_SUM_FRESH_RES_PRE', --'ПРОВЕРКА ПО СУММЕ И СВЕЖЕСТИ КЛИЕНТА (ДО КГ)',
+                                    'SC_R_VIRG_EKT350_RES_PRE' --'РИСК ЭКТ БЕКИ 350 (ДО КГ)'
+                                    ) then 1 end) >= 2;
+grant select on U1.M_FOLDER_MO_CANCEL_LAST_PRE3DD to LOADDB;
+
+

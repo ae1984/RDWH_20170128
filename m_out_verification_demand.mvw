@@ -1,0 +1,40 @@
+﻿create materialized view U1.M_OUT_VERIFICATION_DEMAND
+build deferred
+refresh force on demand
+as
+select /*+ parallel(10)*/ t.id as verification_demand_id, --идентификатор заявки на верификацию
+       t.c_client_ref  as rfo_client_id, --идентификатор клиента из РФО(FK на z#client)
+       cast(nvl(t.c_folder_ref,
+           (select max(pre1.id)
+            from M_OUT_VERIFICATION_DEMAND_PRE1 pre1
+            where pre1.c_client=t.c_client_ref
+                  and pre1.c_date_create >= trunc(f.c_doc_date)
+                  and pre1.c_date_create < trunc(f.c_doc_date) + 1
+            )
+            ) as number) AS folder_id,
+       cast( case when f.c_status_doc is null then -1
+            when f.c_status_doc is not null then f.c_status_doc end as number) as verif_demand_status_doc_id,  --Статус документа(FK на Z#STATUS_DOG)
+       cast(case when t.c_verify_result = '1' then 'Y'
+            when t.c_verify_result = '0' then 'N'
+            when t.c_verify_result is null then '*' end as varchar2(10)) as is_verif_demand_result_flg,
+       t.c_comment,
+       t.c_comment_photo,
+      cast( case when t.c_photover_work is not null then coalesce(
+                  a2.c_d1,f.c_doc_date)
+             else f.c_doc_date end as date) as verif_date_create,
+      cast (a1.val as date) as verif_demand_date_out,
+      cast (case
+         when t.c_photover_work is not null
+          then coalesce(a.val,t.c_date_last_edit)
+          else t.c_date_last_edit end as date) as verif_demand_date_in,
+      nvl(t.c_reason_process, -1) as reason_process_id   --Причина обработки(FK на Z#KAS_UNIVERSAL_D)
+      ,f.c_doc_date
+  from T_RFO_Z#KAS_VERIFICATION t
+  join V_RFO_Z#FDOC             f  on f.id = t.id  and f.class_id = 'KAS_VERIFICATION'
+  left join M_OUT_VERIFICATION_DEMAND_PRE4 a on a.collection_id = t.c_photover_work
+  left join M_OUT_VERIFICATION_DEMAND_PRE3 a1 on a1.c_id_object=t.id
+  left join M_OUT_VERIFICATION_DEMAND_PRE2 a2 on a2.collection_id=t.c_photover_work;
+grant select on U1.M_OUT_VERIFICATION_DEMAND to LOADDB;
+grant select on U1.M_OUT_VERIFICATION_DEMAND to RISK_VERIF;
+
+

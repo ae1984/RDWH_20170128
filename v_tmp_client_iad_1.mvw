@@ -1,0 +1,24 @@
+﻿create materialized view U1.V_TMP_CLIENT_IAD_1
+using no index
+refresh complete on demand
+as
+select *
+from (
+select rfo_client_id,
+       iin_cur,
+       cl_name_cur,
+       birth_date_cur,
+       max(folder_id) keep (dense_rank last order by folder_date_create) as fold_id_last,
+       max(c_cl_req_old#contacts) keep (dense_rank last order by folder_date_create) as c_cl_req_old#contacts,
+       max(c_cl_req_new#contacts) keep (dense_rank last order by folder_date_create) as c_cl_req_new#contacts,
+       max(ci.c_cl_req_new#last_name) keep (dense_rank last order by folder_date_create) || ' '|| max(ci.c_cl_req_new#first_name) keep (dense_rank last order by folder_date_create)
+       ||' '||max(ci.c_cl_req_new#sur_name) keep (dense_rank last order by folder_date_create) as fio_iad
+from V_TMP_CLIENT_IAD ci
+group by rfo_client_id,
+         iin_cur,
+         cl_name_cur,
+         birth_date_cur) a;
+grant select on U1.V_TMP_CLIENT_IAD_1 to LOADDB;
+grant select on U1.V_TMP_CLIENT_IAD_1 to LOADER;
+
+

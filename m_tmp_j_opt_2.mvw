@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_TMP_J_OPT_2
+refresh force on demand
+as
+select to_char(spof_end_mon,'yyyy - mm') as mon,
+       restructing_type_name,
+       count(distinct contract_number) as con_cnt, count(*) as cnt,
+       sum(total_debt_after) as total_debt_after
+from (
+    select t.spof_end_mon, t.contract_number, t.restructing_type_name,
+           dp_bef.delinq_days as delinq_days_before,
+           dp_aft.total_debt as total_debt_after
+    from (select trunc(tt.spof_end_date,'mm') as spof_end_mon, tt.contract_number,
+                 max(tt.spof_end_date) as spof_end_date_max_in_mon,
+                 max(tt.restructing_type_name) keep (dense_rank last order by tt.spof_end_date) as restructing_type_name
+          from M_DWH_ACC_SPECIAL_OFFER_CON tt
+          where trunc(tt.spof_end_date) >= to_date('2014-01-01','yyyy-mm-dd') and
+                tt.spof_spec_offer_status_cd in ('EXECUTED','DEFAULT','WORK')
+          group by trunc(tt.spof_end_date,'mm'), tt.contract_number
+    ) t
+    join DWH_PORT dp_bef on dp_bef.deal_number = t.contract_number and
+                            dp_bef.rep_date = trunc(t.spof_end_date_max_in_mon) - 1
+    join DWH_PORT dp_aft on dp_aft.deal_number = t.contract_number and
+                            dp_aft.rep_date = trunc(t.spof_end_date_max_in_mon) + 1
+    where dp_bef.delinq_days < 30
+) group by to_char(spof_end_mon,'yyyy - mm'),
+           restructing_type_name;
+grant select on U1.M_TMP_J_OPT_2 to LOADDB;
+grant select on U1.M_TMP_J_OPT_2 to LOADER;
+
+

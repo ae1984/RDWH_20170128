@@ -1,0 +1,47 @@
+﻿create table U1.T_IBSO_Z#FACT_ACC
+(
+  id                 NUMBER not null,
+  c_opdate           DATE,
+  c_acc_ref          NUMBER,
+  c_sld_in#val       NUMBER,
+  c_sld_in#nat       NUMBER,
+  c_turn_dt#val      NUMBER,
+  c_turn_dt#nat      NUMBER,
+  c_turn_kt#val      NUMBER,
+  c_turn_kt#nat      NUMBER,
+  c_turn_dt_cr#val   NUMBER,
+  c_turn_dt_cr#nat   NUMBER,
+  c_turn_kt_cr#val   NUMBER,
+  c_turn_kt_cr#nat   NUMBER,
+  c_audit#modified   DATE,
+  c_audit#user_ref   NUMBER,
+  c_audit#prod_descr VARCHAR2(4000),
+  c_audit#purpose    VARCHAR2(300),
+  c_audit#load_date  DATE,
+  c_audit#source_ref NUMBER,
+  c_audit#time       TIMESTAMP(9),
+  c_audit#reason     VARCHAR2(750),
+  c_prz_cln_sotr     VARCHAR2(3),
+  c_audit#divs_ref   NUMBER,
+  c_sld_out_round    NUMBER,
+  c_params           NUMBER not null,
+  c_other_params     NUMBER not null,
+  sn                 NUMBER,
+  su                 NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_IBSO_Z#FACT_ACC to LOADDB;
+grant select on U1.T_IBSO_Z#FACT_ACC to LOADER;
+

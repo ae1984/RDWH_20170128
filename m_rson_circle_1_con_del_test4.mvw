@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_RSON_CIRCLE_1_CON_DEL_TEST4
+refresh complete on demand
+as
+select d.contract_number
+   from (select *
+           from M_RSON_CIRCLE_1_CON_DEL cl
+          where cl.perc_del_days_max_by_cli >= 70
+            and cl.circle_1_cli_cnt > 3
+            and cl.circle_1_cli_cnt < 80) g
+   join M_CONTRACT_CAL_DEL d
+     on d.contract_number = g.contract_number
+  group by d.contract_number;
+grant select on U1.M_RSON_CIRCLE_1_CON_DEL_TEST4 to LOADDB;
+grant select on U1.M_RSON_CIRCLE_1_CON_DEL_TEST4 to LOADER;
+
+

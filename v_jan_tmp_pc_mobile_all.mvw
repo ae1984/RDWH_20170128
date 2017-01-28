@@ -1,0 +1,39 @@
+﻿create materialized view U1.V_JAN_TMP_PC_MOBILE_ALL
+refresh force on demand
+as
+select /*+ leading(d p fpc) index(fpc V_FOLDER_PHONE_CALC_PK_IND) parallel(30) parallel_index(30) */
+--       fpc.ph_home_same_order || ' - ' || fpc.ph_home_same_age as home_same_order_age,
+       lpad(fpc.ph_mobile_all_order,4,0) || ' - ' || lpad(fpc.ph_mobile_all_age,4,0) as home_all_order_age,
+--       to_char(fpc.phone_order_age_code) as phone_order_age_code_text,
+--       fpc.ph_home_same_order || '#' || fpc.ph_home_same_age as order_and_age,
+    count(p.contract_number) as s_contract_count,
+--    count(distinct p.contract_number) as s_contract_count_distinct,
+    round(sum(case when p.delinq_days > 0 and p.delinq_days < 8 then p.total_debt * 0.45
+                   when p.delinq_days > 7 then p.total_debt
+                   else 0 end) / sum(p.max_debt_used) * 100, 2) as s_deling_rate,
+/*    round(sum(case when p.delinq_days > 0 then p.total_debt
+                   else 0 end) / sum(p.max_debt_used) * 100, 2) as s_deling_rate_simple,*/
+    round(sum(p.max_debt_used) / 1000000, 2) as s_sales_mln
+from V_PORTFOLIO p
+join V_FOLDER_PHONE_CALC fpc on fpc.folder_id = p.folder_id_first --and fpc.folder_date > to_date('2013-01-01','yyyy-mm-dd') and
+--      fpc.folder_date < to_date('2013-11-01','yyyy-mm-dd') --and
+where p.report_month_all_contracts = (select max(d.yy_mm_report) from v_data_all d) and
+      fpc.folder_date_day >= to_date('2013-01-01','yyyy-mm-dd') and
+      fpc.folder_date_day < to_date('2014-01-01','yyyy-mm-dd') --and
+     -- fpc.ph_home_same_order < 101 and fpc.ph_home_same_age < 365 101 and
+--      fpc.ph_home_same_order = 2
+--      fpc.ph_home_all_order > 1 and fpc.ph_home_all_order < 101 and fpc.ph_home_all_age < 11
+group by fpc.ph_mobile_all_order, fpc.ph_mobile_all_age
+--group by fpc.phone_order_age_code
+having sum(p.max_debt_used) > 0/* and
+       sum(case when p.delinq_days > 0 and p.delinq_days < 8 then p.total_debt * 0.45
+                   when p.delinq_days > 7 then p.total_debt
+                   else 0 end) / sum(p.max_debt_used) > 0.4 and
+       count(p.contract_number) > 4*/
+--) where s_deling_rate > 40
+--phone_order_age_code_text = '10001000000020554'
+--order by 1, 2;
+grant select on U1.V_JAN_TMP_PC_MOBILE_ALL to LOADDB;
+grant select on U1.V_JAN_TMP_PC_MOBILE_ALL to LOADER;
+
+

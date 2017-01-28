@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_TMP_ONLINE_SMS_CALLS1
+refresh force on demand
+as
+select /*+noparallel*/
+phone_date,
+rfo_client_id,
+iin,
+clnt_name,
+phone_number,
+text,
+result_name,
+contact_type,
+system_name,
+is_sign_require,
+
+fpd0,
+fpd7,
+spd,
+is_del0,
+is_del7,
+is_del14
+from M_TMP_ONLINE_SMS_CALLS
+where is_categ_a = 1;
+grant select on U1.M_TMP_ONLINE_SMS_CALLS1 to LOADDB;
+grant select on U1.M_TMP_ONLINE_SMS_CALLS1 to LOADER;
+
+

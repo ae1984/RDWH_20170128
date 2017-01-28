@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_KASPIKZ_PAY_SUBSCRIPTIONS
+refresh force on demand
+as
+select
+t."bintId" id,
+t."bintUserId" user_id,
+t."intServiceId" service_id,
+t."vchName" name_val,
+t."AddInfo" add_info,
+t."bitIsActive" is_active,
+t."bitIsTrusted" is_trusted,
+t."bitIsConfirmedBySms" is_confirmed_by_sms,
+to_date(to_char(t."CreateTimestamp", 'dd.mm.yyyy hh24:mi:ss'), 'dd.mm.yyyy hh24:mi:ss') date_create
+from "dbo"."tb_Payments_Subscriptions"@"db_kr2" t;
+grant select on U1.M_KASPIKZ_PAY_SUBSCRIPTIONS to LOADDB;
+grant select on U1.M_KASPIKZ_PAY_SUBSCRIPTIONS to LOADER;
+
+

@@ -1,0 +1,67 @@
+﻿create table U1.ZZ_DWH_DM_CARDSDAILY_LD_T
+(
+  cdld$change_date           DATE not null,
+  cdld$audit_id              NUMBER not null,
+  cdld_rep_date              DATE not null,
+  cdld_clnt_gid              NUMBER,
+  cdld_dcard_gid             NUMBER not null,
+  cdld_client_name           VARCHAR2(255 CHAR),
+  cdld_client_iin            VARCHAR2(12 CHAR),
+  cdld_client_rnn            VARCHAR2(40 CHAR),
+  cdld_client_rfo_id         VARCHAR2(2000 CHAR),
+  cdld_deal_number           VARCHAR2(250 CHAR) not null,
+  cdld_currency              VARCHAR2(3 CHAR),
+  cdld_begin_date            DATE,
+  cdld_plan_end_date         DATE,
+  cdld_actual_end_date       DATE,
+  cdld_set_revolving_date    DATE,
+  cdld_deal_status           VARCHAR2(255 CHAR),
+  cdld_fst_dept_auto_date    DATE,
+  cdld_fst_dept_date         DATE,
+  cdld_card_limit            NUMBER,
+  cdld_rate_value            NUMBER,
+  cdld_prod_name             VARCHAR2(255 CHAR),
+  cdld_prod_type             VARCHAR2(255 CHAR),
+  cdld_dept_name             VARCHAR2(254 CHAR),
+  cdld_dept_number           VARCHAR2(254 CHAR),
+  cdld_unp_name              VARCHAR2(254 CHAR),
+  cdld_unp_number            VARCHAR2(254 CHAR),
+  cdld_fil_name              VARCHAR2(254 CHAR),
+  cdld_fil_number            VARCHAR2(254 CHAR),
+  cdld_empl_name             VARCHAR2(4000),
+  cdld_empl_number           VARCHAR2(10),
+  cdld_create_empl_name      VARCHAR2(4000),
+  cdld_create_empl_number    VARCHAR2(10),
+  cdld_pc_cred               NUMBER,
+  cdld_pc_overlimit          NUMBER,
+  cdld_pc_overdraft          NUMBER,
+  cdld_pc_prc                NUMBER,
+  cdld_pc_ovrd_cred          NUMBER,
+  cdld_pc_ovrd_overlimit     NUMBER,
+  cdld_pc_ovrd_overdraft     NUMBER,
+  cdld_pc_ovrd_prc           NUMBER,
+  cdld_available_balance     NUMBER,
+  cdld_to_ovrd_date          DATE,
+  cdld_ovrd_days             NUMBER,
+  cdld_cl_to_ovrd_date       DATE,
+  cdld_cl_ovrd_days          NUMBER,
+  cdld_pc_vnb_ovrd_cred      NUMBER,
+  cdld_pc_vnb_ovrd_overdraft NUMBER,
+  cdld_pc_vnb_ovrd_overlimit NUMBER,
+  cdld_pc_vnb_ovrd_prc_cred  NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.ZZ_DWH_DM_CARDSDAILY_LD_T to LOADDB;
+

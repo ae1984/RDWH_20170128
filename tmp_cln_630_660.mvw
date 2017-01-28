@@ -1,0 +1,11 @@
+﻿create materialized view U1.TMP_CLN_630_660
+refresh force on demand
+as
+select nvl(pr.c_client,pc.c_client_ref)  as client_id from T_TMP_PROVISION_631_660 q
+left join v_rbo_z#kas_pc_dog pc on pc.c_num_dog = q.contract_number
+left join v_rbo_z#pr_cred pr on pr.c_num_dog = q.contract_number
+group by nvl(pr.c_client,pc.c_client_ref);
+grant select on U1.TMP_CLN_630_660 to LOADDB;
+grant select on U1.TMP_CLN_630_660 to LOADER;
+
+

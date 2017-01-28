@@ -1,0 +1,35 @@
+﻿create materialized view U1.M_TMP_J_SEX_1_DET
+refresh complete on demand
+as
+select t.rfo_client_id, t.iin,
+
+       t.name_last, t.name_first, t.name_patronymic,
+
+       c.c_name as client_tax_name,
+
+       case when substr(t.iin,7, 1) in ('1','3','5') then 'ИИН М'
+            when substr(t.iin,7, 1) in ('2','4','6') then 'ИИН Ж'
+            else 'ИИН ?' end as sex_iin,
+       'РФО ' || coalesce(t.sex,'?') as sex_rfo,
+       substr(trim(t.name_patronymic),-2) as patronymic_type,
+       substr(trim(t.name_last),-2) as last_name_type,
+       substr(trim(t.name_first),-2) as first_name_type,
+
+       case when t.iin is not null then 'С ИИН' else 'БЕЗ ИИН' end as is_iin_exists,
+       case when t.name_last is null then 'БЕЗ ФАМИЛИИ' else 'С ФАМИЛИЕЙ' end as is_last_name_exists,
+       extract(year from t.birth_date) as birth_year,
+
+/*       substr(name1,1,INSTR(name1,' ', 1, 1)-1) as f,
+       substr(name1,INSTR(name1,' ', 1, 1)+1,
+              case when INSTR(name1,' ', 1, 2) = 0 then length(name1) else
+              INSTR(name1,' ', 1, 2)-INSTR(name1,' ', 1, 1)-1 end
+              ) as i,*/
+       case when c.iin is null then 'НЕТ В НАЛОГОВОЙ' else 'ЕСТЬ В НАЛОГОВОЙ' end as is_in_tax_db,
+       substr(trim(case when instr(c.c_name,' ', 1, 2) = 0 then null else
+              substr(c.c_name, instr(c.c_name,' ', 1, 2) + 1, length(c.c_name)) end),-2) as tax_patronymic_type
+from V_CLIENT_RFO_BY_ID t
+left join V_CLIENT_TAX c on c.iin = t.iin;
+grant select on U1.M_TMP_J_SEX_1_DET to LOADDB;
+grant select on U1.M_TMP_J_SEX_1_DET to LOADER;
+
+

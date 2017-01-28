@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_RFO_OUT_KAS_CL_RISK_MO_TEST
+refresh complete on demand
+as
+select t3.UPDATE_DATE,
+       t3.CLIENT_REF,
+       t3.ANKETA_TYPE,
+       case when MNG_VIS_REASON_PRE = 0 then null
+            when MNG_VIS_REASON_PRE = 1 then 'VERIFY_PHOTO;'
+       else 'VERIFY_PHOTO;DO_SOMETHING;' end MNG_VIS_REASON
+from (
+    select t2.*,
+           case when t2.ANKETA_TYPE = 3 or t2.ANKETA_TYPE = 4  then round(dbms_random.value(1, 2))
+           else 0 end MNG_VIS_REASON_PRE
+    from (
+        select trunc(sysdate) as UPDATE_DATE,
+               t.client_id_rfo CLIENT_REF,
+               round(dbms_random.value(2, 4)) ANKETA_TYPE
+        from M_CLIENT_RFO_BAS t
+        where rownum < 50000
+        ) t2
+    ) t3;
+grant select on U1.M_RFO_OUT_KAS_CL_RISK_MO_TEST to LOADDB;
+grant select on U1.M_RFO_OUT_KAS_CL_RISK_MO_TEST to LOADER;
+
+

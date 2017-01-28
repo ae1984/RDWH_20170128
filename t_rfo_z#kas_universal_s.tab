@@ -1,0 +1,68 @@
+﻿create table U1.T_RFO_Z#KAS_UNIVERSAL_S
+(
+  id            NUMBER not null,
+  collection_id NUMBER,
+  c_s1          VARCHAR2(4000),
+  c_s2          VARCHAR2(4000),
+  c_n1          NUMBER(30,10),
+  c_n2          NUMBER(30,10),
+  c_i1          NUMBER(20),
+  c_i2          NUMBER(20),
+  c_b1          VARCHAR2(3),
+  c_b2          VARCHAR2(3),
+  c_d1          DATE,
+  c_d2          DATE,
+  c_r1          VARCHAR2(384),
+  c_r2          VARCHAR2(384),
+  sn            NUMBER,
+  su            NUMBER,
+  c_s3          VARCHAR2(4000),
+  c_s4          VARCHAR2(4000),
+  c_n3          NUMBER(30,10),
+  c_n4          NUMBER(30,10),
+  c_n5          NUMBER(30,10),
+  c_n6          NUMBER(30,10)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create unique index U1.PK_T_Z#KAS_UNIVERSAL_S_ID on U1.T_RFO_Z#KAS_UNIVERSAL_S (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RFO_Z#KAS_UNIVERSAL_S_IND1 on U1.T_RFO_Z#KAS_UNIVERSAL_S (COLLECTION_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#KAS_UNIVERSAL_S
+  add constraint T_RFO_Z#KAS_UNIVERSAL_S_PK primary key (ID);
+grant select on U1.T_RFO_Z#KAS_UNIVERSAL_S to LOADDB;
+

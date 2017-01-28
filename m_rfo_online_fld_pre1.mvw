@@ -1,0 +1,43 @@
+﻿create materialized view U1.M_RFO_ONLINE_FLD_PRE1
+refresh complete on demand
+as
+select /*+ driving_site(x) first_rows*/ *
+from
+(
+select /*+ driving_site(c) no_merge*/
+     c.id,
+     c.c_date_create,
+     f.c_client,
+     f.c_business,
+     c.c_st_depart,
+     f.c_kas_sys_ref,
+     c.c_way,
+     c.c_point,
+     cl.c_inn,
+     cp.c_last_name,
+     cp.c_first_name,
+     cp.c_sur_name,
+     co.c_numb,
+     co.c_activ,
+     co.c_allow_cc_2,
+     c.c_create_user
+
+     ,f.c_docs
+/*     ,co.c_private*/
+      from IBS.Z#CM_CHECKPOINT@RFO c
+      join IBS.Z#FOLDERS@RFO f
+        on f.id = c.id
+      join IBS.Z#CLIENT@RFO cl
+        on cl.id = f.c_client
+      join IBS.Z#CL_PRIV@RFO cp
+        on cp.id = cl.id
+      join IBS.Z#CONTACTS@RFO co
+        on co.collection_id = cl.c_contacts
+
+     where c.c_date_create > sysdate - 2 / 24
+       and co.c_private = 690120
+       ) x;
+grant select on U1.M_RFO_ONLINE_FLD_PRE1 to LOADDB;
+grant select on U1.M_RFO_ONLINE_FLD_PRE1 to LOADER;
+
+

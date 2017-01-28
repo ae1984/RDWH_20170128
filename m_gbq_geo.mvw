@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_GBQ_GEO
+build deferred
+refresh force on demand
+as
+select id,
+      hit_id,
+      geo_id,
+      idate
+from GBQ.GBQ_GEO@KSVISIT;
+grant select on U1.M_GBQ_GEO to LOADDB;
+
+

@@ -1,0 +1,141 @@
+﻿create materialized view U1.M_TMP_KASPIKZ_1
+refresh force on demand
+as
+select /*+ parallel 20 */
+       --count(*), count(distinct t.user_id) --8938 --572042 --x6897
+       --coalesce(f.iin, t.inn) iin,
+       coalesce (f.iin, ff.iin) iin,
+       t.inn as kaspikz_iin,
+      -- coalesce(f.rfo_client_id, to_number(t.rfo_id)) rfo_client_id,
+       f.rfo_client_id as rfo_rfo_client_id,
+       to_number(t.rfo_id) as kaspikz_rfo_client_id,
+       t.session_start_time,
+       t.user_agent,
+
+       case when t.user_agent like '%mac%' then 'mac'
+            when t.user_agent like '%linux%' then 'linux'
+            when t.user_agent like '%unix%' then 'unix'
+            when t.user_agent like '%windows%' or t.user_agent not like '%windows phone%' then 'windows'
+            when t.user_agent like '%windows phone%' then 'windows_phone'
+            when t.user_agent like '%android%' then 'android'
+            when t.user_agent like '%blackberry%' or t.user_agent like '%bb10%' then 'blackberry'
+            when t.user_agent like '%symbian%' or t.user_agent like '%series40%' or t.user_agent like '%series60%' then 'symbian'
+            when t.user_agent like '%ubuntu%' then 'ubuntu'
+            when t.user_agent like '%debian%' then 'debian'
+            when t.user_agent like '%freebsd%' then 'freebsd'
+            else 'other'
+       end as op_system,
+
+       case when t.user_agent like '%opera%' then 'opera'
+            when t.user_agent like '%ie%' then 'ie'
+            when t.user_agent like '%firefox%' then 'firefox'
+            when t.user_agent like '%chrome%' or t.user_agent like '%crios%' then 'chrome'
+            when t.user_agent like '%safari%' and t.user_agent not like '%chrome%' and t.user_agent not like '%crios%' then 'safari'
+            else 'other'
+       end as browser,
+
+       case when t.user_agent like '%alcatel%' then 'alcatel'
+            when t.user_agent like '%archos%' then 'archos'
+            when t.user_agent like '%asus%' then 'asus'
+            when t.user_agent like '%asu2js%' then 'asus'
+            when t.user_agent like '%k00e%' then 'asus'
+            when t.user_agent like '%k01%' then 'asus'
+            when t.user_agent like '%me371mg%' then 'asus'
+            when t.user_agent like '%padfone%' then 'asus'
+            when t.user_agent like '%acer%' then 'acer'
+            when t.user_agent like '%a1-713%' then 'acer'
+            when t.user_agent like '%a1-811%' then 'acer'
+            when t.user_agent like '%a3-a10%' then 'acer'
+            when t.user_agent like '%b1-730hd%' then 'acer'
+            when t.user_agent like '%beeline%' then 'beeline smart'
+            when t.user_agent like '%blackberry%' then 'blackberry'
+            when t.user_agent like '%bb1%' then 'blackberry'
+            when t.user_agent like '%boost%' then 'boost'
+            when t.user_agent like '%brand infinityll%' then 'explay infinityll'
+            when t.user_agent like '%c811%' then 'cassio'
+            when t.user_agent like '%dns%' then 'dns'
+            when t.user_agent like '%gsmart%' then 'gigabyte'
+            when t.user_agent like '%htc%' then 'htc'
+            when t.user_agent like '%m8 %' then 'htc'
+            when t.user_agent like '%huawei%' then 'huawei'
+            when t.user_agent like '%iq%' then 'fly'
+            when t.user_agent like '%iphone%' then 'iphone'
+            when t.user_agent like '%ipad%' then 'ipad'
+            when t.user_agent like '%lg-%' then 'lg'
+            when t.user_agent like '%lenovo%' then 'lenovo'
+            when t.user_agent like '%m977g%' then 'mid'
+            when t.user_agent like '%mid%' then 'mid'
+            when t.user_agent like '%mflogin3t%' then 'megafon'
+            when t.user_agent like '%ms3a%' then 'megafon'
+            when t.user_agent like '%mx4%' then 'meizu'
+            when t.user_agent like '%n2 %' then 'newman'
+            when t.user_agent like '%nexus%' then 'nexus'
+            when t.user_agent like '%nokia%' then 'nokia'
+            when t.user_agent like '%oysters%' then 'oysters'
+            when t.user_agent like '%pi3100%' then 'philips'
+            when t.user_agent like '%plane%' then 'digma plain'
+            when t.user_agent like '%playstation%' then 'playstation'
+            when t.user_agent like '%pap%' then 'prestigio'
+            when t.user_agent like '%pmp%' then 'prestigio'
+            when t.user_agent like '%pmt%' then 'prestigio'
+            when t.user_agent like '%psp%' then 'prestigio'
+            when t.user_agent like '%samsung%' then 'samsung'
+            when t.user_agent like '%slim%' then 'slim'
+            when t.user_agent like '%gt%' then 'samsung galaxy'
+            when t.user_agent like '%shv-%' then 'samsung galaxy'
+            when t.user_agent like '%sm-%' then 'samsung'
+            when t.user_agent like '%smart_phone%' then 'smart_phone'
+            when t.user_agent like '%smart_tv%' then 'smart_tv'
+            when t.user_agent like '%sonyericsson%' then 'sonyericsson'
+            when t.user_agent like '%sony xperia%' then 'sony xperia'
+            when t.user_agent like '%lt2%' then 'sony xperia'
+            when t.user_agent like '%lt1%' then 'sony xperia'
+            when t.user_agent like '%mt1%' then 'sony xperia'
+            when t.user_agent like '%mt2%' then 'sony xperia'
+            when t.user_agent like '%mt3%' then 'sony xperia'
+            when t.user_agent like '%c2105%' or t.user_agent like '%d2105%' then 'sony xperia'
+            when t.user_agent like '%c2305%' or t.user_agent like '%d2302%' or t.user_agent like '%d2502%' then 'sony xperia'
+            when t.user_agent like '%c5503%' or t.user_agent like '%d5503%' then 'sony xperia'
+            when t.user_agent like '%c6602%' or t.user_agent like '%d5803%' then 'sony xperia'
+            when t.user_agent like '%c6902%' or t.user_agent like '%d6633%' then 'sony xperia'
+            when t.user_agent like '%mt3%' then 'sony xperia'
+            when t.user_agent like '%mt3%' then 'sony xperia'
+            when t.user_agent like '%mt3%' then 'sony xperia'
+            when t.user_agent like '%tab%' then 'tab'
+            when t.user_agent like '% rc%' then 'rc'
+            when t.user_agent like '%steam%' then 'steam'
+            when t.user_agent like '%st1%' then 'st1'
+            when t.user_agent like '%st2%' then 'st2'
+            when t.user_agent like '%texet%' then 'texet'
+            when t.user_agent like '%x-pad%' then 'texet'
+            when t.user_agent like '%zp998%' then 'zopo'
+            when t.user_agent like '%zte%' then 'zte'
+            when t.user_agent like '%athens%' then 'athens'
+            else
+              case when t.user_agent like '%windows%' or t.user_agent not like '%windows phone%' then 'pc' else 'other' end
+       end as device,
+
+       p.*,
+       k.last_name || ' ' || k.first_name || ' ' || k.middle_name as cli_fio,
+       case when substr(p.client_ip,1,1) in ('1','2','3','4','5','6','7','8','9','0','A','B','C','D','E','F') then
+       trim(to_char(replace(replace(replace(replace(replace(replace(substr(p.client_ip,1,1),'A',10),'B',11),'C',12),'D',13),'E',14),'F',15)*16 + replace(replace(replace(replace(replace(replace(substr(p.client_ip,2,1),'A',10),'B',11),'C',12),'D',13),'E',14),'F',15),'999')) || '.' ||
+       trim(to_char(replace(replace(replace(replace(replace(replace(substr(p.client_ip,3,1),'A',10),'B',11),'C',12),'D',13),'E',14),'F',15)*16 + replace(replace(replace(replace(replace(replace(substr(p.client_ip,4,1),'A',10),'B',11),'C',12),'D',13),'E',14),'F',15),'999')) || '.' ||
+       trim(to_char(replace(replace(replace(replace(replace(replace(substr(p.client_ip,5,1),'A',10),'B',11),'C',12),'D',13),'E',14),'F',15)*16 + replace(replace(replace(replace(replace(replace(substr(p.client_ip,6,1),'A',10),'B',11),'C',12),'D',13),'E',14),'F',15),'999')) || '.' ||
+       trim(to_char(replace(replace(replace(replace(replace(replace(substr(p.client_ip,7,1),'A',10),'B',11),'C',12),'D',13),'E',14),'F',15)*16 + replace(replace(replace(replace(replace(replace(substr(p.client_ip,8,1),'A',10),'B',11),'C',12),'D',13),'E',14),'F',15),'999')) end as cli_ip_dec,
+
+       case when substr(p.client_ip,1,1) in ('1','2','3','4','5','6','7','8','9','0','A','B','C','D','E','F') then
+       trim(to_char(replace(replace(replace(replace(replace(replace(substr(p.client_ip,1,1),'A',10),'B',11),'C',12),'D',13),'E',14),'F',15)*16 + replace(replace(replace(replace(replace(replace(substr(p.client_ip,2,1),'A',10),'B',11),'C',12),'D',13),'E',14),'F',15),'999')) || '.' ||
+       trim(to_char(replace(replace(replace(replace(replace(replace(substr(p.client_ip,3,1),'A',10),'B',11),'C',12),'D',13),'E',14),'F',15)*16 + replace(replace(replace(replace(replace(replace(substr(p.client_ip,4,1),'A',10),'B',11),'C',12),'D',13),'E',14),'F',15),'999')) || '.' ||
+       trim(to_char(replace(replace(replace(replace(replace(replace(substr(p.client_ip,5,1),'A',10),'B',11),'C',12),'D',13),'E',14),'F',15)*16 + replace(replace(replace(replace(replace(replace(substr(p.client_ip,6,1),'A',10),'B',11),'C',12),'D',13),'E',14),'F',15),'999')) end as cli_ip_dec3
+
+from u1.M_TMP_GK_KASPI_IP p
+join u1.V_RFO_Z#KAS_ONLINE_BUY buy on buy.c_process_id = p.order_number
+join u1.V_RFO_Z#KAS_ONLINE_CLAIM cl on cl.c_buy_ref = buy.id
+left join risk_gkim.M_TMP_GK_USERS_AGENT_DIST t on t.session_id = p.session_id
+left join u1.T_KATE_KASPISHOP_TMP /*T_TMP_KATE_KASPISHOP*/ k on k.order_number = p.order_number
+left join u1.m_folder_con_cancel f on f.folder_id = p.folder_id
+left join u1.m_folder_con_cancel_online ff on ff.claim_id = cl.id;
+grant select on U1.M_TMP_KASPIKZ_1 to LOADDB;
+grant select on U1.M_TMP_KASPIKZ_1 to LOADER;
+
+

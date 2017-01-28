@@ -1,0 +1,41 @@
+﻿create table U1.T_KASPISH_USER
+(
+  user_id               NUMBER(38),
+  user_dwh_id           VARCHAR2(40 CHAR),
+  client_dwh_id         VARCHAR2(40 CHAR),
+  user_name             VARCHAR2(50 CHAR),
+  user_surname          VARCHAR2(50 CHAR),
+  user_patronymic       VARCHAR2(50 CHAR),
+  block_status          NUMBER(1),
+  block_date            DATE,
+  block_reason          VARCHAR2(50 CHAR),
+  reg_date              DATE,
+  birth_date            DATE,
+  residence_sign        NUMBER(1),
+  rnn                   VARCHAR2(12 CHAR),
+  iin                   VARCHAR2(20 CHAR),
+  phone_num             VARCHAR2(40 CHAR),
+  prospect_sign         NUMBER(1),
+  person_uid            VARCHAR2(50 CHAR),
+  change_date_prsp_sign DATE,
+  prospect_dwh_id       VARCHAR2(40 CHAR),
+  shop_user_id          VARCHAR2(40 CHAR),
+  shop_user_name        VARCHAR2(100 CHAR)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select, insert, update on U1.T_KASPISH_USER to ETL;
+grant select on U1.T_KASPISH_USER to LOADDB;
+grant select on U1.T_KASPISH_USER to RTDM_USER;
+

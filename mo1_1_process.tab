@@ -1,0 +1,32 @@
+﻿create table U1.MO1_1_PROCESS
+(
+  id                  NUMBER not null,
+  d_process_id        NUMBER not null,
+  date_start          TIMESTAMP(6),
+  rfolder_id          NUMBER,
+  date_end            TIMESTAMP(6),
+  error_code          NUMBER(1) not null,
+  error_msg           VARCHAR2(2048),
+  params_in           VARCHAR2(4000),
+  params_out          VARCHAR2(4000),
+  async_processing_id NUMBER,
+  date_preparation    TIMESTAMP(6),
+  d_process_type_id   NUMBER,
+  d_system_id         NUMBER,
+  process_request_id  NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.MO1_1_PROCESS to LOADDB;
+grant select on U1.MO1_1_PROCESS to LOADER;
+

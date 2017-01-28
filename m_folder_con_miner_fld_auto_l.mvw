@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_FLD_AUTO_L
+refresh force on demand
+as
+select t.rfo_client_id,
+       max(t.contract_number) keep (dense_rank last order by t.folder_date_create) contract_number
+from M_FOLDER_CON_MINER t
+join M_FOLDER_CON_MINER_FOLDER f on f.rfo_client_id = t.rfo_client_id and
+                                    f.folder_date_create > t.folder_date_create and
+                                    f.cr_program_name like '%АВТОКРЕДИТОВАНИЕ%'
+group by t.rfo_client_id;
+grant select on U1.M_FOLDER_CON_MINER_FLD_AUTO_L to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER_FLD_AUTO_L to LOADER;
+
+

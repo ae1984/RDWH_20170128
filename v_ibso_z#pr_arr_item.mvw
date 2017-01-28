@@ -1,0 +1,21 @@
+﻿create materialized view U1.V_IBSO_Z#PR_ARR_ITEM
+build deferred
+refresh complete on demand
+as
+select id,
+       class_id,
+       state_id,
+       c_pr,
+       c_value,
+       c_date,
+       c_history,
+       collection_id,
+       c_rep_date,
+       c_username,
+       c_error_msg,
+       sn,
+       su
+  from s06.Z#PR_ARR_ITEM@rdwh_exd;
+grant select on U1.V_IBSO_Z#PR_ARR_ITEM to LOADDB;
+
+

@@ -1,0 +1,158 @@
+﻿create materialized view U1.M_TMP_OP_KDN1
+refresh force on demand
+as
+select --+ parallel(30) parallel_index(30)
+  distinct -- т.к. строки множатся из-за связок
+  c.contract_number,
+  c.op_date_start,
+
+  fc.form_client_id,
+  fc_link.form_client_found_type,
+  case when fc_link.form_client_age_days = 99999999 then null
+       else fc_link.form_client_age_days end form_client_age_days,
+  g.gcvp_rep_id,
+  gcvp_link.gcvp_rep_found_type,
+  gcvp_link.gcvp_age_days,
+  p.report_id as pkb_rep_id,
+  p.report_type as pkb_report_type,
+  pkb_link.pkb_rep_found_type,
+  pkb_link.pkb_age_days,
+      case when fc.form_client_id is null or -- не нашли анкету
+                coalesce(c.c_summa_plan_pre, pr2.pr_pmt) is null or -- нет платежа по выдаваемому договору
+                (pkb_link.pkb_rep_found_type in (4,5,6,7) and -- или нашли только первичный
+                     not (pkb_link.pkb_rep_found_type in (4,5) and -- за исключением случаев, когда нашли первичный недавно
+                          p.report_type = 'ПЕРВИЧНЫЙ' and
+                          coalesce(p.active_contracts,0) in (0, 1))) -- и кол-во действующих договоров = 0 или 1
+           then 1 else 0 end as
+  is_error, -- ошибки, которые препятсвуют расчету КДН
+  -- доходы с анкеты
+  coalesce(fc.inc_sal,0) + coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) + coalesce(fc.inc_rent,0) +
+       coalesce(fc.inc_pension_benefits,0) + coalesce(fc.inc_interest,0) as form_income_total,
+  coalesce(fc.inc_sal,0) as form_inc_sal,
+  coalesce(fc.inc_sal_add,0) as form_inc_sal_add,
+  coalesce(fc.inc_sal_spouse,0) as form_inc_sal_spouse,
+  coalesce(fc.inc_rent,0) as form_inc_rent,
+  coalesce(fc.inc_pension_benefits,0) as form_inc_pension_benefits,
+  coalesce(fc.inc_interest,0) as form_inc_interest,
+
+  case when coalesce(g.salary,0) > coalesce(fc.inc_sal,0) then
+                 coalesce(g.salary,0) + coalesce(fc.inc_sal_spouse,0) + coalesce(fc.inc_rent,0) +
+                 coalesce(fc.inc_pension_benefits,0) + coalesce(fc.inc_interest,0) + coalesce(fc.inc_sal_add,0)
+            else
+                 coalesce(fc.inc_sal,0) + coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) + coalesce(fc.inc_rent,0) +
+                 coalesce(fc.inc_pension_benefits,0) + coalesce(fc.inc_interest,0)
+            end as form_income_gcvp_salary_max,
+  -- платеж по договору
+  coalesce(c.c_summa_plan_pre, 0) as pc_pmt, -- для 134 не указана ставка, для берем pmt_old, если есть
+  coalesce(pr2.pr_pmt, 0) as pr_pmt,
+  -- зарплата с ГЦВП
+  coalesce(g.salary,0) as salary_gcvp,
+  --данные о том, что договор был рефинансирован
+  case when trunc(c.op_date_start) < to_date('01.04.2014', 'dd.mm.yyyy') then 0 else 1 end is_open_after_x
+
+
+
+from m_tmp_gk_op_pc_sum_pre c
+left join (select pr.contract_number,
+                  pr.op_date_start,
+                  sum(pr.pmt) pr_pmt
+           from M_TMP_GK_OP_PR_SUM_PRE pr
+           group by pr.contract_number,
+                    pr.op_date_start) pr2 on pr2.contract_number = c.contract_number and
+                                             pr2.op_date_start = c.op_date_start
+-- ищем анкету
+left join (select c2.contract_number,
+                  max(coalesce(fc2.form_client_id, fc3.form_client_id)) as form_client_id,
+                  case when max(fc2.form_client_id) is not null then 2
+                       when max(fc3.form_client_id) is not null then 3 else 0 end as form_client_found_type,
+                  case when max(fc2.form_client_id) is not null then max(c2.c_date_stmt_pre) - max(trunc(fc2.form_client_date))
+                       when max(fc3.form_client_id) is not null then max(c2.c_date_stmt_pre) - max(trunc(fc3.form_client_date))
+                            else  null end as form_client_age_days
+            from m_tmp_gk_op_pc_sum_pre c2
+            left join m_client_link cl on cl.rbo_client_id = c2.c_client_ref
+            left join v_client_rfo_by_iin cll on cll.rfo_client_id = cl.rfo_client_id
+            left join V_FORM_CLIENT_ALL_RFO fc2 on fc2.iin = cll.iin and                            -- или ищем последнюю анкету до договора по ИИН клиента
+                                                   trunc(fc2.form_client_date) <= c2.c_date_stmt_pre
+            left join V_FORM_CLIENT_ALL_RFO fc3 on fc3.rnn = cll.rnn and                            -- или ищем последнюю анкету до договора по РНН клиента
+                                                   trunc(fc3.form_client_date) <= c2.c_date_stmt_pre
+            group by c2.contract_number
+) fc_link on fc_link.contract_number = c.contract_number
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = fc_link.form_client_id
+
+-- ищем гцвп
+left join (select c3.contract_number,
+                  max(coalesce(g2.gcvp_rep_id, g3.gcvp_rep_id)) as gcvp_rep_id,
+                  case when max(g2.gcvp_rep_id) is not null then 2
+                       when max(g3.gcvp_rep_id) is not null then 3 else 0 end as gcvp_rep_found_type,
+                  case when max(g2.gcvp_rep_id) is not null then max(c3.c_date_stmt_pre) - max(g2.rep_date)
+                       when max(g3.gcvp_rep_id) is not null then max(c3.c_date_stmt_pre) - max(g3.rep_date)
+                            else null end as gcvp_age_days
+            from m_tmp_gk_op_pc_sum_pre c3
+            left join m_client_link cl on cl.rbo_client_id = c3.c_client_ref
+            left join v_client_rfo_by_iin cll on cll.rfo_client_id = cl.rfo_client_id
+            left join V_GCVP_REPORT g2 on g2.client_iin = cll.iin and
+                                          g2.rep_date <= c3.c_date_stmt_pre -- или ищем последний гцвп до договора по ИИН клиента
+            left join V_GCVP_REPORT g3 on g3.client_rnn = cll.rnn and
+                                          g3.rep_date <= c3.c_date_stmt_pre -- или ищем последний гцвп до договора по РНН клиента
+            group by c3.contract_number
+) gcvp_link on gcvp_link.contract_number = c.contract_number
+left join V_GCVP_REPORT g on g.gcvp_rep_id = gcvp_link.gcvp_rep_id
+
+-- ищем пкб
+left join (select c4.contract_number,
+                  max(coalesce(p2.report_id, p3.report_id,
+                               /*p5.report_id, */p6.report_id,
+                               p7.report_id, p8.report_id,
+                               p9.report_id)) as pkb_rep_id,
+                  case when max(p2.report_id) is not null then 2
+                       when max(p3.report_id) is not null then 3
+                       --when max(p5.report_id) is not null then 5
+                       when max(p6.report_id) is not null then 6
+                       when max(p7.report_id) is not null then 7
+                       when max(p8.report_id) is not null then 8
+                       when max(p9.report_id) is not null then 9 else 0 end as pkb_rep_found_type,
+                  case when max(p2.report_id) is not null then max(c4.c_date_stmt_pre) - max(p2.rfo_report_date)
+                       when max(p3.report_id) is not null then max(c4.c_date_stmt_pre) - max(p3.rfo_report_date)
+                       --when max(p5.report_id) is not null then max(c4.c_date_stmt_pre) - max(p5.rfo_report_date)
+                       when max(p6.report_id) is not null then max(c4.c_date_stmt_pre) - max(p6.rfo_report_date)
+                       when max(p7.report_id) is not null then max(c4.c_date_stmt_pre) - max(p7.rfo_report_date)
+                       when max(p8.report_id) is not null then max(c4.c_date_stmt_pre) - max(p8.rfo_report_date)
+                       when max(p9.report_id) is not null then max(c4.c_date_stmt_pre) - max(p9.rfo_report_date)
+                            else null end as pkb_age_days
+            from m_tmp_gk_op_pc_sum_pre c4
+            left join m_client_link cl on cl.rbo_client_id = c4.c_client_ref
+            left join v_client_rfo_by_iin cll on cll.rfo_client_id = cl.rfo_client_id
+            left join V_PKB_REPORT p2 on p2.report_iin_rnn = cll.iin and           -- или в тот же день
+                                         p2.rfo_report_date = c4.c_date_stmt_pre and
+                                         p2.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ')
+
+            left join V_PKB_REPORT p3 on p3.report_iin_rnn = cll.iin and           -- или в течение 3 месяцев (для ночных или авто)
+                                         p3.rfo_report_date < c4.c_date_stmt_pre and
+                                         p3.rfo_report_date >= c4.c_date_stmt_pre - 90 and
+                                         p3.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ')
+
+            /*left join V_PKB_REPORT p5 on p5.report_iin_rnn = cll.iin and           -- если нет, то в течение 90 дней
+                                         p5.rfo_report_date < c4.c_date_stmt_pre and
+                                         p5.rfo_report_date >= c4.c_date_stmt_pre - 90 and
+                                         p5.report_type in ('ПЕРВИЧНЫЙ')*/
+
+            left join V_PKB_REPORT p6 on p6.report_iin_rnn = cll.iin and            -- или ищем любой до договора по ИИН клиента
+                                         p6.rfo_report_date <= c4.c_date_stmt_pre and
+                                         p6.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ')
+
+            left join V_PKB_REPORT p7 on p7.report_iin_rnn   = cll.rnn and            -- или ищем любой до договора по РНН клиента
+                                         p7.rfo_report_date <= c4.c_date_stmt_pre and
+                                         p7.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ')
+
+            left join V_PKB_REPORT p8 on p8.report_iin_rnn = cll.iin and            -- или ищем любой до договора по ИИН клиента
+                                         p8.rfo_report_date <= c4.c_date_stmt_pre
+
+            left join V_PKB_REPORT p9 on p9.report_iin_rnn   = cll.rnn and            -- или ищем любой до договора по РНН клиента
+                                         p9.rfo_report_date <= c4.c_date_stmt_pre
+            group by c4.contract_number
+) pkb_link on pkb_link.contract_number = c.contract_number
+left join V_PKB_REPORT p on p.report_id = pkb_link.pkb_rep_id;
+grant select on U1.M_TMP_OP_KDN1 to LOADDB;
+grant select on U1.M_TMP_OP_KDN1 to LOADER;
+
+

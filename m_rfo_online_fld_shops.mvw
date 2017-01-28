@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_RFO_ONLINE_FLD_SHOPS
+refresh force on demand
+as
+select /*+ first_rows */
+       t.folder_id,
+       t.rfo_contract_id,
+       t.c_num_dog,
+       t.c_date_create,
+       t.c_client,
+       t.c_business,
+       t.c_st_depart,
+       t.c_way,
+       t.c_point,
+       t.c_create_user,
+       t.c_info_cred#summa_cred,
+       t.c_shop,
+       t.credit_dog_status_id,
+       t.cr_program_name
+from u1.M_RFO_ONLINE_FLD_DAY t
+where t.c_date_create > sysdate - 1/24 and
+      t.c_shop is not null;
+grant select on U1.M_RFO_ONLINE_FLD_SHOPS to LOADDB;
+grant select on U1.M_RFO_ONLINE_FLD_SHOPS to LOADER;
+
+

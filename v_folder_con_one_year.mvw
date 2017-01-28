@@ -1,0 +1,109 @@
+﻿create materialized view U1.V_FOLDER_CON_ONE_YEAR
+refresh complete on demand
+as
+select /*+first_rows parallel(15) parallel_index(15)*/
+        a3.id as folder_id,
+        b1.id as contract_id,
+        upper(b4.C_CODE) as cred_prog_code,
+        upper(b4.C_NAME) as cred_prog_name,
+        0 as is_card,
+        trunc(a3.c_date_create) as folder_date_create,
+        trunc(b1.c_date_begin) as contract_date_begin,
+        null as set_revolve_date,
+        b1.c_info_cred#summa_cred_com as contract_amount,
+        case when fd.C_STATUS_DOC in (3704301, 3704308, 9456720) -- Активный, Погашен досрочно, Просроченный
+            then 1 else 0 end as is_credit_issued
+    from V_RFO_Z#CM_CHECKPOINT a3
+    join V_RFO_Z#FOLDERS a1 on a1.id = a3.id and a1.C_BUSINESS in (
+                   3647625, 95085189, 1441323670, 1441323906, 6503629123)
+                   -- Выдача кредита физическому лицу
+                   -- Каспийский. Кредит наличными
+                   -- Каспийский. Выдача кредита на карту
+                   -- Каспийский. Выдача кредита наличными на карту
+                   -- Каспийский. Выдача автокредита на карту
+    join V_RFO_Z#RDOC a2 on a1.C_DOCS = a2.collection_id
+    join V_RFO_Z#CREDIT_DOG b1 on a2.C_DOC = b1.ID and b1.c_date_begin >= add_months(trunc(sysdate,'mm'),-12)
+    join V_RFO_Z#FDOC fd on fd.id = b1.id
+    join V_RFO_Z#CRED_SCHEME b2 on b1.C_CRED_SCHEME = b2.id
+    join V_RFO_Z#PROPERTIES b3 on b2.C_ADD_PROP = b3.collection_id
+    join V_RFO_Z#PROD_PROPERTY b4 on b3.C_PROP = b4.id and b4.C_GROUP_PROP = 188106869 -- KAS. Программы кредитования
+    where a3.C_DATE_CREATE >= add_months(trunc(sysdate,'mm'),-12) and
+          (a1.C_KAS_VID_DELIVERY is NULL or a1.C_KAS_VID_DELIVERY <> 2255218132) -- SAVE_CREDIT  БК (V_RFO_Z#KAS_UNIVERSAL_D)
+
+union all ----------------------------------------------------------
+
+    select /*+first_rows parallel(15) parallel_index(15)*/
+        e3.id as folder_id,
+        f1.id as contract_id,
+        upper(f4.C_CODE) as cred_prog_code,
+        upper(f4.C_NAME) as cred_prog_name,
+        1 as is_card,
+        trunc(e3.c_date_create) as folder_date_create,
+        trunc(f1.c_date_begin) as contract_date_begin,
+        trunc(f1.C_DATE_SET_REVOLV) as set_revolve_date,
+        f1.C_CREDIT_LIMIT as contract_amount,
+        case when fd.C_STATUS_DOC in (115881331, 115881597, 115880367, 115881457, 9456720, 84882947) and
+                   -- Работает
+                   -- ЗС Работает
+                   -- КС На просрочке
+                   -- ЗС На просрочке
+                   -- Просроченный
+                   -- Подписан
+                NVL(f1.C_WISH_PAY_SUM,0) = 0 -- отсекаем заявки на изменение условий
+            then 1 else 0 end as is_credit_issued
+    from V_RFO_Z#CM_CHECKPOINT e3
+    join V_RFO_Z#FOLDERS e1 on e1.id = e3.id and e1.C_BUSINESS in (
+                         84882952, 1682828418,
+              -- Выдача пластиковой карты
+              -- Установка револьверности
+                         1441323670, 1441323906)
+               -- Каспийский. Выдача кредита на карту
+               -- Каспийский. Выдача кредита наличными на карту
+    join V_RFO_Z#RDOC e2 on e1.C_DOCS = e2.collection_id
+    join V_RFO_Z#KAS_PC_DOG f1 on e2.C_DOC = f1.ID
+    join V_RFO_Z#FDOC fd on fd.id = f1.id
+    join V_RFO_Z#KAS_CARD_SCHEME f2 on f1.C_PC_SCHEME = f2.id and f2.C_CODE <> 'REFIN' -- Рефинансирование
+    join V_RFO_Z#PROPERTIES f3 on f2.C_ADD_PROP = f3.collection_id --f3.C_PROP = f4.id
+    join V_RFO_Z#PROD_PROPERTY f4 on f3.C_PROP = f4.id and f4.C_GROUP_PROP = 188106869 -- KAS. Программы кредитования
+    where e3.C_DATE_CREATE >= add_months(trunc(sysdate,'mm'),-12) and
+          (e1.C_KAS_VID_DELIVERY is NULL or e1.C_KAS_VID_DELIVERY <> 2255218132) -- SAVE_CREDIT  БК (V_RFO_Z#KAS_UNIVERSAL_D)
+
+union all ----------------------------------------------------------
+
+    select /*+first_rows parallel(15) parallel_index(15)*/
+        e3.id as folder_id,
+        f1.id as contract_id,
+        upper(f4.C_CODE) as cred_prog_code,
+        upper(f4.C_NAME) as cred_prog_name,
+        1 as is_card,
+        trunc(e3.c_date_create) as folder_date_create,
+        trunc(f1.c_date_begin) as contract_date_begin,
+        trunc(f1.C_DATE_SET_REVOLV) as set_revolve_date,
+        f1.C_CREDIT_LIMIT as contract_amount,
+        case when fd.C_STATUS_DOC in (115881331, 115881597, 115880367, 115881457, 9456720, 84882947) and
+                     -- Работает
+                     -- ЗС Работает
+                     -- КС На просрочке
+                     -- ЗС На просрочке
+                     -- Просроченный
+                     -- Подписан
+                NVL(f1.C_WISH_PAY_SUM,0) <> 0 -- заявки на изменение условий
+            then 1 else 0 end as is_credit_issued
+    from V_RFO_Z#CM_CHECKPOINT e3
+    join V_RFO_Z#FOLDERS e1 on e1.id = e3.id and e1.C_BUSINESS in (
+                 1441323906, 6503629123, 7054580055)
+                 -- Каспийский. Выдача кредита наличными на карту
+                 -- Каспийский. Выдача автокредита на карту
+                 -- Выдача управляемого кредита
+    join V_RFO_Z#RDOC e2 on e1.C_DOCS = e2.collection_id
+    join V_RFO_Z#KAS_PC_DOG f1 on e2.C_DOC = f1.ID
+    join V_RFO_Z#FDOC fd on fd.id = f1.id
+    join V_RFO_Z#KAS_CARD_SCHEME f2 on f1.C_PC_SCHEME = f2.id
+    join V_RFO_Z#PROPERTIES f3 on f2.C_ADD_PROP = f3.collection_id --f3.C_PROP = f4.id
+    join V_RFO_Z#PROD_PROPERTY f4 on f3.C_PROP = f4.id and f4.C_GROUP_PROP = 188106869 -- KAS. Программы кредитования
+    where e3.C_DATE_CREATE >= add_months(trunc(sysdate,'mm'),-12) and
+          e1.C_KAS_VID_DELIVERY = 2255218132 -- SAVE_CREDIT  БК (V_RFO_Z#KAS_UNIVERSAL_D);
+grant select on U1.V_FOLDER_CON_ONE_YEAR to LOADDB;
+grant select on U1.V_FOLDER_CON_ONE_YEAR to LOADER;
+
+

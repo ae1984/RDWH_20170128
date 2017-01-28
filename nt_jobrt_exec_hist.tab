@@ -1,0 +1,22 @@
+﻿create table U1.NT_JOBRT_EXEC_HIST
+(
+  sdt      DATE,
+  job_name VARCHAR2(300)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_JOBRT_EXEC_HIST
+  is 'rdwh 2.0 история исполнения jobrt';
+grant select on U1.NT_JOBRT_EXEC_HIST to LOADDB;
+

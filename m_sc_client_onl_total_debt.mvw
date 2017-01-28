@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_SC_CLIENT_ONL_TOTAL_DEBT
+refresh force on demand
+as
+selecT h.rfo_client_id as rfo_client_id,
+       sum(coalesce(h.x_total_debt, 0)) as cli_total_debt_transh
+from v_dwh_portfolio_current h
+join u1.m_folder_con_cancel_base ff on ff.folder_id = h.folder_id_first and
+                                       ff.process_name = 'ОНЛАЙН КРЕДИТ'
+group by h.rfo_client_id;
+grant select on U1.M_SC_CLIENT_ONL_TOTAL_DEBT to LOADDB;
+grant select on U1.M_SC_CLIENT_ONL_TOTAL_DEBT to LOADER;
+grant select on U1.M_SC_CLIENT_ONL_TOTAL_DEBT to LOAD_MO;
+
+

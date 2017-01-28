@@ -1,0 +1,36 @@
+﻿create materialized view U1.M_RBO_ACC_SENDER_OUT
+build deferred
+refresh force on demand
+as
+select /*+ parallel(10)*/ coalesce(md.c_kl_dt#2#1,af_dt.c_main_v_id) as acc_sender,
+       coalesce(md.c_kl_dt#2#inn,cl_dt.c_inn) as inn_sender,
+       coalesce(md.c_kl_dt#2#2,af_dt.c_name) as name_sender,
+       coalesce(bn.c_bic,to_char(md.c_kl_dt#2#3)) as bic_sender,
+       md.c_kl_kt#2#1 as acc_recipient,
+       md.c_kl_kt#2#inn as inn_recipient,
+       md.c_kl_kt#2#2 as name_recipient,
+       af.c_main_v_id as account_num,
+       cl.c_name as name_client,
+       md.c_nazn as nazn_po,
+       md.c_sum as amount_po,
+       md.c_date_prov date_prov,
+       fm.c_cur_short as curreny_po,
+       md.id as main_docum_id,
+       md.c_quit_doc as quit_doc_id,
+       ci.rbo_client_id,
+       ci.rfo_client_id,
+       ci.cnt_work_credit,
+       ci.cnt_work_card,
+       case when fp.account_num is not null then 1 else 0 end as is_acc_pc_dog
+  from u1.M_RBO_ACC_SENDER_OUT_PRE md
+  join u1.T_RBO_Z#AC_FIN            af on af.id = md.c_acc_kt
+  join u1.V_RBO_Z#CLIENT            cl on cl.id = af.c_client_v
+  join u1.V_RBO_Z#FT_MONEY          fm on fm.id = md.c_valuta
+  join u1.M_RBO_CLIENT_INFO         ci on ci.client_iin = md.c_kl_kt#2#inn
+  left join risk_mvera.V_RBO_Z#CL_BANK_N bn on bn.id = md.c_kl_dt#2#3
+  left join u1.T_RBO_Z#AC_FIN       af_dt on af_dt.id = md.c_acc_dt
+  left join u1.V_RBO_Z#CLIENT            cl_dt on cl_dt.id = af_dt.c_client_v
+  left join u1.M_ACC_FIN_PC_DOG          fp on fp.account_num = md.c_kl_kt#2#1;
+grant select on U1.M_RBO_ACC_SENDER_OUT to LOADDB;
+
+

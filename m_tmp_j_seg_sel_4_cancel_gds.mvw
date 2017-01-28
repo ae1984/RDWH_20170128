@@ -1,0 +1,42 @@
+﻿create materialized view U1.M_TMP_J_SEG_SEL_4_CANCEL_GDS
+refresh complete on demand
+as
+select tm.text_yyyy_mm as mon,
+       count(*) as cnt, count(distinct t.rfo_contract_id) as con_cnt,
+       count(distinct t.rfo_client_id) as cli_cnt,
+       count(case when t.is_credit_issued = 1 then t.rfo_contract_id end) / count(*) as approval_rate_by_con,
+       count(distinct case when t.is_credit_issued = 1 then t.rfo_client_id end) /
+                      count(distinct t.rfo_client_id) as approval_rate_by_cli,
+
+       sum(case when t.is_credit_issued = 1 then t.contract_amount end) / 1000000 as sales_mln,
+       sum(fc.amount) / count(distinct t.rfo_contract_id) * count(distinct t.rfo_client_id) / 1000000 as amount_requested_mln, -----!!!!!!!!!
+
+       count(distinct case when t.cancel_prescoring = 1 then t.rfo_contract_id end) /
+                      count(distinct t.rfo_contract_id) as rej_rate_by_prescoring,
+       count(distinct case when t.cancel_middle_office = 1 then t.rfo_contract_id end) /
+                      count(distinct t.rfo_contract_id) as rej_rate_by_middle_office,
+       count(distinct case when t.cancel_manager = 1 then t.rfo_contract_id end) /
+                      count(distinct t.rfo_contract_id) as rej_rate_by_manager,
+       count(distinct case when t.cancel_client = 1 then t.rfo_contract_id end) /
+                      count(distinct t.rfo_contract_id) as rej_rate_by_client,
+       count(distinct case when t.cancel_cpr_aa = 1 then t.rfo_contract_id end) /
+                      count(distinct t.rfo_contract_id) as rej_rate_by_cpr_aa,
+       count(distinct case when t.cancel_verificator = 1 then t.rfo_contract_id end) /
+                      count(distinct t.rfo_contract_id) as rej_rate_by_verificator,
+       count(distinct case when t.cancel_controller = 1 then t.rfo_contract_id end) /
+                      count(distinct t.rfo_contract_id) as rej_rate_by_controller,
+       count(distinct case when t.cancel_undefined = 1 then t.rfo_contract_id end) /
+                      count(distinct t.rfo_contract_id) as rej_rate_by_undefined
+from M_FOLDER_CON_CANCEL t
+join V_TIME_MINUTES tm on tm.yyyy_mm_dd_hh_mi = t.folder_date_create_mi
+join V_FOLDER_ALL_RFO fa on fa.folder_id = t.folder_id
+join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = fa.form_client_id
+join M_TMP_J_SEG_SEL_4 s4 on s4.rfo_contract_id = t.rfo_contract_id
+where t.is_refin = 0 and -- не рефин
+      tm.yyyy_mm_num >= 201201 and tm.yyyy_mm_num <= 201503 and
+      t.product_type in (/*'ДЕНЬГИ'*/'ТОВАРЫ') and t.process_name != 'ОНЛАЙН КРЕДИТ'
+group by tm.text_yyyy_mm;
+grant select on U1.M_TMP_J_SEG_SEL_4_CANCEL_GDS to LOADDB;
+grant select on U1.M_TMP_J_SEG_SEL_4_CANCEL_GDS to LOADER;
+
+

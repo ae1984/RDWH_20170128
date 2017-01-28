@@ -1,0 +1,38 @@
+﻿create table U1.MO_RFOL_GOODS
+(
+  prinf_id          NUMBER not null,
+  foldr_id          NUMBER,
+  foldr_client      NUMBER,
+  crdog_id          NUMBER,
+  prinf_name        VARCHAR2(300),
+  prinf_producer    VARCHAR2(300),
+  prinf_model       VARCHAR2(300),
+  prinf_price       NUMBER(17,2),
+  prinf_quant       NUMBER(4),
+  prinf_cost        NUMBER(17,2),
+  prinf_bill_number VARCHAR2(150),
+  prinf_bill_date   DATE,
+  prinf_bill_summ   NUMBER(17,2),
+  kzalb_id          NUMBER,
+  kzalb_code        VARCHAR2(75),
+  kzalb_name        VARCHAR2(750),
+  ktovn_id          NUMBER,
+  ktovn_code        VARCHAR2(75),
+  ktovn_name        VARCHAR2(750)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO_RFOL_GOODS to LOADDB;
+grant select on U1.MO_RFOL_GOODS to LOADER;
+

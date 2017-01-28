@@ -1,0 +1,146 @@
+﻿create materialized view U1.M_TMP_J_MATRIX_ONL_OLD_CLI_1
+refresh complete on demand
+as
+select td.yyyy, td.quarter, td.text_yyyy_mm, td.week_text, --td.text_yyyy_mm_dd_week_day,
+       f.product, f.is_categ_a, f.is_categ_b, f.is_client_new_by_con, f.is_credit_issued, f.is_signing_required,
+       floor(fc.age_full_years / 10) * 10 as client_age,
+       fc.sex, f.city, f.region,
+       round(d.max_debt_used_x / 10000) * 10000 as amount_approved,
+       round(p1.pmt/1000)*1000 as pmt,
+       x.prev_ekt_con_cnt,
+       x.prev_ekt_con_clsd_cnt,
+       x.prev_ekt_con_clsd_del_8_cnt,
+       x.prev_ekt_con_clsd_del_1_cnt,
+       x.prev_ekt_con_del_days_max,
+       x.prev_ekt_con_clsd_del_days_max,
+       x.last_prev_ekt_clsd_mon_ago,
+       x.prev_ekt_pmt_max,
+       x.prev_ekt_amount_max,
+       ---
+       count(*) as cnt, count(distinct f.claim_id) as claim_cnt, count(distinct f.rfo_contract_id) as rfo_con_cnt,
+       count(distinct f.rfo_con_or_claim_id) as rfo_con_or_claim_cnt, -- кол-во заявок, включая онлайн
+       count(distinct f.folder_id) as fld_cnt,
+       sum(f.contract_amount) / 1000000 as amount_requested_mln,
+       min(f.contract_amount) as amount_requested_min,
+       max(f.contract_amount) as amount_requested_max,
+       ---
+       count(b.rbo_contract_id) as contract_cnt,
+       count(distinct b.rbo_contract_id) as contract_cnt_dist,
+
+       sum(d.max_debt_used_x) / 1000000 as sales_mln,
+       min(d.max_debt_used_x) as amount_approved_min,
+       max(d.max_debt_used_x) as amount_approved_max,
+
+       sum(case when d.del_days_x > 7  then d.total_debt_x end) / 1000000 as del_debt_7d_mln,
+       sum(case when d.del_days_x > 30 then d.total_debt_x end) / 1000000 as del_debt_30d_mln,
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_mln,
+       sum(case when d.del_days_x > 90 then d.total_debt_x end) / 1000000 as del_debt_90d_mln,
+       sum(d.total_debt_pmt_1_0) / 1000000 as pmt_1_0d_del_debt_mln,
+       sum(d.max_debt_used_pmt_1_0) / 1000000 as pmt_1_0d_sales_mln,
+       sum(d.total_debt_pmt_1_7) / 1000000 as pmt_1_7d_del_debt_mln,
+       sum(d.max_debt_used_pmt_1_7) / 1000000 as pmt_1_7d_sales_mln
+
+from (
+  select 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(f.folder_date_create_mi) as a_date,
+         case when f.is_categ_a = 1 then 'КАТЕГОРИЯ А' when f.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+         case when f.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when f.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+         case when f.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when f.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+         case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         case when f.is_sign_require = 1 then 'С ПОДПИСАНИЕМ' when f.is_sign_require = 0 then 'БЕЗ ПОДПИСАНИЯ' end as is_signing_required,
+         f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+         f.rfo_contract_id as rfo_con_or_claim_id,
+         f.x_dnp_name as city, f.x_dnp_region as region
+  from M_FOLDER_CON_CANCEL f
+  where f.process_name = 'ОНЛАЙН КРЕДИТ' and
+        f.claim_id is not null and
+        f.folder_date_create_mi >= to_date('2014-12-08','yyyy-mm-dd') --to_date('2014-12-08','yyyy-mm-dd')
+  union all
+  select 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(fo.folder_date_create_mi) as a_date,
+         case when fo.is_categ_a = 1 then 'КАТЕГОРИЯ А' when fo.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+         case when fo.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when fo.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+         case when fo.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when fo.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+         case when fo.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when fo.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         case when fo.is_sign_require = 1 then 'С ПОДПИСАНИЕМ' when fo.is_sign_require = 0 then 'БЕЗ ПОДПИСАНИЯ' end as is_signing_required,
+         fo.claim_id, fo.contract_number, fo.rfo_client_id, fo.contract_amount, fo.folder_id, fo.form_client_id, fo.rfo_contract_id,
+         fo.claim_id as rfo_con_or_claim_id,
+         fo.x_dnp_name as city, fo.x_dnp_region as region
+  from M_FOLDER_CON_CANCEL_ONLINE fo
+  where fo.folder_date_create_mi >= to_date('2014-12-08','yyyy-mm-dd') --to_date('2014-12-08','yyyy-mm-dd')
+  union all
+  select f.cr_program_name as product, trunc(f.folder_date_create_mi) as a_date,
+         case when f.is_categ_a = 1 then 'КАТЕГОРИЯ А' when f.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+         case when f.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when f.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+         case when f.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when f.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+         case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         case when f.is_sign_require = 1 then 'С ПОДПИСАНИЕМ' when f.is_sign_require = 0 then 'БЕЗ ПОДПИСАНИЯ' end as is_signing_required,
+         f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+         f.rfo_contract_id as rfo_con_or_claim_id,
+         f.x_dnp_name as city, f.x_dnp_region as region
+  from M_FOLDER_CON_CANCEL f
+  where f.process_name != 'ОНЛАЙН КРЕДИТ' and
+        f.cr_program_name = 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР' and
+        f.folder_date_create_mi >= to_date('2014-12-08','yyyy-mm-dd') --to_date('2014-12-08','yyyy-mm-dd')
+) f
+join V_TIME_DAYS td on td.yyyy_mm_dd = f.a_date
+left join M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+left join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+--left join M_RBO_CONTRACT_DEL_TST d2 on d2.rbo_contract_id = b.rbo_contract_id
+---
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = f.form_client_id
+left join V_DWH_PORTFOLIO_CURRENT p1 on p1.deal_number = b.contract_number
+left join (
+      select f1.rfo_con_or_claim_id, count(distinct bp.rbo_contract_id) as prev_ekt_con_cnt,
+             count(distinct case when bp.date_fact_end < trunc(f1.folder_date_create_mi) then bp.rbo_contract_id end) as prev_ekt_con_clsd_cnt,
+             count(distinct case when bp.date_fact_end < trunc(f1.folder_date_create_mi) and
+                                      coalesce(d.del_days_max_x,0) > 7 then bp.rbo_contract_id end) as prev_ekt_con_clsd_del_8_cnt,
+             count(distinct case when bp.date_fact_end < trunc(f1.folder_date_create_mi) and
+                                      coalesce(d.del_days_max_x,0) > 0 then bp.rbo_contract_id end) as prev_ekt_con_clsd_del_1_cnt,
+             round(max(d.del_days_max_x)/10)*10 as prev_ekt_con_del_days_max,
+             round(max(case when bp.date_fact_end < trunc(f1.folder_date_create_mi) then d.del_days_max_x end)*10) as prev_ekt_con_clsd_del_days_max,
+             floor(min(months_between(trunc(f1.folder_date_create_mi), bp.date_fact_end))) as last_prev_ekt_clsd_mon_ago,
+             round(max(p.pmt)/1000)*1000 as prev_ekt_pmt_max,
+             round(max(bp.contract_amount)/10000)*10000 as prev_ekt_amount_max
+      from (
+        select f.rfo_client_id, f.rfo_contract_id as rfo_con_or_claim_id, f.folder_date_create_mi
+        from M_FOLDER_CON_CANCEL f
+        where f.process_name = 'ОНЛАЙН КРЕДИТ' and
+              f.claim_id is not null and
+              f.folder_date_create_mi >= to_date('2014-12-08','yyyy-mm-dd')
+        union all
+        select fo.rfo_client_id, fo.claim_id as rfo_con_or_claim_id, fo.folder_date_create_mi
+        from M_FOLDER_CON_CANCEL_ONLINE fo
+        where fo.folder_date_create_mi >= to_date('2014-12-08','yyyy-mm-dd')
+        union all
+        select f.rfo_client_id, f.rfo_contract_id as rfo_con_or_claim_id, f.folder_date_create_mi
+        from M_FOLDER_CON_CANCEL f
+        where f.process_name != 'ОНЛАЙН КРЕДИТ' and
+              f.cr_program_name = 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР' and
+              f.folder_date_create_mi >= to_date('2014-12-08','yyyy-mm-dd')
+      ) f1
+      join M_RBO_CONTRACT_BAS bp on bp.rfo_client_id = f1.rfo_client_id and bp.cred_program_name = 'ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)' and
+                                    bp.begin_date < trunc(f1.folder_date_create_mi)
+      left join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = bp.rbo_contract_id
+      left join V_DWH_PORTFOLIO_CURRENT p on p.deal_number = bp.contract_number
+      group by f1.rfo_con_or_claim_id
+) x on x.rfo_con_or_claim_id = f.rfo_con_or_claim_id
+group by td.yyyy, td.quarter, td.text_yyyy_mm, td.week_text, --td.text_yyyy_mm_dd_week_day,
+       f.product, f.is_categ_a, f.is_categ_b, f.is_client_new_by_con, f.is_credit_issued, f.is_signing_required,
+       floor(fc.age_full_years / 10) * 10,
+       fc.sex,
+       f.city, f.region,
+       round(d.max_debt_used_x / 10000) * 10000,
+       round(p1.pmt/1000)*1000,
+       x.prev_ekt_con_cnt,
+       x.prev_ekt_con_clsd_cnt,
+       x.prev_ekt_con_clsd_del_8_cnt,
+       x.prev_ekt_con_clsd_del_1_cnt,
+       x.prev_ekt_con_del_days_max,
+       x.prev_ekt_con_clsd_del_days_max,
+       x.last_prev_ekt_clsd_mon_ago,
+       x.prev_ekt_pmt_max,
+       x.prev_ekt_amount_max
+--);
+grant select on U1.M_TMP_J_MATRIX_ONL_OLD_CLI_1 to LOADDB;
+grant select on U1.M_TMP_J_MATRIX_ONL_OLD_CLI_1 to LOADER;
+
+

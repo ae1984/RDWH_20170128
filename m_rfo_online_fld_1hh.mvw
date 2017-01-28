@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_RFO_ONLINE_FLD_1HH
+refresh force on demand
+as
+select /*+ first_rows */
+       t.*
+from M_RFO_ONLINE_FLD_DAY t
+where t.c_date_create > sysdate - 1/24;
+grant select on U1.M_RFO_ONLINE_FLD_1HH to LOADDB;
+grant select on U1.M_RFO_ONLINE_FLD_1HH to LOADER;
+
+

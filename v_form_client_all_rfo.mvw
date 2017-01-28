@@ -1,0 +1,171 @@
+﻿create materialized view U1.V_FORM_CLIENT_ALL_RFO
+build deferred
+refresh force on demand
+as
+select /*+ parallel(15) */  ---parallel_index(15)
+    fc.id as form_client_id,
+    fd.c_doc_date as form_client_date,
+    f.c_client    as rfo_client_id,
+    fc.x_rnn as rnn,
+    fc.x_iin as iin,
+    upper(fc.c_last_name) as surname,
+    upper(fc.c_first_name) as first_name,
+    upper(fc.c_sur_name) as patronymic,
+    upper(c.c_value) as citizenship,
+    fc.c_resident as is_resident,
+    decode(fc.c_sex#0,1,'М',2,'Ж') as sex,
+    upper(nvl(cr1.c_name, fc.c_address_reg#region)) as reg_address_region,
+    upper(nvl(nc1.c_name, fc.c_address_reg#place)) as reg_address_city,
+    upper(nvl(di1.c_name, fc.c_address_reg#district)) as reg_address_district,
+    upper(nvl(fc.c_address_reg#post_ind, nc1.c_zip)) as reg_address_index,
+    upper(fc.c_address_reg#street) as reg_address_street,
+    upper(fc.c_address_reg#house) as reg_address_house,
+    upper(fc.c_address_reg#frame) as reg_address_house_part,
+    upper(fc.c_address_reg#flat) as reg_address_flat,
+    fc.c_address_reg#date_begin as reg_address_date_begin,
+    to_char(fc.c_address_reg#date_begin,'dd.mm.yyyy') as reg_address_date_begin_txt, --
+    upper(nvl(cr2.c_name, fc.c_address_reg#region)) as fact_address_region,
+    upper(nvl(nc2.c_name, fc.c_address_reg#place)) as fact_address_city,
+    upper(nvl(di2.c_name, fc.c_address_reg#district)) as fact_address_district,
+    upper(nvl(fc.c_address_fact#post_ind, nc2.c_zip)) as fact_address_index,
+    upper(fc.c_address_fact#street) as fact_address_street,
+    upper(fc.c_address_fact#house) as fact_address_house,
+    upper(fc.c_address_fact#frame) as fact_address_house_part,
+    upper(fc.c_address_fact#flat) as fact_address_flat,
+    fc.c_address_fact#date_begin as fact_address_date_begin,
+    to_char(fc.c_address_fact#date_begin,'dd.mm.yyyy') as fact_address_date_begin_txt, --
+    upper(ci1.c_value) as education,
+    upper(fc.c_education_str) as education_str,
+    upper(ci1.c_code) as education_code,
+
+    upper(ci2.c_value) as marital_status,
+    upper(ci2.c_code) as marital_status_code,
+
+    upper(ci3.c_value) as children,
+    upper(ci3.c_code) as children_code,
+
+    upper(ci5.c_value) as social_status_spouse,
+    upper(ci5.c_code) as social_status_spouse_code,
+
+    upper(fc.c_casta) as job_position,
+    upper(fc.c_casta_wife) as job_position_spouse,
+    upper(p1.prop_name) as org_activity,
+    upper(p2.prop_name) as org_sector,
+    upper(ci6.c_value) as org_type,
+    upper(p3.prop_name) as job_position_type,
+    upper(p4.prop_name) as job_position_type_spouse,
+    upper(p5.prop_name) as is_bank_account_exists,
+    upper(p6.prop_name) as is_auto_exists,
+    upper(p7.prop_name) as real_estate_relation,
+    upper(p8.prop_name) as is_garage_exists,
+    p9.prop_name as work_experience_last_place,
+    to_char(p9.prop_name,'dd.mm.yyyy') as work_experience_last_place_txt, --
+    upper(fc.c_name_org) as org_name,
+    upper(fc.c_name_org_wife) as org_name_spouse,
+    to_char(fc.c_date_birth,'dd.mm.yyyy') as birth_date,
+    fc.c_date_birth as birth_date_date,
+    floor(months_between(fd.c_doc_date, fc.c_date_birth) / 12) as age_full_years,
+    upper(fc.c_place_birth) as birth_place,
+    fc.c_address_equal,
+    upper(ci7.c_value) as dependants_count,
+    fie.inc_sal,
+    fie.inc_sal_add,
+    fie.inc_sal_spouse,
+    fie.inc_rent,
+    fie.inc_pension_benefits,
+    fie.inc_interest,
+    fie.exp_utilities,
+    fie.exp_transport,
+    fie.exp_children,
+    fie.exp_nutrition,
+    fie.exp_clothes,
+    fie.exp_obligations,
+    fie.exp_other,
+    upper(fc.c_main_doc#num) as personal_id_doc_num,
+    upper(fc.c_main_doc#who) as personal_id_doc_who,
+    fc.c_main_doc#date_doc   as personal_id_doc_date,
+    fc.c_result_scoring#rate as scoring_result,
+    fc.c_summa as amount,
+    fc.c_period#quant as term_duration,
+    upper(ut.c_name1) as term_unit,
+    upper(fc.c_fio_wife ) as fio_wife,
+    upper(fc.c_last_name_wife) as last_name_wife,
+    upper(fc.c_first_name_wife) as first_name_wife,
+    upper(fc.c_sur_name_wife) as sur_name_wife,
+    upper(fc.c_org_department) as org_department,
+    upper(p10.prop_name) as casta_now,
+    fc.c_phone_work#numb as phone_work_number,
+    upper(p11.prop_name) as is_founder,
+    upper(p12.prop_name) as is_have_cred,
+    upper(fc.c_email#numb) as email,
+    coalesce(fc.c_fio_wife,
+             fc.c_last_name_wife||
+             decode(fc.c_first_name_wife,null,null,' '||fc.c_first_name_wife)||
+             decode(fc.c_sur_name_wife,null,null,' '||fc.c_sur_name_wife)) as fio_wife_full,
+     fc.c_phone_wife as phone_wife,
+     fc.c_phone_org_wife as phone_org_wife,
+     cpr.is_pl_birth_usa,
+     cpr.address_usa,
+     cpr.is_resident_usa,
+     cpr.offshore,
+     cpr.ipdl_relation,
+     bp.c_code as bus_process_code,
+     upper(p13.prop_name) as is_add_estate_exists,
+     trim(fc.c_phone_home#numb) as phone_home,
+     trim(fc.c_mobile#numb) as phone_mobile,
+     trim(fc.c_phone_org) as phone_org,
+     f.id as folder_id,
+     fc.c_date_create as form_date_create
+from V_RFO_Z#FORM_CLIENT fc
+join V_RFO_Z#FDOC fd        on fd.id = fc.id and fd.class_id = 'FORM_CLIENT'
+join V_RFO_Z#RDOC rd        on rd.c_doc = fd.id
+join V_RFO_Z#FOLDERS f      on f.c_docs = rd.collection_id
+join V_RFO_Z#BUS_PROCESS bp on f.c_business = bp.id
+left join V_RFO_Z#COUNTRY c on c.id = fc.c_country
+left join V_RFO_Z#NAMES_CITY nc1 on nc1.id = fc.c_address_reg#place_ref
+left join V_RFO_Z#CODE_REGION cr1 on cr1.id = fc.c_address_reg#region_ref
+left join V_RFO_Z#REGION_AREA di1 on di1.id = fc.c_address_reg#district_ref
+left join V_RFO_Z#NAMES_CITY nc2 on nc2.id = fc.c_address_fact#place_ref
+left join V_RFO_Z#CODE_REGION cr2 on cr2.id = fc.c_address_fact#region_ref
+left join V_RFO_Z#REGION_AREA di2 on di2.id = fc.c_address_fact#district_ref
+left join V_RFO_Z#CLIENT_INDEX ci1 on ci1.id = fc.c_education
+left join V_RFO_Z#CLIENT_INDEX ci2 on ci2.id = fc.c_family
+left join V_RFO_Z#CLIENT_INDEX ci3 on ci3.id = fc.c_quant_child
+left join V_RFO_Z#CLIENT_INDEX ci5 on ci5.id = fc.c_social_stat_wife
+left join V_RFO_Z#CLIENT_INDEX ci6 on ci6.id = fc.c_type_org
+left join V_RFO_Z#CLIENT_INDEX ci7 on ci7.id = fc.c_quant_depend
+left join V_FORM_CLIENT_ALL_RFO_PRE1 fie           on fie.form_client_id = fc.id
+left join  V_FORM_CLIENT_ALL_RFO_PRE2 --Направление деятельности 3647984 -- ORG_ACTIVITY
+         p1 on p1.collection_id = fc.c_add_prop
+left join V_FORM_CLIENT_ALL_RFO_PRE3  --Отраслевая принадлежность 8824034 -- OT_BEL
+         p2 on p2.collection_id = fc.c_add_prop
+left join V_FORM_CLIENT_ALL_RFO_PRE4   --Тип должности заемщика  3648139 -- JOB
+         p3 on p3.collection_id = fc.c_add_prop
+left join V_FORM_CLIENT_ALL_RFO_PRE5 --Тип должности супруга(ги) 4074076 -- JOB_2
+         p4 on p4.collection_id = fc.c_add_prop
+left join V_FORM_CLIENT_ALL_RFO_PRE6 --Наличие счета в банке  8821868 -- NAL_SCH
+         p5 on p5.collection_id = fc.c_add_prop
+left join V_FORM_CLIENT_ALL_RFO_PRE7 --Наличие автомобиля  8823555 -- NALICHIE_AUTO
+         p6 on p6.collection_id = fc.c_add_prop
+left join V_FORM_CLIENT_ALL_RFO_PRE8  --Отношение к жилищу 8823273 -- NEDVIZHIMOST
+         p7 on p7.collection_id = fc.c_add_prop
+left join V_FORM_CLIENT_ALL_RFO_PRE9      --Наличие гаража 8822897 -- GARAZH
+         p8 on p8.collection_id = fc.c_add_prop
+left join V_FORM_CLIENT_ALL_RFO_PRE10 --Стаж на последнем месте  работы 8836976 STAZH_DATE
+         p9 on p9.collection_id = fc.c_add_prop
+left join V_FORM_CLIENT_ALL_RFO_PRE11  --Должность на данный момент
+         p10 on p10.collection_id = fc.c_add_prop
+left join V_FORM_CLIENT_ALL_RFO_PRE12 --Являетесь ли вы учредителем юр. лица
+         p11 on p11.collection_id = fc.c_add_prop
+left join V_FORM_CLIENT_ALL_RFO_PRE13 --Наличие кредита в нашем/другом банке
+         p12 on p12.collection_id = fc.c_add_prop
+left join V_FORM_CLIENT_ALL_RFO_PRE14     --Наличие недвижимости(дополнительной)
+         p13 on p13.collection_id = fc.c_add_prop
+left join V_RFO_Z#UNITS_OF_TIME ut on ut.id = fc.c_period#unit
+left join M_FORM_CL_POD_RFO    cpr on cpr.form_client_id = fc.id
+where fc.id not in (24072064899, 24073141842);
+grant select on U1.V_FORM_CLIENT_ALL_RFO to LOADDB;
+grant select on U1.V_FORM_CLIENT_ALL_RFO to LOAD_MO;
+grant select on U1.V_FORM_CLIENT_ALL_RFO to RISK_VERIF;
+
+

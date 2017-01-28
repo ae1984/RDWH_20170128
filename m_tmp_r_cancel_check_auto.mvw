@@ -1,0 +1,162 @@
+﻿create materialized view U1.M_TMP_R_CANCEL_CHECK_AUTO
+refresh force on demand
+as
+select cr_program_name ,
+--       sum("(55)TERM_KDN_REGUL") as NUM_KDN_FLAG,
+       sum("(32)AUTO_AMT_012014") as  NUM_32_CHECK,-- сколько всего отказов по проверке(всесте с другими)
+       sum(case when "(32)AUTO_AMT_012014" = 1 and kg =0 then 1 else 0 end) as NUM_32_KG, --без холостых
+       sum(case when "(32)AUTO_AMT_012014" = 1 and KG =0 and
+       "(1)PKB_ACT_CRD"+"(2)CALL_STAT_TEL"+"(3)NONRESIDENT"+"(4)AGE_NOT_APPLIC"+"(5)GCVP_SAL_LESS"+"(6)GCVP_DAYS_ELAPS"+"(7)PKB_CRD_OVERDUE"+"(8)ATMPTS_4D8M30"+"(9)CLN_MAX_DELAY"+
+                "(10)MNY_CRED_EXIS"+"(11)VERIF_RATING"+"(12)REF_PART_IN_AC"+
+                "(13)RISK_NOT_VIRG"+"(14)RISK_ORG"+"(15)RISK_VERIPHN"+"(16)RISKY_GOODS"+"(17)SC_22"+"(18)SC_43"+"(19)SC_13"+"(20)SC_2"+"(21)COMB_CHECK"+
+                "(22)SUM_FRESH"+"(23)RISK_VIRG_EKT350"+"(24)SC_18"+"(25)R_VIRG_ZERO"+"(26)R_VIRG_21_EKT"+"(27)R_VIRG_22_KN"+"(28)SC_103"+"(29)R_VIRG_KK110"+"(30)BL_CLN_EXST"+"(31)BL_DOC_EXST"+
+                "(55)TERM_KDN_REGUL"+"(33)R_EKT_UNMAR"+"(34)KN_KDN_HIGH_INC"+"(35)KN_KDN_LOW_INC"+"(36)AR1_KNP"+"(37)AR1_КН"+"(38)AR1_EKT"+"(39)AR1_KN15LKNPKN"+"(40)SC_2_1"+"(41)KN_J1"+"(42)KNP_FR_1405"+
+                "(43)EKT_FR1405"+"(44)KN15_ANTIFR_201406"+"(45)SC_22_1"+"(46)CHECK_MAN_REJ"+"(47)SC_8FRAUD"+"(48)AUTO_GAI_NO_GCVP"+"(49)SC_8BW"+"(50)MIXED"+"(51)SC_ROUTE"+
+                "(52)SC_2_2_BW"+"(53)CASH_EMPLOYEE"+"(54)CASH_BEKI_EARLY_RPAY"+ "(56)YOUNG_MALE_BIG_SUM"+"(57)VID_NA_ZHITEL"+"(58)PENS_AGE"+"(59)DP_AUTO"+"(60)VERIFICATION"+"(61)PKB"+"(62)GCVP"+"(63)CALCUL_KN"+"(64)DOC_NOT_CREAT"+
+                "(65)Постскор_люди"=0 then 1 else 0 end) as OTKAZ_32, -- только проверка-количество отказов (надо исключить саму проверку и смотреть без нее)
+    --  sum(case when "(55)TERM_KDN_REGUL" = 1 and KG =0 and
+sum(case when  "(32)AUTO_AMT_012014" = 1 and KG =0 and
+        "(1)PKB_ACT_CRD"+"(2)CALL_STAT_TEL"+"(3)NONRESIDENT"+"(4)AGE_NOT_APPLIC"+"(5)GCVP_SAL_LESS"+"(6)GCVP_DAYS_ELAPS"+"(7)PKB_CRD_OVERDUE"+"(8)ATMPTS_4D8M30"+"(9)CLN_MAX_DELAY"+
+                "(10)MNY_CRED_EXIS"+"(11)VERIF_RATING"+"(12)REF_PART_IN_AC"+
+                "(13)RISK_NOT_VIRG"+"(14)RISK_ORG"+"(15)RISK_VERIPHN"+"(16)RISKY_GOODS"+"(17)SC_22"+"(18)SC_43"+"(19)SC_13"+"(20)SC_2"+"(21)COMB_CHECK"+
+                "(22)SUM_FRESH"+"(23)RISK_VIRG_EKT350"+"(24)SC_18"+"(25)R_VIRG_ZERO"+"(26)R_VIRG_21_EKT"+"(27)R_VIRG_22_KN"+"(28)SC_103"+"(29)R_VIRG_KK110"+"(30)BL_CLN_EXST"+"(31)BL_DOC_EXST"+
+                 "(55)TERM_KDN_REGUL"+"(33)R_EKT_UNMAR"+"(34)KN_KDN_HIGH_INC"+"(35)KN_KDN_LOW_INC"+"(36)AR1_KNP"+"(37)AR1_КН"+"(38)AR1_EKT"+"(39)AR1_KN15LKNPKN"+"(40)SC_2_1"+"(41)KN_J1"+"(42)KNP_FR_1405"+
+                "(43)EKT_FR1405"+"(44)KN15_ANTIFR_201406"+"(45)SC_22_1"+"(46)CHECK_MAN_REJ"+"(47)SC_8FRAUD"+"(48)AUTO_GAI_NO_GCVP"+"(49)SC_8BW"+"(50)MIXED"+"(51)SC_ROUTE"+
+                "(52)SC_2_2_BW"+"(53)CASH_EMPLOYEE"+"(54)CASH_BEKI_EARLY_RPAY"+ "(56)YOUNG_MALE_BIG_SUM"+"(57)VID_NA_ZHITEL"+"(58)PENS_AGE"+"(59)DP_AUTO"+"(60)VERIFICATION"+"(61)PKB"+"(62)GCVP"+"(63)CALCUL_KN"+"(64)DOC_NOT_CREAT"+
+                "(65)Постскор_люди" =0 then contract_amount else 0 end) as OTKAZ_32_SUMMA,
+                  -- только проверка-сумма отказов (надо исключить саму проверку и смотреть без нее)
+
+
+
+         count(folder_id) as cnt, count(distinct folder_id) as dist_cnt,
+         count(distinct case when is_credit_issued = 1 then folder_id end) as approved,
+         sum(case when is_credit_issued = 1 then contract_amount end) as approved_sum,
+         sum(contract_amount) as folder_all_sum,
+       folder_yyyy_mm,
+       folder_date_create
+
+from (select z.*,
+
+                z."(1)PKB_ACT_CRD"||z."(2)CALL_STAT_TEL"||z."(3)NONRESIDENT"||z."(4)AGE_NOT_APPLIC"||z."(5)GCVP_SAL_LESS"||z."(6)GCVP_DAYS_ELAPS"||z."(7)PKB_CRD_OVERDUE"||z."(8)ATMPTS_4D8M30"||z."(9)CLN_MAX_DELAY"||
+                z."(10)MNY_CRED_EXIS"||z."(11)VERIF_RATING"||z."(12)REF_PART_IN_AC"||
+                z."(13)RISK_NOT_VIRG"||z."(14)RISK_ORG"||z."(15)RISK_VERIPHN"||z."(16)RISKY_GOODS"||z."(17)SC_22"||z."(18)SC_43"||z."(19)SC_13"||z."(20)SC_2"||z."(21)COMB_CHECK"||
+                z."(22)SUM_FRESH"||z."(23)RISK_VIRG_EKT350"||z."(24)SC_18"||z."(25)R_VIRG_ZERO"||z."(26)R_VIRG_21_EKT"||z."(27)R_VIRG_22_KN"||z."(28)SC_103"||z."(29)R_VIRG_KK110"||z."(30)BL_CLN_EXST"||z. "(31)BL_DOC_EXST"||
+                z."(32)AUTO_AMT_012014"||z."(33)R_EKT_UNMAR"||z."(34)KN_KDN_HIGH_INC"||z."(35)KN_KDN_LOW_INC"||z."(36)AR1_KNP"||z."(37)AR1_КН"||z."(38)AR1_EKT"||z."(39)AR1_KN15LKNPKN"||z."(40)SC_2_1"||z."(41)KN_J1"||z."(42)KNP_FR_1405"||
+                z."(43)EKT_FR1405"||z. "(44)KN15_ANTIFR_201406"||z."(45)SC_22_1"||z."(46)CHECK_MAN_REJ"||z."(47)SC_8FRAUD"||z."(48)AUTO_GAI_NO_GCVP"||z."(49)SC_8BW"||z."(50)MIXED"||z."(51)SC_ROUTE"||
+                z."(52)SC_2_2_BW"||z."(53)CASH_EMPLOYEE"||z."(54)CASH_BEKI_EARLY_RPAY"||z."(55)TERM_KDN_REGUL" || z."(56)YOUNG_MALE_BIG_SUM"||z."(57)VID_NA_ZHITEL"||z."(58)PENS_AGE"||z."(59)DP_AUTO"||z."(60)VERIFICATION"||z."(61)PKB"||z."(62)GCVP"||z."(63)CALCUL_KN"||z."(64)DOC_NOT_CREAT"||
+                z."(65)Постскор_люди" as shtrih,
+
+                (z."(1)PKB_ACT_CRD"+z."(2)CALL_STAT_TEL"+z."(3)NONRESIDENT"+z."(4)AGE_NOT_APPLIC"+z."(5)GCVP_SAL_LESS"+z."(6)GCVP_DAYS_ELAPS"+z."(7)PKB_CRD_OVERDUE"+z."(8)ATMPTS_4D8M30"+z."(9)CLN_MAX_DELAY"+
+                z."(10)MNY_CRED_EXIS"+z."(11)VERIF_RATING"+z."(12)REF_PART_IN_AC"+
+                z."(13)RISK_NOT_VIRG"+z."(14)RISK_ORG"+z."(15)RISK_VERIPHN"+z."(16)RISKY_GOODS"+z."(17)SC_22"+z."(18)SC_43"+z."(19)SC_13"+z."(20)SC_2"+z."(21)COMB_CHECK"+
+                z."(22)SUM_FRESH"+z."(23)RISK_VIRG_EKT350"+z."(24)SC_18"+z."(25)R_VIRG_ZERO"+z."(26)R_VIRG_21_EKT"+z."(27)R_VIRG_22_KN"+z."(28)SC_103"+z."(29)R_VIRG_KK110"+z."(30)BL_CLN_EXST"+z."(31)BL_DOC_EXST"+
+                z."(32)AUTO_AMT_012014"+z."(33)R_EKT_UNMAR"+z."(34)KN_KDN_HIGH_INC"+z."(35)KN_KDN_LOW_INC"+z."(36)AR1_KNP"+z."(37)AR1_КН"+z."(38)AR1_EKT"+z."(39)AR1_KN15LKNPKN"+z."(40)SC_2_1"+z."(41)KN_J1"+z."(42)KNP_FR_1405"+
+                z."(43)EKT_FR1405"+z."(44)KN15_ANTIFR_201406"+z."(45)SC_22_1"+z."(46)CHECK_MAN_REJ"+z."(47)SC_8FRAUD"+z."(48)AUTO_GAI_NO_GCVP"+z."(49)SC_8BW"+z."(50)MIXED"+z."(51)SC_ROUTE"+
+                z."(52)SC_2_2_BW"+z."(53)CASH_EMPLOYEE"+z."(54)CASH_BEKI_EARLY_RPAY"+z."(55)TERM_KDN_REGUL" + z."(56)YOUNG_MALE_BIG_SUM"+z."(57)VID_NA_ZHITEL"+z."(58)PENS_AGE"+z."(59)DP_AUTO"+z."(60)VERIFICATION"+z."(61)PKB"+z."(62)GCVP"+z."(63)CALCUL_KN"+z."(64)DOC_NOT_CREAT"+
+                z."(65)Постскор_люди") as rej_cnt
+from (select f.folder_id,
+             f.product_type,
+             f.cr_program_name,
+             trunc(f.folder_date_create_mi) as folder_date_create,
+             to_char(f.folder_date_create_mi, 'yyyy-mm') as folder_yyyy_mm,
+            f.contract_amount,
+            f.is_credit_issued,
+            case when sum(case when f.is_credit_issued = 1 then 1 else 0 end)>0 then 1 else 0 end as KG,
+            case when sum(case when f.cancel_prescoring = 1 then 1 else 0 end)>0 then 1 else 0 end as "Presc_total",--1
+
+            -- PRESCORING CHECKS
+            case when sum(case when PC.CANCEL_TYPE_CODE = 'PKB_ACT_CRD_CNT1' then 1 else 0 end) > 0 then 1 else 0 end as "(1)PKB_ACT_CRD",--1
+            case when sum(case when PC.CANCEL_TYPE_CODE = 'КОЛ_СТАЦ_ТЕЛЕФОНОВ' then 1 else 0 end) > 0 then 1 else 0 end as "(2)CALL_STAT_TEL",--2
+            case when sum(case when PC.CANCEL_TYPE_CODE = 'НЕ_РЕЗИДЕНТ' then 1 else 0 end) > 0 then 1 else 0 end as "(3)NONRESIDENT",--3
+            case when sum(case when PC.CANCEL_TYPE_CODE = 'ВОЗРАСТ_НЕДОПУСТИМ' then 1 else 0 end) > 0 then 1 else 0 end as "(4)AGE_NOT_APPLIC",--4
+            case when sum(case when PC.CANCEL_TYPE_CODE = 'GCVP_SAL_LESS' then 1 else 0 end) > 0 then 1 else 0 end as "(5)GCVP_SAL_LESS",--5
+            case when sum(case when PC.CANCEL_TYPE_CODE = 'GCVP_DAYS_ELAPS_OVER' then 1 else 0 end) > 0 then 1 else 0 end as "(6)GCVP_DAYS_ELAPS",--6
+            case when sum(case when PC.CANCEL_TYPE_CODE = 'PKB_CRD_OVERDUE_CUR' then 1 else 0 end) > 0 then 1 else 0 end as "(7)PKB_CRD_OVERDUE",--7
+            case when sum(case when PC.CANCEL_TYPE_CODE = 'ПОПЫТОК_БОЛЕЕ_4Д8М30' then 1 else 0 end) > 0 then 1 else 0 end as "(8)ATMPTS_4D8M30",--8
+            case when sum(case when PC.CANCEL_TYPE_CODE = 'CLN_MAX_DELAY' then 1 else 0 end) > 0 then 1 else 0 end as "(9)CLN_MAX_DELAY",--9
+            case when sum(case when PC.CANCEL_TYPE_CODE = 'CLN_MONEY_CRED_EXIST' then 1 else 0 end) > 0 then 1 else 0 end as "(10)MNY_CRED_EXIS",--10
+            case when sum(case when PC.CANCEL_TYPE_CODE = 'VERIFICATION_RATING' then 1 else 0 end) > 0 then 1 else 0 end as "(11)VERIF_RATING",--11
+            case when sum(case when PC.CANCEL_TYPE_CODE = 'REFUSAL_PART_IN_ACT' then 1 else 0 end) > 0 then 1 else 0 end as "(12)REF_PART_IN_AC",--12
+
+            --case when sum(case when trunc(f.folder_date_create_mi)< to_date('17.10.2013', 'dd.mm.yyyy') and f.is_credit_issued = 0 then 1 else 0 end) > 0 then 1 else 0 end as "(2)Старые",--2
+
+            --MIDDLE OFFICE CHECKS
+
+
+            case when sum(case when t.par_code = 'SC_RISK_NOT_VIRGIN_RES_PRE' then 1 else 0 end) > 0 then 1 else 0 end as "(13)RISK_NOT_VIRG",--13
+            case when sum(case when t.par_code = 'SC_RISK_ORG_RES_PRE' then 1 else 0 end) > 0 then 1 else 0 end as "(14)RISK_ORG",--14
+            case when sum(case when t.par_code = 'SC_R_VERIPHONE_RES_PRE' then 1 else 0 end) > 0 then 1 else 0 end as "(15)RISK_VERIPHN",--15
+            case when sum(case when t.par_code = 'RISKY_GOODS_RES_PRE' then 1 else 0 end) > 0 then 1 else 0 end as "(16)RISKY_GOODS", --16
+            case when sum(case when t.par_code = 'SC_CARD_2_18_22_RES_PRE_22' then 1 else 0 end) > 0 then 1 else 0 end as "(17)SC_22",--17
+            case when sum(case when t.par_code = 'SC_CARD_43_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(18)SC_43",--18
+            case when sum(case when t.par_code = 'SC_CARD_13_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(19)SC_13",--19
+            case when sum(case when t.par_code = 'SC_CARD_2_18_22_RES_PRE_2' then 1 else 0 end)> 0 then 1 else 0 end as "(20)SC_2",--20
+            case when sum(case when t.par_code = 'SC_8_RV_COMB_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(21)COMB_CHECK",--21
+
+            case when sum(case when t.par_code = 'SC_8_RV_SUM_FRESH_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(22)SUM_FRESH",--22
+            case when sum(case when t.par_code = 'SC_R_VIRG_EKT350_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(23)RISK_VIRG_EKT350",--23
+            case when sum(case when t.par_code = 'SC_CARD_2_18_22_RES_PRE_18' then 1 else 0 end)> 0 then 1 else 0 end as "(24)SC_18",--24
+            case when sum(case when t.par_code = 'SC_R_VIRGIN_ZERO_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(25)R_VIRG_ZERO",--25
+            case when sum(case when t.par_code = 'SC_RISK_VIRGIN21_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(26)R_VIRG_21_EKT",--26
+            case when sum(case when t.par_code = 'SC_RISK_VIRGIN22_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(27)R_VIRG_22_KN",--27
+             case when sum(case when t.par_code = 'SC_CARD_103_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(28)SC_103",--28
+             case when sum(case when t.par_code = 'SC_R_VIRG_KK110_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(29)R_VIRG_KK110",--29
+             case when sum(case when t.par_code = 'CLIENT_BL_EXISTS_SCO' then 1 else 0 end)> 0 then 1 else 0 end as "(30)BL_CLN_EXST",  --30
+             case when sum(case when t.par_code = 'CLIENT_DOC_BL_EXISTS' then 1 else 0 end)> 0 then 1 else 0 end as "(31)BL_DOC_EXST",--31
+             case when sum(case when t.par_code = 'RISK_AUTO_AMOUNT_BEKI_GCVP' then 1 else 0 end)> 0 then 1 else 0 end as "(32)AUTO_AMT_012014",--32
+             case when sum(case when t.par_code = 'SC_RISK_EKT_UNMARRIED_BEKI_LOW_SAL' then 1 else 0 end)> 0 then 1 else 0 end as "(33)R_EKT_UNMAR",--33
+             case when sum(case when t.par_code = 'SC_RISK_KN_KDN_HIGH_INCOME' then 1 else 0 end)> 0 then 1 else 0 end as "(34)KN_KDN_HIGH_INC",--34
+             case when sum(case when t.par_code = 'SC_RISK_KN_KDN_LOW_INCOME' then 1 else 0 end)> 0 then 1 else 0 end as "(35)KN_KDN_LOW_INC",  --35
+             case when sum(case when t.par_code = 'SC_AR1_KNP' then 1 else 0 end)> 0 then 1 else 0 end as "(36)AR1_KNP",--36
+             case when sum(case when t.par_code = 'SC_AR1_KN' then 1 else 0 end)> 0 then 1 else 0 end as "(37)AR1_КН",--37
+             case when sum(case when t.par_code = 'SC_AR1_EKT' then 1 else 0 end)> 0 then 1 else 0 end as "(38)AR1_EKT",--39
+             case when sum(case when t.par_code = 'SC_AR1_KN15_LKN_PKN' then 1 else 0 end)> 0 then 1 else 0 end as "(39)AR1_KN15LKNPKN",--38
+             case when sum(case when t.par_code = 'SC_CARD_2_1_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(40)SC_2_1",--40
+             case when sum(case when t.par_code = 'SC_2_KN_RULES_SET_J1' then 1 else 0 end)> 0 then 1 else 0 end as "(41)KN_J1",--41
+             case when sum(case when t.par_code = 'SC_22_ANTIFRAUD_201405' then 1 else 0 end)> 0 then 1 else 0 end as "(42)KNP_FR_1405",--51
+             case when sum(case when t.par_code = 'SC_8_ANTIFRAUD_201405' then 1 else 0 end)> 0 then 1 else 0 end as "(43)EKT_FR1405",--42
+             case when sum(case when t.par_code = 'SC_17_ANTIFRAUD_201406' then 1 else 0 end)> 0 then 1 else 0 end as "(44)KN15_ANTIFR_201406",--43
+             case when sum(case when t.par_code = 'SC_CARD_22_1_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(45)SC_22_1",--44
+             case when sum(case when t.par_code = 'SC_CHECK_MAN_REJ' then 1 else 0 end)> 0 then 1 else 0 end as "(46)CHECK_MAN_REJ",--45
+             case when sum(case when t.par_code = 'SC_CARD_8_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(47)SC_8FRAUD",--48
+             case when sum(case when t.par_code = 'SC_AUTO_GAI_NO_GCVP' then 1 else 0 end)> 0 then 1 else 0 end as "(48)AUTO_GAI_NO_GCVP",--46
+             case when sum(case when t.par_code = 'SC_CARD_8_BW_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(49)SC_8BW",--47
+
+             case when sum(case when t.par_code = 'SC_MIXED_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(50)MIXED",--49
+             case when sum(case when t.par_code = 'SC_ROUTE_RES' then 1 else 0 end)> 0 then 1 else 0 end as "(51)SC_ROUTE",--50
+             case when sum(case when t.par_code = 'SC_CARD_2_2_BW_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(52)SC_2_2_BW",--52
+             case when sum(case when t.par_code = 'SC_CASH_EMPLOYEE_RES_PRE' then 1 else 0 end)> 0 then 1 else 0 end as "(53)CASH_EMPLOYEE",--53
+
+             case when sum(case when t.par_code = 'SC_CASH_BEKI_EARLY_REPAY_61DD_RES_PRE'   then 1 else 0 end)> 0 then 1 else 0 end as "(54)CASH_BEKI_EARLY_RPAY",--54
+             case when sum(case when t.par_code = 'SC_CONTRACT_TERM_KDN_REGUL_RES_PRE' /*<==Деньги*/  or t.par_code = 'SC_CONTRACT_TERM_KDN_REGUL_TK_RES_PRE' /*<== Товары*/ then 1 else 0 end)> 0 then 1 else 0 end as "(55)TERM_KDN_REGUL",--54
+             case when sum(case when t.par_code = 'SC_YOUNG_MALE_BIG_SUM_RES_PRE'   then 1 else 0 end)> 0 then 1 else 0 end as "(56)YOUNG_MALE_BIG_SUM",--54
+
+             case when sum(case when car.auto_calc_result in ('НЕТ ДАТЫ ОКОНЧ ВИДА НА ЖИТЕЛЬСТВО', 'У КЛИЕНТА НАСТУПИЛА ДАТА ОКОНЧАНИЯ ВИДА НА ЖИТЕЛЬСТВО') then 1 else 0 end)>0 then 1 else 0 end as "(57)VID_NA_ZHITEL",
+             case when sum(case when car.auto_calc_result in ('ПЕНСИОННЫЙ ВОЗРАСТ') then 1 else 0 end) > 0 then 1 else 0 end as "(58)PENS_AGE",
+             case when sum(case when car.auto_calc_result in ('ИЗМЕНИТЬ СРОК ДО 39 МЕС ИЛИ ПВ=50%','ТРЕБУЕТСЯ ИЗМЕНИТЬ СРОК ИЛИ ВНЕСТИ ПВ','ТРЕБУЕТСЯ ВНЕСТИ ПВ') then 1 else 0 end)>0 then 1 else 0 end  as "(59)DP_AUTO",
+             case when sum(case when car.auto_calc_result in ('ОТКАЗ ПО ВЕРИФИКАЦИИ') then 1 else 0 end)>0 then 1 else 0 end  as "(60)VERIFICATION",
+             case when sum(case when car.auto_calc_result in ('ОШИБКА','СУММА ПРОСРОЧКИ БОЛЬШЕ МАКС','НЕТ ОТЧЕТА ПКБ','СТАТУС ПО ЗАКР ЗАЙМУ','СТАТУС ПО ТЕК ЗАЙМУ','У КЛИЕНТА ЕСТЬ ТЕКУЩИЙ ЗАЙМ, ПО КОТОРОМУ НЕТ АКТУАЛЬНОЙ ИНФОРМАЦИИ В PKB.','ФОРМА РАСЧЕТА ПО ЗАКР ЗАЙМУ',
+                                                              'ТЕК ЗАЙМ БЕЗ АКТУАЛЬНО ИНФО В ПКБ','НЕПОГАШ СУММА ПО ЗАКР ЗАЙМУ','КЛАСС ПО ЗАКР ЗАЙМУ','КЛАСС ПО ТЕК ЗАЙМУ','ИПОТЕКА В KASPI','НЕПОГАШЕННЫЙ ТЕК ЗАЙМ','НЕПОГАШЕННЫЙ ТЕК ЗАЙМ KASPI','ПОСРОЧКА ПО ЗАКР ЗАЙМУ',
+                                                              'ПОСРОЧКА ПО ТЕК ЗАЙМУ') then 1 else 0 end)>0 then 1 else 0 end  as "(61)PKB",
+             case when sum(case when car.auto_calc_result in ('НЕТ ОТЧЕТА ГЦВП','КОЛ-ВО ДНЕЙ МЕЖДУ НАЧИСЛЕНИЯМИ','КОЛ-ВО ДНЕЙ ПОСЛЕ НАЧИСЛЕНИЯ','КОЛ-ВО НАЧИСЛЕНИЙ','ЛК. КОЛ-ВО ДНЕЙ ПОСЛЕ НАЧИСЛЕНИЯ','РАБОТОДАТЕЛЬ ФИЗ ЛИЦО') then 1 else 0 end)>0 then 1 else 0 end  as "(62)GCVP",
+             case when sum(case when car.auto_calc_result in ('БЕКИ','ОТКАЗ','ОТКАЗ АЛЬТЕРНАТИВА','НЕ НАЙДЕН СРОК','НЕ УДАЛОСЬ ПОЛУЧИТЬ СУММУ СТРАХОВОЙ КОММИССИИ, ТРЕБУЕТСЯ РУЧНОЙ РАСЧЕТ') then 1 else 0 end)>0 then 1 else 0 end  as "(63)CALCUL_KN",
+             case when sum(case when car.auto_calc_result in ('ДОКУМЕНТ "KAS. РЕЗУЛЬТАТ АВТОМАТИЧЕСКОГО КАЛЬКУЛЯТОРА" НЕ СОЗДАН','ДОКУМЕНТ ЛKAS. РЕЗУЛЬТАТ АВТОМАТИЧЕСКОГО КАЛЬКУЛЯТОРА» НЕ СОЗДАН','ДОКУМЕНТ С РЕЗУЛЬТАТОМ НЕ СОЗДАН') then 1 else 0 end)>0 then 1 else 0 end  as "(64)DOC_NOT_CREAT",
+
+             case when sum(nvl(f.cancel_manager,0)+nvl(f.cancel_cpr_aa,0)+nvl(f.cancel_verificator,0))>0 and sum(nvl(f.is_aa_reject,0)) < 1 then 1 else 0 end as "(65)Постскор_люди"--54
+
+from u1.m_folder_con_cancel f
+left join u1.v_contract_all_rfo car on f.rfo_contract_id = car.rfo_contract_id
+left join u1.M_FOLDER_MO_CANCEL_LAST t on t.folder_id = f.folder_id
+left join RISK_AAMAN.m_folder_presc_cancel pc on f.folder_id = pc.folder_id
+where f.is_refin = 0 and f.is_point_active = 0
+and f.cr_program_name in ('АВТОКРЕДИТОВАНИЕ')-- указать продукт
+
+and f.folder_date_create_mi>= to_date('01.04.2014', 'dd.mm.yyyy')
+group by f.folder_id, trunc(f.folder_date_create_mi), to_char(f.folder_date_create_mi, 'yyyy-mm'),
+f.product_type, f.cr_program_name,f.contract_amount,f.is_credit_issued ) z)x
+group by       folder_yyyy_mm,
+       folder_date_create, cr_program_name;
+grant select on U1.M_TMP_R_CANCEL_CHECK_AUTO to LOADDB;
+grant select on U1.M_TMP_R_CANCEL_CHECK_AUTO to LOADER;
+
+

@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_TMP_J_G_CLIENT_CAL
+refresh complete on demand
+as
+select * from V_TMP_J_G_CLIENT_CAL;
+grant select on U1.M_TMP_J_G_CLIENT_CAL to LOADDB;
+grant select on U1.M_TMP_J_G_CLIENT_CAL to LOADER;
+
+

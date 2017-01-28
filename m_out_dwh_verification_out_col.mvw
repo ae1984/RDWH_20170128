@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_OUT_DWH_VERIFICATION_OUT_COL
+build deferred
+refresh force on demand
+as
+select /*+ parallel(15)*/
+       id,
+       inserted_date,
+       client_id,
+       verification_id,
+       verification_type,
+       ver_type_result,
+       verify_result,
+       repeat_photo,
+       comment_manager,
+       comment_cpr,
+       cont_arr_res,
+       error_message
+       is_accepted,
+       change_status_date,
+       photo_arr_res,
+       type_ver
+  from verificator.out_collection@verifais;
+grant select on U1.M_OUT_DWH_VERIFICATION_OUT_COL to LOADDB;
+
+

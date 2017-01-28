@@ -1,0 +1,9 @@
+﻿create materialized view U1.V_SCO_CALCULATIONS
+refresh complete on demand
+as
+select distinct *
+from V_MO_CALCULATIONS@sc18;
+grant select on U1.V_SCO_CALCULATIONS to LOADDB;
+grant select on U1.V_SCO_CALCULATIONS to LOADER;
+
+

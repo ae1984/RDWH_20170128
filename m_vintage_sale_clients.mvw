@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_VINTAGE_SALE_CLIENTS
+using no index
+refresh complete on demand
+as
+select p.yy_mm_start,
+       count(distinct p.client_id ) as col
+from V_PORTFOLIO p
+where p.yy_mm_report >= '2009 - 02' and p.yy_mm_start >= '2009 - 01'
+group by p.yy_mm_start;
+grant select on U1.M_VINTAGE_SALE_CLIENTS to LOADDB;
+grant select on U1.M_VINTAGE_SALE_CLIENTS to LOADER;
+
+

@@ -1,0 +1,39 @@
+﻿create materialized view U1.M_PRESC_PKB_NUM_CONTRACTS_TEST
+refresh complete on demand
+as
+with send_pkb as
+ (select to_date(v.c_value, 'dd.mm.yyyy') as send_pkb_date
+    from V_RFO_Z#TUNE t
+    left join V_RFO_Z#TUNE_VAL v
+      on v.collection_id = t.c_values
+   where t.c_code = 'KAS_DATE_PKB'
+     and rownum = 1)
+selecT x.rfo_client_id,
+       ((cnt_act - (case when cnt_act > 0 and cnt_priv = 0 then 1 when cnt_act = 0 and cnt_new = 0 then 0 else cnt_priv end) + cnt_new) -  cnt_cl_con_aft_send_pkb)
+        as pkb_act_cnt
+  from (seleCT d.rfo_client_id,
+               sum(case
+                     when (d.x_is_card = 0 or (d.x_is_card = 1 and coalesce(d.card_limit,0) != 0)) and
+                          d.is_credit_active = 1 and
+                          d.begin_date >= (select send_pkb_date from send_pkb) then 1 else 0 end) as cnt_new, -- V_NNEW. договора (кредиты+карты) созданные после отправки в ПКБ, прибавляем. (Get_Act_Cnt  = v_nAct - v_nPriv + v_nNew)
+               sum(case
+                     when (d.x_is_card = 0 or (d.x_is_card = 1 and coalesce(d.card_limit,0) != 0)) and
+                          d.is_credit_active = 1 and
+                          d.begin_date < (select send_pkb_date from send_pkb) then 1 else 0 end) as cnt_act, --V_NACT. кол-во договоров (кредиты+карты) созданные до отправки в ПКБ, прибавляем.
+               sum(case
+                     when d.x_is_card = 0 and
+                          d.is_credit_active != 1 and
+                          d.actual_end_date >= (selecT Get_Pkb_Date() from dual) then 1 else 0 end) as cnt_cl_con_aft_send_pkb, -- Get_PKB_Gash_Crd_Count. кол-во договоров(только кредиты) закрытых после отправки в ПКБ, отнимаем.
+
+               sum(case
+                     when d.x_is_card = 1 and
+                          coalesce(d.card_limit,0) = 0 and d.prod_type not in ('KASPI GOLD','ЗАРПЛАТНЫЕ КАРТЫ','КАРТА ВКЛАДЧИКА') and
+                          d.is_credit_active = 1 and
+                          d.begin_date <= (select send_pkb_date from send_pkb) then 1 else 0 end) as cnt_priv --V_NPRIV. кол-во активных привилегированных карт, после отправки в ПКБ, отнимаем. ( V_NACT > 0 and V_NPRIV = 0 then V_NPRIV := 1;)
+
+          from v_dwh_portfolio_current d
+         where d.x_is_credit_issued = 1
+         group by d.rfo_client_id) x;
+grant select on U1.M_PRESC_PKB_NUM_CONTRACTS_TEST to LOADDB;
+
+

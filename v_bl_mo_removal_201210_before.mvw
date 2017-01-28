@@ -1,0 +1,9 @@
+﻿create materialized view U1.V_BL_MO_REMOVAL_201210_BEFORE
+never refresh
+as
+select sysdate, t.*
+from V_MO_BLACK_LIST t where t.note = 'А3';
+grant select on U1.V_BL_MO_REMOVAL_201210_BEFORE to LOADDB;
+grant select on U1.V_BL_MO_REMOVAL_201210_BEFORE to LOADER;
+
+

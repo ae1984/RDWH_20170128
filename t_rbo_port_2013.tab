@@ -1,0 +1,326 @@
+﻿create table U1.T_RBO_PORT_2013
+(
+  rep_date                 DATE not null,
+  rbo_contract_id          NUMBER(32) not null,
+  rbo_client_id            NUMBER(32) not null,
+  principal                NUMBER(21,2),
+  interest                 NUMBER(21,2),
+  overlimit                NUMBER(21,2),
+  overlimit_interest       NUMBER(21,2),
+  overdraft                NUMBER(21,2),
+  overdraft_interest       NUMBER(21,2),
+  principal_del            NUMBER(21,2),
+  interest_del             NUMBER(21,2),
+  overlimit_del            NUMBER(21,2),
+  overlimit_interest_del   NUMBER(21,2),
+  overdraft_del            NUMBER(21,2),
+  overdraft_interest_del   NUMBER(21,2),
+  w_principal_del          NUMBER(21,2),
+  w_interest_del           NUMBER(21,2),
+  w_overlimit_del          NUMBER(21,2),
+  w_overlimit_interest_del NUMBER(21,2),
+  w_overdraft_del          NUMBER(21,2),
+  w_overdraft_interest_del NUMBER(21,2),
+  pc_cred_limit            NUMBER(21,2),
+  delinq_days              NUMBER(21),
+  delinq_date              DATE,
+  delinq_days_cli          NUMBER(21),
+  delinq_date_cli          DATE,
+  total_debt               NUMBER(21,2) not null,
+  delinq_amount            NUMBER(21,2),
+  is_on_balance            NUMBER(1) not null,
+  is_card                  NUMBER(1) not null,
+  total_debt_cli           NUMBER(21,2) not null,
+  del_amount_cli           NUMBER(21,2),
+  total_debt_max           NUMBER(21,2),
+  total_debt_cli_max       NUMBER(21,2),
+  del_days_max             NUMBER(21),
+  del_days_cli_max         NUMBER(21),
+  del_amount_max           NUMBER(21,2),
+  del_amount_cli_max       NUMBER(21,2)
+)
+partition by range (REP_DATE) interval (NUMTOYMINTERVAL(1, 'MONTH'))
+(
+  partition P0 values less than (TO_DATE(' 2007-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255,
+  partition SYS_P11102 values less than (TO_DATE(' 2013-02-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P11103 values less than (TO_DATE(' 2013-03-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P11104 values less than (TO_DATE(' 2013-04-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P11105 values less than (TO_DATE(' 2013-05-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P11106 values less than (TO_DATE(' 2013-06-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P11107 values less than (TO_DATE(' 2013-07-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P11108 values less than (TO_DATE(' 2013-08-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P11109 values less than (TO_DATE(' 2013-09-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P11110 values less than (TO_DATE(' 2013-10-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P11111 values less than (TO_DATE(' 2013-11-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P11112 values less than (TO_DATE(' 2013-12-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P11113 values less than (TO_DATE(' 2014-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 0
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    )
+);
+comment on table U1.T_RBO_PORT_2013
+  is 'Портфель расчета задолженности на каждый день по карточным/кредитным договорам(данные за 2012 год)';
+comment on column U1.T_RBO_PORT_2013.rep_date
+  is 'Отчетная дата';
+comment on column U1.T_RBO_PORT_2013.rbo_contract_id
+  is 'ID контракта (FK на Z#KAS_PC_DOG.id(карточный),Z#PR_CRED(кредитный)';
+comment on column U1.T_RBO_PORT_2013.rbo_client_id
+  is 'ID клиента в РБО';
+comment on column U1.T_RBO_PORT_2013.principal
+  is 'Основной долг';
+comment on column U1.T_RBO_PORT_2013.interest
+  is 'Проценты по ОД';
+comment on column U1.T_RBO_PORT_2013.overlimit
+  is 'Оверлимит';
+comment on column U1.T_RBO_PORT_2013.overlimit_interest
+  is 'Проценты по оверлимиту';
+comment on column U1.T_RBO_PORT_2013.overdraft
+  is 'Овердрафт';
+comment on column U1.T_RBO_PORT_2013.overdraft_interest
+  is 'Проценты по овердрафту';
+comment on column U1.T_RBO_PORT_2013.principal_del
+  is 'Просроченный ОД';
+comment on column U1.T_RBO_PORT_2013.interest_del
+  is 'Просроченные проценты по ОД';
+comment on column U1.T_RBO_PORT_2013.overlimit_del
+  is 'Просроченный оверлимит';
+comment on column U1.T_RBO_PORT_2013.overlimit_interest_del
+  is 'Просроченные проценты по оверлимиту';
+comment on column U1.T_RBO_PORT_2013.overdraft_del
+  is 'Просроченный овердрафт';
+comment on column U1.T_RBO_PORT_2013.overdraft_interest_del
+  is 'Просроченные проценты по овердрафту';
+comment on column U1.T_RBO_PORT_2013.w_principal_del
+  is 'Внебаланс. Просроченный ОД';
+comment on column U1.T_RBO_PORT_2013.w_interest_del
+  is 'Внебаланс. Просроченные проценты по ОД';
+comment on column U1.T_RBO_PORT_2013.w_overlimit_del
+  is 'Внебаланс. Просроченный оверлимит';
+comment on column U1.T_RBO_PORT_2013.w_overlimit_interest_del
+  is 'Внебаланс. Проценты по просроченному оверлимиту';
+comment on column U1.T_RBO_PORT_2013.w_overdraft_del
+  is 'Внебаланс. Просроченный овердрафт';
+comment on column U1.T_RBO_PORT_2013.w_overdraft_interest_del
+  is 'Внебаланс. просроченные проценты по овердрафту';
+comment on column U1.T_RBO_PORT_2013.pc_cred_limit
+  is 'Свободный остаток по кредитному лимиту';
+comment on column U1.T_RBO_PORT_2013.delinq_days
+  is 'Количество дней на просрочке по договору';
+comment on column U1.T_RBO_PORT_2013.delinq_date
+  is 'Дата выхода на просрочку по договору';
+comment on column U1.T_RBO_PORT_2013.delinq_days_cli
+  is 'Количество дней на просрочке по клиенту';
+comment on column U1.T_RBO_PORT_2013.delinq_date_cli
+  is 'Дата выхода на просрочку по клиенту';
+comment on column U1.T_RBO_PORT_2013.total_debt
+  is 'Вся задолженность по договору';
+comment on column U1.T_RBO_PORT_2013.delinq_amount
+  is 'Сумма просроченной задолженности(не включает внебаланс)';
+comment on column U1.T_RBO_PORT_2013.is_on_balance
+  is 'Признак: 1-Вся задолженность на балансе, 0 - Вся задолженность на внебалансе, 2 - Задолженность не числится на балансе(7999), списывается за счет страховой компании(старая схема по кредитам)';
+comment on column U1.T_RBO_PORT_2013.is_card
+  is 'Признак: 0 - Кредитный договор, 1 - Карточный договор';
+comment on column U1.T_RBO_PORT_2013.total_debt_cli
+  is 'Сумма всей задолженности по клиенту на отчетную дату';
+comment on column U1.T_RBO_PORT_2013.del_amount_cli
+  is 'Сумма просроченной задолженности(не включает внебаланс) по клиенту на отчетную дату';
+comment on column U1.T_RBO_PORT_2013.total_debt_max
+  is 'Максимальная задолженность по договору на отчетную дату';
+comment on column U1.T_RBO_PORT_2013.total_debt_cli_max
+  is 'Максимальная задолженность по клиенту на отчетную дату';
+comment on column U1.T_RBO_PORT_2013.del_days_max
+  is 'Максимальное количество дней на просрочке по договору на отчетную дату';
+comment on column U1.T_RBO_PORT_2013.del_days_cli_max
+  is 'Максимальное количество дней на просрочке по клиенту на отчетную дату';
+comment on column U1.T_RBO_PORT_2013.del_amount_max
+  is 'Максимальная сумма просроченной задолженности(не включает внебаланс)';
+comment on column U1.T_RBO_PORT_2013.del_amount_cli_max
+  is 'Максимальная сумма просроченной задолженности(не включает внебаланс) по клиенту на отчетную дату';
+create index U1.T_RBO_PORT_2013_IND1 on U1.T_RBO_PORT_2013 (RBO_CONTRACT_ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  compress  nologging;
+create index U1.T_RBO_PORT_2013_IND2 on U1.T_RBO_PORT_2013 (RBO_CLIENT_ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  compress  nologging;
+create index U1.T_RBO_PORT_2013_IND3 on U1.T_RBO_PORT_2013 (REP_DATE)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  compress  nologging;
+create index U1.T_RBO_PORT_2013_IND4 on U1.T_RBO_PORT_2013 (RBO_CONTRACT_ID, REP_DATE)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  compress  nologging;
+grant select on U1.T_RBO_PORT_2013 to LOADDB;
+grant select on U1.T_RBO_PORT_2013 to LOADER;
+

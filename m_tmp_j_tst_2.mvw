@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_TMP_J_TST_2
+refresh complete on demand
+as
+select a.a_name from M_TMP_J_TST_1 a;
+grant select on U1.M_TMP_J_TST_2 to LOADDB;
+grant select on U1.M_TMP_J_TST_2 to LOADER;
+
+

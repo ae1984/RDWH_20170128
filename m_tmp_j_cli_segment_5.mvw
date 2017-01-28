@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_TMP_J_CLI_SEGMENT_5
+refresh complete on demand
+as
+select k.iin, k.is_pmt_done_ever as is_kaspi_kz_ever,
+       k.pmt_amount_sum, k.pmt_amount_max,
+       floor(months_between(trunc(sysdate), k.pmt_date_min)) as first_kaspikz_pmt_mon_ago,
+       floor(months_between(trunc(sysdate), k.pmt_date_max)) as last_kaspikz_pmt_mon_ago
+from M_TMP_J_KASPI_USERS k;
+grant select on U1.M_TMP_J_CLI_SEGMENT_5 to LOADDB;
+grant select on U1.M_TMP_J_CLI_SEGMENT_5 to LOADER;
+
+

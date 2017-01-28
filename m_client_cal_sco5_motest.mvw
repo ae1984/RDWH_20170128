@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_CLIENT_CAL_SCO5_MOTEST
+refresh force on demand
+as
+select f.rfo_client_id,
+       f.iin,
+        case when count(distinct d.deal_number) > 0 then 0 else 1 end as is_client_new,
+        case
+         when sum(case
+                    when (d.x_is_card = 1 and d.x_amount <= 0) or
+                         (d.x_is_card = 1 and d.x_amount <= 0 and
+                          d.prod_name = 'ПРИВИЛЕГИРОВАННЫЙ' and d.x_total_debt <= 0) then 0
+                    when  d.prod_name is null then 0 else 1
+                  end) > 0 then
+          0
+         else
+          1
+       end as is_client_new2
+  from M_FOLDER_CON_CANCEL_BASE f
+  left join V_DWH_PORTFOLIO_CURRENT d
+    on d.rfo_client_id = f.rfo_client_id
+   and d.x_is_credit_issued = 1
+ group by f.rfo_client_id, f.iin;
+grant select on U1.M_CLIENT_CAL_SCO5_MOTEST to LOADDB;
+grant select on U1.M_CLIENT_CAL_SCO5_MOTEST to LOADER;
+
+

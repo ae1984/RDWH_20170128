@@ -1,0 +1,82 @@
+﻿create materialized view U1.M_APP_MINER_ONLINE_PHONE
+build deferred
+refresh force on demand
+as
+select t.app_id,
+/*       t.rfo_client_id                                                                                    as rfo_client_id,
+       t.claim_id                                                                                         as claim_id,
+       t.folder_date_create_mi                                                                            as folder_date_create_mi,
+       rt.mobile_phone                                                                                    as mobile_phone,*/
+
+       count(case when t1.folder_date_create_mi >= trunc(t.folder_date_create_mi) - 30
+                       and t1.folder_date_create_mi < t.folder_date_create_mi then rt1.claim_id end) as onl_ph_app_30d_cnt_x,
+
+       count(case when upper(stp.p_name) = 'ОТМЕНЕН ПОКУПАТЕЛЕМ ЧЕРЕЗ CSC'
+                       and t1.folder_date_create_mi >= trunc(t.folder_date_create_mi) - 30
+                       and t1.folder_date_create_mi < t.folder_date_create_mi then rt1.claim_id end) as onl_ph_cnl_30d_cnt_x,
+
+       count(case when t1.is_credit_issued = 1
+                       and t1.folder_date_create_mi >= trunc(t.folder_date_create_mi) - 30
+                       and t1.folder_date_create_mi < t.folder_date_create_mi then rt1.claim_id end) as onl_ph_iss_30d_cnt_x,
+
+       count(case when dp.p_name = 'Доставка'
+                       and t1.folder_date_create_mi >= trunc(t.folder_date_create_mi) - 30
+                       and t1.folder_date_create_mi < t.folder_date_create_mi then rt1.claim_id end) as onl_ph_deliv_30d_cnt_x,
+
+       nvl(sum(case when t1.folder_date_create_mi >= trunc(t.folder_date_create_mi) - 30
+                         and t1.folder_date_create_mi < t.folder_date_create_mi then rt1.total_amount end), 0) as onl_ph_app_30d_sum_x,
+
+       nvl(sum(case when t1.is_credit_issued = 1
+                         and t1.folder_date_create_mi >= trunc(t.folder_date_create_mi) - 30
+                         and t1.folder_date_create_mi < t.folder_date_create_mi then rt1.total_amount end), 0) as onl_ph_iss_30d_sum_x,
+
+       count(distinct case when rt1.rfo_client_id <> rt.rfo_client_id
+                                and t1.folder_date_create_mi >= trunc(t.folder_date_create_mi) - 30
+                                and t1.folder_date_create_mi < t.folder_date_create_mi then rt1.rfo_client_id end) as onl_ph_cl_30d_cnt_x,
+
+       --T-1
+       count(case when t1.folder_date_create_mi >= trunc(t.folder_date_create_mi) - 30
+                       and t1.folder_date_create_mi < trunc(t.folder_date_create_mi) then rt1.claim_id end) as onl_ph_app_30d_cnt,
+
+       count(case when upper(stp.p_name) = 'ОТМЕНЕН ПОКУПАТЕЛЕМ ЧЕРЕЗ CSC'
+                       and t1.folder_date_create_mi >= trunc(t.folder_date_create_mi) - 30
+                       and t1.folder_date_create_mi < trunc(t.folder_date_create_mi) then rt1.claim_id end) as onl_ph_cnl_30d_cnt,
+
+       count(case when t1.is_credit_issued = 1
+                       and t1.folder_date_create_mi >= trunc(t.folder_date_create_mi) - 30
+                       and t1.folder_date_create_mi < trunc(t.folder_date_create_mi) then rt1.claim_id end) as onl_ph_iss_30d_cnt,
+
+       count(case when dp.p_name = 'Доставка'
+                       and t1.folder_date_create_mi >= trunc(t.folder_date_create_mi) - 30
+                       and t1.folder_date_create_mi < trunc(t.folder_date_create_mi) then rt1.claim_id end) as onl_ph_deliv_30d_cnt,
+
+       nvl(sum(case when t1.folder_date_create_mi >= trunc(t.folder_date_create_mi) - 30
+                         and t1.folder_date_create_mi < trunc(t.folder_date_create_mi) then rt1.total_amount end), 0) as onl_ph_app_30d_sum,
+
+       nvl(sum(case when t1.is_credit_issued = 1
+                         and t1.folder_date_create_mi >= trunc(t.folder_date_create_mi) - 30
+                         and t1.folder_date_create_mi < trunc(t.folder_date_create_mi) then rt1.total_amount end), 0) as onl_ph_iss_30d_sum,
+
+       count(distinct case when rt1.rfo_client_id <> rt.rfo_client_id
+                                and t1.folder_date_create_mi >= trunc(t.folder_date_create_mi) - 30
+                                and t1.folder_date_create_mi < trunc(t.folder_date_create_mi) then rt1.rfo_client_id end) as onl_ph_cl_30d_cnt
+
+from U1.M_APP_MINER_BAS t
+join U1.M_FOLDER_ONLINE_T1 rt on rt.claim_id = t.claim_id
+
+left  join U1.M_FOLDER_ONLINE_T1 rt1 on rt1.mobile_phone = rt.mobile_phone
+left  join U1.M_APP_MINER_BAS t1 on t1.claim_id = rt1.claim_id
+                                    and t1.app_id != t.app_id
+                                    and t1.folder_date_create_mi >= trunc(t.folder_date_create) - 30
+                                    and t1.folder_date_create_mi < t.folder_date_create_mi
+
+left  join U1.M_KASPISH_ORDERS ko on ko.code = rt1.buy_process_id
+left  join U1.M_KASPISH_ENUMERATIONVALUES st on st.pk = ko.p_cancellationreason
+left  join U1.M_KASPISH_ENUMERATIONVALUESLP stp on stp.itempk = st.pk and stp.langpk = 8796093317152
+left  join U1.M_KASPISH_DELIVERYMODES d on d.pk = ko.deliverymodepk
+left  join U1.M_KASPISH_DELIVERYMODESLP dp on dp.itempk = d.pk and dp.langpk = 8796093317152
+where t.folder_date_create >= to_date('01012015', 'ddmmyyyy')
+group by t.app_id;
+grant select on U1.M_APP_MINER_ONLINE_PHONE to LOADDB;
+
+

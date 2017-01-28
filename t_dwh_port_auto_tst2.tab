@@ -1,0 +1,36 @@
+﻿create table U1.T_DWH_PORT_AUTO_TST2
+(
+  rep_date              DATE,
+  deal_number           VARCHAR2(250),
+  prod_type             VARCHAR2(255),
+  total_debt            NUMBER,
+  delinq_days           NUMBER,
+  delinq_days_old       NUMBER,
+  discount              NUMBER,
+  eff_rate              NUMBER,
+  reduced_cost          NUMBER,
+  market_cost           NUMBER,
+  total_ts_cost         NUMBER,
+  total_set_cost        NUMBER,
+  zalog_cost            NUMBER,
+  is_on_balance         VARCHAR2(20),
+  is_gu_sale            NUMBER,
+  sale_amount           NUMBER,
+  sale_date             DATE,
+  zalog_contract_number VARCHAR2(22 CHAR)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_DWH_PORT_AUTO_TST2 to LOADDB;
+

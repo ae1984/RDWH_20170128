@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_TMP_J_3001
+refresh complete on demand
+as
+select substr(ltrim(r.contract_number,'R'),1,7) as client_id,
+       min(r.spof_end_date) as min_hard_opt_date
+from M_DWH_ACC_SPECIAL_OFFER_CON r
+where r.spof_spec_offer_status_cd in ('WORK', 'DEFAULT', 'EXECUTED') and
+      r.restr_type = 'HARD'
+group by substr(ltrim(r.contract_number,'R'),1,7);
+grant select on U1.M_TMP_J_3001 to LOADDB;
+grant select on U1.M_TMP_J_3001 to LOADER;
+
+

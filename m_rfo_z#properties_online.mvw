@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_RFO_Z#PROPERTIES_ONLINE
+build deferred
+refresh force on demand
+as
+select p.* from IBS.Z#PROPERTIES@Rfo p
+where p.id in(
+select p1.id from S01.s$Z#PROPERTIES@rdwh_exd p1
+where p1.SRC_COMMIT_DATE > trunc(sysdate));
+grant select on U1.M_RFO_Z#PROPERTIES_ONLINE to LOADDB;
+
+

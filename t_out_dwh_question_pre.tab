@@ -1,0 +1,24 @@
+﻿create table U1.T_OUT_DWH_QUESTION_PRE
+(
+  id             NUMBER(19),
+  code           VARCHAR2(255),
+  name           VARCHAR2(255),
+  text           VARCHAR2(4000),
+  schema_id      NUMBER(19),
+  portition_date TIMESTAMP(6)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.T_OUT_DWH_QUESTION_PRE to LOADDB;
+grant select on U1.T_OUT_DWH_QUESTION_PRE to LOADER;
+

@@ -1,0 +1,24 @@
+﻿create materialized view U1.TMP_AVTO_CONTRACT_NUMBER_10_01
+refresh force on demand
+as
+select distinct pc2.c_num_dog
+    from v_rbo_z#pr_cred pc
+    join v_rbo_z#kind_credits kc on pc.c_kind_credit = kc.id
+    join v_rbo_z#cred_program cp on kc.c_cred_program = cp.id
+    join v_rbo_z#pr_cred pc2 on pc2.c_kas_pc_dog_ref = nvl(pc.c_kas_pc_dog_ref,pc.c_kas_pc_dog_t_ref)
+                             or pc2.c_kas_pc_dog_t_ref = nvl(pc.c_kas_pc_dog_ref,pc.c_kas_pc_dog_t_ref)
+    where
+    cp.c_name in ('АВТОКРЕДИТОВАНИЕ БУ', 'АВТОКРЕДИТОВАНИЕ','РЕФИНАНСИРОВАНИЕ АВТОКРЕДИТА') and (pc.c_date_close > to_date('31.12.2014','dd.mm.yyyy')
+    or pc.c_date_close is null) and pc.c_date_begin <= to_date('31.12.2014','dd.mm.yyyy')
+    union all
+    select distinct pcd.c_num_dog
+    from v_rbo_z#pr_cred pc
+    join v_rbo_z#kind_credits kc on pc.c_kind_credit = kc.id
+    join v_rbo_z#cred_program cp on kc.c_cred_program = cp.id
+    join v_rbo_z#kas_pc_dog  pcd on pcd.id = nvl(pc.c_kas_pc_dog_ref,pc.c_kas_pc_dog_t_ref)
+    where cp.c_name in ('АВТОКРЕДИТОВАНИЕ БУ', 'АВТОКРЕДИТОВАНИЕ','РЕФИНАНСИРОВАНИЕ АВТОКРЕДИТА') and (pc.c_date_close > to_date('31.12.2014','dd.mm.yyyy')
+    or pc.c_date_close is null) and pc.c_date_begin <= to_date('31.12.2014','dd.mm.yyyy');
+grant select on U1.TMP_AVTO_CONTRACT_NUMBER_10_01 to LOADDB;
+grant select on U1.TMP_AVTO_CONTRACT_NUMBER_10_01 to LOADER;
+
+

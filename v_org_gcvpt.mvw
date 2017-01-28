@@ -1,0 +1,107 @@
+﻿create materialized view U1.V_ORG_GCVPT
+build deferred
+refresh force on demand
+as
+with g as (                                                           --Теперь выборка проходит по новому. Сокращен запрос и обработка запроса в 2 раза.
+select /*+ parallel(20) */
+       nvl(tt.tax_org_bin, 'RNN ' || tt.tax_org_rnn) as bin,          --Ранее была выборка по Юр лицам уникальна, а по Физ были дубли,
+       max(tt.tax_org_rnn) as rnn,                                    --теперь и по Физ лицам и по Юр дублей нету.
+       max(tt.c_organization) keep (dense_rank last order by tt.id) as org_name,      --Различие между Физ и Юр лицами получаем из V_ORG_TAX. Если поле is_jur_person = 1 то это Юр иначе Физ
+       min(tt.c_payment_date) as pmt_date_min,
+       max(tt.c_payment_date) as pmt_date_max,
+       trunc(min(tt.c_statement_date)) as gcvp_rep_date_min,
+       trunc(max(tt.c_statement_date)) as gcvp_rep_date_max,
+       count(distinct tt.collection_id) as gcvp_reports,
+       count(distinct tt.rfo_client_id) as clients_all,
+       count(distinct co.rfo_client_id) as clients_with_contracts,
+       count(distinct (case when co.delinq_days_max > 5 then co.rfo_client_id end)) as clients_del_above_5d,
+       count(distinct (case when co.delinq_days_max > 30 then co.rfo_client_id end)) as clients_del_above_30d,
+       count(distinct (case when co.delinq_days_max > 60 then co.rfo_client_id end)) as clients_del_above_60d,
+       count(distinct (case when co.delinq_days_max > 90 then co.rfo_client_id end)) as clients_del_above_90d,
+       count(distinct co.contract_number) as contracts,
+       round(avg(case when nvl(tt.c_sal,0) > 0 then tt.c_sal end),0) as gcvp_rep_salary_avg,
+       round(avg(case when nvl(tt.c_sal,0) > 0 and tt.c_statement_date > trunc(sysdate) - 365
+             then tt.c_sal end),0) as gcvp_rep_salary_avg_365d,
+       case when sum(po.max_debt_used) > 0 then
+             round(sum(case when po.delinq_days > 5 then po.new_total_debt else 0 end) /
+                   sum(po.max_debt_used) * 100, 2)
+          end as delinq_rate_above_5d,
+      case when max(tt.is_jur_person) = 1 then 1 else 0 end as is_exists_in_tax_db
+from (select ot.tax_org_bin,
+             ot.tax_org_rnn,
+             p.c_organization,
+             p.c_payment_date,
+             p.id,
+             r.c_statement_date,
+             p.collection_id,
+             r.c_sal,
+             r.x_client_rnn,
+             r.x_client_iin,
+             t.rfo_client_id,
+             t.iin,
+             t.rnn,
+             ot.is_jur_person
+        from u1.V_ORG_TAX ot
+        join u1.V_RFO_Z#KAS_GCVP_PAYMENT p on ot.tax_org_rnn = p.x_org_rnn
+        join u1.V_RFO_Z#KAS_GCVP_REPORT r on p.collection_id = r.c_payments_arr
+        left join u1.V_CLIENT_RFO_BY_ID t on t.rnn = r.x_client_rnn or t.iin = r.x_client_iin
+
+      union all
+
+      select ot.tax_org_bin,
+             ot.tax_org_rnn,
+             p.c_organization,
+             p.c_payment_date,
+             p.id,
+             r.c_statement_date,
+             p.collection_id,
+             r.c_sal,
+             r.x_client_rnn,
+             r.x_client_iin,
+             t.rfo_client_id,
+             t.iin,
+             t.rnn,
+             ot.is_jur_person
+        from u1.V_ORG_TAX ot
+        join u1.V_RFO_Z#KAS_GCVP_PAYMENT p on ot.tax_org_bin = p.x_org_bin
+        join u1.V_RFO_Z#KAS_GCVP_REPORT r on p.collection_id = r.c_payments_arr
+        left join u1.V_CLIENT_RFO_BY_ID t on t.rnn = r.x_client_rnn or t.iin = r.x_client_iin) tt
+
+left join (select ccl.rfo_client_id, cc.contract_number, cc.delinq_days_max
+             from u1.V_CONTRACT_ALL_RFO_CLIENT_LINK ccl
+             join u1.v_contract_cal cc on cc.contract_number = ccl.contract_number) co on
+                co.rfo_client_id = tt.rfo_client_id
+left join (select po1.contract_number, po1.new_total_debt, po1.delinq_days, po1.max_debt_used
+            from u1.v_portfolio po1 where po1.report_month_all_contracts = (select max(yy_mm_report) from u1.v_data_all)) po on
+                     po.contract_number = co.contract_number
+group by tt.tax_org_bin, tt.tax_org_rnn
+)
+select /*+ parallel(10) */
+       g.bin,
+       g.rnn,
+       upper(g.org_name) as org_name,
+       g.pmt_date_min,
+       g.pmt_date_max,
+       ceil((trunc(sysdate) - g.pmt_date_min) / 30) as org_age_months_30d_roundup,
+       trunc(sysdate) - g.pmt_date_min as pmt_date_min_days_ago,
+       trunc(sysdate) - g.pmt_date_max as pmt_date_max_days_ago,
+       g.gcvp_rep_date_min,
+       g.gcvp_rep_date_max,
+       trunc(sysdate) - g.gcvp_rep_date_min as gcvp_rep_date_min_days_ago,
+       trunc(sysdate) - g.gcvp_rep_date_max as gcvp_rep_date_max_days_ago,
+       g.gcvp_reports,
+       g.clients_all,
+       g.clients_with_contracts,
+       g.clients_del_above_5d,
+       g.clients_del_above_30d,
+       g.clients_del_above_60d,
+       g.clients_del_above_90d,
+       g.contracts,
+       g.gcvp_rep_salary_avg,
+       g.gcvp_rep_salary_avg_365d,
+       g.delinq_rate_above_5d,
+       g.is_exists_in_tax_db
+from g;
+grant select on U1.V_ORG_GCVPT to LOADDB;
+
+

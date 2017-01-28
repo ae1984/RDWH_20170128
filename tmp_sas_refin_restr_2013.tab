@@ -1,0 +1,26 @@
+﻿create table U1.TMP_SAS_REFIN_RESTR_2013
+(
+  iin                   VARCHAR2(50),
+  contract_number_after VARCHAR2(100),
+  contract_status_now   VARCHAR2(100),
+  delinq_days_now       NUMBER,
+  operation_date        DATE,
+  spec_offer_status_now VARCHAR2(100),
+  spec_offer_type_now   VARCHAR2(500)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.TMP_SAS_REFIN_RESTR_2013 to LOADDB;
+grant select on U1.TMP_SAS_REFIN_RESTR_2013 to LOADER;
+

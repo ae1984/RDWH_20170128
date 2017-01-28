@@ -1,0 +1,93 @@
+﻿create materialized view U1.M_CLIENT_SCORE_TST
+refresh complete on demand
+as
+select q.*,
+       case when q.total_debt is null and q.delinq_days is null and
+                 q.delinq_amount is null and
+                 (sum(q.current_score) over (partition by q.client_id
+                  order by q.text_yyyy_mm range unbounded preceding)) > -5 and
+                  current_score = 5 then -5
+            when q.total_debt is null and q.delinq_days is null and
+                 q.delinq_amount is null and
+                 (sum(q.current_score) over (partition by q.client_id
+                  order by q.text_yyyy_mm range unbounded preceding)) < 5 and
+                  current_score = -5 then 5
+            else sum(q.current_score) over (partition by q.client_id
+                 order by q.text_yyyy_mm range unbounded preceding) end as
+      cumulative_score
+from
+(select w.text_yyyy_mm,
+       w.client_id,
+       w.total_debt,
+       w.delinq_days,
+       w.delinq_amount,
+case when w.total_debt is null and w.delinq_days is null and w.delinq_amount is null and
+            w.cumulative_score > 0 then  -5
+            when w.total_debt is null and w.delinq_days is null and w.delinq_amount is null and
+            w.cumulative_score < 0 then  5
+            else w.current_score end as current_score
+from
+(select z.*,
+        sum(z.current_score) over (partition by z.client_id
+          order by z.text_yyyy_mm range unbounded preceding) as
+     cumulative_score
+from
+(select y.text_yyyy_mm,
+        y.client_id_c as client_id,
+        y.total_debt,
+        y.delinq_days,
+        y.delinq_amount,
+case when y.total_debt > 5000 and (y.delinq_days < 1 or y.delinq_days is null) and y.delinq_amount < 1500
+            then 15 -- платеж
+            when y.total_debt > 5000 and  y.delinq_days > 0 and
+                 y.delinq_amount > 1500 and y.delinq_days - y.delinq_days_prev_rep < 15 and
+                 y.delinq_days_prev_rep != 0 and y.delinq_days_prev_rep is not null
+            then 0 -- частичный платеж
+            else
+            (case when y.total_debt > 5000 and 0 < y.delinq_days and
+                       y.delinq_days < 8 and y.delinq_amount > 1500
+                 then 10
+                 when y.total_debt > 5000 and 8 <= y.delinq_days and
+                      y.delinq_days < 15 and y.delinq_amount > 1500
+                 then 5
+                 when y.total_debt > 5000 and 15 <= y.delinq_days and
+                      y.delinq_days < 30 and y.delinq_amount > 1500
+                 then 0
+                 when y.total_debt > 5000 and y.delinq_days >= 30 and
+                      y.delinq_amount > 1500
+                 then -30
+                 else 0 end)
+              end as current_score
+from
+
+(select x.*,
+       lag(delinq_days,1,0) over (partition by client_id_p order by text_yyyy_mm)   as delinq_days_prev_rep
+from
+(select a.text_yyyy_mm,
+        a.client_id as client_id_c,
+        b.client_id as client_id_p,
+        b.total_debt,
+        b.delinq_days,
+        b.delinq_amount
+
+from (
+  select tm.text_yyyy_mm, c.client_id from V_TIME_MONTHS tm
+  left join V_CLIENT_CAL c on c.yy_mm_start_first <= tm.text_yyyy_mm
+  where tm.text_yyyy_mm >= '2008 - 12' and
+        tm.text_yyyy_mm <= (select max(yy_mm_report) from v_data_all)
+) a left join (
+  select p.yy_mm_report, p.client_id,
+          sum(p.total_debt) as total_debt,
+          max(p.delinq_days) as delinq_days,
+          /*case when p.yy_mm_report < '2012 - 08' and max(p.delinq_days) > 0 then 2000
+               else sum(p.delinq_amount) end as delinq_amount*/
+           case when max(p.delinq_days) > 0 and sum(p.delinq_amount) = 0 and
+                     sum(p.total_debt) > 0 then 2000
+                else sum(p.delinq_amount) end as delinq_amount
+  from V_PORTFOLIO p
+  group by p.yy_mm_report, p.client_id
+) b on b.yy_mm_report = a.text_yyyy_mm and a.client_id = b.client_id) x) y) z) w) q;
+grant select on U1.M_CLIENT_SCORE_TST to LOADDB;
+grant select on U1.M_CLIENT_SCORE_TST to LOADER;
+
+

@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_4_B1
+refresh force on demand
+as
+select
+     fld.id as folder_id,
+     pr.id as pkb_report_id,
+     pr.c_rnn as report_iin_rnn,
+     trunc(fd.c_doc_date) as report_date,
+         case when pr.c_status = 'SubjectNotFound' then 'БЕКИ'
+              else upper(pr.c_status) end as
+     report_status,
+         case when pr.c_rpt_type = 4 then 'СТАНДАРТНЫЙ'
+              when pr.c_rpt_type = 6 then 'РАСШИРЕННЫЙ'
+              else 'ПЕРВИЧНЫЙ' end as
+     report_type,
+     pr.c_si_tdo as overdue_amount_total,
+     pr.c_agre_statuses,
+     pr.c_ci,
+     pr.c_closed_ci
+from V_RFO_Z#FOLDERS fld
+     join V_RFO_Z#RDOC rd on rd.collection_id = fld.c_docs
+     join v_rfo_z#fdoc fd on fd.id = rd.c_doc and fd.class_id = 'PKB_REPORT'
+     full outer join V_RFO_Z#PKB_REPORT pr on pr.id = fd.id and pr.c_status != 'NoAction';
+grant select on U1.M_RFO_FRAUD_SEARCH_4_B1 to LOADDB;
+
+

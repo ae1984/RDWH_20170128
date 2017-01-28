@@ -1,0 +1,30 @@
+﻿create materialized view U1.V_FORM_CLIENT_ALL_RFO_PRE1
+build deferred
+refresh force on demand
+as
+select /*+ parallel(5)*/
+      fc.id as form_client_id,
+      avg(decode(tdc.c_code, 'З/П', idc.c_summa, null)) as inc_sal,
+      avg(decode(tdc.c_code, 'ДОПОЛНИТЕЛЬНЫЙ ЗП', idc.c_summa, null)) as inc_sal_add,
+      avg(decode(tdc.c_code, 'З/П СУПРУГА', idc.c_summa, null)) as inc_sal_spouse,
+      avg(decode(tdc.c_code, 'ДОХОД ОТ АРЕНДЫ', idc.c_summa, null)) as inc_rent,
+      avg(decode(tdc.c_code, 'ПОСОБИЯ, ПЕНСИИ, АЛИМЕНТЫ', idc.c_summa, null)) as inc_pension_benefits,
+      avg(decode(tdc.c_code, 'ПРОЦЕНТНЫЙ ДОХОД', idc.c_summa, null)) as inc_interest,
+      avg(decode(tdc.c_code, 'КОММУНАЛЬНЫЕ ПЛАТЕЖИ', idc.c_summa, null)) as exp_utilities,
+      avg(decode(tdc.c_code, 'ТРАНСПОРТНЫЕ ПЛАТЕЖИ', idc.c_summa, null)) as exp_transport,
+      avg(decode(tdc.c_code, 'РАСХОДЫ НА СОДЕРЖАНИЕ ДЕТЕЙ', idc.c_summa, null)) as exp_children,
+      avg(decode(tdc.c_code, 'РАСХОДЫ НА ПИТАНИЕ', idc.c_summa, null)) as exp_nutrition,
+      avg(decode(tdc.c_code, 'РАСХОДЫ НА ОДЕЖДУ', idc.c_summa, null)) as exp_clothes,
+      avg(decode(tdc.c_code, 'ПЛАТЕЖИ ПО ОБЯЗАТЕЛЬСТВАМ', idc.c_summa, null)) as exp_obligations,
+      avg(decode(tdc.c_code, 'ПРОЧИЕ РАСХОДЫ', idc.c_summa, null)) as exp_other
+    from
+      V_RFO_Z#FORM_CLIENT fc,
+      V_RFO_z#INFO_DT_CR idc,
+      V_RFO_Z#TYPE_DT_CR tdc
+    where
+      tdc.id = idc.c_type_info and
+      fc.c_info_dt_cr = idc.collection_id
+    group by fc.id;
+grant select on U1.V_FORM_CLIENT_ALL_RFO_PRE1 to LOADDB;
+
+

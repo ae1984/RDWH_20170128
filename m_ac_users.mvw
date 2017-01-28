@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_AC_USERS
+refresh complete on demand
+as
+select t."Id" as id,
+       t."UserType" as user_type,
+       t."IsBlocked" as is_blocked,
+       upper(t."Login") as login,
+       t."RfoId" as rfo_id,
+       upper(t."FirstName") as first_name,
+       upper(t."LastName") as last_name,
+       upper(t."MiddleName") as middle_name,
+       upper(t."FullName") as full_name,
+       t."WarrantNumber"  as  warrant_number,
+       to_date(to_char(t."WarrantIssueDate", 'dd-mm-yyyy hh24:mi:ss'), 'dd-mm-yyyy hh24:mi:ss') as warrant_issue_date,
+       upper(t."PositionName")as position_name
+  from "tb_framework_users"@"db_ar" t;
+grant select on U1.M_AC_USERS to LOADDB;
+grant select on U1.M_AC_USERS to LOADER;
+
+

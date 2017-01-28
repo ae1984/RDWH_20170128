@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_CLIENT_MO_BL_HIST
+refresh force on demand
+as
+select cl.client_id,
+       bl.iin,
+       bl.add_date,
+       bl.delete_date
+from
+    (select t.iin,
+           min(t.add_date) add_date,
+           null delete_date
+    from v_mo_client_bl t
+    where t.iin is not null
+    group by t.iin, t.add_date
+
+    union all
+    select t.iin,
+           t.add_date add_date,
+           t.delete_date delete_date
+    from v_mo_client_bl_archive t
+    where t.iin is not null and t.delete_date is not null
+    group by t.iin, t.add_date, t.delete_date) bl
+join m_client_cal_iin cl on cl.client_iin_last = bl.iin;
+grant select on U1.M_CLIENT_MO_BL_HIST to LOADDB;
+grant select on U1.M_CLIENT_MO_BL_HIST to LOADER;
+
+

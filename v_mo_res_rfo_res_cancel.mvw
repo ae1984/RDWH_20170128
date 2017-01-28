@@ -1,0 +1,11 @@
+﻿create materialized view U1.V_MO_RES_RFO_RES_CANCEL
+refresh complete on demand
+as
+select *
+from V_MO_RES_RFO_RES_PARAMS p
+left join V_MO_RES_RFO_CANCEL c on c.cancel_rfo_res_from_mo_id = p.rfo_res_from_mo_id and
+                                   c.cancel_mo_par_code = p.res_par_code;
+grant select on U1.V_MO_RES_RFO_RES_CANCEL to LOADDB;
+grant select on U1.V_MO_RES_RFO_RES_CANCEL to LOADER;
+
+

@@ -1,0 +1,338 @@
+﻿create table U1.T_RFO_Z#KAS_ONLINE_CLAIM
+(
+  id                             NUMBER not null,
+  sn                             NUMBER,
+  su                             NUMBER,
+  c_client_ref                   NUMBER,
+  c_form_client_ref              NUMBER,
+  c_form_client_st#num           VARCHAR2(50 CHAR),
+  c_form_client_st#doc_date      DATE,
+  c_form_client_st#prior_fio     VARCHAR2(250 CHAR),
+  c_form_client_st#parent_fdoc   NUMBER,
+  c_form_client_st#sex#0         NUMBER,
+  c_form_client_st#sex#male      VARCHAR2(1 CHAR),
+  c_form_client_st#sex#female    VARCHAR2(1 CHAR),
+  c_form_client_st#date_birth    DATE,
+  c_form_client_st#status_doc    NUMBER,
+  c_form_client_st#date_audit    DATE,
+  c_form_client_st#place_birth   VARCHAR2(250 CHAR),
+  c_form_client_st#country       NUMBER,
+  c_form_client_st#main_doc#type NUMBER,
+  c_form_client_st#main_doc#num  VARCHAR2(20 CHAR),
+  c_m_client_st#main_doc#seria17 VARCHAR2(16 CHAR),
+  c_form_client_st#main_doc#who  VARCHAR2(128 CHAR),
+  c_lient_st#main_doc#date_doc19 DATE,
+  c_m_client_st#main_doc#place20 VARCHAR2(128 CHAR),
+  c_lient_st#main_doc#date_end21 DATE,
+  c_nt_st#main_doc#depart_code22 VARCHAR2(15 CHAR),
+  c_form_client_st#add_doc#type  NUMBER,
+  c_form_client_st#add_doc#num   VARCHAR2(20 CHAR),
+  c_form_client_st#add_doc#seria VARCHAR2(16 CHAR),
+  c_form_client_st#add_doc#who   VARCHAR2(128 CHAR),
+  c_client_st#add_doc#date_doc27 DATE,
+  c_form_client_st#add_doc#place VARCHAR2(128 CHAR),
+  c_client_st#add_doc#date_end29 DATE,
+  c_ent_st#add_doc#depart_code30 VARCHAR2(15 CHAR),
+  c_t_st#address_fact#post_ind31 VARCHAR2(6 CHAR),
+  c_ient_st#address_fact#place32 VARCHAR2(170 CHAR),
+  c_t_st#address_fact#adr_type33 NUMBER,
+  c_st#address_fact#date_begin34 DATE,
+  c_t_st#address_fact#date_end35 DATE,
+  c_ient_st#address_fact#house36 VARCHAR2(10 CHAR),
+  c_ient_st#address_fact#frame37 VARCHAR2(10 CHAR),
+  c_lient_st#address_fact#flat38 VARCHAR2(10 CHAR),
+  c_ent_st#address_fact#street39 VARCHAR2(100 CHAR),
+  c_ent_st#address_fact#region40 VARCHAR2(100 CHAR),
+  c_t_st#address_fact#district41 VARCHAR2(100 CHAR),
+  c_st#address_fact#region_ref42 NUMBER,
+  c_#address_fact#district_ref43 NUMBER,
+  c__st#address_fact#place_ref44 NUMBER,
+  c_lient_st#address_fact#city45 NUMBER,
+  c_nt_st#address_fact#country46 NUMBER,
+  c_st#address_fact#date_audit47 TIMESTAMP(9),
+  c_t_st#address_fact#affirmed48 VARCHAR2(1 CHAR),
+  c_ient_st#address_fact#activ49 VARCHAR2(1 CHAR),
+  c_st#address_fact#houses_ref50 NUMBER,
+  c_nt_st#address_reg#post_ind51 VARCHAR2(6 CHAR),
+  c_lient_st#address_reg#place52 VARCHAR2(170 CHAR),
+  c_nt_st#address_reg#adr_type53 NUMBER,
+  c__st#address_reg#date_begin54 DATE,
+  c_nt_st#address_reg#date_end55 DATE,
+  c_lient_st#address_reg#house56 VARCHAR2(10 CHAR),
+  c_lient_st#address_reg#frame57 VARCHAR2(10 CHAR),
+  c_client_st#address_reg#flat58 VARCHAR2(10 CHAR),
+  c_ient_st#address_reg#street59 VARCHAR2(100 CHAR),
+  c_ient_st#address_reg#region60 VARCHAR2(100 CHAR),
+  c_nt_st#address_reg#district61 VARCHAR2(100 CHAR),
+  c__st#address_reg#region_ref62 NUMBER,
+  c_t#address_reg#district_ref63 NUMBER,
+  c_t_st#address_reg#place_ref64 NUMBER,
+  c_client_st#address_reg#city65 NUMBER,
+  c_ent_st#address_reg#country66 NUMBER,
+  c__st#address_reg#date_audit67 TIMESTAMP(9),
+  c_nt_st#address_reg#affirmed68 VARCHAR2(1 CHAR),
+  c_lient_st#address_reg#activ69 VARCHAR2(1 CHAR),
+  c__st#address_reg#houses_ref70 NUMBER,
+  c_form_client_st#education     NUMBER,
+  c_form_client_st#social_status NUMBER,
+  c_form_client_st#seniority     NUMBER(17,2),
+  c_form_client_st#forma_org     NUMBER,
+  c_form_client_st#family        NUMBER,
+  c_form_client_st#quant_depend  NUMBER,
+  c_nt_st#address_org#post_ind77 VARCHAR2(6 CHAR),
+  c_lient_st#address_org#place78 VARCHAR2(170 CHAR),
+  c_nt_st#address_org#adr_type79 NUMBER,
+  c__st#address_org#date_begin80 DATE,
+  c_nt_st#address_org#date_end81 DATE,
+  c_lient_st#address_org#house82 VARCHAR2(10 CHAR),
+  c_lient_st#address_org#frame83 VARCHAR2(10 CHAR),
+  c_client_st#address_org#flat84 VARCHAR2(10 CHAR),
+  c_ient_st#address_org#street85 VARCHAR2(100 CHAR),
+  c_ient_st#address_org#region86 VARCHAR2(100 CHAR),
+  c_nt_st#address_org#district87 VARCHAR2(100 CHAR),
+  c__st#address_org#region_ref88 NUMBER,
+  c_t#address_org#district_ref89 NUMBER,
+  c_t_st#address_org#place_ref90 NUMBER,
+  c_client_st#address_org#city91 NUMBER,
+  c_ent_st#address_org#country92 NUMBER,
+  c__st#address_org#date_audit93 TIMESTAMP(9),
+  c_nt_st#address_org#affirmed94 VARCHAR2(1 CHAR),
+  c_lient_st#address_org#activ95 VARCHAR2(1 CHAR),
+  c__st#address_org#houses_ref96 NUMBER,
+  c_form_client_st#phone_org     VARCHAR2(20 CHAR),
+  c_form_client_st#casta         VARCHAR2(100 CHAR),
+  c_client_st#social_stat_wife99 NUMBER,
+  c_form_client_st#name_org_wife VARCHAR2(100 CHAR),
+  c_form_client_st#name_org      VARCHAR2(100 CHAR),
+  c_address_org_wife#post_ind102 VARCHAR2(6 CHAR),
+  c_st#address_org_wife#place103 VARCHAR2(170 CHAR),
+  c_address_org_wife#adr_type104 NUMBER,
+  c_dress_org_wife#date_begin105 DATE,
+  c_address_org_wife#date_end106 DATE,
+  c_st#address_org_wife#house107 VARCHAR2(10 CHAR),
+  c_st#address_org_wife#frame108 VARCHAR2(10 CHAR),
+  c__st#address_org_wife#flat109 VARCHAR2(10 CHAR),
+  c_t#address_org_wife#street110 VARCHAR2(100 CHAR),
+  c_t#address_org_wife#region111 VARCHAR2(100 CHAR),
+  c_address_org_wife#district112 VARCHAR2(100 CHAR),
+  c_dress_org_wife#region_ref113 NUMBER,
+  c_ess_org_wife#district_ref114 NUMBER,
+  c_ddress_org_wife#place_ref115 NUMBER,
+  c__st#address_org_wife#city116 NUMBER,
+  c_#address_org_wife#country117 NUMBER,
+  c_dress_org_wife#date_audit118 TIMESTAMP(9),
+  c_address_org_wife#affirmed119 VARCHAR2(1 CHAR),
+  c_st#address_org_wife#activ120 VARCHAR2(1 CHAR),
+  c_dress_org_wife#houses_ref121 NUMBER,
+  c__client_st#phone_org_wife122 VARCHAR2(20 CHAR),
+  c_form_client_st#casta_wife    VARCHAR2(100 CHAR),
+  c_form_client_st#address_flat  VARCHAR2(170 CHAR),
+  c_form_client_st#address_equal VARCHAR2(1 CHAR),
+  c_form_client_st#note          VARCHAR2(2000 CHAR),
+  c_form_client_st#date_create   DATE,
+  c_form_client_st#prev_exp      NUMBER(10,1),
+  c_form_client_st#id_req        VARCHAR2(128 CHAR),
+  c_form_client_st#last_name     VARCHAR2(100 CHAR),
+  c_form_client_st#first_name    VARCHAR2(100 CHAR),
+  c_form_client_st#sur_name      VARCHAR2(100 CHAR),
+  c_lient_st#phone_home#activ133 VARCHAR2(1 CHAR),
+  c_client_st#phone_home#numb134 VARCHAR2(100 CHAR),
+  c_ent_st#phone_home#private135 NUMBER,
+  c_client_st#phone_home#type136 NUMBER,
+  c_nt_st#phone_home#affirmed137 VARCHAR2(1 CHAR),
+  c_one_home#allow_collection138 VARCHAR2(1 CHAR),
+  c_ent_st#phone_home#id_deal139 VARCHAR2(128 CHAR),
+  c_ient_st#phone_home#id_rbo140 VARCHAR2(128 CHAR),
+  c_ent_st#phone_home#cid_rbo141 VARCHAR2(128 CHAR),
+  c_hone_home#kas_verificated142 VARCHAR2(1 CHAR),
+  c__st#phone_home#date_audit143 TIMESTAMP(9),
+  c__st#phone_home#allow_cc_2144 VARCHAR2(1 CHAR),
+  c_lient_st#phone_work#activ145 VARCHAR2(1 CHAR),
+  c_client_st#phone_work#numb146 VARCHAR2(100 CHAR),
+  c_ent_st#phone_work#private147 NUMBER,
+  c_client_st#phone_work#type148 NUMBER,
+  c_nt_st#phone_work#affirmed149 VARCHAR2(1 CHAR),
+  c_one_work#allow_collection150 VARCHAR2(1 CHAR),
+  c_ent_st#phone_work#id_deal151 VARCHAR2(128 CHAR),
+  c_ient_st#phone_work#id_rbo152 VARCHAR2(128 CHAR),
+  c_ent_st#phone_work#cid_rbo153 VARCHAR2(128 CHAR),
+  c_hone_work#kas_verificated154 VARCHAR2(1 CHAR),
+  c__st#phone_work#date_audit155 TIMESTAMP(9),
+  c__st#phone_work#allow_cc_2156 VARCHAR2(1 CHAR),
+  c_form_client_st#mobile#activ  VARCHAR2(1 CHAR),
+  c_form_client_st#mobile#numb   VARCHAR2(100 CHAR),
+  c__client_st#mobile#private159 NUMBER,
+  c_form_client_st#mobile#type   NUMBER,
+  c_client_st#mobile#affirmed161 VARCHAR2(1 CHAR),
+  c_t#mobile#allow_collection162 VARCHAR2(1 CHAR),
+  c__client_st#mobile#id_deal163 VARCHAR2(128 CHAR),
+  c_form_client_st#mobile#id_rbo VARCHAR2(128 CHAR),
+  c__client_st#mobile#cid_rbo165 VARCHAR2(128 CHAR),
+  c_st#mobile#kas_verificated166 VARCHAR2(1 CHAR),
+  c_ient_st#mobile#date_audit167 TIMESTAMP(9),
+  c_ient_st#mobile#allow_cc_2168 VARCHAR2(1 CHAR),
+  c_client_st#phone_add#activ169 VARCHAR2(1 CHAR),
+  c__client_st#phone_add#numb170 VARCHAR2(100 CHAR),
+  c_ient_st#phone_add#private171 NUMBER,
+  c__client_st#phone_add#type172 NUMBER,
+  c_ent_st#phone_add#affirmed173 VARCHAR2(1 CHAR),
+  c_hone_add#allow_collection174 VARCHAR2(1 CHAR),
+  c_ient_st#phone_add#id_deal175 VARCHAR2(128 CHAR),
+  c_lient_st#phone_add#id_rbo176 VARCHAR2(128 CHAR),
+  c_ient_st#phone_add#cid_rbo177 VARCHAR2(128 CHAR),
+  c_phone_add#kas_verificated178 VARCHAR2(1 CHAR),
+  c_t_st#phone_add#date_audit179 TIMESTAMP(9),
+  c_t_st#phone_add#allow_cc_2180 VARCHAR2(1 CHAR),
+  c_form_client_st#email#activ   VARCHAR2(1 CHAR),
+  c_form_client_st#email#numb    VARCHAR2(100 CHAR),
+  c_form_client_st#email#private NUMBER,
+  c_form_client_st#email#type    NUMBER,
+  c__client_st#email#affirmed185 VARCHAR2(1 CHAR),
+  c_st#email#allow_collection186 VARCHAR2(1 CHAR),
+  c_form_client_st#email#id_deal VARCHAR2(128 CHAR),
+  c_form_client_st#email#id_rbo  VARCHAR2(128 CHAR),
+  c_form_client_st#email#cid_rbo VARCHAR2(128 CHAR),
+  c__st#email#kas_verificated190 VARCHAR2(1 CHAR),
+  c_lient_st#email#date_audit191 TIMESTAMP(9),
+  c_lient_st#email#allow_cc_2192 VARCHAR2(1 CHAR),
+  c_form_client_st#rclient_doc   VARCHAR2(1 CHAR),
+  c_form_client_st#images        NUMBER,
+  c_form_client_st#inn           VARCHAR2(12 CHAR),
+  c_form_client_st#sik           VARCHAR2(16 CHAR),
+  c_form_client_st#rnn_org       VARCHAR2(12 CHAR),
+  c_form_client_st#num_cert_org  VARCHAR2(100 CHAR),
+  c_lient_st#date_end_cer_org199 DATE,
+  c_form_client_st#type_org      NUMBER,
+  c_form_client_st#quant_child   NUMBER,
+  c_form_client_st#password      VARCHAR2(250 CHAR),
+  c_form_client_st#add_prop      NUMBER,
+  c_form_client_st#education_str VARCHAR2(250 CHAR),
+  c_form_client_st#quant_infant  NUMBER,
+  c_form_client_st#relation_law  NUMBER,
+  c_form_client_st#categ_client  NUMBER,
+  c_form_client_st#note_client   VARCHAR2(2000 CHAR),
+  c__st#address_wife#post_ind209 VARCHAR2(6 CHAR),
+  c_ent_st#address_wife#place210 VARCHAR2(170 CHAR),
+  c__st#address_wife#adr_type211 NUMBER,
+  c_t#address_wife#date_begin212 DATE,
+  c__st#address_wife#date_end213 DATE,
+  c_ent_st#address_wife#house214 VARCHAR2(10 CHAR),
+  c_ent_st#address_wife#frame215 VARCHAR2(10 CHAR),
+  c_ient_st#address_wife#flat216 VARCHAR2(10 CHAR),
+  c_nt_st#address_wife#street217 VARCHAR2(100 CHAR),
+  c_nt_st#address_wife#region218 VARCHAR2(100 CHAR),
+  c__st#address_wife#district219 VARCHAR2(100 CHAR),
+  c_t#address_wife#region_ref220 NUMBER,
+  c_address_wife#district_ref221 NUMBER,
+  c_st#address_wife#place_ref222 NUMBER,
+  c_ient_st#address_wife#city223 NUMBER,
+  c_t_st#address_wife#country224 NUMBER,
+  c_t#address_wife#date_audit225 TIMESTAMP(9),
+  c__st#address_wife#affirmed226 VARCHAR2(1 CHAR),
+  c_ent_st#address_wife#activ227 VARCHAR2(1 CHAR),
+  c_t#address_wife#houses_ref228 NUMBER,
+  c_form_client_st#phone_wife    VARCHAR2(50 CHAR),
+  c_form_client_st#any_cred      NUMBER,
+  c_form_client_st#info_dt_cr    NUMBER,
+  c_nt_st#result_scoring#rate232 NUMBER,
+  c_#result_scoring#max_summa233 NUMBER(17,2),
+  c__scoring#max_period#quant234 NUMBER(10),
+  c_t_scoring#max_period#unit235 NUMBER,
+  c_t_scoring#max_monthly_pay236 NUMBER(17,2),
+  c_form_client_st#summa         NUMBER(17,2),
+  c_form_client_st#period#quant  NUMBER(10),
+  c_form_client_st#period#unit   NUMBER,
+  c_form_client_st#list_estate   NUMBER,
+  c_form_client_st#call_comment  VARCHAR2(2000 CHAR),
+  c_form_client_st#prev_exp_scor NUMBER,
+  c_form_client_st#month_profit  NUMBER,
+  c_client_st#contact_persons244 NUMBER,
+  c_form_client_st#resident      VARCHAR2(1 CHAR),
+  c__client_st#last_name_wife246 VARCHAR2(100 CHAR),
+  c_client_st#first_name_wife247 VARCHAR2(100 CHAR),
+  c_form_client_st#sur_name_wife VARCHAR2(100 CHAR),
+  c__client_st#org_department249 VARCHAR2(100 CHAR),
+  c__client_st#transfer_bki#0250 NUMBER,
+  c_form_client_st#bki_code_subj VARCHAR2(250 CHAR),
+  c_form_client_st#kas_client_id NUMBER,
+  c_monthly_pay                  NUMBER,
+  c_term_period                  NUMBER,
+  c_stage                        NUMBER,
+  c_check_route                  NUMBER,
+  c_exec_comment                 VARCHAR2(2000 CHAR),
+  c_mng_vis_scen                 NUMBER,
+  c_check_result                 NUMBER,
+  c_buy_ref                      NUMBER,
+  c_folder_ref                   NUMBER,
+  c_inter_state                  NUMBER,
+  c_limit_sum                    NUMBER,
+  c_ver_date                     DATE,
+  c_chk_end_date                 DATE,
+  c_chk_beg_date                 DATE,
+  c_status_bpm                   VARCHAR2(35 CHAR)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RFO_Z#KAS_ONLINE_CLAIM
+  is 'KAS. Заявка клиента на онлайн кредит';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_client_ref
+  is 'Клиент(FK на Z#CL_PRIV)';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_form_client_ref
+  is 'Последняя анкета клиента(FK на Z#FORM_CLIENT)';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_monthly_pay
+  is 'Выбранный размер платежа';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_term_period
+  is 'Выбранный срок';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_stage
+  is 'Текущий этап проверки(FK на Z#KAS_UNIVERSAL_D)';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_check_route
+  is 'Маршрут проверок(FK на Z#KAS_UNIVERSAL_D)';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_exec_comment
+  is 'Комментарий выполнения проверок';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_mng_vis_scen
+  is 'Сценарий действий у менеджера(COLLECTION в Z#KAS_UNIVERSA_REF)';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_check_result
+  is 'Результат проверок(FK на Z#KAS_UNIVERSAL_D)';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_buy_ref
+  is 'Покупка(FK на Z#KAS_ONLINE_BUY)';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_folder_ref
+  is 'Папка(FK на Z#FOLDERS)';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_inter_state
+  is 'Промежуточное состояние(FK на Z#KAS_UNIVERSAL_D)';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_limit_sum
+  is 'Сумма лимита';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_ver_date
+  is 'Дата проведения верификации';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_chk_end_date
+  is 'Дата окончания выполнения поэтапных проверок';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_chk_beg_date
+  is 'Дата начала выполнения поэтапных проверок';
+comment on column U1.T_RFO_Z#KAS_ONLINE_CLAIM.c_status_bpm
+  is 'Статус обработки BPM';
+create unique index U1.T_RFO_Z#KAS_ONLINE_CLAIM_IND1 on U1.T_RFO_Z#KAS_ONLINE_CLAIM (ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#KAS_ONLINE_CLAIM
+  add constraint T_RFO_Z#KAS_ONLINE_CLAIM_PK primary key (ID);
+grant select on U1.T_RFO_Z#KAS_ONLINE_CLAIM to LOADDB;
+

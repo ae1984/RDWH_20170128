@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_TMP_J_SC_DEL_COMB_A_KN__FIN
+never refresh
+as
+select * from M_TMP_J_SC_DEL_COMB_A_KN t;
+grant select on U1.M_TMP_J_SC_DEL_COMB_A_KN__FIN to LOADDB;
+grant select on U1.M_TMP_J_SC_DEL_COMB_A_KN__FIN to LOADER;
+
+

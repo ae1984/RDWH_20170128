@@ -1,0 +1,65 @@
+﻿create materialized view U1.M_FOLDER_CON_LINK_PRE
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30*/
+       r.folder_id,
+       r.gcvp_rep_id as gcvp_report_id,
+       r.gcvp_rep_id as gcvp_rep_id_rfo,
+       r.org_bin_last,
+       r.org_bin_last as org_bin_max_pmt
+from V_GCVP_REPORT r
+where r.folder_id is not null
+union all
+select folder_id,
+      coalesce(min(gcvp_rep_onl_id),max(gcvp_rep_id)),
+      max(gcvp_rep_id_rfo),
+      coalesce(max(org_bin_last) keep (dense_rank first order by gcvp_rep_onl_id),max(org_bin_last) keep (dense_rank last order by gcvp_rep_id)),
+      max(org_bin_last) keep (dense_rank last order by pmts_count_from_rep,rep_date) as org_bin_max_pmt
+from(
+     select/*+ parallel 30*/ cc.folder_id,
+           g.rep_date_fd as rep_date,
+           case
+             when g.rep_date_fd between cc.a_date-60 and cc.a_date then -- для всех кроме онлайна берем последний ГЦВП отчет за период 60 дней до заявки
+               g.gcvp_rep_id
+           end as gcvp_rep_id,
+           case
+             when g.rep_date_fd > cc.a_date then --для онлайн берем +10 дней после заведения заявки и из этих отчетов берем самый первый
+                g.gcvp_rep_id
+           end as gcvp_rep_onl_id,
+           case when g.rep_date_fd between cc.a_date-15 and cc.a_date then
+               g.gcvp_rep_id
+            end as gcvp_rep_id_rfo,
+           g.org_bin_last,
+           g.pmts_count_from_rep
+     from u1.M_MATRIX_BASE cc
+     join u1.V_GCVP_REPORT g on g.client_iin = cc.iin and g.rep_date_fd between cc.a_date-60 and cc.a_date + decode(process_name,'ОНЛАЙН КРЕДИТ',10,0)
+     where g.rep_date_fd > to_date('01-01-2013','dd-mm-yyyy')
+       and not exists (select 1
+                         from V_GCVP_REPORT r
+                        where r.folder_id = cc.folder_id)
+     union all
+     select /*+ parallel 30*/cc.folder_id,
+            g.rep_date_fd as rep_date,
+            case
+             when g.rep_date_fd between cc.a_date-60 and cc.a_date then
+               g.gcvp_rep_id
+            end as gcvp_rep_id,
+            case when g.rep_date_fd > cc.a_date then
+                g.gcvp_rep_id
+            end as gcvp_rep_onl_id,
+            case when g.rep_date_fd between cc.a_date-15 and cc.a_date then
+               g.gcvp_rep_id
+            end as gcvp_rep_id_rfo,
+            g.org_bin_last,
+           g.pmts_count_from_rep
+     from u1.M_MATRIX_BASE cc
+     join u1.V_GCVP_REPORT g on g.client_rnn = cc.rnn and g.rep_date_fd between cc.a_date-60 and cc.a_date + decode(process_name,'ОНЛАЙН КРЕДИТ',10,0)
+     where g.rep_date_fd <= to_date('01-01-2013','dd-mm-yyyy')
+       and not exists (select 1
+                       from V_GCVP_REPORT r where r.folder_id = cc.folder_id)
+    ) t
+group by folder_id;
+grant select on U1.M_FOLDER_CON_LINK_PRE to LOADDB;
+
+

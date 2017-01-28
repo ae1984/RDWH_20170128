@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_ACC_FRAUD_OPER
+build deferred
+refresh complete on demand
+as
+select /*+ append enable_parallel_dml parallel(20)*/
+       pu.c_num as pl_usv_code,
+       af.id    as rbo_ac_fin_id,
+       af.c_main_v_id as acc,
+       af.c_name      as acc_name
+  from V_RBO_Z#PL_USV pu
+  join T_RBO_Z#AC_FIN af on af.c_main_usv = pu.id
+ where (pu.c_num  like '2860%' or pu.c_num  like '1860%')
+   and af.c_name like '%МОШЕНН%';
+grant select on U1.M_ACC_FRAUD_OPER to LOADDB;
+grant select on U1.M_ACC_FRAUD_OPER to LOADER;
+
+

@@ -1,0 +1,7 @@
+﻿create materialized view U1.M_TST_MO_RBP_RES
+refresh force on demand
+as
+selecT * from u1.M_TST_RBP_RES@motest;
+grant select on U1.M_TST_MO_RBP_RES to LOADDB;
+
+

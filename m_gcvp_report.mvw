@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_GCVP_REPORT
+refresh force on demand
+as
+select /* + parallel 20 */
+       r.value_number as folder_id,
+       t.value_number as gcvp_salary
+
+
+from mo_rfolder_par_value t
+join mo_rfolder_par_value r on r.rfolder_id = t.rfolder_id and r.d_par_id = 1010
+join v_mo_d_par p on t.d_par_id = p.id and p.code_int = 'IN_SCO_GCVP_SALARY';
+grant select on U1.M_GCVP_REPORT to LOADDB;
+
+

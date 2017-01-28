@@ -1,0 +1,35 @@
+﻿create materialized view U1.M_REJ_KN15_M_UNMAR_05022015
+refresh force on demand
+as
+select t.contract_number
+from U1.M_FOLDER_CON_MINER t
+where upper(t.cr_program_name) = 'КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ'
+  and(upper(t.x_dnp_name) = 'АЛМАТЫ'
+   or upper(t.x_dnp_name) = 'АСТАНА'
+   or upper(t.x_dnp_name) = 'АТЫРАУ'
+   or upper(t.x_dnp_name) = 'КАРАГАНДА'
+   or upper(t.x_dnp_name) = 'КАСКЕЛЕН'
+   or upper(t.x_dnp_name) = 'КЫЗЫЛОРДА'
+   or upper(t.x_dnp_name) = 'КОКШЕТАУ'
+   or upper(t.x_dnp_name) = 'ПЕТРОПАВЛОВСК'
+   or upper(t.x_dnp_name) = 'РУДНЫЙ'
+   or upper(t.x_dnp_name) = 'ТАЛГАР'
+   or upper(t.x_dnp_name) = 'ТАРАЗ'
+   or upper(t.x_dnp_name) = 'УРАЛЬСК'
+   or upper(t.x_dnp_name) = 'УСТЬ-КАМЕНОГОРСК'
+   or upper(t.x_dnp_name) = 'ЭКИБАСТУЗ')
+  and t.sex = 'М'
+  and t.age_full_years >= 18
+  and t.age_full_years <= 45
+  and upper(t.marital_status) <> 'ЖЕНАТ/ЗАМУЖЕМ'
+  and(t.pkb_closed_contracts = 0
+   or t.pkb_closed_contracts = null)
+  and t.time_day_num_of_week = 7
+  and upper(t.real_estate_relation) <> 'ЖИЛИЩЕ РОДИТЕЛЕЙ'
+  and upper(t.real_estate_relation) <> 'СОБСТВЕННОЕ ЖИЛЬЕ'
+  and(upper(t.education) = 'СРЕДНЕЕ'
+   or upper(t.education) = 'НЕПОЛНОЕ ВЫСШЕЕ');
+grant select on U1.M_REJ_KN15_M_UNMAR_05022015 to LOADDB;
+grant select on U1.M_REJ_KN15_M_UNMAR_05022015 to LOADER;
+
+

@@ -1,0 +1,10 @@
+﻿create sequence U1.UPDATE_LOG_SEQ
+minvalue 0
+maxvalue 99999999999999999999
+start with 6049079
+increment by 1
+cache 20;
+grant select on U1.UPDATE_LOG_SEQ to RISK_ALEXEY;
+grant select on U1.UPDATE_LOG_SEQ to RISK_ALEXEY2;
+
+

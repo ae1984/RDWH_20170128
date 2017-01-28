@@ -1,0 +1,59 @@
+﻿create materialized view U1.M_FOLDER_MO_KN_ALT2
+build deferred
+refresh force on demand
+as
+select /*+parallel(20)*/ *
+from (
+    select x.rfolder_id,
+           x.date_create,
+           x.code_int,
+           max(x.value_number) keep (dense_rank last order by x.value_index) value_last,
+           min(x.value_number) keep (dense_rank first order by x.value_index) value_first,
+
+           count(*) as rbp_cnt
+    from (
+        select
+               r.id as rfolder_id,
+               r.date_create,
+               dp.code_int,
+               case when dp.d_par_datatype_code = 'NUMBER' then to_char(t.value_number)
+                    when dp.d_par_datatype_code = 'DATE' then to_char(t.value_date, 'dd-mm-yyyy')
+               else t.value_text end as value_number,
+
+               t.value_index
+        from u1.MO_RFOLDER r
+        --IN_SCO_NUM_SCORING 1030
+        join u1.MO_RFOLDER_PAR_VALUE t2 on t2.rfolder_id = r.id and
+                                                  t2.d_par_id = 1030 and
+                                                  t2.value_number in (2,22,9,17) and
+                                                  t2.date_create >= to_date('01.01.2015','dd.mm.yyyy')
+        --SC_IS_DEPART_RBP 1725
+        join u1.MO_RFOLDER_PAR_VALUE t3 on t3.rfolder_id = r.id and
+                                                  t3.d_par_id = 1725 and
+                                                  t3.value_number = 1 and
+                                                  t3.date_create >= to_date('01.01.2015','dd.mm.yyyy')
+
+        join u1.MO_RFOLDER_PAR_VALUE t on t.rfolder_id = r.id and t.date_create >= to_date('01.01.2015','dd.mm.yyyy')
+
+        join u1.V_MO_D_PAR dp on dp.id = t.d_par_id
+                              and dp.code_int in ('SC_RBP_PMT',
+                                                  'SC_RBP_TERM'
+                                                  )
+        where r.date_create >= to_date('11-12-2015', 'dd-mm-yyyy')and
+              r.date_create < trunc(sysdate)
+
+              --and r.id = 73629400
+    ) x
+    group by x.rfolder_id,
+             x.date_create,
+             x.code_int
+) y
+pivot (
+    max(value_first) as first,
+    max(value_last) as last
+    for code_int in ( 'SC_RBP_PMT' sc_rbp_pmt,
+                      'SC_RBP_TERM' sc_rbp_term)
+);
+grant select on U1.M_FOLDER_MO_KN_ALT2 to LOADDB;
+
+

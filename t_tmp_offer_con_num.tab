@@ -1,0 +1,20 @@
+﻿create table U1.T_TMP_OFFER_CON_NUM
+(
+  con_num VARCHAR2(50)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_OFFER_CON_NUM to LOADDB;
+grant select on U1.T_TMP_OFFER_CON_NUM to LOADER;
+

@@ -1,0 +1,185 @@
+﻿create materialized view U1.M_MATRIX_ALL_WEEK
+build deferred
+refresh force on demand
+as
+select td.yyyy as d_app_year --год заявки РФО
+      ,td.text_yyyy_mm as d_app_mon --год-месяц заявки РФО
+      ,td.week_text as d_app_week --год-месяц-неделя заявки РФО
+      ,tdc.yyyy as d_con_year --год контракта РБО
+      ,tdc.text_yyyy_mm as d_con_mon --год-месяц контракта РБО
+      ,tdc.week_text as d_con_week --год-месяц-неделя контракта РБО
+      ,f.product_type as d_prod_type --Тип продукта
+      ,f.product as d_prod --название продукта
+      ,case when f.is_categ_a = 1 then 'CAT А'
+            when f.is_categ_b = 1 then 'CAT B'
+            when f.is_client_new_by_con = 0 then 'CAT C'
+            when f.is_client_new_by_con = 1 then 'CAT D'
+       end as d_cli_categ --категория клиентов
+      ,f.is_credit_issued as d_is_issued_rfo --кредит выдан РФО?
+      ,f.city --город
+      ,f.region as d_region --регион
+      ,case when b.rbo_contract_id is not null then 'КРЕДИТ ВЫДАН'
+            else 'КРЕДИТ НЕ ВЫДАН'
+       end as d_is_issued_rbo --кредит выдан РБО?
+      ,case when d.total_debt_x_pmt_1_7 > 0 then 'FIRST_DEL_PMT_1' --Сумма всей задолженности с учетом рефинанса при просрочки на дату 1-го платежа плюс 7 дней
+            when d.total_debt_x_pmt_2_7 > 0 then 'FIRST_DEL_PMT_2' --Сумма всей задолженности с учетом рефинанса при просрочки на дату 2-го платежа плюс 7 дней
+            when d.total_debt_x_pmt_3_7 > 0 then 'FIRST_DEL_PMT_3' --Сумма всей задолженности с учетом рефинанса при просрочки на дату 3-го платежа плюс 7 дней
+            when d.total_debt_x_pmt_4_7 > 0 then 'FIRST_DEL_PMT_4' --Сумма всей задолженности с учетом рефинанса при просрочки на дату 4-го платежа плюс 7 дней
+            when d.total_debt_x_pmt_5_7 > 0 then 'FIRST_DEL_PMT_5' --Сумма всей задолженности с учетом рефинанса при просрочки на дату 5-го платежа плюс 7 дней
+            when d.total_debt_x_pmt_6_7 > 0 then 'FIRST_DEL_PMT_6' --Сумма всей задолженности с учетом рефинанса при просрочки на дату 6-го платежа плюс 7 дней
+       end as first_del_pmt --поколение +7дней первой просрочки платежа
+       ----------------------------
+       ,count(*) as cnt --количество заявок
+       ,count(distinct f.rfo_con_or_claim_id) as rfo_con_cnt -- кол-во уникальных заявок, включая онлайн
+       ,sum(f.contract_amount) / 1000000 as amount_req_mln --Сумма кредитов
+       ---
+       ,count(b.rbo_contract_id) as con_cnt --количество ID контрактов из RBO
+       ,count(distinct b.rbo_contract_id) as con_cnt_dist --количество уникальных ID контрактов из RBO
+
+       ,sum(d.max_debt_used_x) / 1000000 as sales_mln --сумма максимальной задолженности по договором на отчетную дату с учетом рефинанса
+       ,sum(case when b.is_card = 0 then b.contract_amount else d.max_debt_used_x end) / 1000000 as sales_new_mln,  --
+       -- Если is_card 0 - Кредит, то Сумма кредитов. Есди is_card 1, то сумма максимальной задолженности по договором на отчетную дату с учетом рефинанса
+
+       sum(case when d.del_days_x > 7  then d.total_debt_x end) / 1000000 as del_debt_7d_mln, --Если количество дней просрочки по договору с учетом рефинаанса больше 7, то суммируем Общую рассчитанную задолженность с учетом рефинанса
+       sum(case when d.del_days_x > 30 then d.total_debt_x end) / 1000000 as del_debt_30d_mln, --Если количество дней просрочки по договору с учетом рефинаанса больше 30, то суммируем Общую рассчитанную задолженность с учетом рефинанса
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_mln, --Если количество дней просрочки по договору с учетом рефинаанса больше 60, то суммируем Общую рассчитанную задолженность с учетом рефинанса
+       sum(case when d.del_days_x > 90 then d.total_debt_x end) / 1000000 as del_debt_90d_mln, --Если количество дней просрочки по договору с учетом рефинаанса больше 90, то суммируем Общую рассчитанную задолженность с учетом рефинанса
+
+       sum(case when d.del_days_max_x > 7  then d.total_debt_x end) / 1000000 as del_debt_7d_ever_mln, --Если Макс дней просрочки с учетом рефинанса больше 7, то суммируем Общую рассчитанную задолженность с учетом рефинанса
+       sum(case when d.del_days_max_x > 30 then d.total_debt_x end) / 1000000 as del_debt_30d_ever_mln, --Если Макс дней просрочки с учетом рефинанса больше 30, то суммируем Общую рассчитанную задолженность с учетом рефинанса
+       sum(case when d.del_days_max_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_ever_mln, --Если Макс дней просрочки с учетом рефинанса больше 60, то суммируем Общую рассчитанную задолженность с учетом рефинанса
+       sum(case when d.del_days_max_x > 90 then d.total_debt_x end) / 1000000 as del_debt_90d_ever_mln, --Если Макс дней просрочки с учетом рефинанса больше 90, то суммируем Общую рассчитанную задолженность с учетом рефинанса
+
+       sum(d.total_debt_x_pmt_1_0) / 1000000 as pmt_1_0d_del_debt_mln, --Сумма всей задолженности с учетом рефинанса при просрочки на дату 1-го платежа
+       sum(d.max_debt_used_x_pmt_1_0) / 1000000 as pmt_1_0d_sales_mln, --Максимальная сумма задолженности с учетом рефинанса на дату 1-го платежа
+       sum(d.total_debt_x_pmt_1_7) / 1000000 as pmt_1_7d_del_debt_mln, --Сумма всей задолженности с учетом рефинанса при просрочки на дату 1-го платежа плюс 7 дней
+       sum(d.max_debt_used_x_pmt_1_7) / 1000000 as pmt_1_7d_sales_mln, --Максимальная сумма задолженности с учетом рефинанса на дату 1-го платежа плюс 7 дней
+       sum(d.total_debt_x_pmt_2_7) / 1000000 as pmt_2_7d_del_debt_mln, --Сумма всей задолженности с учетом рефинанса при просрочки на дату 2-го платежа плюс 7 дней
+       sum(d.max_debt_used_x_pmt_2_7) / 1000000 as pmt_2_7d_sales_mln, --Максимальная сумма задолженности с учетом рефинанса на дату 2-го платежа плюс 7 дней
+       sum(d.total_debt_x_pmt_3_7) / 1000000 as pmt_3_7d_del_debt_mln, --Сумма всей задолженности с учетом рефинанса при просрочки на дату 3-го платежа плюс 7 дней
+       sum(d.max_debt_used_x_pmt_3_7) / 1000000 as pmt_3_7d_sales_mln, --Максимальная сумма задолженности с учетом рефинанса на дату 3-го платежа плюс 7 дней
+       sum(d.total_debt_x_pmt_4_7) / 1000000 as pmt_4_7d_del_debt_mln, --Сумма всей задолженности с учетом рефинанса при просрочки на дату 4-го платежа плюс 7 дней
+       sum(d.max_debt_used_x_pmt_4_7) / 1000000 as pmt_4_7d_sales_mln, --Максимальная сумма задолженности с учетом рефинанса на дату 4-го платежа плюс 7 дней
+       sum(d.total_debt_x_pmt_5_7) / 1000000 as pmt_5_7d_del_debt_mln, --Сумма всей задолженности с учетом рефинанса при просрочки на дату 5-го платежа плюс 7 дней
+       sum(d.max_debt_used_x_pmt_5_7) / 1000000 as pmt_5_7d_sales_mln, --Максимальная сумма задолженности с учетом рефинанса на дату 5-го платежа плюс 7 дней
+       sum(d.total_debt_x_pmt_6_7) / 1000000 as pmt_6_7d_del_debt_mln, --Сумма всей задолженности с учетом рефинанса при просрочки на дату 6-го платежа плюс 7 дней
+       sum(d.max_debt_used_x_pmt_6_7) / 1000000 as pmt_6_7d_sales_mln, --Максимальная сумма задолженности с учетом рефинанса на дату 6-го платежа плюс 7 дней
+
+       sum(d.total_debt_x_pmt_1_30) / 1000000 as pmt_1_30d_del_debt_mln, --Сумма всей задолженности с учетом рефинанса при просрочки на дату 1-го платежа плюс 30 дней
+       sum(d.max_debt_used_x_pmt_1_30) / 1000000 as pmt_1_30d_sales_mln, --Максимальная сумма задолженности с учетом рефинанса на дату 1-го платежа плюс 30 дней
+       sum(d.total_debt_x_pmt_1_60) / 1000000 as pmt_1_60d_del_debt_mln, --Сумма всей задолженности с учетом рефинанса при просрочки на дату 1-го платежа плюс 60 дней
+       sum(d.max_debt_used_x_pmt_1_60) / 1000000 as pmt_1_60d_sales_mln, --Максимальная сумма задолженности с учетом рефинанса на дату 1-го платежа плюс 60 дней
+
+       sum(case when coalesce(d.total_debt_x_pmt_1_7, 0) = 0
+                     then d.total_debt_x_pmt_2_7 end) / 1000000 as pmt_2_7d_01_del_debt_mln, --Сумма всей задолженности с учетом рефинанса при просрочке на дату 2-го платежа плюс 7 дней, при нулевой просрочке на 1-м платеже
+       sum(case when coalesce(d.total_debt_x_pmt_1_7, 0) = 0 and
+                     coalesce(d.total_debt_x_pmt_2_7, 0) = 0
+                     then d.total_debt_x_pmt_3_7 end) / 1000000 as pmt_3_7d_001_del_debt_mln, --Сумма всей задолженности с учетом рефинанса при просрочке на дату 3-го платежа плюс 7 дней, при нулевой просрочке на 1-м и 2-м платеже
+       sum(case when coalesce(d.total_debt_x_pmt_1_7, 0) = 0 and
+                     coalesce(d.total_debt_x_pmt_2_7, 0) = 0 and
+                     coalesce(d.total_debt_x_pmt_3_7, 0) = 0
+                     then d.total_debt_x_pmt_4_7 end) / 1000000 as pmt_4_7d_0001_del_debt_mln, --Сумма всей задолженности с учетом рефинанса при просрочке на дату 4-го платежа плюс 7 дней, при нулевой просрочке на 1-м, 2=м и 3-м платеже
+
+       count(case when d.max_debt_used_x_pmt_1_0 > 0 then b.rbo_contract_id end) as pmt_1_0d_con_cnt, --Кол-во кредитов с максимальная сумма задолженности с учетом рефинанса на дату 1-го платежа
+       count(case when d.max_debt_used_x_pmt_1_7 > 0 then b.rbo_contract_id end) as pmt_1_7d_con_cnt, --Кол-во кредитов с максимальная сумма задолженности с учетом рефинанса на дату 1-го платежа плюс 7 дней
+       count(case when d.max_debt_used_x_pmt_2_7 > 0 then b.rbo_contract_id end) as pmt_2_7d_con_cnt, --Кол-во кредитов с максимальная сумма задолженности с учетом рефинанса на дату 2-го платежа плюс 7 дней
+       count(case when d.max_debt_used_x_pmt_3_7 > 0 then b.rbo_contract_id end) as pmt_3_7d_con_cnt, --Кол-во кредитов с максимальная сумма задолженности с учетом рефинанса на дату 3-го платежа плюс 7 дней
+       count(case when d.max_debt_used_x_pmt_4_7 > 0 then b.rbo_contract_id end) as pmt_4_7d_con_cnt, --Кол-во кредитов с максимальная сумма задолженности с учетом рефинанса на дату 4-го платежа плюс 7 дней
+       count(case when d.max_debt_used_x_pmt_5_7 > 0 then b.rbo_contract_id end) as pmt_5_7d_con_cnt, --Кол-во кредитов с максимальная сумма задолженности с учетом рефинанса на дату 5-го платежа плюс 7 дней
+       count(case when d.max_debt_used_x_pmt_6_7 > 0 then b.rbo_contract_id end) as pmt_6_7d_con_cnt, --Кол-во кредитов с максимальная сумма задолженности с учетом рефинанса на дату 6-го платежа плюс 7 дней
+
+       count(case when d.max_debt_used_x_pmt_1_30 > 0 then b.rbo_contract_id end) as pmt_1_30d_con_cnt, --Кол-во кредитов с максимальная сумма задолженности с учетом рефинанса на дату 1-го платежа плюс 30 дней
+       count(case when d.max_debt_used_x_pmt_1_60 > 0 then b.rbo_contract_id end) as pmt_1_60d_con_cnt, --Кол-во кредитов с максимальная сумма задолженности с учетом рефинанса на дату 1-го платежа плюс 60 дней
+
+       sum(d.total_debt_x) / 1000000 as debt_all_mln, --сумма Общей рассчитанной задолженности с учетом рефинанса
+       sum(case when coalesce(d.del_days_x,0) = 0 then d.total_debt_x end) / 1000000 as no_del_debt_mln, --если 0 дней просрочки по договору с учетом рефинанса, Общая рассчитанная сумма задолженности с учетом рефинанса
+       sum(case when d.del_days_x > 7 and d.del_days_x <= 30 then d.total_debt_x end) / 1000000 as del_debt_7_30_mln, --если от 7 до 30 дней просрочки по договору с учетом рефинанса, Общая рассчитанная сумма задолженности с учетом рефинанса
+       sum(case when d.del_days_x > 30 and d.del_days_x <= 60 then d.total_debt_x end) / 1000000 as del_debt_31_60_mln,--если от 30 до 60 дней просрочки по договору с учетом рефинанса, Общая рассчитанная сумма задолженности с учетом рефинанса
+       sum(case when d.del_days_x > 60 and d.del_days_x <= 90 then d.total_debt_x end) / 1000000 as del_debt_61_90_mln,--если от 60 до 90 дней просрочки по договору с учетом рефинанса, Общая рассчитанная сумма задолженности с учетом рефинанса
+       sum(case when d.del_days_x > 90 then d.total_debt_x end) / 1000000 as del_debt_91_XX_mln,--если от 90 дней просрочки по договору с учетом рефинанса, Общая рассчитанная сумма задолженности с учетом рефинанса
+
+       --- отказы
+       count(case when f.cancel_prescoring = 1 then f.rfo_con_or_claim_id end) as cancel_prescoring_cnt, --количество отказов прескоринга
+       count(case when f.cancel_middle_office = 1 then f.rfo_con_or_claim_id end) as cancel_middle_office_cnt, --количество отказов МО
+       count(case when f.cancel_controller = 1 then f.rfo_con_or_claim_id end) as cancel_controller_cnt,--количество отказов контроллера
+       count(case when f.cancel_client = 1 then f.rfo_con_or_claim_id end) as cancel_client_cnt,--количество отказов клиента
+       count(case when f.cancel_manager = 1 then f.rfo_con_or_claim_id end) as cancel_manager_cnt,--количество отказов менеджера
+       count(case when f.cancel_cpr_aa = 1 then f.rfo_con_or_claim_id end) as cancel_cpr_aa_cnt,--количество отказов Автоандер. или ЦПР или СБ
+       count(case when f.is_aa_reject = 1 then f.rfo_con_or_claim_id end) as cancel_aa_reject_cnt,--количество отказов Автоандерайтинга
+       count(case when f.cancel_verificator = 1 then f.rfo_con_or_claim_id end) as cancel_verificator_cnt,--количество отказов верификатора
+       count(case when f.cancel_undefined = 1 then f.rfo_con_or_claim_id end) as cancel_undefined_cnt,--количество неизвестных отказов
+       count(case when f.cancel_prescoring = 1 or f.cancel_middle_office = 1 or f.cancel_controller = 1 or
+                            f.cancel_client = 1 or f.cancel_manager = 1 or f.cancel_cpr_aa = 1 or
+                            f.cancel_verificator = 1 or f.cancel_undefined = 1
+                       then null else f.rfo_con_or_claim_id end) as rfo_con_or_claim_not_rej_cnt --количество одобренных заявок
+from (
+  select 'ОНЛАЙН-КРЕДИТ' as product_type, 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(f.folder_date_create_mi) as a_date,
+         f.is_categ_a,
+         f.is_categ_b,
+         f.is_client_new_by_con,
+         case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+         f.rfo_contract_id as rfo_con_or_claim_id,
+         f.x_dnp_name as city, f.x_dnp_region as region,
+         f.cancel_prescoring, f.cancel_middle_office, f.cancel_controller, f.cancel_client, f.cancel_manager,
+         f.cancel_cpr_aa, f.cancel_verificator, f.cancel_undefined, f.is_aa_reject
+  from u1.M_FOLDER_CON_CANCEL f
+  where f.process_name = 'ОНЛАЙН КРЕДИТ' and
+        f.claim_id is not null and
+        f.folder_date_create_mi >= to_date('2014-01-01','yyyy-mm-dd')
+  union all
+  select 'ОНЛАЙН-КРЕДИТ' as product_type, 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(fo.folder_date_create_mi) as a_date,
+         fo.is_categ_a,
+         fo.is_categ_b,
+         fo.is_client_new_by_con,
+         case when fo.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when fo.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         fo.claim_id, fo.contract_number, fo.rfo_client_id, fo.contract_amount, fo.folder_id, fo.form_client_id, fo.rfo_contract_id,
+         fo.claim_id as rfo_con_or_claim_id,
+         fo.x_dnp_name as city, fo.x_dnp_region as region,
+         fo.cancel_prescoring, fo.cancel_middle_office, fo.cancel_controller, fo.cancel_client, fo.cancel_manager,
+         fo.cancel_cpr_aa, fo.cancel_verificator, fo.cancel_undefined, fo.is_aa_reject
+  from u1.M_FOLDER_CON_CANCEL_ONLINE fo
+  where fo.folder_date_create_mi >= to_date('2014-01-01','yyyy-mm-dd')
+  union all
+  select f.product_type, f.cr_program_name as product, trunc(f.folder_date_create_mi) as a_date,
+         f.is_categ_a,
+         f.is_categ_b,
+         f.is_client_new_by_con,
+         case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+         f.rfo_contract_id as rfo_con_or_claim_id,
+         f.x_dnp_name as city, f.x_dnp_region as region,
+         f.cancel_prescoring, f.cancel_middle_office, f.cancel_controller, f.cancel_client, f.cancel_manager,
+         f.cancel_cpr_aa, f.cancel_verificator, f.cancel_undefined, f.is_aa_reject
+  from u1.M_FOLDER_CON_CANCEL f
+  where f.process_name != 'ОНЛАЙН КРЕДИТ' and
+        f.folder_date_create_mi >= to_date('2014-01-01','yyyy-mm-dd')
+) f
+join u1.V_TIME_DAYS td on td.yyyy_mm_dd = f.a_date
+left join u1.M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+left join u1.V_TIME_DAYS tdc on tdc.yyyy_mm_dd = b.start_date
+left join u1.M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+left join u1.V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = f.form_client_id
+
+group by td.yyyy, td.text_yyyy_mm, td.week_text,
+       tdc.yyyy, tdc.text_yyyy_mm,
+       tdc.week_text,
+       f.product_type, f.product,
+       case when f.is_categ_a = 1 then 'CAT А'
+            when f.is_categ_b = 1 then 'CAT B'
+            when f.is_client_new_by_con = 0 then 'CAT C'
+            when f.is_client_new_by_con = 1 then 'CAT D'
+            end,
+       f.is_credit_issued,
+       f.city, f.region,
+       case when b.rbo_contract_id is not null then 'КРЕДИТ ВЫДАН' else 'КРЕДИТ НЕ ВЫДАН' end,
+       case when d.total_debt_x_pmt_1_7 > 0 then 'FIRST_DEL_PMT_1'
+            when d.total_debt_x_pmt_2_7 > 0 then 'FIRST_DEL_PMT_2'
+            when d.total_debt_x_pmt_3_7 > 0 then 'FIRST_DEL_PMT_3'
+            when d.total_debt_x_pmt_4_7 > 0 then 'FIRST_DEL_PMT_4'
+            when d.total_debt_x_pmt_5_7 > 0 then 'FIRST_DEL_PMT_5'
+            when d.total_debt_x_pmt_6_7 > 0 then 'FIRST_DEL_PMT_6'
+       end;
+grant select on U1.M_MATRIX_ALL_WEEK to LOADDB;
+
+

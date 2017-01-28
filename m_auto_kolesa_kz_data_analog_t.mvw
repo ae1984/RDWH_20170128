@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_AUTO_KOLESA_KZ_DATA_ANALOG_T
+build deferred
+refresh complete on demand
+as
+with x_analog_id as (
+select
+  x.akk_data_id,
+  max(case when x.rn=1 then x.akk_id end) as id_a,
+  max(x.akk_id) keep (dense_rank last order by case when x.akk_price<=(x.a+x.c)/2 and x.rn<x.cnt_act then x.akk_price end nulls first,x.akk_id) as id_b,
+  max(case when x.rn=x.cnt_act then x.akk_id end) as id_c
+from (
+  select
+    t.akk_data_id,
+    t.avg_price,
+    a.akk_id,
+    a.akk_price,
+
+    count(*) over (partition by t.akk_data_id) as cnt_act,
+    row_number() over (partition by t.akk_data_id order by a.akk_price,a.akk_id) as rn,
+    min(a.akk_price) over (partition by t.akk_data_id) as a,
+    max(a.akk_price) over (partition by t.akk_data_id) as c
+  from M_AUTO_KOLESA_KZ_DATA_T t
+  join M_AUTO_KOLESA_KZ_DATA_SUB_T a on a.akk_data_id=t.akk_data_id and a.akk_active_bool=1 and t.confidence_level=1
+  order by t.akk_data_id, a.akk_price, a.akk_id
+) x
+where x.cnt_act>=5
+group by x.akk_data_id
+order by x.akk_data_id
+)
+
+select a.akk_data_id,
+       a.id_a,
+       s1.akk_price as akk_price_a,
+       a.id_b,
+       s2.akk_price as akk_price_b,
+       a.id_c,
+       s3.akk_price as akk_price_c
+from x_analog_id a
+join M_AUTO_KOLESA_KZ_DATA_SUB_T s1 on s1.akk_id=a.id_a
+join M_AUTO_KOLESA_KZ_DATA_SUB_T s2 on s2.akk_id=a.id_b
+join M_AUTO_KOLESA_KZ_DATA_SUB_T s3 on s3.akk_id=a.id_c;
+grant select on U1.M_AUTO_KOLESA_KZ_DATA_ANALOG_T to LOADDB;
+
+

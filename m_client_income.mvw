@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_CLIENT_INCOME
+refresh force on demand
+as
+select
+       rc.rbo_client_id,
+       rc.rfo_client_id,
+       sum(nvl(ci.interest,0) + nvl(ci.commiss,0)) as income_amount
+  from m_rbo_contract_bas  rc
+  join t_contract_income_pre ci on ci.rbo_contract_id = rc.rbo_contract_id
+ where rc.is_card = 0
+   and rc.product_type in ('ДЕНЬГИ','ТОВАРЫ')
+  group by rc.rbo_client_id, rc.rfo_client_id;
+grant select on U1.M_CLIENT_INCOME to LOADDB;
+grant select on U1.M_CLIENT_INCOME to LOADER;
+
+

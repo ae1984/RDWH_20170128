@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_RBO_CONTRACT_REFIN_LINK
+build deferred
+refresh force on demand
+as
+select /*+parallel(20)*/ tt.rbo_contract_id_to,
+       tt.contract_number_to,
+       tt.refin_contract_number,
+       tt.refin_rbo_contract_id,
+       tt.refin_type,
+       tt.refin_summa,
+       tt.refin_date,
+       kas_pc_fo_id,
+       dat_re.refin_date_return - 1 as refin_date_return,         --дата окончания рефинансирования перед восстановлением задолженности на транше
+       dat_pay.refin_date_repay - 1 as refin_date_repay           --дата окончания рефинансирования перед фактическим погашением задолженности
+  from M_RBO_CONTRACT_REFIN_LINK_PRE tt
+  left join M_RBO_CONTRACT_REFIN_LINK_PRE1 DAT_RE on dat_re.rbo_contract_id = tt.refin_rbo_contract_id
+                  and dat_re.refin_date = tt.refin_date
+  left join M_RBO_CONTRACT_REFIN_LINK_PRE2 DAT_PAY on dat_pay.rbo_contract_id_to = tt.rbo_contract_id_to
+                   and dat_pay.refin_date = tt.refin_date;
+grant select on U1.M_RBO_CONTRACT_REFIN_LINK to LOADDB;
+grant select on U1.M_RBO_CONTRACT_REFIN_LINK to LOADER;
+
+

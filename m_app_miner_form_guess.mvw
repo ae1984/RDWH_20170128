@@ -1,0 +1,119 @@
+﻿create materialized view U1.M_APP_MINER_FORM_GUESS
+build deferred
+refresh force on demand
+as
+select t.app_id,
+
+       f1.frm_cnt_30d,
+       f1.frm_cnt_30d_x,
+
+       --M_APP_MINER_FORM_GUESS_5
+       case when t.x_dnp_name != f.reg_address_city then 1 else 0 end is_from_diff_city_reg,
+       case when t.x_dnp_name != f.fact_address_city then 1 else 0 end is_from_diff_city_fact,
+       case when t.x_dnp_name != upper(trim(f.birth_place)) then 1 else 0 end is_from_diff_city_born,
+
+       --M_APP_MINER_FORM_GUESS_6
+       substr(f.patronymic, -2) as patronymic_type,
+
+       --M_APP_MINER_FORM_GUESS_PRE1
+       --M_APP_MINER_FORM_GUESS_30D, M_APP_MINER_FORM_GUESS_90D
+       --inc_sal ratio
+       case when f1.inc_sal_avg_30d > 0 then round(f.inc_sal/f1.inc_sal_avg_30d*100) end as inc_sal_to_avg_30d_rat,--inc_sal_to_avg_30d_ratio
+       case when f1.inc_sal_avg_90d > 0 then round(f.inc_sal/f1.inc_sal_avg_90d*100) end as inc_sal_to_avg_90d_rat,
+
+       case when f1.inc_sal_avg_30d_x > 0 then round(f.inc_sal/f1.inc_sal_avg_30d_x*100) end as inc_sal_to_avg_30d_rat_x,
+       case when f1.inc_sal_avg_90d_x > 0 then round(f.inc_sal/f1.inc_sal_avg_90d_x*100) end as inc_sal_to_avg_90d_rat_x,
+
+       case when f1.inc_sal_min_30d > 0 then round(f.inc_sal/f1.inc_sal_min_30d*100) end as inc_sal_to_min_30d_rat,
+       case when f1.inc_sal_min_90d > 0 then round(f.inc_sal/f1.inc_sal_min_90d*100) end as inc_sal_to_min_90d_rat,
+
+       case when f1.inc_sal_min_30d_x > 0 then round(f.inc_sal/f1.inc_sal_min_30d_x*100) end as inc_sal_to_min_30d_rat_x,
+       case when f1.inc_sal_min_90d_x > 0 then round(f.inc_sal/f1.inc_sal_min_90d_x*100) end as inc_sal_to_min_90d_rat_x,
+
+       case when f1.inc_sal_max_30d > 0 then round(f.inc_sal/f1.inc_sal_max_30d*100) end as inc_sal_to_max_30d_rat,
+       case when f1.inc_sal_max_90d > 0 then round(f.inc_sal/f1.inc_sal_max_90d*100) end as inc_sal_to_max_90d_rat,
+
+       case when f1.inc_sal_max_30d_x > 0 then round(f.inc_sal/f1.inc_sal_max_30d_x*100) end as inc_sal_to_max_30d_rat_x,
+       case when f1.inc_sal_max_90d_x > 0 then round(f.inc_sal/f1.inc_sal_max_90d_x*100) end as inc_sal_to_max_90d_rat_x,
+
+       --inc_all ratio
+       case when f1.inc_all_avg_30d > 0 then round(f.inc_all/f1.inc_all_avg_30d*100) end as inc_all_to_avg_30d_rat,--inc_all_to_avg_30d_ratio
+       case when f1.inc_all_avg_90d > 0 then round(f.inc_all/f1.inc_all_avg_90d*100) end as inc_all_to_avg_90d_rat,
+
+       case when f1.inc_all_avg_30d_x > 0 then round(f.inc_all/f1.inc_all_avg_30d_x*100) end as inc_all_to_avg_30d_rat_x,
+       case when f1.inc_all_avg_90d_x > 0 then round(f.inc_all/f1.inc_all_avg_90d_x*100) end as inc_all_to_avg_90d_rat_x,
+
+       case when f1.inc_all_min_30d > 0 then round(f.inc_all/f1.inc_all_min_30d*100) end as inc_all_to_min_30d_rat,
+       case when f1.inc_all_min_90d > 0 then round(f.inc_all/f1.inc_all_min_90d*100) end as inc_all_to_min_90d_rat,
+
+       case when f1.inc_all_min_30d_x > 0 then round(f.inc_all/f1.inc_all_min_30d_x*100) end as inc_all_to_min_30d_rat_x,
+       case when f1.inc_all_min_90d_x > 0 then round(f.inc_all/f1.inc_all_min_90d_x*100) end as inc_all_to_min_90d_rat_x,
+
+       case when f1.inc_all_max_30d > 0 then round(f.inc_all/f1.inc_all_max_30d*100) end as inc_all_to_max_30d_rat,
+       case when f1.inc_all_max_90d > 0 then round(f.inc_all/f1.inc_all_max_90d*100) end as inc_all_to_max_90d_rat,
+
+       case when f1.inc_all_max_30d_x > 0 then round(f.inc_all/f1.inc_all_max_30d_x*100) end as inc_all_to_max_30d_rat_x,
+       case when f1.inc_all_max_90d_x > 0 then round(f.inc_all/f1.inc_all_max_90d_x*100) end as inc_all_to_max_90d_rat_x,
+
+       --M_APP_MINER_FORM_GUESS_6
+       case when coalesce(f4.children_last, 'НЕТ') != coalesce(f.children, 'НЕТ') then 1 else 0 end    as last_frm_is_child_dif,
+       case when coalesce(f4.marital_last, 'NA') != coalesce(f.marital_status, 'NA') then 1 else 0 end as last_frm_is_marital_dif,
+       case when coalesce(f4.phone_mob_last, 'NA') != coalesce(f.phone_mobile, 'NA') then 1 else 0 end as last_frm_is_phone_mob_dif,
+       case when coalesce(f4.phone_home_last, 'NA') != coalesce(f.phone_home, 'NA') then 1 else 0 end  as last_frm_is_phone_hom_dif,
+
+       case when coalesce(f4.children_last, 'НЕТ') != 'НЕТ'
+                 and coalesce(f4.children_last, 'НЕТ') != coalesce(f.children, 'НЕТ')
+            then 1 else 0 end as last_frm_is_child_van,
+
+       case when coalesce(f4.marital_last, 'NA') = 'ЖЕНАТ/ЗАМУЖЕМ'
+                 and coalesce(f4.marital_last, 'NA') != coalesce(f.marital_status, 'NA')
+            then 1 else 0 end as last_frm_is_marital_van,
+
+       case when f4.inc_sal_last > 0 then (f.inc_sal/f4.inc_sal_last*100) end as inc_sal_to_last_frm_rat,
+       case when f4.inc_all_last > 0 then (f.inc_all/f4.inc_all_last*100) end as inc_all_to_last_frm_rat,
+
+       --+ текущий день
+       case when coalesce(f4.children_last_x, 'НЕТ') != coalesce(f.children, 'НЕТ') then 1 else 0 end    as last_frm_is_child_dif_x,
+       case when coalesce(f4.marital_last_x, 'NA') != coalesce(f.marital_status, 'NA') then 1 else 0 end as last_frm_is_marital_dif_x,
+       case when coalesce(f4.phone_mob_last_x, 'NA') != coalesce(f.phone_mobile, 'NA') then 1 else 0 end as last_frm_is_phone_mob_dif_x,
+       case when coalesce(f4.phone_home_last_x, 'NA') != coalesce(f.phone_home, 'NA') then 1 else 0 end  as last_frm_is_phone_hom_dif_x,
+
+       case when coalesce(f4.children_last_x, 'НЕТ') != 'НЕТ'
+                 and coalesce(f4.children_last_x, 'НЕТ') != coalesce(f.children, 'НЕТ')
+            then 1 else 0 end as last_frm_is_child_van_x,
+
+       case when coalesce(f4.marital_last_x, 'NA') = 'ЖЕНАТ/ЗАМУЖЕМ'
+                 and coalesce(f4.marital_last_x, 'NA') != coalesce(f.marital_status, 'NA')
+            then 1 else 0 end as last_frm_is_marital_van_x,
+
+       case when f4.inc_sal_last_x > 0 then (f.inc_sal/f4.inc_sal_last_x*100) end as inc_sal_to_last_frm_rat_x,
+       case when f4.inc_all_last_x > 0 then (f.inc_all/f4.inc_all_last_x*100) end as inc_all_to_last_frm_rat_x,
+
+       --M_APP_MINER_FORM_GUESS_7
+       case when coalesce(f4.children_last_180d, 'НЕТ') != coalesce(f.children, 'НЕТ') then 1 else 0 end    as l180d_frm_is_child_dif,
+       case when coalesce(f4.marital_last_180d, 'NA') != coalesce(f.marital_status, 'NA') then 1 else 0 end as l180d_frm_is_marital_dif,
+       case when coalesce(f4.phone_mob_last_180d, 'NA') != coalesce(f.phone_mobile, 'NA') then 1 else 0 end as l180d_frm_is_phone_mob_dif,
+       case when coalesce(f4.phone_home_last_180d, 'NA') != coalesce(f.phone_home, 'NA') then 1 else 0 end  as l180d_frm_is_phone_hom_dif,
+
+       case when coalesce(f4.children_last_180d, 'НЕТ') != 'НЕТ'
+                 and coalesce(f4.children_last_180d, 'НЕТ') != coalesce(f.children, 'НЕТ')
+            then 1 else 0 end as l180d_frm_is_child_van,
+
+       case when coalesce(f4.marital_last_180d, 'NA') = 'ЖЕНАТ/ЗАМУЖЕМ'
+                 and coalesce(f4.marital_last_180d, 'NA') != coalesce(f.marital_status, 'NA')
+            then 1 else 0 end as l180d_frm_is_marital_van,
+
+       case when f4.inc_sal_last_180d > 0 then (f.inc_sal/f4.inc_sal_last_180d*100) end as inc_sal_to_l180d_frm_rat,
+       case when f4.inc_all_last_180d > 0 then (f.inc_all/f4.inc_all_last_180d*100) end as inc_all_to_l180d_frm_rat
+
+
+
+from u1.M_APP_MINER_BAS t
+left join u1.M_APP_MINER_FORM_CLIENT f on f.app_id = t.app_id
+left join U1.M_APP_MINER_FORM_GUESS_PRE1 f1 on f1.app_id = t.app_id
+left join U1.M_APP_MINER_FORM_GUESS_PRE4 f4 on f4.app_id = t.app_id
+where t.folder_date_create >= to_date('01012015', 'ddmmyyyy')
+--and t.rfo_client_id = 22792275;
+grant select on U1.M_APP_MINER_FORM_GUESS to LOADDB;
+
+

@@ -1,0 +1,65 @@
+﻿create materialized view U1.M_APP_MINER_AUTO_GAI2
+build deferred
+refresh force on demand
+as
+select  /*+ parallel(10) */
+       x.app_id
+
+
+       --,case when count(distinct x.vin) > 0 then 1 else 0 end as bylo_ili_est_auto
+
+       ,extract(year from trunc(x.folder_date_create_mi)) - extract(year from max(x.auto_date_issue)) as years_from_issue_ever
+       ,case when sum(case when x.mvd_status_id = 2
+                           then case when x.next_mvd_status_id = 4 and x.next_mvd_status_date < trunc(x.folder_date_create_mi)
+                                     then 0
+                                else 1 end
+                      end) > 0
+        then 1 else 0 end as actual_auto_flag
+
+       ,extract(year from x.folder_date_create_mi) - max(case when x.mvd_status_id = 2
+                                                              then case when x.next_mvd_status_id = 4 and x.next_mvd_status_date < trunc(x.folder_date_create_mi)
+                                                                        then null
+                                                                   else extract(year from x.auto_date_issue) end
+                                                          end) as years_from_issue
+from (
+      select m.*,
+
+             t.autovin_vin as vin,
+             t.autovin_mvd_iin as mvd_iin
+             ,t.autovin_mvd_date as mvd_status_date
+             ,t.autovin_mvd_status_id as mvd_status_id
+             ,case when t.autovin_mvd_status_id=1 then 'ТС НА ВРЕМЕННОМ УЧЕТЕ'
+                   when t.autovin_mvd_status_id=2 then 'ТС НА ПОСТОЯННОМ УЧЕТЕ'
+                   when t.autovin_mvd_status_id=3 then 'ВРЕМЕННЫЙ ВВОЗ ТС'
+                   when t.autovin_mvd_status_id=4 then 'ТС СНЯТО С УЧЕТА'
+                   when t.autovin_mvd_status_id=5 then 'UNKNOWN'
+               else '-' end as status_name
+
+             ,lead(t.autovin_mvd_status_id) over (partition by t.autovin_vin, t.autovin_mvd_iin order by t.autovin_mvd_status_date) as next_mvd_status_id
+             ,lead(t.autovin_mvd_status_date) over (partition by t.autovin_vin, t.autovin_mvd_iin order by t.autovin_mvd_status_date) as next_mvd_status_date
+
+             ,case when t.autovin_esbd_issue_month between 1 and 12
+                        and t.autovin_esbd_issue_year >= 1900
+                        and t.autovin_esbd_issue_year <= extract(year from t.autovin_mvd_status_date)
+
+                   then to_date('01' || lpad(to_char(t.autovin_esbd_issue_month), 2, '0') || to_char(t.autovin_esbd_issue_year), 'ddmmyyyy')
+
+              else case when length(t.autovin_ar_manufacture_date) = 7
+                             and substr(t.autovin_ar_manufacture_date,1,2) in ('01','02','03','04','05','06','07','08','09','10','11','12')
+                             and to_number(substr(t.autovin_ar_manufacture_date,4,4)) >= 1900
+                             and to_number(substr(t.autovin_ar_manufacture_date,4,4)) <= extract(year from t.autovin_mvd_status_date)
+                        then to_date('01' || substr(t.autovin_ar_manufacture_date,1,2) || substr(t.autovin_ar_manufacture_date,4,4), 'ddmmyyyy')
+                   end
+            end as auto_date_issue
+
+      from u1.M_APP_MINER_BAS m
+      left join u1.V_CLIENT_RFO_BY_ID cl on cl.rfo_client_id = m.rfo_client_id
+      left join u1.T_AUTO_VIN t on t.autovin_mvd_date < trunc(m.folder_date_create_mi)
+                                     and t.autovin_mvd_iin = cl.iin
+      where m.folder_date_create_mi >= to_date('01.01.2015','dd.mm.yyyy')
+      ) x
+group by x.app_id,
+         x.folder_date_create_mi;
+grant select on U1.M_APP_MINER_AUTO_GAI2 to LOADDB;
+
+

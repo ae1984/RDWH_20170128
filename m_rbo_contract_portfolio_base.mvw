@@ -1,0 +1,81 @@
+﻿create materialized view U1.M_RBO_CONTRACT_PORTFOLIO_BASE
+build deferred
+refresh complete on demand
+as
+with dat_mr as (select /*+parallel(5)*/ rbo_contract_id,
+                       max(rep_date) as max_rep_contract
+                  from T_RBO_CONTRACT_PORTFOLIO
+                 group by rbo_contract_id),
+     dat_m  as (select /*+parallel(5)*/  max(rep_date) as max_rep
+                  from T_RBO_CONTRACT_PORTFOLIO)
+select /*+parallel(20)*/  lag(cp.rep_date) over (partition by cp.rbo_contract_id order by cp.rep_date) as rep_date_prev,
+       cp.rep_date,
+       cp.yy_mm_report,
+       cast (case when cp.rep_date < dat_mr.max_rep_contract
+                   then cp.yy_mm_report
+                  else to_char(dat_m.max_rep,'yyyy - mm')
+             end as varchar2(9)) as yy_mm_report_last,
+       cp.rbo_client_id,
+       cp.rbo_contract_id,
+       cc.rfo_contract_id,
+       cp.rfo_client_id,
+       cp.contract_number,
+       cp.start_date_actual,
+       cp.yy_mm_start_date_act,
+       cp.start_date,
+       cp.yy_mm_start_date,
+       cp.debt_begin_date,
+       cp.cred_program_code,
+       cp.cred_program_name,
+       cp.cred_program_code_x,
+       cp.cred_program_name_x,
+       cp.x_dnp_name,
+       cp.is_card,
+       cp.is_refin_contract,
+       cp.is_ever_refin_contract,
+       cp.rbo_contract_id_to,
+       cp.refin_date,
+       cp.refin_date_first,
+       cp.refin_percent,
+       cp.ppm,
+       cp.num_stmt,
+       cp.total_debt,
+       cp.total_debt_x,
+       cp.del_days,
+       cp.del_days_x,
+       cp.max_debt_used,
+       cp.max_debt_used_x,
+       cp.del_days_max,
+       cp.del_days_max_x,
+       cp.del_days_cli_max,
+       cp.del_days_cli_max_x,
+       case when to_char(cp.rep_date,'yyyymm') > cl.yyyy_mm_num_end
+            then rpad(cl.pmt_full_code_3,months_between(trunc(cp.rep_date,'mm'),to_date('01'||cl.yyyy_mm_num_end,'ddyyyymm'))+length(cl.pmt_full_code_3),'0')
+            when to_char(rep_date,'yyyymm') <= cl.yyyy_mm_num_end and to_char(cp.rep_date,'yyyymm') >= 200812
+            then substr(cl.pmt_full_code_3,1,length(cl.pmt_full_code_3) + months_between(trunc(rep_date,'mm'),to_date('01'||cl.yyyy_mm_num_end,'ddyyyymm')))
+       end as pmt_full_code_3,
+       cast(
+       case when cc.is_categ_a = 'КАТЕГОРИЯ А' then 'КАТЕГОРИЯ А'
+            when cc.is_categ_b = 'КАТЕГОРИЯ Б' then 'КАТЕГОРИЯ Б'
+            when cc.is_categ_b <> 'КАТЕГОРИЯ Б' then
+              case when cc.is_client_new_by_con = 'КЛИЕНТ НОВЫЙ' then 'КЛИЕНТ НОВЫЙ'
+                   when cc.is_client_new_by_con = 'КЛИЕНТ ПОВТОРНЫЙ' then 'КЛИЕНТ ПОВТОРНЫЙ'
+              end
+       end as varchar2(250)) as client_categ,
+       fa.is_ind_enterpreneur_clear,
+       fa.is_ind_enterpreneur,
+       cp.is_on_balance,
+       cp.contract_amount,
+       max(cp.contract_amount)  over (partition by cp.rbo_contract_id order by cp.rep_date rows unbounded preceding) as contract_amount_max
+       ,cc.product_type
+  from T_RBO_CONTRACT_PORTFOLIO cp
+  join M_RBO_CONTRACT_BAS       cb on cb.rbo_contract_id = cp.rbo_contract_id
+  join dat_mr on dat_mr.rbo_contract_id = cp.rbo_contract_id
+  join dat_m  on 1 = 1
+  left join M_MATRIX_BASE cc on cc.contract_number = cb.contract_number
+                                  and cc.folder_id = cb.folder_id_first
+  left join M_CLIENT_BARCODE cl    on cl.client_id = substr(ltrim(cp.contract_number, 'R'),1,7)
+  left join V_FOLDER_ALL_RFO fa    on fa.folder_id = cb.folder_id_first;
+grant select on U1.M_RBO_CONTRACT_PORTFOLIO_BASE to LOADDB;
+
+

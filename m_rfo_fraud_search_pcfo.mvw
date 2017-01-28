@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_PCFO
+build deferred
+refresh complete on demand
+as
+select fo.claim_id, sum(pc.amount) as sum_pay_cred_3_m
+  from u1.M_FOLDER_CON_CANCEL_ONLINE_1 fo
+  join u1.M_RBO_CONTRACT_BAS    bs on bs.rfo_client_id = fo.rfo_client_id
+                                  and bs.cred_program_code not in ('DEP_CARD','ZP_KASPI_GOLD','ZP_CARDS')
+  join u1.M_RBO_PAYMENT_CARD    pc on pc.rbo_contract_id = bs.rbo_contract_id
+                                  and trunc(pc.oper_date) < trunc(fo.date_create)
+                                  and trunc(pc.oper_date) >= trunc(fo.date_create) - 90
+  group by fo.claim_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_PCFO to LOADDB;
+
+

@@ -1,0 +1,71 @@
+﻿create materialized view U1.M_TMP_J_K1_FOLDER_PRE
+refresh force on demand
+as
+select x.folder_id,
+       x.cr_program_name,
+       case when x.is_card > 0 then
+              round(x.contract_amount * 0.07, 0)
+
+            when x.is_card = 0 and x.rate_value_avg2 is not null and x.rate_value_avg2 != 0 and
+                 x.term_duration is not null and x.term_duration > 0 then
+              round(x.contract_amount/(1 - 1/power((1 + x.rate_value_avg2/1200), x.term_duration))*x.rate_value_avg2/1200, 0)
+
+            when x.is_card = 0 and x.rate_value_avg2 is not null and x.rate_value_avg2 != 0 and
+                 x.sc_term_cred is not null and x.sc_term_cred > 0 then
+              round(x.contract_amount/(1 - 1/power((1 + x.rate_value_avg2/1200), x.sc_term_cred))*x.rate_value_avg2/1200, 0)
+
+       end pmt,
+       x.rate_value_avg2,
+       x.contract_amount,
+       coalesce(x.term_duration, x.sc_term_cred) term_cred
+from (select t.folder_id,
+             max(t.cr_program_name) keep (dense_rank first order by t.is_card) cr_program_name,
+             max(t.is_card) is_card,
+             max(t.contract_amount) keep (dense_rank first order by t.is_card) contract_amount,
+             max(fc.term_duration) keep (dense_rank first order by t.is_card) term_duration,
+             max(r.rate_value_avg2) keep (dense_rank first order by t.is_card) rate_value_avg2,
+             max(rr.sc_term_cred) keep (dense_rank first order by t.is_card) sc_term_cred
+
+
+
+      from M_FOLDER_CON_CANCEL t
+      left join M_TMP_GK_RATE_VALUE_AVG2 r on r.cr_program_name = t.cr_program_name
+      left join (select r3.folder_id,
+                        trunc(r3.date_create) date_create,
+                        max(r3.sc_term_cred) keep (dense_rank last order by r3.date_create) sc_term_cred
+                 from (select * from M_FOLDER_MO_TERM_CRED_2013
+                       union all
+                       select * from M_FOLDER_MO_TERM_CRED_2014
+                      ) r3
+                 group by r3.folder_id, trunc(r3.date_create)
+                ) rr on rr.folder_id = t.folder_id /*and rr.date_create = trunc(t.folder_date_create_mi)*/
+
+      /*left join (select f2.folder_id,
+                        max(coalesce(fc1.form_client_id, fc2.form_client_id, fc3.form_client_id)) as form_client_id,
+                        case when max(fc1.form_client_id) is not null then 1
+                             when max(fc2.form_client_id) is not null then 2
+                             when max(fc3.form_client_id) is not null then 3 else 0 end as form_client_found_type,
+                        least(nvl(max(f2.folder_date_create) - max(trunc(fc2.form_client_date)),99999999),
+                              nvl(max(f2.folder_date_create) - max(trunc(fc3.form_client_date)),99999999)) as form_client_age_days
+                  from V_FOLDER_ALL_RFO f2
+                  left join V_CLIENT_RFO_BY_ID cl2 on cl2.rfo_client_id = f2.rfo_client_id
+                  left join V_FORM_CLIENT_ALL_RFO fc1 on fc1.form_client_id = f2.form_client_id -- ???? ?????? ? ?????
+                  left join V_FORM_CLIENT_ALL_RFO fc2 on fc2.iin = cl2.iin and -- ??? ???? ????????? ?????? ?? ????? ?? ???
+                                                         trunc(fc2.form_client_date) <= f2.folder_date_create
+                  left join V_FORM_CLIENT_ALL_RFO fc3 on fc3.rnn = cl2.rnn and -- ??? ???? ????????? ?????? ?? ????? ?? ???
+                                                         trunc(fc3.form_client_date) <= f2.folder_date_create
+                  group by f2.folder_id
+      ) fc_link on fc_link.folder_id = t.folder_id*/
+      left join V_FOLDER_ALL_RFO f on f.folder_id = t.folder_id
+      left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = f.form_client_id
+
+      where t.is_credit_issued = 0
+      and t.folder_date_create_mi >= to_date('01012010', 'ddmmyyyy')
+      group by t.folder_id
+) x
+/*
+and t.is_card > 0*/;
+grant select on U1.M_TMP_J_K1_FOLDER_PRE to LOADDB;
+grant select on U1.M_TMP_J_K1_FOLDER_PRE to LOADER;
+
+

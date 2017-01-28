@@ -1,0 +1,103 @@
+﻿create materialized view U1.M_CLIENT_PHONE_MOBILE
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30)*/
+            t2.folder_id,
+            t2.form_client_id,
+            t2.rfo_client_id,
+            t2.phone_number_cur,
+            case when regexp_like(t2.phone_number_cur, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(t2.phone_number_cur,'^[7-8]{1}','')
+                 when regexp_like(t2.phone_number_cur, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(t2.phone_number_cur,'^[7-8]{2}','')
+                 when regexp_like(t2.phone_number_cur, '^[+]7[[:digit:]]{10}$') then regexp_replace(t2.phone_number_cur,'^[+]7','')
+                 else to_char(t2.phone_number_cur)
+             end as phone_number_cur_clear,
+            t2.phone_date_cur,
+            t2.is_deposit,
+            t2.client_phone_cnt,
+            t2.phone_number_prev,
+            case when regexp_like(t2.phone_number_prev, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(t2.phone_number_prev,'^[7-8]{1}','')
+                 when regexp_like(t2.phone_number_prev, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(t2.phone_number_prev,'^[7-8]{2}','')
+                 when regexp_like(t2.phone_number_prev, '^[+]7[[:digit:]]{10}$') then regexp_replace(t2.phone_number_prev,'^[+]7','')
+                 else to_char(t2.phone_number_prev)
+             end as phone_number_prev_clear,
+
+            t2.phone_date_prev,
+            t2.c_affirmed,
+            t2.is_aprooved
+   from
+  (select
+       folder_id,
+       t.form_client_id,
+       rfo_client_id,
+       phone_number_cur,
+       phone_date as phone_date_cur,
+       is_deposit,
+       sum(client_phone_cnt) over (partition by rfo_client_id) as client_phone_cnt,
+       case when phone_number_prev is null
+            then lag(t.phone_number_cur,1,null) over (partition by  t.rfo_client_id  order by t.phone_date)
+            else phone_number_prev  end as phone_number_prev,
+       lag(t.phone_date,1,null) over (partition by  t.rfo_client_id  order by t.phone_date) as phone_date_prev,
+       t.c_affirmed,
+       t.is_aprooved
+FROM (
+  select
+         f.folder_id,
+         f.form_client_id,
+         f.rfo_client_id,
+         f.phone_number as phone_number_cur,
+         0 as is_deposit,
+         f.form_client_date as phone_date,
+         cast(null as varchar2(100)) as phone_number_prev,
+         1 as client_phone_cnt,
+         null as c_affirmed,
+         fa.is_credit_issued as is_aprooved
+  from V_FORM_CLIENT_CONTACT_PHONE f
+  join V_FOLDER_ALL_RFO fa on fa.folder_id = f.folder_id
+  where  f.phone_type = 'МОБИЛЬНЫЙ'
+union all
+  select
+         f.folder_id,
+         c.id as  form_client_id,
+         f.rfo_client_id,
+         h.c_numb as phone_number_cur,
+         1 as is_deposit,
+         h.c_date_audit  as phone_date,
+         cast(null as varchar2(100)) as phone_number_prev,
+         1 as client_phone_cnt,
+         h.c_affirmed,
+         nvl2(fd.c_parent_fdoc,1,0) as is_aprooved
+  from  V_RFO_Z#DEPOSIT c
+  join V_RFO_Z#CONTACTS h on c.c_cl_req#contacts = h.collection_id  and h.c_private = 690120
+  join V_RFO_Z#RDOC r on r.c_doc = c.id
+  join V_FOLDER_ALL_RFO f on f.fld_c_docs = r.collection_id and f.process_code = 'INPUT_ANKETA_DEPOSIT'
+  left join (select fd.c_parent_fdoc
+               from V_RFO_Z#FDOC fd
+               join V_RFO_Z#CONTRACT cn on cn.id = fd.id
+                                       and cn.c_end_date is not null
+              where fd.class_id = 'CONT_DEP'
+              group by fd.c_parent_fdoc) fd on fd.c_parent_fdoc = c.id
+union all
+    select
+           f.folder_id,
+          cp.id as  form_client_id,
+          f.rfo_client_id,
+          h.c_numb as phone_number_cur,
+          2 as is_deposit,
+          h.c_date_audit  as phone_date,
+          h2.c_numb as phone_number_prev,
+          2 as client_phone_cnt,
+          h.c_affirmed,
+         null as is_aprooved
+  from  V_RFO_Z#REQ_EDIT_CL_PRIV  cp
+  left join V_RFO_Z#CONTACTS h  on cp.c_cl_req_new#contacts = h.collection_id
+                               and substr(h.c_numb_clear,2,3) in ('705','777','771','776','700','708','701','702','775','778','772','707','747') -- mobile
+  left join V_RFO_Z#CONTACTS h2 on cp.c_cl_req_old#contacts = h2.collection_id
+                               and  substr(h2.c_numb_clear,2,3) in ('705','777','771','776','700','708','701','702','775','778','772','707','747')-- mobile
+  join V_RFO_Z#RDOC r           on r.c_doc = cp.id
+  join V_FOLDER_ALL_RFO f       on f.fld_c_docs = r.collection_id
+ where h.c_numb_clear is not null or h2.c_numb_clear is not null
+) t) t2;
+grant select on U1.M_CLIENT_PHONE_MOBILE to LOADDB;
+
+

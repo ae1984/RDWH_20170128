@@ -1,0 +1,11 @@
+﻿create materialized view U1.V_SCO_CARD_PARAMS
+refresh complete on demand
+as
+select id, id_card, id_dictionary, id_actual, using_in_scoring,
+REGEXP_REPLACE(CONVERT(param_name,'AL32UTF8','RU8PC866'), '[^[:alnum:]-_() =><#;&/.]') as param_name,
+param_type, ref, create_date, id_user
+from CARD_PARAMS@sc18;
+grant select on U1.V_SCO_CARD_PARAMS to LOADDB;
+grant select on U1.V_SCO_CARD_PARAMS to LOADER;
+
+

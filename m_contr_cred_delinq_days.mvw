@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_CONTR_CRED_DELINQ_DAYS
+refresh complete on demand
+as
+select mdf.rbo_cred_id, mdf.d_fo,
+        (case when min(sign(nvl(mdf.n_ovrd_from_part,0) - nvl(mdt.n_ovrd_to_part,0))) = - 1
+              then min(mdt.d_fo) keep (dense_rank first order by sign(nvl(mdf.n_ovrd_from_part,0) - nvl(mdt.n_ovrd_to_part,0)))
+              else null end) date_delinq_days,
+        coalesce((lead(mdf.d_fo-1) over (partition by mdf.rbo_cred_id order by mdf.d_fo)),mdf.c_date_close,trunc(sysdate)-1) d_fo_next,
+        mdf.c_date_close
+   from M_CRED_CALC_DELINQ_DAYS mdf
+   join M_CRED_CALC_DELINQ_DAYS mdt on mdt.rbo_cred_id = mdf.rbo_cred_id
+                                   and mdt.d_fo <= mdf.d_fo
+  group by mdf.rbo_cred_id, mdf.d_fo, mdf.n_ovrd_to, mdf.n_ovrd_from, mdf.c_date_close;
+grant select on U1.M_CONTR_CRED_DELINQ_DAYS to LOADDB;
+grant select on U1.M_CONTR_CRED_DELINQ_DAYS to LOADER;
+
+

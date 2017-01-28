@@ -1,0 +1,35 @@
+﻿create table U1.MO_AA_REQUEST_NUMB
+(
+  id            NUMBER not null,
+  aa_request_id NUMBER not null,
+  field_code    VARCHAR2(40),
+  field_name    VARCHAR2(250),
+  value         NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.IDX_MO_AA_REQUEST_NUMB_1 on U1.MO_AA_REQUEST_NUMB (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+

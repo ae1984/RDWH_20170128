@@ -1,0 +1,23 @@
+﻿create table U1.NT_SYS_PARAM_HIST
+(
+  sdt   DATE,
+  name  VARCHAR2(200),
+  value NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_SYS_PARAM_HIST
+  is 'rdwh2.0 история NV_SYS_PARAM';
+grant select on U1.NT_SYS_PARAM_HIST to LOADDB;
+

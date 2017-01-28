@@ -1,0 +1,43 @@
+﻿create table U1.ONLINE_NEW_CLIENTS
+(
+  c_process_id           VARCHAR2(300),
+  c_date_create          DATE,
+  c_date_create_datepart DATE,
+  client_dwh_id          VARCHAR2(255),
+  rnn                    VARCHAR2(255),
+  phone_mobile_number    VARCHAR2(255),
+  target                 VARCHAR2(255),
+  mdy_month              DATE,
+  phone_mobile_number1   VARCHAR2(255),
+  general_value          VARCHAR2(255),
+  eco_offline            NUMBER,
+  eco_online             NUMBER,
+  all_rules              NUMBER,
+  g_new_iin_c17_n1       NUMBER,
+  g_rr_eco_c96_n1        NUMBER,
+  g_iz_aut_c24_n4        NUMBER,
+  g_zs_cardcat_c54_n1    NUMBER,
+  g_zs_carddays_c52_n1   NUMBER,
+  g_zs_cardatm_c82_n1    NUMBER,
+  g_rr_cat_125_n1        NUMBER,
+  g_rr_pay_c168_n1       NUMBER,
+  g_rr_avia_c58_n1       NUMBER,
+  g_new_phone_c25_n1     NUMBER,
+  g_iz_tn_c41_n11        NUMBER,
+  g_iz_tn_c45_n2         NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.ONLINE_NEW_CLIENTS to LOADDB;
+

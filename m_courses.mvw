@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_COURSES
+refresh complete on demand
+as
+select date_recount,curs_usd,curs_eur,curs_rur,curs_gbp,curs_kgs
+from (
+select сс.date_recount as date_recount, сс.currency as cur_short,сс.curs_value as course
+ from u1.M_RBO_COURSES сс
+ where сс.currency  in ('USD','EUR','RUR','GBP','KGS'))
+      pivot (max(course) for cur_short in  ('USD' as curs_usd,'EUR' as curs_eur,'RUR' as curs_rur,'GBP' as curs_gbp,'KGS' as curs_kgs) );
+grant select on U1.M_COURSES to LOADDB;
+grant select on U1.M_COURSES to LOAD_MO;
+
+

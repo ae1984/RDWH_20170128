@@ -1,0 +1,40 @@
+﻿create materialized view U1.M_DWH_REF_AUTO_ESTIM
+refresh complete on demand
+as
+select /*+parallel(15) driving_site(a)*/
+        AUTOE_ID,
+        to_number(substr(to_char(autoe_gid),3,13))  as estim_id,
+        AUTOE_GID,
+        AUTOE$START_DATE,
+        AUTOE$END_DATE,
+        AUTOE$AUDIT_ID,
+        AUTOE$HASH,
+        AUTOE$PROVIDER,
+        AUTOE$CHANGE_DATE,
+        AUTOE$ROW_STATUS,
+        AUTOE$SOURCE,
+        AUTOE$SOURCE_PK,
+        AUTOE_ACTION_DATE,
+        AUTOE_AUTO_CONDITION_CD,
+        AUTOE_ADVERT_NUM,
+        AUTOE_OWNER_TRUST,
+        AUTOE_PHONE_NUMBER,
+        AUTOE_PROD_GID,
+        AUTOE_CRTF_GID,
+        AUTOE_ADD_INFO,
+        AUTOE_NOK_CD,
+        AUTOE_NOK_NUM,
+        AUTOE_NOK_DATE,
+        AUTOE_ESTIM_DATE,
+        AUTOE_EMPL_GID,
+        AUTOE_CRT_FOLDER_STATUS_CD,
+        AUTOE_LINE_DATE,
+        AUTOE_FIRST_EMPL_GID,
+        AUTOE_LAST_EMPL_GID,
+        AUTOE_WAY,
+        AUTOE_CHILD_CRTF_GID
+from DWH_MAIN.REF_AUTO_ESTIM@RDWH_EXD;
+grant select on U1.M_DWH_REF_AUTO_ESTIM to LOADDB;
+grant select on U1.M_DWH_REF_AUTO_ESTIM to LOADER;
+
+

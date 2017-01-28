@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_TMP_R_ADRESS_BY_IIN_V2
+refresh force on demand
+as
+select /*+ no_parallel*/distinct
+       q.address, q.city, q.street, q.building_number, q.corpus, q.flat_number, client_iin, d.client_name,
+       max(cl.last_name_wife||' '||cl.first_name_wife||' '||cl.sur_name_wife) --as fio_spouse
+       keep (dense_rank last order by cl.last_name_wife||' '||cl.first_name_wife||' '||cl.sur_name_wife nulls first)
+       over (partition by q.address, d.client_iin, d.client_name)
+  from M_TMP_R_ADDRESS_BY_IIN_0515 q
+  join v_dwh_portfolio_current d on q.iin = d.client_iin
+  left join v_form_client_all_rfo cl on cl.iin = d.client_iin
+where d.x_is_credit_issued = 1
+ and q.address in (
+select /*+ no_parallel*/q1.address
+  from M_TMP_R_ADDRESS_BY_IIN_0515 q1
+  join v_dwh_portfolio_current d1 on q1.iin = d1.client_iin
+where d1.x_is_credit_issued = 1
+ group by q1.address
+having count(distinct q1.iin) > 1);
+grant select on U1.M_TMP_R_ADRESS_BY_IIN_V2 to LOADDB;
+grant select on U1.M_TMP_R_ADRESS_BY_IIN_V2 to LOADER;
+
+

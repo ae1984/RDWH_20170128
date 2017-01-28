@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_RBO_CONTRACT_SPEC_OFFER
+build deferred
+refresh complete on demand
+as
+select
+       pd.c_client_ref  as rbo_client_id,
+       cl.rfo_client_id,
+       cc.c_inn         as client_iin,
+       pd.c_num_dog     as contract_number,
+       so.id            as spec_offer_id,
+       so.state_id      as spec_offer_status,
+       so.c_date_begin  as spec_offer_date_begin,
+       so.c_date_end    as spec_offer_date_end,
+       so.c_date_cancel as spec_offer_date_cancel,
+       vs.restr_type,
+       vs.restr_prior,
+       vs.c_code      as spec_offer_code,
+       vs.c_name      as spec_offer_name
+  from u1.V_RBO_Z#KAS_SPEC_OFFER so
+  join u1.V_RBO_Z#KAS_VID_SPEC   vs on vs.id = so.c_vid_spec_ref
+  join u1.V_RBO_Z#KAS_PC_DOG     pd on pd.id = so.c_dog_ref
+  join u1.M_CLIENT_LINK          cl on cl.rbo_client_id = pd.c_client_ref
+  join u1.V_RBO_Z#CLIENT         cc on cc.id = pd.c_client_ref
+ where so.state_id in ('WORK','DEFAULT','EXECUTED','SWITCHED');
+grant select on U1.M_RBO_CONTRACT_SPEC_OFFER to LOADDB;
+
+

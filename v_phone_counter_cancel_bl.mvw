@@ -1,0 +1,40 @@
+﻿create materialized view U1.V_PHONE_COUNTER_CANCEL_BL
+refresh complete on demand
+as
+select cl.id as rfo_client_id,
+--         max(cl.x_iin) keep (dense_rank last order by cl.id) as iin,
+--         max(cl.x_rnn) keep (dense_rank last order by cl.id) as rnn,
+         max(cl.x_iin) as iin,
+         max(cl.x_rnn) as rnn,
+         min(c.c_date) as add_date,
+         to_char(min(c.c_date),'yyyymmdd') as add_date_text_date,
+         to_char(min(c.c_date),'hh24miss') as add_date_text_time,
+         'RFO_PHONES_COUNTER' as add_cause,
+         'RFO' as orig_system,
+         'Z#KAS_CANCEL' as orig_object,
+         cl.id as orig_object_id
+  from  V_RFO_Z#KAS_CANCEL c,
+        V_RFO_Z#KAS_CANCEL_TYPES ct,
+        V_RFO_Z#CLIENT cl,
+        V_CONTRACT_CAL con1,
+        V_CONTRACT_CAL con2
+  where ct.id = c.c_type and
+        cl.id = c.c_client and
+        cl.x_iin is not null and
+        cl.class_id = 'CL_PRIV' and
+        ct.c_code = 'VERIFICATION_RATING' and
+        c.c_date > to_date('2011-04-12','yyyy-mm-dd') and
+        cl.x_iin = con1.client_iin_first(+) and
+        cl.x_iin = con2.client_iin_last(+) and
+        nvl(con1.fact_pmts,0) < 4 and
+        nvl(con2.fact_pmts,0) < 4 and
+        cl.x_iin not in ( -- bank's employees white list
+            '831113400620',
+            '900315400909',
+            '890823300820')
+  group by cl.id;
+grant select on U1.V_PHONE_COUNTER_CANCEL_BL to LOADDB;
+grant select on U1.V_PHONE_COUNTER_CANCEL_BL to LOADER;
+grant select on U1.V_PHONE_COUNTER_CANCEL_BL to LOAD_MO;
+
+

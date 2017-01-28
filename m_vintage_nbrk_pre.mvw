@@ -1,0 +1,237 @@
+﻿create materialized view U1.M_VINTAGE_NBRK_PRE
+refresh force on demand
+as
+select v."QUARTER",v2.sales,
+       v."2009-05",
+       v."2009-06",
+       v."2009-07",
+       v."2009-08",
+       v."2009-09",
+       v."2009-10",
+       v."2009-11",
+       v."2009-12",
+       v."2010-01",
+       v."2010-02",
+       v."2010-03",
+       v."2010-04",
+       v."2010-05",
+       v."2010-06",
+       v."2010-07",
+       v."2010-08",
+       v."2010-09",
+       v."2010-10",
+       v."2010-11",
+       v."2010-12",
+       v."2011-01",
+       v."2011-02",
+       v."2011-03",
+       v."2011-04",
+       v."2011-05",
+       v."2011-06",
+       v."2011-07",
+       v."2011-08",
+       v."2011-09",
+       v."2011-10",v."2011-11",v."2011-12",v."2012-01",v."2012-02",v."2012-03",v."2012-04",
+       v."2012-05",v."2012-06",v."2012-07",v."2012-08",v."2012-09",v."2012-10",v."2012-11",v."2012-12",v."2013-01",v."2013-02",v."2013-03",
+       v."2013-04",v."2013-05",v."2013-06",v."2013-07",v."2013-08",v."2013-09",v."2013-10",v."2013-11",v."2013-12",v."2014-01",v."2014-02",
+       v."2014-03",v."2014-04",v."2014-05",v."2014-06",v."2014-07",v."2014-08",v."2014-09",v."2014-10",v."2014-11",v."2014-12",v."2015-01",
+       v."2015-02",v."2015-03",v."2015-04",v."2015-05",v."2015-06",v."2015-07",v."2015-08",v."2015-09",v."2015-10",v."2015-11",v."2015-12",
+       v."2016-01",v."2016-02",v."2016-03",v."2016-04",v."2016-05",v."2016-06",v."2016-07",v."2016-08",v."2016-09",v."2016-10",v."2016-11",v."2016-12",
+       v."2017-01",v."2017-02",v."2017-03",v."2017-04",v."2017-05",v."2017-06",v."2017-07",v."2017-08",v."2017-09",v."2017-10",v."2017-11",v."2017-12"
+from (
+     select *
+     from(
+          select tT.quarter,
+                 TT.cnt_cli_w_debt,
+                 row_number() over(partition by num_quar order by tT.report_date) as report_num
+          from (
+                select dense_rank() over ( order by t.quarter) as num_quar,
+                       sum(t.count_clients_w_dbt) as cnt_cli_w_debt,
+                       sum(t.count_distinct_clients) as count_distinct_clients,
+                       t.quarter,
+                       t.report_date,
+                       min(t.report_date) over (partition by 1)  as min_rep_date
+                from (select t.cred_program_code_x,
+                            t.cred_program_name_x,
+                            t.yy_mm_start_date,
+                            t.yy_mm_report,
+                            count(distinct t.rfo_client_id ) as count_distinct_clients,
+                            count(distinct case when t.total_debt>0 then t.rfo_client_id else 0 end ) as count_clients_w_dbt,
+                            Case when nvl(t.DEL_DAYS_MAX_X,0) <= 90 then 'OK'
+                                 when nvl(t.DEL_DAYS_MAX_X,0) > 90 then 'NPL'
+                            end as long_delinq,
+                            vd.quarter,
+                            trunc(t.rep_date,'mm') as report_date,
+                            t.yy_mm_report_last
+                      from u1.M_RBO_CONTRACT_PORTFOLIO t
+                      join V_TIME_DAYS vd on vd.yyyy_mm_dd = t.start_date
+                      group by
+                            t.cred_program_code_x,
+                            t.cred_program_name_x,
+                            t.yy_mm_start_date,
+                            t.yy_mm_report,
+                            Case when nvl(t.DEL_DAYS_MAX_X,0) <= 90 then 'OK'
+                                 when nvl(t.DEL_DAYS_MAX_X,0) > 90 then 'NPL'
+                            end ,
+                            vd.quarter,
+                            trunc(t.rep_date,'mm'),
+                            t.yy_mm_report_last
+                    ) t
+                where t.long_delinq = 'NPL'
+                  and t.yy_mm_start_date >= '2009 - 01'
+                  and t.cred_program_code_x  in ('PC_POST_CLIENT','AUTO_SERV','GU_AVTO','GU_AVTO_BU','MONEY_CN','MONEY_ECN','MONEY_KN_P','MONEY_LK','MONEY_LKN','OSOB_CLIENT_PC','OSOB_CLIENT_MON',
+                                                 'OSOB_CLIENT','MONEY_POST', 'PROST_KART', 'KAS_PC_DOG','SMENA_KK_KN','EC_MANY','EC_GOODS','EC_SERVICE')
+                group by t.quarter,
+                         t.report_date
+                order by t.quarter,
+                         t.report_date desc
+                ) tt
+          where TT.report_date >= add_months(Tt.min_rep_date,3*(num_quar-1))
+          order by num_quar
+        ) t1
+        pivot (max(cnt_cli_w_debt)
+               for report_num in (1 as "2009-05",
+                          2 as "2009-06",
+                          3 as "2009-07",
+                          4 as "2009-08",
+                          5 as "2009-09",
+                          6 as "2009-10",
+                          7 as "2009-11",
+                          8 as "2009-12",
+                          9 as "2010-01",
+                          10 as "2010-02",
+                          11 as "2010-03",
+                          12 as "2010-04",
+                          13 as "2010-05",
+                          14 as "2010-06",
+                          15 as "2010-07",
+                          16 as "2010-08",
+                          17 as "2010-09",
+                          18 as "2010-10",
+                          19 as "2010-11",
+                          20 as "2010-12",
+                          21 as "2011-01",
+                          22 as "2011-02",
+                          23 as "2011-03",
+                          24 as "2011-04",
+                          25 as "2011-05",
+                          26 as "2011-06",
+                          27 as "2011-07",
+                          28 as "2011-08",
+                          29 as "2011-09",
+                          30 as "2011-10",
+                          31 as "2011-11",
+                          32 as "2011-12",
+                          33 as "2012-01",
+                          34 as "2012-02",
+                          35 as "2012-03",
+                          36 as "2012-04",
+                          37 as "2012-05",
+                          38 as "2012-06",
+                          39 as "2012-07",
+                          40 as "2012-08",
+                          41 as "2012-09",
+                          42 as "2012-10",
+                          43 as "2012-11",
+                          44 as "2012-12",
+                          45 as "2013-01",
+                          46 as "2013-02",
+                          47 as "2013-03",
+                          48 as "2013-04",
+                          49 as "2013-05",
+                          50 as "2013-06",
+                          51 as "2013-07",
+                          52 as "2013-08",
+                          53 as "2013-09",
+                          54 as "2013-10",
+                          55 as "2013-11",
+                          56 as "2013-12",
+                          57 as "2014-01",
+                          58 as "2014-02",
+                          59 as "2014-03",
+                          60 as "2014-04",
+                          61 as "2014-05",
+                          62 as "2014-06",
+                          63 as "2014-07",
+                          64 as "2014-08",
+                          65 as "2014-09",
+                          66 as "2014-10",
+                          67 as "2014-11",
+                          68 as "2014-12",
+                          69 as "2015-01",
+                          70 as "2015-02",
+                          71 as "2015-03",
+                          72 as "2015-04",
+                          73 as "2015-05",
+                          74 as "2015-06",
+                          75 as "2015-07",
+                          76 as "2015-08",
+                          77 as "2015-09",
+                          78 as "2015-10",
+                          79 as "2015-11",
+                          80 as "2015-12",
+                          81 as "2016-01",
+                          82 as "2016-02",
+                          83 as "2016-03",
+                          84 as "2016-04",
+                          85 as "2016-05",
+                          86 as "2016-06",
+                          87 as "2016-07",
+                          88 as "2016-08",
+                          89 as "2016-09",
+                          90 as "2016-10",
+                          91 as "2016-11",
+                          92 as "2016-12",
+                          93 as "2017-01",
+                          94 as "2017-02",
+                          95 as "2017-03",
+                          96 as "2017-04",
+                          97 as "2017-05",
+                          98 as "2017-06",
+                          99 as "2017-07",
+                          100 as "2017-08",
+                          101 as "2017-09",
+                          102 as "2017-10",
+                          103 as "2017-11",
+                          104 as "2017-12"))
+) v
+left join (select dense_rank() over ( order by t.quarter) as num_quar,
+                 sum(t.count_distinct_clients) as sales,
+                 t.quarter,
+                 t.report_date,
+                 min(t.report_date) over (partition by 1)  as min_rep_date
+          from (select t.cred_program_code_x,
+                            t.cred_program_name_x,
+                            t.yy_mm_start_date,
+                            t.yy_mm_report,
+                            count(distinct t.rfo_client_id ) as count_distinct_clients,
+                            count(distinct case when t.total_debt>0 then t.rfo_client_id else 0 end ) as count_clients_w_dbt,
+                            Case when nvl(t.DEL_DAYS_MAX_X,0) <= 90 then 'OK'
+                                 when nvl(t.DEL_DAYS_MAX_X,0) > 90 then 'NPL'
+                            end as long_delinq,
+                            vd.quarter,
+                            trunc(t.rep_date,'mm') as report_date
+                      from u1.M_RBO_CONTRACT_PORTFOLIO t
+                      join V_TIME_DAYS vd on vd.yyyy_mm_dd = t.start_date
+                      group by
+                            t.cred_program_code_x,
+                            t.cred_program_name_x,
+                            t.yy_mm_start_date,
+                            t.yy_mm_report,
+                            Case when nvl(t.DEL_DAYS_MAX_X,0) <= 90 then 'OK'
+                                 when nvl(t.DEL_DAYS_MAX_X,0) > 90 then 'NPL'
+                            end ,
+                            vd.quarter,
+                            trunc(t.rep_date,'mm')
+                    ) t
+          where t.yy_mm_start_date >= '2009 - 01'
+            and t.cred_program_code_x  in ('PC_POST_CLIENT','AUTO_SERV','GU_AVTO','GU_AVTO_BU','MONEY_CN','MONEY_ECN','MONEY_KN_P','MONEY_LK','MONEY_LKN','OSOB_CLIENT_PC','OSOB_CLIENT_MON',
+                                           'OSOB_CLIENT','MONEY_POST', 'PROST_KART', 'KAS_PC_DOG','SMENA_KK_KN','EC_MANY','EC_GOODS','EC_SERVICE')
+            and t.report_date  = (select max(trunc(t.rep_date,'mm')) from M_RBO_CONTRACT_PORTFOLIO t)
+          group by t.quarter,
+                   t.report_date
+          order by t.quarter,
+                   t.report_date desc) v2 on v2.quarter = v.quarter;
+grant select on U1.M_VINTAGE_NBRK_PRE to LOADDB;
+
+

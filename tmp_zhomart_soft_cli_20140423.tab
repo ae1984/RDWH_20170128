@@ -1,0 +1,22 @@
+﻿create table U1.TMP_ZHOMART_SOFT_CLI_20140423
+(
+  segment VARCHAR2(100),
+  rnn     VARCHAR2(50),
+  month   VARCHAR2(50)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.TMP_ZHOMART_SOFT_CLI_20140423 to LOADDB;
+grant select on U1.TMP_ZHOMART_SOFT_CLI_20140423 to LOADER;
+

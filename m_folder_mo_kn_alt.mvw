@@ -1,0 +1,108 @@
+﻿create materialized view U1.M_FOLDER_MO_KN_ALT
+refresh force on demand
+as
+select /*+ parallel(20) */ x.*,
+
+
+       alt2.sc_rbp_pmt_first,
+       alt2.sc_rbp_term_first,
+
+       alt2.sc_rbp_pmt_last,
+       alt2.sc_rbp_term_last,
+
+       alt2.rbp_cnt,
+       pm.sc_pmt_nom_rate,
+       pm.sc_pmt_rbo,
+       cp.plan_pmt_first_sum,
+       cp.pmt_avg
+from (
+    select
+           r.id as rfolder_id,
+           r.date_create,
+           dp.code_int,
+           case when dp.d_par_datatype_code = 'NUMBER' then to_char(t.value_number)
+                when dp.d_par_datatype_code = 'DATE' then to_char(t.value_date, 'dd-mm-yyyy')
+           else t.value_text end as value_number
+    from u1.MO_RFOLDER r
+    --IN_SCO_NUM_SCORING 1030
+    join u1.MO_RFOLDER_PAR_VALUE t2 on t2.rfolder_id = r.id and
+                                              t2.d_par_id = 1030 and
+                                              t2.value_number in (2,22,9,17) and
+                                              t2.date_create >= to_date('01.01.2015','dd.mm.yyyy')
+    join u1.MO_RFOLDER_PAR_VALUE t on t.rfolder_id = r.id and t.date_create >= to_date('01.01.2015','dd.mm.yyyy')
+
+    join u1.V_MO_D_PAR dp on dp.id = t.d_par_id
+                          and dp.code_int in ('IN_SCO_FOLDER_ID',
+                                              'IN_SCO_TERM_CRED',
+                                              'IN_SCO_SUMMA_CRED',
+                                              'IN_SCO_NUM_SCORING',
+
+                                              'SC_IS_DEPART_RBP',
+
+                                              'SC_IS_CATEG_A',
+                                              'SC_IS_CATEG_B',
+                                              'SC_IS_CLIENT_NEW_BY_CON',
+
+                                              'SC_KDN_REGUL',
+
+                                              'SC_RBP_CARD_KN_NEW_RES_PRE',
+                                              'SC_RBP_CARD_KN_OLD_RES_PRE',
+
+                                              'SC_RBP_IS_NEED_RECALC',
+                                              'SC_RBP_IS_REJECT_EXIST',
+
+                                              /*'SC_RBP_PMT',
+                                              'SC_RBP_TERM',*/
+
+                                              'SC_REJECT_KN', --wo RBP
+
+                                              'MO_SCO_REJECT_KN',
+                                              'SC_KN_MATRIX_NEW_RES_PRE',
+                                              'SC_KN_MATRIX_OLD_RES_PRE',
+                                              'SC_KN_MATRIX_CAT_B_RES_PRE',
+                                              'SC_KN_MATRIX_CAT_A_RES_PRE'
+                                              )
+    where r.date_create >= to_date('11-12-2015', 'dd-mm-yyyy')and
+          r.date_create < trunc(sysdate)
+) pivot (
+    max(value_number)
+    for code_int in ('IN_SCO_FOLDER_ID' folder_id,
+                      'IN_SCO_TERM_CRED' IN_SCO_TERM_CRED,
+                      'IN_SCO_SUMMA_CRED' IN_SCO_SUMMA_CRED,
+                      'IN_SCO_NUM_SCORING' IN_SCO_NUM_SCORING,
+
+                      'SC_IS_DEPART_RBP' SC_IS_DEPART_RBP,
+
+                      'SC_IS_CATEG_A' SC_IS_CATEG_A,
+                      'SC_IS_CATEG_B' SC_IS_CATEG_B,
+                      'SC_IS_CLIENT_NEW_BY_CON' SC_IS_CLIENT_NEW_BY_CON,
+
+                      'SC_KDN_REGUL' SC_KDN_REGUL,
+
+                      'SC_RBP_CARD_KN_NEW_RES_PRE' SC_RBP_CARD_KN_NEW_RES_PRE,
+                      'SC_RBP_CARD_KN_OLD_RES_PRE' SC_RBP_CARD_KN_OLD_RES_PRE,
+
+                      'SC_RBP_IS_NEED_RECALC' SC_RBP_IS_NEED_RECALC,
+                      'SC_RBP_IS_REJECT_EXIST' SC_RBP_IS_REJECT_EXIST,
+
+                      /*'SC_RBP_PMT' SC_RBP_PMT,
+                      'SC_RBP_TERM' SC_RBP_TERM,*/
+
+                      'SC_REJECT_KN' SC_REJECT_KN, --wo RBP
+
+                      'MO_SCO_REJECT_KN' MO_SCO_REJECT_KN,
+                      'SC_KN_MATRIX_NEW_RES_PRE' SC_KN_MATRIX_NEW_RES_PRE,
+                      'SC_KN_MATRIX_OLD_RES_PRE' SC_KN_MATRIX_OLD_RES_PRE,
+                      'SC_KN_MATRIX_CAT_B_RES_PRE' SC_KN_MATRIX_CAT_B_RES_PRE,
+                      'SC_KN_MATRIX_CAT_A_RES_PRE' SC_KN_MATRIX_CAT_A_RES_PRE )
+) x
+
+left join u1.M_FOLDER_MO_KN_ALT2 alt2 on alt2.rfolder_id = x.rfolder_id
+left join u1.m_folder_mo_pmt_2016 pm on pm.rfolder_id = x.rfolder_id
+                                    and pm.folder_id = x.folder_id
+
+left join u1.m_rbo_contract_credit_pmt cp on cp.folder_id_first = x.folder_id
+where SC_IS_DEPART_RBP = 1;
+grant select on U1.M_FOLDER_MO_KN_ALT to LOADDB;
+
+

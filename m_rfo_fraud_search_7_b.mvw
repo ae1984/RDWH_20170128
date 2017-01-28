@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_7_B
+build deferred
+refresh force on demand
+as
+select gm.claim_id,
+       g.salary,
+       floor(gm.a_date - g.max_pmt_date) as days_last_gcvp
+from (select fcc.claim_id,
+             max(coalesce(v1.gcvp_rep_id,v2.gcvp_rep_id)) as gcvp_rep_id,
+             max(fcc.a_date) as a_date
+          from u1.M_MATRIX_BASE fcc
+          left join u1.V_GCVP_REPORT v1 on v1.client_iin = fcc.iin and v1.error_code = 0 and
+                                           v1.rep_date >= trunc(fcc.folder_date_create_mi) - 60 and
+                                           v1.rep_date <= trunc(fcc.folder_date_create_mi) + 5 and
+                                           v1.rep_date >= to_date('01-01-2013','dd-mm-yyyy')
+          left join u1.V_GCVP_REPORT v2 on v2.client_iin = fcc.rnn and v2.error_code = 0 and
+                                           v2.rep_date >= trunc(fcc.folder_date_create_mi) - 60 and
+                                           v2.rep_date <= trunc(fcc.folder_date_create_mi) + 5 and
+                                           v2.rep_date < to_date('01-01-2013','dd-mm-yyyy')
+          group by fcc.claim_id
+      ) gm
+left join (select v.gcvp_rep_id, max(v.salary) as salary,
+                  max(v.max_pmt_date) as max_pmt_date
+          from u1.V_GCVP_REPORT v
+          group by v.gcvp_rep_id
+) g on g.gcvp_rep_id = gm.gcvp_rep_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_7_B to LOADDB;
+
+

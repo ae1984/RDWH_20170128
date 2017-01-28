@@ -1,0 +1,26 @@
+﻿create table U1.T_PARTNER_POS_PROD
+(
+  pos_code      VARCHAR2(1000),
+  state         VARCHAR2(1000),
+  pos_name      VARCHAR2(1000),
+  partner       VARCHAR2(1000),
+  activity_type VARCHAR2(1000),
+  group_col     VARCHAR2(1000),
+  group2        VARCHAR2(20)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.T_PARTNER_POS_PROD to LOADDB;
+grant select on U1.T_PARTNER_POS_PROD to LOADER;
+grant select on U1.T_PARTNER_POS_PROD to LOAD_MO;
+

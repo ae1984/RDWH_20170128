@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_TMP_J_KASPIKZ_CLIENTS_DEL
+refresh complete on demand
+as
+select k.rfo_id as rfo_client_id, max(c.iin) as iin,
+       max(d.del_days) as del_days,
+       max(d.del_days_max_x) as del_days_max,
+       sum(d.total_debt) as total_debt,
+       count(distinct b.rbo_contract_id) as active_con_cnt,
+       floor(months_between(sysdate, max(pm.pmt_date_max))) as last_pmt_mon_ago
+from M_KASPIKZ_USERS_ALL k
+left join V_CLIENT_RFO_BY_ID c on c.rfo_client_id = k.rfo_id
+left join M_RBO_CONTRACT_BAS b on b.rfo_client_id = k.rfo_id and b.is_credit_active = 1
+left join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+left join (
+  select t.user_id, max(t.reg_date) as pmt_date_max
+  from M_KASPIKZ_PAY_PAY_INFO t
+  group by t.user_id
+) pm on pm.user_id = k.user_id
+group by k.rfo_id
+--) -- 730,200;
+grant select on U1.M_TMP_J_KASPIKZ_CLIENTS_DEL to LOADDB;
+grant select on U1.M_TMP_J_KASPIKZ_CLIENTS_DEL to LOADER;
+
+

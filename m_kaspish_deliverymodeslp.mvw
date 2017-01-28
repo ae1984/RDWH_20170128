@@ -1,0 +1,9 @@
+﻿create materialized view U1.M_KASPISH_DELIVERYMODESLP
+build deferred
+refresh force on demand
+as
+select * from KASPI.DELIVERYMODESLP@ks_std t
+where rownum > 0;
+grant select on U1.M_KASPISH_DELIVERYMODESLP to LOADDB;
+
+

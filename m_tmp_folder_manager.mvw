@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_TMP_FOLDER_MANAGER
+refresh force on demand
+as
+select *
+from
+      (select /*+ parallel 30 */
+              c1.id cliam_id,
+--             kd1.c_name,
+             kd1.c_code
+
+      from U1.V_RFO_Z#KAS_ONLINE_CLAIM c1
+      left join U1.V_RFO_Z#KAS_UNIVERSA_REF s1 on s1.collection_id = c1.c_mng_vis_scen
+      left join U1.V_RFO_Z#KAS_UNIVERSAL_D kd1 on kd1.id = s1.c_value) x
+pivot (
+  count(*)
+  for c_code in (
+'NEED_CHNG_FC' NEED_CHNG_FC,
+'NEED_FILL_FC' NEED_FILL_FC,
+'NEED_ASOCR_CHK' NEED_ASOCR_CHK,
+'NEED_VERIFICATION' NEED_VERIFICATION,
+'NEED_UPDATE_VER_GU' NEED_UPDATE_VER_GU,
+'NEED_FILL_CL_DATA' NEED_FILL_CL_DATA,
+'NEED_ASK_PKB_GCVP' NEED_ASK_PKB_GCVP,
+'NEED_OPEN_GU' NEED_OPEN_GU
+)
+);
+grant select on U1.M_TMP_FOLDER_MANAGER to LOADDB;
+grant select on U1.M_TMP_FOLDER_MANAGER to LOADER;
+
+

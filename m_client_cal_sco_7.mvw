@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_CLIENT_CAL_SCO_7
+build deferred
+refresh force on demand
+as
+select t.rfo_client_id,
+       max(t.folder_date_create_mi) as folder_date_create,
+       count(distinct t.folder_id) as fld_cnt
+from u1.m_folder_con_cancel t
+where t.is_credit_issued = 1 and
+      t.folder_date_create_mi > trunc(sysdate) - 30 and
+      t.product_type = 'ТОВАРЫ' and
+      t.process_name != 'ОНЛАЙН КРЕДИТ' and
+      t.is_client_new_by_con = 1
+group by t.rfo_client_id;
+grant select on U1.M_CLIENT_CAL_SCO_7 to LOADDB;
+grant select on U1.M_CLIENT_CAL_SCO_7 to LOAD_MO;
+
+

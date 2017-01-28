@@ -1,0 +1,87 @@
+﻿create materialized view U1.M_DAILY_MONITORING_VERIFICATOR
+build deferred
+refresh force on demand
+as
+select td.yyyy                                                                      as yyyy,
+       td.text_yyyy_mm                                                              as text_yyyy_mm,
+       td.week_text                                                                 as week_text,
+       td.text_yyyy_mm_dd_week_day                                                  as text_yyyy_mm_dd_week_day,
+       f.product_type                                                               as product_type,
+       f.product                                                                    as product,
+       case
+         when b.rbo_contract_id is not null then
+           'КРЕДИТ ВЫДАН' else 'КРЕДИТ НЕ ВЫДАН'
+       end                                                                          as is_credit_issued_rbo,
+       count(distinct f.rfo_con_or_claim_id)                                        as rfo_con_or_claim_cnt, -- кол-во заявок, включая онлайн
+       count(distinct f.folder_id)                                                  as fld_cnt,
+       count(distinct f.rfo_client_id)                                              as client_cnt,
+       count(case when f.cancel_verificator = 1 then f.rfo_con_or_claim_id end)     as cancel_verificator_cnt
+from (
+  select 'ОНЛАЙН-КРЕДИТ'                      as product_type,
+         'ОНЛАЙН-КРЕДИТ ЭКТ'                  as product,
+         trunc(f.folder_date_create_mi)       as a_date,
+         case
+           when f.is_credit_issued = 1 then
+             'КРЕДИТ ВЫДАН'
+           when f.is_credit_issued = 0 then
+             'КРЕДИТ НЕ ВЫДАН'
+         end                                  as is_credit_issued,
+         f.rfo_client_id                      as rfo_client_id,
+         f.folder_id                          as folder_id,
+         f.rfo_contract_id                    as rfo_con_or_claim_id,
+         f.contract_number                    as contract_number,
+         f.cancel_verificator                 as cancel_verificator
+  from u1.M_FOLDER_CON_CANCEL f
+  where f.process_name = 'ОНЛАЙН КРЕДИТ'
+    and f.claim_id is not null
+    and f.folder_date_create_mi >= to_date('2013-01-01','yyyy-mm-dd') --to_date('2014-12-08','yyyy-mm-dd')
+  union all
+  select 'ОНЛАЙН-КРЕДИТ'                       as product_type,
+         'ОНЛАЙН-КРЕДИТ ЭКТ'                   as product,
+         trunc(fo.folder_date_create_mi)       as a_date,
+         case
+           when fo.is_credit_issued = 1 then
+             'КРЕДИТ ВЫДАН'
+           when fo.is_credit_issued = 0 then
+             'КРЕДИТ НЕ ВЫДАН'
+         end                                   as is_credit_issued,
+         fo.rfo_client_id                      as rfo_client_id,
+         fo.folder_id                          as folder_id,
+         fo.claim_id                           as rfo_con_or_claim_id,
+         fo.contract_number                    as contract_number,
+         fo.cancel_verificator                 as cancel_verificator
+  from u1.M_FOLDER_CON_CANCEL_ONLINE fo
+  where fo.folder_date_create_mi >= to_date('2013-01-01','yyyy-mm-dd') --to_date('2014-12-08','yyyy-mm-dd')
+  union all
+  select f.product_type                        as product_type,
+         f.cr_program_name                     as product,
+         trunc(f.folder_date_create_mi)        as a_date,
+         case
+           when f.is_credit_issued = 1 then
+             'КРЕДИТ ВЫДАН'
+           when f.is_credit_issued = 0 then
+             'КРЕДИТ НЕ ВЫДАН'
+         end                                   as is_credit_issued,
+         f.rfo_client_id                       as rfo_client_id,
+         f.folder_id                           as folder_id,
+         f.rfo_contract_id                     as rfo_con_or_claim_id,
+         f.contract_number                     as contract_number,
+         f.cancel_verificator                  as cancel_verificator
+  from u1.M_FOLDER_CON_CANCEL f
+  where f.process_name != 'ОНЛАЙН КРЕДИТ'
+    and f.folder_date_create_mi >= to_date('2013-01-01','yyyy-mm-dd') --to_date('2014-12-08','yyyy-mm-dd')
+) f
+inner join u1.V_TIME_DAYS        td on     td.yyyy_mm_dd = f.a_date
+left  join u1.M_RBO_CONTRACT_BAS  b on b.folder_id_first = f.folder_id
+                                   and b.contract_number = f.contract_number
+group by td.yyyy,
+         td.text_yyyy_mm,
+         td.week_text,
+         td.text_yyyy_mm_dd_week_day,
+         f.product_type,
+         f.product,
+         case when b.rbo_contract_id is not null then 'КРЕДИТ ВЫДАН' else 'КРЕДИТ НЕ ВЫДАН' end;
+grant select on U1.M_DAILY_MONITORING_VERIFICATOR to LOADDB;
+grant select on U1.M_DAILY_MONITORING_VERIFICATOR to RISK_VERIF;
+
+

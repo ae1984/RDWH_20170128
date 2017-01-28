@@ -1,0 +1,57 @@
+﻿create materialized view U1.V_TIME_MONTHS
+refresh complete on demand
+as
+select
+--    currdate                    as yyyy_mm_dd,
+    trunc(currdate,'mm')        as yyyy_mm,
+    extract(year from currdate) as yyyy,
+
+--    to_char(currdate,'yyyy-mm-dd') as text_yyyy_mm_dd,
+    to_char(currdate,'yyyy - mm')  as text_yyyy_mm,
+    to_char(currdate,'yyyy')       as text_yyyy,
+
+    to_number(to_char(currdate,'yyyymm')) as yyyy_mm_num,
+    MONTHS_BETWEEN(trunc(currdate,'mm'), to_date('2002 - 12','yyyy - mm')) as report_month,
+    add_months(trunc(currdate,'mm'),1) as yyyy_mm_next,
+
+/*    to_char(currdate,'DY','NLS_DATE_LANGUAGE = Russian') as week_day_short_ru,
+    to_char(currdate,'DY','NLS_DATE_LANGUAGE = English') as week_day_short_en,
+    to_char(currdate,'DAY','NLS_DATE_LANGUAGE = Russian') as week_day_long_ru,
+    to_char(currdate,'DAY','NLS_DATE_LANGUAGE = English') as week_day_long_en,
+        case when to_char(currdate,'d') = '1' then 7 else
+            to_number(trim(leading '0' from to_char(currdate,'d'))) - 1 end as
+    day_num_of_week,
+    to_number(trim(leading '0' from to_char(currdate,'dd'))) as day_num_of_month,
+    to_number(trim(leading '0' from to_char(currdate,'ddd'))) as day_num_of_year,*/
+--    upper(to_char(currdate,'mon') || '-' || to_char(currdate,'yyyy')) as month_id,
+--    to_char(currdate,'mon') || ' ' || to_char(currdate,'yyyy') as month_short_desc,
+--    rtrim(to_char(currdate,'month')) || ' ' || to_char(currdate,'yyyy') as month_long_desc,
+    to_char(currdate,'MON','NLS_DATE_LANGUAGE = Russian') as month_short_ru,
+    to_char(currdate,'MON','NLS_DATE_LANGUAGE = English') as month_short_en,
+    to_char(currdate,'MONTH','NLS_DATE_LANGUAGE = Russian') as month_long_ru,
+    to_char(currdate,'MONTH','NLS_DATE_LANGUAGE = English') as month_long_en,
+    to_number(trim(leading '0' from to_char(currdate,'mm'))) as month_num_of_year,
+          MONTHS_BETWEEN(to_date(to_char(currdate,'yyyy - mm'),'yyyy - mm'), to_date('2002 - 12','yyyy - mm')) as
+    month_num,
+    to_char(currdate,'yyyy') || '-Q' || upper(to_char(currdate,'q')) as quarter,
+    to_number(to_char(currdate,'q')) as quarter_num_of_year,
+        case when to_number(to_char(currdate,'q')) <= 2 then 1 else 2 end as
+    half_num_of_year,
+        case when to_number(to_char(currdate,'q')) <= 2
+            then to_char(currdate,'yyyy')|| '-H1'
+            else to_char(currdate,'yyyy')|| '-H2' end as
+    half_of_year
+  from
+    (select level n,
+-- calendar starts at the day after this date.
+--      to_date('31/12/2010','dd/mm/yyyy') + numtodsinterval(level,'day') currdate
+      to_date('2002-12-01','yyyy-mm-dd') + numtoyminterval(level,'month') as currdate
+    from dual
+-- change for the number of days to be added to the table.
+--      connect by level <= 365
+      connect by rownum < months_between(to_date('2030-01-01','yyyy-mm-dd'),to_date('2002-12-01','yyyy-mm-dd'))
+    );
+grant select on U1.V_TIME_MONTHS to LOADDB;
+grant select on U1.V_TIME_MONTHS to LOADER;
+
+

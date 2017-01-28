@@ -1,0 +1,65 @@
+﻿create materialized view U1.V_PKB_REPORT
+build deferred
+refresh complete on demand
+as
+select /*+ parallel(30) parallel_index(30) */ re.*, nvl(re.is_daytime_old,rre.is_daytime) as is_daytime
+from u1.V_PKB_REPORT_v1 rre
+right join (
+select distinct /*+ parallel(30) parallel_index(30) */
+     p.report_id as report_id,
+     fld.id as folder_id,
+     fld.c_client as folder_client_id,
+     pr.c_error_status as err_status,
+     pr.c_rnn as report_iin_rnn,
+     pr.c_surname as name_last,
+     pr.c_name as name_first,
+     pr.c_fathersname as name_patronymic,
+     trunc(fd.c_doc_date) as rfo_report_date,
+     fd.c_doc_date as rfo_report_date_time,
+     p.active_contracts,
+     p.closed_contracts,
+     p.active_contracts_raw as active_contracts_cur,
+     p.closed_contracts_raw as closed_contracts_cur,
+     to_date(pr.c_dateofrptissue,'dd.mm.yyyy') as pkb_report_date,
+     p.report_status,
+     p.report_type,
+     p.is_from_cache,
+     trunc(fd_orig.c_doc_date) as orig_rfo_report_date,
+     fd_orig.c_doc_date as orig_rfo_report_date_time,
+     trunc(fd.c_doc_date) - trunc(fd_orig.c_doc_date) as orig_report_days_ago,
+     pr.c_pkb_report_ref as orig_report_id,
+     p_pay.pmt_active_all_sum,
+     p_pay.pmt_active_good_sum,
+     p_pay.pmt_draft_active_all_sum,
+     p_pay.pmt_draft_active_good_sum,
+     p_pay.card_limit_active_all_sum,
+     p_pay.card_limit_active_good_sum,
+     p.total_debt,
+     case when cla.c_parameters not like '%[SAS_CMP#%' then 1
+          when cla.c_parameters like '%[SAS_CMP#%' then 0
+          else null end as is_daytime_old,
+     p.report_source
+from u1.T_PKB_REPORT p
+join u1.V_RFO_Z#PKB_REPORT pr on pr.id = p.report_id
+join u1.V_RFO_Z#FDOC fd on fd.id = pr.id and fd.class_id = 'PKB_REPORT'
+ left join u1.V_RFO_Z#RDOC rd on rd.c_doc = fd.id
+ left join u1.V_RFO_Z#FOLDERS fld on fld.c_docs = rd.collection_id
+ left join u1.V_RFO_Z#PKB_REPORT pr_orig on pr_orig.id = pr.c_pkb_report_ref and pr_orig.c_status != 'NoAction'
+ left join u1.V_RFO_Z#FDOC fd_orig on fd_orig.id = pr_orig.id and fd_orig.class_id = 'PKB_REPORT'
+ left join u1.V_PKB_REPORT_CON_ACTIVE p_pay on p_pay.pkb_id = p.report_id
+ left join (select qq.c_parameters,qq.c_date_create,qq.c_rnn,qq.c_type,qq.id_report
+            from u1.V_RFO_Z#KAS_CLAIM qq
+            join (select q.id_report,min(q.c_date_create) as c_date_create
+                  from u1.V_RFO_Z#KAS_CLAIM q
+                  where q.id_report <> '0'
+                  group by q.id_report)q on qq.id_report = q.id_report and qq.c_date_create = q.c_date_create) cla on cla.id_report = to_char(pr.id) and cla.c_type = 'PKB_REPORT'
+ where pr.c_status != 'NoAction'
+ and   nvl(fld.id,0) != 82271506531
+)re on rre.report_id = re.report_id and nvl(rre.folder_id,0) = nvl(re.folder_id,0)
+where nvl(re.folder_id,0) != 82271506531
+and nvl(rre.folder_id,0) != 82271506531;
+grant select on U1.V_PKB_REPORT to LOADDB;
+grant select on U1.V_PKB_REPORT to LOADER;
+grant select on U1.V_PKB_REPORT to RISK_VERIF;
+
+

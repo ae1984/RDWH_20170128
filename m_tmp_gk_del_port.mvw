@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_TMP_GK_DEL_PORT
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30 */
+       x.*,
+       rr.xxx
+from (
+      select t.*,
+             lag(t.delinq_days, 1, null) over (partition by t.deal_number order by t.rep_date) as delinq_days_pre,
+             lag(t.total_debt, 1, null) over (partition by t.deal_number order by t.rep_date) as total_debt_pre
+      from u1.DWH_PORT t
+      join (select t.*
+            from u1.m_rbo_calendar_value t
+            where calendar_name = 'LAST_MONTH_DAY'
+            and t.value > to_date('01122013', 'ddmmyyyy') and
+                t.value < to_date('01102015', 'ddmmyyyy')) v on v.value = t.rep_date
+) x
+left join risk_erbol.t_op_fix_0915 rr on rr.contract_number = x.deal_number and
+                                         x.rep_date = to_date('30092015', 'ddmmyyyy')
+where coalesce(x.delinq_days_pre, 0) = 0 and
+      x.total_debt_pre > 0/* and
+      coalesce(x.delinq_days, 0) > 0 and
+      x.total_debt > 0*/;
+grant select on U1.M_TMP_GK_DEL_PORT to LOADDB;
+grant select on U1.M_TMP_GK_DEL_PORT to LOADER;
+
+

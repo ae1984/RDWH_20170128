@@ -1,0 +1,63 @@
+﻿create materialized view U1.M_CLIENT_PHONE_SMS_CALLS
+refresh complete on demand
+as
+select /*+ parallel 30*/ rfo_client_id,
+   min(iin) as iin,
+   min(rnn) as rnn,
+   min(clnt_name) as clnt_name,
+   phone_number,
+   phone_date,
+   max(text) as text,
+   max(result_name) as result_name,
+   max(result_desc) as result_desc,
+   max(status_name) as status_name,
+   max(cont_theme)  as cont_theme
+     from
+     (
+         select rfo_client_id,
+           iin,
+           rnn,
+           clnt_name,
+           phone_number,
+           trunc(phone_date) as phone_date,
+           listagg( to_char(phone_date,'hh24:mi:ss')||' '||contact_type||' '||text  ,';')
+                           within group (order by rfo_client_id,phone_number,phone_date) over (partition by rfo_client_id,phone_number, trunc(phone_date)) as text,
+           listagg( p.result_name  ,';')  within group (order by phone_date) over (partition by rfo_client_id,phone_number, trunc(phone_date)) as result_name,
+           listagg( p.result_desc  ,';')  within group (order by phone_date) over (partition by rfo_client_id,phone_number, trunc(phone_date)) as result_desc,
+           listagg( p.status_name  ,';') within group (order by phone_date) over (partition by rfo_client_id,phone_number, trunc(phone_date)) as status_name,
+           listagg( p.cont_theme  ,';')  within group (order by phone_date) over (partition by rfo_client_id,phone_number, trunc(phone_date)) as cont_theme
+         from (
+
+                       select rfo_client_id,
+                              iin,
+                              rnn,
+                              clnt_name,
+                              phone_number,
+                              t.phone_date,
+                              text,
+                              contact_type,
+                              result_name,
+                              result_desc,
+                              status_name,
+                              cont_theme,to_char(phone_date,'hh24:mi:ss')||' '||contact_type||' '||text,
+                              --length(to_char(phone_date,'hh24:mi:ss')||' '||contact_type||' '||text),
+                              sum(length(to_char(phone_date,'hh24:mi:ss')||' '||contact_type||' '||text)) over (partition by rfo_client_id, phone_number,trunc(phone_date)) as lenn,
+                              sum(length(result_name)) over (partition by rfo_client_id, phone_number,trunc(phone_date)) as lenn1,
+                              sum(length(result_desc)) over (partition by rfo_client_id, phone_number,trunc(phone_date)) as lenn2,
+                              sum(length(status_name)) over (partition by rfo_client_id, phone_number,trunc(phone_date)) as lenn3,
+                              sum(length(cont_theme)) over (partition by rfo_client_id, phone_number,trunc(phone_date)) as lenn4
+                                                                                 /*,
+                              trunc(( sum(length(to_char(phone_date,'hh24:mi:ss')||' '||contact_type||' '||text)) over (partition by rfo_client_id, phone_number,trunc(phone_date)
+                                                                                   order by  date_2 range between interval '1' day  preceding and current row))/2000) len_str*/
+                   from u1.M_CLIENT_PHONE_NUMBER_TST3 t
+                        --  where t1.rfo_client_id = 15266145
+               ) p
+               where  p.lenn < 2000 and p.lenn1 < 2000 and p.lenn2 < 2000 and p.lenn3 < 2000 and p.lenn4 < 2000
+         )
+         group by rfo_client_id,
+                  phone_number,
+                  phone_date;
+grant select on U1.M_CLIENT_PHONE_SMS_CALLS to LOADDB;
+grant select on U1.M_CLIENT_PHONE_SMS_CALLS to LOADER;
+
+

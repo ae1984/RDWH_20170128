@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_TMP_J_RFO_MON_FLD_HIST
+refresh complete on demand
+as
+select /*+ driving_site(x) first_rows*/ *
+from (
+  select /*+ driving_site(c) no_merge*/
+       c.id,
+       h.id as cm_history_id, h.c_line as cm_history_line,
+       h.c_line_time as cm_history_line_time
+  from IBS.Z#CM_CHECKPOINT@RFO c
+  join IBS.Z#CM_HISTORY@RFO h on h.collection_id = c.c_history
+  where c.c_date_create > trunc(sysdate) - 3 -- - 2 / 24
+) x;
+grant select on U1.M_TMP_J_RFO_MON_FLD_HIST to LOADDB;
+grant select on U1.M_TMP_J_RFO_MON_FLD_HIST to LOADER;
+
+

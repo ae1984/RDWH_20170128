@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_AR_ONLINE
+build deferred
+refresh force on demand
+as
+select sum(req_cnt) as req_cnt,
+       sum(cli_cnt) as cli_cnt,
+       sum(case
+             when is_all_crater in ('Выданные',
+                                    'Отмененные заказы',
+                                    'Отмененные на подписании') then
+              req_cnt
+           end) as approved_req_cnt,
+       sum(case
+             when is_all_crater in ('Выданные',
+                                    'Отмененные заказы',
+                                    'Отмененные на подписании') then
+              cli_cnt
+           end) as approved_cli_cnt,
+       date_r,
+       week_text_online_credit,
+       month_r
+
+  from u1.M_OUT_ONLINE_SHOP_RR1
+ group by date_r, week_text_online_credit, month_r;
+grant select on U1.M_AR_ONLINE to DEK_USER with grant option;
+grant select on U1.M_AR_ONLINE to LOADDB;
+
+

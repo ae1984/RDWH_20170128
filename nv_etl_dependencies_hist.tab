@@ -1,0 +1,22 @@
+﻿create table U1.NV_ETL_DEPENDENCIES_HIST
+(
+  sdt             DATE,
+  owner           VARCHAR2(128),
+  name            VARCHAR2(128),
+  referenced_name VARCHAR2(128)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NV_ETL_DEPENDENCIES_HIST to LOADDB;
+

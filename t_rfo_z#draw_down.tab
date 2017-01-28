@@ -1,0 +1,97 @@
+﻿create table U1.T_RFO_Z#DRAW_DOWN
+(
+  id                             NUMBER not null,
+  c_id_req                       VARCHAR2(128 CHAR),
+  c_payer_summ                   NUMBER(17,2),
+  c_transfer_summ                NUMBER(17,2),
+  c_rate                         NUMBER(20,6),
+  c_small_coin                   NUMBER(17,2),
+  c_settlement_summ              NUMBER(17,2),
+  c_tariff_summ                  NUMBER(17,2),
+  c_cash_type#0                  NUMBER,
+  c_cash_type#transfer#bank      NUMBER,
+  c_cash_type#transfer#num_acc   VARCHAR2(25 CHAR),
+  c_cash_type#transfer#name_kt   VARCHAR2(255 CHAR),
+  c_cash_type#transfer#inn_kt    VARCHAR2(12 CHAR),
+  c_type#transfer#code_benefic13 NUMBER,
+  c_cash_type#transfer#note      VARCHAR2(100 CHAR),
+  c_h_type#trans_card#num_card15 VARCHAR2(20 CHAR),
+  c_type#trans_card#valid_thru16 VARCHAR2(5 CHAR),
+  c_certificate#type             NUMBER,
+  c_certificate#num              VARCHAR2(20 CHAR),
+  c_certificate#seria            VARCHAR2(16 CHAR),
+  c_certificate#who              VARCHAR2(128 CHAR),
+  c_certificate#date_doc         DATE,
+  c_certificate#place            VARCHAR2(128 CHAR),
+  c_certificate#date_end         DATE,
+  c_certificate#depart_code      VARCHAR2(15 CHAR),
+  c_nazn                         VARCHAR2(2000 CHAR),
+  c_kod_nazn_pay                 VARCHAR2(16 CHAR),
+  c__type#trans_card#num_card216 VARCHAR2(32 CHAR),
+  c_kas_close_summ               NUMBER(17,2),
+  c_kas_dog_tariffs              NUMBER,
+  c_kas_kbk                      NUMBER,
+  c_kas_is_convert               VARCHAR2(1 CHAR),
+  c_kas_transfer_typ             NUMBER(2),
+  sn                             NUMBER,
+  su                             NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RFO_Z#DRAW_DOWN
+  is 'Заявка на списание средств/закрытие депозитного договора';
+comment on column U1.T_RFO_Z#DRAW_DOWN.c_id_req
+  is 'ID запроса в бэк-офисе';
+comment on column U1.T_RFO_Z#DRAW_DOWN.c_payer_summ
+  is 'Сумма списания со счета';
+comment on column U1.T_RFO_Z#DRAW_DOWN.c_transfer_summ
+  is 'Сумма для зачисления';
+comment on column U1.T_RFO_Z#DRAW_DOWN.c_rate
+  is 'Курс';
+comment on column U1.T_RFO_Z#DRAW_DOWN.c_small_coin
+  is 'Сумма валютной мелочи';
+comment on column U1.T_RFO_Z#DRAW_DOWN.c_settlement_summ
+  is 'Сумма для урегулирования тиынов';
+comment on column U1.T_RFO_Z#DRAW_DOWN.c_tariff_summ
+  is 'Сумма тарифа';
+comment on column U1.T_RFO_Z#DRAW_DOWN.c_nazn
+  is 'Назначение платежа';
+comment on column U1.T_RFO_Z#DRAW_DOWN.c_kod_nazn_pay
+  is 'Код назначения платежа';
+comment on column U1.T_RFO_Z#DRAW_DOWN.c_kas_close_summ
+  is 'KAS. Сумма закрытия';
+comment on column U1.T_RFO_Z#DRAW_DOWN.c_kas_dog_tariffs
+  is 'KAS. Комиссии по заявке(COLLECTION в Z#KAS_DOG_TARIFFS)';
+comment on column U1.T_RFO_Z#DRAW_DOWN.c_kas_kbk
+  is 'KAS. КБК(FK на Z#KAS_CODE_BUD)';
+comment on column U1.T_RFO_Z#DRAW_DOWN.c_kas_is_convert
+  is 'KAS. Конвертация';
+comment on column U1.T_RFO_Z#DRAW_DOWN.c_kas_transfer_typ
+  is 'KAS. Тип безналичного перечисления';
+create unique index U1.T_RFO_Z#DRAW_DOWN_IND1 on U1.T_RFO_Z#DRAW_DOWN (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#DRAW_DOWN
+  add constraint T_RFO_Z#DRAW_DOWN_PK primary key (ID);
+grant select on U1.T_RFO_Z#DRAW_DOWN to LOADDB;
+

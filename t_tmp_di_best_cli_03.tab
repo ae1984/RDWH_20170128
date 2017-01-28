@@ -1,0 +1,27 @@
+﻿create table U1.T_TMP_DI_BEST_CLI_03
+(
+  client_id         VARCHAR2(7 CHAR),
+  barcode_cat       VARCHAR2(103),
+  upcode_cat        NUMBER,
+  optcode           NUMBER,
+  dt                VARCHAR2(10),
+  active_credit_cnt NUMBER,
+  payment_cnt       VARCHAR2(5),
+  pay_cnt           NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_DI_BEST_CLI_03 to LOADDB;
+grant select on U1.T_TMP_DI_BEST_CLI_03 to LOADER;
+

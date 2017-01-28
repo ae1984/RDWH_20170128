@@ -1,0 +1,54 @@
+﻿create materialized view U1.M_SC_FRAUD_SEARCH
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30)*/
+    t.rfo_client_id
+    ,t.reg_kaspikz_date
+    ,t.avg_sum_pay_kspkz_30_d
+    ,t.count_month_kaspikz_6_m
+    ,t.count_pay_kspkz_30_d
+    ,t.count_serv_kspkz_6_m
+    ,t.kommunalka_kaspikz_6_m
+    ,g.session_ksp_last_6_mnth
+    ,f.count_appl_kn_30_d
+    ,coalesce(a.count_applications_30_d,0)+coalesce(f.count_applications_30_d,0) as count_applications_30_d
+    ,coalesce(a.count_applications_30_d_x,0)+coalesce(f.count_applications_30_d_x,0) as count_applications_30_d_x
+    ,a.count_day_app_onl
+    ,a.count_fail_30_d+f.count_fail_30_d as count_fail_30_d
+    ,f.count_fail_kn_30_d
+    ,c.max_count_fail_onl_day --max(c.count_fail_onl_day) as max_count_fail_onl_day
+    ,f.max_sum_appl_kn_30_d
+    ,a.max_sum_online_ekt_3_m
+    ,d.last_year_max_delay
+    ,j.avg_sum_pay_cred_3_m
+    ,k.count_visit_guest
+    ,n.max_tov_categ_code
+    ,n.max_count_category_day
+    ,o.max_prod_models_day
+    ,o.max_count_models_day
+    ,p.ex_terminal_share_count
+    ,s.fail_share_30_d_count
+    ,p.terminal_share_count
+    ,s.share_30_d_count
+    ,case when p.terminal_share_count = 0 then null else p.ex_terminal_share_count/p.terminal_share_count*100 end as ex_terminal_share
+    ,case when s.share_30_d_count = 0 then 0 else  s.fail_share_30_d_count/s.share_30_d_count*100 end as fail_share_30_d
+    ,q.avg_zp_h
+
+from u1.M_SC_FRAUD_SEARCH_PRE1 t
+left join u1.M_SC_FRAUD_SEARCH_PRE2 a  on a.rfo_client_id = t.rfo_client_id
+left join u1.M_SC_FRAUD_SEARCH_PRE3 c  on c.rfo_client_id = t.rfo_client_id --c.rfo_client_id = t.rfo_client_id and c.date_create >= t.date_create-30 and c.date_create < t.date_create
+left join u1.M_SC_FRAUD_SEARCH_PRE10 d on d.rfo_client_id = t.rfo_client_id
+left join u1.M_SC_FRAUD_SEARCH_PRE5 f  on f.rfo_client_id = t.rfo_client_id
+left join u1.M_SC_FRAUD_SEARCH_PRE6 g  on g.rfo_client_id = t.rfo_client_id
+left join u1.M_SC_FRAUD_SEARCH_PRE8 j  on j.rfo_client_id = t.rfo_client_id
+left join u1.M_SC_FRAUD_SEARCH_PRE9 k  on k.rfo_client_id = t.rfo_client_id
+left join u1.M_SC_FRAUD_SEARCH_PRE13 n on n.rfo_client_id = t.rfo_client_id
+left join u1.M_SC_FRAUD_SEARCH_PRE14 o on o.rfo_client_id = t.rfo_client_id
+left join u1.M_SC_FRAUD_SEARCH_PRE15 p on p.rfo_client_id = t.rfo_client_id
+left join u1.M_SC_FRAUD_SEARCH_PRE16 q on q.rfo_client_id = t.rfo_client_id
+left join u1.M_SC_FRAUD_SEARCH_PRE18 s on s.rfo_client_id = t.rfo_client_id;
+grant select on U1.M_SC_FRAUD_SEARCH to LOADDB;
+grant select on U1.M_SC_FRAUD_SEARCH to LOAD_MO;
+
+

@@ -1,0 +1,39 @@
+﻿create table U1.T_RDWH_UPD_MV_LOG
+(
+  id         NUMBER not null,
+  mview_name VARCHAR2(32),
+  date_start TIMESTAMP(6),
+  date_end   TIMESTAMP(6),
+  date_diff  NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create unique index U1.UPD_MV_LOG_PK_IND on U1.T_RDWH_UPD_MV_LOG (ID)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RDWH_UPD_MV_LOG
+  add constraint UPD_MV_LOG_PK primary key (ID);
+grant select on U1.T_RDWH_UPD_MV_LOG to LOADDB;
+grant select on U1.T_RDWH_UPD_MV_LOG to LOADER;
+

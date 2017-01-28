@@ -1,0 +1,45 @@
+﻿create table U1.NT_RDWH_OBJ_NUMROWS
+(
+  dt       DATE,
+  obj_name VARCHAR2(100),
+  numrows  NUMBER,
+  err      NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_RDWH_OBJ_NUMROWS
+  is 'RDWH2.0 количество строк в объекте ';
+comment on column U1.NT_RDWH_OBJ_NUMROWS.dt
+  is 'дата расчета показаний ';
+comment on column U1.NT_RDWH_OBJ_NUMROWS.obj_name
+  is 'название объекта';
+comment on column U1.NT_RDWH_OBJ_NUMROWS.numrows
+  is 'количество строк';
+comment on column U1.NT_RDWH_OBJ_NUMROWS.err
+  is 'если произошла ошибка во время расчета';
+create index U1.IDX_NT_RDWH_OBJ_NUMROWS_NM on U1.NT_RDWH_OBJ_NUMROWS (OBJ_NAME, DT)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.NT_RDWH_OBJ_NUMROWS to LOADDB;
+

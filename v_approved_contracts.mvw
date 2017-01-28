@@ -1,0 +1,26 @@
+﻿create materialized view U1.V_APPROVED_CONTRACTS
+refresh complete on demand
+as
+select trunc(f.folder_date_create) as folder_date,
+count (case when f.is_credit_issued = 1  and t.deal_number is not null then c.rfo_contract_id end) as ALL_APP_CONTRACTS,
+count (case when p.product = 'АВТО'  and f.is_credit_issued = 1 and t.deal_number is not null then c.rfo_contract_id end) as AVTO,
+count (case when p.product = 'КК' and f.is_credit_issued = 1 and t.deal_number is not null then c.rfo_contract_id end) as KK,
+count (case when p.product = 'КН' and f.is_credit_issued = 1 and t.deal_number is not null then c.rfo_contract_id end) as KN,
+count (case when p.product = 'КН-15' and f.is_credit_issued = 1 and t.deal_number is not null then c.rfo_contract_id end) as KN_15,
+count (case when p.product = 'КНП' and f.is_credit_issued = 1 and t.deal_number is not null then c.rfo_contract_id end) as KNP,
+count (case when p.product = 'ЛК и ПК' and f.is_credit_issued = 1 and t.deal_number is not null then c.rfo_contract_id end) as LK_PK,
+count (case when p.product = 'ЛКН и ПКН' and f.is_credit_issued = 1 and t.deal_number is not null then c.rfo_contract_id end) as LKN_PKN,
+count (case when p.product = 'ЭКТ' and f.is_credit_issued = 1 and t.deal_number is not null then c.rfo_contract_id end) as EKT
+from V_CONTRACT_ALL_RFO c
+join V_FOLDER_ALL_RFO f ON f.credit_contract_id = c.rfo_contract_id or f.card_contract_id = c.rfo_contract_id
+join REF_PRODUCTS_RFO p on p.cred_program = c.cr_program_name
+left join V_DWH_PORTFOLIO_CURRENT t on t.deal_number = c.contract_number and
+          ((t.deal_status is null and t.x_total_debt > 0) or t.x_is_credit_issued=1)--deal_status not in ('ОТКАЗ','ВВЕДЕН'))
+           and t.prod_name not in ('ПРИВИЛЕГИРОВАННЫЙ','ЗАРПЛАТНЫЙ ПРОЕКТ')
+where f.is_credit_process = 1 and f.folder_date_create > trunc(sysdate) - 90
+and c.contract_status_code not in ('CANCEL','PREPARE','PREP_REVOLV','RFO_CLOSE')
+group by trunc(f.folder_date_create);
+grant select on U1.V_APPROVED_CONTRACTS to LOADDB;
+grant select on U1.V_APPROVED_CONTRACTS to LOADER;
+
+

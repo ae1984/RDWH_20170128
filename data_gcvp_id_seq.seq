@@ -1,0 +1,7 @@
+﻿create sequence U1.DATA_GCVP_ID_SEQ
+minvalue 1
+maxvalue 9999999999999999999999999999
+start with 1166401
+increment by 1
+cache 20;
+

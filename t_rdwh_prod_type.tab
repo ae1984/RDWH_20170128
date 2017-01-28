@@ -1,0 +1,25 @@
+﻿create table U1.T_RDWH_PROD_TYPE
+(
+  prod_type_order NUMBER,
+  prod_type       VARCHAR2(14)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RDWH_PROD_TYPE
+  is 'Настройка для типов продуктов';
+comment on column U1.T_RDWH_PROD_TYPE.prod_type_order
+  is 'Порядок продукта';
+comment on column U1.T_RDWH_PROD_TYPE.prod_type
+  is 'Тип продукта';
+grant select on U1.T_RDWH_PROD_TYPE to LOADDB;
+

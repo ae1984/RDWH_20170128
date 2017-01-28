@@ -1,0 +1,212 @@
+﻿create table U1.V_FOLDER_ALL_RFO
+(
+  folder_id                  NUMBER not null,
+  folder_number              VARCHAR2(60),
+  folder_date_create         DATE,
+  folder_yy_mm_create        VARCHAR2(9),
+  folder_year_create         VARCHAR2(4),
+  rfo_client_id              NUMBER,
+  folder_state               VARCHAR2(300),
+  process_code               VARCHAR2(300),
+  process_name               VARCHAR2(4000),
+  route_code                 VARCHAR2(75),
+  route_name                 VARCHAR2(300),
+  delivery_type              VARCHAR2(750),
+  source_system              VARCHAR2(750),
+  card_contract_id           NUMBER,
+  card_contract_number       VARCHAR2(300),
+  credit_contract_id         NUMBER,
+  credit_contract_number     VARCHAR2(300),
+  contract_id                NUMBER,
+  pos_code                   VARCHAR2(150),
+  dnp_name                   VARCHAR2(300),
+  is_credit_process          NUMBER,
+  is_credit_issued           NUMBER,
+  is_credit_issued_new       NUMBER,
+  is_form_exists             NUMBER,
+  underwriter                VARCHAR2(400),
+  underwriter_senior         VARCHAR2(400),
+  form_client_id             NUMBER,
+  fld_c_docs                 NUMBER not null,
+  autocalc_doc_id            NUMBER,
+  org_bin                    VARCHAR2(80),
+  route_point_code           VARCHAR2(90),
+  route_point_name           VARCHAR2(300),
+  expert_login               VARCHAR2(90),
+  expert_name                VARCHAR2(400),
+  expert_position            VARCHAR2(750),
+  is_daytime_decision_folder NUMBER,
+  manager_result             VARCHAR2(300),
+  manager_result_note        VARCHAR2(4000),
+  manager_input_time         NUMBER,
+  is_ind_enterpreneur_clear  NUMBER,
+  is_ind_enterpreneur        NUMBER,
+  expert_id                  NUMBER,
+  is_alt                     NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on column U1.V_FOLDER_ALL_RFO.folder_number
+  is 'Номер';
+comment on column U1.V_FOLDER_ALL_RFO.folder_date_create
+  is 'Дата создания';
+comment on column U1.V_FOLDER_ALL_RFO.folder_yy_mm_create
+  is 'Год и месяц создания';
+comment on column U1.V_FOLDER_ALL_RFO.folder_year_create
+  is 'Год создания';
+comment on column U1.V_FOLDER_ALL_RFO.rfo_client_id
+  is 'Клиент(FK на Z#CLIENT)';
+comment on column U1.V_FOLDER_ALL_RFO.folder_state
+  is 'Наименование СМ состояния';
+comment on column U1.V_FOLDER_ALL_RFO.process_code
+  is 'Код бизнес-процесса (V_RFO_Z#BUS_PROCESS)';
+comment on column U1.V_FOLDER_ALL_RFO.process_name
+  is 'Наименование бизнес-процесса';
+comment on column U1.V_FOLDER_ALL_RFO.route_code
+  is 'Код CM маршрута (V_RFO_Z#CM_WAY)';
+comment on column U1.V_FOLDER_ALL_RFO.route_name
+  is 'Наименование маршрута';
+comment on column U1.V_FOLDER_ALL_RFO.delivery_type
+  is 'Вид выдачи ';
+comment on column U1.V_FOLDER_ALL_RFO.source_system
+  is 'KAS. Система-источник';
+comment on column U1.V_FOLDER_ALL_RFO.card_contract_id
+  is 'ID карты (FK на v_rfo_z#kas_pc_dog)';
+comment on column U1.V_FOLDER_ALL_RFO.card_contract_number
+  is 'Номер карты';
+comment on column U1.V_FOLDER_ALL_RFO.credit_contract_id
+  is 'Кредит (FK наv_fro_z#credit_dog)';
+comment on column U1.V_FOLDER_ALL_RFO.credit_contract_number
+  is 'Номер кредита';
+comment on column U1.V_FOLDER_ALL_RFO.contract_id
+  is 'ID контракта';
+comment on column U1.V_FOLDER_ALL_RFO.pos_code
+  is 'Код структурного подразделения(V_RFO_Z#STRUCT_DEPART)';
+comment on column U1.V_FOLDER_ALL_RFO.dnp_name
+  is 'Курирующее управление новых продаж';
+comment on column U1.V_FOLDER_ALL_RFO.is_form_exists
+  is 'Признак существования формы клиента';
+comment on column U1.V_FOLDER_ALL_RFO.underwriter
+  is 'Андеррайтер';
+comment on column U1.V_FOLDER_ALL_RFO.underwriter_senior
+  is 'Старший андеррайтер';
+comment on column U1.V_FOLDER_ALL_RFO.form_client_id
+  is 'Анкета клиента(FK на V_RFO_Z#FDOC)';
+comment on column U1.V_FOLDER_ALL_RFO.fld_c_docs
+  is 'Документы(COLLECTION в Z#RDOC)';
+comment on column U1.V_FOLDER_ALL_RFO.autocalc_doc_id
+  is 'Результат автоматического калькулятора(FK на V_RFO_Z#FDOC)';
+comment on column U1.V_FOLDER_ALL_RFO.org_bin
+  is 'БИН/РНН организации';
+comment on column U1.V_FOLDER_ALL_RFO.route_point_code
+  is 'Код СМ состояния(V_RFO_Z#CM_POINT)';
+comment on column U1.V_FOLDER_ALL_RFO.route_point_name
+  is 'Наиманование СМ состояния';
+comment on column U1.V_FOLDER_ALL_RFO.expert_login
+  is 'Сетевое имя создателя';
+comment on column U1.V_FOLDER_ALL_RFO.expert_name
+  is 'ФИО создателя';
+comment on column U1.V_FOLDER_ALL_RFO.expert_position
+  is 'Должность создателя';
+comment on column U1.V_FOLDER_ALL_RFO.manager_result
+  is 'Результат операции';
+comment on column U1.V_FOLDER_ALL_RFO.manager_result_note
+  is 'Результат операции (сообщение)';
+comment on column U1.V_FOLDER_ALL_RFO.is_alt
+  is 'Признак прохождения папки через альтернативу';
+create index U1.T_FOLDER_ALL_RFO_IND1 on U1.V_FOLDER_ALL_RFO (RFO_CLIENT_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_FOLDER_ALL_RFO_IND2 on U1.V_FOLDER_ALL_RFO (IS_CREDIT_PROCESS)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_FOLDER_ALL_RFO_IND3 on U1.V_FOLDER_ALL_RFO (FOLDER_DATE_CREATE)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_FOLDER_ALL_RFO_IND4 on U1.V_FOLDER_ALL_RFO (FLD_C_DOCS)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_FOLDER_ALL_RFO_IND5 on U1.V_FOLDER_ALL_RFO (FORM_CLIENT_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create unique index U1.T_FOLDER_ALL_RFO_PK_IND on U1.V_FOLDER_ALL_RFO (FOLDER_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.V_FOLDER_ALL_RFO
+  add constraint T_FOLDER_ALL_RFO_PK primary key (FOLDER_ID);
+grant select on U1.V_FOLDER_ALL_RFO to LOADDB;
+grant select on U1.V_FOLDER_ALL_RFO to LOADER;
+grant select on U1.V_FOLDER_ALL_RFO to LOAD_MO;
+grant select on U1.V_FOLDER_ALL_RFO to RISK_VERIF;
+

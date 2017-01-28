@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_CLIENT_CAL_5
+build deferred
+refresh force on demand
+as
+selecT h.rfo_client_id, sum(h.x_total_debt) as cli_total_debt_transh
+  from v_dwh_portfolio_current h
+ where h.prod_type not  in ('ЗАЛОГОВОЕ АВТОКРЕДИТОВАНИЕ','АВТОКРЕДИТОВАНИЕ','АВТОКРЕДИТЫ','АВТОКРЕДИТОВАНИЕ БУ')
+ group by h.rfo_client_id;
+grant select on U1.M_CLIENT_CAL_5 to LOADDB;
+grant select on U1.M_CLIENT_CAL_5 to LOADER;
+grant select on U1.M_CLIENT_CAL_5 to LOAD_MO;
+
+

@@ -1,0 +1,55 @@
+﻿create materialized view U1.M_SCO_PKB_REPORTS
+build deferred
+refresh force on demand
+as
+select /*+ parallel 5 */
+       tab2.scoring_request_id,
+       trunc(tab2.date_create) as date_create,
+       tab2.folder_id,
+       tab2.sco_report_type,
+       nvl(tab2.pkb_report_type,pr2.report_type) as pkb_report_type,
+       case when tab2.report_id is not null then 1
+            when pr2.report_id is not null then 0
+            else null end as by_folder
+       --,tab2.org_bin
+
+  from (select tab.scoring_request_id,
+               cast (tab.date_create as date) as date_create,
+               tab.folder_id,
+               sco_report_type,
+               pr.report_type as pkb_report_type,
+               pr.report_id,
+               fa.org_bin
+          from (select sr.id as scoring_request_id,
+                       sr.date_create,
+                       sr.folder_id,
+                       case when count(rs.id) > 0 or count(rn.id) > 0 then 'СТАНДАРТНЫЙ/РАСШИРЕННЫЙ'
+                            else 'ПЕРВИЧНЫЙ'
+                       end as sco_report_type
+                  from MO_SCO_REQUEST sr
+                  left join MO_SCO_REQUEST_STR rs on sr.id = rs.sco_request_id and substr(rs.field_code,1,length(rs.field_code)-2) in ('PKB_CIF_FIN_INST',
+                                                                                                                                       'PKB_CIF_CRED_LIM',
+                                                                                                                                       'PKB_CIF_MONTH_PAY',
+                                                                                                                                       'PKB_CIF_OUTST_SUM',
+                                                                                                                                       'PKB_CIF_OVERD_SUM',
+                                                                                                                                       'PKB_CIF_CONTR_STAT',
+                                                                                                                                       'PKB_CL_CI_CONTR_STAT')
+                  left join MO_SCO_REQUEST_NUMB rn on sr.id = rn.sco_request_id and substr(rn.field_code,1,length(rn.field_code)-2) in ('PKB_CIF_FIN_INST',
+                                                                                                                                       'PKB_CIF_CRED_LIM',
+                                                                                                                                       'PKB_CIF_MONTH_PAY',
+                                                                                                                                       'PKB_CIF_OUTST_SUM',
+                                                                                                                                       'PKB_CIF_OVERD_SUM',
+                                                                                                                                       'PKB_CIF_CONTR_STAT',
+                                                                                                                                       'PKB_CL_CI_CONTR_STAT')
+                 where sr.date_create between to_date('01.01.2015','dd.mm.yyyy') and to_date('31.12.2015','dd.mm.yyyy')
+                       and sr.folder_id is not null
+                group by sr.id,
+                         sr.date_create,
+                         sr.folder_id) tab
+          join v_folder_all_rfo fa on fa.folder_id = tab.folder_id
+          left join v_pkb_report pr on tab.folder_id = pr.folder_id) tab2
+ left join v_pkb_report pr2 on tab2.report_id is null and pr2.report_iin_rnn = tab2.org_bin and pr2.rfo_report_date = trunc(tab2.date_create);
+grant select on U1.M_SCO_PKB_REPORTS to LOADDB;
+grant select on U1.M_SCO_PKB_REPORTS to LOADER;
+
+

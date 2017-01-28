@@ -1,0 +1,34 @@
+﻿create materialized view U1.NM_FOLDER_CON_CARD_RT
+build deferred
+refresh force on demand
+as
+select /*+parallel(30,cp)*/
+               cd2.id as rfo_con_or_claim_id
+               ,'CARD' as rfo_con_claim_type
+               ,trunc(cp.c_date_create) as folder_con_date
+               ,cp.c_date_create as folder_con_date_time
+               ,cp.id as folder_id
+               ,cd2.c_num_dog as contract_number
+               ,cd2.c_credit_limit as contract_amount
+               ,bp.c_code as process_code
+               ,upper(bp.c_name) as process_name
+               --служебное
+               ,cp.c_point as cp_c_point
+               ,fld.c_kas_vid_delivery as c_kas_vid_delivery
+               ,cs.c_add_prop as cs_c_add_prop
+               ,fd.c_status_doc as fd_c_status_doc
+               ,cd2.c_client_ref as client_ref
+               ,cd2.c_kas_add_prop as cd_c_kas_add_prop
+               ,cd2.c_num_dog as gu_contract_num
+               ,cd2.c_tariff_plan as tariff_ref
+        from u1.T_RFO_Z#CM_CHECKPOINT cp
+        join u1.T_RFO_Z#FOLDERS fld on fld.id = cp.id
+        join NV_RFO_BUS_PROCESS_WRAP bp on bp.id = fld.c_business and bp.is_credit_process = 1
+        join u1.T_RFO_Z#RDOC rd on rd.collection_id = fld.c_docs
+        join u1.T_RFO_Z#FDOC fd on fd.id = rd.c_doc and fd.class_id = 'KAS_PC_DOG'
+        left join u1.T_RFO_Z#KAS_PC_DOG cd2 on cd2.id = fd.id
+        left join u1.V_RFO_Z#KAS_CARD_SCHEME cs on cs.id = cd2.c_pc_scheme
+        where  cp.c_date_create > trunc(sysdate);
+grant select on U1.NM_FOLDER_CON_CARD_RT to LOADDB;
+
+

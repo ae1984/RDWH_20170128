@@ -1,0 +1,54 @@
+﻿create materialized view U1.V_FOLDER_CON_CANCEL_EKT_1M
+refresh complete on demand
+as
+select /*+first_rows*/ tm.text_yyyy_mm_dd, tm.text_yyyy_mm_dd_hh, tm.text_yyyy_mm_dd_hh_10mi,
+       tm.text_yyyy_mm_dd_hh_mi, tm.week_day_short_ru,
+       ff.*
+from V_TIME_MINUTES tm
+left join (
+    select trunc(f.folder_date_create,'mi') as folder_date_create_mi,
+           c.rfo_contract_id, f.folder_id, c.rfo_client_id,
+           p.x_dnp_region, p.x_dnp_name, f.pos_code, c.shop_code, /*c.shop_place,*/ s.shop_name,
+           f.expert_name, c.cr_program_name, f.is_credit_issued,
+           c.contract_number, c.contract_amount,
+           case when f.is_credit_issued = 0 then cc.ps_cancel end as ps_cancel,
+           case when f.is_credit_issued = 0 then cc.vr_cancel end as vr_cancel,
+           case when f.is_credit_issued = 0 then cc.mo_cancel end as mo_cancel,
+           case when f.is_credit_issued = 0 and (cc.mn_cancel = 1 or
+                         f.folder_state in ('ОТКАЗ КЛИЕНТА','ОТКАЗ ЦПР','ОТКАЗАНО','ОТКАЗ КОНТРОЛЕРА')) then 1
+                end as mn_cancel
+    from V_FOLDER_ALL_RFO f
+    join V_CONTRACT_ALL_RFO c on c.folder_id = f.folder_id and c.cr_program_name = 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР'
+    join V_POS p on p.pos_code = f.pos_code
+    left join V_SHOP s on s.rfo_shop_id = c.shop_id
+    left join (
+          select * from (
+                select y.c_folders as folder_id, y.cancel_type, 1 as is_cancel from (
+                      select c.c_folders,
+                             case when ct.c_type in ('AUTO','GCVP','NIGHT_PRS_PKB','NIGHT_PRS_FC') then 'PRESCORING'
+                                   when ct.c_code in ('VERIFICATION_CONTACT','VERIFICATION_PHOTO') or ct.c_type = 'CPR' then 'VERIFICATION'
+                                   when ct.c_code in ('MO_SCO_REJECT','BL_REJECT_ASOKR') then 'MIDDLE_OFFICE'
+                                   when ct.c_type in ('MANAGER') then 'MANAGER'
+                             end as cancel_type
+                      from V_RFO_Z#KAS_CANCEL c
+                      join V_RFO_Z#KAS_CANCEL_TYPES ct on ct.id = c.c_type
+                      where c.c_date >= add_months(trunc(sysdate,'mm'),-1) /*trunc(sysdate) - 1*/ and
+                            c.c_folders is not null and c.c_hist_err_level = 1
+                ) y group by y.c_folders, y.cancel_type
+          ) pivot (max(is_cancel) as cancel
+                    for cancel_type in (
+                      'PRESCORING' as PS,
+                      'VERIFICATION' as VR,
+                      'MIDDLE_OFFICE' as MO,
+                      'MANAGER' as MN)
+          )
+    ) cc on cc.folder_id = f.folder_id
+    where f.is_credit_process = 1 and
+          f.folder_date_create >= add_months(trunc(sysdate,'mm'),-1) --trunc(sysdate) - 7 * 25
+) ff on ff.folder_date_create_mi = tm.yyyy_mm_dd_hh_mi
+where tm.yyyy_mm_dd_hh_mi >= add_months(trunc(sysdate,'mm'),-1) and -- trunc(sysdate) - 7 * 25
+      tm.num_hh >= 9 and tm.num_hh <= 21;
+grant select on U1.V_FOLDER_CON_CANCEL_EKT_1M to LOADDB;
+grant select on U1.V_FOLDER_CON_CANCEL_EKT_1M to LOADER;
+
+

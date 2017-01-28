@@ -1,0 +1,53 @@
+﻿create materialized view U1.M_MO_GCVP_PMT_CACHE
+build deferred
+refresh force on demand
+as
+select tt.*
+from (
+    select /*+ parallel 30 */
+           cast(t.iin as varchar2(100)) as client_iin,
+           cast(t.bin as varchar2(100)) as org_bin,
+           t.a_date,
+           t.pmt_by_cli_org_bnk_mon_sum,
+    --       add_months(t.a_date, 1) as pmt_date_cur,
+           x.is_last_pmt_day_older,
+           x.last_pmt_mm_diff,
+
+           case when x.last_pmt_mm_diff > 1 and x.is_last_pmt_day_older = 0 then add_months(t.a_date, x.last_pmt_mm_diff - 1)
+                when x.last_pmt_mm_diff > 0 and x.is_last_pmt_day_older > 0 then add_months(t.a_date, x.last_pmt_mm_diff)
+           else t.a_date end as pmt_date,
+
+           cast(t.org_name as varchar2(200)) as org_name,
+
+           row_number() over (partition by t.iin order by t.a_date desc) as pmt_order
+
+    from M_TMP_GX_CLIENT_ORG_BANK_DAY t
+    left join (select xxx.*,
+                      case when extract(day from xxx.a_date) < extract(day from (trunc(sysdate) - 1)) then 1 else 0 end as is_last_pmt_day_older,
+                      round(months_between(trunc((sysdate - 1), 'mm'), trunc(max_date, 'mm'))) as last_pmt_mm_diff
+               from (select xx.*,
+                            max(xx.a_date) over () as max_date
+                     from ( select /*+ parallel 30 */
+                                   t.iin,
+                                   max(t.a_date) as a_date/*,
+                                   case when extract(day from max(t.a_date)) < extract(day from (trunc(sysdate) - 1)) then 1 else 0 end as is_last_pmt_day_older,
+                                   round(months_between(trunc((sysdate - 1), 'mm'), trunc(max(t.a_date), 'mm'))) as last_pmt_mm_diff*/
+                            from M_TMP_GX_CLIENT_ORG_BANK_DAY t
+                            /*where t.iin = '700802350598'*/
+                            group by t.iin
+                            ) xx
+                     ) xxx
+                ) x on x.iin = t.iin
+    /*left join (select \*+ parallel 30 *\
+                      gg.tax_org_bin bin,
+                      max(gg.tax_org_name) as tax_org_name
+               from V_ORG_TAX gg
+               where gg.tax_org_name is not null
+               group by gg.tax_org_bin) g on g.bin = t.bin  */
+    where t.a_date < trunc(sysdate - 1)
+) tt
+where tt.pmt_order < 7;
+grant select on U1.M_MO_GCVP_PMT_CACHE to LOADDB;
+grant select on U1.M_MO_GCVP_PMT_CACHE to LOAD_MO;
+
+

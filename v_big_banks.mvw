@@ -1,0 +1,8 @@
+﻿create materialized view U1.V_BIG_BANKS
+refresh force on demand
+as
+select distinct b.bank from V_BIG_CONTRACTS_ALL b;
+grant select on U1.V_BIG_BANKS to LOADDB;
+grant select on U1.V_BIG_BANKS to LOADER;
+
+

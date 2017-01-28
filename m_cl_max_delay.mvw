@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_CL_MAX_DELAY
+refresh complete on demand
+as
+selecT dpc.rfo_client_id,
+         coalesce(sum(dpc.x_total_debt), 0) as total_debt_sum,
+         coalesce(sum(dpc.x_delinq_days), 0) as total_delinq_days
+    from v_dwh_portfolio_current dpc
+   where dpc.is_credit_active = 1
+   group by dpc.rfo_client_id;
+grant select on U1.M_CL_MAX_DELAY to LOADDB;
+grant select on U1.M_CL_MAX_DELAY to LOADER;
+
+

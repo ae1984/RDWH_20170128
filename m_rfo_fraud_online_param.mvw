@@ -1,0 +1,66 @@
+﻿create materialized view U1.M_RFO_FRAUD_ONLINE_PARAM
+build deferred
+refresh force on demand
+as
+select
+age,
+avg_sum_pay_cred_3_m,
+avg_sum_pay_kspkz_30_d,
+avg_zp_h,
+claim_id,
+count_applications_30_d,
+count_applications_30_d_x,
+count_appl_kn_30_d,
+count_category_3_m,
+count_category_3_m_x,
+count_day_app_onl,
+count_fail_30_d,
+count_fail_kn_30_d,
+count_mob_kspkz,
+count_month_kaspikz_6_m,
+count_pay_kspkz_30_d,
+count_salary_6_m,
+count_serv_kspkz_6_m,
+count_visit_guest,
+date_create,
+days_last_gcvp,
+diff_zp_form_all_gcvp,
+diff_zp_form_gcvp,
+ex_terminal_share,
+ex_terminal_share_count,
+fail_share_30_d,
+fail_share_30_d_count,
+ii,
+income_form,
+income_form_all,
+income_gcvp,
+kaspi_gold_active,
+kommunalka_kaspikz_6_m,
+last_year_max_delay,
+max_count_category_day,
+max_count_fail_onl_day,
+max_count_models_day,
+max_prod_models_day,
+max_sum_appl_kn_30_d,
+max_sum_online_ekt_3_m,
+max_tov_categ_code,
+pkb_debt_kzt,
+process_id,
+reg_kaspikz_length,
+rfo_client_id,
+session_ksp_last_6_mnth,
+share_30_d_count,
+share_month_kaspikz_6_m,
+shop_code,
+shop_name,
+status_code,
+status_name,
+sum_pay_kspkz_30_d,
+terminal_share_count
+
+
+from u1.M_RFO_FRAUD_SEARCH
+where process_id is not null and date_create >= to_date('01-01-2016', 'dd.mm.yyyy');
+grant select on U1.M_RFO_FRAUD_ONLINE_PARAM to LOADDB;
+
+

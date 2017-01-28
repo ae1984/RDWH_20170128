@@ -1,0 +1,46 @@
+﻿create materialized view U1.M_ONLINE_CRED_DUMMY_15DD_TST
+build deferred
+refresh force on demand
+as
+select /*+parallel(60)*/ *
+from
+    (select /*+ parallel 30 */
+           t.id rfolder_id,
+           t.date_create rfolder_create_date,
+           ppv.value_text sys_source,
+           dpp2.code_int param_code,
+           ppv2.value_number param_value
+
+    from MO_RFOLDER t
+    join t_mo_rfolder_par_value_2016 ppv on ppv.rfolder_id = t.id
+                                  and ppv.date_create > trunc(sysdate) - 15
+                                  --and ppv.d_par_id = 1327 -- IN_SCO_SYSTEM_SOURCE
+                                  and ppv.value_text = 'KASPI_SHOPPING'
+    join v_mo_d_par dpp on dpp.id = ppv.d_par_id
+                        and dpp.code_int = 'IN_SCO_SYSTEM_SOURCE'
+                        and dpp.status = 1
+
+    -- ищем значение холостых и RFO_FOLDER_ID
+    join t_mo_rfolder_par_value_2016 ppv2 on ppv2.rfolder_id = t.id
+                                  and ppv2.date_create > trunc(sysdate) - 15
+    join v_mo_d_par dpp2 on dpp2.id = ppv2.d_par_id
+                        and (dpp2.code_int = 'MO_SCO_IS_CTRL_GR_8'
+                            or dpp2.code_int = 'MO_SCO_IS_CTRL_GR_81'
+                            or dpp2.code_int = 'MO_SCO_REJECT_PRE_8'
+                            or dpp2.code_int = 'MO_SCO_REJECT_PRE_81'
+                            or dpp2.code_int = 'IN_SCO_FOLDER_ID')
+                        and dpp2.status = 1
+
+    where trunc(t.date_create) > trunc(sysdate) - 15
+    )
+pivot (
+  max(param_value) val
+  for param_code in ('MO_SCO_IS_CTRL_GR_8' as is_dummy_8,
+                     'MO_SCO_IS_CTRL_GR_81' as is_dummy_81,
+                     'MO_SCO_REJECT_PRE_8' as is_reject_8,
+                     'MO_SCO_REJECT_PRE_81' as is_reject_81,
+                     'IN_SCO_FOLDER_ID' as rfo_folder_id)
+);
+grant select on U1.M_ONLINE_CRED_DUMMY_15DD_TST to LOADDB;
+
+

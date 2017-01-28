@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_TMP
+build deferred
+refresh force on demand
+as
+select -- --+first_rows noparallel
+       f.rfo_contract_id,
+       f.folder_id,
+
+       fxc.cancel_fld_count_in_24h - decode(f.is_credit_issued,0,1,0) as cancel_fld_count_in_24h,
+       fxc.cancel_fld_count_in_48h - decode(f.is_credit_issued,0,1,0) as cancel_fld_count_in_48h,
+       fxc.cancel_fld_count_in_1w - decode(f.is_credit_issued,0,1,0) as cancel_fld_count_in_1w,
+       fxc.cancel_fld_count_in_1m - decode(f.is_credit_issued,0,1,0) as cancel_fld_count_in_1m
+
+
+from M_FOLDER_CON_CANCEL f
+left join M_FOLDER_CON_MINER_2 fxc on fxc.folder_id = f.folder_id
+
+where --f.is_refin = 0 and
+f.folder_date_create_mi > to_date('2010-01-01','yyyy-mm-dd');
+grant select on U1.M_FOLDER_CON_MINER_TMP to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER_TMP to LOADER;
+
+

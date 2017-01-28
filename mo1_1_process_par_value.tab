@@ -1,0 +1,31 @@
+﻿create table U1.MO1_1_PROCESS_PAR_VALUE
+(
+  id                NUMBER not null,
+  process_id        NUMBER not null,
+  d_process_par_id  NUMBER not null,
+  d_par_datatype_id NUMBER not null,
+  value_text        VARCHAR2(2048),
+  value_number      NUMBER,
+  value_date        DATE,
+  date_create       TIMESTAMP(6) not null,
+  date_update       TIMESTAMP(6),
+  d_par_id          NUMBER,
+  d_par_object_id   NUMBER,
+  d_system_id       NUMBER,
+  value_index       NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.MO1_1_PROCESS_PAR_VALUE to LOADDB;
+grant select on U1.MO1_1_PROCESS_PAR_VALUE to LOADER;
+

@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_OUT_VERIFICATION_REVISE
+build deferred
+refresh force on demand
+as
+select /*+ parallel 5 */
+       vr.client_fio,
+       vr.client_iin,
+       vr.verificator_fio,
+       vr.accept_date,
+       vr.verification_type,
+       vr.folder_id,
+       fa.folder_state,
+       nvl2(cb2.gu_rbo_contract_id,cb3.contract_number,cb.contract_number) as contract_number,
+       nvl2(cb2.gu_rbo_contract_id,cb3.status_name,cb.status_name) as contract_status,
+       cb2.contract_number as transh,
+       cb2.status_name as transh_status,
+       fa.process_name,
+       vr.verification_status,
+       vr.product,
+       vr.vector_group
+  from u1.M_OUT_DWH_VERIFICATION_REP_ROW vr
+  left join u1.V_FOLDER_ALL_RFO fa on vr.folder_id = fa.folder_id
+  left join u1.M_RBO_CONTRACT_BAS cb on cb.folder_id_first = vr.folder_id and cb.is_card = 1
+
+  left join u1.M_RBO_CONTRACT_BAS cb2 on cb2.folder_id_first = vr.folder_id and cb2.is_card = 0
+  left join u1.M_RBO_CONTRACT_BAS cb3 on cb2.gu_rbo_contract_id = cb3.gu_rbo_contract_id and cb3.is_card = 1
+ where to_date(vr.accept_date,'yyyy-mm-dd hh24:mi:ss') >= to_date('01.01.2015','dd.mm.yyyy')
+       and vr.mark = 'Вход';
+grant select on U1.M_OUT_VERIFICATION_REVISE to LOADDB;
+
+

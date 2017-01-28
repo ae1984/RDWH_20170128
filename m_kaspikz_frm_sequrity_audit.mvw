@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_KASPIKZ_FRM_SEQURITY_AUDIT
+build deferred
+refresh force on demand
+as
+select "Id" as id,
+      "Login" as client_login,
+      to_date(to_char(t."DateTime", 'dd.mm.yyyy hh24:mi:ss'), 'dd.mm.yyyy hh24:mi:ss') as date_time,
+      "ClientIp" as client_ip,
+      "ClientSession" as client_session,
+      "SecurityCause" as Security_Cause,
+      "AddInfo" as add_info
+from "dbo"."tb_Framework_SecurityAudit"@"db_kr2" t;
+grant select on U1.M_KASPIKZ_FRM_SEQURITY_AUDIT to LOADDB;
+
+

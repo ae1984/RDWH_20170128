@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_OUT_FOLDER_HIST_EKT
+build deferred
+refresh force on demand
+as
+select h.folder_id,
+       h.history_id,
+       h.line_time,
+       h.line_name,
+       h.point_from_name,
+       h.point_to_name,
+       h.user_name,
+       h.user_position,
+       h.line_id,
+       h.point_from_id,
+       h.point_to_id,
+       h.user_id,
+       cl.iin,
+       fa.process_code
+  from u1.V_FOLDER_ALL_HISTORY h
+  join u1.M_FOLDER_CON_CANCEL fc on fc.folder_id = h.folder_id
+  join u1.V_FOLDER_ALL_RFO fa on h.folder_id = fa.folder_id
+  join u1.V_CLIENT_RFO_BY_ID cl on cl.rfo_client_id = fa.rfo_client_id
+ where fc.folder_date_create_mi >= to_date ('2015-07-01', 'yyyy-mm-dd')
+   and fa.process_code = 'KAS_CREDIT_CASH_PRIV_PC';
+grant select on U1.M_OUT_FOLDER_HIST_EKT to AUTO_USER;
+grant select on U1.M_OUT_FOLDER_HIST_EKT to DNP;
+grant select on U1.M_OUT_FOLDER_HIST_EKT to LOADDB;
+grant select on U1.M_OUT_FOLDER_HIST_EKT to LOADER;
+
+

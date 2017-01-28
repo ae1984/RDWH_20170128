@@ -1,0 +1,28 @@
+﻿create materialized view U1.V_TMP_JAN_NEW_PHONE_CNTR_CONS
+refresh force on demand
+as
+select c.contract_id, c.contract_number
+from V_TMP_CONTRACT_CAL_DEL c
+join V_FOLDER_PHONE_CALC fpc on fpc.folder_id = c.folder_id_first
+where (c.yms like '2013 - %' or c.yms like '2014 - %') and
+      (
+      exists (select null from V_TMP_JAN_D2_hs_1 a -- !
+          where fpc.ph_home_same_order >= a.ord_from and fpc.ph_home_same_order < a.ord_to and -- !
+                fpc.ph_home_same_age <= a.age_max) or -- !
+      exists (select null from V_TMP_JAN_D2_ms_1 a -- !
+          where fpc.ph_mobile_same_order >= a.ord_from and fpc.ph_mobile_same_order < a.ord_to and -- !
+                fpc.ph_mobile_same_age <= a.age_max) or -- !
+      exists (select null from V_TMP_JAN_D2_cs_1 a -- !
+          where fpc.ph_contact_same_order_min >= a.ord_from and fpc.ph_contact_same_order_min < a.ord_to and -- !
+                fpc.ph_contact_same_age_min <= a.age_max) or -- !
+      exists (select null from V_TMP_JAN_D2_ha_1 a -- !
+          where fpc.ph_home_all_order >= a.ord_from and fpc.ph_home_all_order < a.ord_to and -- !
+                fpc.ph_home_all_age <= a.age_max) or -- !
+      exists (select null from V_TMP_JAN_D2_ca_1 a -- !
+          where fpc.ph_contact_all_order_min >= a.ord_from and fpc.ph_contact_all_order_min < a.ord_to and -- !
+                fpc.ph_contact_all_age_min <= a.age_max) -- !
+      ) and nvl(c.start_total_fact_pmts_by_cli,0) < 4;
+grant select on U1.V_TMP_JAN_NEW_PHONE_CNTR_CONS to LOADDB;
+grant select on U1.V_TMP_JAN_NEW_PHONE_CNTR_CONS to LOADER;
+
+

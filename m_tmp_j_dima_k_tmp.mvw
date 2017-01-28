@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_TMP_J_DIMA_K_TMP
+refresh force on demand
+as
+select a.yy_mm_report, a.client_id
+  from v_data_all a
+  where a.yy_mm_report_date >= to_date('01.12.2010','dd.mm.yyyy') and
+        a.contract_amount > 0 --and a.total_debt > 0
+  group by a.yy_mm_report, a.client_id;
+grant select on U1.M_TMP_J_DIMA_K_TMP to LOADDB;
+grant select on U1.M_TMP_J_DIMA_K_TMP to LOADER;
+
+

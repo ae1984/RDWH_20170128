@@ -1,0 +1,28 @@
+﻿create materialized view U1.V_RFO_Z#KAS_EMP_LIMIT
+refresh force on demand
+as
+select  id,
+        c_inn,
+        c_name,
+        c_cr_limit,
+        c_tarif,
+        c_status,
+        c_date_end,
+        c_product,
+        c_market_code,
+        c_upload_date,
+        c_spec_product,
+        c_birth_date,
+        c_last_name,
+        c_first_name,
+        c_sur_name,
+        c_client,
+        c_ext_code,
+        c_kas_sas_date,
+        sn,
+        su
+from ibs.Z#KAS_EMP_LIMIT@rfo_snap;
+grant select on U1.V_RFO_Z#KAS_EMP_LIMIT to LOADDB;
+grant select on U1.V_RFO_Z#KAS_EMP_LIMIT to LOADER;
+
+

@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_FOLDER_MO_CATEG_2016T
+refresh force on demand
+as
+select /*+ parallel(20)*/ *
+from (
+    select
+           r.id rfolder_id,
+           r.date_create,
+           dp.code_int,
+           t.value_number
+    from MO_RFOLDER r
+    join T_MO_RFOLDER_PAR_VALUE_2016 t on t.rfolder_id = r.id
+    join V_MO_D_PAR dp on dp.id = t.d_par_id
+                          and dp.code_int in ('IN_SCO_FOLDER_ID',
+                                              'SC_IS_CATEG_A',
+                                              'SC_CATEG_KDN_REGUL_RES_PRE',
+                                              'SC_IS_CATEG_B',
+                                              'SC_CATEG_B_KDN_REGUL_RES_PRE',
+                                              'SC_CARD_CATEG_B_RES_PRE',
+                                              'PRSC_CLN_4D8M_RES_PRE',
+                                              'PRSC_GCVP_PKB_ACTIVE_CONTRACTS_RES_PRE',
+                                              'PRSC_PROD_MATRIX_RES_PRE',
+                                              'SC_KDN_REGUL'
+                                              )
+    where r.date_create >= to_date('01-01-2016', 'dd-mm-yyyy')
+          and r.date_create < to_date('01-01-2017', 'dd-mm-yyyy')
+          /*and r.id = 35894176*/
+) pivot (
+    max(value_number)
+    for code_int in ('IN_SCO_FOLDER_ID' as folder_id,
+                     'SC_IS_CATEG_A' as is_categ_a,
+                     'SC_CATEG_KDN_REGUL_RES_PRE' as is_categ_a_approve,
+                     'SC_IS_CATEG_B' as is_categ_b,
+                     'SC_CATEG_B_KDN_REGUL_RES_PRE' as is_categ_b_approve,
+                     'SC_CARD_CATEG_B_RES_PRE' as is_sco_categ_b_approve,
+                     'PRSC_CLN_4D8M_RES_PRE' as prsc_cln_4d8m_reject,
+                     'PRSC_GCVP_PKB_ACTIVE_CONTRACTS_RES_PRE' as prsc_gcvp_pkb_act_con_reject,
+                     'PRSC_PROD_MATRIX_RES_PRE' as prsc_prod_matrix_reject,
+                     'SC_KDN_REGUL' as kdn_regul)
+)
+where folder_id is not null;
+grant select on U1.M_FOLDER_MO_CATEG_2016T to LOADDB;
+
+

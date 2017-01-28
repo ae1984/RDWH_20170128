@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_TMP_PKB_2_STAND
+refresh force on demand
+as
+select p.first_name,p.last_name,p.middle_name,p.ur_1,p.ur_2,p.inn_1,p.inn_2,p.p_user,
+p.rep_type,cast (p.p_date as varchar2(500)) as p_date,p.ip
+
+from RISK_SDARYA.T_TMP_PKB_1 p
+where p.rep_type='Стандартный Физическое лицо';
+grant select on U1.M_TMP_PKB_2_STAND to LOADDB;
+grant select on U1.M_TMP_PKB_2_STAND to LOADER;
+
+

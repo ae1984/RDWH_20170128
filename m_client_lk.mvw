@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_CLIENT_LK
+refresh force on demand
+as
+select a.x_client_id as client_id
+from (
+    select distinct t.x_client_id
+    from U1.V_DWH_PORTFOLIO_CURRENT t
+    where t.x_is_credit_issued = 1 and
+          t.x_delinq_days is null and -- У клиента нет просрочки на текущий момент;
+          (t.restruct_type is null or t.restruct_type != 'HARD') and -- Клиент не попадал в хард коллекшн;
+          not exists (
+                select null -- У клиента может быть историческая просрочка за последние 6 месяцев не более 29-ти дней;
+                from u1.v_client_history dc
+                where to_date(dc.text_yyyy_mm, 'yyyy - mm') >= add_months(trunc(trunc(sysdate) - 1, 'mm'), -6) and
+                      dc.delinq_days_in_month > 29 and
+                      dc.client_id = t.x_client_id
+          ) and
+          -- Клиент не попадал в черный список (РФО+МО черные списки).
+          not exists (select b1.iin from U1.V_RFO_BLACK_LIST b1 where b1.iin = t.client_iin) and
+          not exists (select b2.iin from U1.V_MO_BLACK_LIST b2 where b2.iin = t.client_iin)
+) a
+join (
+    select distinct p.x_client_id
+    from U1.V_DWH_PORTFOLIO_CURRENT p
+    where p.x_is_credit_issued =  1 and
+         (p.actual_end_date - p.begin_date >= 75 or --  У клиента был ранее кредит продолжительностью в 75 дней и более.
+         trunc(sysdate) - 1 - p.begin_date >= 75) --  Либо у клиента есть активный кредит, продолжительностью в 75 дней и более;
+) b on b.x_client_id = a.x_client_id;
+grant select on U1.M_CLIENT_LK to LOADDB;
+grant select on U1.M_CLIENT_LK to LOADER;
+
+

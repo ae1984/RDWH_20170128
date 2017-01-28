@@ -1,0 +1,41 @@
+﻿create table U1.NT_SQL_HIST
+(
+  sdt              DATE,
+  schema           VARCHAR2(30),
+  sql_id           VARCHAR2(13),
+  sql_text         VARCHAR2(1000),
+  sql_fulltext     CLOB,
+  module           VARCHAR2(64),
+  action           VARCHAR2(64),
+  last_active_time DATE
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_SQL_HIST
+  is 'RDWH2.0 История по V$SQL';
+create index U1.IDX_NT_SQL_HIST_1 on U1.NT_SQL_HIST (SQL_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.NT_SQL_HIST to LOADDB;
+

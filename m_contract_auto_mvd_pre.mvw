@@ -1,0 +1,49 @@
+﻿create materialized view U1.M_CONTRACT_AUTO_MVD_PRE
+build deferred
+refresh force on demand
+as
+select au.rfo_contract_id,
+       au.contract_number,
+       au.contract_date,
+       au.date_begin,
+       cl.iin as buyer_iin,
+       cl2.iin as seller_iin,
+       au.vin,
+       au.auto_price,
+       au.initial_payment,
+       au.tech_passport_date,
+       au.cr_program_code,
+       au.cr_program_name,
+       f.pos_code,
+       f.expert_login,
+       f.expert_name,
+       ac.date_begin date_colat,
+       min(v.mvd_status_date) as mvd_status_date
+from V_CONTRACT_ALL_RFO_AUTO au
+join v_folder_all_rfo f on f.folder_id = au.folder_id
+join V_CLIENT_RFO_BY_ID cl on cl.rfo_client_id = au.rfo_client_id
+join V_CLIENT_RFO_BY_ID cl2 on cl2.rfo_client_id = au.prev_owner
+left join DWH_AUTO_VIN v on v.vin = au.vin and v.mvd_iin = cl.iin and v.mvd_status_date > au.date_begin -20
+left join M_AUTO_COLLATERAL ac on ac.contract_number = au.contract_number
+where au.vin is not null
+  and au.is_credit_issued = 1
+group by  au.rfo_contract_id,
+       au.contract_number,
+       au.contract_date,
+       au.date_begin,
+       cl.iin ,
+       cl2.iin,
+       au.vin,
+       au.auto_price,
+       au.initial_payment,
+       au.tech_passport_date,
+       au.cr_program_code,
+       au.cr_program_name,
+       f.pos_code,
+       f.expert_login,
+       f.expert_name,
+       ac.date_begin;
+grant select on U1.M_CONTRACT_AUTO_MVD_PRE to LOADDB;
+grant select on U1.M_CONTRACT_AUTO_MVD_PRE to LOADER;
+
+

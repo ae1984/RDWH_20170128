@@ -1,0 +1,150 @@
+﻿create materialized view U1.M_TMP_LUNA_ALL_PHOTO_ANALYSIS2
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30*/
+      distinct hg.C_CLIENT_ID,
+      hg.MAX_DATE,
+      hg.MIN_DATE,
+      "ROUND(MONTHS_BETWEEN(MAX(CASE" as cl_photo_mm_diff,
+      hg.CNT_ALL_PHOTO,
+      hg.CNT_EXIST_PHOTO,
+      hg.CNT_FOTO_FL,
+      hg.CNT_NO_FOUND,
+      hg.CNT_DOC_UD_L,
+      hg.MIN_SIMILARITY,
+      hg.MAX_SIMILARITY,
+      hg.MAX_SIMIL_100,
+      hg.MAX_DATE-MIN_DATE,
+      hg.CNT_FLD_PHOTO,
+      hg.CNT_VERIF_FLD_PHOTO,
+      hg.CNT_VERIF_FLD_1_PH,
+      hg.CNT_VERIF_FLD_0_PH,
+      hg.CNT_VERIF_REJ_FRAUD_PH,
+      hg.VERIF_PHOTO_RESULT,
+      hg.AGE,
+      hg.TAXDB_REM,
+      hg.PHOTO_VERIF,
+      hg.FRAUD_CONTR,
+      hg.VERIF_APPR,
+      hg.CNT_CONTR_ALL,
+      hg.CNT_CONTR_DEL,
+      hg.CNT_CONTR_REFIN,
+      hg.CNT_MATCHING,
+      af.c_bin_id,
+      af.c_photo_type,
+      af.c_photo_date,
+      trunc(af.c_photo_date),
+      case when fg.rbo_contract_id is not null then 1 else 0 end as contract_exist,
+      case when fg.rbo_contract_id is not null and fg.total_debt_x_pmt_1_0 > 0 then 1 else 0 end as fpd_1_0,
+      case when cf.folder_id is not null then 1 else 0 end as verif_exist,
+      cf.verify_result,
+      case when dg.folder_id is not null then 1 else 0 end as verif_reject_fraud,
+      case when bs.folder_id_first is not null then 1 else 0 end as fraud_contract,
+      max(similarity) as max_similarity_photo,
+      min(similarity) as min_similarity_photo,
+      avg(similarity) as avg_similarity_photo
+from u1.V_RFO_DEV_Z#PHOTO4UPLOAD af
+join (select af.c_bin_id,
+             similarity
+      from (select distinct * from U1.t_luna_result_1_clear
+            union all
+            select distinct * from U1.t_luna_result_2_clear
+            union all
+            select distinct * from U1.t_luna_result_3_clear
+            union all
+            select distinct * from U1.t_luna_result_4_clear
+            union all
+            select distinct * from U1.t_luna_result_6_clear
+            /*union all
+            select distinct SIMILARITY,
+                            RFO_CLIENT_ID,
+                            LUNA_ID,
+                            RFO_CLIENT_ID2,
+                            LUNA_ID2
+            from U1.t_luna_result_7*/) bf
+      join u1.V_RFO_DEV_Z#PHOTO4UPLOAD af on af.c_bin_id = bf.luna_id and af.c_photo_type in ('FOTO_FL', 'NO_FOUND')
+      join u1.V_RFO_DEV_Z#PHOTO4UPLOAD af1 on af1.c_bin_id = bf.luna_id2 and af1.c_photo_type in ('FOTO_FL', 'NO_FOUND')
+      where rfo_client_id = rfo_client_id2
+      union all
+      select af1.c_bin_id,
+             similarity
+      from (select distinct * from U1.t_luna_result_1_clear
+            union all
+            select distinct * from U1.t_luna_result_2_clear
+            union all
+            select distinct * from U1.t_luna_result_3_clear
+            union all
+            select distinct * from U1.t_luna_result_4_clear
+            union all
+            select distinct * from U1.t_luna_result_6_clear
+            /*union all
+            select distinct SIMILARITY,
+                            RFO_CLIENT_ID,
+                            LUNA_ID,
+                            RFO_CLIENT_ID2,
+                            LUNA_ID2
+            from U1.t_luna_result_7*/) bf
+      join u1.V_RFO_DEV_Z#PHOTO4UPLOAD af on af.c_bin_id = bf.luna_id and af.c_photo_type in ('FOTO_FL', 'NO_FOUND')
+      join u1.V_RFO_DEV_Z#PHOTO4UPLOAD af1 on af1.c_bin_id = bf.luna_id2 and af1.c_photo_type in ('FOTO_FL', 'NO_FOUND')
+      where rfo_client_id = rfo_client_id2) bf on af.c_bin_id = bf.c_bin_id and af.c_photo_type in ('FOTO_FL', 'NO_FOUND')
+join risk_dsholpan.tmp_luna_foto_and_simil_4_22 hg on af.c_client_id = hg.c_client_id
+left join u1.m_folder_con_cancel fk on fk.folder_id = af.c_folder_id
+left join u1.m_rbo_contract_bas fg2 on fg2.contract_number = fk.contract_number and
+                                       fg2.folder_id_first = fk.folder_id and
+                                       fg2.cred_program_name <> 'КАРТА ВКЛАДЧИКА'
+left join u1.m_rbo_contract_del fg on fg.rbo_contract_id = fg2.rbo_contract_id
+left join (select /*+ no_parallel */
+                  v.folders_id as folder_id,
+                  max(s.schema_result) keep (dense_rank last order by s.open_time) as verify_result
+           from U1.M_OUT_DWH_VERIFICATION v
+           join U1.M_OUT_DWH_PROCESS p on p.verification_id = v.id and
+                                           p.verification_type = 'PHOTO'
+           join u1.m_out_dwh_schema s on s.process_id = p.id
+           group by v.folders_id) cf on af.c_folder_id = cf.folder_id and verify_result is not null
+left join risk_dsholpan.V_TMP_VERIF_REJECT_2 dg on af.c_folder_id = dg.folder_id --and dg.verification_date <= '01.07.2015'
+left join (select b.*
+           from U1.M_DEBT_DEBTOR_FRAUD a
+           join u1.v_dwh_portfolio_current b on a.contract_number = b.deal_number) bs on af.c_client_id = bs.rfo_client_id and af.c_folder_id = bs.folder_id_first
+group by
+      hg.C_CLIENT_ID,
+      hg.MAX_DATE,
+      hg.MIN_DATE,
+      "ROUND(MONTHS_BETWEEN(MAX(CASE",
+      hg.CNT_ALL_PHOTO,
+      hg.CNT_EXIST_PHOTO,
+      hg.CNT_FOTO_FL,
+      hg.CNT_NO_FOUND,
+      hg.CNT_DOC_UD_L,
+      hg.MIN_SIMILARITY,
+      hg.MAX_SIMILARITY,
+      hg.MAX_SIMIL_100,
+      hg.MAX_DATE-MIN_DATE,
+      hg.CNT_FLD_PHOTO,
+      hg.CNT_VERIF_FLD_PHOTO,
+      hg.CNT_VERIF_FLD_1_PH,
+      hg.CNT_VERIF_FLD_0_PH,
+      hg.CNT_VERIF_REJ_FRAUD_PH,
+      hg.VERIF_PHOTO_RESULT,
+      hg.AGE,
+      hg.TAXDB_REM,
+      hg.PHOTO_VERIF,
+      hg.FRAUD_CONTR,
+      hg.VERIF_APPR,
+      hg.CNT_CONTR_ALL,
+      hg.CNT_CONTR_DEL,
+      hg.CNT_CONTR_REFIN,
+      hg.CNT_MATCHING,
+      af.c_bin_id,
+      af.c_photo_type,
+      af.c_photo_date,
+      trunc(af.c_photo_date),
+      case when fg.rbo_contract_id is not null then 1 else 0 end,
+      case when fg.rbo_contract_id is not null and fg.total_debt_x_pmt_1_0 > 0 then 1 else 0 end,
+      case when cf.folder_id is not null then 1 else 0 end ,
+      cf.verify_result,
+      case when dg.folder_id is not null then 1 else 0 end,
+      case when bs.folder_id_first is not null then 1 else 0 end;
+grant select on U1.M_TMP_LUNA_ALL_PHOTO_ANALYSIS2 to LOADDB;
+
+

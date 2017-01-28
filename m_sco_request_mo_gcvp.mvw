@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_SCO_REQUEST_MO_GCVP
+build deferred
+refresh force on demand
+as
+select * from u1.m_sco_request_mo_gcvp@ee13 t;
+grant select on U1.M_SCO_REQUEST_MO_GCVP to LOADDB;
+
+

@@ -1,0 +1,64 @@
+﻿create materialized view U1.M_SHOPS_CHECK
+build deferred
+refresh force on demand
+as
+select pp.shop_bin,
+       pp.owner_iin,
+       case when i.iin is null then 'да' else 'нет' end as is_client,
+       i.fpd_30,
+       case when z.tax_id is null then 'нет'
+        else 'да' end as is_empl,
+       case when vv.org_bin is null then 'нет'
+        else 'да' end as is_partner,
+       round(k.p_del_60_ever,2) || '%' as p_del_60_ever,
+       round(k.p_fpd_30,2) || '%' as p_fpd_30,
+       case when nb.c_iin_bin is null then '0'
+        else '1' end as taxpayer_check,
+            case when bv.org_bin is not null
+                 or tbl.shop_bin is not null
+                 or l.shop_bin is not null then 1
+         else  0 end as bl_check,
+       case when round(months_between(sysdate, pp.reg_d), 2)>=6 then 1 else 0 end work_exper_more_6month
+        --bc.bad_contact,
+      --U1.GET_SOCIAL_PHONE(pp.owner_iin) as prc_del
+from (select p.shop_bin,p.owner_iin,min(p.ks_reg_date) as reg_d from partner_info p
+      group by p.shop_bin,p.owner_iin) pp
+left join (select t.iin,
+                case when nvl(sum(d.max_debt_used_x), 0) = 0 then 0 else ((sum(d.total_debt_x_pmt_1_30)/1000000 )/(sum(d.max_debt_used_x)/1000000))*100 end || '%' as fpd_30
+           from u1.m_folder_con_cancel t
+           join u1.M_RBO_CONTRACT_BAS b on b.folder_id_first = t.folder_id and b.contract_number = t.contract_number
+           join u1.M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+           group by t.iin) i on i.iin=pp.owner_iin  --(общая сумма кредита/сумма просрочки первого платежа более 30 дней)*100 - fpd_30 владельца магазина
+left join (select distinct v.org_bin from u1.v_shop v) vv on vv.org_bin=pp.shop_bin
+left join (select distinct s.tax_id  from u1.m_zup_1c_staff s) z  on z.tax_id=pp.owner_iin
+left join (select vv.org_bin,
+                  ((sum(case when dd.del_days_max_x > 60 then dd.total_debt_x end) / 1000000)/(sum(dd.max_debt_used_x) / 1000000))*100 as p_del_60_ever,--(общая сумма продаж/историческая сумма просрочки 60 дней)*100 дефолтный портфель партнера(магазина)
+                  ((sum(dd.total_debt_x_pmt_1_30) / 1000000)/(sum(dd.max_debt_used_x) / 1000000))*100 as p_fpd_30--(общая сумма продаж/просрочки первого платежа более 30 дней)*100 fpd партнера(магазина)
+           from  m_matrix_base m
+           left join v_shop vv on vv.shop_code=m.shop_code
+           join m_rbo_contract_del dd on m.contract_number=dd.contract_number
+           group by vv.org_bin
+           ) k on k.org_bin=pp.shop_bin
+left join v_rfo_z#kas_nb_taxpayer nb on pp.owner_iin=nb.c_iin_bin
+left join (select distinct v1.org_bin from v_shop v1
+               join (select distinct shop_code  from M_MO_T_RFO_SHOP_BL) sbl on sbl.shop_code=v1.shop_code) bv on bv.org_bin=pp.shop_bin
+left join  (select p1.shop_bin from partner_info p1
+                               join (select distinct bl.phone_number from V_MO_T_PHONE_BL bl) bl on bl.phone_number=p1.tel_num
+                                                                                                 or bl.phone_number=p1.tel_num2
+                                                                                                 or bl.phone_number=p1.owner_tel_num
+                                                                                                 or bl.phone_number=p1.owner_tel_num2
+                                                                                                 or bl.phone_number=p1.cont_per_tel_num
+                                                                                                 or bl.phone_number=p1.cont_per_tel_num2) tbl on tbl.shop_bin=pp.shop_bin
+left join  ( select distinct p3.shop_bin from partner_info p3
+                                       join (select distinct bl1.iin from M_RFO_BLACK_LIST_APPROV bl1
+                                             union
+                                             select distinct bl2.iin  from V_MO_BLACK_LIST bl2
+                                             union
+                                             select distinct bl3.iin  from V_MO_CLIENT_BL bl3
+                                             union
+                                             select distinct bl4.iin  from V_MO_CLIENT_BL_ARCHIVE bl4
+                                             union
+                                             select distinct bl5.c_inn as iin  from V_RFO_Z#KAS_BLACK_LIST_D bl5) all_bl on all_bl.iin=p3.owner_iin ) l on l.shop_bin=pp.shop_bin;
+grant select on U1.M_SHOPS_CHECK to LOADDB;
+
+

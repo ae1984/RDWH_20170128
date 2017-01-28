@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_CONTRACT_WITHOUT_GCVP
+refresh complete on demand
+as
+select c.rfo_contract_id,c.contract_number,cl.rfo_client_id,cl.iin,cl.rnn,cl.client_name
+  from  V_CONTRACT_ALL_RFO c
+  join V_CLIENT_RFO_BY_ID cl on cl.rfo_client_id = c.rfo_client_id
+  where c.is_credit_issued = 1
+    --and v.contract_date < to_date('01-01-2013','dd-mm-yyyy')
+    and not exists (select 1
+                     from V_GCVP_REPORT gr
+                     where  (gr.client_rnn = cl.rnn  or gr.client_iin = cl.iin )and gr.rep_date <= c.contract_date);
+grant select on U1.M_CONTRACT_WITHOUT_GCVP to LOADDB;
+grant select on U1.M_CONTRACT_WITHOUT_GCVP to LOADER;
+
+

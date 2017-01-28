@@ -1,0 +1,38 @@
+﻿create materialized view U1.M_RBO_CONTRACT_CARD_PMT
+build deferred
+refresh force on demand
+as
+select
+       bc.rbo_client_id,
+       bc.rfo_client_id,
+      -- bc.rfo_contract_id,
+       bc.rbo_contract_id,
+       bc.contract_number,
+       bc.folder_id_first,
+       bc.tariff_plan_name_code,
+       bc.cred_program_code,
+       lh.date_begin,
+       lh.limit_sum_hst,
+       coalesce(lh.date_end,to_date('01-01-3000','dd-mm-yyyy')) as date_end,
+       case when lh.limit_sum_hst > 0 then
+            case when bc.cred_program_code = 'PROST_KART' then to_number(tp.tarif_value)
+                 else lh.limit_sum_hst*0.07
+            end
+       end as pmt_avg_07,
+       case when lh.limit_sum_hst > 0 then
+            case when bc.cred_program_code = 'PROST_KART' then to_number(tp.tarif_value)
+                 else lh.limit_sum_hst*0.10
+            end
+       end as pmt_avg_10
+  from u1.M_RBO_CONTRACT_BAS        bc
+  join u1.M_CONTRACT_LIMIT_HST lh on lh.rbo_contract_id = bc.rbo_contract_id
+  left join M_RBO_TARIF_PLAN            tp on tp.tarifplan_code = bc.tariff_plan_name_code
+                                      and tp.tarif_code = 'MIN_PAY_SUM'
+                                      and tp.credit_programm_code = 'PROST_KART'
+                                      and lh.date_begin between tp.tarif_date_begin
+                                                        and coalesce(tp.tarif_date_end,trunc(sysdate))
+ where bc.is_card = 1;
+grant select on U1.M_RBO_CONTRACT_CARD_PMT to LOADDB;
+grant select on U1.M_RBO_CONTRACT_CARD_PMT to LOADER;
+
+

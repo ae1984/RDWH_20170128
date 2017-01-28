@@ -1,0 +1,78 @@
+﻿create table U1.T_RFO_Z#KAS_PC_DOG
+(
+  id                 NUMBER not null,
+  c_type_pc          NUMBER,
+  c_owner_pc_bank    VARCHAR2(1 CHAR),
+  c_use_pc_internet  VARCHAR2(1 CHAR),
+  c_mother_name      VARCHAR2(17 CHAR),
+  c_deliver_method   NUMBER,
+  c_personal_pc      VARCHAR2(1 CHAR),
+  c_currency         NUMBER,
+  c_pan              VARCHAR2(20 CHAR),
+  c_valid_period     NUMBER(3),
+  c_credit_limit     NUMBER(17,2),
+  c_emboss_name      VARCHAR2(100 CHAR),
+  c_pc_scheme        NUMBER,
+  c_tariff_plan      NUMBER,
+  c_id_req           VARCHAR2(128 CHAR),
+  c_id_back          VARCHAR2(128 CHAR),
+  c_num_dog          VARCHAR2(100 CHAR),
+  c_date_begin       DATE,
+  c_date_end         DATE,
+  c_sms_service      VARCHAR2(1 CHAR),
+  c_dep_num_dog      VARCHAR2(22 CHAR),
+  c_dep_account      VARCHAR2(25 CHAR),
+  c_kas_dep_delivery NUMBER,
+  c_acc_num          VARCHAR2(25 CHAR),
+  c_kas_secret       NUMBER,
+  c_kas_add_prop     NUMBER,
+  c_kas_calc_limit   NUMBER(17,2),
+  c_limit_gu         NUMBER(17,2),
+  c_date_gu          DATE,
+  c_sber_acc         VARCHAR2(25 CHAR),
+  c_date_debt_begin  DATE,
+  c_date_set_revolv  DATE,
+  c_kas_cred_purpose NUMBER,
+  c_kas_cr_purp_str  VARCHAR2(2000 CHAR),
+  c_wish_pay_sum     NUMBER(17,2),
+  c_client_ref       NUMBER,
+  c_date_sc          DATE,
+  c_ver_gu           VARCHAR2(100 CHAR),
+  c_gu_sign_ldate    DATE,
+  c_card_type        NUMBER,
+  c_card_expire_date DATE,
+  sn                 NUMBER,
+  su                 NUMBER,
+  c_crypted_pan      VARCHAR2(20 CHAR),
+  c_dkbo_signing_fld NUMBER,
+  c_save_cntrct_num  VARCHAR2(22 CHAR),
+  c_kas_gu_dog_ref   NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.IDX_KAS_PC_DOG_1 on U1.T_RFO_Z#KAS_PC_DOG (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_RFO_Z#KAS_PC_DOG to LOADDB;
+

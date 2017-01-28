@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_TMP_J_CON_TERM_WO_NPL_PLUS
+refresh complete on demand
+as
+select a.contract_number,
+    coalesce(least(a.npl_mon_min,b.npl_mon_min),a.npl_mon_min,b.npl_mon_min) as npl_mon_min,
+    ceil(months_between(coalesce(least(a.npl_mon_min,b.npl_mon_min),a.npl_mon_min,b.npl_mon_min,trunc(c.actual_end_date,'mm')),
+                  trunc(c.x_start_date,'mm')
+            )) as term_wo_npl_plus
+from (
+  select t.contract_number, min(to_date(s.yy_mm_report,'yyyy - mm')) as npl_mon_min
+  from M_TMP_J_CON_NPL_PLUS t
+  left join V_DATA_ALL s on s.contract_no = t.contract_number
+  where s.delinq_days > 90
+  group by t.contract_number
+) a left join (
+  select t.contract_number, min(to_date(d.yy_mm_report,'yyyy - mm')) as npl_mon_min
+  from M_TMP_J_CON_NPL_PLUS t
+  left join V_DATA_ALL d on d.contract_no = t.contract_number_to
+  where d.delinq_days > 90
+  group by t.contract_number
+) b on b.contract_number = a.contract_number
+left join V_DWH_PORTFOLIO_CURRENT c on c.deal_number = a.contract_number;
+grant select on U1.M_TMP_J_CON_TERM_WO_NPL_PLUS to LOADDB;
+grant select on U1.M_TMP_J_CON_TERM_WO_NPL_PLUS to LOADER;
+
+

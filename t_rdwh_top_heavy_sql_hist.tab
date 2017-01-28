@@ -1,0 +1,30 @@
+﻿create table U1.T_RDWH_TOP_HEAVY_SQL_HIST
+(
+  dt                   DATE,
+  physical_read_bytes  NUMBER,
+  physical_write_bytes NUMBER,
+  cpu_time             NUMBER,
+  elapsed_time         NUMBER,
+  status               VARCHAR2(8),
+  sql_text             VARCHAR2(1000),
+  sql_id               VARCHAR2(13),
+  last_load_time       DATE,
+  action               VARCHAR2(64),
+  module               VARCHAR2(64),
+  parsing_schema_name  VARCHAR2(30)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RDWH_TOP_HEAVY_SQL_HIST to LOADDB;
+

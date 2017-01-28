@@ -1,0 +1,42 @@
+﻿create materialized view U1.V_RBO_Z#CRED_PROGRAM
+build deferred
+refresh complete on demand
+as
+select t.id,
+       t.c_code,
+       t.c_name,
+       t.c_penalty_pay_ref,
+       cast(case when t.c_code in ('GU_AVTO_BU','AUTO','GU_AVTO','GU_AVTO_ZALOG')                           then 'АВТО'
+                 when t.c_code in ('MONEY_LKN','MONEY_POST','OSOB_CLIENT_MON','OSOB_CLIENT','MONEY_CN','EC_MANY',
+                                   'MONEY_ECN','MONEY_KN_P',
+                                   'SMENA_KK_KN')                                                           then 'ДЕНЬГИ'
+                 when t.c_code in ('PROST_KART','OSOB_CLIENT_PC','ZP_CARDS','DEP_CARD','MONEY_LK','PC_POST_CLIENT',
+                                   'KAS_PC_DOG','OVER','KASPI_RED')                                         then 'КАРТЫ'
+                 when t.c_code in ('PC_REFIN_RESTR','GU_AVTO_REF')                                          then 'ОПТИМИЗАЦИЯ'
+                 when t.c_code in ('AUTO_SERV','EC_GOODS','EC_SERVICE','EC_GOODS_STAND','EC_SERVICE_STAND') then 'ТОВАРЫ'
+                 else 'ДРУГОЕ' end as varchar2(100)) as product_type,
+       cast(case when t.c_name in ('АВТОКРЕДИТОВАНИЕ')                          then 'АВТО НОВЫЙ'
+                 when t.c_name in ('АВТОКРЕДИТОВАНИЕ БУ')                       then 'AВТО БУ'
+                 when t.c_name in ('АВТОЗАПЧАСТИ','ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)',
+                                   'КРЕДИТ НА ПОКУПКИ')                         then 'ТОВАРЫ'
+                 when t.c_name in ('ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)',
+                                   'КРЕДИТ НА УСЛУГИ')                          then 'УСЛУГИ'
+                 when t.c_name in ('КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ')               then 'КНП'
+                 when t.c_name in ('КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ',
+                                   'ОСОБЕННЫЙ КЛИЕНТ -КН 15')                   then 'КН-15'
+                 when t.c_name in ('ЛУЧШИЙ КЛИЕНТ НАЛИЧНЫМИ')                   then 'ЛКН'
+                 when t.c_name in ('ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ')              then 'ПКН'
+                 when t.c_name in ('КРЕДИТ НАЛИЧНЫМИ')                           then 'КН'
+                 when t.c_name in ('СМЕНА КК НА КН')                            then 'КК-КН'
+                 when t.c_name in ('РЕВОЛЬВЕРНЫЕ КАРТЫ',
+                                   'ОСОБЕННЫЙ КЛИЕНТ - КК',
+                                   'ЗАРПЛАТНЫЕ КАРТЫ','КАРТА ВКЛАДЧИКА',
+                                   'ПРОСТАЯ КАРТА','ОВЕРДРАФТЫ',
+                                   'PC.ПОСТОЯННЫЙ КЛИЕНТ','ЛУЧШИЙ КЛИЕНТ')      then 'КАРТЫ'
+                 when t.c_name in ('ЗАЛОГОВОЕ АВТОКРЕДИТОВАНИЕ')                then 'AВТО ЗАЛОГ'
+            end as varchar2(100)) as prod,
+            t.prod_belong_sign
+  from rdwh.V_RBO_Z#CRED_PROGRAM@rdwh_exd t;
+grant select on U1.V_RBO_Z#CRED_PROGRAM to LOADDB;
+
+

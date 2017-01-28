@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_RBO_CONTRACT_REF_PERC_CHANGE
+refresh complete on demand
+as
+select
+       pc.rbo_contract_id_to,
+       pc.refin_rbo_contract_id,
+       pc.date_change,
+       pc.date_change_end,
+       pc.refin_summa as refin_summa_old,
+       count(1) over (partition by pc.rbo_contract_id_to, pc.date_change) as refin_cnt,
+       case when sum(pc.refin_summa) over (partition by pc.rbo_contract_id_to, pc.date_change) > pc.total_debt
+            then round(pc.total_debt*pc.refin_summa/(sum(pc.refin_summa) over (partition by pc.rbo_contract_id_to, pc.date_change)),2)
+       else pc.refin_summa end as refin_summa,
+       pc.refin_date,
+       pc.total_debt
+  from M_RBO_CONTR_REF_PERC_CHANG_PRE pc;
+grant select on U1.M_RBO_CONTRACT_REF_PERC_CHANGE to LOADDB;
+grant select on U1.M_RBO_CONTRACT_REF_PERC_CHANGE to LOADER;
+
+

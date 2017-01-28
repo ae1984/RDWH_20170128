@@ -1,0 +1,20 @@
+﻿create materialized view U1.V_CONTRACT_PMT_INFO_TMP_2
+refresh complete on demand
+as
+select
+  c.folder_id_first,
+  c.contract_number,
+  case when p.pmt_active_all_sum > 0 then p.pmt_active_all_sum
+       else coalesce(greatest(t.pmt_avg, t.pmt_med), t.pmt_avg, t.pmt_med) end as pkb_pmt,
+  c.pmt,
+  (c.pmt + case when p.pmt_active_all_sum > 0 then p.pmt_active_all_sum
+            else coalesce(greatest(t.pmt_avg, t.pmt_med), t.pmt_avg, t.pmt_med) end) /
+       case when p.pmt_active_all_sum > 0 then p.pmt_active_all_sum
+            else coalesce(greatest(t.pmt_avg, t.pmt_med), t.pmt_avg, t.pmt_med) end as pmt_rise_coeff
+from V_CONTRACT_CAL c
+left join V_PKB_REPORT p on p.folder_id = c.folder_id_first
+left join M_TMP_JAN_PKB_PMT_BY_DEBT t on t.total_debt_group = round(p.total_debt,-5);
+grant select on U1.V_CONTRACT_PMT_INFO_TMP_2 to LOADDB;
+grant select on U1.V_CONTRACT_PMT_INFO_TMP_2 to LOADER;
+
+

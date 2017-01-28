@@ -1,0 +1,105 @@
+﻿create materialized view U1.V_TMP_JAN_DHC_20140401_V2
+using no index
+refresh complete on demand
+as
+select t.contract_number, t.iin, --t.user_name,
+       cc.fact_pmts_new_before_high_del,
+       case when cc.fact_pmts_new_before_high_del2 < 0 then 0
+            else cc.fact_pmts_new_before_high_del2 end as fact_pmts_new_before_high_del2,
+       ccc.total_pmts as cli_total_fact_pmts,
+       cx.cli_total_fact_pmts_max_2,
+       cx.cli_total_fact_pmts_sum_2,
+       g.sal_average, g.sal_median, g.sal_count, p.p_del_max_above,
+       pk.p_del_max_above as p_kas_del_max_above,
+       pk.pkb_rep_date_max as p_kas_pkb_rep_date_max,
+       ccc.total_debt_sum_last_rep as cli_total_debt_sum_last_rep,
+       con.fact_pmts as con_fact_pmts, con.total_debt_last_rep as con_total_debt_last_rep,
+       con.max_debt_used as con_max_debt_used,
+       con.delinq_days_max as con_delinq_days_max, con.delinq_days_last_rep as con_delinq_days_last_rep,
+       case when con.product_refin_last = 'ХК' then 'H'
+            when con.is_refin_restruct_ever = 1 then 'S'
+            else 'O' end as con_status,
+       con.yy_mm_start_first, con.yy_mm_start_last, con.yms, con.yms_res_last, con.yms_res_first,
+
+       cp.planned_pmt_month_new as con_planned_pmt_month_new, cp.delinq_mm_new as con_delinq_mm_new,
+       cp.planned_pmt_month_new - cp.delinq_mm_new as con_fact_pmts_2_new,
+       cp.planned_pmt_month as con_planned_pmt_month, cp.delinq_mm as con_delinq_mm,
+       cp.planned_pmt_month - cp.delinq_mm as con_fact_pmts_2
+
+from (select iin as contract_number, contract_number as iin from TMP_DHC_PORT_IIN_20140401) t
+left join V_CLIENT_CAL ccc on ccc.client_iin_last = t.iin
+left join V_CONTRACT_CAL con on con.contract_number = t.contract_number
+left join (
+    select t.contract_number,
+           t.planned_pmt_month_new, t.delinq_mm_new,
+           t.planned_pmt_month_new - delinq_mm_new as fact_pmts_2_new,
+           t.planned_pmt_month, t.delinq_mm,
+           t.planned_pmt_month - t.delinq_mm as fact_pmts_2
+    from V_PORTFOLIO t
+    where t.yy_mm_report = '2014 - 03'
+) cp on cp.contract_number = t.contract_number
+
+left join (
+    select p2.client_id, max(fact_pmts_2_new) as cli_total_fact_pmts_max_2,
+           sum(fact_pmts_2_new) as cli_total_fact_pmts_sum_2
+    from (
+        select t.contract_number, t.client_id,
+               max(t.planned_pmt_month_new - delinq_mm_new) as fact_pmts_2_new
+        from V_PORTFOLIO t
+        where t.report_month_all_contracts = '2014 - 03'
+        group by t.contract_number, t.client_id
+    ) p2 group by p2.client_id
+) cx on cx.client_id = ccc.client_id
+
+left join (select t.contract_number, min(t.yy_mm_report) as yy_mm_report_high_del,
+             max(t.fact_pmts_new) keep (dense_rank first order by t.yy_mm_report) as fact_pmts_new_before_high_del,
+             max(t.planned_pmt_month_new - t.delinq_mm_new) keep (
+                    dense_rank first order by t.yy_mm_report) as fact_pmts_new_before_high_del2
+      from V_PORTFOLIO t where t.delinq_days > 90 --and t.contract_number = '1554834-001'
+      group by t.contract_number
+) cc on cc.contract_number = t.contract_number
+left join (select t.iin, max(t.cli_sal_avg_all_ym) as sal_average,
+              max(t.cli_sal_med_all_ym) as sal_median, count(*) as sal_count
+           from V_G_ALL t group by t.iin
+) g on g.iin = t.iin
+left join (
+      select t.iin_merged as iin, max(decode(t.contractstatus_name,
+             'ПРОСРЕЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 7 ДО 30 ДНЕЙ',7,
+             'ПРОСРЕЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 31 ДО 60 ДНЕЙ',30,
+             'ПРОСРЕЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 61 ДО 90 ДНЕЙ',60,
+             'ПРОСРОЧЕННАЯ ЗАДОЛЖЕННОСТЬ СВЫШЕ 90 ДНЕЙ',90,
+             'ССУДА ПЕРЕВЕДЕНА В РАЗРЯД УБЫТКОВ, 100% НЕЛИКВИДНОСТЬ, НА БАЛАНСОВЫХ СЧЕТАХ',90,
+             'ПРЕКРАЩЁН В СВЯЗИ С НЕСВОЕВРЕМЕННЫМ ПОГАШЕНИЕМ',90,
+             0
+             )) as p_del_max_above
+      from V_BIG_CONTRACTS_ALL t
+      where t.contract_phase = 'ДЕЙСТВУЮЩИЙ' and
+            t.client_relation in ('ЗАЁМЩИК','СОЗАЕМЩИК (ПРИСОЕДИНИВШЕЕСЯ ЛИЦО) С СОЛИДАРНЫМИ ОБЯЗАТЕЛЬСТВАМИ')
+      group by t.iin_merged
+) p on p.iin = t.iin
+left join (
+      select t.report_iin_rnn as iin, max(
+               case when t.contract_state = 'OPEN' then
+                   case when t.contract_status like 'ПРОСРЕЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 7 ДО 30 ДНЕЙ%' then 7
+                        when t.contract_status like 'ПРОСРОЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 31 ДО 60 ДНЕЙ%' then 30
+                        when t.contract_status like 'ПРОСРОЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 61 ДО 90 ДНЕЙ%' then 60
+                        when t.contract_status like 'ПРОСРОЧЕННАЯ ЗАДОЛЖЕННОСТЬ СВЫШЕ 90 ДНЕЙ%' then 90
+                        when t.contract_status like 'ССУДА ПЕРЕВЕДЕНА В РАЗРЯД УБЫТКОВ, 100% НЕЛИКВИДНОСТЬ, НА БАЛАНСОВЫХ СЧЕТАХ%' then 90
+                        when t.contract_status like 'ПРЕКРАЩЁН В СВЯЗИ С НЕСВОЕВРЕМЕННЫМ ПОГАШЕНИЕМ%' then 90
+                        when t.contract_status like 'ПРОСРОЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 91 ДО 360 ДНЕЙ%' then 90
+                        when t.contract_status like 'ПРОСРОЧЕННАЯ ЗАДОЛЖЕННОСТЬ СВЫШЕ 360 ДНЕЙ%' then 90
+                        else 0 end
+               else 0 end) as p_del_max_above,
+             max(p2.pkb_rep_date_max) as pkb_rep_date_max
+      from V_PKB t
+      join (select p1.report_iin_rnn as iin, max(p1.report_id) as pkb_rep_max_id,
+             max(p1.rfo_report_date) as pkb_rep_date_max
+          from V_PKB_REPORT p1 where p1.is_from_cache = 0
+          group by p1.report_iin_rnn
+      ) p2 on p2.pkb_rep_max_id = t.pkb_report_id
+      group by t.report_iin_rnn
+) pk on pk.iin = t.iin;
+grant select on U1.V_TMP_JAN_DHC_20140401_V2 to LOADDB;
+grant select on U1.V_TMP_JAN_DHC_20140401_V2 to LOADER;
+
+

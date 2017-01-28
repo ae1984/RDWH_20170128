@@ -1,0 +1,81 @@
+﻿create materialized view U1.M_TMP_KASPIKZ_3MD
+refresh force on demand
+as
+select y.*,
+       x.cli_ip_cnt_pre as other_cli_ip_cnt_pre,
+       x2.cli_ip_cnt_pre_3 as other_cli_ip_3_cnt_pre,
+       x3.cli_ip_cnt_pre_2 as other_cli_ip_2_cnt_pre,
+
+       x4.cli_user_agent_cnt_pre,
+       x4.cli_browser_cnt_pre,
+       x4.cli_device_cnt_pre,
+       x4.cli_op_system_cnt_pre,
+       x4.cli_client_ip_cnt_pre,
+       x4.cli_client_ip_3_cnt_pre,
+       x4.cli_client_ip_2_cnt_pre
+
+from u1.M_TMP_KASPIKZ y
+left join ( select t.order_number,
+                   count(distinct tt.iin) cli_ip_cnt_pre
+                   --*
+
+            from u1.M_TMP_KASPIKZ t
+            left join u1.M_TMP_KASPIKZ tt on tt.buy_create_date < t.buy_create_date and
+                                                      tt.buy_create_date >= add_months(t.buy_create_date,-3) and
+                                                      tt.iin != t.iin and
+                                                      tt.client_ip = t.client_ip and
+                                                      tt.client_ip != '00000000' and
+                                                      tt.user_agent ||'#'|| tt.client_ip = t.user_agent ||'#'|| t.client_ip
+            --where t.order_number = '00384204'
+            group by t.order_number
+            ) x on x.order_number = y.order_number
+
+left join ( select t.order_number,
+                   count(distinct tt.iin) cli_ip_cnt_pre_3
+                   --*
+
+            from u1.M_TMP_KASPIKZ t
+            left join u1.M_TMP_KASPIKZ tt on tt.buy_create_date < t.buy_create_date and
+                                                      tt.buy_create_date >= add_months(t.buy_create_date,-3) and
+                                                      tt.iin != t.iin and
+                                                      --tt.client_ip_3 = t.client_ip_3 and
+                                                      tt.client_ip != '00000000' and
+                                                      tt.user_agent ||'#'|| tt.client_ip = t.user_agent ||'#'|| t.client_ip
+            --where t.order_number = '00384204'
+            group by t.order_number
+            ) x2 on x2.order_number = y.order_number
+
+left join ( select t.order_number,
+                   count(distinct tt.iin) cli_ip_cnt_pre_2
+                   --*
+
+            from u1.M_TMP_KASPIKZ t
+            left join u1.M_TMP_KASPIKZ tt on tt.buy_create_date < t.buy_create_date and
+                                                      tt.buy_create_date >= add_months(t.buy_create_date,-3) and
+                                                      tt.iin != t.iin and
+                                                      tt.client_ip_2 = t.client_ip_2 and
+                                                      tt.client_ip != '00000000' and
+                                                      tt.user_agent ||'#'|| tt.client_ip = t.user_agent ||'#'|| t.client_ip
+            --where t.order_number = '00384204'
+            group by t.order_number
+            ) x3 on x3.order_number = y.order_number
+
+left join ( select t.order_number,
+                   count(distinct tt.user_agent) as cli_user_agent_cnt_pre,
+                   count(distinct tt.browser) as cli_browser_cnt_pre,
+                   count(distinct tt.device) as cli_device_cnt_pre,
+                   count(distinct tt.op_system) as cli_op_system_cnt_pre,
+                   count(distinct case when tt.client_ip != '00000000' and tt.client_ip is not null then tt.client_ip end) as cli_client_ip_cnt_pre,
+                   count(distinct case when tt.client_ip != '00000000' and tt.client_ip is not null then tt.client_ip_3 end) as cli_client_ip_3_cnt_pre,
+                   count(distinct case when tt.client_ip != '00000000' and tt.client_ip is not null then tt.client_ip_2 end) as cli_client_ip_2_cnt_pre
+
+            from u1.M_TMP_KASPIKZ t
+            left join u1.M_TMP_KASPIKZ tt on tt.buy_create_date < t.buy_create_date and
+                                                      tt.iin = t.iin
+            --where t.order_number = '00384204'
+            group by t.order_number
+            ) x4 on x4.order_number = y.order_number;
+grant select on U1.M_TMP_KASPIKZ_3MD to LOADDB;
+grant select on U1.M_TMP_KASPIKZ_3MD to LOADER;
+
+

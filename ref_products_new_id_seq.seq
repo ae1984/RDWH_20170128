@@ -1,0 +1,7 @@
+﻿create sequence U1.REF_PRODUCTS_NEW_ID_SEQ
+minvalue 1
+maxvalue 9999999999999999999999999999
+start with 221
+increment by 1
+cache 20;
+

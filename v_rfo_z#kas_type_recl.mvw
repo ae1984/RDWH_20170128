@@ -1,0 +1,19 @@
+﻿create materialized view U1.V_RFO_Z#KAS_TYPE_RECL
+refresh complete on demand
+as
+select
+    t.id
+    ,upper(t.c_code) as c_code
+    ,upper(t.c_name) as c_name
+    ,t.c_is_active
+    ,t.c_is_critical
+    ,t.c_correct_ca
+    ,t.sn
+    ,t.su
+    ,t.c_is_rep
+    ,t.c_kas_doc_arr
+    ,t.c_check_criteria
+from S01.Z#KAS_TYPE_RECL@rdwh_exd t;
+grant select on U1.V_RFO_Z#KAS_TYPE_RECL to LOADDB;
+
+

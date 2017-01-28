@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_MATRIX_KDN_1_PMT_NR
+build deferred
+refresh force on demand
+as
+select rfo_contract_id,
+       contract_amount,
+       contract_term_mon,
+       product_rate,
+       round(x.contract_amount*(x.product_rate/12)/(1-(power(1+(x.product_rate/12),-x.contract_term_mon))),0) as pmt_nom_rate
+from (
+      select f.rfo_contract_id, -- платежи - есть только по выданным
+             f.contract_amount,
+             case when round(months_between(b.date_plan_end, b.start_date)) > 0 then round(months_between(b.date_plan_end, b.start_date))
+             else m.sc_term_cred end as contract_term_mon,
+
+             case when f.cr_program_name = 'КРЕДИТ НАЛИЧНЫМИ' then 0.2099
+                  when f.cr_program_name = 'КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ' then 0.2699
+                  when f.cr_program_name = 'ЛУЧШИЙ КЛИЕНТ - НАЛИЧНЫМИ' then 0.2399
+                  when f.cr_program_name = 'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ' then 0.1799 end as product_rate
+
+      from M_FOLDER_CON_CANCEL f
+      left join U1.M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+      left join (select m2.folder_id,
+                        max(m2.sc_term_cred) keep (dense_rank last order by m2.date_create) as sc_term_cred
+                 from u1.V_FOLDER_MO_TERM_CRED m2
+                 group by m2.folder_id) m on m.folder_id = f.folder_id
+) x;
+grant select on U1.M_MATRIX_KDN_1_PMT_NR to LOADDB;
+grant select on U1.M_MATRIX_KDN_1_PMT_NR to LOADER;
+
+

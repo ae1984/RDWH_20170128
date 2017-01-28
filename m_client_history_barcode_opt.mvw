@@ -1,0 +1,43 @@
+﻿create materialized view U1.M_CLIENT_HISTORY_BARCODE_OPT
+refresh force on demand
+as
+select * from (
+--в выборке только строки с оптимизацией
+select t.*,
+
+       -- среднее значение pmt_h за 3 месяца
+       round(avg(t.pmt_h)  over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 3 following), 4) is_opt_work_3m,
+       -- минимальное значение pmt_h за 3 месяца
+       min(t.pmt_h)        over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 3 following) min_opt_work_3m,
+       -- максимальное значение pmt_h за 3 месяца
+       max(t.pmt_h)        over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 3 following) max_opt_work_3m,
+       -- кол-во месяцев после оптимизации, если равно 3, то прошло 3 месяца
+       max(t.cli_row_rank) over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 3 following) - t.cli_row_rank opt_mm_after_3m,
+       -- была ли следующая оптимизация в течении 3 месяцев
+       max(t.opt_h)        over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 3 following) is_opt_next_3m,
+
+       round(avg(t.pmt_h)  over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 4 following), 4) is_opt_work_4m,
+       min(t.pmt_h)        over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 4 following) min_opt_work_4m,
+       max(t.pmt_h)        over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 4 following) max_opt_work_4m,
+       max(t.cli_row_rank) over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 4 following) - t.cli_row_rank opt_mm_after_4m,
+       max(t.opt_h)        over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 4 following) is_opt_next_4m,
+
+       round(avg(t.pmt_h)  over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 5 following), 4) is_opt_work_5m,
+       min(t.pmt_h)        over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 5 following) min_opt_work_5m,
+       max(t.pmt_h)        over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 5 following) max_opt_work_5m,
+       max(t.cli_row_rank) over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 5 following) - t.cli_row_rank opt_mm_after_5m,
+       max(t.opt_h)        over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 5 following) is_opt_next_5m,
+
+       round(avg(t.pmt_h)  over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 6 following), 4) is_opt_work_6m,
+       min(t.pmt_h)        over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 6 following) min_opt_work_6m,
+       max(t.pmt_h)        over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 6 following) max_opt_work_6m,
+       max(t.cli_row_rank) over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 6 following) - t.cli_row_rank opt_mm_after_6m,
+       max(t.opt_h)        over (partition by t.client_id order by t.yyyy_mm_num rows between 1 following and 6 following) is_opt_next_6m
+
+from M_CLIENT_HISTORY_BARCODE_PRE1 t
+) tt
+where tt.opt_h = 1;
+grant select on U1.M_CLIENT_HISTORY_BARCODE_OPT to LOADDB;
+grant select on U1.M_CLIENT_HISTORY_BARCODE_OPT to LOADER;
+
+

@@ -1,0 +1,53 @@
+﻿create materialized view U1.M_MO_CL_SPEC_PRODUCT
+build deferred
+refresh force on demand
+as
+select t.c_inn as client_iin
+  from V_RFO_Z#KAS_EMP_LIMIT t
+  join V_RFO_Z#KAS_SPEC_PRODUCT p
+    on t.c_spec_product = p.collection_id
+  join V_RFO_Z#KAS_UNIVERSAL_D d
+    on d.id = p.c_tarif_plan
+ where d.c_code in ('PC_15MIN_B1',
+                    'PC_15MIN_A1',
+                    'PC_15MIN_C1',
+                    'PC_BEST_NEW',
+                    'PC_BEST_CLIENT_NEW',
+                    'PC_TRUST_PARTNER_NEW',
+                    'PC_15MIN_20_NEW',
+                    'PC_15MIN_GRС_NEW',
+                    'PC_BEST_24_99_NEW',
+                    'PC_BEST_23_88_NEW',
+                    'PC_SUPER_ADVISE_NEW',
+                    'PC_BEST_22_99_NEW',
+                    'PC_BEST_CLIENT_J',
+                    'PC_BEST_K',
+                    'PC_BEST_L',
+                    'PC_BEST_N',
+                    'PC_BEST_O',
+                    'PC_BEST_P',
+                    'PC_BEST_Q',
+                    'PC_BEST_R',
+                    'PC_BEST_T',
+                    'PC_BEST_W',
+                    'PC_BEST_V',
+                    'PC_BEST_U',
+                    'PC_BEST_S',
+                    'PC_BEST_CLIENT_Y',
+                    'PC_BEST_X',
+                    'PC_EMPLOYER_NEW',
+                    'PC_OSOB_LK_A',
+                    'KASPI_RED',
+                    'PC_EMPLOYER',
+                    'PC_EMPLOYER_NEW',
+                    'PC_EVERYD_EMPLOYER_1_100',
+                    'PC_EVERYD_EMPLOYER_1_150',
+                    'PC_EVERYD_EMPLOYER_6_50')
+   and trunc(p.c_date_end) >= trunc(sysdate)
+   and t.c_inn is not null
+   group by t.c_inn;
+grant select on U1.M_MO_CL_SPEC_PRODUCT to LOADDB;
+grant select on U1.M_MO_CL_SPEC_PRODUCT to LOADER;
+grant select on U1.M_MO_CL_SPEC_PRODUCT to LOAD_MO;
+
+

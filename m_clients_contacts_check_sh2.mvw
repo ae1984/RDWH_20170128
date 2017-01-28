@@ -1,0 +1,94 @@
+﻿create materialized view U1.M_CLIENTS_CONTACTS_CHECK_SH2
+refresh force on demand
+as
+select /*+ no_parallel*/
+        a.RFO_CLIENT_ID,
+        a.RBO_CLIENT_ID,
+        a.IIN,
+        a.MOBILE_NUMBER_CLEAR,
+        a.COUNT_IN_CONTACTS,
+        a.MAX_PAY_DATE,
+        a.HAVE_KASPI_LOGIN,
+        a.HAVE_OTHER_KASPI_LOGIN,
+        a.THIS_MAX_CALL_DATE,
+        a.OTHER_MAX_CALL_DATE,
+        a.OTHER_CLIENT_HAS_CALL,
+        a.SUCCESS_OUT_CALL,
+        a.MAX_SEND_DATE,
+        a.PHOTO_VERIFICATION_CANCEL,
+        a.HAVE_CREDIT,
+        a.HAVE_DEPOSIT,
+        a.FOLDERS_COUNT,
+        a.LAST_FOLDER_DATE,
+        a.LAST_SUCCESS_FOLDER_DATE,
+        a.TEXT,
+        a.MAX_AUDIT,
+        a.active_deposit,
+        a.pay_terminal,
+        a.last_pay_terminal_date,
+        a.max_date_other_cli_cont,
+        a.cnt_other_cli_cont,
+        max(coalesce(c.report_issued,
+        c1.report_issued,
+        c2.report_issued,
+        c3.report_issued,
+        c4.report_issued,
+        c5.report_issued,
+        c6.report_issued,
+        c7.report_issued,
+        c8.report_issued,
+        c9.report_issued,
+        c10.report_issued,
+        c11.report_issued,
+        c12.report_issued,
+        c13.report_issued,
+        c14.report_issued,
+        c15.report_issued)) as max_pkb_rep_date
+from M_CLIENTS_CONTACTS_CHECK_SH1 a
+left join M_PKB_REPORT_MOBILE_PHONES c on a.rfo_client_id = c.rfo_client_id and a.mobile_number_clear = c.phone_numb_clear_1
+left join M_PKB_REPORT_MOBILE_PHONES c1 on a.rfo_client_id = c1.rfo_client_id and a.mobile_number_clear = c1.phone_numb_clear_2
+left join M_PKB_REPORT_MOBILE_PHONES c2 on a.rfo_client_id = c2.rfo_client_id and a.mobile_number_clear = c2.phone_numb_clear_3
+left join M_PKB_REPORT_MOBILE_PHONES c3 on a.rfo_client_id = c3.rfo_client_id and a.mobile_number_clear = c3.phone_numb_clear_4
+left join M_PKB_REPORT_MOBILE_PHONES c4 on a.rfo_client_id = c4.rfo_client_id and a.mobile_number_clear = c4.phone_numb_clear_5
+left join M_PKB_REPORT_MOBILE_PHONES c5 on a.rfo_client_id = c5.rfo_client_id and a.mobile_number_clear = c5.phone_numb_clear_6
+left join M_PKB_REPORT_MOBILE_PHONES c6 on a.rfo_client_id = c6.rfo_client_id and a.mobile_number_clear = c6.phone_numb_clear_7
+left join M_PKB_REPORT_MOBILE_PHONES c7 on a.rfo_client_id = c7.rfo_client_id and a.mobile_number_clear = c7.phone_numb_clear_8
+left join M_PKB_REPORT_MOBILE_PHONES c8 on a.rfo_client_id = c8.rfo_client_id and a.mobile_number_clear = c8.phone_numb_clear_9
+left join M_PKB_REPORT_MOBILE_PHONES c9 on a.rfo_client_id = c9.rfo_client_id and a.mobile_number_clear = c9.phone_numb_clear_10
+left join M_PKB_REPORT_MOBILE_PHONES c10 on a.rfo_client_id = c10.rfo_client_id and a.mobile_number_clear = c10.phone_numb_clear_11
+left join M_PKB_REPORT_MOBILE_PHONES c11 on a.rfo_client_id = c11.rfo_client_id and a.mobile_number_clear = c11.phone_numb_clear_12
+left join M_PKB_REPORT_MOBILE_PHONES c12 on a.rfo_client_id = c12.rfo_client_id and a.mobile_number_clear = c12.phone_numb_clear_13
+left join M_PKB_REPORT_MOBILE_PHONES c13 on a.rfo_client_id = c13.rfo_client_id and a.mobile_number_clear = c13.phone_numb_clear_14
+left join M_PKB_REPORT_MOBILE_PHONES c14 on a.rfo_client_id = c14.rfo_client_id and a.mobile_number_clear = c14.phone_numb_clear_15
+left join M_PKB_REPORT_MOBILE_PHONES c15 on a.rfo_client_id = c15.rfo_client_id and a.mobile_number_clear = c15.phone_numb_clear_16
+group by
+        a.RFO_CLIENT_ID,
+        a.RBO_CLIENT_ID,
+        a.IIN,
+        a.MOBILE_NUMBER_CLEAR,
+        a.COUNT_IN_CONTACTS,
+        a.MAX_PAY_DATE,
+        a.HAVE_KASPI_LOGIN,
+        a.HAVE_OTHER_KASPI_LOGIN,
+        a.THIS_MAX_CALL_DATE,
+        a.OTHER_MAX_CALL_DATE,
+        a.OTHER_CLIENT_HAS_CALL,
+        a.SUCCESS_OUT_CALL,
+        a.MAX_SEND_DATE,
+        a.PHOTO_VERIFICATION_CANCEL,
+        a.HAVE_CREDIT,
+        a.HAVE_DEPOSIT,
+        a.FOLDERS_COUNT,
+        a.LAST_FOLDER_DATE,
+        a.LAST_SUCCESS_FOLDER_DATE,
+        a.TEXT,
+        a.MAX_AUDIT,
+        a.active_deposit,
+        a.pay_terminal,
+        a.last_pay_terminal_date,
+        a.max_date_other_cli_cont,
+        a.cnt_other_cli_cont;
+grant select on U1.M_CLIENTS_CONTACTS_CHECK_SH2 to LOADDB;
+grant select on U1.M_CLIENTS_CONTACTS_CHECK_SH2 to LOADER;
+
+

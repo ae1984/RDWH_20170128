@@ -1,0 +1,68 @@
+﻿create table U1.T_RFO_Z#FDOC
+(
+  id            NUMBER not null,
+  class_id      VARCHAR2(16 CHAR),
+  c_num         VARCHAR2(50 CHAR),
+  c_doc_date    DATE,
+  c_parent_fdoc NUMBER,
+  c_status_doc  NUMBER,
+  c_date_audit  DATE,
+  sn            NUMBER,
+  su            NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RFO_Z#FDOC
+  is 'Документ папки';
+comment on column U1.T_RFO_Z#FDOC.c_num
+  is 'Номер';
+comment on column U1.T_RFO_Z#FDOC.c_doc_date
+  is 'Дата';
+comment on column U1.T_RFO_Z#FDOC.c_parent_fdoc
+  is 'Породивший документ(FK на Z#FDOC)';
+comment on column U1.T_RFO_Z#FDOC.c_status_doc
+  is 'Статус документа(FK на Z#STATUS_DOG)';
+comment on column U1.T_RFO_Z#FDOC.c_date_audit
+  is 'Дата аудита';
+create unique index U1.T_RFO_Z#FDOC_IND1 on U1.T_RFO_Z#FDOC (ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RFO_Z#FDOC_IND2 on U1.T_RFO_Z#FDOC (ID, CLASS_ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#FDOC
+  add constraint T_RFO_Z#FDOC_PK primary key (ID);
+grant select on U1.T_RFO_Z#FDOC to LOADDB;
+grant select on U1.T_RFO_Z#FDOC to LOADER;
+grant select on U1.T_RFO_Z#FDOC to RISK_VERIF;
+

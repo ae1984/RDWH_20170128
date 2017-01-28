@@ -1,0 +1,73 @@
+﻿create table U1.T_RFO_Z#PROPERTIES
+(
+  id            NUMBER not null,
+  c_date_beg    DATE,
+  c_date_end    DATE,
+  c_prop        NUMBER,
+  c_str         VARCHAR2(4000),
+  c_group_prop  NUMBER,
+  c_v_date      DATE,
+  c_num         NUMBER(20,4),
+  collection_id NUMBER,
+  c_bool        VARCHAR2(3),
+  class_id      VARCHAR2(48),
+  c_obj         VARCHAR2(384),
+  c_date_audit  DATE,
+  sn            NUMBER,
+  su            NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RFO_Z#PROPERTIES
+  is 'Дополнительные свойства';
+comment on column U1.T_RFO_Z#PROPERTIES.id
+  is 'Идентификатор таблицы';
+comment on column U1.T_RFO_Z#PROPERTIES.c_date_beg
+  is 'Дата начала действия';
+comment on column U1.T_RFO_Z#PROPERTIES.c_date_end
+  is 'Дата окончания действия';
+comment on column U1.T_RFO_Z#PROPERTIES.c_prop
+  is 'Значение. Свойство(FK на Z#PROD_PROPERTY)(FK на Z#PROD_PROPERTY.ID)';
+comment on column U1.T_RFO_Z#PROPERTIES.c_str
+  is 'Значение. Текст';
+comment on column U1.T_RFO_Z#PROPERTIES.c_group_prop
+  is 'Группа свойств(FK на Z#PROPERTY_GRP)(FK на Z#PROPERTY_GRP.ID)';
+comment on column U1.T_RFO_Z#PROPERTIES.c_v_date
+  is 'Значение. Дата';
+comment on column U1.T_RFO_Z#PROPERTIES.c_num
+  is 'Значение. Число';
+comment on column U1.T_RFO_Z#PROPERTIES.c_bool
+  is 'Значение. Логика';
+comment on column U1.T_RFO_Z#PROPERTIES.c_obj
+  is 'Значение. Ссылка(FK на OBJECTS)';
+comment on column U1.T_RFO_Z#PROPERTIES.c_date_audit
+  is 'Дата аудита';
+create unique index U1.T_RFO_Z#PROPERTIES_IND1 on U1.T_RFO_Z#PROPERTIES (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#PROPERTIES
+  add constraint T_RFO_Z#PROPERTIES_PK primary key (ID);
+grant select on U1.T_RFO_Z#PROPERTIES to ITS_USER;
+grant select on U1.T_RFO_Z#PROPERTIES to LOADDB;
+grant select on U1.T_RFO_Z#PROPERTIES to LOADER;
+

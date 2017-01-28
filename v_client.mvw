@@ -1,0 +1,23 @@
+﻿create materialized view U1.V_CLIENT
+using no index
+refresh complete on demand
+as
+select t.rfo_client_id,
+       cc.client_id_min, cc.client_id_max,
+       t.iin, t.rnn,
+       t.client_name, t.name_last, t.name_first, t.name_patronymic, t.birth_date,
+--       case when dc.deposit_count > 0 then 1 else 0 end as is_deposit_exists,
+       case when cc.credit_count > 0 then 1 else 0 end as is_credit_exists
+from V_CLIENT_RFO_BY_ID t
+/*left join (select d.clnt_inn, count(distinct d.dpst_number) as deposit_count
+             from V_DWH_DEPOSITS d group by d.clnt_inn) dc on dc.clnt_inn = t.iin*/
+left join (select p.client_iin, count(distinct p.deal_number) as credit_count,
+                  min(to_number(substr(ltrim(p.deal_number,'R'),1,7))) as client_id_min,
+                  max(to_number(substr(ltrim(p.deal_number,'R'),1,7))) as client_id_max
+             from V_DWH_PORTFOLIO_CURRENT p
+             where p.deal_status not in ('ВВЕДЕН','ОТКАЗ')
+             group by p.client_iin) cc on cc.client_iin = t.iin;
+grant select on U1.V_CLIENT to LOADDB;
+grant select on U1.V_CLIENT to LOADER;
+
+

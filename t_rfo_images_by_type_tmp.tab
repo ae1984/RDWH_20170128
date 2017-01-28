@@ -1,0 +1,33 @@
+﻿create table U1.T_RFO_IMAGES_BY_TYPE_TMP
+(
+  photo_guid VARCHAR2(210),
+  photo_type VARCHAR2(75)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.IDX_T_RFO_IMAGES_BY_TYPE_TMP_1 on U1.T_RFO_IMAGES_BY_TYPE_TMP (PHOTO_GUID)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_RFO_IMAGES_BY_TYPE_TMP to LOADDB;
+

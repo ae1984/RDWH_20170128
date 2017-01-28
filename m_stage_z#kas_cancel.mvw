@@ -1,0 +1,9 @@
+﻿create materialized view U1.M_STAGE_Z#KAS_CANCEL
+build deferred
+refresh force on demand
+as
+select *
+  from rdwh.V_RFO_Z#KAS_CANCEL@rdwh_exd;
+grant select on U1.M_STAGE_Z#KAS_CANCEL to LOADDB;
+
+

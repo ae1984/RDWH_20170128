@@ -1,0 +1,203 @@
+﻿create table U1.T_RBO_Z#KAS_PC_FO
+(
+  id                NUMBER not null,
+  class_id          VARCHAR2(48),
+  collection_id     NUMBER,
+  state_id          VARCHAR2(48),
+  c_key             NUMBER(3),
+  c_num             NUMBER(24,4) not null,
+  c_oper_date       DATE not null,
+  c_vid_oper_ref    NUMBER not null,
+  c_date_grace_end  DATE,
+  c_card_ref        NUMBER,
+  c_summa           NUMBER(17,2) not null,
+  c_exec_summa      NUMBER(17,2),
+  c_doc_ref         NUMBER,
+  c_parent_ref      NUMBER,
+  c_child_ref       NUMBER,
+  c_reverse_fo      NUMBER,
+  c_is_grace_exec   VARCHAR2(3),
+  c_is_storno       VARCHAR2(3),
+  c_slip_ref        NUMBER,
+  c_tarifchik_ref   NUMBER,
+  c_pay_off_date    DATE,
+  c_prc_ref         NUMBER,
+  c_op_ref          NUMBER,
+  c_stmt_ref        NUMBER,
+  c_fld_num         NUMBER(24,4),
+  c_req_ref         NUMBER,
+  c_correct_date    DATE,
+  c_client_summa    NUMBER(17,2),
+  c_grace_type_ref  NUMBER,
+  c_grace_state_ref NUMBER,
+  c_grace_date_plan DATE,
+  c_grace_date_fact DATE,
+  c_sum_for_pay     NUMBER(17,2),
+  c_doc_date        DATE,
+  c_doc_state       VARCHAR2(48)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RBO_Z#KAS_PC_FO
+  is 'KAS. PC. Фактические операции';
+comment on column U1.T_RBO_Z#KAS_PC_FO.id
+  is 'Идентификатор операции';
+comment on column U1.T_RBO_Z#KAS_PC_FO.class_id
+  is 'Класс объекта';
+comment on column U1.T_RBO_Z#KAS_PC_FO.collection_id
+  is 'collection на Z#KAS_PC_DOG.C_FO_ARR';
+comment on column U1.T_RBO_Z#KAS_PC_FO.state_id
+  is 'Состояние операции';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_key
+  is 'Ключ партиционирования';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_num
+  is 'Номер';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_oper_date
+  is 'Дата операции';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_vid_oper_ref
+  is 'Вид операции(FK на Z#VID_OPER_DOG)';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_date_grace_end
+  is 'UNKNOWN - поле пустое';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_card_ref
+  is 'Пластиковая карта(FK на Z#KAS_PC_CARD)';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_summa
+  is 'Сумма операции';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_exec_summa
+  is 'Погашенная сумма';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_doc_ref
+  is 'Документ(FK на Z#MAIN_DOCUM)';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_parent_ref
+  is 'Родительская ФО (гашение либо откат)(FK на Z#KAS_PC_FO)';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_child_ref
+  is 'Ссылка на дочернюю операцию(FK на Z#KAS_PC_FO)';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_reverse_fo
+  is 'Ссылка на обратную проводку(FK на T_RBO_Z#KAS_PC_FO)';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_is_grace_exec
+  is 'UNKNOWN - поле пустое';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_is_storno
+  is 'Сторнирована/ликвидирована';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_slip_ref
+  is 'Слип(FK на Z#KAS_PC_SLIPS)';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_tarifchik_ref
+  is 'Использованный тарифчик(FK на Z#TARIF)';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_pay_off_date
+  is 'Дата полного погашения долгообразующей';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_prc_ref
+  is 'Ссылка на Журнал рассчитанных процентов(FK на Z#KAS_PC_PRC)';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_op_ref
+  is 'Настройка операции(FK на Z#KAS_PC_OP)';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_stmt_ref
+  is 'Стейтмент(FK на Z#KAS_PC_STMT)';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_fld_num
+  is 'Номер папки';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_req_ref
+  is 'Заявка(FK на Z#KAS_PC)';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_correct_date
+  is 'Дата исправления';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_client_summa
+  is 'Сумма погашенная клиентом';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_grace_type_ref
+  is 'Тип грейса(FK на Z#KAS_DIC)';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_grace_state_ref
+  is 'Состояние грейса(FK на Z#KAS_DIC)';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_grace_date_plan
+  is 'Дата окончания грейса (плановая)';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_grace_date_fact
+  is 'Дата окончания грейса (фактическая)';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_sum_for_pay
+  is 'Сумма для погашения';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_doc_date
+  is 'Дата проводки';
+comment on column U1.T_RBO_Z#KAS_PC_FO.c_doc_state
+  is 'Состояние документа';
+create index U1.T_RBO_Z#KAS_PC_FO_IND1 on U1.T_RBO_Z#KAS_PC_FO (COLLECTION_ID, C_DOC_DATE, C_VID_OPER_REF)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create unique index U1.T_RBO_Z#KAS_PC_FO_IND2 on U1.T_RBO_Z#KAS_PC_FO (ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RBO_Z#KAS_PC_FO_IND3 on U1.T_RBO_Z#KAS_PC_FO (C_VID_OPER_REF)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RBO_Z#KAS_PC_FO_IND4 on U1.T_RBO_Z#KAS_PC_FO (C_DOC_DATE)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RBO_Z#KAS_PC_FO_IND5 on U1.T_RBO_Z#KAS_PC_FO (C_REVERSE_FO)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RBO_Z#KAS_PC_FO_IND6 on U1.T_RBO_Z#KAS_PC_FO (C_DOC_REF)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_RBO_Z#KAS_PC_FO to LOADDB;
+grant select on U1.T_RBO_Z#KAS_PC_FO to LOADER;
+

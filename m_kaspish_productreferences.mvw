@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_KASPISH_PRODUCTREFERENCES
+build deferred
+refresh force on demand
+as
+select HJMPTS,
+       TYPEPKSTRING,
+       OWNERPKSTRING,
+       MODIFIEDTS,
+       CREATEDTS,
+       PK,
+       P_ACTIVE,
+       P_SOURCEPOS,
+       P_REFERENCETYPE,
+       P_ICON,
+       P_TARGET,
+       P_SOURCE,
+       P_QUALIFIER,
+       P_QUANTITY,
+       P_PRESELECTED,
+       ACLTS,
+       PROPTS,
+       P_TARGETCATALOGVERSION,
+       P_SOURCECATALOGVERSION,
+       P_REFERENCEINDEX
+  from kaspi.productreferences@ks_std
+ where rownum > 0;
+grant select on U1.M_KASPISH_PRODUCTREFERENCES to LOADDB;
+
+

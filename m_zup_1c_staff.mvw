@@ -1,0 +1,9 @@
+﻿create materialized view U1.M_ZUP_1C_STAFF
+refresh complete on demand
+as
+select * from M_ZUP_1C_STAFF@rdwh11;
+grant select on U1.M_ZUP_1C_STAFF to LOADDB;
+grant select on U1.M_ZUP_1C_STAFF to LOADER;
+grant select on U1.M_ZUP_1C_STAFF to RISK_VERIF;
+
+

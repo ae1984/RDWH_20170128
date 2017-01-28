@@ -1,0 +1,63 @@
+﻿create table U1.DWH_DM_SPGU_LD
+(
+  exld$change_date        DATE not null,
+  exld$audit_id           NUMBER not null,
+  exld_clnt_gid           NUMBER not null,
+  exld_dcard_gid          NUMBER not null,
+  exld_rep_date           DATE,
+  exld_client_name        VARCHAR2(255 CHAR),
+  exld_client_iin         VARCHAR2(12 CHAR),
+  exld_client_rnn         VARCHAR2(40 CHAR),
+  exld_client_rfo_id      VARCHAR2(2000 CHAR),
+  exld_deal_number        VARCHAR2(250 CHAR),
+  exld_currency           VARCHAR2(3 CHAR) not null,
+  exld_begin_date         DATE,
+  exld_plan_end_date      DATE,
+  exld_actual_end_date    DATE,
+  exld_amount             NUMBER,
+  exld_deal_status        VARCHAR2(255 CHAR),
+  exld_rate_value         NUMBER,
+  exld_prod_name          VARCHAR2(255 CHAR),
+  exld_prod_type          VARCHAR2(255 CHAR),
+  exld_old_ovd_scheme     CHAR(1 CHAR) not null,
+  exld_dept_name          VARCHAR2(254 CHAR),
+  exld_dept_number        VARCHAR2(254 CHAR),
+  exld_unp_name           VARCHAR2(254 CHAR),
+  exld_unp_number         VARCHAR2(254 CHAR),
+  exld_fil_name           VARCHAR2(254 CHAR),
+  exld_fil_number         VARCHAR2(254 CHAR),
+  exld_create_empl_name   VARCHAR2(100 CHAR),
+  exld_create_empl_number VARCHAR2(10),
+  exld_sign_empl_name     VARCHAR2(100 CHAR),
+  exld_sign_empl_number   VARCHAR2(10),
+  exld_fgu_as_of_date     DATE,
+  exld_fgu_cred           NUMBER,
+  exld_fgu_prc            NUMBER,
+  exld_fgu_ovrd_cred      NUMBER,
+  exld_fgu_ovrd_prc       NUMBER,
+  exld_to_ovrd_date       DATE,
+  exld_ovrd_days          NUMBER,
+  exld_cl_to_ovrd_date    DATE,
+  exld_cl_ovrd_days       NUMBER,
+  exld_vnb_ovrd_cred      NUMBER,
+  exld_vnb_ovrd_prc       NUMBER,
+  exld_vnb_comm           NUMBER,
+  exld_fgu_overdraft      NUMBER,
+  exld_fgu_ovrd_overdraft NUMBER,
+  exld_vnb_overdraft      NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.DWH_DM_SPGU_LD to LOADDB;
+grant select on U1.DWH_DM_SPGU_LD to LOADER;
+

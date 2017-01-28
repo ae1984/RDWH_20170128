@@ -1,0 +1,22 @@
+﻿create table U1.T_RDWH_MONTH_UPDATE
+(
+  data      DATE,
+  operation VARCHAR2(500),
+  status    VARCHAR2(100)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RDWH_MONTH_UPDATE to LOADDB;
+grant select on U1.T_RDWH_MONTH_UPDATE to LOADER;
+

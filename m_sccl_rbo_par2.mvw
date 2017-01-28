@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_SCCL_RBO_PAR2
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       cl.rfo_client_id
+
+       ,sum(case when t1.cred_program_code not in ('DEP_CARD','ZP_KASPI_GOLD','ZP_CARDS')
+                 then pc.amount end) as card_pay_cred_90d_sum
+
+from u1.V_CLIENT_RFO_BY_ID cl
+left join U1.M_RBO_CONTRACT_BAS t1 on t1.rfo_client_id = cl.rfo_client_id
+left join u1.M_RBO_PAYMENT_CARD pc on pc.rbo_contract_id = t1.rbo_contract_id
+                                      and trunc(pc.oper_date) >= trunc(sysdate) - 90
+group by cl.rfo_client_id;
+grant select on U1.M_SCCL_RBO_PAR2 to LOADDB;
+grant select on U1.M_SCCL_RBO_PAR2 to LOAD_MO;
+grant select on U1.M_SCCL_RBO_PAR2 to RTS_RDWH;
+
+

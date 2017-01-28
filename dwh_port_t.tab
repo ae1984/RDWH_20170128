@@ -1,0 +1,30 @@
+﻿create table U1.DWH_PORT_T
+(
+  rep_date        DATE,
+  prod_type       VARCHAR2(255 CHAR),
+  deal_number     VARCHAR2(250 CHAR),
+  delinq_days_old NUMBER,
+  x_total_debt    NUMBER,
+  x_delinq_amount NUMBER,
+  x_is_card       NUMBER,
+  x_client_id     VARCHAR2(7 CHAR),
+  x_start_date    DATE,
+  is_on_balance   VARCHAR2(1 CHAR),
+  x_delinq_days   NUMBER,
+  x_is_active     NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.DWH_PORT_T to LOADDB;
+grant select on U1.DWH_PORT_T to LOADER;
+

@@ -1,0 +1,43 @@
+﻿create table U1.T_KASPIKZ_USER_REQUEST_TST
+(
+  rfo_client_id       VARCHAR2(50),
+  client_name         VARCHAR2(401),
+  client_inn          VARCHAR2(100),
+  is_blocked          NUMBER(3) not null,
+  wrong_auth_tries    NUMBER(10) not null,
+  reg_date            DATE,
+  user_id             NUMBER,
+  login_val           VARCHAR2(2700),
+  change_date         DATE,
+  is_disabled         NUMBER(3),
+  user_id_pre         NUMBER,
+  login_val_pre       VARCHAR2(2700),
+  nc_client_ip_dec    VARCHAR2(19),
+  security_tag_id     NUMBER,
+  device_id           NUMBER(20),
+  user_agent_id       NUMBER,
+  user_agent          VARCHAR2(4000),
+  session_id          NUMBER,
+  date_start          DATE,
+  start_time          DATE,
+  last_act_time       DATE,
+  close_time          DATE,
+  is_valid            NUMBER(3) not null,
+  nc_client_ip        VARCHAR2(64),
+  log_http_request_id NUMBER not null
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_KASPIKZ_USER_REQUEST_TST to LOADDB;
+

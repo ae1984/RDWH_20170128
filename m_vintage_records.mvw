@@ -1,0 +1,9 @@
+﻿create materialized view U1.M_VINTAGE_RECORDS
+using no index
+refresh complete on demand
+as
+select * from VINTAGE_RECORDS;
+grant select on U1.M_VINTAGE_RECORDS to LOADDB;
+grant select on U1.M_VINTAGE_RECORDS to LOADER;
+
+

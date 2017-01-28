@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_MO_GCVP_CACHE
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30 */
+       t.client_iin,
+       round(avg(t.pmt_by_cli_org_bnk_mon_sum)) as average_amount
+from u1.M_MO_GCVP_PMT_CACHE t
+group by t.client_iin;
+grant select on U1.M_MO_GCVP_CACHE to LOADDB;
+grant select on U1.M_MO_GCVP_CACHE to LOAD_MO;
+
+

@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_TMP_E_KDN_GOODS
+refresh force on demand
+as
+select
+       k.deal_number,
+       k.prod_type,
+       k.kdn_form_salary_max,
+       m.contract_term_months,
+       case when m.contract_term_months >= 9 and m.contract_term_months < 12 and k.kdn_form_salary_max >= 90 then 1
+            when m.contract_term_months >= 12 and m.contract_term_months < 18 and k.kdn_form_salary_max >= 70 then 1
+            when m.contract_term_months >= 18 and m.contract_term_months < 24 and k.kdn_form_salary_max >= 50 then 1
+            when m.contract_term_months >= 24 and m.contract_term_months < 36 and k.kdn_form_salary_max >= 30 then 1
+            when m.contract_term_months >= 36 and m.contract_term_months < 48 and k.kdn_form_salary_max >= 30 then 1
+            when m.contract_term_months >= 48 and m.contract_term_months < 60 and k.kdn_form_salary_max >= 20 then 1
+            when m.contract_term_months >= 60 and k.kdn_form_salary_max >= 20 then 1
+       else 0 end as is_rejected
+from u1.M_TMP_J_K5 k
+join u1.M_FOLDER_CON_MINER m on m.contract_number = k.deal_number
+where k.x_start_date >= to_date('01.01.2013','dd.mm.yyyy') and
+      k.x_start_date < to_date('01.01.2014','dd.mm.yyyy') and
+      k.prod_type in ('ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)','ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)');
+grant select on U1.M_TMP_E_KDN_GOODS to LOADDB;
+grant select on U1.M_TMP_E_KDN_GOODS to LOADER;
+
+

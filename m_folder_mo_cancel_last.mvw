@@ -1,0 +1,140 @@
+﻿create materialized view U1.M_FOLDER_MO_CANCEL_LAST
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       c.folder_id,
+       c.rfolder_id,
+       c.par_code,
+       c.par_name,
+       max(c.is_rejecting) as is_rejecting,
+       max(c.reject_prior) as reject_prior
+from u1.M_FOLDER_MO_CANCEL_LAST_PRE2 c
+where (c.is_rejecting < 2
+   or (c.is_rejecting = 2 and c.par_code like '%SC_AA%'))
+      --SC_MIXED_RES_PRE
+      and c.par_code not in ('SC_RISK_NOT_VIRGIN_RES_PRE', --'РИСКОВЫЕ НЕ БЕКИ (СКОРИНГ)',
+                             'RISKY_GOODS_RES_PRE', --'РИСК. ТОВАРЫ - РЕЗУЛЬТАТ (ДО КГ)',
+                             'SC_8_RV_COMB_RES_PRE', --'КОМБИНИР. ПРОВЕРКА - РЕЗУЛЬТАТ (ДО КГ)',
+                             'SC_8_RV_SUM_FRESH_RES_PRE', --'ПРОВЕРКА ПО СУММЕ И СВЕЖЕСТИ КЛИЕНТА (ДО КГ)',
+                             'SC_R_VIRG_EKT350_RES_PRE', --'РИСК ЭКТ БЕКИ 350 (ДО КГ)')
+                             'SC_MIXED_RES_PRE' --СМЕШАННАЯ ПРОВЕРКА - ОБОБЩАЮЩАЯ
+                             )
+      --Проверка по прескорингу (КН)
+      and not (c.par_code in ('SC_RFO_PRESCO_APPROVE_RES_PRE',
+                              'SC_RFO_PRESCO_APPROVE_B_RES_PRE')
+               and c.date_create >= to_date('11092015', 'ddmmyyyy') --дата добавления SC_RFO_PRESCO_APPROVE_B_RES_PRE
+               )
+      --RBP + SC_KN_MATRIX_CAT_A_RES_PRE
+      and c.par_code not in ('SC_KN_MATRIX_CAT_A_RES_PRE')
+
+      and (not (c.reject_prior >= 36000000000000
+      and c.reject_prior <= 37000000000000
+      and c.par_code in ('PRSC_PKB_NEGATIVE_STATUS_RES_PRE',
+                         'PRSC_OVERDUE_EXIST_RES_PRE',
+                         'PRSC_KDN_REGUL_MATRIX',
+                         'PRSC_GCVP_SALARY_RES_PRE',
+                         'PRSC_CONTACT_ABSENCE_RES_PRE',
+                         'PRSC_CL_CONTACTS_RES_PRE',
+                         'PRSC_RESIDENT_RES_PRE',
+                         'PRSC_PROD_MATRIX_RES_PRE',
+                         'PRSC_CLIENT_AGE_RES_PRE',
+                         'PRSC_CLN_4D8M_RES_PRE',
+                         'PRSC_GCVP_DAYS_ELAPSED_RES_PRE',
+                         'SC_KDN_REGUL',
+                         'PRSC_VERIFICATION_RESULT',
+                         'PRSC_GCVP_PKB_ACTIVE_CONTRACTS_RES_PRE',
+                         'SC_IS_CATEG_A') ) )
+group by c.folder_id,
+         c.rfolder_id,
+         c.par_code,
+         c.par_name
+
+-------------------------
+--только SC_MIXED_RES_PRE
+union
+select /*+ parallel 30 */
+       m.folder_id,
+       m.rfolder_id,
+       m.par_code,
+       m.par_name,
+       m.is_rejecting,
+       m.reject_prior
+from u1.M_FOLDER_MO_CANCEL_LAST_PRE3 m
+
+--Результаты правил, участвующих в смешанной проверке
+union
+select /*+ parallel 30 */
+       c2.folder_id,
+       c2.rfolder_id,
+       c2.par_code,
+       c2.par_name,
+       case when m2.folder_id is null then 2 else 1 end as is_rejecting,
+       c2.reject_prior
+from u1.M_FOLDER_MO_CANCEL_LAST_PRE2 c2
+left join u1.M_FOLDER_MO_CANCEL_LAST_PRE3 m2 on m2.folder_id = c2.folder_id
+                                                and m2.rfolder_id = c2.rfolder_id
+where c2.par_code in ('SC_RISK_NOT_VIRGIN_RES_PRE', --'РИСКОВЫЕ НЕ БЕКИ (СКОРИНГ)',
+                      'RISKY_GOODS_RES_PRE', --'РИСК. ТОВАРЫ - РЕЗУЛЬТАТ (ДО КГ)',
+                      'SC_8_RV_COMB_RES_PRE', --'КОМБИНИР. ПРОВЕРКА - РЕЗУЛЬТАТ (ДО КГ)',
+                      'SC_8_RV_SUM_FRESH_RES_PRE', --'ПРОВЕРКА ПО СУММЕ И СВЕЖЕСТИ КЛИЕНТА (ДО КГ)',
+                      'SC_R_VIRG_EKT350_RES_PRE' --'РИСК ЭКТ БЕКИ 350 (ДО КГ)')
+                      )
+-----------------------------
+--Проверка по прескорингу (КН)
+union
+select --+ parallel 30
+       t.folder_id,
+       t.rfolder_id,
+       'SC_RFO_PRESCO_APPROVE_AB_RES_PRE' as par_code,
+       'ПРАВИЛО ПО КАТЕГОРИИ А, Б И ПРОВЕРКАМ ПРЕСКОРИНГА РФО' as par_name,
+       1 as is_rejecting,
+       max(t.reject_prior) as reject_prior
+from u1.M_FOLDER_MO_CANCEL_LAST_PRE2 t
+where t.date_create >= to_date('11092015', 'ddmmyyyy')
+group by t.folder_id, t.rfolder_id
+having sum(case when t.par_code in ('SC_RFO_PRESCO_APPROVE_RES_PRE',
+                                    'SC_RFO_PRESCO_APPROVE_B_RES_PRE'
+                                    ) then 1 end) >= 2
+
+
+--RBP + SC_KN_MATRIX_CAT_A_RES_PRE
+union
+select /*+ parallel 30 */
+       m4.folder_id,
+       m4.rfolder_id,
+       m4.par_code,
+       m4.par_name,
+       m4.is_rejecting,
+       m4.reject_prior
+from u1.M_FOLDER_MO_CANCEL_LAST_PRE4 m4
+
+
+--and trunc(c.date_create) < to_date('19012016', 'ddmmyyyy')
+/*union
+select \*+ parallel 30 *\
+       c.folder_id,
+       c.rfolder_id,
+       c.par_code,
+       c.par_name,
+       c.is_rejecting
+from U1.M_FOLDER_MO_CANCEL_LAST_PRE2 c
+join u1.m_folder_con_cancel_base f on f.folder_id = c.folder_id and
+                                      f.process_name != 'ОНЛАЙН КРЕДИТ'
+where c.par_code = 'SC_CHECK_MAN_REJ'
+
+union
+select \*+ parallel 30 *\
+       c.folder_id,
+       c.rfolder_id,
+       c.par_code,
+       c.par_name,
+       c.is_rejecting
+from U1.M_FOLDER_MO_CANCEL_LAST_PRE2 c
+join u1.m_folder_con_cancel_base f on f.folder_id = c.folder_id and
+                                      f.process_name = 'ОНЛАЙН КРЕДИТ'
+where c.par_code = 'SC_CHECK_MAN_REJ' and
+      c.date_create < to_date('19012016', 'ddmmyyyy')*/;
+grant select on U1.M_FOLDER_MO_CANCEL_LAST to LOADDB;
+
+

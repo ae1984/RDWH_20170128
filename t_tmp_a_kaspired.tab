@@ -1,0 +1,33 @@
+﻿create table U1.T_TMP_A_KASPIRED
+(
+  fld_id               NUMBER not null,
+  fld_date_create      DATE,
+  client_iin           VARCHAR2(36),
+  client_name          VARCHAR2(2252),
+  fld_point_name       VARCHAR2(300),
+  is_mo_reject         NUMBER,
+  mo_cred_limit_k      NUMBER,
+  fld_department_name  VARCHAR2(600),
+  create_user_name     VARCHAR2(400),
+  rfo_client_id        NUMBER,
+  fld_number           VARCHAR2(48),
+  fld_result_oper_note VARCHAR2(4000),
+  fld_c_docs           NUMBER not null,
+  fld_history_id       NUMBER not null,
+  c_docs               NUMBER not null
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_A_KASPIRED to LOADDB;
+

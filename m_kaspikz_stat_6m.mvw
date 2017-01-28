@@ -1,0 +1,71 @@
+﻿create materialized view U1.M_KASPIKZ_STAT_6M
+build deferred
+refresh force on demand
+as
+select
+  a.folder_id,
+  a.a_date,
+  a.user_id,
+  a.rfo_client_id,
+  a.rfo_con_or_claim_id as app_id,
+  a.user_pay_count,
+  a.user_pay_amount,
+  a.user_pay_avg_amount,
+  a.user_pay_max_amount,
+  a.user_pay_median_amount,
+  count(distinct a.category_name)   as category_count,
+  max(a.category_name)              keep (dense_rank last order by a.category_pay_amount) as max_category_name,
+  max(a.category_pay_count)         keep (dense_rank last order by a.category_pay_amount) as max_category_pay_count,
+  max(a.category_pay_amount)        keep (dense_rank last order by a.category_pay_amount) as max_category_pay_amount,
+  max(a.category_pay_avg_amount)    keep (dense_rank last order by a.category_pay_amount) as max_category_pay_avg_amount,
+  max(a.category_pay_max_amount)    keep (dense_rank last order by a.category_pay_amount) as max_category_pay_max_amount,
+  max(a.category_pay_median_amount) keep (dense_rank last order by a.category_pay_amount) as max_category_pay_median_amount,
+
+  max(a.category_name)              keep (dense_rank first order by a.category_pay_amount) as min_category_name,
+  max(a.category_pay_count)         keep (dense_rank first order by a.category_pay_amount) as min_category_pay_count,
+  max(a.category_pay_amount)        keep (dense_rank first order by a.category_pay_amount) as min_category_pay_amount,
+  max(a.category_pay_avg_amount)    keep (dense_rank first order by a.category_pay_amount) as min_category_pay_avg_amount,
+  max(a.category_pay_max_amount)    keep (dense_rank first order by a.category_pay_amount) as min_category_pay_max_amount,
+  max(a.category_pay_median_amount) keep (dense_rank first order by a.category_pay_amount) as min_category_pay_median_amount
+
+
+from (
+  select /*+ parallel(30)*/
+    m.folder_id,
+    pi.rfo_client_id,
+    pi.user_id,
+    m.a_date,
+    m.rfo_con_or_claim_id,
+    count(1)                   over (partition by m.rfo_con_or_claim_id, m.folder_id,pi.rfo_client_id) as user_pay_count,
+    round(sum(pi.pay_amount)   over (partition by m.rfo_con_or_claim_id, m.folder_id,pi.rfo_client_id)) as user_pay_amount,
+    round(avg(pi.pay_amount)   over (partition by m.rfo_con_or_claim_id, m.folder_id,pi.rfo_client_id)) as user_pay_avg_amount,
+    round(max(pi.pay_amount)   over (partition by m.rfo_con_or_claim_id, m.folder_id,pi.rfo_client_id)) as user_pay_max_amount,
+    round(median(pi.pay_amount)over (partition by m.rfo_con_or_claim_id, m.folder_id,pi.rfo_client_id)) as user_pay_median_amount,
+  ------------------------
+    pi.category_name,
+    count(1)                   over (partition by m.rfo_con_or_claim_id, m.folder_id,pi.rfo_client_id,pi.category_name) as category_pay_count,
+    round(sum(pi.pay_amount)   over (partition by m.rfo_con_or_claim_id, m.folder_id,pi.rfo_client_id,pi.category_name)) as category_pay_amount,
+    round(avg(pi.pay_amount)   over (partition by m.rfo_con_or_claim_id, m.folder_id,pi.rfo_client_id,pi.category_name)) as category_pay_avg_amount,
+    round(max(pi.pay_amount)   over (partition by m.rfo_con_or_claim_id, m.folder_id,pi.rfo_client_id,pi.category_name)) as category_pay_max_amount,
+    round(median(pi.pay_amount)over (partition by m.rfo_con_or_claim_id, m.folder_id,pi.rfo_client_id,pi.category_name)) as category_pay_median_amount
+  ------------------------
+  from u1.M_MATRIX_BASE m
+  join u1.M_KASPIKZ_PAY pi on m.rfo_client_id = pi.rfo_client_id
+                          and trunc(pi.pay_date,'mm') < trunc(m.a_date)
+                          and trunc(pi.pay_date,'mm') >= add_months(trunc(m.a_date),-6)
+                          and pi.is_prov = 1
+) a
+group by
+  a.folder_id,
+  a.a_date,
+  a.user_id,
+  a.rfo_client_id,
+  a.rfo_con_or_claim_id,
+  a.user_pay_count,
+  a.user_pay_amount,
+  a.user_pay_avg_amount,
+  a.user_pay_max_amount,
+  a.user_pay_median_amount;
+grant select on U1.M_KASPIKZ_STAT_6M to LOADDB;
+
+

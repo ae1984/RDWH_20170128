@@ -1,0 +1,85 @@
+﻿create materialized view U1.M_TMP_SH_VERIF
+refresh force on demand
+as
+select  /*+ no_parallel*/
+        /*distinct mvv.folders_id,
+        cc.*,
+        d.**/
+distinct
+        mvv.verify_group,
+        case when d.max_debt_used < 50000 then '<50000'
+             when d.max_debt_used >= 50000 and d.max_debt_used < 100000 then '50 000-100 000'
+             when d.max_debt_used >= 100000 and d.max_debt_used < 150000 then '100 000-150 000'
+             when d.max_debt_used >= 150000 and d.max_debt_used < 200000 then '150 000-200 000'
+             when d.max_debt_used >= 200000 and d.max_debt_used < 250000 then '200 000-250 000'
+             when d.max_debt_used >= 250000 and d.max_debt_used < 300000 then '250 000-300 000'
+             when d.max_debt_used >= 300000 and d.max_debt_used < 350000 then '300 000-350 000'
+              when d.max_debt_used >= 350000 and d.max_debt_used < 400000 then '350 000-400 000'
+                 when d.max_debt_used >= 400000 and d.max_debt_used < 450000 then '400 000-450 000'
+                    when d.max_debt_used >= 450000 and d.max_debt_used < 500000 then '450 000-500 000'
+                    when d.max_debt_used >= 500000 and d.max_debt_used < 1000000 then '500 000-1 000 000'
+                      when d.max_debt_used >= 1000000 then '>1000000' else null
+                          end as amount_of_contract,
+        trunc(cc.folder_date_create_mi, 'mm') as folder_date_create_mi,
+        d.product_start_last,
+        mvv.verify_status,
+        uu.c_name,
+        --mvv1.person_tabnum,
+        cc.expert_name,
+        round(sum(d.max_debt_used)/1000000) as sales_mln,
+        round(sum(d.delinq_rate_b_w * d.max_debt_used) / sum(d.max_debt_used),1)/100 as del_rate_b_w,
+        round(sum(d.delinq_rate_pmt_1 * d.max_debt_used) / sum(d.max_debt_used),1)/100 as del_rate_1,
+        round(sum(d.delinq_rate_pmt_1_45 * d.max_debt_used) / sum(d.max_debt_used),1)/100 as del_rate_1_45,
+        count(case when d.delinq_rate_pmt_1 > 0 then d.contract_id end) / count(d.contract_id)  as del_rate_1_cnt,
+        count(case when d.delinq_rate_b_w > 0 then d.contract_id end) / count(d.contract_id)  as del_rate_b_w_cnt,
+        count(case when d.delinq_rate_pmt_1 > 0 then d.contract_id end) as cnt_cont_del_1,
+        count(case when d.delinq_rate_b_w > 0 then d.contract_id end) as cnt_cont_del_bw,
+        count(*) as con_cnt,
+        count(d.contract_id) as dist_cnt
+
+
+from u1.M_OUT_DWH_VERIFICATION mvv
+join (select distinct verification_id,
+                      person_tabnum,
+                      max(verification_type_id) keep (dense_rank last order by verification_date) as verification_type_id
+              from u1.M_VERIFICATION
+              group by verification_id,
+                      person_tabnum) mvv1 on mvv.id = mvv1.verification_id
+join u1.m_folder_con_cancel cc on mvv.folders_id = cc.folder_id
+join u1.m_contract_cal_del d on cc.folder_id = d.folder_id_first and cc.contract_number = d.contract_number
+join u1.v_dwh_portfolio_current dd on dd.deal_number = cc.contract_number
+join u1.V_CONTRACT_CAL ccc on ccc.contract_number = d.contract_number and
+     ccc.is_refin_restruct_first != 1
+left join v_rfo_z#user uu on uu.c_num_tab = mvv1.person_tabnum
+where not exists (select null from M_FOLDER_CON_CANCEL f
+                  where f.folder_id = d.folder_id_first and f.is_refin = 1)
+and trunc(cc.folder_date_create_mi, 'mm') >= '01.01.2015' and trunc(cc.folder_date_create_mi, 'mm') < '01.05.2015'
+/* and mvv.verify_group = 'VEC_GR_5P'
+and d.product_start_last = 'ТК'
+and verify_status = 'OVERDUE'
+and d.max_debt_used >= 50000 and d.max_debt_used < 100000*/
+group by mvv.verify_group,
+         case when d.max_debt_used < 50000 then '<50000'
+             when d.max_debt_used >= 50000 and d.max_debt_used < 100000 then '50 000-100 000'
+             when d.max_debt_used >= 100000 and d.max_debt_used < 150000 then '100 000-150 000'
+             when d.max_debt_used >= 150000 and d.max_debt_used < 200000 then '150 000-200 000'
+             when d.max_debt_used >= 200000 and d.max_debt_used < 250000 then '200 000-250 000'
+             when d.max_debt_used >= 250000 and d.max_debt_used < 300000 then '250 000-300 000'
+             when d.max_debt_used >= 300000 and d.max_debt_used < 350000 then '300 000-350 000'
+              when d.max_debt_used >= 350000 and d.max_debt_used < 400000 then '350 000-400 000'
+                 when d.max_debt_used >= 400000 and d.max_debt_used < 450000 then '400 000-450 000'
+                    when d.max_debt_used >= 450000 and d.max_debt_used < 500000 then '450 000-500 000'
+                    when d.max_debt_used >= 500000 and d.max_debt_used < 1000000 then '500 000-1 000 000'
+                      when d.max_debt_used >= 1000000 then '>1000000' else null
+                          end,
+        trunc(cc.folder_date_create_mi, 'mm'),
+        d.product_start_last,
+        mvv.verify_status,
+       -- mvv1.person_tabnum,
+       uu.c_name,
+        cc.expert_name
+having sum(d.max_debt_used) > 0;
+grant select on U1.M_TMP_SH_VERIF to LOADDB;
+grant select on U1.M_TMP_SH_VERIF to LOADER;
+
+

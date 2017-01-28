@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_TMP_J_SN_2_NUM_ABOVE_20
+refresh complete on demand
+as
+select t.phone_number, count(distinct t.rfo_client_id) as cli_cnt_all,
+       trunc(min(t.folder_date)) as folder_date_min
+from V_FORM_CLIENT_CONTACT_PHONE t
+where t.phone_type_simple != 'РАБОЧИЙ'
+group by t.phone_number
+having count(distinct t.rfo_client_id) > 20;
+grant select on U1.M_TMP_J_SN_2_NUM_ABOVE_20 to LOADDB;
+grant select on U1.M_TMP_J_SN_2_NUM_ABOVE_20 to LOADER;
+
+

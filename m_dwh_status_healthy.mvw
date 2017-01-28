@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_DWH_STATUS_HEALTHY
+build deferred
+refresh force on demand
+as
+select dd.dcp_as_of_date as rep_date,
+       dd.dcp_deal_number as deal_number,
+       dd.dcp_deal_status as deal_status,
+       dd.dcp_status_healthy as status_healthy,
+       mv.value              as month_last_date
+from T_OP_FIX f
+join M_RBO_CALENDAR_VALUE mv on mv.calendar_name = 'LAST_MONTH_DAY' and mv.value < trunc(sysdate) and mv.value >= to_date('01-01-2008','dd-mm-yyyy')
+join DWH_SAN.D_CP_DEAL@Rdwh_Exd dd on dd.dcp_deal_number = f.contract_number and trunc(dd.dcp_as_of_date,'mm') = trunc(mv.value,'mm')
+where dd.dcp_status_healthy = 'Y';
+grant select on U1.M_DWH_STATUS_HEALTHY to LOADDB;
+
+

@@ -1,0 +1,56 @@
+﻿create table U1.T_ART_PROCESS
+(
+  id         NUMBER not null,
+  start_date VARCHAR2(50) not null,
+  auth_err   NUMBER,
+  trans_err  NUMBER,
+  all_err    NUMBER,
+  all_0      NUMBER,
+  auth_ok    NUMBER,
+  trans_ok   NUMBER,
+  all_ok     NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.T_ART_PROCESS_IND1 on U1.T_ART_PROCESS (START_DATE)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_ART_PROCESS
+  add constraint T_ART_PROCESS_PK primary key (ID)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.T_ART_PROCESS_PK nologging;
+grant select on U1.T_ART_PROCESS to LOADDB;
+grant select on U1.T_ART_PROCESS to LOADER;
+

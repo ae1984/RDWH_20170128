@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_REJ_ONLINE_FR_BL_170215
+refresh force on demand
+as
+select /*+ no_parallel*/
+       t.contract_number
+from U1.M_FOLDER_CON_MINER t
+
+left join (select
+                  f.c_client rfo_client_id,
+                  c.c_date   cancel_date
+           from u1.V_RFO_Z#FOLDERS    f
+
+           join u1.V_RFO_Z#KAS_CANCEL c on c.c_folders = f.id and
+                                           c.c_type    = 28073292042 --ПОДОЗРЕНИЕ В МОШЕННИЧЕСТВЕ
+           ) can on can.rfo_client_id = t.rfo_client_id and
+                    can.cancel_date   < t.folder_date_create
+group by t.contract_number
+having count(can.rfo_client_id) > 0;
+grant select on U1.M_REJ_ONLINE_FR_BL_170215 to LOADDB;
+grant select on U1.M_REJ_ONLINE_FR_BL_170215 to LOADER;
+
+

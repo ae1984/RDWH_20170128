@@ -1,0 +1,66 @@
+﻿create materialized view U1.M_SCCL_DWH_CL_CATEG
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       t.rfo_client_id
+
+       ,case --CATEG_A
+             when coalesce(t.prev_con_closed_cnt, 0) >= 2         --Закрыл несколько кредитов
+                  and coalesce(t.prior_optim_count, 0) = 0           --Не было оптимизации
+                  and coalesce(t2.prev_con_del_days_max, 0) <= 15 --Не допускал просрочку > 15
+                  and coalesce(t2.fact_pmt_mon_before, 0) >= 12   --Кол-во платежей
+             then 'A'
+             --CATEG_B
+             when coalesce(t.prev_con_closed_cnt, 0) >= 1         --Закрыл несколько кредитов
+                  and coalesce(t2.prev_con_del_days_max, 0) < 31  --Не допускал просрочку > 30
+                  and coalesce(t2.fact_pmt_mon_before, 0) >= 6    --Кол-во платежей
+             then 'B'
+             --CATEG_C
+             when coalesce(t.prev_con_cnt, 0) > 0 then 'C'
+        else 'D' end as client_categ
+
+
+
+/*
+CATEG_A
+
+IF #SC_PREV_CON_CLOSED_CNT# >= 2 and
+#SC_PRIOR_OPTIM_COUNT# = 0 and
+coalesce(#SC_PREV_CON_DEL_DAYS_MAX#, 0) <= 15 and
+#SC_FACT_PMT_MON_BEFORE# >= 12
+then RESULT := 1;
+else RESULT := 0;
+end if;
+
+case when coalesce(a1.prev_con_closed_cnt, 0) >= 2 and     --Закрыл несколько кредитов
+         coalesce(a1.prior_optim_count, 0) = 0 and        --Не было оптимизации
+         coalesce(a3.prev_con_del_days_max, 0) <= 15 and  --Не допускал просрочку > 15
+         coalesce(a3.fact_pmt_mon_before, 0) >= 12 and    --Кол-во платежей
+         coalesce(a3.fact_pmt_mon_before_12_mon, 0) > 0   --Платил в течении последних 12 мес
+    then 1 else 0 end as is_categ_a,
+*/
+/*
+CATEG_B
+
+if #SC_IS_CATEG_A# = 0 and
+#SC_PREV_CON_CLOSED_CNT# >= 1 and
+coalesce(#SC_PREV_CON_DEL_DAYS_MAX#, 0) < 31 and
+#SC_FACT_PMT_MON_BEFORE# >= 6
+then RESULT := 1;
+else RESULT := 0;
+end if;
+
+case when coalesce(a1.prev_con_closed_cnt, 0) >= 1 and     --Закрыл несколько кредитов
+         coalesce(a3.prev_con_del_days_max, 0) < 31 and  --Не допускал просрочку > 15
+         coalesce(a3.fact_pmt_mon_before, 0) >= 6     --Кол-во платежей
+    then 1 else 0 end as is_categ_b,
+*/
+
+
+from u1.M_SCCL_DWH_CL_PAR1 t
+left join u1.M_SCCL_DWH_CL_PAR2 t2 on t2.rfo_client_id = t.rfo_client_id;
+grant select on U1.M_SCCL_DWH_CL_CATEG to LOADDB;
+grant select on U1.M_SCCL_DWH_CL_CATEG to RTS_RDWH;
+
+

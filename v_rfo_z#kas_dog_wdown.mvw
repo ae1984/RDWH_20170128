@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_RFO_Z#KAS_DOG_WDOWN
+build deferred
+refresh complete on demand
+as
+select id,
+       c_dogovor,
+       c_selected,
+       c_prioritet,
+       collection_id
+  from ibs.Z#KAS_DOG_WDOWN@rfo_snap;
+grant select on U1.V_RFO_Z#KAS_DOG_WDOWN to LOADDB;
+grant select on U1.V_RFO_Z#KAS_DOG_WDOWN to LOADER;
+
+

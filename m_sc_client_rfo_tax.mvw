@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_SC_CLIENT_RFO_TAX
+build deferred
+refresh force on demand
+as
+select x.rfo_client_id as rfo_client_id
+from(
+select f.iin as inn,
+       cl.rfo_client_id as rfo_client_id,
+       f.folder_id as folder_id,
+       max(tax.c_sign_inactive) keep (dense_rank last order by tax.c_date_last_upd) as c_sign_inactive
+from u1.M_FOLDER_CON_CANCEL f
+join u1.V_CLIENT_RFO_BY_ID cl on cl.rfo_client_id = f.rfo_client_id
+join u1.V_RFO_Z#KAS_NB_TAXPAYER tax on tax.c_iin_bin = cl.iin and tax.c_date_last_upd <= f.folder_date_create_mi
+                                    and (tax.c_date_remov_reg is null or tax.c_date_remov_reg > f.folder_date_create_mi)
+where f.is_credit_issued = 1 and f.folder_date_create_mi >= to_date('201301', 'yyyymm')
+group by f.iin,
+       f.folder_id,
+       cl.rfo_client_id
+union all
+select f.iin,
+       cl.rfo_client_id as rfo_client_id,
+       f.folder_id,
+       max(tax.c_sign_inactive) keep (dense_rank last order by tax.c_date_last_upd) as c_sign_inactive
+from u1.M_FOLDER_CON_CANCEL f
+join u1.V_CLIENT_RFO_BY_ID cl on cl.rfo_client_id = f.rfo_client_id
+join u1.V_RFO_Z#KAS_NB_TAXPAYER tax on tax.c_rnn = cl.rnn and tax.c_date_last_upd <= f.folder_date_create_mi
+                                    and (tax.c_date_remov_reg is null or tax.c_date_remov_reg > f.folder_date_create_mi)
+where f.is_credit_issued = 1 and f.folder_date_create_mi < to_date('201301', 'yyyymm')
+group by f.iin,
+       f.folder_id,
+       cl.rfo_client_id) x
+where x.c_sign_inactive =1
+group by x.rfo_client_id;
+grant select on U1.M_SC_CLIENT_RFO_TAX to LOADDB;
+grant select on U1.M_SC_CLIENT_RFO_TAX to LOAD_MO;
+
+

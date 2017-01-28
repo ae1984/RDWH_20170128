@@ -1,0 +1,70 @@
+﻿create materialized view U1.M_CLIENT_PHONE_NUMBER_TST3
+refresh force on demand
+as
+select cl.rfo_client_id,cso.rbo_client_id, cl.iin,cl.rnn ,cso.clnt_name,cso.phone_number,cso.phone_date,cso.text,
+  cso.result_name,cso.result_desc,cso.status_code,cso.status_name,cso.cont_theme, 'SMS' as contact_type,
+  system_name
+  from V_DWH_CLIENT_CONTACT_SMS_OPER cso
+  join m_client_link c on cso.rbo_client_id = c.rbo_client_id
+  join v_client_rfo_by_id cl on cl.rfo_client_id = c.rfo_client_id
+  where cso.rbo_client_id is not null
+   and cso.phone_date >= to_date('01-10-2014','dd-mm-yyyy')
+union all
+  select cl.rfo_client_id,cso.rbo_client_id,  cl.iin,cl.rnn  ,cso.clnt_name,cso.phone_number,cso.phone_date,cso.text,
+  cso.result_name,cso.result_desc,cso.status_code,cso.status_name,cso.cont_theme, 'SMS' as contact_type,
+  system_name
+  from V_DWH_CLIENT_CONTACT_SMS_TST CSO
+  join m_client_link c on cso.rbo_client_id = c.rbo_client_id
+  join v_client_rfo_by_id cl on cl.rfo_client_id = c.rfo_client_id
+  where  cso.rbo_client_id is not null
+  and cso.phone_date < to_date('01-10-2014','dd-mm-yyyy')
+union all
+  select cl.rfo_client_id,c.rbo_client_id,cl.iin,cl.rnn ,c.clnt_name ,c.phone_number,c.phone_date,c.text,c.result_name,c.result_desc,c.status_code,c.status_name,c.cont_theme,
+  case when text = 'Call' then 'CALL'
+  else 'SMS' end as   contact_type,
+    system_name
+  from V_DWH_CLIENT_CONTACT c
+  join m_client_link mc on mc.rbo_client_id = c.rbo_client_id
+  join v_client_rfo_by_id cl on cl.rfo_client_id = mc.rfo_client_id
+  where  c.rbo_client_id is not null
+union all
+  select cl.rfo_client_id,cc.rbo_client_id,cl.iin,cl.rnn ,cc.clnt_name, cc.phone_number,
+         cc.phone_date,
+         cast (null as varchar2(1000)) as text,
+         cc.result_name,
+         cc.result_desc,
+         cc.status_code,
+         cc.status_name,
+         cc.cont_theme,
+         'CALL' as   contact_type,
+         'CALL_CENTER' system_name
+  from V_DWH_CLIENT_CONTACT_CC cc
+  join m_client_link c on cc.rbo_client_id = c.rbo_client_id
+  join v_client_rfo_by_id cl on cl.rfo_client_id = c.rfo_client_id
+  where  cc.rbo_client_id is not null
+union all
+  select cl.rfo_client_id,to_number(sc.rbo_client_id) as rbo_client_id,cl.iin,cl.rnn ,sc.clnt_name,sc.phone_number, sc.phone_date,
+        sc.text,sc.result_name,sc.result_desc,sc.status_code,sc.status_name,sc.cont_theme,
+         'CALL' as   contact_type,
+         'SOFT_COLLECTION' as system_name
+  from V_DWH_SOFT_COLLECTION_CALLS sc
+  join m_client_link c on sc.rbo_client_id = c.rbo_client_id
+  join v_client_rfo_by_id cl on cl.rfo_client_id = c.rfo_client_id
+  where  sc.rbo_client_id is not null
+union all
+  select cl.rfo_client_id,csi.rbo_client_id,cl.iin,cl.rnn  ,csi.clnt_name ,csi.phone_number,csi.phone_date,csi.text,
+        cast (null as varchar2(255)) as result_name,
+        cast (null as varchar2(1000)) as result_desc,
+        cast (null as varchar2(40)) as status_code,
+        cast (null as varchar2(255)) as status_name,
+        cast (null as varchar2(255)) as cont_theme,
+        'SMS' as contact_type,
+        'CLIENT' as system_name
+  from v_Dwh_Client_Contact_Sms_In csi
+  join m_client_link c on csi.rbo_client_id = c.rbo_client_id
+  join v_client_rfo_by_id cl on cl.rfo_client_id = c.rfo_client_id
+  where  csi.rbo_client_id is not null;
+grant select on U1.M_CLIENT_PHONE_NUMBER_TST3 to LOADDB;
+grant select on U1.M_CLIENT_PHONE_NUMBER_TST3 to LOADER;
+
+

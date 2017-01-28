@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_OUT_VERIFICATION_DEMAND_PRE1
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/ fld.c_client,fld.id,cp.c_date_create
+              from V_RFO_Z#FOLDERS fld
+              join V_RFO_Z#CM_CHECKPOINT cp on fld.id = cp.id
+              join V_RFO_Z#BUS_PROCESS b    on fld.c_business = b.id
+             /*where cp.c_date_create >= trunc(f.c_doc_date)
+               and cp.c_date_create < trunc(f.c_doc_date) + 1*/
+               --and fld.c_client = t.c_client_ref
+               and b.c_code IN ('KAS_CREDIT_CASH_PRIV_PC',
+                                'KAS_AUTO_CRED_PRIV_PC',
+                                'EDIT_CL_PRIV',
+                                'OPEN_CRED_PRIV_PC',
+                                'KAS_PC_PURSE',
+                                'OPEN_PC',
+                                'SET_REVOLV');
+grant select on U1.M_OUT_VERIFICATION_DEMAND_PRE1 to LOADDB;
+
+

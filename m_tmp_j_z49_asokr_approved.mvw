@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_TMP_J_Z49_ASOKR_APPROVED
+refresh force on demand
+as
+select distinct ff.folder_id -- одобренные АСОКР (отправленные на АСОКР и не отказанные скорингом, прескорингом и АА)
+from M_FOLDER_CON_CANCEL ff
+join M_TMP_J_Z49_TO_ASOKR a on a.folder_id = ff.folder_id
+where extract (year from ff.folder_date_create_mi) = 2013 and
+      ff.is_refin = 0 and ff.is_point_active = 0 and
+      not exists (select null from M_TMP_J_Z49_ASOKR_REJECTED r
+                  where r.folder_id = ff.folder_id);
+grant select on U1.M_TMP_J_Z49_ASOKR_APPROVED to LOADDB;
+grant select on U1.M_TMP_J_Z49_ASOKR_APPROVED to LOADER;
+
+

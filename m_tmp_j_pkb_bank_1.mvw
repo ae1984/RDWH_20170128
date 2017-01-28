@@ -1,0 +1,9 @@
+﻿create materialized view U1.M_TMP_J_PKB_BANK_1
+refresh complete on demand
+as
+select t.c_fin_inst, count(*) from V_PKB_ALL t
+group by t.c_fin_inst;
+grant select on U1.M_TMP_J_PKB_BANK_1 to LOADDB;
+grant select on U1.M_TMP_J_PKB_BANK_1 to LOADER;
+
+

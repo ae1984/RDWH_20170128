@@ -1,0 +1,39 @@
+﻿create table U1.M_TDWH_HHKZ_26012016
+(
+  id                    NUMBER not null,
+  udate                 TIMESTAMP(6),
+  idate                 TIMESTAMP(6),
+  last_update           VARCHAR2(4000),
+  last_job_exp          VARCHAR2(4000),
+  last_job_prof_title   VARCHAR2(4000),
+  last_job_field        VARCHAR2(4000),
+  last_job_title        VARCHAR2(4000),
+  job_title_link        VARCHAR2(4000),
+  job_title             VARCHAR2(4000),
+  exp_sum               VARCHAR2(4000),
+  compensation          VARCHAR2(4000),
+  age                   VARCHAR2(4000),
+  username              VARCHAR2(4000),
+  username_patronymic   VARCHAR2(4000),
+  username_name         VARCHAR2(4000),
+  username_surname      VARCHAR2(4000),
+  last_update_date      DATE,
+  compensation_currency VARCHAR2(100),
+  city                  VARCHAR2(4000)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.M_TDWH_HHKZ_26012016 to LOADDB;
+grant select on U1.M_TDWH_HHKZ_26012016 to LOADER;
+

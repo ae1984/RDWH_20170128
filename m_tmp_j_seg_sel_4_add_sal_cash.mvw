@@ -1,0 +1,34 @@
+﻿create materialized view U1.M_TMP_J_SEG_SEL_4_ADD_SAL_CASH
+refresh complete on demand
+as
+select tm.text_yyyy_mm as mon,
+       count(*) as cnt, count(distinct t.rfo_contract_id) as con_cnt,
+       count(distinct t.rfo_client_id) as cli_cnt,
+       sum(fc.amount) / count(distinct t.rfo_contract_id) * count(distinct t.rfo_client_id) / 1000000 as sales_to_be_mln -----!!!!!!!!!
+from M_FOLDER_CON_CANCEL t
+join V_TIME_MINUTES tm on tm.yyyy_mm_dd_hh_mi = t.folder_date_create_mi
+join V_FOLDER_ALL_RFO fa on fa.folder_id = t.folder_id
+join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = fa.form_client_id
+join M_TMP_J_SEG_SEL_4 s4 on s4.rfo_contract_id = t.rfo_contract_id
+where t.is_credit_issued = 0 and t.is_refin = 0 and -- не выданные не рефин
+      tm.yyyy_mm_num >= 201201 and tm.yyyy_mm_num <= 201503 and
+      t.product_type in ('ДЕНЬГИ'/*,'ТОВАРЫ'*/) and t.process_name != 'ОНЛАЙН КРЕДИТ' and
+      not exists (select null -- клиенты не получили кредит в месяце
+            from M_FOLDER_CON_CANCEL tt
+            where tt.is_refin = 0 and tt.is_credit_issued = 1 and
+                  tt.rfo_client_id = t.rfo_client_id and
+                  trunc(tt.folder_date_create_mi,'mm') = trunc(t.folder_date_create_mi,'mm')) and
+      -- для расчета насколько вырастут продажи
+      t.cancel_middle_office is not null and
+      t.cancel_prescoring is null and
+      t.cancel_manager is null and
+      t.cancel_client is null and
+      t.cancel_cpr_aa is null and
+      t.cancel_verificator is null and
+      t.cancel_controller is null and
+      t.cancel_undefined is null
+group by tm.text_yyyy_mm;
+grant select on U1.M_TMP_J_SEG_SEL_4_ADD_SAL_CASH to LOADDB;
+grant select on U1.M_TMP_J_SEG_SEL_4_ADD_SAL_CASH to LOADER;
+
+

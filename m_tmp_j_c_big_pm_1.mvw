@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_TMP_J_C_BIG_PM_1
+refresh force on demand
+as
+select iin_merged, count(distinct contractid) as con_all_cnt,
+       count(distinct case when is_delinq = 1 then contractid end) as con_bad_cnt
+from (
+    select t.*, case when t.contractstatus_name in ('СТАНДАРТНЫЕ КРЕДИТЫ','СТАТУС ДОГОВОРА НЕ ЯВЛЯЕТСЯ НЕГАТИВНЫМ',
+                   'УСТУПКА/ПЕРЕУСТУПКА ПРАВА ТРЕБОВАНИЯ ПО КРЕДИТУ ДРУГОМУ ЛИЦУ',
+                   'СУБСТАНДАРТНЫЕ И СОМНИТЕЛЬНЫЕ КРЕДИТЫ','ПРОСРЕЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 7 ДО 30 ДНЕЙ') then 0
+              else 1 end as is_delinq
+    from V_BIG_CONTRACTS_ALL t
+    where t.client_relation in ('ЗАЁМЩИК'/*,
+                                'СОЗАЕМЩИК (ПРИСОЕДИНИВШЕЕСЯ ЛИЦО) С СОЛИДАРНЫМИ ОБЯЗАТЕЛЬСТВАМИ'*/) and
+          t.contract_phase not in ('ОТКАЗАН','ОТОЗВАН') and
+          (   (t.contract_cur = 'KZT' and t.totalamount >= 150000 and t.totalamount < 1000000) or
+              (t.contract_cur is null and t.totalamount >= 150000 and t.totalamount < 1000000) or
+              (t.contract_cur = 'USD' and t.totalamount >= 1000 and t.totalamount < 6667) or
+              (t.contract_cur = 'EUR' and t.totalamount >= 750 and t.totalamount < 5000) --or
+--              (t.contract_cur = 'RUB' and t.totalamount >= 32608 and t.totalamount < 217387) or
+--              (t.contract_cur = 'RUR' and t.totalamount >= 32608 and t.totalamount < 217387) or
+--              (t.contract_cur = 'GBR' and t.totalamount >= 636 and t.totalamount < 4240)
+          ) and
+          t.is_collateral_exists = 0 and
+          t.credit_purpose in ('НЕОТЛОЖНЫЕ НУЖДЫ','ПРОЧИЕ ЦЕЛИ','ПРОЧИЕ ПОТРЕБИТЕЛЬСКИЕ ЦЕЛИ') and
+          (t.paymenty_period is null or t.paymenty_period in (
+                    'ЕЖЕМЕСЯЧНЫЕ ПЛАТЕЖИ -30 ДНЕЙ','ПЛАТЕЖИ С НЕРЕГУЛЯРНОЙ ПЕРИОДИЧНОСТЬЮ')) and
+          t.enddate < trunc(sysdate)
+) group by iin_merged;
+grant select on U1.M_TMP_J_C_BIG_PM_1 to LOADDB;
+grant select on U1.M_TMP_J_C_BIG_PM_1 to LOADER;
+
+

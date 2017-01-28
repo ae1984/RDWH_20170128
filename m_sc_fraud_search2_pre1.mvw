@@ -1,0 +1,49 @@
+﻿create materialized view U1.M_SC_FRAUD_SEARCH2_PRE1
+build deferred
+refresh force on demand
+as
+select fo.rfo_client_id,
+       nvl(bb.avg_term_cred_plan,0)           as avg_term_cred_plan,
+       trunc(tt.begin_date)                   as rbo_contract_date_first,
+       bb.count_kn_ever                       as count_kn_ever,
+       o.count_visit_guest                    as count_visit_guest,
+       o.count_visit_client                   as count_visit_client
+
+from u1.V_CLIENT_RFO_BY_ID fo
+left join (select ff.rfo_client_id,
+                  sum(round(months_between(cb.date_plan_end, cb.begin_date), 0)) / count(cb.rbo_contract_id)   as avg_term_cred_plan,
+                  count(case when cb.product_type = 'ДЕНЬГИ' then cb.rbo_contract_id end)  as count_kn_ever
+             from u1.V_CLIENT_RFO_BY_ID ff
+             join u1.M_RBO_CONTRACT_BAS           cb on cb.rfo_client_id = ff.rfo_client_id
+                                                    and cb.begin_date < trunc(sysdate)
+                                                    and cb.is_card = 0
+            group by ff.rfo_client_id ) bb on bb.rfo_client_id = fo.rfo_client_id
+left join (select rfo_client_id, min(begin_date) as begin_date
+             from (select rfo_client_id, begin_date
+                     from u1.M_RBO_CONTRACT_BAS
+                    union all
+                   select dd.rfo_client_id, dd.begin_date
+                     from u1.M_RBO_CONTRACT_DEPOSIT_BAS dd
+                    where dd.is_has_timeout = 1)
+            group by rfo_client_id) tt on tt.rfo_client_id = fo.rfo_client_id
+
+left join (select p.rfo_client_id,
+                  count(case when x.is_loan_guest = 1 then k.claim_id end) as count_visit_guest
+                 ,count(case when x.is_loan_guest = 0 then k.claim_id end) as count_visit_client
+          from u1.V_CLIENT_RFO_BY_ID p
+          left join u1.M_FOLDER_CON_CANCEL_ONLINE_1 k on k.rfo_client_id = p.rfo_client_id
+          left join (
+                    select  a.pk,
+                            a.code,
+                            max(case when upper(t.p_description) like '%ГОСТ%' then 1 else 0 end) as is_loan_guest
+                    from u1.M_KASPISH_ORDERS a
+                    join u1.M_KASPISH_ORDERHISTORYENTRIES t on t.p_order = a.pk
+                    group by a.pk,
+                             a.code
+                   ) x on x.code = k.process_id
+         where  k.date_create < trunc(sysdate)
+           and  k.date_create >= trunc(sysdate) - 30
+           group by p.rfo_client_id) o on o.rfo_client_id = fo.rfo_client_id;
+grant select on U1.M_SC_FRAUD_SEARCH2_PRE1 to LOADDB;
+
+

@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_VERIFICATION_CONTACT
+refresh complete on demand
+as
+select
+       v.id as verification_id,  --Идентификатор верификации
+       v.client_id as rfo_client_id,  --Идентификатор клиента в РФО(FK на z#client)
+       d.folder_id as demand_folder_id,
+       v.folders_id as verify_folder_id,
+       v.from_rfo_to_is as send_to_verification_dtm,  --Время получения заявки в ИС.Дата и время отправки на верификацию
+       v.verify_status as verification_result_id,
+       c.numb_cont as client_phone_number,
+       c.type_cont_ver as contact_info_type_id,
+       c.accepted as call_result,
+       cast (c.last_name_cp||' '||c.first_name_cp||' '||c.sur_name_cp as varchar(1000)) as contact_person_fio,
+       c.cont_info as contact_info
+  from M_OUT_DWH_VERIFICATION    v
+  join M_OUT_VERIFICATION_DEMAND d on d.verification_demand_id = v.verification_id
+  join M_OUT_DWH_CONTACT         c on c.verification_id = v.id;
+grant select on U1.M_VERIFICATION_CONTACT to LOADDB;
+grant select on U1.M_VERIFICATION_CONTACT to LOADER;
+
+

@@ -1,0 +1,59 @@
+﻿create materialized view U1.V_CANCEL_TYPES_HIST_ERR_LEVEL
+using no index
+refresh complete on demand
+as
+select x.cancel_type_id,
+       upper(x.cancel_type_code) as cancel_type_code,
+       upper(x.cancel_type_type) as cancel_type_type,
+       upper(x.cancel_type_name) as cancel_type_name,
+       nvl(x.err_level,0) as err_level_current,
+       x.history_id,
+       upper(x.history_user_id) as changed_by,
+       nvl(x.value,0) as err_level,
+       lag(x.date_edit,1,to_date('0001-01-01','yyyy-mm-dd')) over (
+               partition by x.cancel_type_code order by x.date_edit) as valid_from,
+       x.date_edit as valid_to
+from ( -- заходим записи о редактировании видов отказов в таблице истории значений
+    select ct.id as cancel_type_id,
+           ct.c_code as cancel_type_code,
+           ct.c_type as cancel_type_type,
+           ct.c_name as cancel_type_name,
+           ct.c_err_level as err_level,
+           h.id as history_id,
+           substr(h.user_id,1,instr(h.user_id,'.')-1) as history_user_id,
+           h.value,
+           to_date(to_char(h.time,'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') as date_edit
+    from V_RFO_Z#KAS_CANCEL_TYPES ct
+    join V_RFO_VALUES_HISTORY h on h.obj_id = ct.id and h.qual = 'ERR_LEVEL'
+union all -- и добавляем также все текущие значения измененных видов отказов
+    select ct.id as cancel_type_id,
+           ct.c_code as cancel_type_code,
+           ct.c_type as cancel_type_type,
+           ct.c_name as cancel_type_name,
+           ct.c_err_level as err_level,
+           null as history_id,
+           null as history_user_id,
+           ct.c_err_level as value,
+           to_date('9999-12-31','yyyy-mm-dd') as date_edit
+    from V_RFO_Z#KAS_CANCEL_TYPES ct
+    where exists (select null from V_RFO_VALUES_HISTORY h
+                     where h.obj_id = ct.id and h.qual = 'ERR_LEVEL')
+) x
+union all -- виды отказов, которые не менялись
+select ct.id as cancel_type_id,
+       upper(ct.c_code) as cancel_type_code,
+       upper(ct.c_type) as cancel_type_type,
+       upper(ct.c_name) as cancel_type_name,
+       ct.c_err_level as err_level_current,
+       null as history_id,
+       null as changed_by,
+       ct.c_err_level as err_level,
+       to_date('0001-01-01 00:00:00','yyyy-mm-dd HH24:MI:SS') as valid_from,
+       to_date('9999-12-31','yyyy-mm-dd') as date_edit
+from V_RFO_Z#KAS_CANCEL_TYPES ct
+where not exists (select null from V_RFO_VALUES_HISTORY h
+                     where h.obj_id = ct.id and h.qual = 'ERR_LEVEL');
+grant select on U1.V_CANCEL_TYPES_HIST_ERR_LEVEL to LOADDB;
+grant select on U1.V_CANCEL_TYPES_HIST_ERR_LEVEL to LOADER;
+
+

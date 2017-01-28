@@ -1,0 +1,36 @@
+﻿create table U1.MO_SCO_REQUEST_STR
+(
+  id             NUMBER not null,
+  sco_request_id NUMBER not null,
+  field_code     VARCHAR2(40),
+  field_name     VARCHAR2(250),
+  value          VARCHAR2(4000)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+create index U1.MO_SCO_REQUEST_STR_IND on U1.MO_SCO_REQUEST_STR (SCO_REQUEST_ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.MO_SCO_REQUEST_STR to LOADDB;
+grant select on U1.MO_SCO_REQUEST_STR to LOADER;
+

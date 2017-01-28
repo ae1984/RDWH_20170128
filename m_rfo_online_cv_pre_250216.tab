@@ -1,0 +1,27 @@
+﻿create table U1.M_RFO_ONLINE_CV_PRE_250216
+(
+  update_date           DATE,
+  client_ref            NUMBER,
+  anketa_type           NUMBER,
+  mng_vis_reason        VARCHAR2(20),
+  is_cancel_exists      NUMBER,
+  is_purse_exists       NUMBER,
+  is_credit_exists      NUMBER,
+  is_credit_after_fraud NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.M_RFO_ONLINE_CV_PRE_250216 to LOADDB;
+grant select on U1.M_RFO_ONLINE_CV_PRE_250216 to LOADER;
+

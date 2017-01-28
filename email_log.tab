@@ -1,0 +1,88 @@
+﻿create table U1.EMAIL_LOG
+(
+  id             NUMBER not null,
+  email_code     VARCHAR2(32) not null,
+  date_start     TIMESTAMP(6) not null,
+  date_end       TIMESTAMP(6),
+  send_status    NUMBER not null,
+  send_error_msg VARCHAR2(2048),
+  email_body     CLOB,
+  subject        VARCHAR2(200),
+  attach_dir     VARCHAR2(200),
+  attach_file    VARCHAR2(200),
+  with_attach    NUMBER(1),
+  with_html      NUMBER(1) default 0
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.EMAIL_LOG
+  is 'Очередь для отправки сообщений по почте';
+comment on column U1.EMAIL_LOG.id
+  is 'Первичный ключ';
+comment on column U1.EMAIL_LOG.email_code
+  is 'Код сообщения';
+comment on column U1.EMAIL_LOG.date_start
+  is 'Даа поставки сообщения в очередь';
+comment on column U1.EMAIL_LOG.date_end
+  is 'Дата отправки сообщения';
+comment on column U1.EMAIL_LOG.send_status
+  is '0 - в очереди, 1- отправлено, 2 - ошибка';
+comment on column U1.EMAIL_LOG.send_error_msg
+  is 'Текст ошибки в случае неотправки сообщения';
+comment on column U1.EMAIL_LOG.email_body
+  is 'Текст сообщения';
+comment on column U1.EMAIL_LOG.subject
+  is 'Текст темы письма';
+comment on column U1.EMAIL_LOG.attach_dir
+  is 'Директория oracle для файлов';
+comment on column U1.EMAIL_LOG.attach_file
+  is 'Путь до файла относительно директории (ATTACH_DIR)';
+comment on column U1.EMAIL_LOG.with_attach
+  is 'Признак письма с вложением (0 - нет, 1- да)';
+comment on column U1.EMAIL_LOG.with_html
+  is 'Текст письма в виде html';
+create bitmap index U1.EMAIL_LOG_IND on U1.EMAIL_LOG (SEND_STATUS)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.EMAIL_LOG
+  add constraint EMAIL_LOG_PK primary key (ID)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.EMAIL_LOG_PK nologging;
+alter table U1.EMAIL_LOG
+  add constraint EMAIL_LOG_CHK
+  check (with_html in (0,1));
+grant select on U1.EMAIL_LOG to LOADDB;
+grant select on U1.EMAIL_LOG to LOADER;
+

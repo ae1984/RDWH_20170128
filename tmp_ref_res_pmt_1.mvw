@@ -1,0 +1,16 @@
+﻿create materialized view U1.TMP_REF_RES_PMT_1
+refresh complete on demand
+as
+select t.*, case when x.pmt_cnt = 2 then 1 else 0 end as is_pmt_exists
+from TMP_REF_RES_PMT t
+join (
+select p.contract_no,
+sum( case when p.pmt_exists = 2 then 1 else 0 end) as pmt_cnt
+from M_TMP_REF_RES_PMT p
+where p.pmt_num != 3
+group by p.contract_no
+) x on x.contract_no = t.contract_number;
+grant select on U1.TMP_REF_RES_PMT_1 to LOADDB;
+grant select on U1.TMP_REF_RES_PMT_1 to LOADER;
+
+

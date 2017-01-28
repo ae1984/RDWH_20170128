@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_FOLDER_MO_CANCEL_NIGHT_LAST
+build deferred
+refresh force on demand
+as
+select /*+ parallel(20)*/
+       --p.id, /*rf.id as rfolder_id, rf.rfo_folder_id,*/
+       --ppv.value_number as folder_id,
+      --p.process_id,
+      p.rfolder_id,
+      p.rfo_client_id,
+      p.sco_num_scoring,
+      p.date_start,
+      dp.code_int as par_code,
+      dp.name as par_name
+from M_FOLDER_MO_CANCEL_NIGHT_PRE22 p
+join MO_CALC c on c.process_id = p.process_id
+join MO_CALC_PAR_VALUE cpv on cpv.calc_id = c.id and cpv.value_number = 1
+join V_MO_D_PAR dp on dp.id = cpv.d_par_id
+join M_FOLDER_MO_CANCEL_LAST_PRE_D xx on xx.code_int = dp.code_int;
+grant select on U1.M_FOLDER_MO_CANCEL_NIGHT_LAST to LOADDB;
+
+

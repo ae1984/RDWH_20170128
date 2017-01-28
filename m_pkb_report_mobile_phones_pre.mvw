@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_PKB_REPORT_MOBILE_PHONES_PRE
+using no index
+refresh complete on demand
+as
+select /*+ parallel 20*/
+       id,
+       rfc.rfo_client_id,
+       rfc.iin,
+       pr.c_dateofrptissue as report_issued,
+       regexp_replace(substr(pr.c_dop_field, instr(pr.c_dop_field,'CELLULARPHONE')+14, instr(substr(pr.c_dop_field, instr(pr.c_dop_field,'CELLULARPHONE')+14 ),']')-1 )||';','[() +-]','') as phone_numb
+  from U1.V_CLIENT_RFO_BY_ID rfc
+  left join u1.M_CLIENT_LINK cl on cl.rfo_client_id = rfc.rfo_client_id
+  left join U1.V_RFO_Z#PKB_REPORT pr on to_date(pr.c_dateofrptissue,'dd.mm.yyyy') < to_date('01.01.2013','dd.mm.yyyy') and pr.c_rnn = rfc.rnn
+ union all
+select /*+ parallel 20*/
+       id,
+       rfc.rfo_client_id,
+       rfc.iin,
+       pr.c_dateofrptissue as report_issued,
+       regexp_replace(substr(pr.c_dop_field, instr(pr.c_dop_field,'CELLULARPHONE')+14, instr(substr(pr.c_dop_field, instr(pr.c_dop_field,'CELLULARPHONE')+14 ),']')-1 )||';','[() +-]','') as phone_numb
+  from U1.V_CLIENT_RFO_BY_ID rfc
+  left join u1.M_CLIENT_LINK cl on cl.rfo_client_id = rfc.rfo_client_id
+  left join U1.V_RFO_Z#PKB_REPORT pr on  to_date(pr.c_dateofrptissue,'dd.mm.yyyy') >= to_date('01.01.2013','dd.mm.yyyy') and  pr.c_rnn = rfc.iin;
+grant select on U1.M_PKB_REPORT_MOBILE_PHONES_PRE to LOADDB;
+grant select on U1.M_PKB_REPORT_MOBILE_PHONES_PRE to LOADER;
+
+

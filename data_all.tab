@@ -1,0 +1,172 @@
+﻿create table U1.DATA_ALL
+(
+  pos_code                       VARCHAR2(11),
+  branch_name                    VARCHAR2(31),
+  client_name                    VARCHAR2(100),
+  rnn                            VARCHAR2(12),
+  contract_no                    VARCHAR2(20) not null,
+  product_programm               VARCHAR2(68),
+  start_date                     DATE,
+  end_date                       DATE,
+  closing_date                   DATE,
+  delinq_days                    NUMBER,
+  contract_amount                NUMBER,
+  contract_interest_rate         NUMBER,
+  expert_name                    VARCHAR2(87),
+  yy_mm_report                   VARCHAR2(9),
+  yy_mm_start                    VARCHAR2(9),
+  short_delinq                   VARCHAR2(7),
+  long_delinq                    VARCHAR2(7),
+  total_debt                     NUMBER,
+  fraud_level                    VARCHAR2(7),
+  closed_open                    VARCHAR2(8),
+  write_off                      VARCHAR2(10),
+  id                             NUMBER not null,
+  is_calculated_for_bi           NUMBER(1) default 0 not null,
+  is_calculated_post_import      NUMBER(1) default 0 not null,
+  c_num_months                   NUMBER(4),
+  c_client_id                    NUMBER(7),
+  c_status                       VARCHAR2(5),
+  c_year                         NUMBER(4),
+  c_delinq                       VARCHAR2(1),
+  c_del_short                    VARCHAR2(7),
+  c_del_middle                   VARCHAR2(7),
+  c_del_long                     VARCHAR2(7),
+  c_planned_pmt_month            NUMBER(4),
+  c_delinq_mm                    NUMBER(4),
+  c_delinq_type                  VARCHAR2(2),
+  c_fact_pmts                    NUMBER(4),
+  c_report_month_all_contracts   VARCHAR2(9),
+  c_contract_amount_categ        VARCHAR2(10),
+  c_max_debt_used                NUMBER(38),
+  c_new_total_debt               NUMBER(38),
+  c_is_card                      NUMBER(1),
+  c_first_start_date             DATE,
+  c_report_month                 NUMBER(38),
+  c_report_month_all_contracts_n NUMBER(38),
+  yy_mm_report_date              DATE,
+  el_principal                   NUMBER(38),
+  el_interest                    NUMBER(38),
+  el_principal_del               NUMBER(38),
+  el_interest_del                NUMBER(38),
+  cc_principal                   NUMBER(38),
+  cc_principal_del               NUMBER(38),
+  cc_overlimit                   NUMBER(38),
+  cc_overdraft                   NUMBER(38),
+  cc_overlimit_del               NUMBER(38),
+  cc_overdraft_del               NUMBER(38),
+  cc_interest                    NUMBER(38),
+  cc_interest_del                NUMBER(38),
+  imp_is_card                    NUMBER(1),
+  cc_contract_start_date         DATE,
+  iin                            VARCHAR2(12)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 4096M
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on column U1.DATA_ALL.start_date
+  is '?';
+comment on column U1.DATA_ALL.closing_date
+  is 'del';
+comment on column U1.DATA_ALL.contract_interest_rate
+  is 'del';
+comment on column U1.DATA_ALL.yy_mm_start
+  is '?';
+comment on column U1.DATA_ALL.short_delinq
+  is 'del';
+comment on column U1.DATA_ALL.long_delinq
+  is 'del';
+comment on column U1.DATA_ALL.fraud_level
+  is 'del';
+comment on column U1.DATA_ALL.closed_open
+  is 'del';
+comment on column U1.DATA_ALL.write_off
+  is 'del';
+comment on column U1.DATA_ALL.id
+  is 'PK';
+comment on column U1.DATA_ALL.is_calculated_for_bi
+  is 'del';
+comment on column U1.DATA_ALL.is_calculated_post_import
+  is 'del';
+comment on column U1.DATA_ALL.c_num_months
+  is 'del';
+comment on column U1.DATA_ALL.c_client_id
+  is 'del';
+comment on column U1.DATA_ALL.c_status
+  is 'del';
+comment on column U1.DATA_ALL.c_year
+  is 'del';
+comment on column U1.DATA_ALL.c_delinq
+  is 'del';
+comment on column U1.DATA_ALL.c_del_short
+  is 'del';
+comment on column U1.DATA_ALL.c_del_middle
+  is 'del';
+comment on column U1.DATA_ALL.c_del_long
+  is 'del';
+comment on column U1.DATA_ALL.c_planned_pmt_month
+  is 'del';
+comment on column U1.DATA_ALL.c_delinq_mm
+  is 'del';
+comment on column U1.DATA_ALL.c_delinq_type
+  is 'del';
+comment on column U1.DATA_ALL.c_fact_pmts
+  is 'del';
+comment on column U1.DATA_ALL.c_report_month_all_contracts
+  is 'del';
+comment on column U1.DATA_ALL.c_contract_amount_categ
+  is 'del';
+comment on column U1.DATA_ALL.c_max_debt_used
+  is 'del';
+comment on column U1.DATA_ALL.c_new_total_debt
+  is 'del';
+comment on column U1.DATA_ALL.c_is_card
+  is 'del';
+comment on column U1.DATA_ALL.c_first_start_date
+  is 'del';
+comment on column U1.DATA_ALL.c_report_month
+  is 'del';
+comment on column U1.DATA_ALL.c_report_month_all_contracts_n
+  is 'del';
+comment on column U1.DATA_ALL.yy_mm_report_date
+  is '?';
+create index U1.DATA_ALL_IND1 on U1.DATA_ALL (YY_MM_REPORT)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create unique index U1.DATA_ALL_PK_IND on U1.DATA_ALL (ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.DATA_ALL
+  add constraint DATA_ALL_PK primary key (ID);
+grant select on U1.DATA_ALL to LOADDB;
+grant select on U1.DATA_ALL to LOADER;
+

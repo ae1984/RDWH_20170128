@@ -1,0 +1,47 @@
+﻿create materialized view U1.M_RFO_BLACK_LIST_APPROV
+build deferred
+refresh force on demand
+as
+select c.rfo_client_id,
+       c.iin,
+       t.surname || ' ' || t.first_name || ' ' || t.patronymic as client_name,
+       t.date_add_text,
+       t.date_add,
+       c.folder_date_create_mi,
+       c.cr_program_name,
+       c.contract_status_name,
+       c.contract_number,
+       c.contract_amount,
+       c.source_system,
+       case when t.note in ('А0000013','A0000013') then 'LSBOO'
+            when t.note in ('A7','А7') then 'TERRORIST' end as type_list,
+       cb.is_credit_active,
+       count(o.contract_number) as cnt_spec_offer,
+       max(case when trunc(o.spof_start_date) = trunc(sysdate) - 1 then 1 else 0 end) as is_spec_offer_last,
+       max(case when  o.spof_start_date >= t.date_add then 1 else 0 end) as is_spec_offer
+  from M_FOLDER_CON_CANCEL c
+  join V_RFO_BLACK_LIST    t on t.iin = c.iin
+  join M_RBO_CONTRACT_BAS cb on cb.contract_number = c.contract_number
+  left join M_DWH_ACC_SPECIAL_OFFER_CON o on o.contract_number = cb.contract_number
+                                         and trunc(o.spof_start_date) >= trunc(t.date_add)
+                                         and o.spof_spec_offer_status_cd in ('EXECUTED', 'DEFAULT', 'WORK')
+ where t.note in ('А0000013','A0000013','A7','А7')
+   and c.is_credit_issued = 1
+ group by c.rfo_client_id,
+       c.iin,
+       t.surname || ' ' || t.first_name || ' ' || t.patronymic,
+       t.date_add_text,
+       t.date_add,
+       c.folder_date_create_mi,
+       c.cr_program_name,
+       c.contract_status_name,
+       c.contract_number,
+       c.contract_amount,
+       c.source_system,
+       case when t.note in ('А0000013','A0000013') then 'LSBOO'
+            when t.note in ('A7','А7') then 'TERRORIST' end,
+       cb.is_credit_active;
+grant select on U1.M_RFO_BLACK_LIST_APPROV to LOADDB;
+grant select on U1.M_RFO_BLACK_LIST_APPROV to LOADER;
+
+

@@ -1,0 +1,31 @@
+﻿create table U1.T_CLIENT_PHOTOLUNA_COUNT
+(
+  rfo_client_id NUMBER,
+  photo_date    DATE,
+  count_photo   NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_CLIENT_PHOTOLUNA_COUNT
+  is 'Количество фото по клиенту в указанный день которые были найдены в Luna';
+comment on column U1.T_CLIENT_PHOTOLUNA_COUNT.rfo_client_id
+  is 'РФО id клиента';
+comment on column U1.T_CLIENT_PHOTOLUNA_COUNT.photo_date
+  is 'дата фото';
+comment on column U1.T_CLIENT_PHOTOLUNA_COUNT.count_photo
+  is 'количество фото в дату';
+grant select on U1.T_CLIENT_PHOTOLUNA_COUNT to LOADDB;
+grant select, insert, update, delete, references, alter, index on U1.T_CLIENT_PHOTOLUNA_COUNT to RISK_ALEXEY;
+grant select, insert, update, delete, references, alter, index on U1.T_CLIENT_PHOTOLUNA_COUNT to RISK_ALEXEY2;
+

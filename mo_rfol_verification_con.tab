@@ -1,0 +1,29 @@
+﻿create table U1.MO_RFOL_VERIFICATION_CON
+(
+  kverc_id           NUMBER not null,
+  kverf_id           NUMBER not null,
+  kverf_client_ref   NUMBER,
+  kverf_folder_ref   NUMBER,
+  kverc_phone_num    VARCHAR2(60),
+  kverc_hasnt_dialed VARCHAR2(3),
+  kverc_accepted     VARCHAR2(3),
+  kverc_not_accepted VARCHAR2(3),
+  foldr_id           NUMBER,
+  foldr_client       NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO_RFOL_VERIFICATION_CON to LOADDB;
+grant select on U1.MO_RFOL_VERIFICATION_CON to LOADER;
+

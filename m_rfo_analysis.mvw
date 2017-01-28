@@ -1,0 +1,428 @@
+﻿create materialized view U1.M_RFO_ANALYSIS
+build deferred
+refresh force on demand
+as
+select /*+ parallel (50) */
+distinct vvy.rfo_client_id,
+
+         vvy.folder_date_create,
+         trunc(vvy.folder_date_create) as folder_day,
+         trunc(vvy.folder_date_create, 'mon') as folder_mon,
+         vvy.folder_id as rfo_fld,
+
+         bbh.pos_name as pos_name,
+         vvy.expert_name,
+         vvy.expert_position,
+         mb.product_type,
+         mb.product,
+         vvy.is_credit_issued,
+         mb.cancel_verificator,
+         vvy.process_name,
+         vvy.folder_state,
+         mb.contract_amount,
+         mb.is_signing_required,
+         mb.iin,
+         mb.folder_id as cc_fld,
+         case
+           when mb.is_categ_a = 'КАТЕГОРИЯ А' then
+            'Category A'
+           when mb.is_categ_b = 'КАТЕГОРИЯ Б' then
+            'Category B'
+           when mb.is_categ_b = 'НЕ КАТЕГОРИЯ Б' then
+            case
+              when mb.is_client_new_by_con = 'КЛИЕНТ НОВЫЙ' then
+               'NEW CLIENT'
+              else
+               'Category C'
+            end
+         end as is_categ,
+
+         case
+           when po.verify_result = 0 and po.repeat_photo = 0 then
+            'ОТКАЗ'
+           when po.verify_result = 0 and po.repeat_photo = 1 then
+            'ПЕРЕФОТО'
+           when po.verify_result = 0 and po.repeat_photo = 2 then
+            'РЕДАКТИР'
+           when po.verify_result = 1 then
+            'УСПЕХ'
+           else
+            'БЕЗ РЕЗУЛЬТАТА'
+         end as final_handle_result_byIS,
+
+         po.process_cnt_IS,
+         po.repeat_cnt,
+
+         case
+           when yy.c_photover_result = 0 and yy.c_repeat_photo = 0 then
+            'ОТКАЗ'
+           when yy.c_photover_result = 0 and yy.c_repeat_photo = 1 then
+            'ПЕРЕФОТО'
+           when yy.c_photover_result = 0 and yy.c_repeat_photo = 2 then
+            'РЕДАКТИР'
+           when yy.c_photover_result = 1 then
+            'УСПЕХ'
+           else
+            'БЕЗ РЕЗУЛЬТАТА'
+         end as final_handle_result_byRFO,
+
+         case
+           when iad.is_pas_dif_exists = 0 then
+            'НЕТИАД'
+           when iad.is_pas_dif_exists = 1 then
+            'ЕСТЬИАД'
+           else
+            'ПУСТО'
+         end as is_iad,
+
+         case
+           when ii.rfo_client_id is null then
+            'НЕ БЫЛО ИАД В ЭТОТ ДЕНЬ'
+           else
+            'БЫЛ ИАД В ЭТОТ ДЕНЬ'
+         end as is_iad_exists,
+         yy.verif_id,
+         yy.is_bl_rej,
+         yy.is_has_twin,
+         yy.is_has_reclam,
+         yy.is_tax_eq,
+
+         yy.auto_photo_result,
+         yy.VERIF_CLIENT_DATA_IS_EQ,
+         yy.AP_CLIENT_IS_RECLAM_PRE,
+         yy.process_cnt,
+
+         yy.last_compare_type,
+         yy.last_compare_list,
+         yy.last_compare_code,
+         yy.sim_max,
+         yy.sim_min,
+         yy.photo_quality_min,
+         yy.photo_quality_max,
+         yy.luna_time,
+         yy.c_auto_res,
+         yy.c_transfer_dir,
+         yy.reason_process,
+         yy.cnt_photo_by_list,
+         yy.photo_cnt_by_MO,
+         case
+           when yy.cnt_photo_by_list is null and
+                yy.photo_cnt_by_MO is not null then
+            1
+           else
+            0
+         end as is_list_mo_dif,
+         yy.why_handle
+  from u1.v_folder_all_rfo vvy
+  left join u1.m_matrix_base mb on mb.folder_id = vvy.folder_id
+  left join u1.v_pos bbh  on bbh.pos_code = vvy.pos_code
+  left join (select max(z1.max_sim_bl) as bl_sim,
+                    case
+                      when max(max_sim_bl) >= 97 then
+                       'BL_REJ'
+                      else
+                       'NO_BL_REJ'
+                    end as is_bl_rej,
+                    case
+                      when tw.rfo_client_id is not null then
+                       1
+                      else
+                       0
+                    end as is_has_twin,
+                    case
+                      when y.rfo_client_id is not null then
+                       1
+                      else
+                       0
+                    end as is_has_reclam,
+                    case
+                      when k.rfo_client_id is not null then
+                       1
+                      else
+                       0
+                    end as is_tax_eq,
+                    t.rfo_client_id,
+                    t.folder_id,
+                    t.verif_id,
+                    pp.auto_photo_result,
+                    t.VERIF_CLIENT_DATA_IS_EQ,
+                    t.AP_CLIENT_IS_RECLAM_PRE,
+                    pp.last_compare_type,
+                    pp.last_compare_code,
+
+                    t.status,
+                    t.error_msg,
+
+                    pp.last_compare_status,
+
+                    case
+                      when pp.last_compare_status = 'LUNA_ID_NOT_EXIST' then
+                       'LUNA_ID_NOT_EXIST'
+                      when pp.last_compare_status = 'RULE_NOT_EXIST' then
+                       'RULE_NOT_EXIST'
+                      else
+                       'LUNA_ID_EXIST'
+                    end as why_handle,
+                    pp.last_compare_list,
+                    pp.photo_cnt as photo_cnt_by_MO,
+
+                    max(pp.similarity_max) keep(dense_rank last order by pp.date_insert) as sim_max, --) keep (dense_rank last order by r.date_insert) as similarity_max,
+                    max(pp.similarity_min) keep(dense_rank last order by pp.date_insert) as sim_min, --)  keep (dense_rank first order by r.date_insert)as similarity_min,
+                    count(distinct pp.date_insert) as process_cnt,
+                    r.luna_status,
+
+                    tt.cnt_photo as cnt_photo_by_list,
+
+                    max(q.error_code) keep(dense_rank last order by t.date_create) as error_code,
+                    max(q.photo_quality) keep(dense_rank last order by pp.date_insert) as photo_quality_max,
+                    min(q.photo_quality) keep(dense_rank last order by pp.date_insert) as photo_quality_min,
+                    q.pos_code,
+
+                    kv.c_auto_send_date,
+                    kv.c_auto_rec_date,
+                    (kv.c_auto_rec_date - kv.c_auto_send_date) * 24 * 60 * 60 as luna_time,
+                    kv.c_auto_res,
+                    kv.c_photover_result,
+                    kv.c_repeat_photo,
+                    kv.c_transfer_dir,
+                    --kv.c_reason_process,
+                    ku.c_name as reason_process
+             --po.verif_id,
+
+               from u1.T_MO_AUTOCHECK_RESULT t
+               left join (select tr.*,
+                                regexp_count(tr.photo_luna_id, ',') + 1 as cnt_photo
+                           from U1.T_MO_CLIENT_PHOTO_LIST tr) tt
+                 on t.rfo_client_id = tt.rfo_client_id
+               left join u1.t_mo_client_photo q
+                 on q.verif_id = t.verif_id
+                and q.photo_type = 'Ph_Client'
+               left join u1.t_rfo_z#kas_verification kv
+                 on kv.id = t.verif_id
+               left join u1.v_rfo_z#kas_universal_d ku
+                 on ku.id = kv.c_reason_process
+               left join u1.M_CLIENT_TWIN tw
+                 on tw.rfo_client_id = t.rfo_client_id
+               left join (select /*-- noparallel */
+                          tu.rfo_client_id,
+                          tu.folder_id,
+                          regexp_count(cc.compare_list, ',') + 1 as photo_cnt,
+                          max(cc.compare_code) keep(dense_rank last order by cc.request_id) as last_compare_code,
+                          max(cc.compare_type) keep(dense_rank last order by cc.request_id) as last_compare_type,
+                          max(cc.compare_list) keep(dense_rank last order by cc.request_id) as last_compare_list,
+                          max(cc.status) keep(dense_rank last order by cc.request_id) as last_compare_status,
+                          max(cc.request_id) as request_id,
+                          max(r.date_insert) as date_insert,
+                          max(r.similarity * 100) keep(dense_rank last order by tu.date_create /*, cc.request_id*/) as similarity_max,
+                          min(r.similarity * 100) keep(dense_rank first order by tu.date_create /*, cc.request_id*/) as similarity_min,
+                          max(tu.auto_photo_result) keep(dense_rank last order by r.date_insert /*,cc.request_id*/) as auto_photo_result,
+                          count(distinct r.date_insert) as process_cnt
+                           from u1.T_MO_AUTOCHECK_RESULT tu
+                           left join u1.T_mo_luna_check cc
+                             on cc.verif_id = tu.verif_id
+                            and cc.compare_type != 'NAMED_LIST'
+                           left join u1.T_mo_luna_request r
+                             on r.request_id = cc.request_id
+                          where r.similarity is not null
+
+                          group by tu.rfo_client_id,
+                                   tu.folder_id,
+                                   regexp_count(cc.compare_list, ',') + 1) pp
+                 on pp.folder_id = t.folder_id
+               left join u1.T_mo_luna_request r
+                 on r.request_id = pp.request_id
+               left join (select c1.verif_id,
+                                c1.request_id,
+                                max(r1.similarity * 100) keep(dense_rank last order by t1.date_create) as max_sim_bl
+                           from u1.T_MO_AUTOCHECK_RESULT t1
+                           left join u1.T_mo_luna_check c1
+                             on c1.verif_id = t1.verif_id
+                            and c1.compare_type = 'NAMED_LIST'
+                           left join u1.T_mo_luna_request r1
+                             on r1.request_id = c1.request_id
+
+                          group by c1.verif_id, c1.request_id) z1
+                 on z1.verif_id = t.verif_id
+               left join (select distinct rc.rfo_client_id
+                           from u1.M_RFO_FOLDERS_RECLAM rc
+                          where rc.c_date_create is not null
+                            and rc.type_recl_name in
+                                ('НЕВЕРНО УКАЗАНА ДАТА ВЫДАЧИ УД.Л/ПАСПОРТ',
+                                 'НЕВЕРНО УКАЗАН ОРГАН ВЫДАЧИ УД.Л/ПАСПОРТ',
+                                 'НЕВЕРНЫЕ ДАННЫЕ В ДОКУМЕНТЕ',
+                                 'НЕВЕРНАЯ ДАТА  ДОКУМЕНТА',
+                                 'НЕВЕРНО УКАЗАН НОМЕР УД.Л/ПАСПОРТ',
+                                 'НЕВЕРНО УКАЗАНА ДАТА РОЖДЕНИЯ',
+                                 'НЕВЕРНЫЕ ДАННЫЕ УД.ЛИЧ В ДОКУМЕНТЕ',
+                                 'НЕТ СООТВЕТСТВИЯ В ДОК./ИИН',
+                                 'НЕТ СООТВЕТСТВИЯ В ДОК./УД.Л/ПАСПОРТ',
+                                 'НЕТ СООТВЕТСТВИЯ В ДОК./ФИО КЛИЕНТА',
+                                 'НЕТ СООТВЕТСТВИЯ В ДОК./ФИО КЛИЕНТА В СИСТЕМЕ')
+                            and rc.folder_state = 'НА РЕКЛАМАЦИЮ') y
+                 on y.rfo_client_id = t.rfo_client_id
+               left join (select distinct b.rfo_client_id
+                           from u1.v_client_rfo_by_id b
+                           join U1.V_RFO_Z#KAS_NB_TAXPAYER ct
+                             on b.iin = ct.c_iin_bin
+                            and trim(b.client_name) = trim(ct.c_name)
+                            and case
+                                  when to_number(substr(ct.c_iin_bin, 5, 2)) > 0 and
+                                       to_number(substr(ct.c_iin_bin, 5, 2)) < 32 and
+                                       to_number(substr(ct.c_iin_bin, 7, 1)) in
+                                       (1, 2, 3, 4, 5, 6) and
+                                       substr(ct.c_iin_bin, 3, 2) > 0 and
+                                       substr(ct.c_iin_bin, 3, 2) < 13 then
+                                   case
+                                     when substr(ct.c_iin_bin, 7, 1) in
+                                          ('5', '6') then
+                                      '20'
+                                     when substr(ct.c_iin_bin, 7, 1) in
+                                          ('3', '4') then
+                                      '19'
+                                     when substr(ct.c_iin_bin, 7, 1) in
+                                          ('1', '2') then
+                                      '18'
+                                   end || substr(ct.c_iin_bin, 1, 2) || '-' ||
+                                   substr(ct.c_iin_bin, 3, 2) || '-' ||
+                                   substr(ct.c_iin_bin, 5, 2)
+                                end = to_char(b.birth_date, 'yyyy-mm-dd')) k
+                 on k.rfo_client_id = t.rfo_client_id
+
+              group by case
+                         when tw.rfo_client_id is not null then
+                          1
+                         else
+                          0
+                       end,
+                       case
+                         when y.rfo_client_id is not null then
+                          1
+                         else
+                          0
+                       end,
+                       case
+                         when k.rfo_client_id is not null then
+                          1
+                         else
+                          0
+                       end,
+
+                       t.rfo_client_id,
+                       t.folder_id,
+                       t.verif_id,
+                       t.status,
+                       t.error_msg,
+
+                       pp.last_compare_status,
+
+                       pp.photo_cnt,
+                       case
+                         when pp.last_compare_status = 'LUNA_ID_NOT_EXIST' then
+                          'LUNA_ID_NOT_EXIST'
+                         when pp.last_compare_status = 'RULE_NOT_EXIST' then
+                          'RULE_NOT_EXIST'
+                         else
+                          'LUNA_ID_EXIST'
+                       end,
+                       pp.last_compare_type,
+                       pp.last_compare_code,
+
+                       r.luna_status,
+
+                       tt.cnt_photo,
+                       q.pos_code,
+                       pp.auto_photo_result,
+                       t.VERIF_CLIENT_DATA_IS_EQ,
+                       t.AP_CLIENT_IS_RECLAM_PRE,
+
+                       kv.c_auto_send_date,
+                       kv.c_auto_rec_date,
+                       (kv.c_auto_rec_date - kv.c_auto_send_date) * 24 * 60 * 60,
+                       kv.c_auto_res,
+                       kv.c_photover_result,
+                       kv.c_repeat_photo,
+                       kv.c_transfer_dir,
+
+                       ku.c_name) yy
+    on vvy.folder_id = yy.folder_id
+
+  left join (select v.folders_id as folder_id,
+                    max(s.schema_result) keep(dense_rank last order by s.open_time) as verify_result,
+                    max(repeat_photo) keep(dense_rank last order by s.open_time) as repeat_photo,
+                    count(distinct p.id) as process_cnt_IS,
+                    count(distinct case
+                            when p.repeat_photo = 1 then
+                             p.id
+                          end) as repeat_cnt
+               from U1.M_OUT_DWH_VERIFICATION v
+               join U1.M_OUT_DWH_PROCESS p
+                 on p.verification_id = v.id
+                and p.verification_type = 'PHOTO'
+               join u1.m_out_dwh_schema s
+                 on s.process_id = p.id
+              group by v.folders_id) po
+    on po.folder_id = yy.folder_id
+
+  left join (select b.folder_id,
+                    case
+                      when (pz.c_cl_req_old#last_name <>
+                           pz.c_cl_req_new#last_name or
+                           pz.c_cl_req_old#first_name <>
+                           pz.c_cl_req_new#first_name or
+                           pz.c_cl_req_old#sur_name <>
+                           pz.c_cl_req_new#sur_name or
+                           pz.c_cl_req_old#sex#0 <> pz.c_cl_req_new#sex#0 or
+                           pz.c_cl_req_old#date_pers <>
+                           pz.c_cl_req_new#date_pers or
+                           pz.c_cl_req_old#pasport#type <>
+                           pz.c_cl_req_new#pasport#type or
+                           pz.c_cl_req_old#pasport#num <>
+                           pz.c_cl_req_new#pasport#num or
+                           pz.c_cl_req_old#pasport#who <>
+                           pz.c_cl_req_new#pasport#who or
+                           pz.c_cl_req_old#pasport#date_doc <>
+                           pz.c_cl_req_new#pasport#date_doc or
+                           pz.c_cl_req_old#pasport#date_end <>
+                           pz.c_cl_req_new#pasport#date_end or
+                           pz.c_cl_req_old#inn <> pz.c_cl_req_new#inn or
+                           pz.c_cl_req_old#place_birth <>
+                           pz.c_cl_req_new#place_birth) then
+                       1
+                      else
+                       0
+                    end as is_pas_dif_exists
+               from u1.v_folder_all_rfo b
+               join u1.V_RFO_Z#RDOC rd
+                 on rd.collection_id = b.fld_c_docs
+               join u1.V_RFO_Z#FDOC fd
+                 on fd.id = rd.c_doc
+               join u1.V_RFO_Z#REQ_EDIT_CL_PRIV pz
+                 on pz.id = fd.id) iad
+    on iad.folder_id = vvy.folder_id
+  left join (select distinct rr.rfo_client_id,
+                             trunc(rr.folder_date_create) as folder_date_create
+               from u1.v_folder_all_rfo rr
+              where rr.process_name = 'ИЗМЕНЕНИЕ АНКЕТНЫХ ДАННЫХ КЛИЕНТА') ii
+    on ii.rfo_client_id = vvy.rfo_client_id
+   and trunc(vvy.folder_date_create) = ii.folder_date_create
+ where
+
+ trunc(vvy.folder_date_create) >= to_date('08.09.2016', 'dd.mm.yyyy')
+ and vvy.process_name not in
+ ('KAS. ВЫПИСКИ',
+  'ВВОД АНКЕТЫ НА ОТКРЫТИЕ ДЕПОЗИТНОГО ДОГОВОРА',
+  'ВЫДАЧА СПРАВКИ',
+  'ВЫДАЧА СТРАХОВКИ (АВТО)',
+  'ВЫПИСКА ПО КЛИЕНТУ (ДЕПОЗИТЫ)',
+  'ВЫПЛАТА ПЕРЕВОДА',
+  'ДОП. СОГЛАШЕНИЕ К ДОГОВОРУ ЗАЛОГА',
+  'ДОСРОЧНОЕ ПОГАШЕНИЕ КРЕДИТА(ПЕРЕСЧЕТ ГРАФИКА)',
+  'КАРТА ВКЛАДЧИКА. ИЗМЕНЕНИЕ УСЛОВИЙ',
+  'ОТПРАВКА ПЕРЕВОДА',
+  'ПЕЧАТЬ СЧЕТ-ВЫПИСКИ',
+  'ПЕЧАТЬ ТЕКУЩЕЙ ИНФОРМАЦИИ ПО КАРТЕ',
+  'ПОДПИСАНИЕ ДОПОЛНИТЕЛЬНОГО СОГЛАШЕНИЯ',
+  'ПОПОЛНЕНИЕ ДЕПОЗИТНОГО ДОГОВОРА');
+grant select on U1.M_RFO_ANALYSIS to LOADDB;
+
+

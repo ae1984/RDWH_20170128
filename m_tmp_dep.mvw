@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_TMP_DEP
+refresh force on demand
+as
+select t.c_inn as iin,
+            max(t.c_date_begin) as c_date_begin,
+            sum(case when t.c_cur_short = 'EUR' then t.c_saldo_in * 211.5
+                     when t.c_cur_short = 'USD' then t.c_saldo_in * 185.5
+                     when t.c_cur_short = 'KZT' then t.c_saldo_in end) c_sum_saldo_depn
+           from M_RBO_PORT_DEPN_TST t
+           where c_date_begin <= c_date_in
+                 and trunc(c_date_in) = '01.09.2014'
+                 and t.c_inn is not null
+                 and t.c_saldo_in != 0
+           group by t.c_inn;
+grant select on U1.M_TMP_DEP to LOADDB;
+grant select on U1.M_TMP_DEP to LOADER;
+
+

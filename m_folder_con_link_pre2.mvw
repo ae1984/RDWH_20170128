@@ -1,0 +1,123 @@
+﻿create materialized view U1.M_FOLDER_CON_LINK_PRE2
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30*/ folder_id,
+                coalesce(min(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_status != 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_status != 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_status != 'OK' then pp.report_id end)) as kb_report_id,
+                coalesce(min(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_status = 'OK' then pp.report_id end) ,
+                         min(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_status != 'OK' then pp.report_id end)) as kb_report_ex_id,
+                coalesce(min(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_status != 'OK' then pp.report_id end)) as kb_report_st_id,
+                coalesce(min(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_status != 'OK' then pp.report_id end))  as kb_report_pr_id,
+                coalesce(min(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_source = 'ПКБ' and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_source = 'ПКБ' and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_source = 'ПКБ' and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_source = 'ПКБ' and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_source = 'ПКБ' and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_source = 'ПКБ' and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_source = 'ПКБ' and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_source = 'ПКБ' and pp.report_status != 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_source = 'ПКБ' and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_source = 'ПКБ' and pp.report_status != 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_source = 'ПКБ' and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_source = 'ПКБ' and pp.report_status != 'OK' then pp.report_id end)) as pkb_report_id,
+                coalesce(min(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_source = 'ПКБ' and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_source = 'ПКБ' and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_source = 'ПКБ' and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_source = 'ПКБ' and pp.report_status != 'OK' then pp.report_id end)) as pkb_report_ex_id,
+                coalesce(min(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_source = 'ПКБ' and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_source = 'ПКБ' and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_source = 'ПКБ' and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_source = 'ПКБ' and pp.report_status != 'OK' then pp.report_id end)) as pkb_report_st_id,
+                coalesce(min(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_source = 'ПКБ' and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_source = 'ПКБ' and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_source = 'ПКБ' and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_source = 'ПКБ' and pp.report_status != 'OK' then pp.report_id end)) as pkb_report_pr_id,
+                coalesce(min(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_source = 'ГКБ' and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_source = 'ГКБ' and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_source = 'ГКБ' and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_source = 'ГКБ' and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_source = 'ГКБ' and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_source = 'ГКБ' and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_source = 'ГКБ' and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_source = 'ГКБ' and pp.report_status != 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_source = 'ГКБ' and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_source = 'ГКБ' and pp.report_status != 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_source = 'ГКБ' and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_source = 'ГКБ' and pp.report_status != 'OK' then pp.report_id end)
+                         ) as gkb_report_id,
+                coalesce(min(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_source = 'ГКБ' and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_source = 'ГКБ' and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_source = 'ГКБ' and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'РАСШИРЕННЫЙ' and pp.report_source = 'ГКБ' and pp.report_status != 'OK' then pp.report_id end)
+                         ) as gkb_report_ex_id,
+                coalesce(min(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_source = 'ГКБ' and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_source = 'ГКБ' and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_source = 'ГКБ' and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'СТАНДАРТНЫЙ' and pp.report_source = 'ГКБ' and pp.report_status != 'OK' then pp.report_id end)
+                ) as gkb_report_st_id,
+                coalesce(min(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_source = 'ГКБ' and pp.report_status = 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_source = 'ГКБ' and pp.report_status = 'OK' then pp.report_id end),
+                         min(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_source = 'ГКБ' and pp.report_status != 'OK' then pp.report_id_onl end),
+                         max(case when pp.report_type = 'ПЕРВИЧНЫЙ'   and pp.report_source = 'ГКБ' and pp.report_status != 'OK' then pp.report_id end)
+                         ) as gkb_report_pr_id,
+                max(report_id_rfo) as report_id_rfo
+          from(
+          select folder_id,
+                 report_type,
+                 case when report_date <= folder_date_create   then
+                   report_id
+                 end as report_id,
+                 case when report_date >= folder_date_create   then
+                   report_id
+                 end as report_id_onl,
+                 case when report_date between folder_date_create-60 and folder_date_create then
+                   report_id
+                 end as report_id_rfo,
+                 report_source,
+                 report_status
+          from (
+          select cc.folder_id,
+                 p.report_type,
+                 p.report_id,
+                 p.report_source,
+                 p.report_status,
+                 p.report_date,
+                 cc.a_date as folder_date_create
+          from u1.M_MATRIX_BASE cc
+          join u1.M_PKB_REPORT_ADD p on p.iin_rnn = cc.iin and p.report_date between cc.a_date-60 and cc.a_date + decode(process_name,'ОНЛАЙН КРЕДИТ',10,0)
+          where p.report_date > to_date('01-01-2013','dd-mm-yyyy')
+          union all
+          select cc.folder_id,
+                 p.report_type,
+                 p.report_id,
+                 p.report_source,
+                 p.report_status,
+                 p.report_date,
+                 cc.a_date as folder_date_create
+          from u1.M_MATRIX_BASE cc
+          join u1.M_PKB_REPORT_ADD p on p.iin_rnn = cc.rnn and p.report_date between cc.a_date-60 and cc.a_date + decode(process_name,'ОНЛАЙН КРЕДИТ',10,0)
+          where p.report_date <= to_date('01-01-2013','dd-mm-yyyy')
+          )) pp
+          group by pp.folder_id;
+grant select on U1.M_FOLDER_CON_LINK_PRE2 to LOADDB;
+
+

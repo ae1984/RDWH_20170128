@@ -1,0 +1,34 @@
+﻿create materialized view U1.M_KASPIKZ_USERS_ALL
+build deferred
+refresh force on demand
+as
+select u.id user_id,
+       upper(u.user_first_name_rus) first_name,
+       upper(u.user_last_name_rus) last_name,
+       upper(u.user_middle_name_rus) patronymic,
+       u.is_blocked,
+       u.inn,
+       b.iin bank_prof_iin,
+       b.tm_id,
+       b.rbo_id,
+       b.rfo_id,
+       b.dwh_id,
+       u.date_of_birth,
+       u.rnn,
+       upper( u.user_first_name_rus||' '|| u.user_last_name_rus||' '||u.user_middle_name_rus) as client_name,
+       u.reg_date
+from (
+select t.id,
+       t.inn,
+       max(tt.id) keep (dense_rank last order by tt.bank_profile_type, tt.id) b_id
+from u1.M_KASPIKZ_USERS t
+left join u1.M_KASPIKZ_BANK_PROFILE tt on tt.banking_user_id = t.id
+group by t.id,
+       t.inn
+       ) x
+join u1.M_KASPIKZ_USERS u on u.id = x.id
+left join u1.M_KASPIKZ_BANK_PROFILE b on b.id = x.b_id;
+grant select on U1.M_KASPIKZ_USERS_ALL to LOADDB;
+grant select on U1.M_KASPIKZ_USERS_ALL to RISK_VERIF;
+
+

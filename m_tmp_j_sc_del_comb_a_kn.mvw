@@ -1,0 +1,60 @@
+﻿create materialized view U1.M_TMP_J_SC_DEL_COMB_A_KN
+refresh force on demand
+as
+select * from (
+select
+       m.contract_amount_categ_first,
+       m.client_new_fresh_old,
+       floor(case when m.sal_gcvp_to_sal_form_prc_floor >= 100 then 100
+                  else sal_gcvp_to_sal_form_prc_floor end / 5) * 5 as sal_gcvp_to_sal_form,
+       floor(m.contract_term_months / 12) * 12 as contract_term_months,
+--       m.pkb_report_status,
+       m.x_dnp_name,
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate, -- просрочка всего по-старому
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1, -- USE THIS! - просрочка 1-го платежа
+    round(sum(c.max_debt_used) / 1000000) as sales_mln, -- USE THIS! - продажи, млн
+    round(sum(c.max_debt_used)) as sales, -- продажи
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt, -- проверка - если эти два поля равны, значит выборка верна
+    round(sum(c.delinq_rate_b_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b_w, -- USE THIS! - просрочка всего по-новому
+    round(sum(c.delinq_rate_npl * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_npl, -- USE THIS! - просрочка по NPL (>=90 days)
+    round(sum(c.delinq_rate_b * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b, -- просрочка по BAD клиентам
+    round(sum(c.delinq_rate_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_w, -- просрочка по WATCH клиентам
+    round(sum(c.delinq_rate_g * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_g, -- просрочка по GOOD клиентам
+    round(sum(c.income) / 1000000) as income_mln, -- доход, млн (40% от продаж по GOOD клиентам)
+    round(sum(c.expense) / 1000000) as expense_mln, -- расход, млн (текущая задолженность по BAD и WATCH клиентам)
+    round(sum(c.profit) / 1000000) as profit_mln, -- USE THIS! - прибыль, млн (доход - расход)
+    round(sum(c.income)) as income, -- доход
+    round(sum(c.expense)) as expense, -- расход
+    round(sum(c.profit)) as profit, -- прибыль
+    round(sum(c.profit)/sum(c.max_debt_used) * 100, 1) as profit_rate, -- уровень прибыли
+    round(sum(c.max_debt_used_b_w) / 1000000) as sales_b_w_mln, -- продажи по BAD и WATCH клиентам, млн
+    round(sum(c.max_debt_used_b_w)) as sales_b_w, -- продажи по BAD и WATCH клиентам
+    round(sum(c.max_debt_used_b) / 1000000) as sales_b_mln, -- продажи по BAD клиентам, млн
+    round(sum(c.max_debt_used_b)) as sales_b, -- продажи по BAD клиентам
+    round(sum(c.max_debt_used_w) / 1000000) as sales_w_mln, -- продажи по WATCH клиентам, млн
+    round(sum(c.max_debt_used_w)) as sales_w, -- продажи по WATCH клиентам
+    round(sum(c.max_debt_used_g) / 1000000) as sales_g_mln, -- продажи по GOOD клиентам, млн
+    round(sum(c.max_debt_used_g)) as sales_g, -- продажи по GOOD клиентам
+    round(sum(c.max_debt_used_npl) / 1000000) as sales_npl_mln, -- продажи NPL, млн
+    round(sum(c.max_debt_used_npl)) as sales_npl, -- продажи NPL
+    round(sum(c.max_debt_used_b_w) / sum(c.max_debt_used) * 100, 1) as sales_b_w_to_sales_ratio
+from V_TMP_CONTRACT_CAL_DEL_NEW c
+join M_FOLDER_CON_MINER_X m on m.contract_id = c.contract_id
+--where (c.yy_mm_start_last >= '2012 - 06' and c.yy_mm_start_last <= '2013 - 06') --and m.is_test = 0
+where (c.yy_mm_start_last >= '2012 - 06' and c.yy_mm_start_last <= '2013 - 10') --and m.is_test = 0
+      and m.cr_program_name in (/*'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР')--,*/'КРЕДИТ НАЛИЧНЫМИ'/*,'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ'*/)
+group by /*rollup*/ (
+       m.contract_amount_categ_first,
+       m.client_new_fresh_old,
+       floor(case when m.sal_gcvp_to_sal_form_prc_floor >= 100 then 100
+                  else sal_gcvp_to_sal_form_prc_floor end / 5) * 5,
+       floor(m.contract_term_months / 12) * 12,
+--       m.pkb_report_status,
+       m.x_dnp_name
+      )
+having sum(c.max_debt_used) > 0
+) where profit < 0 --profit_rate < 0 --con_cnt >= 30 --and*/ sales >= 10000000;
+grant select on U1.M_TMP_J_SC_DEL_COMB_A_KN to LOADDB;
+grant select on U1.M_TMP_J_SC_DEL_COMB_A_KN to LOADER;
+
+

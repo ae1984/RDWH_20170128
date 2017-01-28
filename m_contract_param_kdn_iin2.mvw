@@ -1,0 +1,49 @@
+﻿create materialized view U1.M_CONTRACT_PARAM_KDN_IIN2
+refresh complete on demand
+as
+select --+ parallel(30) parallel_index(30)
+       s1.client_id,
+       sum(coalesce(s2.other_deal_pmt, s3.other_deal_pmt, s1.other_deal_pmt)) as other_deal_pmt, -- сначала берем списанные,
+                                                                                                 -- затем значение платежа, если была просрочка, затем платеж с договора
+       count(distinct case when s2.other_deal_pmt is not null
+                      then s1.client_id end) as other_written_off_con_count,
+       count(distinct case when s2.other_deal_pmt is null and s3.other_deal_pmt is not null
+                      then s1.client_id end) as other_delinq_con_count,
+       count(distinct case when s2.other_deal_pmt is null and s3.other_deal_pmt is null and s1.other_deal_pmt is not null
+                      then s1.client_id end) as other_ok_con_count,
+       count(1) as other_cl_count,
+       count(distinct s1.client_id) as other_dist_cl_count -- проверка
+from (
+    select t.client_id,
+           sum(coalesce(d.pmt, d.pmt_old)) as other_deal_pmt
+    from M_CONTRACT_PARAM_KDN_IIN1 t
+    join V_DWH_PORTFOLIO_CURRENT d on d.x_client_id = t.client_id and
+                                      d.is_credit_active = 1 and
+                                      d.x_is_credit_issued = 1 and d.pmt > 0
+    group by t.client_id
+) s1
+left join (
+    select t.client_id,
+           sum(dp2.total_debt) as other_deal_pmt                     -- платеж по ним - это вся задолженность
+    from M_CONTRACT_PARAM_KDN_IIN1 t
+    join V_DWH_PORT dp2 on to_number(dp2.client_id) = t.client_id and
+                           dp2.rep_date = (trunc(sysdate) - 1) and
+                           dp2.is_on_balance = 'W'
+    group by t.client_id
+) s2 on s2.client_id = s1.client_id
+left join (
+    select t.client_id,
+           sum(coalesce(d2.pmt, d2.pmt_old) + coalesce(dp3.delinq_amount,0)) as other_deal_pmt  -- платеж по ним - это
+                                                                                                -- их платеж + просроченная задолженность
+    from M_CONTRACT_PARAM_KDN_IIN1 t
+    join V_DWH_PORT dp3 on to_number(dp3.client_id) = t.client_id and -- договора на просрочке в день выдачи
+                           dp3.rep_date = (trunc(sysdate) - 1) and
+                           dp3.delinq_days > 0
+    join V_DWH_PORTFOLIO_CURRENT d2 on d2.deal_number = dp3.deal_number
+    group by t.client_id
+) s3 on s3.client_id = s1.client_id
+group by s1.client_id;
+grant select on U1.M_CONTRACT_PARAM_KDN_IIN2 to LOADDB;
+grant select on U1.M_CONTRACT_PARAM_KDN_IIN2 to LOADER;
+
+

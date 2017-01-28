@@ -1,0 +1,61 @@
+﻿create materialized view U1.V_RBO_Z#DEPART
+refresh complete on demand
+as
+select
+  id,
+  c_code,
+  translate(upper(c_name),
+          chr(53388)||chr(53384)||chr(53383)||chr(53904)||
+          chr(53390)||chr(53380)||chr(53381),
+          chr(53914)||chr(54168)||chr(53934)||chr(54184)||
+          chr(53936)||chr(53906)||chr(53922)) as
+  c_name,
+  c_high,
+  c_part,
+  c_filial,
+  c_filial_d,
+  c_num,
+  c_svod_folder,
+  c_sklonenie,
+  c_calendar_hol,
+  c_address,
+  c_phone,
+  c_sprav_meth,
+  c_code_dblink,
+  c_short_name,
+  c_struct_sign,
+  c_beg_date,
+  c_prikaz_beg,
+  c_end_date,
+  c_prikaz_end,
+  c_products,
+  c_code_org,
+  c_beg_date_prikaz,
+  c_end_date_prikaz,
+  c_decl_name,
+  class_id,
+  c_depart_group,
+  c_is_depart_uzel,
+  c_next_day_shift,
+  c_next_day_begin,
+  c_need_for_change,
+  c_rady_to_change,
+  c_dep_address,
+  c_disable_clop,
+  c_cod_dep_zp,
+  c_aux_ctrl_dep,
+  c_tax_insp_ref,
+  c_kpp,
+  c_off_line,
+  c_dpt_brn,
+  c_kas_code_tm,
+  c_bks,
+  c_kas_region,
+  c_products_arr,
+  c_upravl_dnp_ref,
+  c_kas_code_ibso
+from rdwh.V_RBO_Z#DEPART@rdwh_exd;
+grant select on U1.V_RBO_Z#DEPART to LOADDB;
+grant select on U1.V_RBO_Z#DEPART to LOADER;
+
+

@@ -1,0 +1,17 @@
+﻿create materialized view U1.V_RFO_Z#INFO_DT_CR
+using no index
+refresh complete on demand
+as
+select dt.id,
+       dt.c_type_info,
+       dt.c_summa,
+       dt.collection_id,
+       dt.c_curr,
+       dt.sn,
+       dt.su
+ from IBS.Z#INFO_DT_CR@RFO_SNAP dt;
+grant select on U1.V_RFO_Z#INFO_DT_CR to ITS_USER;
+grant select on U1.V_RFO_Z#INFO_DT_CR to LOADDB;
+grant select on U1.V_RFO_Z#INFO_DT_CR to LOADER;
+
+

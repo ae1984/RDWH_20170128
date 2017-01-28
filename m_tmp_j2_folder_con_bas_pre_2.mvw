@@ -1,0 +1,43 @@
+﻿create materialized view U1.M_TMP_J2_FOLDER_CON_BAS_PRE_2
+build deferred
+refresh complete on demand
+as
+select /*+parallel(10)*/
+         cd.id as rfo_con_or_claim_id,
+         'CREDIT' as rfo_con_claim_type,
+         trunc(cp.c_date_create) as folder_con_date,
+         cp.c_date_create as folder_con_date_time,
+         c.id as rfo_client_id,
+         c.x_iin as iin,
+         c.x_rnn as rnn,
+         cp.id as folder_id,
+         bp.c_code as process_code,
+         upper(bp.c_name) as process_name
+  from u1.V_RFO_Z#CM_CHECKPOINT cp
+  join u1.V_RFO_Z#FOLDERS fld on fld.id = cp.id
+  join u1.V_RFO_Z#RDOC rd on rd.collection_id = fld.c_docs
+  join u1.V_RFO_Z#FDOC fd on fd.id = rd.c_doc and fd.class_id = 'CREDIT_DOG'
+  join u1.V_RFO_Z#CREDIT_DOG cd on cd.id = fd.id
+  join u1.V_RFO_Z#CLIENT c on c.id = cd.c_client_ref
+  join u1.V_RFO_Z#BUS_PROCESS bp on bp.id = fld.c_business
+  where bp.c_code in (
+                  'OPEN_CRED_PRIV_PC', --Каспийский. Выдача кредита на карту
+    --              'KAS_SAFE_CREDIT', Выдача управляемого кредита
+                  'KAS_AUTO_CRED_PRIV_PC', --Каспийский. Выдача автокредита на карту
+                  'KAS_CREDIT_CASH_PRIV_PC', --Каспийский. Выдача кредита наличными на карту
+                  'SET_REVOLV', --Установка револьверности
+                  'KAS_OPEN_CRED_PRIV_MIN', --Каспийский. Выдача кредита "Минутка"
+                  'KAS_AUTO_CRED_PRIV', --Автокредитование
+                  'OPEN_PC', --Выдача пластиковой карты
+                  'KAS_CREDIT_CASH_PRIV', --Каспийский. Кредит наличными
+            --      'KAS_PC_PURSE', Выдача кошелька
+                  'OPEN_CRED_PRIV', --Выдача кредита физическому лицу
+                  'OPEN_TRANSH', --Выдача транша
+                  'OPEN_CRED_PRIV_CRL', --Выдача кредита физическому лицу с открытием кредитной линии
+                  'OPEN_CRED_PRIV_OLD', --Выдача кредита физическому лицу (NOT ACTIVE)
+                  'ONLINE_CRED', --Онлайн Кредит
+                  'KASPI_RED'
+                );
+grant select on U1.M_TMP_J2_FOLDER_CON_BAS_PRE_2 to LOADDB;
+
+

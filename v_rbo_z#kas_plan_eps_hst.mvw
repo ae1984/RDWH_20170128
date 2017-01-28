@@ -1,0 +1,16 @@
+﻿create materialized view U1.V_RBO_Z#KAS_PLAN_EPS_HST
+refresh complete on demand
+as
+select id,
+      collection_id,
+      c_update_date,
+      c_update_user,
+      c_plan_am_arr,
+      c_prc_rate_eps,
+      c_prc_rate_eps_r,
+      c_type_graf
+from s02.Z#KAS_PLAN_EPS_HST@rdwh_exd;
+grant select on U1.V_RBO_Z#KAS_PLAN_EPS_HST to LOADDB;
+grant select on U1.V_RBO_Z#KAS_PLAN_EPS_HST to LOADER;
+
+

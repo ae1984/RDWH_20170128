@@ -1,0 +1,26 @@
+﻿create table U1.T_NPS_DICT_REGION_CITY
+(
+  region VARCHAR2(256) not null,
+  city   VARCHAR2(256)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_NPS_DICT_REGION_CITY
+  is 'Справочник распределения городов по регионам';
+comment on column U1.T_NPS_DICT_REGION_CITY.region
+  is 'Регион';
+comment on column U1.T_NPS_DICT_REGION_CITY.city
+  is 'Город';
+grant select on U1.T_NPS_DICT_REGION_CITY to LOADDB;
+grant select on U1.T_NPS_DICT_REGION_CITY to LOADER;
+

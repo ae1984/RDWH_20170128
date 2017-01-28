@@ -1,0 +1,76 @@
+﻿create table U1.T_DWH_CRED_REG
+(
+  id                NUMBER not null,
+  c_opdate          DATE,
+  c_name_pok        VARCHAR2(250),
+  c_dim_div         VARCHAR2(16),
+  c_cli_type        VARCHAR2(1),
+  c_mp_code         VARCHAR2(2),
+  c_num_dog         VARCHAR2(40),
+  c_date_dog        DATE,
+  c_date_final      DATE,
+  c_cur_code        VARCHAR2(10),
+  c_sum_loan        NUMBER(32),
+  c_ann_rate_1      NUMBER(9,2),
+  c_ef_prc          NUMBER(9,2),
+  c_sld_od#nat      NUMBER,
+  c_sld_od_p#nat    NUMBER,
+  c_sld_od_v#nat    NUMBER,
+  c_sld_prc#nat     NUMBER,
+  c_sld_prc_p#nat   NUMBER,
+  c_sld_prc_v#nat   NUMBER,
+  c_sum_prov_msfo   NUMBER(20,6),
+  c_discount#nat    NUMBER,
+  c_bal_acc_od      VARCHAR2(9),
+  c_bal_acc_od_p    VARCHAR2(9),
+  c_bal_acc_od_v    VARCHAR2(9),
+  c_bal_acc_prc     VARCHAR2(9),
+  c_bal_acc_prc_p   VARCHAR2(9),
+  c_bal_acc_prc_v   VARCHAR2(9),
+  c_bal_acc_dis     VARCHAR2(9),
+  c_date_od_out     DATE,
+  c_date_prc_out    DATE,
+  c_date_fact_off   DATE,
+  c_cli_name        VARCHAR2(400),
+  c_cli_rnn         VARCHAR2(16),
+  c_cli_iin         VARCHAR2(16),
+  c_name_prg        VARCHAR2(512),
+  c_prc_provis_msfo NUMBER(20,6),
+  c_pr_spis_msfo    VARCHAR2(100),
+  c_sum_obesp       VARCHAR2(100),
+  c_obesp           VARCHAR2(100),
+  c_oked_name       VARCHAR2(400),
+  c_act_name        VARCHAR2(200),
+  c_pawn_name       VARCHAR2(512),
+  c_overdue_day     NUMBER
+)
+partition by range (C_OPDATE) interval (NUMTOYMINTERVAL(1, 'YEAR'))
+(
+  partition P0 values less than (TO_DATE(' 2016-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS
+    pctfree 5
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P844 values less than (TO_DATE(' 2017-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 'NLS_CALENDAR=GREGORIAN'))
+    tablespace USERS_F
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    )
+);
+grant select on U1.T_DWH_CRED_REG to LOADDB;
+grant select on U1.T_DWH_CRED_REG to LOADER;
+

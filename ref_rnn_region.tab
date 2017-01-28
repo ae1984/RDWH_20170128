@@ -1,0 +1,36 @@
+﻿create table U1.REF_RNN_REGION
+(
+  rnn_first_two_digits VARCHAR2(2) not null,
+  region_name          VARCHAR2(50)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+alter table U1.REF_RNN_REGION
+  add constraint REF_RNN_REGION primary key (RNN_FIRST_TWO_DIGITS)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.REF_RNN_REGION nologging;
+grant select on U1.REF_RNN_REGION to LOADDB;
+grant select on U1.REF_RNN_REGION to LOADER;
+

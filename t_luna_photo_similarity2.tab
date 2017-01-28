@@ -1,0 +1,30 @@
+﻿create table U1.T_LUNA_PHOTO_SIMILARITY2
+(
+  sdt                         DATE,
+  similarity                  NUMBER,
+  rfo_client_id               NUMBER,
+  luna_id                     NUMBER,
+  photo_guid                  VARCHAR2(210),
+  photo_date_create           DATE,
+  photo_type                  VARCHAR2(100),
+  rfo_client_id_candidate     NUMBER,
+  luna_id_candidate           NUMBER,
+  photo_guid_candidate        VARCHAR2(210),
+  photo_date_create_candidate DATE,
+  photo_type_candidate        VARCHAR2(100)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_LUNA_PHOTO_SIMILARITY2 to LOADDB;
+

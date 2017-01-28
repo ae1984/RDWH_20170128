@@ -1,0 +1,43 @@
+﻿create table U1.T_S02_Z#KAS_PC_STMT
+(
+  id                 NUMBER,
+  class_id           VARCHAR2(16),
+  collection_id      NUMBER,
+  state_id           VARCHAR2(16),
+  c_date_debt_begin  DATE,
+  c_date_stmt        DATE not null,
+  c_plan_pay_off_dat DATE,
+  c_fact_pay_off_dat DATE,
+  c_summa_plan       NUMBER(17,2) not null,
+  c_summa_full       NUMBER(17,2),
+  c_overdue_count    NUMBER(5) not null,
+  c_pp_arr           NUMBER,
+  c_vid_stmt_ref     NUMBER not null,
+  c_num              NUMBER(7),
+  c_summa_rcmd       NUMBER(17,2),
+  c_summa_min        NUMBER(17,2),
+  c_send_bill        VARCHAR2(1),
+  c_show_bill        VARCHAR2(1),
+  c_date_close_stmt  DATE,
+  c_summa_optimal    NUMBER(17,2),
+  c_tr_sum_arr       NUMBER not null,
+  c_tr_plan_arr      NUMBER not null,
+  c_tr_rest_min      NUMBER(17,2),
+  c_tr_rest_plan     NUMBER(17,2),
+  c_pc_rest_min      NUMBER(17,2),
+  c_pc_rest_plan     NUMBER(17,2),
+  c_parent_ref       NUMBER,
+  c_cnt_client_pays  NUMBER,
+  c_cnt_min_pays     NUMBER,
+  c_sum_last_cl_pay  NUMBER(17,2),
+  c_sum_last_min_pay NUMBER(17,2)
+)
+tablespace USERS_ARC
+  pctfree 10
+  initrans 1
+  maxtrans 255
+nologging;
+grant select, insert, update, delete on U1.T_S02_Z#KAS_PC_STMT to ETL;
+grant select on U1.T_S02_Z#KAS_PC_STMT to LOADDB;
+grant select on U1.T_S02_Z#KAS_PC_STMT to LOADER;
+

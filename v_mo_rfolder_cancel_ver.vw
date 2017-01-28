@@ -1,0 +1,9 @@
+﻿create or replace force view u1.v_mo_rfolder_cancel_ver as
+select "RFOLDER_ID","REJECT_CODE","REJECT_VER", NULL as REJECT_RESULT from M_MO_RFOLDER_CANCEL_VER_2014 t
+union all
+select "RFOLDER_ID","REJECT_CODE","REJECT_VER", REJECT_RESULT from M_MO_RFOLDER_CANCEL_VER_2015 t
+union all
+select "RFOLDER_ID","REJECT_CODE","REJECT_VER", REJECT_RESULT from M_MO_RFOLDER_CANCEL_VER_2016 t;
+grant select on U1.V_MO_RFOLDER_CANCEL_VER to LOADDB;
+
+

@@ -1,0 +1,74 @@
+﻿create table U1.NT_TASKS_PLAN
+(
+  sdt         DATE default sysdate not null,
+  task_name   VARCHAR2(100) not null,
+  start_time  NUMBER,
+  end_time    NUMBER,
+  group_num   NUMBER not null,
+  task_num    NUMBER not null,
+  sql_code    CLOB not null,
+  descr       VARCHAR2(1000) not null,
+  is_active   NUMBER not null,
+  object_name VARCHAR2(100),
+  interval    NUMBER,
+  weekday     VARCHAR2(30),
+  day         VARCHAR2(100)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_TASKS_PLAN
+  is 'Плановые задачи на исполение по расписанию';
+comment on column U1.NT_TASKS_PLAN.sdt
+  is 'Дата и время добавления записи в таблицу
+';
+comment on column U1.NT_TASKS_PLAN.task_name
+  is 'Название задачи
+';
+comment on column U1.NT_TASKS_PLAN.start_time
+  is 'время запуска (HH24MI) (7:30 ->730)';
+comment on column U1.NT_TASKS_PLAN.end_time
+  is 'повторять запуск до если задача неудачно завершена (HH24MI) (9:30 ->930)';
+comment on column U1.NT_TASKS_PLAN.group_num
+  is 'Номер группы от 1 до 9999999 в рамках которой распараллеливание не критично';
+comment on column U1.NT_TASKS_PLAN.task_num
+  is 'Номер задачи в группе от 1 до 9999999';
+comment on column U1.NT_TASKS_PLAN.sql_code
+  is 'SQL на исполение';
+comment on column U1.NT_TASKS_PLAN.descr
+  is 'Описание задачи';
+comment on column U1.NT_TASKS_PLAN.is_active
+  is 'Активная задача? 1 или 0-нет';
+comment on column U1.NT_TASKS_PLAN.object_name
+  is 'конечный объект';
+comment on column U1.NT_TASKS_PLAN.interval
+  is 'повторять задачу через промежуток времени (минуты)';
+comment on column U1.NT_TASKS_PLAN.weekday
+  is 'день недели. через запятую несколько дней. null-все дни недели';
+comment on column U1.NT_TASKS_PLAN.day
+  is 'день месяца. через запятую несколько дней. null-все дни';
+create unique index U1.INX_NT_TASKS_PLAN_1 on U1.NT_TASKS_PLAN (TASK_NAME, GROUP_NUM, TASK_NUM)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.NT_TASKS_PLAN to LOADDB;
+

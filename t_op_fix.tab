@@ -1,0 +1,28 @@
+﻿create table U1.T_OP_FIX
+(
+  rep_date        DATE,
+  iin             NUMBER,
+  contract_number VARCHAR2(12),
+  xxx             VARCHAR2(10),
+  soft_hard       VARCHAR2(4),
+  deal_status     VARCHAR2(40),
+  delinq_days     NUMBER,
+  date_first_op   DATE,
+  op_cnt          NUMBER,
+  barcode_wout_u  VARCHAR2(90)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.T_OP_FIX to LOADDB;
+grant select on U1.T_OP_FIX to LOADER;
+

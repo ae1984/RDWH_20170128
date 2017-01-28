@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_SC_FRAUD_SEARCH_PRE5
+build deferred
+refresh force on demand
+as
+select /*+ parallel(5) */
+         t.rfo_client_id
+         ,count(distinct case when a.folder_date_create_mi>=trunc(sysdate)-30 and a.folder_date_create_mi < trunc(sysdate) and a.product_type = 'ДЕНЬГИ' then a.rfo_contract_id end) as count_appl_kn_30_d
+         ,count(distinct case when a.folder_date_create_mi>=trunc(sysdate)-30 and a.folder_date_create_mi < trunc(sysdate) then a.rfo_contract_id end)  as count_applications_30_d
+         ,count(distinct case when a.folder_date_create_mi>=trunc(sysdate)-30 then a.rfo_contract_id end)  as count_applications_30_d_x
+         ,count(distinct case when a.folder_date_create_mi>=trunc(sysdate)-30 and a.folder_date_create_mi < trunc(sysdate) and a.folder_state like '%ОТКАЗ%'  then a.rfo_contract_id end) as count_fail_30_d
+         ,nvl(max(case when a.folder_date_create_mi>=trunc(sysdate)-30 and a.folder_date_create_mi < trunc(sysdate) and a.product_type = 'ДЕНЬГИ' then a.contract_amount end),0) as max_sum_appl_kn_30_d
+         ,count(distinct case when a.folder_date_create_mi>=trunc(sysdate)-30 and a.folder_date_create_mi < trunc(sysdate) and a.product_type = 'ДЕНЬГИ'
+                         and a.folder_state like '%ОТКАЗ%'  then a.rfo_contract_id end) as count_fail_kn_30_d
+from u1.V_CLIENT_RFO_BY_ID t
+left join u1.M_FOLDER_CON_CANCEL a on a.rfo_client_id = t.rfo_client_id
+group by t.rfo_client_id;
+grant select on U1.M_SC_FRAUD_SEARCH_PRE5 to LOADDB;
+
+

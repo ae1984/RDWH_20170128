@@ -1,0 +1,71 @@
+﻿create materialized view U1.M_APP_MINER_BAS
+build deferred
+refresh complete on demand
+as
+select
+       mb.rfo_client_id,
+       mb.rfo_con_or_claim_id as app_id,
+       mb.folder_id,
+       mb.form_client_id,
+       mb.a_date as folder_date_create,
+       mb.folder_date_create_mi,
+       mb.claim_id,
+       mb.rfo_contract_id,
+       mb.contract_number,
+       mb.contract_amount,
+       mb.product_type,
+       mb.product,
+       coalesce(fcc.is_card, fco.is_card, fck.is_card) as is_card,
+       coalesce(fcc.cr_scheme_name, fck.cr_scheme_name) as cr_scheme_name,
+       coalesce(fcc.tariff_plan_name, fck.tariff_plan_name) as tariff_plan_name,
+       fa.expert_name,
+       coalesce(fcc.pos_code, fck.pos_code) as pos_code,
+       coalesce(fcc.pos_name, fck.pos_name) as pos_name,
+       coalesce(fcc.x_dnp_name, fck.x_dnp_name) as x_dnp_name,
+       coalesce(fcc.is_credit_issued, fck.is_credit_issued) as is_credit_issued,
+       coalesce(fcc.shop_code, fck.shop_code) as shop_code,
+       coalesce(fcc.shop_name, fck.shop_name) as shop_name,
+       fa.process_code,
+       fa.process_name,
+       coalesce(fcc.prev_con_closed_cnt, fco.prev_con_closed_cnt, fck.prev_con_closed_cnt) as prev_con_closed_cnt,
+       coalesce(fcc.prior_optim_count, fco.prior_optim_count, fck.prior_optim_count) as prior_optim_count,
+       coalesce(fcc.prev_con_del_days_max, fco.prev_con_del_days_max, fck.prev_con_del_days_max) as prev_con_del_days_max,
+       coalesce(fcc.fact_pmt_mon_before, fco.fact_pmt_mon_before, fck.fact_pmt_mon_before) as fact_pmt_mon_before,
+       coalesce(fcc.fact_pmt_mon_before_12_mon, fco.fact_pmt_mon_before_12_mon, fck.fact_pmt_mon_before_12_mon) as fact_pmt_mon_before_12_mon,
+       coalesce(fcc.prev_con_cnt, fco.prev_con_cnt, fck.prev_con_cnt) as prev_con_cnt,
+       coalesce(fcc.is_client_new_by_con, fco.is_client_new_by_con, fck.is_client_new_by_con) as is_client_new_by_con,
+       coalesce(fcc.is_categ_a, fco.is_categ_a, fck.is_categ_a) as is_categ_a,
+       coalesce(fcc.is_categ_b, fco.is_categ_b, fck.is_categ_b) as is_categ_b,
+
+       case when mb.is_categ_a = 'КАТЕГОРИЯ А'  then 'A'
+            when mb.is_categ_b = 'КАТЕГОРИЯ Б'  then 'B'
+            when mb.is_client_new_by_con = 'КЛИЕНТ ПОВТОРНЫЙ'  then 'C'
+            when mb.is_client_new_by_con = 'КЛИЕНТ НОВЫЙ'      then 'D' end as cli_cat,
+
+       case when mb.is_categ_a = 'КАТЕГОРИЯ А'  then 1
+            when mb.is_categ_b = 'КАТЕГОРИЯ Б'  then 2
+            when mb.is_client_new_by_con = 'КЛИЕНТ ПОВТОРНЫЙ'  then 3
+            when mb.is_client_new_by_con = 'КЛИЕНТ НОВЫЙ'      then 4 end as client_categ,
+
+       mb.amount_max_before,
+       case when fco.claim_id is not null and trunc(mb.a_date_time) != trunc(fco.folder_date_create_mi) then 1 else 0 end as is_change_folder_date,
+
+       coalesce(fcc.cancel_prescoring, fck.cancel_prescoring) as cancel_prescoring,
+       coalesce(fcc.cancel_middle_office, fck.cancel_middle_office) as cancel_middle_office,
+       coalesce(fcc.cancel_controller, fck.cancel_controller) as cancel_controller,
+       coalesce(fcc.cancel_client, fck.cancel_client) as cancel_client,
+       coalesce(fcc.cancel_manager, fck.cancel_manager) as cancel_manager,
+       coalesce(fcc.cancel_cpr_aa, fck.cancel_cpr_aa) as cancel_cpr_aa,
+       coalesce(fcc.cancel_verificator, fck.cancel_verificator) as cancel_verificator,
+       coalesce(fcc.cancel_undefined, fck.cancel_undefined) as cancel_undefined,
+
+       coalesce(fco.is_credit_rejected, fcc.is_credit_rejected, fck.is_credit_rejected) as is_credit_rejected
+
+  from u1.M_MATRIX_BASE mb
+  left join u1.M_FOLDER_CON_CANCEL fcc on fcc.rfo_contract_id = mb.rfo_con_or_claim_id
+  left join u1.M_FOLDER_CON_CANCEL_ONLINE fco on fco.claim_id = mb.rfo_con_or_claim_id
+  left join u1.M_FOLDER_CON_CANCEL_KSPRED fck on fck.folder_id = mb.rfo_con_or_claim_id
+  left join u1.V_FOLDER_ALL_RFO fa on fa.folder_id = mb.folder_id;
+grant select on U1.M_APP_MINER_BAS to LOADDB;
+
+

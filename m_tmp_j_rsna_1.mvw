@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_TMP_J_RSNA_1
+refresh force on demand
+as
+select a.rfo_client_id, count(distinct b.rfo_client_id) as circle_1_cli_cnt
+  from V_FORM_CLIENT_CONTACT_PHONE a
+  left join V_FORM_CLIENT_CONTACT_PHONE b
+    on b.phone_number = a.phone_number
+ where b.phone_type_simple in
+       ('МОБИЛЬНЫЙ', 'ДОМАШНИЙ', 'КОНТАКТ')
+        and b.phone_number not like '%000000%'
+        and b.rfo_client_id!=a.rfo_client_id
+ group by a.rfo_client_id;
+grant select on U1.M_TMP_J_RSNA_1 to LOADDB;
+grant select on U1.M_TMP_J_RSNA_1 to LOADER;
+
+

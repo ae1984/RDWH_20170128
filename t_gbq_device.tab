@@ -1,0 +1,44 @@
+﻿create table U1.T_GBQ_DEVICE
+(
+  id                NUMBER,
+  hit_id            VARCHAR2(50),
+  ip                VARCHAR2(40),
+  user_agent        VARCHAR2(600),
+  flash_version     VARCHAR2(40),
+  java_enabled      NUMBER(1),
+  language          VARCHAR2(20),
+  screen_colors     VARCHAR2(40),
+  screen_resolution VARCHAR2(20),
+  idate             TIMESTAMP(6)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_GBQ_DEVICE
+  is 'Устройства';
+comment on column U1.T_GBQ_DEVICE.id
+  is 'Идентификатор';
+comment on column U1.T_GBQ_DEVICE.hit_id
+  is 'ID посещения страницы';
+comment on column U1.T_GBQ_DEVICE.ip
+  is 'IP устройства';
+comment on column U1.T_GBQ_DEVICE.user_agent
+  is 'Строка юзерагент браузера';
+comment on column U1.T_GBQ_DEVICE.flash_version
+  is 'Версия FLASH';
+comment on column U1.T_GBQ_DEVICE.java_enabled
+  is 'Включен ли JAVA';
+comment on column U1.T_GBQ_DEVICE.language
+  is 'Язык';
+grant select on U1.T_GBQ_DEVICE to LOADDB;
+

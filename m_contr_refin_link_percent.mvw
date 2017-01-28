@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_CONTR_REFIN_LINK_PERCENT
+refresh complete on demand
+as
+select
+       lp.rbo_contract_id_to,
+       lp.refin_rbo_contract_id,
+       lp.date_change,
+       lp.date_change_end,
+       lp.refin_summa,
+       lp.refin_date,
+       lp.total_debt,
+       rl.refin_date_return,
+       rl.refin_date_repay,
+       coalesce(rl.refin_date_return, rl.refin_date_repay) as refin_date_end,
+       lp.part_percent,
+       100 - (sum(lp.part_percent) over (partition by lp.rbo_contract_id_to, lp.date_change)) as card_gu_percent,
+       lp.dense_date + 1 as refin_date_to,
+       max(lp.date_change_end) over (partition by lp.rbo_contract_id_to, lp.dense_date) as refin_end_to,
+       min(lp.refin_date) over (partition by lp.rbo_contract_id_to) as min_refin_date_to,
+       min(lp.refin_date) over (partition by lp.refin_rbo_contract_id) as min_refin_date,
+       dense_rank() over (partition by lp.rbo_contract_id_to order by lp.dense_date) as cnt_refin_to,
+       dense_rank() over (partition by lp.refin_rbo_contract_id order by lp.refin_date) as cnt_refin
+  from (select l.*,
+               case when (case when (select count(1) from RISK_MVERA.T_CON_REFIN_LINK_PERCENT_PRE
+                                      where rbo_contract_id_to = l.rbo_contract_id_to
+                                       and l.date_change - 1 between date_change and date_change_end) = 0
+                               then l.date_change - 1 else null end) is null
+                    then max(case when (select count(1) from RISK_MVERA.T_CON_REFIN_LINK_PERCENT_PRE
+                                      where rbo_contract_id_to = l.rbo_contract_id_to
+                                       and l.date_change - 1 between date_change and date_change_end) = 0
+                               then l.date_change - 1 else null end)
+                         over (partition by rbo_contract_id_to order by date_change range between unbounded preceding and current row)
+                    else case when (select count(1) from RISK_MVERA.T_CON_REFIN_LINK_PERCENT_PRE
+                                      where rbo_contract_id_to = l.rbo_contract_id_to
+                                       and l.date_change - 1 between date_change and date_change_end) = 0 then l.date_change - 1 else null end
+               end  as dense_date
+          from RISK_MVERA.T_CON_REFIN_LINK_PERCENT_PRE l) lp
+  join risk_mvera.M_CONTRACT_REFIN_LINK_TEST rl on rl.rbo_contract_id_to = lp.rbo_contract_id_to
+                                               and rl.refin_rbo_contract_id = lp.refin_rbo_contract_id
+                                               and rl.refin_date = lp.refin_date;
+grant select on U1.M_CONTR_REFIN_LINK_PERCENT to LOADDB;
+grant select on U1.M_CONTR_REFIN_LINK_PERCENT to LOADER;
+
+

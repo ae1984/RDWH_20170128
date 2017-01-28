@@ -1,0 +1,83 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_5
+build deferred
+refresh force on demand
+as
+select t.claim_id
+       ,count(distinct case when a.folder_date_create_mi>=trunc(t.date_create)-30 and
+                                 a.folder_date_create_mi < trunc(t.date_create) and
+                                 a.product_type = 'ДЕНЬГИ'
+                            then a.rfo_contract_id end) as count_appl_kn_30_d
+
+       ,count(distinct case when a.folder_date_create_mi>=trunc(t.date_create)-30 and
+                                 a.folder_date_create_mi < trunc(t.date_create)
+                            then a.rfo_contract_id end)  as count_applications_30_d
+
+       ,count(distinct case when a.folder_date_create_mi>=trunc(t.date_create)-30 then a.rfo_contract_id end)  as count_applications_30_d_x
+
+       ,count(distinct case when a.folder_date_create_mi>=trunc(t.date_create)-30 and
+                                 a.folder_date_create_mi < trunc(t.date_create) and
+                                 (  coalesce(a.cancel_prescoring, 0)
+                                  + coalesce(a.cancel_middle_office, 0)
+                                  + coalesce(a.cancel_controller, 0)
+                                  --+ coalesce(a.cancel_client, 0)
+                                  + coalesce(a.cancel_manager, 0)
+                                  + coalesce(a.cancel_cpr_aa, 0)
+                                  + coalesce(a.cancel_verificator, 0)
+                                  --+ coalesce(a.cancel_undefined, 0)
+                                  ) > 0
+                            then a.rfo_contract_id end) as count_fail_30_d
+
+       ,nvl(max(case when a.folder_date_create_mi>=trunc(t.date_create)-30 and
+                          a.folder_date_create_mi < trunc(t.date_create) and
+                          a.product_type = 'ДЕНЬГИ' then a.contract_amount end),0) as max_sum_appl_kn_30_d
+
+       ,count(distinct case when a.folder_date_create_mi>=trunc(t.date_create)-30 and
+                                 a.folder_date_create_mi < trunc(t.date_create) and
+                                 a.product_type = 'ДЕНЬГИ' and
+                                 (  coalesce(a.cancel_prescoring, 0)
+                                  + coalesce(a.cancel_middle_office, 0)
+                                  + coalesce(a.cancel_controller, 0)
+                                  --+ coalesce(a.cancel_client, 0)
+                                  + coalesce(a.cancel_manager, 0)
+                                  + coalesce(a.cancel_cpr_aa, 0)
+                                  + coalesce(a.cancel_verificator, 0)
+                                  --+ coalesce(a.cancel_undefined, 0)
+                                  ) > 0
+                            then a.rfo_contract_id end) as count_fail_kn_30_d
+
+       ,count(distinct case when a.folder_date_create_mi>=trunc(t.date_create)-30 and
+                                 --a.folder_date_create_mi < trunc(t.date_create) and
+                                 a.product_type = 'ДЕНЬГИ' and
+                                 (  coalesce(a.cancel_prescoring, 0)
+                                  + coalesce(a.cancel_middle_office, 0)
+                                  + coalesce(a.cancel_controller, 0)
+                                  --+ coalesce(a.cancel_client, 0)
+                                  + coalesce(a.cancel_manager, 0)
+                                  + coalesce(a.cancel_cpr_aa, 0)
+                                  + coalesce(a.cancel_verificator, 0)
+                                  --+ coalesce(a.cancel_undefined, 0)
+                                  ) > 0
+                            then a.rfo_contract_id end) as count_fail_kn_30_d_x
+
+       ,count(distinct case when a.is_credit_issued = 1 and
+                                 a.folder_date_create_mi < trunc(t.date_create) and
+                                 a.product_type = 'ДЕНЬГИ' then a.folder_id end) as count_kn_ever
+
+       ,count(distinct case when a.is_credit_issued = 1 and
+                                 a.product_type = 'ДЕНЬГИ' then a.folder_id end) as count_kn_ever_x
+
+       ,nvl(min(case when a.folder_date_create_mi>=trunc(t.date_create)-30 and
+                          a.folder_date_create_mi < trunc(t.date_create) and
+                          a.product_type = 'ДЕНЬГИ' then a.contract_amount end), 0) as min_sum_appl_kn_30_d
+
+       ,nvl(min(case when a.folder_date_create_mi>=trunc(t.date_create)-30 and
+                          a.product_type = 'ДЕНЬГИ' then a.contract_amount end), 0) as min_sum_appl_kn_30_d_x
+       ,count(distinct case when a.folder_date_create_mi>=trunc(t.date_create)-30 and a.claim_id != t.claim_id then a.rfo_contract_id end) as count_applications_30_d_x_v2
+
+
+from u1.M_FOLDER_CON_CANCEL_ONLINE_1 t
+left join u1.M_FOLDER_CON_CANCEL a on a.rfo_client_id = t.rfo_client_id and a.folder_date_create_mi < t.date_create
+group by t.claim_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_5 to LOADDB;
+
+

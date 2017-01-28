@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_TMP_J_DIMA_K_3
+refresh force on demand
+as
+select yy_mm_report,
+       count(client_id) as cli_in_mon_cnt,
+       max(cli_since_beginning_cnt) as cli_since_beginning_cnt,
+       max(cli_since_beginning_cnt) - count(client_id) as cli_closed_cnt
+from (
+    select x.*,
+           count(client_id) over (partition by null order by yy_mm_report
+                    range unbounded preceding) as cli_since_beginning_cnt
+    from (
+      select a.yy_mm_report, a.client_id
+      from v_data_all a
+      where --a.yy_mm_report_date >= to_date('01.12.2010','dd.mm.yyyy') and
+            a.contract_amount > 0 --and a.total_debt > 0
+      group by a.yy_mm_report, a.client_id
+    ) x
+) y
+group by yy_mm_report;
+grant select on U1.M_TMP_J_DIMA_K_3 to LOADDB;
+grant select on U1.M_TMP_J_DIMA_K_3 to LOADER;
+
+

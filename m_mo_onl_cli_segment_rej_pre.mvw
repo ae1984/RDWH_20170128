@@ -1,0 +1,59 @@
+﻿create materialized view U1.M_MO_ONL_CLI_SEGMENT_REJ_PRE
+build deferred
+using no index
+refresh force on demand
+as
+select /*+ parallel(10) */
+       *
+from (
+    select
+           r.id rfolder_id,
+           r.date_create,
+           dp.code_int,
+           case when dp.d_par_datatype_code = 'NUMBER' then to_char(t.value_number)
+                when dp.d_par_datatype_code = 'DATE' then to_char(t.value_date, 'dd-mm-yyyy hh24:mi:ss')
+           else t.value_text end as value_number
+
+           --t.value_number
+    from u1.MO_RFOLDER r
+    join u1.T_MO_RFOLDER_PAR_VALUE_2016 t on t.rfolder_id = r.id and t.date_create >= to_date('22/06/2016', 'dd/mm/yyyy')
+    join u1.T_MO_RFOLDER_PAR_VALUE_2016 t2 on t2.rfolder_id = r.id and
+                                              t2.d_par_id = 1030 and
+                                              t2.value_number = 81 and
+                                              t2.date_create >= to_date('22/06/2016', 'dd/mm/yyyy')
+    join u1.V_MO_D_PAR dp on dp.id = t.d_par_id
+                          and dp.code_int in ('IN_SCO_IIN',
+                                              'IN_SCO_CLIENT_ID',
+                                              'IN_SCO_FOLDER_ID',
+
+                                              --'IN_SCO_BUSINESS_PROC',
+                                              --'IN_SCO_CRED_PROGRAM',
+--                                              'SC_NUM_SCORING',
+                                              --'IN_SCO_NUM_SCORING',
+                                              'SC_BAD_CHECK_ONLY',
+                                              'SC_CARD_81_SA_RES_PKB_GCVP',
+                                              'SC_CARD_81_SA_2_REJECT_RES_PRE',
+                                              'MO_SCO_REJECT'
+                                              )
+    where r.date_create >= to_date('22/06/2016', 'dd/mm/yyyy')
+          /*and r.id = 35894176*/
+) pivot (
+    max(value_number)
+    for code_int in ( 'IN_SCO_IIN' as iin,
+                      'IN_SCO_CLIENT_ID' as rfo_client_id,
+                      'IN_SCO_FOLDER_ID' as rfo_folder_id,
+
+                      --'IN_SCO_BUSINESS_PROC' in_sco_business_proc,
+                      --'IN_SCO_CRED_PROGRAM' in_sco_cred_program,
+--                      'SC_NUM_SCORING' sc_num_scoring,
+                      --'IN_SCO_NUM_SCORING' in_sco_num_scoring,
+
+                      --'MO_SCO_REJECT_PRE_81' as mo_sco_reject_pre_81,
+                      'SC_BAD_CHECK_ONLY' as sc_bad_check_only,
+                      'SC_CARD_81_SA_RES_PKB_GCVP' as sc_card_81_sa_res_pkb_gcvp,
+                      'SC_CARD_81_SA_2_REJECT_RES_PRE' as sc_card_81_sa_2_rej_res_pre,
+                      'MO_SCO_REJECT' as mo_sco_reject)
+);
+grant select on U1.M_MO_ONL_CLI_SEGMENT_REJ_PRE to LOADDB;
+
+

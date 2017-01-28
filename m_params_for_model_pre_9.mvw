@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_PARAMS_FOR_MODEL_PRE_9
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/ tt.rfo_client_id, min(tt.begin_date) as begin_date
+from(
+    select to_char(t.rfo_client_id) as rfo_client_id,t.begin_date from M_RBO_CONTRACT_DEPOSIT_BAS t
+    union all
+    select to_char(t.rfo_client_id) as rfo_client_id,t.begin_date from M_RBO_CONTRACT_BAS t
+    union all
+    select   t.rfo_id as rfo_client_id
+            ,a.reg_date as begin_date
+    from u1.M_KASPIKZ_USERS_ALL t
+    left join u1.M_KASPIKZ_USERS a on a.id = t.user_id
+    where  t.rfo_id is not null
+) tt
+group by tt.rfo_client_id;
+grant select on U1.M_PARAMS_FOR_MODEL_PRE_9 to LOADDB;
+
+

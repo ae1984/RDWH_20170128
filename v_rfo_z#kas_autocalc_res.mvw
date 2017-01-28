@@ -1,0 +1,26 @@
+﻿create materialized view U1.V_RFO_Z#KAS_AUTOCALC_RES
+refresh complete on demand
+as
+select id,
+      c_pay_pkb,
+      c_sum_cred,
+      c_month,
+      c_own_inc,
+      c_couple_inc,
+      c_other_inc,
+      c_gcvp_inc,
+      c_num_dependant,
+      c_couple_exists,
+      c_result,
+      c_man_affirm_res,
+      c_alt_term,
+      c_alt_pre_sum,
+      c_average_pay,
+      c_add_prop,
+      sn,
+      su
+from IBS.Z#KAS_AUTOCALC_RES@RFO_SNAP;
+grant select on U1.V_RFO_Z#KAS_AUTOCALC_RES to LOADDB;
+grant select on U1.V_RFO_Z#KAS_AUTOCALC_RES to LOADER;
+
+

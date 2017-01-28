@@ -1,0 +1,100 @@
+﻿create table U1.T_ODWH_Z#PAY_DOK_PRE
+(
+  id                 NUMBER not null,
+  c_opdate           DATE,
+  c_branch_ref       NUMBER,
+  c_tip_dok          VARCHAR2(384),
+  c_c_deb            VARCHAR2(96),
+  c_c_cre            VARCHAR2(96),
+  c_knp              VARCHAR2(18),
+  c_sim              VARCHAR2(9),
+  c_turn#val         NUMBER,
+  c_turn#nat         NUMBER,
+  c_coun             VARCHAR2(90),
+  c_date_dok         DATE,
+  c_zkl_turn         VARCHAR2(3),
+  c_migr             VARCHAR2(96),
+  c_storno           VARCHAR2(96),
+  c_deb_gbk_ref      NUMBER,
+  c_cre_gbk_ref      NUMBER,
+  c_id_ibso          NUMBER,
+  c_priz             VARCHAR2(384),
+  c_in_folder        VARCHAR2(384),
+  c_code_val         VARCHAR2(9),
+  c_astr_date_create DATE,
+  c_document_num     VARCHAR2(90),
+  c_nazn             VARCHAR2(4000),
+  c_code_reg_op      VARCHAR2(384),
+  c_code_biz_op      VARCHAR2(384),
+  c_bik_bank_korr    VARCHAR2(48),
+  c_code_comm        VARCHAR2(48),
+  c_document_date    DATE,
+  c_ex1_doc_user     VARCHAR2(600),
+  c_prov_user        VARCHAR2(600),
+  c_ex2_doc_user     VARCHAR2(600),
+  c_part_sender      VARCHAR2(48),
+  c_part_recip       VARCHAR2(48),
+  c_acc_dt           VARCHAR2(90),
+  c_acc_kt           VARCHAR2(90),
+  c_inn_dt           VARCHAR2(48),
+  c_inn_kt           VARCHAR2(48),
+  c_name_dt          VARCHAR2(1200),
+  c_name_kt          VARCHAR2(1200),
+  c_document_uno     VARCHAR2(90),
+  c_astr_date_prov   DATE,
+  c_date_val         DATE,
+  c_pachka           VARCHAR2(18),
+  c_text_vozv        VARCHAR2(600),
+  c_name_vid_oborot  VARCHAR2(90),
+  c_resp_name_dt     VARCHAR2(600),
+  c_resp_name_kt     VARCHAR2(600),
+  c_auto_proc        VARCHAR2(3),
+  c_edition_uno      VARCHAR2(150),
+  c_code_dep         VARCHAR2(96),
+  c_code_eknp        VARCHAR2(48),
+  c_issue            VARCHAR2(30),
+  c_bacc_deb         VARCHAR2(27),
+  c_bacc_cre         VARCHAR2(27),
+  c_kart_vo          VARCHAR2(9),
+  c_corr_stor        VARCHAR2(150),
+  c_audit#modified   DATE,
+  c_audit#time       TIMESTAMP(9),
+  c_audit#user_ref   NUMBER,
+  c_audit#prod_descr VARCHAR2(4000),
+  c_audit#purpose    VARCHAR2(300),
+  c_audit#reason     VARCHAR2(750),
+  c_audit#load_date  DATE,
+  c_audit#source_ref NUMBER,
+  c_audit#divs_ref   NUMBER,
+  c_country_rec      VARCHAR2(90),
+  c_transfer_code    VARCHAR2(12),
+  c_payment_type     VARCHAR2(12),
+  c_bic_benef        VARCHAR2(45),
+  c_bic_recipient    VARCHAR2(45),
+  c_payment_sum#val  NUMBER,
+  c_payment_sum#nat  NUMBER,
+  c_decl_num         VARCHAR2(90),
+  sn                 NUMBER,
+  su                 NUMBER,
+  c_sender_birth     DATE,
+  c_receive_birth    DATE,
+  c_sender_iin       VARCHAR2(48),
+  c_receive_iin      VARCHAR2(48),
+  c_sender_name      VARCHAR2(1200),
+  c_receive_name     VARCHAR2(1200)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_ODWH_Z#PAY_DOK_PRE to LOADDB;
+

@@ -1,0 +1,196 @@
+﻿create materialized view U1.M_AUTO_KOLESA_KZ_DATA_PRE_T
+build deferred
+refresh complete on demand
+as
+select
+    kolesa_phone      as akk_number,
+    kolesa_brand      as akk_brend,
+    kolesa_model      as akk_model,
+    kolesa_year       as akk_year_car,
+    kolesa_car_dwheel as akk_drive,
+    kolesa_volume     as akk_engine_volume,
+    kolesa_car_transm as akk_kpp_type,
+    kolesa_car_body   as akk_body_type,
+    kolesa_fuel       as akk_fuel,
+    max(kolesa_price) keep (dense_rank last order by kolesa_updated_at) /*max(akk_price) keep (dense_rank last order by akk_last_date)*/ as akk_price,
+    max(kolesa_id) keep (dense_rank last order by kolesa_updated_at) /*max(akk_id) keep (dense_rank last order by akk_last_date)*/ as akk_id,
+    max(kolesa_active_bool) keep (dense_rank last order by kolesa_updated_at) /*max(akk_active_bool) keep (dense_rank last order by akk_last_date)*/ as akk_active_bool,
+    max(kolesa_update_date_categ) keep (dense_rank last order by kolesa_updated_at) /*max(akk_last_date_categ) keep (dense_rank last order by akk_last_date)*/ as akk_last_date_categ
+  from (
+    select
+      case when length(tt.kolesa_phone_clear) = 12 then tt.kolesa_phone_clear
+           when length(tt.kolesa_phone_clear) = 10 then
+             case when ko.kolesa_phone like '(7%' then '+7' || substr(ko.kolesa_phone, 2, 3) || substr(ko.kolesa_phone, 7, 7)
+                  when ko.kolesa_phone like '+7(7%' then substr(ko.kolesa_phone, 1, 2) || substr(ko.kolesa_phone, 4, 3) || substr(ko.kolesa_phone, 8, 13)
+             end
+      end  as kolesa_phone,
+      ko.kolesa_updated_at as kolesa_updated_at,
+      case
+        when to_number(trunc(sysdate) - kolesa_updated_at)<=7  then '00-07'
+        when to_number(trunc(sysdate) - kolesa_updated_at)<=30 then '08-30'
+        when to_number(trunc(sysdate) - kolesa_updated_at)<=60 then '31-60'
+        when to_number(trunc(sysdate) - kolesa_updated_at)<=90 then '61-90'
+      end as kolesa_update_date_categ,
+      upper(ko.kolesa_brand) as kolesa_brand,
+      upper(ko.kolesa_model) as kolesa_model,
+      ko.kolesa_year as kolesa_year,
+      case
+        when upper(ko.kolesa_car_dwheel) = 'ПОЛНЫЙ' then 'ПОЛНЫЙ ПРИВОД'
+        else upper(ko.kolesa_car_dwheel)
+      end as kolesa_car_dwheel,
+      to_number(replace(ko.kolesa_volume,',','.')) as kolesa_volume,
+      case
+        when upper(ko.kolesa_car_transm) in ('АКПП','АВТОМАТ','ВАРИАТОР','ТИПТРОНИК') then 'АКПП'
+        when upper(ko.kolesa_car_transm) = 'МЕХАНИКА' then 'МКПП'
+        else upper(ko.kolesa_car_transm)
+      end as kolesa_car_transm,
+      case
+        when upper(ko.kolesa_car_body) in ('ВНЕДОРОЖНИК','КРОССОВЕР') then 'ВНЕДОРОЖНИК/КРОССОВЕР'
+        else upper(ko.kolesa_car_body)
+      end as kolesa_car_body,
+      upper(ko.kolesa_fuel) as kolesa_fuel,
+      to_number(ko.kolesa_price) as kolesa_price,
+      ko.kolesa_id as kolesa_id,
+      ko.kolesa_active_bool as kolesa_active_bool
+    from u1.M_DWH_KOLESA_KZ ko
+    join (
+        select kk.kolesa_id,
+               kk.kolesa_phone,
+               substr(
+               case when
+                     (case when kk.kolesa_phone not like '%-%' then
+                              substr(kk.kolesa_phone, 1, 2) ||
+                              substr(kk.kolesa_phone, 5, 3) ||
+                              substr(kk.kolesa_phone, 10, 7)
+                            else substr(kk.kolesa_phone, 1, 2) ||
+                                 substr(kk.kolesa_phone, 5, 3) ||
+                                 substr(kk.kolesa_phone, 10, 3) ||
+                                 substr(kk.kolesa_phone, 14, 2) ||
+                                 substr(kk.kolesa_phone, 17, 2)
+                       end) like '+%' then
+                       case when kk.kolesa_phone not like '%-%' then
+                              substr(kk.kolesa_phone, 1, 2) ||
+                              substr(kk.kolesa_phone, 5, 3) ||
+                              substr(kk.kolesa_phone, 10, 7)
+                            else substr(kk.kolesa_phone, 1, 2) ||
+                                 substr(kk.kolesa_phone, 5, 3) ||
+                                 substr(kk.kolesa_phone, 10, 3) ||
+                                 substr(kk.kolesa_phone, 14, 2) ||
+                                 substr(kk.kolesa_phone, 17, 2)
+                       end
+                     else '+' || replace((case when kk.kolesa_phone not like '%-%' then
+                                                 substr(kk.kolesa_phone, 1, 2) ||
+                                                 substr(kk.kolesa_phone, 5, 3) ||
+                                                 substr(kk.kolesa_phone, 10, 7)
+                                               else substr(kk.kolesa_phone, 1, 2) ||
+                                                    substr(kk.kolesa_phone, 5, 3) ||
+                                                    substr(kk.kolesa_phone, 10, 3) ||
+                                                    substr(kk.kolesa_phone, 14, 2) ||
+                                                    substr(kk.kolesa_phone, 17, 2)
+                                          end) , '-', '')
+                end, 1, 12)  as kolesa_phone_clear
+                from M_DWH_KOLESA_KZ kk
+              ) tt on tt.kolesa_id = ko.kolesa_id
+      where to_number(trunc(sysdate) - ko.kolesa_publication_date)<=90
+            and ko.kolesa_phone is not null
+            --and (ko.kolesa_phone like '+7 (%' or ko.kolesa_phone like '7 (7%')
+            and (ko.kolesa_phone like '+7_(%'
+             or ko.kolesa_phone like '7_(7%'
+
+             or ko.kolesa_phone like '+7__(%'
+             or ko.kolesa_phone like '7__(7%'
+
+             or ko.kolesa_phone like '+_7_(7%'
+             or ko.kolesa_phone like '+ 7 (7%'
+
+             or ko.kolesa_phone like ' +7 (7%'
+             or ko.kolesa_phone like '_+7_(7%'
+
+             or ko.kolesa_phone like '+_7(7%'
+             or ko.kolesa_phone like '+ 7(7%'
+
+
+             or ko.kolesa_phone like '+7(7%'
+             or ko.kolesa_phone like '7(7%'
+
+             or ko.kolesa_phone like '(7%'
+
+             or ko.kolesa_phone like '+77%'
+             or ko.kolesa_phone like '77%'
+             )-- substr(ko.kolesa_phone, 2, 1) = '7'
+
+            and ko.kolesa_custom = 'Да'
+            and ko.kolesa_car_order = 'В наличии'
+            --and ko.akk_accidents_flg = 0
+            and nvl(upper(ko.kolesa_emergency),'null') != 'АВАРИЙНАЯ'
+            and ko.kolesa_avtosalon_ref is null
+            and /*((ko.kolesa_publication_date < to_date('02.02.2016','dd.mm.yyyy') and ko.kolesa_price between 1000 and 500000)
+                or*/ (ko.kolesa_publication_date>=to_date('02.02.2016','dd.mm.yyyy') and ko.kolesa_price >= 350000 and  ko.kolesa_price <= 35000000)
+            and ko.kolesa_brand is not null
+            and ko.kolesa_model != 'АВТО В КАЗАХСТАНЕ'
+            and ko.kolesa_year between 2001 and 2016
+            and ko.kolesa_car_dwheel is not null
+            and ko.kolesa_car_order is not null
+            and ko.kolesa_car_body is not null
+            and ko.kolesa_fuel is not null
+            and ko.kolesa_sweel = 'слева'
+            and ko.kolesa_volume is not null
+            and nvl(length(translate(ko.kolesa_volume,' 0123456789.',' ')),0) = 0
+            --and not exists (selecT 1 from u1.T_AUTO_REGION_BL br where br.region = upper(ko.kolesa_region))
+            and not exists (selecT 1 from u1.T_AUTO_BRAND_BL bb where bb.BRAND = upper(ko.kolesa_brand))
+            and upper(ko.kolesa_region) not in
+(
+'ЧЕЛЯБИНСК',
+'МОСКВА',
+'ОМСК',
+'ОРЕНБУРГ',
+'НОВОСИБИРСК',
+'ЕКАТЕРИНБУРГ',
+'АСТРАХАНЬ',
+'САМАРА',
+'ОРСК',
+'БАРНАУЛ',
+'ТОМСК',
+'КУРГАН',
+'МИНСК',
+'ТЮМЕНЬ',
+'САРАТОВ',
+'УФА',
+'КАЗАНЬ',
+'МАГНИТОГОРСК',
+'ТОЛЬЯТТИ',
+'ВОЛГОГРАД',
+'ПЕРМЬ',
+'РУБЦОВСК',
+'КРАСНОДАР',
+'ТАШКЕНТ',
+'КЕМЕРОВО',
+'БИШКЕК',
+'САНКТ-ПЕТЕРБУРГ',
+'ЧЕБОКСАРЫ',
+'МИАСС',
+'КРАСНОЯРСК',
+'УЛЬЯНОВСК',
+'НИЖНИЙ НОВГОРОД',
+'ВЛАДИМИР',
+'ПЕНЗА',
+'ВОРОНЕЖ',
+'РОСТОВ-НА-ДОНУ'
+)
+
+
+
+  )
+  group by
+    kolesa_phone,
+    kolesa_brand,
+    kolesa_model,
+    kolesa_year,
+    kolesa_car_dwheel,
+    kolesa_volume,
+    kolesa_car_transm,
+    kolesa_car_body,
+    kolesa_fuel;
+grant select on U1.M_AUTO_KOLESA_KZ_DATA_PRE_T to LOADDB;
+
+

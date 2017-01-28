@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_FOLDER_BARCODE_2016
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30)*/
+       tt.folder_id,
+     tt.barcode,
+     tt.reject_cnt,
+     tt.folder_date_create_mi,
+       coalesce(instr(tt.barcode, '1'), 0) as rule_index
+ from (
+      select /*+ parallel(30)*/
+             t.folder_id,
+             get_folder_barcode(t.folder_id) as barcode,
+             count(distinct t.reject_code) as reject_cnt,
+             m.folder_date_create_mi
+        from M_FOLDER_CANCEL_BARCODE t
+             inner join U1.M_FOLDER_CON_CANCEL m on m.folder_id = t.folder_id
+       where m.folder_date_create_mi >= to_date('01.01.2016', 'dd.mm.yyyy')
+       and m.folder_date_create_mi < to_date('01.01.2017', 'dd.mm.yyyy')
+       group by t.folder_id, get_folder_barcode(t.folder_id), m.folder_date_create_mi) tt;
+grant select on U1.M_FOLDER_BARCODE_2016 to LOADDB;
+
+

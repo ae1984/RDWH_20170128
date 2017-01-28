@@ -1,0 +1,271 @@
+﻿create materialized view U1.M_RSON_CIRCLE_1_CLI_CNT
+refresh force on demand
+as
+with c as
+ (select a.rfo_client_id,
+         round(sum(c.delinq_rate_b_w * c.max_debt_used) /
+               sum(c.max_debt_used),
+               1) as del_rate_b_w,
+         round(sum(c.delinq_rate_pmt_1_45 * c.max_debt_used) /
+               sum(c.max_debt_used),
+               1) as del_rate_pmt_1_45,
+         case
+           when max(c.delinq_rate_b_w) > 35 then
+            1
+           else
+            0
+         end as is_delinq_rate_b_w_35,
+         case
+           when max(c.delinq_rate_pmt_1_45) > 0 then
+            1
+           else
+            0
+         end as is_delinq_rate_pmt_1_45,
+         case
+           when max(c.delinq_days_pmt_1) > 7 then
+            1
+           else
+            0
+         end as is_delinq_days_pmt_1_7,
+         case
+           when max(r.contract_number) is not null then
+            1
+           else
+            0
+         end as is_optimized
+    from M_CONTRACT_CAL_DEL c
+    join v_folder_all_rfo a
+      on c.folder_id_first = a.folder_id
+    left join M_DWH_ACC_SPECIAL_OFFER_CON r
+      on c.contract_number = r.contract_number
+     and r.spof_spec_offer_status_cd in ('WORK', 'DEFAULT', 'EXECUTED')
+   group by a.rfo_client_id
+  having sum(c.max_debt_used) > 0)
+select h.rfo_client_id,
+       h.circle_1_cli_cnt,
+       case
+         when h.perc_del_rate_b_w_35 = 0 then
+          0
+         when h.perc_del_rate_b_w_35 > 0 and h.perc_del_rate_b_w_35 <= 5 then
+          5
+         when h.perc_del_rate_b_w_35 > 5 and h.perc_del_rate_b_w_35 <= 10 then
+          10
+         when h.perc_del_rate_b_w_35 > 10 and h.perc_del_rate_b_w_35 <= 15 then
+          15
+         when h.perc_del_rate_b_w_35 > 15 and h.perc_del_rate_b_w_35 <= 20 then
+          20
+         when h.perc_del_rate_b_w_35 > 20 and h.perc_del_rate_b_w_35 <= 25 then
+          25
+         when h.perc_del_rate_b_w_35 > 25 and h.perc_del_rate_b_w_35 <= 30 then
+          30
+         when h.perc_del_rate_b_w_35 > 30 and h.perc_del_rate_b_w_35 <= 35 then
+          35
+         when h.perc_del_rate_b_w_35 > 35 and h.perc_del_rate_b_w_35 <= 40 then
+          40
+         when h.perc_del_rate_b_w_35 > 40 and h.perc_del_rate_b_w_35 <= 45 then
+          45
+         when h.perc_del_rate_b_w_35 > 45 and h.perc_del_rate_b_w_35 <= 50 then
+          50
+         when h.perc_del_rate_b_w_35 > 50 and h.perc_del_rate_b_w_35 <= 55 then
+          55
+         when h.perc_del_rate_b_w_35 > 55 and h.perc_del_rate_b_w_35 <= 60 then
+          60
+         when h.perc_del_rate_b_w_35 > 60 and h.perc_del_rate_b_w_35 <= 65 then
+          65
+         when h.perc_del_rate_b_w_35 > 65 and h.perc_del_rate_b_w_35 <= 70 then
+          70
+         when h.perc_del_rate_b_w_35 > 70 and h.perc_del_rate_b_w_35 <= 75 then
+          75
+         when h.perc_del_rate_b_w_35 > 75 and h.perc_del_rate_b_w_35 <= 80 then
+          80
+         when h.perc_del_rate_b_w_35 > 80 and h.perc_del_rate_b_w_35 <= 85 then
+          85
+         when h.perc_del_rate_b_w_35 > 85 and h.perc_del_rate_b_w_35 <= 90 then
+          90
+         when h.perc_del_rate_b_w_35 > 90 and h.perc_del_rate_b_w_35 <= 95 then
+          95
+         when h.perc_del_rate_b_w_35 > 95 then
+          100
+       end perc_del_rate_b_w_35,
+       case
+         when h.perc_del_rate_pmt_1_45 = 0 then
+          0
+         when h.perc_del_rate_pmt_1_45 > 0 and h.perc_del_rate_pmt_1_45 <= 5 then
+          5
+         when h.perc_del_rate_pmt_1_45 > 5 and
+              h.perc_del_rate_pmt_1_45 <= 10 then
+          10
+         when h.perc_del_rate_pmt_1_45 > 10 and
+              h.perc_del_rate_pmt_1_45 <= 15 then
+          15
+         when h.perc_del_rate_pmt_1_45 > 15 and
+              h.perc_del_rate_pmt_1_45 <= 20 then
+          20
+         when h.perc_del_rate_pmt_1_45 > 20 and
+              h.perc_del_rate_pmt_1_45 <= 25 then
+          25
+         when h.perc_del_rate_pmt_1_45 > 25 and
+              h.perc_del_rate_pmt_1_45 <= 30 then
+          30
+         when h.perc_del_rate_pmt_1_45 > 30 and
+              h.perc_del_rate_pmt_1_45 <= 35 then
+          35
+         when h.perc_del_rate_pmt_1_45 > 35 and
+              h.perc_del_rate_pmt_1_45 <= 40 then
+          40
+         when h.perc_del_rate_pmt_1_45 > 40 and
+              h.perc_del_rate_pmt_1_45 <= 45 then
+          45
+         when h.perc_del_rate_pmt_1_45 > 45 and
+              h.perc_del_rate_pmt_1_45 <= 50 then
+          50
+         when h.perc_del_rate_pmt_1_45 > 50 and
+              h.perc_del_rate_pmt_1_45 <= 55 then
+          55
+         when h.perc_del_rate_pmt_1_45 > 55 and
+              h.perc_del_rate_pmt_1_45 <= 60 then
+          60
+         when h.perc_del_rate_pmt_1_45 > 60 and
+              h.perc_del_rate_pmt_1_45 <= 65 then
+          65
+         when h.perc_del_rate_pmt_1_45 > 65 and
+              h.perc_del_rate_pmt_1_45 <= 70 then
+          70
+         when h.perc_del_rate_pmt_1_45 > 70 and
+              h.perc_del_rate_pmt_1_45 <= 75 then
+          75
+         when h.perc_del_rate_pmt_1_45 > 75 and
+              h.perc_del_rate_pmt_1_45 <= 80 then
+          80
+         when h.perc_del_rate_pmt_1_45 > 80 and
+              h.perc_del_rate_pmt_1_45 <= 85 then
+          85
+         when h.perc_del_rate_pmt_1_45 > 85 and
+              h.perc_del_rate_pmt_1_45 <= 90 then
+          90
+         when h.perc_del_rate_pmt_1_45 > 90 and
+              h.perc_del_rate_pmt_1_45 <= 95 then
+          95
+         when h.perc_del_rate_pmt_1_45 > 95 then
+          100
+       end perc_del_rate_pmt_1_45,
+       case
+         when h.perc_del_days_pmt_1_7 = 0 then
+          0
+         when h.perc_del_days_pmt_1_7 > 0 and h.perc_del_days_pmt_1_7 <= 5 then
+          5
+         when h.perc_del_days_pmt_1_7 > 5 and h.perc_del_days_pmt_1_7 <= 10 then
+          10
+         when h.perc_del_days_pmt_1_7 > 10 and h.perc_del_days_pmt_1_7 <= 15 then
+          15
+         when h.perc_del_days_pmt_1_7 > 15 and h.perc_del_days_pmt_1_7 <= 20 then
+          20
+         when h.perc_del_days_pmt_1_7 > 20 and h.perc_del_days_pmt_1_7 <= 25 then
+          25
+         when h.perc_del_days_pmt_1_7 > 25 and h.perc_del_days_pmt_1_7 <= 30 then
+          30
+         when h.perc_del_days_pmt_1_7 > 30 and h.perc_del_days_pmt_1_7 <= 35 then
+          35
+         when h.perc_del_days_pmt_1_7 > 35 and h.perc_del_days_pmt_1_7 <= 40 then
+          40
+         when h.perc_del_days_pmt_1_7 > 40 and h.perc_del_days_pmt_1_7 <= 45 then
+          45
+         when h.perc_del_days_pmt_1_7 > 45 and h.perc_del_days_pmt_1_7 <= 50 then
+          50
+         when h.perc_del_days_pmt_1_7 > 50 and h.perc_del_days_pmt_1_7 <= 55 then
+          55
+         when h.perc_del_days_pmt_1_7 > 55 and h.perc_del_days_pmt_1_7 <= 60 then
+          60
+         when h.perc_del_days_pmt_1_7 > 60 and h.perc_del_days_pmt_1_7 <= 65 then
+          65
+         when h.perc_del_days_pmt_1_7 > 65 and h.perc_del_days_pmt_1_7 <= 70 then
+          70
+         when h.perc_del_days_pmt_1_7 > 70 and h.perc_del_days_pmt_1_7 <= 75 then
+          75
+         when h.perc_del_days_pmt_1_7 > 75 and h.perc_del_days_pmt_1_7 <= 80 then
+          80
+         when h.perc_del_days_pmt_1_7 > 80 and h.perc_del_days_pmt_1_7 <= 85 then
+          85
+         when h.perc_del_days_pmt_1_7 > 85 and h.perc_del_days_pmt_1_7 <= 90 then
+          90
+         when h.perc_del_days_pmt_1_7 > 90 and h.perc_del_days_pmt_1_7 <= 95 then
+          95
+         when h.perc_del_days_pmt_1_7 > 95 then
+          100
+       end perc_del_days_pmt_1_7,
+       case
+         when h.perc_optim = 0 then
+          0
+         when h.perc_optim > 0 and h.perc_optim <= 5 then
+          5
+         when h.perc_optim > 5 and h.perc_optim <= 10 then
+          10
+         when h.perc_optim > 10 and h.perc_optim <= 15 then
+          15
+         when h.perc_optim > 15 and h.perc_optim <= 20 then
+          20
+         when h.perc_optim > 20 and h.perc_optim <= 25 then
+          25
+         when h.perc_optim > 25 and h.perc_optim <= 30 then
+          30
+         when h.perc_optim > 30 and h.perc_optim <= 35 then
+          35
+         when h.perc_optim > 35 and h.perc_optim <= 40 then
+          40
+         when h.perc_optim > 40 and h.perc_optim <= 45 then
+          45
+         when h.perc_optim > 45 and h.perc_optim <= 50 then
+          50
+         when h.perc_optim > 50 and h.perc_optim <= 55 then
+          55
+         when h.perc_optim > 55 and h.perc_optim <= 60 then
+          60
+         when h.perc_optim > 60 and h.perc_optim <= 65 then
+          65
+         when h.perc_optim > 65 and h.perc_optim <= 70 then
+          70
+         when h.perc_optim > 70 and h.perc_optim <= 75 then
+          75
+         when h.perc_optim > 75 and h.perc_optim <= 80 then
+          80
+         when h.perc_optim > 80 and h.perc_optim <= 85 then
+          85
+         when h.perc_optim > 85 and h.perc_optim <= 90 then
+          90
+         when h.perc_optim > 90 and h.perc_optim <= 95 then
+          95
+         when h.perc_optim > 95 then
+          100
+       end perc_optim,
+       h.avg_del_rate_b_w,
+       h.avg_del_rate_pmt_1_45
+  from (select f.rfo_client_id_1 rfo_client_id,
+               count(f.rfo_client_id_2) circle_1_cli_cnt,
+               round((sum(c.is_delinq_rate_b_w_35) /
+                     count(f.rfo_client_id_2)) * 100) perc_del_rate_b_w_35,
+               round((sum(c.is_delinq_rate_pmt_1_45) /
+                     count(f.rfo_client_id_2)) * 100) perc_del_rate_pmt_1_45,
+               round((sum(c.is_delinq_days_pmt_1_7) /
+                     count(f.rfo_client_id_2)) * 100) perc_del_days_pmt_1_7,
+               round((sum(c.is_optimized) / count(f.rfo_client_id_2)) * 100) perc_optim,
+               round(avg(del_rate_b_w), 1) as avg_del_rate_b_w,
+               round(avg(del_rate_pmt_1_45), 1) as avg_del_rate_pmt_1_45
+          from (select distinct a.rfo_client_id rfo_client_id_1,
+                                b.rfo_client_id rfo_client_id_2
+                  from V_FORM_CLIENT_CONTACT_PHONE a
+                  left join V_FORM_CLIENT_CONTACT_PHONE b
+                    on b.phone_number = a.phone_number
+                 where b.phone_type_simple in
+                       ('МОБИЛЬНЫЙ',
+                        'ДОМАШНИЙ',
+                        'КОНТАКТ')
+                   and b.phone_number not like '%000000%'
+                   and b.rfo_client_id != a.rfo_client_id
+                 group by a.rfo_client_id, b.rfo_client_id) f
+          join c c
+            on c.rfo_client_id = f.rfo_client_id_2
+         group by f.rfo_client_id_1) h;
+grant select on U1.M_RSON_CIRCLE_1_CLI_CNT to LOADDB;
+grant select on U1.M_RSON_CIRCLE_1_CLI_CNT to LOADER;
+
+

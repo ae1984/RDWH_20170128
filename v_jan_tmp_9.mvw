@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_JAN_TMP_9
+refresh force on demand
+as
+select /*d.deal_number, */d.prod_type, c.deal_status, count(*) as cnt from DWH_PORT d
+left join V_DWH_PORTFOLIO_CURRENT c on c.deal_number = d.deal_number
+where d.rep_date = trunc(sysdate) - 2 and
+      not exists (select null from V_DWH_PORT_201312 p
+           where d.rep_date = trunc(sysdate) - 2 and
+           p.deal_number = d.deal_number)
+group by d.prod_type, c.deal_status;
+grant select on U1.V_JAN_TMP_9 to LOADDB;
+grant select on U1.V_JAN_TMP_9 to LOADER;
+
+

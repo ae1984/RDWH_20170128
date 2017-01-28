@@ -1,0 +1,35 @@
+﻿create materialized view U1.M_SCCL_DWH_AUTO
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       a.client_iin
+
+       ,count(distinct a.vin) as cnt_auto
+from (
+      select m.mvd_iin as client_iin,
+             m.vin,
+             max(m.mvd_status_id) keep (dense_rank last order by m.mvd_status_date) as mvd_status_id,
+             max(m.mvd_status_date) as mvd_status_date,
+             m.esbd_mark,
+             m.esbd_model,
+             m.esbd_issue_year,
+             m.ar_origin_country,
+             m.ar_assemblage_countr
+      from u1.DWH_AUTO_VIN m
+      where m.mvd_status_date >= to_date('01-01-2014', 'dd-mm-yyyy')
+      group by m.mvd_iin,
+               m.vin,
+               m.esbd_mark,
+               m.esbd_model,
+               m.esbd_issue_year,
+               m.ar_origin_country,
+               m.ar_assemblage_countr
+) a
+where a.mvd_status_id != 4
+      and a.client_iin is not null
+group by a.client_iin;
+grant select on U1.M_SCCL_DWH_AUTO to LOADDB;
+grant select on U1.M_SCCL_DWH_AUTO to RTS_RDWH;
+
+

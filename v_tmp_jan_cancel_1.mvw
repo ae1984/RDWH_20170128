@@ -1,0 +1,18 @@
+﻿create materialized view U1.V_TMP_JAN_CANCEL_1
+refresh force on demand
+as
+select /*+ first_rows */
+       to_char(trunc(c.c_date,'mm'),'yyyy-mm') as cancel_month,
+       trunc(c.c_date) as cancel_date,
+       c.c_folders as folder_id,
+       ct.c_type,
+       ct.c_code,
+       ct.c_name
+from V_RFO_Z#KAS_CANCEL c
+join V_RFO_Z#KAS_CANCEL_TYPES ct on ct.id = c.c_type and ct.c_err_level = 1 and
+     ct.c_type in ('AUTO','GCVP','MO_SCO','CPR','MANAGER')
+where c.c_date > to_date('2013-06-01','yyyy-mm-dd') and c.c_folders is not null;
+grant select on U1.V_TMP_JAN_CANCEL_1 to LOADDB;
+grant select on U1.V_TMP_JAN_CANCEL_1 to LOADER;
+
+

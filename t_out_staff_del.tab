@@ -1,0 +1,29 @@
+﻿create table U1.T_OUT_STAFF_DEL
+(
+  department    VARCHAR2(1203),
+  position      VARCHAR2(300),
+  name          VARCHAR2(255 CHAR),
+  iin           VARCHAR2(12 CHAR),
+  delinq_days   NUMBER,
+  delinq_amount NUMBER,
+  fine_sum      NUMBER,
+  product       VARCHAR2(255 CHAR),
+  amount        NUMBER,
+  pmt           NUMBER,
+  rep_date      DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_OUT_STAFF_DEL to LOADDB;
+

@@ -1,0 +1,21 @@
+﻿create table U1.T_LOG_HTTP_REQUEST_NEW_2
+(
+  log_http_request_id NUMBER not null,
+  nc_client_ip        VARCHAR2(64),
+  nc_client_ip_dec    VARCHAR2(19)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_LOG_HTTP_REQUEST_NEW_2 to LOADDB;
+

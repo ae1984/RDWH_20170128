@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_GBQ_TRAFFIC
+build deferred
+refresh force on demand
+as
+select ID,
+        HIT_ID,
+        REFERRAL_PATH,
+        CAMPAIGN,
+        SOURCE,
+        MEDIUM,
+        KEYWORD,
+        AD_CONTENT,
+        CAMPAIGN_ID,
+        GCL_ID,
+        DCL_ID,
+        IDATE
+from GBQ.GBQ_TRAFFIC@KSVISIT;
+grant select on U1.M_GBQ_TRAFFIC to LOADDB;
+
+

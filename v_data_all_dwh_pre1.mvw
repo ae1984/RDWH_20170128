@@ -1,0 +1,88 @@
+﻿create materialized view U1.V_DATA_ALL_DWH_PRE1
+build deferred
+refresh force on demand
+as
+select /*+parallel(30)*/
+         to_char(s.exld_rep_date, 'yyyy - mm') as yy_mm_report,
+         trunc(s.exld_rep_date, 'mm') as yy_mm_report_date,
+         s.exld_rep_date as report_date,
+         s.exld_deal_number as contract_no,
+         substr(ltrim(s.exld_deal_number, 'R'), 1, 7) as client_id,
+         case
+           when length(s.exld_client_rnn) = 11 then
+            lpad(s.exld_client_rnn, 12, 0)
+           else
+            s.exld_client_rnn
+         end as rnn,
+         coalesce(s.exld_client_iin, rc.iin) as iin,
+         upper(s.exld_client_name) as client_name,
+         coalesce(rp.product, rp1.product, 'UNKNOWN') as product,
+         coalesce(rp.product_refin, rp1.product_refin, 'UNKNOWN') as product_refin,
+         coalesce(rp.product_program, rp1.product_program) as product_programm,
+         s.exld_amount as contract_amount,
+         to_char(s.exld_begin_date, 'yyyy - mm') as yy_mm_start,
+         s.exld_begin_date as start_date,
+         cast (null as date) as set_revolving_date,
+         s.exld_plan_end_date as end_date,
+         s.exld_actual_end_date as actual_end_date,
+         coalesce(s.exld_fgu_cred, 0) + coalesce(s.exld_fgu_prc, 0) +
+         coalesce(s. exld_fgu_ovrd_cred, 0) +
+         coalesce(s.exld_fgu_ovrd_prc, 0) +
+         coalesce(s.exld_vnb_ovrd_cred, 0) +
+         coalesce(s.exld_vnb_ovrd_prc, 0) + coalesce(s.exld_vnb_comm, 0) +
+         coalesce(s.exld_fgu_overdraft, 0) +
+         coalesce(s.exld_fgu_ovrd_overdraft, 0) as total_debt,
+         --ds.delinq_days_max_client as delinq_days,
+         s.exld_cl_ovrd_days as delinq_days,
+         s.exld_dept_number  as pos_code,
+         /*case when upper(s.exld_unp_name)='ГОРОД НЕ ОПРЕДЕЛЕН' then 'UNKNOWN'
+         else upper(s.exld_unp_name) end as branch_name,*/
+         case
+           when upper(s.exld_unp_name) = 'ГОРОД НЕ ОПРЕДЕЛЕН' or
+                s.exld_unp_name is null then
+            'UNKNOWN'
+           else
+            upper(s.exld_unp_name)
+         end as branch_name,
+         translate(upper(s.exld_create_empl_name),
+                   chr(53388) || chr(53384) || chr(53383) || chr(53904) ||
+                   chr(53390) || chr(53380) || chr(53381),
+                   chr(53914) || chr(54168) || chr(53934) || chr(54184) ||
+                   chr(53936) || chr(53906) || chr(53922)) as expert_name, -----'ҚӘҮӨҰҒҢ'
+         coalesce(s.exld_fgu_ovrd_cred, 0) +
+         coalesce(s.exld_fgu_ovrd_prc, 0) +
+         coalesce(s.exld_vnb_ovrd_cred, 0) +
+         coalesce(s.exld_vnb_ovrd_prc, 0) + coalesce(s.exld_vnb_comm, 0) +
+         coalesce(s.exld_fgu_ovrd_overdraft, 0) as delinq_amount,
+         s.exld_ovrd_days as delinq_days_old,
+         upper(s.exld_deal_status) as deal_status, ----------new
+         lag(upper(s.exld_deal_status), 1, null) over(partition by s.exld_deal_number order by s.exld_rep_date) as deal_status_prev, ------new
+         cast (0 as number) as is_card
+
+          from (select distinct * from DWH_DM_SPGU_LD) s
+        /*join (select to_char(s.exld_rep_date,'yyyy - mm') as yy_mm_report,
+               substr(ltrim(s.exld_deal_number,'R'),1,7) as client_id,
+               max(s.exld_cl_ovrd_days) as delinq_days_max_client
+               from DWH_DM_SPGU_LD s
+        group by to_char(s.exld_rep_date,'yyyy - mm'),
+                 substr(ltrim(s.exld_deal_number,'R'),1,7)
+        ) ds on ds.yy_mm_report = to_char(s.exld_rep_date,'yyyy - mm') and
+                ds.client_id = substr(ltrim(s.exld_deal_number,'R'),1,7)*/
+          left join REF_PRODUCTS rp
+            on rp.product_program = upper(s.exld_prod_name)
+          left join REF_PRODUCTS rp1
+            on rp1.product_program = upper(s.exld_prod_type)
+          left join (select c.x_rnn as rnn,
+                           max(c.x_iin) keep(dense_rank last order by c.id) as iin
+                      from V_RFO_Z#CLIENT c
+                     where c.x_rnn is not null
+                       and c.class_id = 'CL_PRIV'
+                     group by c.x_rnn
+                     ) rc on rc.rnn = s.exld_client_rnn
+where upper(s.exld_prod_name) not like '%ТЕСТ%'
+   and upper(s.exld_prod_name) != 'СЧЕТ KASPI.KZ'
+   and upper(s.exld_deal_status) not in ('ОТКАЗ', 'ВВЕДЕН', 'ПОДПИСАН')
+   and s.exld_rep_date >= to_date('2012-11-30', 'yyyy-mm-dd');
+grant select on U1.V_DATA_ALL_DWH_PRE1 to LOADDB;
+
+

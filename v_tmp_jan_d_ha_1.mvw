@@ -1,0 +1,37 @@
+﻿create materialized view U1.V_TMP_JAN_D_HA_1
+refresh force on demand
+as
+select ord as ord_bad, max(age) as age_max_bad,
+       max(sales_cum) keep (dense_rank last order by age) as sales_cum,
+       max(del_rate_cum) keep (dense_rank last order by age) as del_rate_cum
+from (
+select order_age, ord, age, del_rate, /*del_rate_pmt_1,*/ sales,
+       con_cnt, con_dist_cnt, sum(sales) over (partition by ord order by age
+                range unbounded preceding) as sales_cum,
+       sum(del_rate_mult_sales) over (partition by ord order by age range unbounded preceding) /
+           sum(sales) over (partition by ord order by age range unbounded preceding) as del_rate_cum
+from (
+select lpad(fpc.ph_home_all_order,4,'0') || ' # ' ||
+           lpad(fpc.ph_home_all_age,4,'0') as order_age,
+    fpc.ph_home_all_order as ord, fpc.ph_home_all_age as age,
+    sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used) as del_rate,
+--    sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used) as del_rate_pmt_1,
+    sum(c.max_debt_used) as sales,
+    sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used) *
+         sum(c.max_debt_used) as del_rate_mult_sales,
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt
+from V_TMP_CONTRACT_CAL_DEL c
+join V_FOLDER_PHONE_CALC fpc on fpc.folder_id = c.folder_id_first
+where --(c.yms like '2013 - %' or c.yms in ('2014 - 01', '2014 - 02')) and
+            (/*c.yms like '2012 - 1%' or */c.yms in ('2012 - 11','2012 - 12','2013 - 01', '2013 - 02',
+               '2013 - 03', '2013 - 04',
+              '2013 - 05', '2013 - 06', '2013 - 07', '2013 - 08', '2013 - 09', '2013 - 10')) and
+      fpc.ph_home_all_order is not null and fpc.ph_home_all_age is not null
+group by fpc.ph_home_all_order, fpc.ph_home_all_age having sum(c.max_debt_used) > 0
+) x
+) y where del_rate_cum >= 40
+group by ord;
+grant select on U1.V_TMP_JAN_D_HA_1 to LOADDB;
+grant select on U1.V_TMP_JAN_D_HA_1 to LOADER;
+
+

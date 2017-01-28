@@ -1,0 +1,28 @@
+﻿create table U1.MO_RFOL_MONITORING
+(
+  kmoni_id          NUMBER not null,
+  kmoni_client_ref  NUMBER,
+  kmoni_folder_ref  NUMBER,
+  kmoni_date_create DATE,
+  bproc_id          NUMBER,
+  bproc_code        VARCHAR2(300),
+  bproc_name        VARCHAR2(4000),
+  foldr_id          NUMBER,
+  foldr_client      NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO_RFOL_MONITORING to LOADDB;
+grant select on U1.MO_RFOL_MONITORING to LOADER;
+

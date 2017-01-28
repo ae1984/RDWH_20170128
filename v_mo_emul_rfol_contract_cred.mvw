@@ -1,0 +1,47 @@
+﻿create materialized view U1.V_MO_EMUL_RFOL_CONTRACT_CRED
+using no index
+refresh complete on demand
+as
+select cp.id                  as cmchp_id, -- folder_id
+       f.c_client             as foldr_client, -- client_id
+       cd.id                             as crdog_id,
+       cd.c_num_dog                      as crdog_num_dog,
+       cd.c_info_cred#summa_cred         as crdog_info_cred#summa_cred,
+       cd.c_date_begin                   as crdog_date_begin,
+       cd.c_date_end                     as crdog_date_end,
+--       ccs.id                 as crscm_id,
+       ccs.c_code             as crscm_code,
+--       ccs.c_name             as crscm_name,
+--       pr.id                  as pprop_id__crdog_cr_prog,
+       pr.c_code              as pprop_code__crdog_cr_prog,
+--       pr.c_name              as pprop_name__crdog_cr_prog,
+--       cd_std.id              as stdog_id__crdog,
+       cd_std.c_code          as stdog_code__crdog,
+--       cd_std.c_name          as stdog_name__crdog,
+--       cd_ud.id               as kunid_id__crdog_tar_pln,
+       cd_ud.c_code           as kunid_code__crdog_tar_pln--,
+--       cd_ud.c_name           as kunid_name__crdog_tar_pln,
+--       s.id                   as shops_id,
+--       s.c_code               as shops_code,
+--       s.c_name               as shops_name,
+--       s.c_address#place      as shops_address#place
+from V_RFO_Z#CM_CHECKPOINT cp
+join V_RFO_Z#FOLDERS f on f.id = cp.id -- чекпоинт без фолдера нам не нужен
+join V_RFO_Z#CM_WAY cmw on cmw.id = cp.c_way and
+     cmw.id in (1441324352,6503652354,84522668,1441325149,578214112) -- кредитные маршруты
+join V_RFO_Z#RDOC rd_1 on rd_1.collection_id = f.c_docs
+join V_RFO_Z#FDOC fd_1 on fd_1.id = rd_1.c_doc and fd_1.class_id = 'CREDIT_DOG'
+join V_RFO_Z#CREDIT_DOG cd on cd.id = fd_1.id
+left join V_RFO_Z#CRED_SCHEME ccs on ccs.id = cd.c_cred_scheme
+left join V_RFO_Z#PROPERTIES p on p.collection_id = ccs.c_add_prop
+left join V_RFO_Z#PROD_PROPERTY pr on pr.id = p.c_prop and pr.c_group_prop = 188106869
+left join V_RFO_Z#KAS_UNIVERSAL_D cd_ud on cd_ud.id = ccs.c_kas_tp_ref
+left join V_RFO_Z#STATUS_DOG cd_std on cd_std.id = fd_1.c_status_doc
+--left join V_RFO_Z#SHOPS s on s.id = cd.c_shop
+--where cp.id = 7907571283 -- ТК + карта
+      --cp.id = 9068696377 -- АВТО
+where cp.c_date_create > trunc(sysdate) - 30;
+grant select on U1.V_MO_EMUL_RFOL_CONTRACT_CRED to LOADDB;
+grant select on U1.V_MO_EMUL_RFOL_CONTRACT_CRED to LOADER;
+
+

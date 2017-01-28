@@ -1,0 +1,25 @@
+﻿create table U1.ZIB_CLIENT_CALL
+(
+  zib_cl_id          NUMBER,
+  cl_call_date       DATE,
+  cl_call_start_date DATE,
+  cl_call_dur        NUMBER,
+  cont_theme         VARCHAR2(100),
+  cont_theme_b       VARCHAR2(100),
+  cl_iin             VARCHAR2(100),
+  cl_fio             VARCHAR2(100),
+  cl_address         VARCHAR2(2000),
+  cl_phone           VARCHAR2(100),
+  manager_fio        VARCHAR2(100),
+  manager_pos        VARCHAR2(100),
+  cont_lang          VARCHAR2(100)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+nologging;
+grant select on U1.ZIB_CLIENT_CALL to ETL;
+grant select on U1.ZIB_CLIENT_CALL to LOADDB;
+grant select on U1.ZIB_CLIENT_CALL to LOADER;
+

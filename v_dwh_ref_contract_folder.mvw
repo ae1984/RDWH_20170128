@@ -1,0 +1,30 @@
+﻿create materialized view U1.V_DWH_REF_CONTRACT_FOLDER
+using no index
+refresh complete on demand
+as
+select s.crtf_id,
+       s.crtf_gid,
+       s.crtf$start_date,
+       s.crtf$end_date,
+       s.crtf$change_date,
+       s.crtf$row_status,
+       s.crtf$audit_id,
+       s.crtf$hash,
+       s.crtf_number,
+       s.crtf_crt_folder_type_cd,
+       s.crtf_branch_dept_gid,
+       s.crtf$source,
+       s.crtf$source_pk,
+       s.crtf$provider,
+       s.crtf_create_date,
+       s.crtf_result_note,
+       s.crtf_bundle_num,
+       s.crtf_clnt_gid,
+       s.crtf_dept_gid,
+       s.crtf_empl_gid,
+       s.crtf_envlp_gid
+from dwh_main.REF_CONTRACT_FOLDER@DWH_PROD2 s;
+grant select on U1.V_DWH_REF_CONTRACT_FOLDER to LOADDB;
+grant select on U1.V_DWH_REF_CONTRACT_FOLDER to LOADER;
+
+

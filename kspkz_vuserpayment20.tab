@@ -1,0 +1,52 @@
+﻿create table U1.KSPKZ_VUSERPAYMENT20
+(
+  userid      NUMBER,
+  paymenttime DATE,
+  servicename VARCHAR2(1024),
+  id          NUMBER not null
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 16K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.PAY_USERID_INDX on U1.KSPKZ_VUSERPAYMENT20 (USERID)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.KSPKZ_VUSERPAYMENT20
+  add constraint ID_PAY_PK primary key (ID)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.ID_PAY_PK nologging;
+grant select, insert, update, delete on U1.KSPKZ_VUSERPAYMENT20 to ETL;
+grant select on U1.KSPKZ_VUSERPAYMENT20 to LOADDB;
+grant select on U1.KSPKZ_VUSERPAYMENT20 to LOADER;
+

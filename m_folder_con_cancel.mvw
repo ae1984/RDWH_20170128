@@ -1,0 +1,91 @@
+﻿create materialized view U1.M_FOLDER_CON_CANCEL
+build deferred
+refresh complete on demand
+as
+select --+ parallel(30) parallel_index(30)
+       t.folder_date_create_mi,
+      t.rfo_contract_id,
+      t.folder_id,
+      t.folder_number,
+      t.rfo_client_id,
+      t.iin,
+      t.x_dnp_region,
+      t.x_dnp_name,
+      t.pos_code,
+      t.pos_name,
+      t.pos_type,
+      t.shop_code,
+      t.shop_name,
+      t.expert_name,
+      t.expert_position,
+      t.is_card,
+      t.cr_program_name,
+      t.product_type,
+      t.is_point_active,
+      t.is_credit_issued,
+      t.is_credit_issued_new,
+      t.is_credit_issued_mix,
+      t.contract_status_code,
+      t.contract_status_name,
+      t.contract_number,
+      t.contract_amount,
+      t.cancel_prescoring,
+      t.cancel_middle_office,
+      t.cancel_controller,
+      t.cancel_client,
+      t.cancel_manager,
+      t.cancel_cpr_aa,
+      t.cancel_verificator,
+      t.cancel_undefined,
+      t.is_aa_reject,
+      t.process_name,
+      t.route_name,
+      t.route_point_code,
+      t.folder_state,
+      t.is_daytime_decision_folder,
+      t.source_system,
+      t.delivery_type,
+      t.is_refin,
+      t.contract_date_begin,
+      t.contract_set_revolving_date,
+      t.cr_scheme_name,
+      t.tariff_plan_name,
+      t.form_client_id,
+       a1.prev_con_cnt,
+       a1.prev_con_closed_cnt,
+       a1.amount_max_before,
+       a1.prior_optim_count,
+       a1.is_client_new is_client_new_by_con,
+       a1.is_sign_require,
+
+       a3.prev_con_del_days_max,
+       a3.fact_pmt_mon_before,
+       a3.fact_pmt_mon_before_12_mon,
+       --Категория А
+       case when coalesce(a1.prev_con_closed_cnt, 0) >= 2 and     --Закрыл несколько кредитов
+             coalesce(a1.prior_optim_count, 0) = 0 and        --Не было оптимизации
+             coalesce(a3.prev_con_del_days_max, 0) <= 15 and  --Не допускал просрочку > 15
+             coalesce(a3.fact_pmt_mon_before, 0) >= 12 and    --Кол-во платежей
+             coalesce(a3.fact_pmt_mon_before_12_mon, 0) > 0   --Платил в течении последних 12 мес
+        then 1 else 0 end as is_categ_a,
+        a1.is_credit_rejected,
+        a1.claim_id,
+        t.pos_credit_type,
+        case when coalesce(a1.prev_con_closed_cnt, 0) >= 1 and     --Закрыл несколько кредитов
+             coalesce(a3.prev_con_del_days_max, 0) < 31 and  --Не допускал просрочку > 15
+             coalesce(a3.fact_pmt_mon_before, 0) >= 6     --Кол-во платежей
+        then 1 else 0 end as is_categ_b,
+       t.expert_id,
+       t.rnn,
+       t.is_alt
+from M_FOLDER_CON_CANCEL_BASE t
+left join M_FOLDER_CON_CANCEL_ADD_1 a1 on a1.rfo_contract_id = t.rfo_contract_id
+left join M_FOLDER_CON_CANCEL_ADD_3 a3 on a3.rfo_contract_id = t.rfo_contract_id;
+grant select on U1.M_FOLDER_CON_CANCEL to DNP;
+grant select on U1.M_FOLDER_CON_CANCEL to DTS_USER;
+grant select on U1.M_FOLDER_CON_CANCEL to LOADDB;
+grant select on U1.M_FOLDER_CON_CANCEL to LOADER;
+grant select on U1.M_FOLDER_CON_CANCEL to LOAD_MO;
+grant select on U1.M_FOLDER_CON_CANCEL to RISK_VERIF;
+
+

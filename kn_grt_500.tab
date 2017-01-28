@@ -1,0 +1,23 @@
+﻿create table U1.KN_GRT_500
+(
+  contract_number VARCHAR2(22),
+  client_id       NUMBER,
+  is_high_delinq  NUMBER,
+  bad_good        CHAR(1)
+)
+tablespace USERS_DM
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.KN_GRT_500 to LOADDB;
+grant select on U1.KN_GRT_500 to LOADER;
+

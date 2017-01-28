@@ -1,0 +1,40 @@
+﻿create table U1.T_RDWH_INCREMENT_TABLES_LOAD
+(
+  object_name VARCHAR2(250),
+  last_date   DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RDWH_INCREMENT_TABLES_LOAD
+  is 'Таблица для хранения дат по последней инкрементальной загрузке';
+comment on column U1.T_RDWH_INCREMENT_TABLES_LOAD.object_name
+  is 'Наименование объекта';
+comment on column U1.T_RDWH_INCREMENT_TABLES_LOAD.last_date
+  is 'Дата последней загрузки объекта';
+create unique index U1.T_RDWH_INCREMENT_OBJ_IND1 on U1.T_RDWH_INCREMENT_TABLES_LOAD (OBJECT_NAME)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_RDWH_INCREMENT_TABLES_LOAD to LOADDB;
+grant select on U1.T_RDWH_INCREMENT_TABLES_LOAD to LOADER;
+

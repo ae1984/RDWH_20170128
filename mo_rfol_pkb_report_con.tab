@@ -1,0 +1,31 @@
+﻿create table U1.MO_RFOL_PKB_REPORT_CON
+(
+  kpkbc_id            NUMBER not null,
+  pkbrp_id            NUMBER not null,
+  foldr_id            NUMBER,
+  foldr_client        NUMBER,
+  kpkbc_contr_status  VARCHAR2(600),
+  kpkbc_last_update   VARCHAR2(36),
+  kpkbc_total_ammount VARCHAR2(150),
+  kpkbc_overdue_sum   VARCHAR2(120),
+  kpkbc_collection_id NUMBER,
+  pkbrp_ci            NUMBER,
+  pkbrp_closed_ci     NUMBER,
+  clien_id            NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO_RFOL_PKB_REPORT_CON to LOADDB;
+grant select on U1.MO_RFOL_PKB_REPORT_CON to LOADER;
+

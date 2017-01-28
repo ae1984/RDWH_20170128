@@ -1,0 +1,38 @@
+﻿create materialized view U1.V_VERIFICATION
+build deferred
+refresh complete on demand
+as
+select /*+parallel(30) parallel_index(30) */
+  fa.folder_id,
+  v.id as verif_doc_id,
+  f.c_doc_date as verif_doc_date,
+  c.id as rfo_client_id,
+  c.c_inn as client_iin,
+  upper(sd.c_name) as verif_doc_status,
+  decode(v.c_verify_result, 0, 'ОТКАЗ', 1, 'ОДОБРЕНИЕ', 'НЕТ РЕЗУЛЬТАТА') as verif_phone_result,
+  decode(v.c_photover_result, 0, 'ОТКАЗ', 1, 'ОДОБРЕНИЕ', 'НЕТ РЕЗУЛЬТАТА') as verif_photo_result,
+  upper(trim(v.c_comment)) as verif_comment,
+  r.vector_group_name
+from u1.T_RFO_Z#KAS_VERIFICATION v
+join u1.V_RFO_Z#FDOC f on f.id = v.id
+join (select fa.folder_id,
+        max(v.id) keep (dense_rank first order by f.c_doc_date ) as verif_doc_id
+         -- в случае дублирования берем первый по времени документ
+      from u1.T_RFO_Z#KAS_VERIFICATION v
+      join u1.V_RFO_Z#FDOC f on f.id = v.id
+      join u1.V_RFO_Z#RDOC rd on rd.c_doc = f.id
+      join u1.V_FOLDER_ALL_RFO fa on fa.fld_c_docs = rd.collection_id
+      group by fa.folder_id
+      ) fa on fa.verif_doc_id = v.id
+left join u1.V_RFO_Z#STATUS_DOG sd on sd.id = f.c_status_doc
+left join u1.V_RFO_Z#CLIENT c on c.ID = v.c_client_ref
+left join (select pr.collection_id, upper(ud.c_name) as vector_group_name
+             from u1.V_RFO_Z#PROPERTIES   pr
+             join u1.V_RFO_Z#PROPERTY_GRP pg on pg.id = pr.c_group_prop
+             join u1.V_RFO_Z#KAS_UNIVERSAL_D ud on ud.id = to_number(pr.c_obj)
+            where pg.c_code = 'VER_VECTOR_GR'
+           ) r on r.collection_id = v.c_add_prop;
+grant select on U1.V_VERIFICATION to LOADDB;
+grant select on U1.V_VERIFICATION to RISK_VERIF;
+
+

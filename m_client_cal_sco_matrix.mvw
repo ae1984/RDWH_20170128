@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_CLIENT_CAL_SCO_MATRIX
+refresh force on demand
+as
+select max(rfo.client_iin) as client_iin,
+       max(rfo.client_rnn) as client_rnn,
+       rfo.rfo_client_id,
+       max(t.client_id) as client_id,
+
+       max(t.prod_cnt_by_cli) keep (dense_rank last order by t.client_id) as prod_cnt_by_cli,
+       max(t.con_cnt_by_cli) keep (dense_rank last order by t.client_id) as con_cnt_by_cli,
+       max(t.amount_by_cli_sum) keep (dense_rank last order by t.client_id) as amount_by_cli_sum,
+       max(t.prod_1_prod) keep (dense_rank last order by t.client_id) as prod_1_prod,
+       max(t.prod_1_sum) keep (dense_rank last order by t.client_id) as prod_1_sum,
+       max(t.prod_1_con_cnt) keep (dense_rank last order by t.client_id) as prod_1_con_cnt,
+       max(t.prod_2_prod) keep (dense_rank last order by t.client_id) as prod_2_prod,
+       max(t.prod_2_sum) keep (dense_rank last order by t.client_id) as prod_2_sum,
+       max(t.prod_2_con_cnt) keep (dense_rank last order by t.client_id) as prod_2_con_cnt,
+       max(t.prod_3_prod) keep (dense_rank last order by t.client_id) as prod_3_prod,
+       max(t.prod_3_sum) keep (dense_rank last order by t.client_id) as prod_3_sum,
+       max(t.prod_3_con_cnt) keep (dense_rank last order by t.client_id) as prod_3_con_cnt,
+
+       case when count(distinct lk.client_id) > 0 then 1 else 0 end as is_client_lk
+from M_CLIENT_PRESCO_MATRIX t
+join M_CLIENT_DWH_RFO_LINK rfo on rfo.client_id = t.client_id
+left join M_CLIENT_LK lk on lk.client_id = t.client_id
+group by rfo.rfo_client_id;
+grant select on U1.M_CLIENT_CAL_SCO_MATRIX to LOADDB;
+grant select on U1.M_CLIENT_CAL_SCO_MATRIX to LOADER;
+grant select on U1.M_CLIENT_CAL_SCO_MATRIX to LOAD_MO;
+
+

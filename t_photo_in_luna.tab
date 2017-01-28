@@ -1,0 +1,37 @@
+﻿create table U1.T_PHOTO_IN_LUNA
+(
+  rfo_client_id     NUMBER,
+  luna_id           NUMBER,
+  photo_guid        VARCHAR2(210),
+  photo_date_create DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.IDX_PHOTO_IN_LUNA_1 on U1.T_PHOTO_IN_LUNA (PHOTO_DATE_CREATE)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  compress  nologging;
+grant select on U1.T_PHOTO_IN_LUNA to LOADDB;
+grant select, insert, update, delete, references, alter, index on U1.T_PHOTO_IN_LUNA to RISK_ALEXEY;
+grant select, insert, update, delete, references, alter, index on U1.T_PHOTO_IN_LUNA to RISK_ALEXEY2;
+

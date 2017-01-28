@@ -1,0 +1,170 @@
+﻿create materialized view U1.M_TST_1
+build deferred
+refresh force on demand
+as
+select
+       rownum as rn,
+       case when p.prod_avto='AVTO' then 'A'
+            when p.prod_avto like '%КРЕДИТ НА ПОКУПКУ (СТАНДАРТ%'then 'POS'
+            when p.prod_avto like '%АВТОЗАПЧАСТИ%' then 'POS'
+            when p.prod_avto like '%ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ%' then 'POS'
+            when p.prod_avto like '%ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ%' then 'POS'
+            else 'M'
+       end           as products,
+       p.rep_date,
+       p.deal_number                                                              as deal_number,
+       case when nvl(p.delinq_days,0)>750 then 751 else nvl(p.delinq_days, 0) end as delinq,
+       p.is_on_balance                                                            as is_on_balance,
+       p.is_on_balance_prev                                                       as is_on_balance_prev,
+       f.optim_type as opt_type,
+       case when p.is_on_balance='Y' and p.is_on_balance_prev = 'Y' or p.is_on_balance_prev is null then 0
+            when p.is_on_balance='W' and p.is_on_balance_prev = 'W' then 0
+            when p.is_on_balance='W' and p.is_on_balance_prev = 'Y' then -1
+            when p.is_on_balance='Y' and p.is_on_balance_prev = 'W' then 1
+            when p.is_on_balance='I' then 0
+       end                                                                        as is_written_during_day,
+       case when nvl(p.delinq_days,0) < 8 then '000 – 007'
+            when nvl(p.delinq_days,0) > 7 and nvl(p.delinq_days,0) <31 then '008 – 030'
+            when nvl(p.delinq_days,0) > 30 and nvl(p.delinq_days,0) < 61 then '031 – 060'
+            when nvl(p.delinq_days,0) > 60 and nvl(p.delinq_days,0) < 91 then '061 - 090'
+            when nvl(p.delinq_days,0) > 90 and nvl(p.delinq_days,0) < 121 then '091 - 120'
+            when nvl(p.delinq_days,0) > 120 and nvl(p.delinq_days,0) < 151 then '121 - 150'
+            when nvl(p.delinq_days,0) > 150 and nvl(p.delinq_days,0) < 181 then '151 - 180'
+            when nvl(p.delinq_days,0) > 180 and nvl(p.delinq_days,0) < 211 then '181 - 210'
+            when nvl(p.delinq_days,0) > 210 and nvl(p.delinq_days,0) < 241 then '211 - 240'
+            when nvl(p.delinq_days,0) > 240 and nvl(p.delinq_days,0) < 271 then '241 - 270'
+            when nvl(p.delinq_days,0) > 270 and nvl(p.delinq_days,0) < 301 then '271 - 300'
+            when nvl(p.delinq_days,0) > 300 and nvl(p.delinq_days,0) < 331 then '301 – 330'
+            when nvl(p.delinq_days,0) > 330 and nvl(p.delinq_days,0) < 361 then '331 - 360'
+            when nvl(p.delinq_days,0) > 360 and nvl(p.delinq_days,0) < 391 then '361 - 390'
+            when nvl(p.delinq_days,0) > 390 and nvl(p.delinq_days,0) < 421 then '391 - 420'
+            when nvl(p.delinq_days,0) > 420 and nvl(p.delinq_days,0) < 451 then '421 - 450'
+            when nvl(p.delinq_days,0) > 450 and nvl(p.delinq_days,0) < 481 then '451 - 480'
+            when nvl(p.delinq_days,0) > 480 and nvl(p.delinq_days,0) < 511 then '481 - 510'
+            when nvl(p.delinq_days,0) > 510 and nvl(p.delinq_days,0) < 541 then '511 - 540'
+            when nvl(p.delinq_days,0) > 540 and nvl(p.delinq_days,0) < 571 then '541 - 570'
+            when nvl(p.delinq_days,0) > 570 and nvl(p.delinq_days,0) < 601 then '571 - 600'
+            when nvl(p.delinq_days,0) > 600 and nvl(p.delinq_days,0) < 631 then '601 - 630'
+            when nvl(p.delinq_days,0) > 630 and nvl(p.delinq_days,0) < 661 then '631 - 660'
+            when nvl(p.delinq_days,0) > 660 and nvl(p.delinq_days,0) < 691 then '661 - 690'
+            when nvl(p.delinq_days,0) > 690 and nvl(p.delinq_days,0) < 721 then '691 - 720'
+            when nvl(p.delinq_days,0) > 720 and nvl(p.delinq_days,0) < 751 then '721 - 750'
+            when nvl(p.delinq_days,0) > 750 then '750 <'
+       end                                                                        as long_delinq,
+       nvl(p.total_debt,0) + nvl(pd.total_discount,0)                             as total_debt,
+       vv.main_debt                                                               as main_debt,
+       vv.reward                                                                  as reward,
+       vv.overlimit                                                               as overlimit,
+       vv.overdraft                                                               as overdraft,
+       vv.main_vnb_debt                                                           as main_vnb_debt,
+       vv.vnb_reward                                                              as vnb_reward,
+       vv.vnb_comm                                                                as vnb_comm,
+       vv.vnb_overlimit                                                           as vnb_overlimit,
+       vv.vnb_overdraft                                                           as vnb_overdraft,
+       p.delinq_amount                                                            as delinq_amount,
+       vv.del_main_debt                                                           as del_main_debt,
+       vv.del_reward                                                              as del_reward,
+       vv.del_overlimit                                                           as del_overlimit,
+       vv.del_overdraft                                                           as del_overdraft,
+       nvl(pd.total_discount,0)                                                   as total_discount
+
+
+  from (
+        select t.cdhd_rep_date                                   as rep_date,
+               upper(t.cdhd_prod_type)                           as prod_type,
+               t.cdhd_deal_number                                as deal_number,
+
+               nvl(t.cdhd_pc_cred,0) +
+               nvl(t.cdhd_pc_prc,0) +
+               nvl(t.cdhd_pc_overlimit,0) +
+               nvl(t.cdhd_pc_overdraft,0) +
+
+               nvl(t.cdhd_pc_ovrd_cred,0) +
+               nvl(t.cdhd_pc_ovrd_prc,0) +
+               nvl(t.cdhd_pc_ovrd_overlimit,0) +
+               nvl(t.cdhd_pc_ovrd_overdraft,0) +
+
+               nvl(t.cdhd_pc_vnb_ovrd_cred,0) +
+               nvl(t.cdhd_pc_vnb_ovrd_overdraft,0) +
+               nvl(t.cdhd_pc_vnb_ovrd_overlimit,0) +
+               nvl(t.cdhd_pc_vnb_ovrd_prc_cred,0)                as x_total_debt,
+
+               nvl(t.cdhd_pc_cred,0)                             as main_debt,
+               nvl(t.cdhd_pc_prc,0)                              as reward,
+               nvl(t.cdhd_pc_overlimit,0)                        as overlimit,
+               nvl(t.cdhd_pc_overdraft,0)                        as overdraft,
+
+               nvl(t.cdhd_pc_vnb_ovrd_cred,0)                    as main_vnb_debt,
+               nvl(t.cdhd_pc_vnb_ovrd_prc_cred,0)                as vnb_reward,
+               0                                                 as vnb_comm,
+               nvl(t.cdhd_pc_vnb_ovrd_overlimit,0)               as vnb_overlimit,
+               nvl(t.cdhd_pc_vnb_ovrd_overdraft,0)               as vnb_overdraft,
+
+               nvl(t.cdhd_pc_ovrd_cred,0) +
+               nvl(t.cdhd_pc_ovrd_prc,0) +
+               nvl(t.cdhd_pc_ovrd_overlimit,0) +
+               nvl(t.cdhd_pc_ovrd_overdraft,0)                   as x_delinq_amount,
+
+
+               nvl(t.cdhd_pc_ovrd_cred,0)                        as del_main_debt,
+               nvl(t.cdhd_pc_ovrd_prc,0)                         as del_reward,
+               nvl(t.cdhd_pc_ovrd_overlimit,0)                   as del_overlimit,
+               nvl(t.cdhd_pc_ovrd_overdraft,0)                   as del_overdraft,
+
+               1 as  x_is_card
+          from DWH_DM_CARDSDAILY_HD_H t
+         where t.cdhd_rep_date = to_date('31.08.2016', 'dd.mm.yyyy')
+
+         union all
+
+        select s.exhd_rep_date                                   as rep_date,
+               upper(s.exhd_prod_type)                           as prod_type,
+               s.exhd_deal_number                                as deal_number,
+
+               nvl(s.exhd_fgu_cred,0) +
+               nvl(s.exhd_fgu_prc,0) +
+               nvl(s.exhd_fgu_overdraft,0) +
+
+               nvl(s.exhd_fgu_ovrd_cred,0) +
+               nvl(s.exhd_fgu_ovrd_prc,0) +
+               nvl(s.exhd_fgu_ovrd_overdraft,0) +
+
+               nvl(s.exhd_vnb_ovrd_cred,0) +
+               nvl(s.exhd_vnb_ovrd_prc,0) +
+               nvl(s.exhd_vnb_comm,0) +
+               nvl(s.exhd_vnb_overdraft,0)                       as x_total_debt,
+
+               nvl(s.exhd_fgu_cred,0)                            as main_debt,
+               nvl(s.exhd_fgu_prc,0)                             as reward,
+               0                                                 as overlimit,
+               nvl(s.exhd_fgu_overdraft,0)                       as overdraft,
+
+               nvl(s.exhd_vnb_ovrd_cred,0)                       as main_vnb_debt,
+               nvl(s.exhd_vnb_ovrd_prc,0)                        as vnb_reward,
+               nvl(s.exhd_vnb_comm,0)                            as vnb_comm,
+               nvl(s.exhd_vnb_overdraft,0)                       as vnb_overdraft,
+               0                                                 as vnb_overlimit,
+
+               nvl(s.exhd_fgu_ovrd_cred,0) +
+               nvl(s.exhd_fgu_ovrd_prc,0) +
+               nvl(s.exhd_vnb_overdraft,0)                       as x_delinq_amount,
+
+               nvl(s.exhd_fgu_ovrd_cred,0)                       as del_main_debt,
+               nvl(s.exhd_fgu_ovrd_prc,0)                        as del_reward,
+               0                                                 as del_overlimit,
+               nvl(s.exhd_vnb_overdraft,0)                       as del_overdraft,
+
+               0                                                 as x_is_card
+          from DWH_DM_SPGU_HD_H s
+         where s.exhd_rep_date = to_date('31.08.2016', 'dd.mm.yyyy')
+       ) vv
+       inner join DWH_PORT                     p on      p.deal_number = vv.deal_number
+                                                and         p.rep_date = vv.rep_date
+       left  join U1.M_CONTRACT_OPTIM_FIX      f on  f.contract_number = p.deal_number
+                                                and         f.rep_date = to_date('31.08.2016', 'dd.mm.yyyy')
+       left  join U1.M_CONTRACT_PORT_DISCOUNT pd on        pd.rep_date = p.rep_date
+                                                and pd.CONTRACT_NUMBER = p.deal_number
+ where p.is_on_balance <> 'I';
+grant select on U1.M_TST_1 to LOADDB;
+
+

@@ -1,0 +1,24 @@
+﻿create table U1.T_RFO_Z#KAS_GKB_PC_BKP
+(
+  id                NUMBER not null,
+  c_payment_title   VARCHAR2(36),
+  c_payment_overdue VARCHAR2(24),
+  collection_id     NUMBER,
+  sn                NUMBER,
+  su                NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RFO_Z#KAS_GKB_PC_BKP to LOADDB;
+

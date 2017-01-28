@@ -1,0 +1,79 @@
+﻿create materialized view U1.M_TST1
+refresh force on demand
+as
+select
+           t.rfolder_id,
+           max(t.date_create) as date_create,
+           max(decode(dp.code_int, 'IN_SCO_FOLDER_ID', t.value_number, null)) as IN_SCO_FOLDER_ID,
+
+           max(decode(dp.code_int, 'PRSC_PH_MOBILE-MOBILE_RES_PRE', t.value_number, null)) as PRSC_PH_MOB_MOB_RES_PRE,
+           max(decode(dp.code_int, 'PRSC_PH_HOME-HOME_RES_PRE', t.value_number, null)) as PRSC_PH_HOME_HOME_RES_PRE,
+           max(decode(dp.code_int, 'PRSC_PH_CONTACT-CONTACT_RES_PRE', t.value_number, null)) as PRSC_PH_CONT_CONT_RES_PRE,
+
+           max(decode(dp.code_int, 'PRSC_CLIENT_AGE_RES_PRE', t.value_number, null)) as PRSC_CLIENT_AGE_RES_PRE,
+           max(decode(dp.code_int, 'PRSC_OVERDUE_EXIST_RES_PRE', t.value_number, null)) as PRSC_OVERDUE_EXIST_RES_PRE,
+           max(decode(dp.code_int, 'PRSC_PKB_NEGATIVE_STATUS_RES_PRE', t.value_number, null)) as PRSC_PKB_NEGAT_STAT_RES_PRE,
+
+           max(decode(dp.code_int, 'PRSC_GCVP_DAYS_ELAPSED_RES_PRE', t.value_number, null)) as PRSC_GCVP_DAYS_ELAPSED_RES_PRE,
+           max(decode(dp.code_int, 'PRSC_GCVP_SALARY_RES_PRE', t.value_number, null)) as PRSC_GCVP_SALARY_RES_PRE,
+
+           max(decode(dp.code_int, 'PRSC_RESIDENT_RES_PRE', t.value_number, null)) as PRSC_RESIDENT_RES_PRE,
+           max(decode(dp.code_int, 'PRSC_CLN_4D8M_RES_PRE', t.value_number, null)) as PRSC_CLN_4D8M_RES_PRE,
+           max(decode(dp.code_int, 'PRSC_CL_CONTACTS_RES_PRE', t.value_number, null)) as PRSC_CL_CONTACTS_RES_PRE,
+           max(decode(dp.code_int, 'PRSC_CONTACT_ABSENCE_RES_PRE', t.value_number, null)) as PRSC_CONTACT_ABSENCE_RES_PRE,
+
+           max(decode(dp.code_int, 'PRSC_GCVP_PKB_ACTIVE_CONTRACTS_RES_PRE', t.value_number, null)) as PRSC_GCVP_PKB_ACT_CONT_RES_PRE,
+
+           max(decode(dp.code_int, 'PRSC_PROD_MATRIX_RES_PRE', t.value_number, null)) as PRSC_PROD_MATRIX_RES_PRE,
+
+           max(decode(dp.code_int, 'IN_SCO_SYSTEM_SOURCE', t.value_text, null)) as IN_SCO_SYSTEM_SOURCE,
+           max(decode(dp.code_int, 'IN_SCO_CRED_PROGRAM', t.value_text, null)) as IN_SCO_CRED_PROGRAM,
+
+           max(decode(dp.code_int, 'IN_SCO_NUM_SCORING', t.value_number, null)) as IN_SCO_NUM_SCORING,
+           max(decode(dp.code_int, 'IN_SCO_PKB_SUM_OVERD_PAY', t.value_number, null)) as IN_SCO_PKB_SUM_OVERD_PAY,
+           max(decode(dp.code_int, 'PRSC_ACTIVE_KASPI_CONTRACTS', t.value_number, null)) as PRSC_ACTIVE_KASPI_CONTRACTS,
+           max(decode(dp.code_int, 'IN_SCO_PKB_NUM_CONTRCTS', t.value_number, null)) as IN_SCO_PKB_NUM_CONTRCTS,
+            max(decode(dp.code_int, 'PRSC_CL_FORM_CONTACTS_CNT', t.value_number, null)) as PRSC_CL_FORM_CONTACTS_CNT,
+             max(decode(dp.code_int, 'PRSC_CL_PRIV_CONTACTS_CNT', t.value_number, null)) as PRSC_CL_PRIV_CONTACTS_CNT,
+            max(decode(dp.code_int, 'PRSC_OVERDUE_SUM', t.value_number, null)) as PRSC_OVERDUE_SUM,
+
+             max(decode(dp.code_int, 'SC_IS_CATEG_A', t.value_number, null)) as SC_IS_CATEG_A,
+              max(decode(dp.code_int, 'SC_KDN_REGUL', t.value_number, null)) as SC_KDN_REGUL,
+              max(decode(dp.code_int, 'MO_SCO_REJECT', t.value_number, null)) as MO_SCO_REJECT,
+max(decode(dp.code_int, 'PRSC_VERIFICATION_RESULT', t.value_number, null)) as PRSC_VERIFICATION_RESULT,
+               max(decode(dp.code_int, 'PRSC_REJECT_PRE_81', t.value_number, null)) as PRSC_REJECT_PRE_81
+
+    from u1.T_MO_RFOLDER_PAR_VALUE_DD t
+    join u1.v_mo_D_PAR dp on dp.id = t.d_par_id
+                          and dp.code_int in ('IN_SCO_FOLDER_ID','PRSC_OVERDUE_SUM',
+                                              'PRSC_PH_MOBILE-MOBILE_RES_PRE',
+                                              'PRSC_PH_HOME-HOME_RES_PRE','PRSC_VERIFICATION_RESULT',
+                                              'PRSC_PH_CONTACT-CONTACT_RES_PRE',
+                                               'IN_SCO_NUM_SCORING','PRSC_REJECT_PRE_81',
+                                               'PRSC_CL_FORM_CONTACTS_CNT',            'SC_IS_CATEG_A',  'SC_KDN_REGUL','MO_SCO_REJECT',
+           'PRSC_CL_PRIV_CONTACTS_CNT',
+                                                'IN_SCO_PKB_SUM_OVERD_PAY',
+                                                'PRSC_ACTIVE_KASPI_CONTRACTS',
+                                                'IN_SCO_PKB_NUM_CONTRCTS',
+                                              'PRSC_CLIENT_AGE_RES_PRE',
+                                              'PRSC_OVERDUE_EXIST_RES_PRE',
+                                              'PRSC_PKB_NEGATIVE_STATUS_RES_PRE',
+
+                                              'PRSC_GCVP_DAYS_ELAPSED_RES_PRE',
+                                              'PRSC_GCVP_SALARY_RES_PRE',
+                                              'PRSC_RESIDENT_RES_PRE',
+                                              'PRSC_CLN_4D8M_RES_PRE',
+                                              'PRSC_CL_CONTACTS_RES_PRE',
+                                              'PRSC_CONTACT_ABSENCE_RES_PRE',
+
+                                              'PRSC_GCVP_PKB_ACTIVE_CONTRACTS_RES_PRE',
+                                              'PRSC_PROD_MATRIX_RES_PRE',
+                                              'IN_SCO_SYSTEM_SOURCE',
+                                              'IN_SCO_CRED_PROGRAM'
+                                              )
+
+    where t.date_create> trunc(sysdate)
+    group by t.rfolder_id;
+grant select on U1.M_TST1 to LOADDB;
+
+

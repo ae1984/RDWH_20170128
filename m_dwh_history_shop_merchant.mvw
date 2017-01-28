@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_DWH_HISTORY_SHOP_MERCHANT
+refresh force on demand
+as
+select /*+ parallel 15 */
+       shmer$source_pk as marchant_id, --данного поля нет в источникке
+       shmer_create_date as create_date,
+       shmer_rfo_id as rfo_id,
+       shmer_marchant_name as marchant_name,
+       shmer_employee_id as employee_id,
+       shmer_contact_person_id as contact_person_id,
+       shmer_contact_id as contact_id,
+       shmer_contact_city as contact_city,
+       shmer_street_name as street_name,
+       shmer_street_number as street_number,
+       shmer_address_value_mail_index as address_value_mail_index,
+       shmer$change_date as date_change,
+       shmer_id as id,
+       shmer_gid as marchant_dwh_id
+  from DWH_MAIN.REF_SHOP_MERCHANT@dwh_prod2;
+grant select on U1.M_DWH_HISTORY_SHOP_MERCHANT to LOADDB;
+grant select on U1.M_DWH_HISTORY_SHOP_MERCHANT to LOADER;
+
+

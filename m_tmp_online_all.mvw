@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_TMP_ONLINE_ALL
+refresh complete on demand
+as
+select t.folder_date_create_mi, t.rfo_contract_id, t.contract_number,
+       t.folder_id, t.rfo_client_id, t.is_credit_issued
+from M_FOLDER_CON_CANCEL t
+where t.cr_program_name = 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР' /*and
+      to_char(t.folder_date_create_mi,'yyyy-mm') = '2014-05'*/
+
+--2430212;
+grant select on U1.M_TMP_ONLINE_ALL to LOADDB;
+grant select on U1.M_TMP_ONLINE_ALL to LOADER;
+
+

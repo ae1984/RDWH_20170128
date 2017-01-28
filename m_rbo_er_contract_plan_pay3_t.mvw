@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_RBO_ER_CONTRACT_PLAN_PAY3_T
+refresh complete on demand
+as
+select tt.*, cp.c_name as prod_type
+from M_RBO_ER_CONTRACT_PLAN_PAY_tst tt
+join  v_rbo_Z#PR_CRED c on c.c_num_dog = tt.contract_number
+left join V_RBO_Z#KIND_CREDITS kc on c.c_kind_credit = kc.id
+left join V_RBO_Z#CRED_PROGRAM cp on kc.c_cred_program = cp.id
+where tt.pmt_order = 0;
+grant select on U1.M_RBO_ER_CONTRACT_PLAN_PAY3_T to LOADDB;
+grant select on U1.M_RBO_ER_CONTRACT_PLAN_PAY3_T to LOADER;
+
+

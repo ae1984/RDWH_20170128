@@ -1,0 +1,25 @@
+﻿create table U1.T_BEST_PKB_40K
+(
+  iin             VARCHAR2(50 CHAR),
+  dwh_id          NUMBER,
+  segment         VARCHAR2(50 CHAR),
+  calculation     VARCHAR2(50 CHAR),
+  online_ekt_ever VARCHAR2(50 CHAR)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_BEST_PKB_40K
+  is '40 тыс лучших для ПКБ';
+grant select on U1.T_BEST_PKB_40K to LOADDB;
+

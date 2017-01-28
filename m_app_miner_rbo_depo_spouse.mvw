@@ -1,0 +1,46 @@
+﻿create materialized view U1.M_APP_MINER_RBO_DEPO_SPOUSE
+build deferred
+refresh force on demand
+as
+with curs as (select *
+                  from u1.M_COURSES
+                  unpivot
+                  (curs_value for currency in (curs_usd,curs_eur,curs_rur,curs_gbp,curs_kgs)))
+
+
+select am.app_id
+
+       ,trunc(max(am.folder_date_create_mi)) - min(case when coalesce(t.closed_date, trunc(am.folder_date_create_mi)) >= trunc(am.folder_date_create_mi)
+                                                    then trunc(t.begin_date) end) as dep_sp_life_length
+
+       ,sum(case when t.begin_date < trunc(am.folder_date_create_mi)
+                      and tt.date_doc_prov < trunc(am.folder_date_create_mi)
+                 then tt.amount_oper*decode(tt.is_dt_ct, 0, 1, -1)*coalesce(tt.curs_value, 1) end) as dep_sp_balance
+
+from u1.M_APP_MINER_BAS am
+left join u1.M_WIFE_PHONE m on m.form_client_id = am.form_client_id
+left join U1.M_RBO_CONTRACT_DEPOSIT_BAS t on t.rfo_client_id = m.wife_rfo_client_id
+                                             and t.is_has_timeout = 1
+                                             and t.begin_date < trunc(am.folder_date_create_mi)
+
+left join (select tt2.*
+
+                  --,row_number() over (partition by tt2.rbo_contract_id order by tt2.fact_oper_id) as dep_oper_ord
+
+                  ,dc.curs_value
+                  ,v.c_check_oper_depn_cli
+
+           from U1.T_CONTRACT_DEPN_OPER_ALL tt2
+           left join V_RBO_Z#VID_OPER_DOG v on v.c_code = tt2.oper_dog_code
+           left join curs dc on dc.date_recount = tt2.date_doc_prov  --на дату операции
+                                 and dc.currency = 'CURS_'||tt2.contract_currency
+                                 and tt2.contract_currency != 'KZT'
+           ) tt on tt.rbo_contract_id = t.rbo_contract_id
+                   --and tt.date_doc_prov >= trunc(am.folder_date_create_mi) - 90
+                   and tt.date_doc_prov < am.folder_date_create_mi
+
+--where am.rfo_client_id = 9960545157
+group by am.app_id;
+grant select on U1.M_APP_MINER_RBO_DEPO_SPOUSE to LOADDB;
+
+

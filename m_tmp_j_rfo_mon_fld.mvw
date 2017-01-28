@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_TMP_J_RFO_MON_FLD
+refresh complete on demand
+as
+select /*+ driving_site(x) first_rows*/ *
+from (
+  select /*+ driving_site(c) no_merge*/
+       c.id,
+       c.c_date_create,
+       f.c_client,
+       f.c_business,
+       c.c_st_depart,
+       f.c_kas_sys_ref,
+       c.c_way,
+       c.c_point,
+       c.c_create_user,
+       f.c_docs,
+       a.c_folder_ref,
+       a.c_cancel_point
+  from IBS.Z#CM_CHECKPOINT@RFO c
+  join IBS.Z#FOLDERS@RFO f on f.id = c.id
+  left join IBS.Z#KAS_ARCH_DATA@RFO a on a.c_folder_ref = c.id
+  where c.c_date_create > trunc(sysdate) - 3 -- - 2 / 24
+) x;
+grant select on U1.M_TMP_J_RFO_MON_FLD to LOADDB;
+grant select on U1.M_TMP_J_RFO_MON_FLD to LOADER;
+
+

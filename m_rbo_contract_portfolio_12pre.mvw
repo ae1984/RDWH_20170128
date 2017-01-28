@@ -1,0 +1,58 @@
+﻿create materialized view U1.M_RBO_CONTRACT_PORTFOLIO_12PRE
+build deferred
+refresh force on demand
+as
+select p.rbo_contract_id,
+       p.contract_number,
+       p.rep_date,
+       p.yy_mm_report,
+       p.yy_mm_start_date,
+       p.start_date,
+       p.is_card,
+       p.total_debt,
+       p.total_debt_x,
+       p.del_days,
+       p.del_days_x,
+       p.is_on_balance,
+       p.client_categ_on_date,
+       p.cred_program_code,
+       p.cred_program_name,
+       case when au.rbo_contract_id is not null then 'AVTO' else p.cred_program_name end as prod_avto,
+       p.client_categ,
+       p2.yy_mm_report as yy_mm_report_12m,
+       p2.rep_date as rep_date_12m,
+        p2.total_debt as total_debt_12m,
+       p2.total_debt_x as total_debt_x_12m,
+       p2.del_days as del_days_12m,
+       p2.del_days_x as del_days_x_12m,
+       p2.is_on_balance as is_on_balance_12m,
+       p2.client_categ_on_date as client_categ_on_date_12m,
+       p3.yy_mm_report as yy_mm_report_24m,
+       p3.rep_date as rep_date_24m,
+       p3.total_debt as total_debt_24m,
+       p3.total_debt_x as total_debt_x_24m,
+       p3.del_days as del_days_24m,
+       p3.del_days_x as del_days_x_24m,
+       p3.is_on_balance as is_on_balance_24m,
+       p3.client_categ_on_date as client_categ_on_date_24m/*,
+       p4.yy_mm_report as yy_mm_report_36m,
+       p4.rep_date as rep_date_36m,
+       p4.total_debt as total_debt_36m,
+       p4.total_debt_x as total_debt_x_36m,
+       p4.del_days as del_days_36m,
+       p4.del_days_x as del_days_x_36m,
+       p4.is_on_balance as is_on_balance_36m,
+       p4.client_categ_on_date as client_categ_on_date_36m     */
+from u1.M_RBO_CONTRACT_PORTFOLIO p
+left join u1.M_RBO_CONTRACT_PORTFOLIO p2 on trunc(p2.rep_date,'mm') = add_months(trunc(p.rep_date,'mm'),12)
+                                 and p2.rbo_contract_id = p.rbo_contract_id
+left join u1.M_RBO_CONTRACT_PORTFOLIO p3 on trunc(p3.rep_date,'mm') = add_months(trunc(p.rep_date,'mm'),24)
+                                 and p3.rbo_contract_id = p.rbo_contract_id
+/*left join u1.M_RBO_CONTRACT_PORTFOLIO p4 on trunc(p4.rep_date,'mm') = add_months(trunc(p.rep_date,'mm'),36)
+                                 and p4.rbo_contract_id = p.rbo_contract_id   */
+left join M_RBO_CONTRACT_AUTO au on au.rbo_contract_id = p.rbo_contract_id
+                                 and au.date_begin <= p.rep_date
+                                 and au.date_close >= p.rep_date;
+grant select on U1.M_RBO_CONTRACT_PORTFOLIO_12PRE to LOADDB;
+
+

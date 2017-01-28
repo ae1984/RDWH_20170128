@@ -1,0 +1,92 @@
+﻿create materialized view U1.M_OVERDRAFT_ANALYSIS
+build deferred
+refresh force on demand
+as
+with vrbo_port as (select /*+ parallel(30)*/
+                          case when dense_rank() over (partition by rp.rbo_contract_id ORDER BY rp.rep_date desc) = 1 then 1
+                               else 0 end is_last,
+                          rp.*
+                     from u1.V_RBO_PORT rp
+                    where rp.overdraft + rp.overdraft_del + rp.w_overdraft_del > 0
+                          and rp.principal + rp.principal_del + rp.w_principal_del = 0
+                          and rp.is_card = 1),
+       port_max_over as ( select rbo_contract_id, max(rep_date) as rep_date_over
+                            from (
+                                  select rbo_contract_id,
+                                         rep_date,
+                                         rep_date - 1 as rep_date_prev,
+                                         lead(rep_date) over (partition by rbo_contract_id order by rep_date desc) as rep_date_lead
+                                    from vrbo_port)
+                            where rep_date_prev != coalesce(rep_date_lead,to_date('01-01-1900','dd-mm-yyyy'))
+                            group by rbo_contract_id)
+select /*+parallel(10)*/ *
+from (select
+               cb.rbo_contract_id,
+               cb.cred_program_name,
+               cb.rfo_client_id,
+               vc.iin,
+               vc.client_name,
+               cb.contract_number,
+               cb.begin_date,
+               rp.rep_date,
+               rp.delinq_date,
+               rp.overdraft + rp.overdraft_del + rp.w_overdraft_del as overdraft,
+               rp.total_debt,
+               rp2.min_delinq_date, --Дата первого выхода на просрочку
+               rp.delinq_days,
+               rp2.del_days_max,      --Макс. кол-во дней просрочки на договоре (за всю историю)
+               nvl2(max(bl.rfo_black_list_id),1,0) as in_black_list,
+               nvl2(max(blh.id),1,0) as in_black_list_hist,
+               nvl2(max(bl2.rfo_black_list_id),1,0) as in_lsboo,
+               nvl2(max(bl3.rfo_black_list_id),1,0) as in_terror,
+               coalesce(bl2.date_add, bl3.date_add) as date_add_bl,
+               om.rep_date_over,
+               cb.tariff_plan_name_code             as tariff_plan_code,
+               cb.tariff_plan_name_name             as tariff_plan_name
+          from u1.M_RBO_CONTRACT_BAS cb
+          join u1.V_CLIENT_RFO_BY_ID vc on vc.rfo_client_id = cb.rfo_client_id
+          left join VRBO_PORT rp on cb.rbo_contract_id = rp.rbo_contract_id
+                                and rp.is_last = 1
+          left join (select rbo_contract_id,
+                            min(rp2.delinq_date) as min_delinq_date,
+                            max(rp2.del_days_max) as del_days_max
+                       from vrbo_port rp2
+                      group by rp2.rbo_contract_id) rp2 on rp2.rbo_contract_id = cb.rbo_contract_id
+          left join u1.V_RFO_BLACK_LIST bl on upper(bl.note) like '%КОЛИЧЕСТВО ДНЕЙ ПРОСРОЧК%'||cb.contract_number||'%'
+                                           and bl.iin = vc.iin
+          left join u1.V_RFO_Z#KAS_BLACK_LIST_D blh on upper(blh.c_note) like '%КОЛИЧЕСТВО ДНЕЙ ПРОСРОЧК%'||cb.contract_number||'%'
+                                           and blh.c_inn = vc.iin
+          left join u1.V_RFO_BLACK_LIST bl2 on bl2.iin = vc.iin and bl2.note like '%0000013%' -- признак ЛСБОО
+          left join u1.V_RFO_BLACK_LIST bl3 on bl3.iin = vc.iin and bl3.note in ('A7','А7')   -- признак террориста
+          left join PORT_MAX_OVER        om on om.rbo_contract_id = cb.rbo_contract_id
+         where cb.cred_program_code in ('ZP_KASPI_GOLD',
+                                        'DEP_CARD',
+                                        'OVER',
+                                        'ZP_CARDS')
+        group by cb.rbo_contract_id,
+                 cb.cred_program_name,
+                 cb.rfo_client_id,
+                 cb.contract_number,
+                 cb.begin_date,
+                 rp.delinq_date,
+                 rp.overdraft + rp.overdraft_del + rp.w_overdraft_del,
+                 rp.total_debt,
+                 rp2.min_delinq_date,
+                 rp.delinq_days,
+                 rp2.del_days_max,
+                 rp.rep_date,
+                 vc.iin,
+                 vc.client_name,
+                 coalesce(bl2.date_add, bl3.date_add),
+                 om.rep_date_over,
+                 cb.tariff_plan_name_code,
+                 cb.tariff_plan_name_name)
+ where delinq_date is not null or
+       overdraft is not null or
+       total_debt is not null or
+       min_delinq_date is not null or
+       delinq_days is not null or
+       del_days_max  is not null;
+grant select on U1.M_OVERDRAFT_ANALYSIS to LOADDB;
+
+

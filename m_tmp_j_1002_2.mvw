@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_TMP_J_1002_2
+refresh force on demand
+as
+select --+ parallel 30
+ppv.value_number as folder_id,
+               max(p.id) as id
+        from MO_PROCESS p
+        join MO_PROCESS_PAR_VALUE ppv on ppv.process_id = p.id and ppv.d_par_id = 1010 -- IN_SCO_FOLDER_ID
+        where p.d_process_id = 1000 and -- MO_SCO
+              ppv.value_number is not null
+        group by ppv.value_number;
+grant select on U1.M_TMP_J_1002_2 to LOADDB;
+grant select on U1.M_TMP_J_1002_2 to LOADER;
+
+

@@ -1,0 +1,48 @@
+﻿create table U1.T_TMP_DI_BEST_CLI1
+(
+  barcode_cat                  VARCHAR2(103),
+  upcode_cat                   NUMBER,
+  optcode                      NUMBER,
+  active_credit_cnt            NUMBER,
+  dt                           VARCHAR2(10),
+  payment_cnt                  VARCHAR2(5),
+  pmt_cnt                      VARCHAR2(33),
+  con_cnt                      NUMBER,
+  con_dist_cnt                 NUMBER,
+  client_cnt_dist              NUMBER,
+  sales_mln                    NUMBER,
+  sales                        NUMBER,
+  del_rate_pmt_1               NUMBER,
+  del_rate_b_w                 NUMBER,
+  del_rate_b                   NUMBER,
+  del_rate_w                   NUMBER,
+  del_rate_g                   NUMBER,
+  del_rate_npl                 NUMBER,
+  del_rate                     NUMBER,
+  total_used_sum               NUMBER,
+  del_rate_b_w_tolerance       NUMBER,
+  total_used_sum_b_w_tolerance NUMBER,
+  b_w_tolerance_cnt            NUMBER,
+  total_b_w_tolerance_cnt      NUMBER,
+  pmt_1_cnt                    NUMBER,
+  max_debt_used_pmt_1          NUMBER,
+  npl_cnt                      NUMBER,
+  total_cnt                    NUMBER,
+  npl_plus_all_cnt             NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_DI_BEST_CLI1 to LOADDB;
+grant select on U1.T_TMP_DI_BEST_CLI1 to LOADER;
+

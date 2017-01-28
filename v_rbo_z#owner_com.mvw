@@ -1,0 +1,9 @@
+﻿create materialized view U1.V_RBO_Z#OWNER_COM
+refresh complete on demand
+as
+select id,c_value,c_code
+  from rdwh.V_RBO_Z#OWNER_COM@rdwh_exd;
+grant select on U1.V_RBO_Z#OWNER_COM to LOADDB;
+grant select on U1.V_RBO_Z#OWNER_COM to LOADER;
+
+

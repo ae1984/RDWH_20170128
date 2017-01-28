@@ -1,0 +1,57 @@
+﻿create materialized view U1.M_CONTR_CARD_DELINQ_DAYS
+refresh complete on demand
+as
+with dat as (select distinct
+                    pd.id as rbo_contract_id,
+                    ps.id as pc_stmt_id,
+                    ps.c_date_close_stmt as delinq_date,
+                    sh.c_op_date as del_date_begin,
+                    max(csp.c_code) keep (dense_rank last order by sh.c_date_time)
+                                over (partition by sh.c_obj_ref, sh.c_op_date) as com_status_code
+               from U1.V_RBO_Z#KAS_PC_DOG  pd
+               join U1.V_RBO_Z#KAS_PC_STMT ps  on ps.collection_id = pd.c_stmt_arr
+                                              and ps.state_id not in ('TO_PAY','CANCELED')
+               join V_RBO_Z#KAS_STATE_HST sh   on sh.c_obj_ref = to_char(ps.id)
+               join V_RBO_Z#COM_STATUS_PRD csp on csp.id = sh.c_to_state_ref
+                                              and csp.c_code != 'CANCELED'
+              ),
+   dat_x as (select rbo_contract_id,
+                    pc_stmt_id,
+                    delinq_date,
+                    com_status_code,
+                    del_date_begin,
+                    lead(del_date_begin-1) over (partition by rbo_contract_id, pc_stmt_id order by del_date_begin) as del_date_end
+               from dat),
+  dat_pc as (select distinct
+                    pdz.id as rbo_contract_id,
+                    shz.c_op_date as pc_del_date_begin,
+                    max(cspz.c_code) keep (dense_rank last order by shz.c_date_time)
+                                over (partition by shz.c_obj_ref, shz.c_op_date) as pc_com_status_code
+               from U1.V_RBO_Z#KAS_PC_DOG  pdz
+               join V_RBO_Z#KAS_STATE_HST shz   on shz.c_obj_ref = to_char(pdz.id)
+               join V_RBO_Z#COM_STATUS_PRD cspz on cspz.id = shz.c_to_state_ref
+             ),
+   dat_x_pc as (select rbo_contract_id,
+                    pc_com_status_code,
+                    pc_del_date_begin,
+                    lead(pc_del_date_begin-1) over (partition by rbo_contract_id order by pc_del_date_begin) as pc_del_date_end
+               from dat_pc)
+select dat_x_pc.rbo_contract_id,
+       dat_x_pc.pc_com_status_code,
+       dat_x_pc.pc_del_date_begin,
+       dat_x_pc.pc_del_date_end,
+       dat_x.pc_stmt_id,
+       dat_x.delinq_date,
+       dat_x.com_status_code,
+       dat_x.del_date_begin,
+       dat_x.del_date_end
+  from dat_x_pc
+  left join dat_x on dat_x.rbo_contract_id = dat_x_pc.rbo_contract_id
+                 and dat_x.del_date_begin >= dat_x_pc.pc_del_date_begin
+                 and dat_x.del_date_begin <= nvl(dat_x_pc.pc_del_date_end,trunc(sysdate))
+                 and dat_x.com_status_code = 'OVERDUE'
+ where dat_x_pc.pc_com_status_code in ('OVERDUE','KS_OVERDUE','ZS_OVERDUE');
+grant select on U1.M_CONTR_CARD_DELINQ_DAYS to LOADDB;
+grant select on U1.M_CONTR_CARD_DELINQ_DAYS to LOADER;
+
+

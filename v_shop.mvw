@@ -1,0 +1,83 @@
+﻿create materialized view U1.V_SHOP
+using no index
+refresh complete on demand
+as
+select
+  t.id as rfo_shop_id,
+  t.c_code as shop_code,
+  upper(t.c_name) as shop_name,
+  sd.c_code as pos_code,
+  sd.c_name as pos_name,
+  t.c_active as is_active,
+  upper(t.c_address#place) as city_name,
+  upper(t.c_address#region) as region_name,
+  upper(t.c_address#district) as district_name,
+  t.c_kas_independ as kas_independ,
+  sd.c_not_active as struct_not_active,
+  tsd.c_code as type_struct_code,
+  tsd.c_name as type_struct_name,
+  sd2.c_code as high_pos_code,
+  sd2.c_name as hight_pos_name,
+--  upper(ud.c_name) as distribution_net,
+  upper(trim(c.c_name)) as org_name,
+  upper(trim(c.c_inn)) as org_bin,
+  o.id as cl_org_id,
+  upper(o.c_business) as org_activity_type ,
+  kp.partner_id,
+  kp.partner_code,
+  kp.partner_name,
+  cn.start_date as shop_start_date,
+  cn.end_date as shop_end_date,
+  cn.period_mon,
+  ud.c_code as distr_code,
+  ud.c_name as distr_name,
+  pt.activ_type,
+  case when pt.activ_type is not null then
+            pt.activ_type
+       when upper(o.c_business) like '%ТЕХНИК%' or upper(o.c_business) like '%СОТОВ%' or upper(o.c_business) like '%МОБИЛЬН%' then
+            'Техника'
+       when upper(o.c_business) like '%ПРОДА%АВТОМОБИЛ%' and upper(o.c_business) not like '%ОБОРУДОВАН%' then
+            'АВТО'
+       else
+            'Другие товары'
+   end as activity_type,
+   case when pt.partner_type is null then
+             'Л'
+        else
+             pt.partner_type
+   end as partner_type,
+   br.auto_brand
+from u1.V_RFO_Z#SHOPS t
+left join u1.V_RFO_Z#STRUCT_DEPART sd on sd.id = t.c_kas_dpt_fx
+left join u1.V_RFO_Z#CL_ORG o on o.id = t.c_org
+left join u1.V_RFO_Z#CLIENT c on c.id = o.id
+left join u1.V_RFO_Z#KAS_UNIVERSAL_D ud on ud.id = t.c_kas_distr_net
+left join u1.V_RFO_Z#TYPE_STRUCT_DEP tsd on tsd.id = sd.c_type_depart
+left join u1.V_RFO_Z#STRUCT_DEPART sd2 on sd2.id = sd.c_high_depart
+left join ( select max(p.id) keep (dense_rank first order by p.id desc) as partner_id,
+                   min(p.c_code) keep (dense_rank first order by p.id desc)as partner_code,
+                   min(p.c_name) keep (dense_rank first order by p.id desc)as partner_name,
+                   org.c_value
+           from u1.V_RFO_Z#KAS_PARTNER p
+           join u1.V_RFO_Z#CL_ORG_REF org on  org.collection_id = p.c_orgs
+           group by org.c_value
+           ) kp on o.id = kp.c_value
+left join (select v.shop_id,
+                  trunc(min(contract_date)) as  start_date,
+                  floor(months_between(sysdate,min(v.contract_date)))  as period_mon,
+                  trunc(max(contract_date)) as end_date
+            from u1.V_CONTRACT_ALL_RFO v
+            group by shop_id
+           ) cn on cn.shop_id = t.id
+left join u1.T_RDWH_PARTNER_TYPE pt on pt.partner_code = kp.partner_code
+left join (select distinct
+               shop_code,
+               listagg(brand, ',') within group(order by brand) over(partition by shop_code) as auto_brand
+          from (select t.shop_code, t.brand
+                  from u1.V_CONTRACT_ALL_RFO_AUTO t
+                 group by shop_code, brand)) br on br.shop_code = t.c_code;
+grant select on U1.V_SHOP to DTS_USER;
+grant select on U1.V_SHOP to LOADDB;
+grant select on U1.V_SHOP to LOADER;
+
+

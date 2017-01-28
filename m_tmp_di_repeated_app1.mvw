@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_TMP_DI_REPEATED_APP1
+refresh complete on demand
+as
+select
+rep_date,
+client_iin,
+deal_number,
+begin_date,
+plan_end_date,
+actual_end_date,
+deal_status,
+prod_name,
+prod_type,
+x_amount,
+x_product_type,
+is_credit_active,
+x_is_credit_issued,
+yy_mm_start ,
+report_status
+from v_dwh_portfolio_current c
+left join v_pkb_report r on c.folder_id_first=r.folder_id
+where begin_date>='01-01-2012' and client_iin is not null and x_product_type<>'КАРТЫ' and x_is_card!=1 and x_is_credit_issued=1;
+grant select on U1.M_TMP_DI_REPEATED_APP1 to LOADDB;
+grant select on U1.M_TMP_DI_REPEATED_APP1 to LOADER;
+
+

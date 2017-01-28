@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_KASPIKZ_USERS
+build deferred
+refresh complete on demand
+as
+select cast(t.Id as number(20)) as Id,
+       upper(cast(t.UserFirstNameRus as varchar2(200))) as user_first_name_rus,
+       upper(cast(t.UserLastNameRus as varchar2(200))) as user_last_name_rus,
+       upper(cast(t.UserMiddleNameRus as varchar2(200))) as user_middle_name_rus,
+       upper(cast(t.UserFirstNameEng as varchar2(200))) as user_first_name_eng,
+       upper(cast(t.UserLastNameEng as varchar2(200))) as user_last_name_eng,
+       upper(cast(t.UserMiddleNameEng as varchar2(200))) as user_middle_name_eng,
+       cast(t.IsBlocked as number(3)) as is_blocked,
+       t.UserBlockDate user_block_date,
+       upper(cast(t.UserBlockReason as varchar2(3000))) as user_block_reason,
+       cast(t.WrongAuthTries as number(10)) as wrong_auth_tries,
+       cast(t.IsSystemAccount as number(3)) as is_system_account,
+       t.RegDate as reg_date,
+       t.DateOfBirth as date_of_birth,
+       cast(t.IsResident as number(3)) as is_resident,
+       cast(t.RNN as varchar2(100)) as rnn,
+       cast(t.INN as varchar2(100)) as inn,
+       upper(cast(t.IdentityDocType as varchar2(100))) as identity_doc_type,
+       upper(cast(t.IdentityDocNumber as varchar2(100))) as identity_doc_number,
+       cast(t.IdentityDocIssuer as varchar2(100)) as identity_doc_issuer,
+       cast(t.IdentityDocExpireDate as varchar2(100)) as identity_doc_expire_date,
+       upper(cast(t.Country as varchar2(100))) as country,
+       upper(cast(t.Region as varchar2(100))) as region,
+       upper(cast(t.City as varchar2(100))) as city,
+       cast(t.Address as varchar2(100)) as address,
+       cast(t.Phones as varchar2(1000)) as phones,
+       cast(t.IsRegistrationConfirmed as number(3)) as is_registration_confirmed,
+       cast(t.IsRegCodeEntered as number(3)) as is_reg_code_entered,
+       cast(t.LastAuthMethod as number(5)) as last_auth_method,
+       cast(t.RegCodeEntryAttemptCount as number(5)) as reg_code_entry_attempt_count,
+       cast(t.RegConfirmationCodeHash as varchar2(150)) as reg_confirmation_code_hash,
+       cast(t.UserType as number(10)) as user_type,
+       cast(t.IsWalletUser as number(3)) as is_wallet_user,
+       cast(t.UserAccessType as number(10)) as user_access_type,
+       cast(t.IsTop as number(3)) as is_top
+from s37.tb_Framework_Users@rdwh_exd t;
+grant select on U1.M_KASPIKZ_USERS to LOADDB;
+grant select on U1.M_KASPIKZ_USERS to RISK_VERIF;
+
+

@@ -1,0 +1,81 @@
+﻿create materialized view U1.M_TMP_J_ONLINE_M_CA_1
+refresh complete on demand
+as
+select td.text_yyyy_mm, x.a_date, x.is_categ_a, x.is_credit_issued, x.is_sign_require,
+       y.sent_to_man_reasons,
+       y.is_2_obnov_gu,
+       y.is_5_dozap_ank,
+       y.is_6_dozap_dan,
+       y.is_4_iad,
+       y.is_3_net_sogl_pkb_gcvp,
+       y.is_1_oform_gu,
+       y.is_8_verif,
+       y.is_7_dlya_asokr,
+       ----
+       count(*) as cnt, count(distinct x.claim_id) as cnt_dist
+from (
+  select trunc(f.folder_date_create_mi) as a_date, f.is_categ_a,
+         f.is_credit_issued, f.is_sign_require,
+         f.claim_id
+  from M_FOLDER_CON_CANCEL f
+  where f.process_name = 'ОНЛАЙН КРЕДИТ' and
+        f.claim_id is not null
+  union all
+  select trunc(fo.folder_date_create_mi) as a_date, fo.is_categ_a,
+         fo.is_credit_issued, fo.is_sign_require,
+         fo.claim_id
+  from M_FOLDER_CON_CANCEL_ONLINE fo
+) x
+join V_TIME_DAYS td on td.yyyy_mm_dd = x.a_date
+left join (
+  select c1.id as claim_id,
+--         listagg(kd1.c_name, ';') within group (order by kd1.c_name) as sent_to_man_reasons
+           listagg(
+               case when kd1.c_name = 'Подойти к менеджеру для обновления версии ГУ' then '2 ОБНОВ_ГУ'
+                    when kd1.c_name = 'Подойти к менеджеру для дозаполнения анкеты клиента' then '5 ДОЗАП_АНК'
+                    when kd1.c_name = 'Подойти к менеджеру для дозаполнения данных по клиенту' then '6 ДОЗАП_ДАН'
+                    when kd1.c_name = 'Подойти к менеджеру для изменения анкетных данных' then '4 ИАД'
+                    when kd1.c_name = 'Подойти к менеджеру для запроса ПКБ/ГЦВП' then '3 НЕТ_СОГЛ_ПКБ/ГЦВП'
+                    when kd1.c_name = 'Подойти к менеджеру для оформления ГУ' then '1 ОФОРМ_ГУ'
+                    when kd1.c_name = 'Подойти к менеджеру для верификации фото и контактов' then '8 ВЕРИФ'
+                    when kd1.c_name = 'Подойти к менеджеру для Проверки АСОКР' then '7 ДЛЯ_АСОКР'
+                    end,
+            ';') within group (order by
+               case when kd1.c_name = 'Подойти к менеджеру для обновления версии ГУ' then '2 ОБНОВ_ГУ'
+                    when kd1.c_name = 'Подойти к менеджеру для дозаполнения анкеты клиента' then '5 ДОЗАП_АНК'
+                    when kd1.c_name = 'Подойти к менеджеру для дозаполнения данных по клиенту' then '6 ДОЗАП_ДАН'
+                    when kd1.c_name = 'Подойти к менеджеру для изменения анкетных данных' then '4 ИАД'
+                    when kd1.c_name = 'Подойти к менеджеру для запроса ПКБ/ГЦВП' then '3 НЕТ_СОГЛ_ПКБ/ГЦВП'
+                    when kd1.c_name = 'Подойти к менеджеру для оформления ГУ' then '1 ОФОРМ_ГУ'
+                    when kd1.c_name = 'Подойти к менеджеру для верификации фото и контактов' then '8 ВЕРИФ'
+                    when kd1.c_name = 'Подойти к менеджеру для Проверки АСОКР' then '7 ДЛЯ_АСОКР'
+                    end
+            ) as sent_to_man_reasons,
+
+            max(case when kd1.c_name = 'Подойти к менеджеру для обновления версии ГУ' then 1 else 0 end) as is_2_obnov_gu,
+            max(case when kd1.c_name = 'Подойти к менеджеру для дозаполнения анкеты клиента' then 1 else 0 end) as is_5_dozap_ank,
+            max(case when kd1.c_name = 'Подойти к менеджеру для дозаполнения данных по клиенту' then 1 else 0 end) as is_6_dozap_dan,
+            max(case when kd1.c_name = 'Подойти к менеджеру для изменения анкетных данных' then 1 else 0 end) as is_4_iad,
+            max(case when kd1.c_name = 'Подойти к менеджеру для запроса ПКБ/ГЦВП' then 1 else 0 end) as is_3_net_sogl_pkb_gcvp,
+            max(case when kd1.c_name = 'Подойти к менеджеру для оформления ГУ' then 1 else 0 end) as is_1_oform_gu,
+            max(case when kd1.c_name = 'Подойти к менеджеру для верификации фото и контактов' then 1 else 0 end) as is_8_verif,
+            max(case when kd1.c_name = 'Подойти к менеджеру для Проверки АСОКР' then 1 else 0 end) as is_7_dlya_asokr
+  from V_RFO_Z#KAS_ONLINE_CLAIM c1
+  join V_RFO_Z#KAS_UNIVERSA_REF s1 on s1.collection_id = c1.c_mng_vis_scen
+  join V_RFO_Z#KAS_UNIVERSAL_D kd1 on kd1.id = s1.c_value
+  group by c1.id
+) y on y.claim_id = x.claim_id
+group by td.text_yyyy_mm, x.a_date, x.is_categ_a, x.is_credit_issued, x.is_sign_require,
+       y.sent_to_man_reasons,
+       y.is_2_obnov_gu,
+       y.is_5_dozap_ank,
+       y.is_6_dozap_dan,
+       y.is_4_iad,
+       y.is_3_net_sogl_pkb_gcvp,
+       y.is_1_oform_gu,
+       y.is_8_verif,
+       y.is_7_dlya_asokr;
+grant select on U1.M_TMP_J_ONLINE_M_CA_1 to LOADDB;
+grant select on U1.M_TMP_J_ONLINE_M_CA_1 to LOADER;
+
+

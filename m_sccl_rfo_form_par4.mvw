@@ -1,0 +1,46 @@
+﻿create materialized view U1.M_SCCL_RFO_FORM_PAR4
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       cl.rfo_client_id,
+
+       --previos object values
+       --inc_sal
+       max(f.inc_sal) keep (dense_rank last order by t.folder_date_create) as inc_sal_last,
+
+       --lag(f.inc_sal, 1) over (partition by t.rfo_client_id order by t.folder_date_create_mi) as inc_sal_last_x,
+
+       --inc_all
+       max(f.inc_all) keep (dense_rank last order by t.folder_date_create) as inc_all_last,
+
+       --lag(f.inc_all, 1) keep (dense_rank last partition by t.rfo_client_id order by t.folder_date_create_mi) as inc_all_last_x,
+
+       --children
+       max(f.children) keep (dense_rank last order by t.folder_date_create) as children_last,
+
+       --lag(f.children, 1) keep (dense_rank last partition by t.rfo_client_id order by t.folder_date_create_mi) as children_last_x,
+
+       --marital
+       max(f.marital_status) keep (dense_rank last order by t.folder_date_create) as marital_last,
+
+       --lag(f.marital_status, 1) keep (dense_rank last partition by t.rfo_client_id order by t.folder_date_create_mi) as marital_last_x,
+
+       --phone_mobile
+       max(f.phone_mobile) keep (dense_rank last order by t.folder_date_create) as phone_mob_last,
+
+       --lag(f.phone_mobile, 1) keep (dense_rank last partition by t.rfo_client_id order by t.folder_date_create_mi) as phone_mob_last_x,
+
+       --phone_home
+       max(f.phone_home) keep (dense_rank last order by t.folder_date_create) as phone_home_last
+
+       --lag(f.phone_home, 1) keep (dense_rank last partition by t.rfo_client_id order by t.folder_date_create_mi) as phone_home_last_x,
+
+from u1.V_CLIENT_RFO_BY_ID cl
+join u1.M_APP_MINER_BAS t on t.rfo_client_id = cl.rfo_client_id
+join u1.M_APP_MINER_FORM_CLIENT f on f.app_id = t.app_id
+group by cl.rfo_client_id;
+grant select on U1.M_SCCL_RFO_FORM_PAR4 to LOADDB;
+grant select on U1.M_SCCL_RFO_FORM_PAR4 to RTS_RDWH;
+
+

@@ -1,0 +1,68 @@
+﻿create table U1.NT_TASKS_EXECUTE_HIST
+(
+  id            NUMBER not null,
+  ins_dt        DATE default sysdate,
+  group_num     NUMBER,
+  task_num      NUMBER,
+  task_name     VARCHAR2(100),
+  sql_exec      CLOB,
+  task_start    DATE,
+  task_end      DATE,
+  err           XMLTYPE,
+  status        VARCHAR2(100),
+  detail        VARCHAR2(1000),
+  object_name   VARCHAR2(100),
+  job_prefix    VARCHAR2(100),
+  update_log_id NUMBER,
+  send_mail     DATE,
+  task_id       NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_TASKS_EXECUTE_HIST
+  is 'RDWH2.0 Параллельное исполнение разных запросов (архив)';
+comment on column U1.NT_TASKS_EXECUTE_HIST.id
+  is 'Уникальный ID задачи';
+comment on column U1.NT_TASKS_EXECUTE_HIST.ins_dt
+  is 'Дата и время добавления записи в таблицу';
+comment on column U1.NT_TASKS_EXECUTE_HIST.group_num
+  is 'Номер группы от 1 до 9999999 в рамках которой распараллеливание не критично';
+comment on column U1.NT_TASKS_EXECUTE_HIST.task_num
+  is 'Номер задачи в группе от 1 до 9999999';
+comment on column U1.NT_TASKS_EXECUTE_HIST.task_name
+  is 'Название задачи';
+comment on column U1.NT_TASKS_EXECUTE_HIST.sql_exec
+  is 'PLSQL на исполение';
+comment on column U1.NT_TASKS_EXECUTE_HIST.task_start
+  is 'Дата и время начала исполнения задачи';
+comment on column U1.NT_TASKS_EXECUTE_HIST.task_end
+  is 'Дата и время окончания исполнения задачи';
+comment on column U1.NT_TASKS_EXECUTE_HIST.err
+  is 'Описание возможной ошибки (XML)';
+comment on column U1.NT_TASKS_EXECUTE_HIST.status
+  is 'Статус задачи';
+comment on column U1.NT_TASKS_EXECUTE_HIST.detail
+  is 'Детали';
+comment on column U1.NT_TASKS_EXECUTE_HIST.object_name
+  is 'Имя объекта';
+comment on column U1.NT_TASKS_EXECUTE_HIST.job_prefix
+  is 'Имя задания';
+comment on column U1.NT_TASKS_EXECUTE_HIST.update_log_id
+  is 'ID update_log';
+comment on column U1.NT_TASKS_EXECUTE_HIST.send_mail
+  is 'отправлено письмо? дата-да null-нет';
+comment on column U1.NT_TASKS_EXECUTE_HIST.task_id
+  is 'id задачи (с 19/10/2016)';
+grant select on U1.NT_TASKS_EXECUTE_HIST to LOADDB;
+

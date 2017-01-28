@@ -1,0 +1,50 @@
+﻿create materialized view U1.M_JAN_TMP_KPI_APPROVAL_2
+refresh complete on demand
+as
+select /*+ parallel(15) */
+       cln.*,
+       folder.approval_folders
+from (
+     select trunc(q1.fld_date_create_min) as a_date, --data,
+            -- неск записей по клиенту
+            round((count(case when trunc(q./*dat*/ approved_fld_date_create_min) - trunc(q1.fld_date_create_min) < 2
+                              then 1 end) / count(*)) * 100, 2) as approval_clients, -- по кл в теч 2 дней
+            round((count(case when trunc(q./*dat*/ approved_fld_date_create_min) - trunc(q1.fld_date_create_min) < 1
+                              then 1 end) / count(*)) * 100, 2) as approval_clients_in_day
+     from (
+          select f.rfo_client_id,
+                 trunc(f.folder_date_create_mi,'mm') as create_month, --create_date,
+                 min(f.folder_date_create_mi) as fld_date_create_min
+          from M_FOLDER_CON_CANCEL f
+          where f.is_refin = 0 and f.is_point_active = 0
+          group by f.rfo_client_id,
+                   trunc(f.folder_date_create_mi,'mm')
+     ) q1 left join (
+          select f.rfo_client_id,
+                 trunc(f.folder_date_create_mi,'mm') as approve_month,--create_date,
+                 min(f.folder_date_create_mi) as approved_fld_date_create_min
+          from M_FOLDER_CON_CANCEL f
+          where f.is_credit_issued = 1 and f.is_refin = 0 and f.is_point_active = 0
+          group by f.rfo_client_id,
+                   trunc(f.folder_date_create_mi,'mm')
+     ) q on q.rfo_client_id = q1.rfo_client_id and q.approve_month = q1.create_month
+     group by trunc(q1.fld_date_create_min)
+) cln left join (
+    select trunc(f1.folder_date_create_mi) as a_date,--data,
+    round(count(distinct case when /*a*/f1.is_credit_issued = 1 then f1.rfo_contract_id end) /
+                      count(distinct f1.rfo_contract_id) * 100, 2) as approval_folders
+    from M_FOLDER_CON_CANCEL f1
+/*    join ( --- ???
+          select \*distinct*\ f.rfo_contract_id,
+                 max(f.is_credit_issued) as is_credit_issued
+          from M_FOLDER_CON_CANCEL f
+          where f.is_refin = 0 and f.is_point_active = 0
+          group by f.rfo_contract_id
+    ) a on f1.rfo_contract_id = a.rfo_contract_id*/
+    where f1.is_refin = 0 and f1.is_point_active = 0
+    group by trunc(f1.folder_date_create_mi)
+) folder on cln.a_date = folder.a_date;
+grant select on U1.M_JAN_TMP_KPI_APPROVAL_2 to LOADDB;
+grant select on U1.M_JAN_TMP_KPI_APPROVAL_2 to LOADER;
+
+

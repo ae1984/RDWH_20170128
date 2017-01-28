@@ -1,0 +1,50 @@
+﻿create table U1.REF_DELINQ
+(
+  days_del_from NUMBER,
+  days_del_to   NUMBER,
+  del_short     VARCHAR2(7),
+  del_long      VARCHAR2(7),
+  del_middle    VARCHAR2(7),
+  del           VARCHAR2(1)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+create index U1.REF_DELINQ_IND1 on U1.REF_DELINQ (DAYS_DEL_FROM)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.REF_DELINQ_IND2 on U1.REF_DELINQ (DAYS_DEL_TO)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.REF_DELINQ to LOADDB;
+grant select on U1.REF_DELINQ to LOADER;
+

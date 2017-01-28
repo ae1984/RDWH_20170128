@@ -1,0 +1,47 @@
+﻿create materialized view U1.M_RBO_CONTR_REF_PERC_CHANG_PRE
+refresh complete on demand
+as
+select xx.rbo_contract_id_to,
+       xx.refin_rbo_contract_id,
+       xx.date_change,
+       xx.date_change_end,
+       xx.refin_summa,
+       xx.refin_date,
+       rp.total_debt
+  from (
+select x.rbo_contract_id_to,       --идентификатор карты
+       cr.refin_rbo_contract_id,   --id рефинан договора
+       x.date_change,              --дата изменения процента
+       least(coalesce(refin_date_return,refin_date_repay,(lead(date_change-1) over(partition by x.rbo_contract_id_to, cr.refin_rbo_contract_id order by x.date_change)),
+                      to_date('01-01-3000','dd-mm-yyyy')),
+            coalesce((lead(date_change-1) over(partition by x.rbo_contract_id_to, cr.refin_rbo_contract_id order by x.date_change)),
+                      to_date('01-01-3000','dd-mm-yyyy'))) as date_change_end,-- дата окончания изменения процента
+       cr.refin_summa,             --сумма рефинанса на дату refin_date
+       cr.refin_date               --дата рефинанса
+from (
+select distinct rbo_contract_id_to, date_change
+  from
+(select
+       rbo_contract_id_to,
+       contract_number_to,
+       refin_contract_number,
+       refin_rbo_contract_id,
+       refin_type,
+       refin_summa,
+       refin_date,
+       kas_pc_fo_id,
+       coalesce(refin_date_return,refin_date_repay)+1 as refin_date_close
+  from M_RBO_CONTRACT_REFIN_LINK l
+ ) rl
+ unpivot
+  (date_change for date_name in
+       (refin_date, refin_date_close))) x
+  join M_RBO_CONTRACT_REFIN_LINK cr on cr.rbo_contract_id_to  = x.rbo_contract_id_to
+                                   and x.date_change between cr.refin_date and coalesce(refin_date_return,refin_date_repay,trunc(sysdate))
+) xx
+join V_RBO_PORT rp on rp.rbo_contract_id = xx.rbo_contract_id_to
+                  and rp.rep_date = xx.date_change;
+grant select on U1.M_RBO_CONTR_REF_PERC_CHANG_PRE to LOADDB;
+grant select on U1.M_RBO_CONTR_REF_PERC_CHANG_PRE to LOADER;
+
+

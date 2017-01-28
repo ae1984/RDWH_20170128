@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_RBO_DEPART
+refresh complete on demand
+as
+select d.id as depart_id,
+       d.c_code as depart_code,
+       d.c_name as depart_name,
+       coalesce(ud.c_name,pa.city_name,ph.city_name) as x_dnp_name
+  from V_RBO_Z#DEPART d
+  left join V_RBO_Z#KAS_UPRAVL_DNP ud on ud.id = d.c_upravl_dnp_ref
+  left join (select distinct
+                    p.collection_id,
+                    max(nc.c_name) keep (dense_rank last order by p.c_date_audit nulls first)
+                                   over (partition by p.collection_id) as city_name
+               from V_RBO_Z#PERSONAL_ADDRESS p
+               left join V_RBO_Z#NAMES_CITY nc on nc.id = p.c_city) pa on pa.collection_id = d.c_address
+  left join V_RBO_Z#DEPART dh on dh.id = d.c_high       --выходим на уровень филиала
+  left join (select distinct
+                    p1.collection_id,
+                    max(nc1.c_name) keep (dense_rank last order by p1.c_date_audit nulls first)
+                                    over (partition by p1.collection_id) as city_name
+               from V_RBO_Z#PERSONAL_ADDRESS p1
+               left join V_RBO_Z#NAMES_CITY nc1 on nc1.id = p1.c_city) ph on ph.collection_id = dh.c_address;
+grant select on U1.M_RBO_DEPART to LOADDB;
+grant select on U1.M_RBO_DEPART to LOADER;
+
+

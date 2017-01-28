@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_TMP_R_RISK_PHONE
+refresh force on demand
+as
+select /*+ noparallel */ * from (
+select /*+ noparallel */ q.phone_number, f.folder_id,c.contract_number, f.client_iin
+     ,count(distinct client_iin) over (partition by phone_number) nn
+from v_folder_all f
+join V_FORM_CLIENT_CONTACT_PHONE q on q.folder_id = f.folder_id and q.phone_type = 'ДОМАШНИЙ' --and q.phone_number = '81111111111'
+join v_contract_cal c on c.folder_id_first = f.folder_id
+where  q.folder_date >= to_date('01-05-2013','dd-mm-yyyy')
+
+    and f.is_credit_issued = 1
+    )
+    where nn>1;
+grant select on U1.M_TMP_R_RISK_PHONE to LOADDB;
+grant select on U1.M_TMP_R_RISK_PHONE to LOADER;
+
+

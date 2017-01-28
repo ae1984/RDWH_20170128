@@ -1,0 +1,7 @@
+﻿create sequence U1.DATA_ALL_CALC_BI_SEQ
+minvalue 1
+maxvalue 9999999999999999999999999999
+start with 8270822
+increment by 1
+cache 20;
+

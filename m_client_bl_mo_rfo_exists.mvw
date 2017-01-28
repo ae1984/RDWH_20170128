@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_CLIENT_BL_MO_RFO_EXISTS
+refresh force on demand
+as
+select /*+ paralell 30 */
+       c.id rfo_id,
+       c.c_inn rfo_iin,
+       c.x_iin rfo_x_iin,
+       c.c_date_add rfo_date_add,
+       c.c_date_edit rfo_date_edit,
+       c.c_note as rfo_note,
+
+       t.*,
+       ca.name note_name
+from v_rfo_z#black_list_cl c
+join V_MO_CLIENT_BL t on t.iin = c.x_iin
+join M_MO_D_CLIENT_BL_CHANGE_CAUSE ca on ca.id = t.add_cause_id
+where ca.name like '%D1%';
+grant select on U1.M_CLIENT_BL_MO_RFO_EXISTS to LOADDB;
+grant select on U1.M_CLIENT_BL_MO_RFO_EXISTS to LOADER;
+
+

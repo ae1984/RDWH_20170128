@@ -1,0 +1,34 @@
+﻿create materialized view U1.V_BRANCH
+refresh complete on demand
+as
+select x.dep_code,
+       x.branch_name,
+
+       case when x.city_name is not null then x.city_name
+            when x.dep_code in ('001-001','001-124','001-130','001-133','001-777','001-900')
+                then 'АЛМАТЫ' end as
+       city_name,
+
+           case when x.region_name is not null then x.region_name
+                when x.dep_code in ('001-001','001-124','001-130','001-133','001-777','001-900')
+                    then 'АЛМАТЫ' end as
+       region_name
+from (
+    select
+           max(t.c_code) keep (dense_rank last order by t.c_date_audit) dep_code,
+           upper(max(t.c_name) keep (dense_rank last order by t.c_date_audit)) branch_name,
+           upper(max(a.c_place) keep (dense_rank last order by t.c_date_audit)) city_name,
+           upper(max(r.c_name) keep (dense_rank last order by t.c_date_audit)) region_name
+    from V_RFO_Z#STRUCT_DEPART t
+    left join V_RFO_Z#ADRESSES a on a.collection_id = t.c_addresses
+    left join V_RFO_Z#CODE_REGION r on a.c_region_ref = r.id
+    where t.c_code in (select substr(t.c_code,1,7)
+                       from V_RFO_Z#STRUCT_DEPART t
+                       where t.c_code != '1'
+                       group by substr(t.c_code,1,7))
+    group by t.c_code, t.c_name--, a.c_place, r.c_name
+) x;
+grant select on U1.V_BRANCH to LOADDB;
+grant select on U1.V_BRANCH to LOADER;
+
+

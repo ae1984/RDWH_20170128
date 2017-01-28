@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_TMP_GX_CLIENT_ORG_BANK_DAY
+build deferred
+refresh force on demand
+as
+select * from v_gx_client_org_bank_day t;
+grant select on U1.M_TMP_GX_CLIENT_ORG_BANK_DAY to LOADDB;
+
+

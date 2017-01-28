@@ -1,0 +1,43 @@
+﻿create materialized view U1.M_RBO_CONTRACT_TP_HIST
+build deferred
+refresh force on demand
+as
+select /*+ parallel(10)*/
+       kpd.id        as rbo_contract_id,
+       kpd.c_num_dog as contract_number,
+       p.c_code      as tarif_code_active,
+       upper(p.c_name)   as tarif_name_active,
+       c.c_code       as programm_code_active,
+       c.c_name       as programm_name_active,
+       pth.tarif_code,
+       pth.tarif_name,
+       pth.programm_code,
+       pth.programm_name,
+       pth.date_begin,
+       pth.date_end,
+       pth.tarif_rank,
+       pth.system_code,
+       pth.system_name,
+       pth.set_user
+  from u1.V_RBO_Z#KAS_PC_DOG kpd
+  join u1.V_RBO_Z#TARIF_PLAN p on kpd.c_tarif_plan_ref = p.id
+  join u1.V_RBO_Z#CRED_PROGRAM c on p.c_kas_cr_prog_ref = c.id
+  left join (select th.collection_id,
+                    th.c_date_begin as date_begin,
+                    tp.c_code as tarif_code,
+                    upper(tp.c_name) as tarif_name,
+                    kd.c_code as system_code,
+                    upper(kd.c_name) as  system_name,
+                    upper(th.c_set_user) as set_user,
+                    cp.c_code as programm_code,
+                    cp.c_name as programm_name,
+                    dense_rank() over (partition by th.collection_id order by th.c_date_begin) tarif_rank,
+                    lead(th.c_date_begin-1,1,null) over (partition by th.collection_id order by th.c_date_begin nulls first) date_end
+               from u1.V_RBO_Z#KAS_PC_TARIF_HST th
+               join u1.V_RBO_Z#TARIF_PLAN tp on th.c_tarif_plan_ref = tp.id
+               join u1.V_RBO_Z#CRED_PROGRAM cp on tp.c_kas_cr_prog_ref = cp.id
+               join u1.V_RBO_Z#KAS_DIC kd    on th.c_set_system = kd.id) pth on kpd.c_tarif_plan_arr = pth.collection_id;
+grant select on U1.M_RBO_CONTRACT_TP_HIST to LOADDB;
+grant select on U1.M_RBO_CONTRACT_TP_HIST to LOADER;
+
+

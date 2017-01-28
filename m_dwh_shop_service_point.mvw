@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_DWH_SHOP_SERVICE_POINT
+refresh force on demand
+as
+select /*+ noparallel */
+       service_point_id,
+       create_date,
+       service_point_name,
+       rfo_id,
+       marchant_id,
+       contact_info_id,
+       city_id,
+       opening_schedule_id
+  from dwh_stage.S43_SERVICE_POINT@dwh_prod2;
+grant select on U1.M_DWH_SHOP_SERVICE_POINT to LOADDB;
+grant select on U1.M_DWH_SHOP_SERVICE_POINT to LOADER;
+
+

@@ -1,0 +1,45 @@
+﻿create materialized view U1.M_EKT_RISKY_GOODS_CNT_60D
+refresh complete on demand
+as
+select c.id as rfo_folder_id,
+       c.c_date_create as folder_date_create,
+       f.c_client as rfo_client_id,
+       count(*) as RISKY_GOODS_CNT
+  from v_rfo_Z#CM_CHECKPOINT c
+  join v_rfo_Z#FOLDERS f
+    on f.id = c.id
+  join v_rfo_Z#RDOC rd
+    on rd.collection_id = f.c_docs
+  join v_rfo_Z#FDOC fd
+    on fd.id = rd.c_doc
+   and fd.class_id = 'CREDIT_DOG'
+  join v_rfo_Z#CREDIT_DOG cd
+    on cd.id = rd.c_doc --and cd.c_shop is not null
+  join v_rfo_Z#PROD_INFO pi
+    on pi.collection_id = cd.c_d#type_cred#prod#prod_info11
+  join V_RFO_Z#CM_POINT cmp
+    on cmp.id = c.c_point
+  join V_MO_RISKY_GOODS g
+    on g.title = pi.c_name
+ where c.c_date_create > trunc(sysdate) - 61
+   and cd.c_info_cred#type_cred#0 = 2 -- ТК
+   and cd.c_info_cred#kas_cr_purp_str is null -- убираем онлайн
+   and (cmp.c_code in ('EXECUTE',
+                       'CREDIT_EXEC',
+                       'KAS_CHK_DOC_PACK',
+                       'TO_RECLAMATION',
+                       'ARCHIVE',
+                       'ERR_ARCHIVE',
+                       'KAS_SENT_PKD',
+                       'KAS_WITHDRAWN1',
+                       'KAS_WITHDRAWN2',
+                       'KAS_PKD_CONTROL',
+                       'KAS_PKD_REV',
+                       'TR_CHANGED',
+                       'TAKE_DEPART') or cmp.c_priority >= 80)
+ group by c.id, c.c_date_create, f.c_client;
+grant select on U1.M_EKT_RISKY_GOODS_CNT_60D to LOADDB;
+grant select on U1.M_EKT_RISKY_GOODS_CNT_60D to LOADER;
+grant select on U1.M_EKT_RISKY_GOODS_CNT_60D to LOAD_MO;
+
+

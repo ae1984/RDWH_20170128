@@ -1,0 +1,118 @@
+﻿create materialized view U1.M_TMP_LUNA_ETALON_TMP3
+build deferred
+refresh force on demand
+as
+select c_client_id,
+       cnt_exist_photo,
+       min_similarity,
+       max_similarity,
+       photo_verif,
+       fraud_contr,
+       cl_photo_mm_diff,
+       max(c_photo_type) keep (dense_rank last order by avg_similarity_photo, c_photo_date) as c_photo_type,
+       max(avg_similarity_photo) keep (dense_rank last order by avg_similarity_photo, c_photo_date) as avg_similarity_photo,
+       max(c_bin_id) keep (dense_rank last order by avg_similarity_photo, c_photo_date) as c_bin_id,
+       max(c_photo_date) keep (dense_rank last order by avg_similarity_photo, c_photo_date) as c_photo_date,
+       max(min_similarity_photo) keep (dense_rank last order by avg_similarity_photo, c_photo_date) as min_similarity_photo
+from (select
+C_CLIENT_ID,
+MAX_DATE,
+MIN_DATE,
+cl_photo_mm_diff,
+CNT_ALL_PHOTO,
+CNT_EXIST_PHOTO,
+CNT_FOTO_FL,
+CNT_NO_FOUND,
+CNT_DOC_UD_L,
+MIN_SIMILARITY,
+MAX_SIMILARITY,
+MAX_SIMIL_100,
+"HG.MAX_DATE-MIN_DATE",
+CNT_FLD_PHOTO,
+CNT_VERIF_FLD_PHOTO,
+CNT_VERIF_FLD_1_PH,
+CNT_VERIF_FLD_0_PH,
+CNT_VERIF_REJ_FRAUD_PH,
+VERIF_PHOTO_RESULT,
+AGE,
+TAXDB_REM,
+PHOTO_VERIF,
+FRAUD_CONTR,
+VERIF_APPR,
+CNT_CONTR_ALL,
+CNT_CONTR_DEL,
+CNT_CONTR_REFIN,
+CNT_MATCHING,
+C_BIN_ID,
+C_PHOTO_TYPE,
+C_PHOTO_DATE,
+"TRUNC(AF.C_PHOTO_DATE)",
+max(CONTRACT_EXIST) as CONTRACT_EXIST,
+max(FPD_1_0) as FPD_1_0,
+VERIF_EXIST,
+VERIFY_RESULT,
+VERIF_REJECT_FRAUD,
+FRAUD_CONTRACT,
+MAX_SIMILARITY_PHOTO,
+MIN_SIMILARITY_PHOTO,
+AVG_SIMILARITY_PHOTO
+from u1.M_TMP_LUNA_ALL_PHOTO_ANALYSIS3
+group by
+C_CLIENT_ID,
+MAX_DATE,
+MIN_DATE,
+cl_photo_mm_diff,
+CNT_ALL_PHOTO,
+CNT_EXIST_PHOTO,
+CNT_FOTO_FL,
+CNT_NO_FOUND,
+CNT_DOC_UD_L,
+MIN_SIMILARITY,
+MAX_SIMILARITY,
+MAX_SIMIL_100,
+"HG.MAX_DATE-MIN_DATE",
+CNT_FLD_PHOTO,
+CNT_VERIF_FLD_PHOTO,
+CNT_VERIF_FLD_1_PH,
+CNT_VERIF_FLD_0_PH,
+CNT_VERIF_REJ_FRAUD_PH,
+VERIF_PHOTO_RESULT,
+AGE,
+TAXDB_REM,
+PHOTO_VERIF,
+FRAUD_CONTR,
+VERIF_APPR,
+CNT_CONTR_ALL,
+CNT_CONTR_DEL,
+CNT_CONTR_REFIN,
+CNT_MATCHING,
+C_BIN_ID,
+C_PHOTO_TYPE,
+C_PHOTO_DATE,
+"TRUNC(AF.C_PHOTO_DATE)",
+VERIF_EXIST,
+VERIFY_RESULT,
+VERIF_REJECT_FRAUD,
+FRAUD_CONTRACT,
+MAX_SIMILARITY_PHOTO,
+MIN_SIMILARITY_PHOTO,
+AVG_SIMILARITY_PHOTO)
+where fraud_contr = 0
+and fpd_1_0 = 0
+and fraud_contract = 0
+and verif_reject_fraud = 0
+--and max_simil_100 = 0
+--and avg_similarity_photo >= min_similarity-------????? отсекаем где 2 фото
+--and avg_similarity_photo > 90
+and (verify_result = 1 or verify_result is null)
+--and avg_similarity_photo < 100
+group by c_client_id,
+         cnt_exist_photo,
+         min_similarity,
+         max_similarity,
+         photo_verif,
+         fraud_contr,
+         cl_photo_mm_diff;
+grant select on U1.M_TMP_LUNA_ETALON_TMP3 to LOADDB;
+
+

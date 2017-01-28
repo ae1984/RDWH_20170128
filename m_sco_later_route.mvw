@@ -1,0 +1,83 @@
+﻿create materialized view U1.M_SCO_LATER_ROUTE
+build deferred
+refresh complete on demand
+as
+select /*+ parallel 30 */ * from (
+  select * from (
+      select trunc(t.sc_date_create, 'hh24') sc_date_create,
+             t.card_num,
+             t.is_sc_later_r,
+             count(*) cnt
+      from (
+            select sc.id,
+                   sc.date_create sc_date_create,
+                   r.date_create r_date_create,
+                   sc_n.card_num,
+                   case when sc.date_create > r.date_create then 0 else 1 end is_sc_later_r
+
+            from
+            (select f.id,
+                    t.date_create,
+                    count(t.id) cnt
+              from MO_RFOLDER f
+              left join T_MO_RFOLDER_PAR_VALUE_2016 t on t.rfolder_id = f.id
+                                     and t.d_par_id = 1068
+              where f.date_create >= trunc(sysdate)-7
+              --and f.date_create < trunc(sysdate)
+              group by f.id, t.date_create
+              having count(t.id) > 0
+              ) sc
+
+            join (select f.id,
+                         t.value_number card_num,
+                         count(t.id) cnt
+              from MO_RFOLDER f
+              left join T_MO_RFOLDER_PAR_VALUE_2016 t on t.rfolder_id = f.id
+                                     and t.d_par_id = 1030
+              where f.date_create >= trunc(sysdate)-7
+              --and f.date_create < trunc(sysdate)
+              group by f.id, t.value_number
+              having count(t.id) > 0
+              ) sc_n on sc_n.id = sc.id
+
+            join (
+            select f.id,
+                   t.date_create,
+                   count(t.id) cnt
+              from MO_RFOLDER f
+              left join T_MO_RFOLDER_PAR_VALUE_2016 t on t.rfolder_id = f.id
+                                     and t.d_par_id = 32
+              where f.date_create >= trunc(sysdate)-7
+              --and f.date_create < trunc(sysdate)
+              group by f.id, t.date_create
+              having count(t.id) > 0
+              ) r on r.id = sc.id
+
+      ) t
+      group by trunc(t.sc_date_create, 'hh24'), t.card_num, t.is_sc_later_r)
+    pivot (
+      sum(cnt) cnt
+       for is_sc_later_r in (0 as IS_BEF, 1 as IS_AFT)
+    )
+  pivot (
+    sum(IS_BEF_CNT) IS_BEF_CNT,
+    sum(IS_AFT_CNT) IS_AFT
+    for card_num in (2 as KN ,
+                     8 as EKT,
+                     9 as LKN,
+                     17 as KN15,
+                     18 as EKU,
+                     22 as KNP,
+                     27 as PKN,
+                     28 as AVTO,
+                     43 as KK,
+                     53 as PRK,
+                     122 as NIGHT
+                     )
+
+  )
+);
+grant select on U1.M_SCO_LATER_ROUTE to LOADDB;
+grant select on U1.M_SCO_LATER_ROUTE to LOADER;
+
+

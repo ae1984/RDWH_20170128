@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_RBO_ER_CONTRACT_PLAN_PAY2
+refresh complete on demand
+as
+select tt.*, t.prod_type
+from M_RBO_ER_CONTRACT_PLAN_PAY tt
+join V_DWH_PORTFOLIO_CURRENT t on t.deal_number = tt.contract_number
+                              --and  t.is_credit_active = 1
+                              and t.amount > 0
+                              --and (t.x_delinq_days is null or t.x_delinq_days < 720)
+                              and t.x_is_card = 0
+                              and t.x_is_credit_issued = 1
+where tt.pmt_order = 0;
+grant select on U1.M_RBO_ER_CONTRACT_PLAN_PAY2 to LOADDB;
+grant select on U1.M_RBO_ER_CONTRACT_PLAN_PAY2 to LOADER;
+
+

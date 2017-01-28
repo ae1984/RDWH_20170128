@@ -1,0 +1,98 @@
+﻿create materialized view U1.V_CONTRACT_EKT_DWH
+build deferred
+refresh complete on demand
+as
+select
+     c.id as rfo_contract_id,
+     cc.prod_type as cr_program_name,
+     c.c_num_dog as contract_number,
+     cc.dept_number as pos_code,
+     p.pos_name,
+     to_char(cc.begin_date,'yyyy - mm') as start_month,
+     cc.begin_date,
+     cc.plan_end_date - cc.begin_date as contract_term_days,
+     cc.actual_end_date,
+     round((cc.plan_end_date - cc.begin_date)/30,0) as contract_term_months,
+     upper(pr.c_producer) as producer,
+     upper(nvl(pr.c_name,us.c_name)) as product_name,
+     upper(pr.c_model) as product_model,
+     nvl(pr.c_quant,us.c_quant) as quantity,
+     nvl(pr.c_cost,us.c_cost) as goods_cost,
+     nvl(pr.c_bill_summ,us.c_bill_summ) as bill_sum,
+     nvl(pr.c_price,us.c_price) as goods_price,
+     pr.kind_name,
+     pr.tov_categ_code,
+     pr.tov_categ_name,
+     pr.tov_name_code,
+     pr.tov_name_name,
+     cc.amount as contract_amount,
+     nvl(pr.k_c_name,us.k_c_name) as product_type_name,
+     cl.x_rnn as client_rnn,
+     cl.x_iin as client_iin,
+         upper(clp.c_last_name) || ' ' ||
+         upper(clp.c_first_name) || ' ' ||
+         upper(clp.c_sur_name) as
+     client_name,
+     c.c_shop as rfo_shop_id,
+     s.shop_code, s.shop_name, s.city_name,
+     cc.fil_name,
+     cc.unp_name,
+     pr.id as goods_id,
+     us.id as servise_id,
+     c.c_info_cred#pay_now as initial_payment,
+     case when  cc.prod_type = 'КРЕДИТ НА ПОКУПКУ (СТАНДАРТ)' then
+            1
+          when cc.prod_type in ('ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)','ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)') then
+             0
+     end as is_standard
+from V_RFO_Z#CREDIT_DOG c
+left join (
+    select k.c_name as k_c_name, i.c_producer, i.c_name,
+           i.c_model, i.c_quant, i.c_cost, i.c_bill_summ,
+           i.c_price, i.id, i.collection_id, k.kind_name,
+           k.c_code as tov_categ_code,
+           k.c_name as tov_categ_name,
+           tn.c_code as tov_name_code,
+           tn.c_name as tov_name_name
+    from V_RFO_Z#PROD_INFO i,
+         V_RFO_Z#KIND_ZAL_BODY k,
+         V_RFO_Z#KAS_TOV_NAME tn
+    where k.id = i.c_type_tov
+      and i.c_name_ref = tn.id
+) pr on pr.collection_id = c.c_d#type_cred#prod#prod_info11
+left join (
+    select kk.c_name as k_c_name, ii.c_name, ii.c_quant,
+           ii.c_cost, ii.c_bill_summ, ii.c_price, ii.id,
+           ii.collection_id
+    from V_RFO_Z#SERVICE_INFO ii,
+         V_RFO_Z#KAS_SERV_NAME kk
+    where kk.c_type_serv = ii.c_type_serv and
+          kk.id = ii.c_name_ref
+) us on us.collection_id = c.c_d#type_cred#serv#serv_info12,
+V_DWH_PORTFOLIO_CURRENT cc,
+V_POS p,
+V_RFO_Z#CLIENT cl,
+V_RFO_Z#CL_PRIV clp,
+(   select max(cd1q.id) as max_id
+    from V_RFO_Z#CREDIT_DOG cd1q
+    where cd1q.c_num_dog is not null
+    group by cd1q.c_num_dog
+) cd_max, -- для получения актуальных данных
+V_SHOP s
+where cd_max.max_id = c.id and
+      c.c_num_dog = cc.deal_number and
+      p.pos_code = cc.dept_number and
+      cl.id = c.c_client_ref and
+      cl.id = clp.id and
+      s.rfo_shop_id = c.c_shop and
+      cc.prod_type in ('ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)',
+                       'ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)',
+                       'КРЕДИТ НА ПОКУПКУ (СТАНДАРТ)',
+                       'КРЕДИТ НА ПОКУПКУ (РАССРОЧКА)'
+                       ) and
+      cc.x_is_credit_issued = 1;
+grant select on U1.V_CONTRACT_EKT_DWH to LOADDB;
+grant select on U1.V_CONTRACT_EKT_DWH to LOADER;
+grant select on U1.V_CONTRACT_EKT_DWH to RISK_VERIF;
+
+

@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_TMP_DI_REPEATED_APP5
+refresh complete on demand
+as
+select
+a.client_iin,
+/*case when term_of_first_loan<=15 then '<=15 days'
+     when term_of_first_loan>15 and term_of_first_loan<=31 then '16-31 days'
+     when term_of_first_loan>=32 and term_of_first_loan<=61 then '2 months'
+     when term_of_first_loan>=62 and term_of_first_loan<=91 then '3 months'
+     when term_of_first_loan>=92 and term_of_first_loan<=121 then '4 months'
+     when term_of_first_loan>=122 and term_of_first_loan<=151 then '5 months'
+     when term_of_first_loan>=152 and term_of_first_loan<=181 then '6 months'
+     when term_of_first_loan>=182 then '> 6 months'
+     when term_of_first_loan is null and a.is_credit_active=1 then 'active credit' else 'Other' end as term_of_first_loan_cat,
+*//*case when b.term_of_first_loan=aa.actual_payment_num then aa.contract_amount else null end as cred_amount_of_first_loan_cat,*/
+b.term_of_first_loan_cat,
+b.cred_amount_of_first_loan_cat,
+b.report_status report_status_prev,
+a.report_status report_status_cur,
+a.deal_number,
+a.deal_status,
+a.contract_amount,
+a.is_credit_active,
+a.x_product_type,
+a.actual_payment_num2 term_of_further,
+a.planned_term, x_is_credit_issued,
+(a.begin_date-b.actual_end_date) as days_diff
+from m_tmp_di_repeated_app3 a
+join m_tmp_di_repeated_app4 b on a.client_iin=b.client_iin and b.actual_end_date<=a.begin_date  and b.deal_number!=a.deal_number and a.x_is_credit_issued=1 --and a.is_credit_active=1
+
+/*join (select client_iin,actual_end_date,max(deal_number) deal_number, cred_amount_of_first_loan_cat, term_of_first_loan_cat from m_tmp_di_repeated_app4 group by client_iin,actual_end_date,cred_amount_of_first_loan_cat,term_of_first_loan_cat) b on a.client_iin=b.client_iin and b.actual_end_date<=a.begin_date  and b.deal_number!=a.deal_number and a.x_is_credit_issued=1
+*//*join m_tmp_di_repeated_app3 aa on b.client_iin=aa.client_iin and b.term_of_first_loan=aa.actual_payment_num
+*/;
+grant select on U1.M_TMP_DI_REPEATED_APP5 to LOADDB;
+grant select on U1.M_TMP_DI_REPEATED_APP5 to LOADER;
+
+

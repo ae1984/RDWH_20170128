@@ -1,0 +1,47 @@
+﻿create materialized view U1.M_RFO_ONLINE_CLAIM_AMOUNT
+refresh force on demand
+as
+select
+      shop_name,
+      shop_code,
+      date_ratif,
+      case when (avg_cli/avg_req)> 2 then 1 else 0 end as is_sum_abnormal
+from (
+      select
+            x.shop_name,
+            x.shop_code,
+            trunc(x.buy_date_create) as date_ratif,
+            sum(x.c_info_cred#summa_cred) as con_sum,
+            avg(x.c_info_cred#summa_cred) as avg_con,
+
+            sum(x.c_info_cred#summa_cred)/count(distinct x.rfo_contract_id) as avg_req,
+            sum(x.c_info_cred#summa_cred)/count(distinct x.c_client) as avg_cli,
+
+            count(distinct x.rfo_contract_id) as req_cnt,
+            count(distinct x.c_client) as cli_cnt
+      from (
+          select tt.*,
+                 upper(sd.c_code) as pos_code,
+                 upper(sd.c_name) as pos_name,
+                 s.shop_name,
+                 s.shop_code,
+                 dnp.x_dnp_name
+          from (select * from M_RFO_ONLINE_CLAIM t
+                union
+                select * from M_RFO_ONLINE_CLAIM_DAY t) tt
+          --join V_TIME_DAYS td on td.yyyy_mm_dd = trunc(t.folder_date_create_mi)
+          left join V_SHOP s on s.rfo_shop_id = tt.c_shop
+          left join V_RFO_Z#STRUCT_DEPART sd on sd.id = tt.c_st_depart
+          left join V_POS dnp on dnp.pos_code = sd.c_code
+
+          where dnp.x_dnp_name = 'АЛМАТЫ'
+      ) x
+      group by x.shop_name,
+               x.shop_code,
+               trunc(x.buy_date_create)
+         ) y;
+grant select on U1.M_RFO_ONLINE_CLAIM_AMOUNT to LOADDB;
+grant select on U1.M_RFO_ONLINE_CLAIM_AMOUNT to LOADER;
+grant select on U1.M_RFO_ONLINE_CLAIM_AMOUNT to LOAD_RDWH_PROD;
+
+

@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_TMP_GK_RATE_VALUE_AVG2
+refresh force on demand
+as
+select x.cr_program_name,
+       min(x.exhd_rate_value) rate_value_min,
+       round(avg(x.exhd_rate_value), 2) rate_value_avg,
+       max(x.exhd_rate_value) rate_value_max,
+       count(case when x.exhd_rate_value is not null then exhd_rate_value end) cnt,
+
+       round(sum(case when x.exhd_rate_value is not null then exhd_rate_value end)/
+             count(case when x.exhd_rate_value is not null then exhd_rate_value end), 2) rate_value_avg2
+from (
+      select trunc(t.exhd_begin_date, 'mm') exhd_begin_date,
+             upper(m.cr_program_name) cr_program_name,
+             round(avg(t.exhd_rate_value), 2) exhd_rate_value
+      from V_DWH_PORT_CREDITS t
+      join m_folder_con_cancel m on m.contract_number = t.exhd_deal_number
+                                 and m.is_credit_issued = 1
+                                 --and m.is_refin = 0
+     where t.exhd_begin_date >= to_date('01012013', 'ddmmyyyy')
+      group by trunc(t.exhd_begin_date, 'mm'), m.cr_program_name
+      --order by trunc(t.exhd_begin_date, 'mm'), m.cr_scheme_name
+      ) x
+group by x.cr_program_name;
+grant select on U1.M_TMP_GK_RATE_VALUE_AVG2 to LOADDB;
+grant select on U1.M_TMP_GK_RATE_VALUE_AVG2 to LOADER;
+
+

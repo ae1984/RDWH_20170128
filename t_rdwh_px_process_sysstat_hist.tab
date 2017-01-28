@@ -1,0 +1,24 @@
+﻿create table U1.T_RDWH_PX_PROCESS_SYSSTAT_HIST
+(
+  dt        DATE,
+  statistic VARCHAR2(120),
+  value     NUMBER,
+  con_id    NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RDWH_PX_PROCESS_SYSSTAT_HIST
+  is 'История. Информацию о работе сессий, работающих под управлением параллельного выполнения';
+grant select on U1.T_RDWH_PX_PROCESS_SYSSTAT_HIST to LOADDB;
+

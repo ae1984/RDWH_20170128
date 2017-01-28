@@ -1,0 +1,34 @@
+﻿create materialized view U1.M_SCCL_DWH_CL_BR
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       c.client_iin_last as client_iin
+
+       ,regexp_count(b.pmt_full_code_3, '0') as br_0_cnt
+       ,regexp_count(b.pmt_full_code_3, '1') as br_1_cnt
+       ,regexp_count(b.pmt_full_code_3, '2') as br_2_cnt
+       ,regexp_count(b.pmt_full_code_3, '3') as br_3_cnt
+       ,regexp_count(b.pmt_full_code_3, 'R') as br_r_cnt
+
+       ,regexp_count(b.pmt_full_code_3, '(R.*?0.*?)') as br_r_closed_cnt
+
+       ,length(b.pmt_full_code_3) as br_length
+
+
+      --,cl.pmt_full_code_3 --Штрих-код истории просрочек с учетом оптимизации с разделением просрочки до 30 и после 31 дня
+
+from (select c.client_iin_last,
+             max(c.client_id) as client_id
+      from u1.V_CLIENT_CAL c
+      group by c.client_iin_last) c
+left join u1.M_CLIENT_BARCODE b on b.client_id = c.client_id
+/*left join (select t.*,
+                  to_char(add_months(to_date(t.yyyy_mm_num || '01', 'yyyymmdd'), -1), 'yyyy - mm') as yyyy_mm_prev
+           from u1.V_TIME_MONTHS t) tm on tm.text_yyyy_mm = to_char(am.folder_date_create,'yyyy - mm')*/
+where c.client_iin_last is not null
+--group by c.client_iin_last;
+grant select on U1.M_SCCL_DWH_CL_BR to LOADDB;
+grant select on U1.M_SCCL_DWH_CL_BR to RTS_RDWH;
+
+

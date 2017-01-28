@@ -1,0 +1,32 @@
+﻿create materialized view U1.V_TMP_JAN_MO_RGOODS_DEC
+refresh force on demand
+as
+with a as (
+  select d_calc_code,
+         row_number() over (partition by d_calc_code order by d_par_code) par_num,
+         d_par_code from (
+              select d.d_calc_code, d.d_par_code
+              from D_CALC_DEC@MO1_PROD d where d.is_out = 0 and d.d_calc_code like 'C_RISKY_GOODS_RES_PRE'
+              group by d.d_calc_code, d.d_par_code
+              order by d.d_calc_code, d.d_par_code)
+) select d.d_calc_code, d.row_id,
+max(decode(a.par_num,1,a.d_par_code)) as p1,
+max(decode(a.par_num,2,a.d_par_code)) as p2,
+max(decode(a.par_num,3,a.d_par_code)) as p3,
+--max(decode(a.par_num,4,a.d_par_code)) as p4,
+--max(decode(a.par_num,5,a.d_par_code)) as p5,
+max(decode(d.is_out,1,d.d_par_code)) as res,
+max(case when a.par_num = 1 and d.d_par_code = a.d_par_code then coalesce(to_char(d.value_number), d.value_text) end) as p1_val,
+max(case when a.par_num = 2 and d.d_par_code = a.d_par_code then coalesce(to_char(d.value_number), d.value_text) end) as p2_val,
+max(case when a.par_num = 3 and d.d_par_code = a.d_par_code then coalesce(to_char(d.value_number), d.value_text) end) as p3_val,
+--max(case when a.par_num = 4 and d.d_par_code = a.d_par_code then coalesce(to_char(d.value_number), d.value_text) end) as p4_val,
+--max(case when a.par_num = 5 and d.d_par_code = a.d_par_code then coalesce(to_char(d.value_number), d.value_text) end) as p4_val,
+max(decode(d.is_out,1,coalesce(to_char(d.value_number), d.value_text))) as res_val,
+max(d.is_na) as is_na
+from D_CALC_DEC@MO1_PROD d
+join a on a.d_calc_code = d.d_calc_code
+group by d.d_calc_code, d.row_id;
+grant select on U1.V_TMP_JAN_MO_RGOODS_DEC to LOADDB;
+grant select on U1.V_TMP_JAN_MO_RGOODS_DEC to LOADER;
+
+

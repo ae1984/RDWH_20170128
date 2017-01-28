@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_SC_CLIENT_BARCODE
+build deferred
+refresh force on demand
+as
+select cl.rfo_client_id,
+       b.client_id,
+       --b.pmt_full_code_3,
+
+       regexp_count(b.pmt_full_code_3, '0') as br_0_cnt,
+       regexp_count(b.pmt_full_code_3, '1') as br_1_cnt,
+       regexp_count(b.pmt_full_code_3, '2') as br_2_cnt,
+       regexp_count(b.pmt_full_code_3, '3') as br_3_cnt,
+       regexp_count(b.pmt_full_code_3, 'R') as br_r_cnt,
+       length(b.pmt_full_code_3) as br_length
+from U1.M_CLIENT_BARCODE b
+join (
+      select max(t.client_id) client_id,
+             f.rfo_client_id
+      from U1.M_CLIENT_BARCODE t
+      join u1.m_folder_con_cancel f on substr(ltrim(f.contract_number,'R'),1,7) = t.client_id
+      group by f.rfo_client_id
+      ) cl on cl.client_id = b.client_id;
+grant select on U1.M_SC_CLIENT_BARCODE to LOADDB;
+grant select on U1.M_SC_CLIENT_BARCODE to LOAD_MO;
+
+

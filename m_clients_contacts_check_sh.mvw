@@ -1,0 +1,63 @@
+﻿create materialized view U1.M_CLIENTS_CONTACTS_CHECK_SH
+refresh force on demand
+as
+select distinct
+        a.RFO_CLIENT_ID,
+        a.RBO_CLIENT_ID,
+        a.IIN,
+        a.MOBILE_NUMBER_CLEAR,
+        a.COUNT_IN_CONTACTS,
+        a.MAX_PAY_DATE,
+        a.HAVE_KASPI_LOGIN,
+        a.HAVE_OTHER_KASPI_LOGIN,
+        a.THIS_MAX_CALL_DATE,
+        a.OTHER_MAX_CALL_DATE,
+        a.OTHER_CLIENT_HAS_CALL,
+        a.SUCCESS_OUT_CALL,
+        a.MAX_SEND_DATE,
+        a.PHOTO_VERIFICATION_CANCEL,
+        a.HAVE_CREDIT,
+        a.HAVE_DEPOSIT,
+        a.FOLDERS_COUNT,
+        a.LAST_FOLDER_DATE,
+        a.LAST_SUCCESS_FOLDER_DATE,
+        a.TEXT,
+        a.MAX_AUDIT,
+        case when b.rfo_client_id is not null then 1 else 0 end as active_deposit,
+        case when e.pay_amount is not null then 1 else 0 end as pay_terminal,
+        --case when d.folder_id is not null then 1 else 0 end as in_other_cli_fold,
+        --case when d.folder_id is not null and d.contact_surname = a1.name_last and d.contact_first_name = a1.name_first then 1 else 0 end as in_other_cli_fold,
+        max(e.pay_date) keep (dense_rank last order by e.pay_date) as last_pay_terminal_date
+from RISK_CHDEN.M_CLIENTS_CONTACTS_CHECK_TST a
+join V_CLIENT_RFO_BY_ID a1 on a.rfo_client_id = a1.rfo_client_id
+left join m_client_depn b on a.rfo_client_id = b.rfo_client_id and date_close is null and sum_depn <> 0---has active deposits
+left join risk_mvera.M_TERMINAL_PAY_MOBILE e on a.mobile_number_clear = e.pay_phone_number----Платежи на этот номер с терминалов
+--left join V_FORM_CLIENT_CONTACT_PHONE d on d.phone_type = 'КОНТАКТ-МОБИЛЬНЫЙ' and a.mobile_number_clear = substr(d.phone_number, 2, 10)----Указан как контакт-мобильный у других
+group by
+        a.RFO_CLIENT_ID,
+        a.RBO_CLIENT_ID,
+        a.IIN,
+        a.MOBILE_NUMBER_CLEAR,
+        a.COUNT_IN_CONTACTS,
+        a.MAX_PAY_DATE,
+        a.HAVE_KASPI_LOGIN,
+        a.HAVE_OTHER_KASPI_LOGIN,
+        a.THIS_MAX_CALL_DATE,
+        a.OTHER_MAX_CALL_DATE,
+        a.OTHER_CLIENT_HAS_CALL,
+        a.SUCCESS_OUT_CALL,
+        a.MAX_SEND_DATE,
+        a.PHOTO_VERIFICATION_CANCEL,
+        a.HAVE_CREDIT,
+        a.HAVE_DEPOSIT,
+        a.FOLDERS_COUNT,
+        a.LAST_FOLDER_DATE,
+        a.LAST_SUCCESS_FOLDER_DATE,
+        a.TEXT,
+        a.MAX_AUDIT,
+        case when b.rfo_client_id is not null then 1 else 0 end,
+        case when e.pay_amount is not null then 1 else 0 end;
+grant select on U1.M_CLIENTS_CONTACTS_CHECK_SH to LOADDB;
+grant select on U1.M_CLIENTS_CONTACTS_CHECK_SH to LOADER;
+
+

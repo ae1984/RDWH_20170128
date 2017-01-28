@@ -1,0 +1,24 @@
+﻿create materialized view U1.V_RBO_Z#TIP_ACC
+refresh complete on demand
+as
+select
+       h.ID,
+       h.C_NAME_ACC,
+       h.C_REF_ACC,
+       h.C_COD,
+       h.C_PRODUCT,
+       h.C_NAME_REQ,
+       h.C_METHOD_PROD,
+       h.C_FOR_DEPARTS,
+       h.C_PS_STRING,
+       h.C_REG_CURRENCY,
+       h.C_KIND_TUNE,
+       h.C_COM_TUNING,
+       h.C_INTEND_TUNING,
+       h.C_KAS_REVERSE_REF,
+       h.C_KAS_TA_REF
+  from rdwh.V_RBO_Z#TIP_ACC@rdwh_exd h;
+grant select on U1.V_RBO_Z#TIP_ACC to LOADDB;
+grant select on U1.V_RBO_Z#TIP_ACC to LOADER;
+
+

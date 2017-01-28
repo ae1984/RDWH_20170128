@@ -1,0 +1,23 @@
+﻿create table U1.T_TMP_E_REQ_2
+(
+  cli        VARCHAR2(80),
+  iin        NUMBER,
+  cont_phone VARCHAR2(30),
+  city       VARCHAR2(40)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_E_REQ_2 to LOADDB;
+grant select on U1.T_TMP_E_REQ_2 to LOADER;
+

@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_10
+build deferred
+refresh force on demand
+as
+select
+         t.rfo_client_id
+         ,t.date_create
+         ,t.claim_id
+         ,nvl(max(d.delinq_days_cli),0) as LAST_YEAR_MAX_DELAY
+         ,nvl(max(case when d.rep_date < trunc(t.date_create) then d.delinq_days_cli end),0) as LAST_YEAR_MAX_DELAY_t1
+    from u1.M_FOLDER_CON_CANCEL_ONLINE_1 t
+    left join u1.m_rbo_contract_bas dd on dd.rfo_client_id = t.rfo_client_id
+    left join u1.t_rbo_port d on d.rbo_contract_id = dd.rbo_contract_id and d.rep_date >= trunc(t.date_create)-365 and d.delinq_amount >= 1000 and d.rep_date <= trunc(t.date_create)
+    --left join u1.t_rbo_port d1 on d1.rbo_contract_id = dd.rbo_contract_id and d1.rep_date >= trunc(t.date_create)-365 and d1.delinq_amount >= 1000 and d1.rep_date < trunc(t.date_create)
+    --where t.rfo_client_id = 31393192
+    group by
+          t.rfo_client_id
+         ,t.date_create
+         ,t.claim_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_10 to LOADDB;
+
+

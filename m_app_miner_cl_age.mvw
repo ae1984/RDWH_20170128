@@ -1,0 +1,38 @@
+﻿create materialized view U1.M_APP_MINER_CL_AGE
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       am.app_id
+
+       ,case when trunc((trunc(am.folder_date_create_mi) - nvl(a.date_of_birth, c.birth_date))/365.25) between 18 and 70
+             then trunc((trunc(am.folder_date_create_mi) - nvl(a.date_of_birth, c.birth_date))/365.25)
+        else case when to_number(substr(m.iin, 5, 2)) between 1 and 31
+                       and to_number(substr(m.iin, 3, 2)) between 1 and 12
+                  then trunc((trunc(am.folder_date_create_mi) -
+                                case when to_number(substr(m.iin, 7, 1)) in (5, 6)
+                                     then to_date(substr(m.iin,5,2)||'.'|| substr(m.iin,3,2)||'.20'|| substr(m.iin, 1, 2), 'dd.mm.yyyy')
+                                     else to_date(substr(m.iin,5,2)||'.'|| substr(m.iin,3,2)||'.19'|| substr(m.iin, 1, 2), 'dd.mm.yyyy')
+                                end)/365.25)
+               end
+        end as age
+
+       ,round(trunc(am.folder_date_create_mi) - trunc(a.reg_date)) as reg_kaspikz_length
+
+from u1.M_APP_MINER_BAS am
+left join U1.M_MATRIX_BASE m on m.rfo_con_or_claim_id = am.app_id
+left join ( select  max(t.user_id) as user_id
+                    ,t.rfo_id
+                    ,max(a.date_of_birth) as date_of_birth
+                    ,min(a.reg_date) as reg_date
+            from u1.M_KASPIKZ_USERS_ALL t
+            left join u1.M_KASPIKZ_USERS a on a.id = t.user_id
+            group by t.rfo_id
+) a on a.rfo_id = to_char(am.rfo_client_id)
+       and a.reg_date < trunc(am.folder_date_create_mi)
+
+left join u1.M_CLIENT_RFO_BAS c on c.client_id_rfo = am.rfo_client_id
+where am.folder_date_create_mi >= to_date('01-01-2015','dd-mm-yyyy');
+grant select on U1.M_APP_MINER_CL_AGE to LOADDB;
+
+

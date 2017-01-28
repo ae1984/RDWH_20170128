@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_TMP_J_CON_PREV_CON
+refresh complete on demand
+as
+select f.deal_number,
+       count(distinct d.deal_number) as prev_con_cnt,
+       case when count(distinct d.deal_number) > 0 then 0 else 1 end as is_client_new,
+       min(d.x_start_date_actual) as first_con_start_date,
+       floor(months_between(trunc(min(f.x_start_date_actual)), min(d.x_start_date_actual))) as first_con_start_mon_ago
+from V_DWH_PORTFOLIO_CURRENT f
+left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = f.client_iin and
+                                       d.x_start_date_actual < trunc(f.x_start_date_actual) and
+                                       d.x_is_credit_issued = 1 and
+                                       d.x_product_type != 'ОПТИМИЗАЦИЯ'
+where f.x_is_credit_issued = 1 and -- выданные
+      f.x_start_date_actual is not null -- настоящие кредиты
+group by f.deal_number;
+grant select on U1.M_TMP_J_CON_PREV_CON to LOADDB;
+grant select on U1.M_TMP_J_CON_PREV_CON to LOADER;
+
+

@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_SCCL_EXT_ONL_IIN_PAR
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       t.iin as client_iin,
+
+       t.onl as is_online
+
+from U1.T_UPD_ECO_ONL t
+where t.iin is not null
+and trunc(t.date_update)=trunc(sysdate);
+grant select on U1.M_SCCL_EXT_ONL_IIN_PAR to LOADDB;
+grant select on U1.M_SCCL_EXT_ONL_IIN_PAR to LOAD_MO;
+grant select on U1.M_SCCL_EXT_ONL_IIN_PAR to RTS_RDWH;
+
+

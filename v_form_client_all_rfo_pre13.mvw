@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_FORM_CLIENT_ALL_RFO_PRE13
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/
+      distinct pr12.collection_id, coalesce(pp12.c_name,pr12.c_str) as prop_name
+             from V_RFO_Z#PROPERTIES pr12
+             left join V_RFO_Z#PROD_PROPERTY pp12 on pp12.id = pr12.c_prop
+                                           and pp12.c_group_prop = pr12.c_group_prop
+             join V_RFO_Z#PROPERTY_GRP pg12  on pg12.id = pr12.c_group_prop
+             where pg12.c_code = 'HAVE_CRED' --Наличие кредита в нашем/другом банке;
+grant select on U1.V_FORM_CLIENT_ALL_RFO_PRE13 to LOADDB;
+
+

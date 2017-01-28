@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_DWH_S40_CASHIER
+build deferred
+refresh force on demand
+as
+select change_date,
+       audit_id,
+       level2,
+       office,
+       name,
+       mod_date,
+       cashier
+  from dwh_stage.s40_cashier@rdwh_exd;
+grant select on U1.M_DWH_S40_CASHIER to LOADDB;
+
+

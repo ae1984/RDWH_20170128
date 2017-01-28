@@ -1,0 +1,13 @@
+﻿create materialized view U1.V_FOLDER_ALL_RFO_PRE8
+build deferred
+refresh complete on demand
+as
+select /*+parallel(5)*/ distinct f.id as folder_id
+from V_RFO_Z#KAS_GCVP_REPORT r
+join V_RFO_Z#FDOC fd on fd.id = r.id
+join V_RFO_Z#RDOC rd on rd.c_doc = fd.id
+join V_RFO_Z#FOLDERS f on f.c_docs = rd.collection_id
+join V_RFO_Z#KAS_GCVP_PAYMENT p on p.collection_id = r.c_payments_arr and p.c_org_rnn = r.c_rnn;
+grant select on U1.V_FOLDER_ALL_RFO_PRE8 to LOADDB;
+
+

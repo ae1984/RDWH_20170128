@@ -1,0 +1,28 @@
+﻿create table U1.DATA_ASOKR_TMP
+(
+  scoring_date      DATE not null,
+  folder_number     NUMBER not null,
+  folder_id         NUMBER not null,
+  rnn               VARCHAR2(12),
+  contract_number   VARCHAR2(20),
+  prescoring_result VARCHAR2(10) not null,
+  scoring_status    VARCHAR2(2),
+  scoring_result    VARCHAR2(1) not null,
+  iin               VARCHAR2(12) not null
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 200M
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.DATA_ASOKR_TMP to LOADDB;
+grant select on U1.DATA_ASOKR_TMP to LOADER;
+

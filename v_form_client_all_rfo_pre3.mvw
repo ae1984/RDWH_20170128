@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_FORM_CLIENT_ALL_RFO_PRE3
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/
+      distinct pr2.collection_id, pp2.c_name as prop_name
+             from V_RFO_Z#PROPERTIES pr2
+             join V_RFO_Z#PROD_PROPERTY pp2 on pp2.id = pr2.c_prop
+                                           and pp2.c_group_prop = pr2.c_group_prop
+             join V_RFO_Z#PROPERTY_GRP pg2  on pg2.id = pr2.c_group_prop
+             where pg2.c_code = 'OT_BEL'  --Отраслевая принадлежность 8824034 -- OT_BEL;
+grant select on U1.V_FORM_CLIENT_ALL_RFO_PRE3 to LOADDB;
+
+

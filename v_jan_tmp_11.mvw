@@ -1,0 +1,35 @@
+﻿create materialized view U1.V_JAN_TMP_11
+refresh force on demand
+as
+select * from (
+select
+    c.yms, c.product_refin_last,
+    count(c.contract_number) as con_cnt, count(distinct p.contract_number) as con_dist_cnt,
+    round(sum(case when p.delinq_days > 0 and p.delinq_days < 8 then p.total_debt * 0.45
+                   when p.delinq_days > 7 then p.total_debt
+                   else 0 end) / sum(p.max_debt_used) * 100, 2) as del_rate,
+    round(sum(case when p1.delinq_days > 0 and p1.delinq_days < 8 then p1.total_debt * 0.45
+                   when p1.delinq_days > 7 then p1.total_debt
+                   else 0 end) / sum(p.max_debt_used) * 100, 2) as del_rate_pmt_1,
+    round(sum(p.max_debt_used) / 1000000, 2) as sales_mln
+from V_CONTRACT_CAL c
+join V_PORTFOLIO p on c.contract_id = p.contract_id and
+     p.report_month_all_contracts = '2014 - 01' -- посл. отчетный месяц (select max(d.yy_mm_report) from V_DATA_ALL d)
+left join V_PORTFOLIO p1 on c.contract_id = p1.contract_id and p1.planned_pmt_month_new = 1
+where c.yms like '2013 - %'
+group by c.yms, c.product_refin_last
+having sum(p.max_debt_used) > 0
+) pivot (
+        max(con_cnt) as con_cnt, min(con_dist_cnt) as con_dist_cnt,
+        max(del_rate) as del_rate,
+        max(del_rate_pmt_1) as del_rate_pmt_1,
+        max(sales_mln) as sales_mln
+    for product_refin_last in (
+        'АВТО','КН','КН-15','КНП','ЛКН','ПКН',
+        'ЛК','ПК','КК','ТК'--,'ЗК','Н_КВ','Н_П','ЭКД' as ekd
+    )
+) -- 2 min 20 sec;
+grant select on U1.V_JAN_TMP_11 to LOADDB;
+grant select on U1.V_JAN_TMP_11 to LOADER;
+
+

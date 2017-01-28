@@ -1,0 +1,17 @@
+﻿create materialized view U1.V_MO_D_PAR_CRITICAL
+refresh force on demand
+as
+select distinct dp.id as d_par_id,
+       dp.code_int as d_par_code_int,
+       dp.name as d_par_name,
+       dp.status as d_par_status
+from V_MO_D_PAR dp
+join V_MO_D_CALC_PAR cp on cp.d_par_code = dp.code_int and cp.is_out = 1
+join V_MO_D_CALC dc on dc.code = cp.d_calc_code and dc.d_calc_group_code like 'SC_%'
+where dp.code_int like '%_RES_PRE%' or
+      dp.code_int in ('CLIENT_BL_EXISTS_SCO', 'CLIENT_DOC_BL_EXISTS',
+                      'RISK_AUTO_AMOUNT_BEKI_GCVP');
+grant select on U1.V_MO_D_PAR_CRITICAL to LOADDB;
+grant select on U1.V_MO_D_PAR_CRITICAL to LOADER;
+
+

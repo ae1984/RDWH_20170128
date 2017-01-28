@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_FOLDER_CONTRACT_ALL_LINK_RFO
+refresh complete on demand
+as
+select t.folder_id,
+    max(case when t.is_card = 1 then t.rfo_contract_id end) as card_contract_id,
+    max(case when t.is_card = 1 then t.contract_number end) as card_contract_number,
+    max(case when t.is_card = 0 then t.rfo_contract_id end) as credit_contract_id,
+    max(case when t.is_card = 0 then t.contract_number end) as credit_contract_number
+from V_CONTRACT_FOLDER_ALL_LINK_RFO t
+group by t.folder_id;
+grant select on U1.V_FOLDER_CONTRACT_ALL_LINK_RFO to LOADDB;
+grant select on U1.V_FOLDER_CONTRACT_ALL_LINK_RFO to LOADER;
+
+

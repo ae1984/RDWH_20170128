@@ -1,0 +1,26 @@
+﻿create table U1.ZZ_CONTRACT_ERROR
+(
+  data_on_1_day_dealinq VARCHAR2(50),
+  iin                   VARCHAR2(50),
+  contract_number       VARCHAR2(50),
+  client_dwh_id         VARCHAR2(50),
+  contract_dwh_id       VARCHAR2(50),
+  data_on_6_day_dealinq VARCHAR2(5),
+  new                   VARCHAR2(50)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.ZZ_CONTRACT_ERROR to LOADDB;
+grant select on U1.ZZ_CONTRACT_ERROR to LOADER;
+

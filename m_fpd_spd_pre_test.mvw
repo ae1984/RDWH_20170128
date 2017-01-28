@@ -1,0 +1,96 @@
+﻿create materialized view U1.M_FPD_SPD_PRE_TEST
+refresh complete on demand
+as
+select distinct
+       x.rep_date,
+       x.start_date,
+       x.plan_pmt_date_first,
+       x.deal_number,
+       x.delinq_days_past,
+       x.delinq_days_future,
+       x.delinq_days_old,
+       x.delinq_days_cl_past,
+       x.delinq_days_cl_future,
+       x.delinq_days_cl,
+       x.total_debt,
+       x.x_product_type,
+       x.prod,
+       x.plan_date_due_rn,
+       x.is_online,
+       x.is_categ_a
+from (
+select p.rep_date,
+               p.START_DATE,
+               coalesce(q1.date_due, t1.date_due) as plan_pmt_date_first,
+               coalesce(q1.date_due_rn,t1.date_due_rn) as plan_date_due_rn,
+               p.deal_number,
+               lag(p.delinq_days_old) over(partition by p.deal_number, coalesce(q1.date_due_rn,t1.date_due_rn) order by p.rep_date) as delinq_days_past,
+               lead(p.delinq_days_old) over(partition by p.deal_number, coalesce(q1.date_due_rn,t1.date_due_rn) order by p.rep_date) as delinq_days_future,
+               p.delinq_days_old,
+               lag(p.delinq_days) over(partition by p.deal_number, coalesce(q1.date_due_rn,t1.date_due_rn) order by p.rep_date) as delinq_days_cl_past,
+               lead(p.delinq_days) over(partition by p.deal_number, coalesce(q1.date_due_rn,t1.date_due_rn) order by p.rep_date) as delinq_days_cl_future,
+               p.delinq_days as delinq_days_cl,
+               p.total_debt,
+               dpc1.x_product_type,
+               cast( case
+                 when p.prod_type in ('АВТОКРЕДИТОВАНИЕ') then
+                  'АВТО НОВЫЙ'
+                 when p.prod_type in ('АВТОКРЕДИТОВАНИЕ БУ') then
+                  'AВТО БУ'
+                 when p.prod_type in
+                      ('АВТОЗАПЧАСТИ',
+                       'ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)',
+                       'КРЕДИТ НА ПОКУПКИ') then
+                  'ТОВАРЫ'
+                 when p.prod_type in
+                      ('ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)',
+                       'КРЕДИТ НА УСЛУГИ') then
+                  'УСЛУГИ'
+                 when p.prod_type in ('КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ') then
+                  'КНП'
+                 when p.prod_type in
+                      ('КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ',
+                       'ОСОБЕННЫЙ КЛИЕНТ -КН 15') then
+                  'КН-15'
+                 when p.prod_type in ('ЛУЧШИЙ КЛИЕНТ НАЛИЧНЫМИ') then
+                  'ЛКН'
+                 when p.prod_type in ('ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ') then
+                  'ПКН'
+                 when p.prod_type in ('КРЕДИТ НАЛИЧНЫМИ') then
+                  'КН'
+                 when p.prod_type in ('РЕВОЛЬВЕРНЫЕ КАРТЫ',
+                                      'ОСОБЕННЫЙ КЛИЕНТ - КК',
+                                      'ЗАРПЛАТНЫЕ КАРТЫ',
+                                      'КАРТА ВКЛАДЧИКА',
+                                      'ПРОСТАЯ КАРТА',
+                                      'ОВЕРДРАФТЫ',
+                                      'PC.ПОСТОЯННЫЙ КЛИЕНТ',
+                                      'ЛУЧШИЙ КЛИЕНТ') then
+                  'КАРТЫ'
+               end as varchar2(100)) as prod,
+               case when vfa.process_code = 'ONLINE_CRED' then 1
+                else 0 end is_online,
+               coalesce(fcc.is_categ_a,0) as is_categ_a
+          from U1.V_DWH_PORT p
+          left join U1.V_DWH_PORTFOLIO_CURRENT dpc1
+            on dpc1.deal_number = p.deal_number
+          left join U1.V_DWH_PORT_CARDS_CREDITS c
+            on c.deal_number = p.deal_number
+          left join M_DWH_PLAN_CARD_3PMT t1
+            on t1.deal_number = p.deal_number
+           and t1.date_due_rn in (1)
+          left join M_DWH_PLAN_CREDIT_3PMT q1
+            on q1.deal_number = p.deal_number
+           and q1.date_due_rn in (1)
+          left join V_CONTRACT_CAL vc on vc.contract_number = p.deal_number
+          left join V_FOLDER_ALL_RFO  vfa on   vfa.folder_id = vc.folder_id_first
+          left join M_FOLDER_CON_CANCEL fcc on fcc.contract_number = p.deal_number
+         where p.start_date >= trunc(sysdate) - 365
+           and (p.prod_type not in
+               ('РЕФИНАНСИРОВАНИЕ/РЕСТРУКТУРИЗАЦИЯ',
+                 'РЕФИНАНСИРОВАНИЕ АВТОКРЕДИТА') or c.prod_name is null)) x
+where x.rep_date in (plan_pmt_date_first,plan_pmt_date_first+7,plan_pmt_date_first+30);
+grant select on U1.M_FPD_SPD_PRE_TEST to LOADDB;
+grant select on U1.M_FPD_SPD_PRE_TEST to LOADER;
+
+

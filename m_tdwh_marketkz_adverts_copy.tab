@@ -1,0 +1,51 @@
+﻿create table U1.M_TDWH_MARKETKZ_ADVERTS_COPY
+(
+  id                   NUMBER not null,
+  parent_cat_id        NUMBER,
+  adv_name             VARCHAR2(200),
+  price                NUMBER,
+  region_name          VARCHAR2(100),
+  address              VARCHAR2(100),
+  phone                VARCHAR2(100),
+  seller_name          VARCHAR2(100),
+  seller_url           VARCHAR2(100),
+  publish_date         DATE,
+  views_cnt            NUMBER,
+  idate                DATE,
+  udate                DATE,
+  cat_name             VARCHAR2(100),
+  cat_url              VARCHAR2(100),
+  advert_url           VARCHAR2(200),
+  phone1               NUMBER,
+  phone2               NUMBER,
+  phone3               NUMBER,
+  phone4               NUMBER,
+  phone5               NUMBER,
+  phone6               NUMBER,
+  phone7               NUMBER,
+  phone1_clear         VARCHAR2(4000),
+  phone2_clear         VARCHAR2(4000),
+  phone3_clear         VARCHAR2(4000),
+  phone4_clear         VARCHAR2(4000),
+  phone5_clear         VARCHAR2(4000),
+  phone6_clear         VARCHAR2(4000),
+  phone7_clear         VARCHAR2(4000),
+  initial_publish_date DATE,
+  client_dwh_id        VARCHAR2(40)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.M_TDWH_MARKETKZ_ADVERTS_COPY to LOADDB;
+grant select on U1.M_TDWH_MARKETKZ_ADVERTS_COPY to LOADER;
+

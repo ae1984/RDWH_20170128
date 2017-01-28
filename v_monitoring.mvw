@@ -1,0 +1,29 @@
+﻿create materialized view U1.V_MONITORING
+refresh complete on demand
+as
+select /*+rule*/
+        fld.id as folder_id,
+        fld.c_n as folder_num,
+        cl.x_iin as client_iin,
+        cl.x_rnn as client_rnn,
+        to_char(t.c_process_time, 'dd.mm.yyyy HH24:mi') as process_date,
+        upper(u.c_name) as mon_result,
+        upper(u2.c_name) as mon_denial_reason,
+        upper(t.c_comments) as mon_comments
+from
+        V_RFO_Z#KAS_MONITORING t,
+        V_RFO_Z#KAS_UNIVERSAL_D u,
+        V_RFO_Z#KAS_UNIVERSAL_D u2,
+        V_RFO_Z#CLIENT cl,
+        V_RFO_Z#FOLDERS fld
+where
+        t.c_monitoring_res is not null and
+        u.id = t.c_monitoring_res and
+        u2.id(+) = t.c_decline_reason and
+        cl.id = t.c_client_ref and
+        fld.id = t.c_folder_ref and
+        upper(u.c_name) in ('ОТКАЗАНО', 'ОДОБРЕНО', 'ВЫДАТЬ');
+grant select on U1.V_MONITORING to LOADDB;
+grant select on U1.V_MONITORING to LOADER;
+
+

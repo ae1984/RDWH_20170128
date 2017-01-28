@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_GBQ_CUSTOM_METRICS
+build deferred
+refresh force on demand
+as
+select id,
+      hit_id,
+      metric_index,
+      metric_value,
+      idate
+from GBQ.GBQ_CUSTOM_METRICS@KSVISIT;
+grant select on U1.M_GBQ_CUSTOM_METRICS to LOADDB;
+
+

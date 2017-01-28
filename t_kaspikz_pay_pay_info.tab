@@ -1,0 +1,55 @@
+﻿create table U1.T_KASPIKZ_PAY_PAY_INFO
+(
+  id                        NUMBER(20),
+  user_id                   NUMBER(20),
+  service_id                NUMBER(10),
+  subscription_id           NUMBER(20),
+  pos_terminal_id           VARCHAR2(200),
+  reg_date                  DATE,
+  amount                    NUMBER(19,4),
+  amount_fee                NUMBER(19,4),
+  currency                  VARCHAR2(24),
+  account_id                NUMBER(20),
+  account_simple_id         NUMBER(10),
+  account_type              VARCHAR2(80),
+  account_name              VARCHAR2(200),
+  bank_reference            VARCHAR2(200),
+  bank_result_code          NUMBER(10),
+  bank_payment_id           VARCHAR2(200),
+  bank_auth_ref             VARCHAR2(200),
+  prov_reference            VARCHAR2(200),
+  prov_result_code          NUMBER(10),
+  prov_status_code          NUMBER(10),
+  payment_type              NUMBER(10),
+  descr                     VARCHAR2(1000),
+  deposit_account_number    VARCHAR2(200),
+  deposit_account_simple_id NUMBER(10),
+  old_deposit_account_id    NUMBER(20),
+  transfer_id               NUMBER(20),
+  is_offline_payment        NUMBER(3),
+  ecomm_result_code         NUMBER(10),
+  ecomm_payment_id          VARCHAR2(200),
+  is_3ds                    NUMBER(3),
+  host_name                 VARCHAR2(200),
+  bonus_amount              NUMBER(19,4),
+  global_payment_id         NUMBER(20),
+  cur_pay_inf_hist          NUMBER(10),
+  is_prov                   NUMBER,
+  device_id                 NUMBER(38),
+  session_id                NUMBER(38)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_KASPIKZ_PAY_PAY_INFO to LOADDB;
+

@@ -1,0 +1,16 @@
+﻿create materialized view U1.V_DWH_PORT_201309_NEW
+refresh force on demand
+as
+select t.rep_date,t.deal_number,t.total_debt,t.total_debt_decrease,
+       t.delinq_days,t.delinq_days_previous,t.start_date,t.prod_type,
+       t.delinq_days_old,t.delinq_amount,t.is_card,t.client_id,
+       t.is_active,
+       case when t.is_on_balance = 'Y' then 'I'
+            when t.is_on_balance = 'N' or t.is_on_balance is null then 'Y'
+            else t.is_on_balance end as is_on_balance,
+       t.pmt_date,t.pmt_date_first
+from V_DWH_PORT_201309 t;
+grant select on U1.V_DWH_PORT_201309_NEW to LOADDB;
+grant select on U1.V_DWH_PORT_201309_NEW to LOADER;
+
+

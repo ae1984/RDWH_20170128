@@ -1,0 +1,36 @@
+﻿create table U1.T_MO_AUTOCHECK_RESULT
+(
+  request_id              NUMBER not null,
+  rfo_client_id           NUMBER,
+  folder_id               NUMBER,
+  verif_id                NUMBER,
+  auto_photo_result       NUMBER(2),
+  verif_step              NUMBER(2),
+  system_source           VARCHAR2(10),
+  status                  VARCHAR2(10),
+  date_create             DATE,
+  date_send               DATE,
+  error_msg               VARCHAR2(2048),
+  date_end                DATE,
+  verif_photo             VARCHAR2(10),
+  verif_contacts          VARCHAR2(10),
+  verif_status            VARCHAR2(10),
+  verif_vector_gr         VARCHAR2(100),
+  ap_client_is_reclam_pre VARCHAR2(10),
+  verif_client_data_is_eq VARCHAR2(10)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.T_MO_AUTOCHECK_RESULT to LOADDB;
+grant select on U1.T_MO_AUTOCHECK_RESULT to LOADER;
+

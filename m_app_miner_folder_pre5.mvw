@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_APP_MINER_FOLDER_PRE5
+build deferred
+refresh force on demand
+as
+select x.app_id
+       ,x.folder_date_create_mi
+       ,x.count_application
+       ,case when count_application > 0 then 1 else 0 end as application_flag
+from (
+      select /*+ parallel(30) */
+             am.app_id
+             ,am.folder_date_create_mi
+
+             ,count(am.app_id) over (partition by am.rfo_client_id order by trunc(am.folder_date_create_mi)
+                                     range between unbounded preceding and 1 preceding) as count_application
+      from u1.M_APP_MINER_BAS am
+) x
+where x.folder_date_create_mi >= to_date('01012015', 'ddmmyyyy');
+grant select on U1.M_APP_MINER_FOLDER_PRE5 to LOADDB;
+
+

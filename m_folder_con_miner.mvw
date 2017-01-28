@@ -1,0 +1,142 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER
+refresh force on demand
+as
+select
+  x.rfo_contract_id                ,
+  x.folder_id                      ,
+  x.contract_number                ,
+  x.contract_id                    ,
+  x.rfo_client_id                  ,
+  x.form_client_id                 ,
+  x.folder_date_create             ,
+  x.is_credit_issued               ,
+--  x.is_bad                         ,
+
+  x.is_bad_by_con_del_max_90,
+  x.is_bad_by_cli_B_W,
+  x.is_bad_by_cli_B_W_del_40,
+
+  x.client_status                  ,
+  x.delinq_days_max                ,
+  x.cr_program_name                ,
+  x.is_card                        ,
+  x.contract_amount                ,
+  x.x_dnp_region                   ,
+  x.x_dnp_name                     ,
+  x.pos_type                       ,
+  x.sex                            ,
+  x.reg_address_region             ,
+  x.reg_address_city               ,
+  x.reg_address_age_days           ,
+  x.reg_address_age_mon_floor      ,
+  x.fact_address_region            ,
+  x.fact_address_city              ,
+  x.fact_address_age_days          ,
+  x.fact_address_age_mon_floor     ,
+  x.education                      ,
+  x.marital_status                 ,
+  x.children                       ,
+  x.job_position                   ,
+  x.org_activity                   ,
+  x.org_sector                     ,
+  x.org_type                       ,
+  x.job_position_type              ,
+  x.is_bank_account_exists         ,
+  x.is_auto_exists                 ,
+  x.real_estate_relation           ,
+  x.is_garage_exists               ,
+  x.work_expr_last_place_days      ,
+  x.work_expr_last_place_mon_floor ,
+  x.age_full_years                 ,
+  x.dependants_count               ,
+  x.inc_sal                        ,
+  x.inc_sal_add                    ,
+  case when x.inc_sal_spouse is null then 0 else x.inc_sal_spouse end as  inc_sal_spouse,
+  case when x.inc_rent is null then 0 else x.inc_rent end as  inc_rent,
+  case when x.inc_pension_benefits is null then 0 else x.inc_pension_benefits end as  inc_pension_benefits,
+  case when x.inc_interest is null then 0 else x.inc_interest end as  inc_interest,
+  x.inc_total                      ,
+  x.exp_utilities                  ,
+  case when x.exp_transport is null then 0 else x.exp_transport end as  exp_transport,
+  case when x.exp_children is null then 0 else x.exp_children end as  exp_children,
+  case when x.exp_nutrition is null then 0 else x.exp_nutrition end as  exp_nutrition,
+  case when x.exp_clothes is null then 0 else x.exp_clothes end as  exp_clothes,
+  case when x.exp_obligations is null then 0 else x.exp_obligations end as  exp_obligations,
+  case when x.exp_other is null then 0 else x.exp_other end as  exp_other,
+  x.exp_total                      ,
+  x.contract_term_months           ,
+  x.time_num_hour                  ,
+  x.time_day_num_of_week           ,
+  x.pkb_report_status              ,
+  x.pkb_active_contracts           ,
+  x.pkb_closed_contracts           ,
+  x.pkb_pmt_active_all_sum         ,
+  x.pkb_total_debt                 ,
+  x.gcvp_salary                    ,
+  x.gcvp_last_pmt_days_ago_floor   ,
+  x.gcvp_first_pmt_days_ago_floor  ,
+  x.gcvp_pmts_count_from_rep       ,
+  x.gcvp_org_count_by_name         ,
+  x.gcvp_pmts_per_day_max          ,
+  x.org_gcvp_maxpmtd_age_days      ,
+  x.org_gcvp_maxpmtd_age_mon_floor ,
+  x.sal_gcvp_to_sal_form_prc_floor ,
+  x.pmt_ours                       ,
+  x.fld_number_in_24h              ,
+  x.fld_number_in_48h              ,
+  x.fld_number_in_1w               ,
+  x.fld_number_in_1m               ,
+  x.cancel_fld_count_in_24h        ,
+  x.cancel_fld_count_in_48h        ,
+  x.cancel_fld_count_in_1w         ,
+  x.cancel_fld_count_in_1m         ,
+  x.start_total_fact_pmts_by_cli   ,
+  case when x.start_con_del_days_max_by_cli is null then 0 else x.start_con_del_days_max_by_cli end as  start_con_del_days_max_by_cli,
+  x.start_num_of_con_by_cli        ,
+  x.start_num_of_con_by_cli_pr_rep ,
+  case when cli_age_basing_on_con < 0 then 0 else cli_age_basing_on_con end as cli_age_basing_on_con          ,
+  case when cli_age_basing_on_con_mon_fl < 0 then 0 else cli_age_basing_on_con_mon_fl end as cli_age_basing_on_con_mon_fl  ,
+  case when cli_age_based_on_fld < 0 then 0 else cli_age_based_on_fld end as cli_age_based_on_fld          ,
+  case when cli_age_based_on_fld_mon_fl < 0 then 0 else cli_age_based_on_fld_mon_fl end as cli_age_based_on_fld_mon_fl   ,
+
+       case when x.inc_total > 0 then floor(nvl(x.pmt_ours,0) / x.inc_total * 100) else 0 end as
+  kdn_oursend,
+
+       case when x.inc_total > 0 then floor(nvl(y.pmt_in_rep_sum_by_cli,0) / x.inc_total * 100) else 0 end as
+  kdn_our_all_cons,
+-------
+       case when x.inc_total > 0 then floor(nvl(x.pmt_nom_rate,0) / x.gcvp_salary * 100) else 0 end as
+  kdn_pmt_nom_rate_to_gcvp_sal,
+
+  case when x.start_con_amount_max_by_cli is null then 0 else x.start_con_amount_max_by_cli end as  start_con_amount_max_by_cli,
+  case when x.start_pmt_max_by_cli is null then 0 else x.start_pmt_max_by_cli end as  start_pmt_max_by_cli,
+  x.pmt_nom_rate,
+
+  case when x.start_con_amount_max_by_cli > 0 then
+           floor(x.contract_amount / x.start_con_amount_max_by_cli * 100) else 0 end as amount_rise_perc,
+
+  case when x.start_pmt_max_by_cli > 0 then
+           floor(x.pmt_nom_rate / x.start_pmt_max_by_cli * 100) else 0 end as pmt_rise_perc,
+
+-------
+  client_new_fresh_old,
+  client_patronymic_type,
+
+  y.product_count as start_product_count,
+  y.product_start_number as product_start_number,
+
+  round(case when x.inc_total - nvl(x.exp_utilities,0) > 0 then
+              x.pmt_nom_rate / (x.inc_total - nvl(x.exp_utilities,0)) * x.contract_term_months
+        end) as paid_sal_count,
+
+  p.ymr_paid_sal_count_all_con paid_sal_count_all_con,
+
+  decode(trunc(DBMS_RANDOM.value(1,100/50 /* 50%*/ +1)),1,1,0) as is_test ,
+  x.is_refin
+from M_FOLDER_CON_MINER_4 x
+left join M_CONTRACT_START_CON_ORD_X y on y.contract_number = x.contract_number
+left join M_FOLDER_CON_MINER_6 p on p.contract_number = x.contract_number;
+grant select on U1.M_FOLDER_CON_MINER to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER to LOADER;
+
+

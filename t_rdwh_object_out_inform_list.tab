@@ -1,0 +1,25 @@
+﻿create table U1.T_RDWH_OBJECT_OUT_INFORM_LIST
+(
+  object_name          VARCHAR2(50),
+  inform_level         NUMBER default 1,
+  is_excluded          NUMBER(1) default 0,
+  drill_inform_enabled NUMBER(1) default 0
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RDWH_OBJECT_OUT_INFORM_LIST
+  is 'Исключение объектов из информирования';
+grant select on U1.T_RDWH_OBJECT_OUT_INFORM_LIST to LOADDB;
+grant select on U1.T_RDWH_OBJECT_OUT_INFORM_LIST to LOADER;
+

@@ -1,0 +1,28 @@
+﻿create table U1.T_KASPIKZ_LOG_URI
+(
+  id         NUMBER,
+  uri        VARCHAR2(4000),
+  hash       VARCHAR2(4000),
+  length_col NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_KASPIKZ_LOG_URI
+  is 'Справочник вызываемых URL для журналирования ';
+comment on column U1.T_KASPIKZ_LOG_URI.id
+  is 'Идентификатор таблицы';
+comment on column U1.T_KASPIKZ_LOG_URI.uri
+  is ' ';
+grant select on U1.T_KASPIKZ_LOG_URI to LOADDB;
+grant select on U1.T_KASPIKZ_LOG_URI to LOADER;
+

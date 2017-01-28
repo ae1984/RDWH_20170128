@@ -1,0 +1,49 @@
+﻿create materialized view U1.M_REF_RESTR_CONS_EXT
+using no index
+refresh complete on demand
+as
+select -- связка реф/рес договоров (резуьтирующих) с исходными договорами
+       -- находим какой процент задолженности составлял каждый их них на момент рефин/реструкт
+     t.contract_number as contract_number_new,
+     to_char(t.ref_res_first_date,'yyyy - mm') as ref_res_first_yy_mm,
+     t.ref_res_first_date,
+     t.ref_res_last_date,
+     t.ref_res_count,
+     cc.client_id, cc.yy_mm_start_last as yy_mm_start_last_new, cc.product_last  as product_last_new,
+     cc.contract_amount_first as contract_amount_first_new,
+--     d0.total_debt as total_debt_new_next_rep,
+--     ccc1.contract_number as contract_number_old,
+--     ccc1.product_last as product_last_old,
+--     ccc1.yy_mm_start_last as yy_mm_start_last_old,
+     d1.contract_no as contract_number_old,
+     d1.product as product_old,
+     d1.total_debt as total_debt_old,
+     d1.yy_mm_start as yy_mm_start_old,
+     tdx.total_debt_by_cli_in_rep as total_debt_by_cli_in_rep_old,
+     case when tdx.total_debt_by_cli_in_rep > 0 then
+          round(d1.total_debt / tdx.total_debt_by_cli_in_rep * 100, 2)
+         else 0 end as total_debt_old_perc
+--from TMP_REF_RESTR_CONS_ZHOMART t -- прежний вариант
+from (select t.contract_number, min(t.spof_start_date) as ref_res_first_date,
+             max(t.spof_start_date) as ref_res_last_date,
+             count(distinct t.spof_start_date) as ref_res_count
+      from M_DWH_ACC_SPECIAL_OFFER_CON t -- договора ГУ от Ксении Кохович - обновление 1 раз в месяц
+                                    -- надо переделать - брать напрямую с ДВХ
+      where t.spof_spec_offer_status_cd in ('WORK','EXECUTED','DEFAULT')
+      group by t.contract_number--,trunc(t.spof_start_date,'mm')
+) t join V_CONTRACT_CAL cc on cc.contract_number = t.contract_number -- связываем результирующие договора с V_CONTRACT_CAL
+left join (
+      select t.yy_mm_report, t.client_id, sum(t.total_debt) as total_debt_by_cli_in_rep
+      from V_DATA_ALL t
+      where t.contract_amount > 0 and t.total_debt > 0
+      group by t.yy_mm_report, t.client_id
+) tdx on tdx.client_id = cc.client_id and
+         tdx.yy_mm_report = to_char(add_months(t.ref_res_first_date,-1),'yyyy - mm') -- какие договора были до
+                                                     -- рес реф договора - собираем сводную информацию
+left join V_DATA_ALL d1 on d1.client_id = cc.client_id and
+        d1.yy_mm_report = to_char(add_months(t.ref_res_first_date,-1),'yyyy - mm') and
+        d1.contract_amount > 0 and d1.total_debt > 0 -- и сами эти договора;;
+grant select on U1.M_REF_RESTR_CONS_EXT to LOADDB;
+grant select on U1.M_REF_RESTR_CONS_EXT to LOADER;
+
+

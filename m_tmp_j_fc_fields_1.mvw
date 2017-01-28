@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_TMP_J_FC_FIELDS_1
+refresh complete on demand
+as
+select to_char(f.folder_date_create_mi,'yyyy') as year, to_char(f.folder_date_create_mi,'yyyy-mm') as mon,
+       f.cr_program_name,
+       f.is_credit_issued, fc.is_bank_account_exists, fc.is_have_cred,
+       fc.job_position_type,
+       case when fc.job_position is not null then 'JOB_POS_NOT_NULL' else 'JOB_POS_NULL' end as job_position,
+       case when fc.job_position = fc.job_position_type then 'JOB_POS_AND_TYPE_IS_THE_SAME'
+            else 'JOB_POS_AND_TYPE_IS_NOT_THE_SAME' end as job_pos_and_type_is_the_same,
+       case when fc2.c_phone_work#numb is not null then 'PHONE_WORK_NOT_NULL' else 'PHONE_WORK_NULL' end as phone_work,
+       case when fc2.c_phone_org is not null then 'PHONE_ORG_NOT_NULL' else 'PHONE_ORG_NULL' end as phone_org,
+       case when fc2.c_phone_org_wife is not null then 'PHONE_WIFE_ORG_NOT_NULL' else 'PHONE_WIFE_ORG_NULL' end as phone_wife_org,
+       ---
+       count(*) as cnt,
+       count(distinct f.rfo_contract_id) as cnt_rfo_con,
+       sum(d.max_debt_used_x) / 1000000 as sales_mln,
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_mln
+from M_FOLDER_CON_CANCEL f
+join M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = f.form_client_id
+left join V_RFO_Z#FORM_CLIENT fc2 on fc2.id = f.form_client_id
+where to_char(f.folder_date_create_mi,'yyyy') in ('2014','2015')
+group by to_char(f.folder_date_create_mi,'yyyy'), to_char(f.folder_date_create_mi,'yyyy-mm'),
+         f.cr_program_name,
+         f.is_credit_issued, fc.is_bank_account_exists, fc.is_have_cred,
+         fc.job_position_type,
+         case when fc.job_position is not null then 'JOB_POS_NOT_NULL' else 'JOB_POS_NULL' end,
+         case when fc.job_position = fc.job_position_type then 'JOB_POS_AND_TYPE_IS_THE_SAME' else 'JOB_POS_AND_TYPE_IS_NOT_THE_SAME' end,
+         case when fc2.c_phone_work#numb is not null then 'PHONE_WORK_NOT_NULL' else 'PHONE_WORK_NULL' end,
+         case when fc2.c_phone_org is not null then 'PHONE_ORG_NOT_NULL' else 'PHONE_ORG_NULL' end,
+         case when fc2.c_phone_org_wife is not null then 'PHONE_WIFE_ORG_NOT_NULL' else 'PHONE_WIFE_ORG_NULL' end;
+grant select on U1.M_TMP_J_FC_FIELDS_1 to LOADDB;
+grant select on U1.M_TMP_J_FC_FIELDS_1 to LOADER;
+
+

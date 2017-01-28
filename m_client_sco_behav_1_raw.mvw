@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_CLIENT_SCO_BEHAV_1_RAW
+build deferred
+refresh force on demand
+as
+select t.rfo_client_id,
+       t.rfo_contract_id,
+       t.folder_date_create_mi as folder_date_create,
+       t.contract_amount
+from M_FOLDER_CON_CANCEL_BASE t
+where t.folder_date_create_mi >= trunc(sysdate) - 60 and
+      t.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ',
+                            'КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ',
+                            'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ',
+                            'ЛУЧШИЙ КЛИЕНТ – НАЛИЧНЫЕ') and
+      t.is_credit_issued = 0 and
+      (coalesce(t.cancel_prescoring, 0) +
+       coalesce(t.cancel_middle_office, 0) +
+       coalesce(t.cancel_controller, 0) +
+       coalesce(t.cancel_manager, 0) +
+       coalesce(t.cancel_cpr_aa, 0) +
+       coalesce(t.cancel_verificator, 0) +
+       coalesce(t.cancel_undefined, 0)) > 0;
+grant select on U1.M_CLIENT_SCO_BEHAV_1_RAW to LOADDB;
+grant select on U1.M_CLIENT_SCO_BEHAV_1_RAW to LOAD_MO;
+
+

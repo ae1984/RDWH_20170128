@@ -1,0 +1,38 @@
+﻿create table U1.NT_SIZE_OBJECT
+(
+  sdt             DATE,
+  owner           VARCHAR2(150),
+  segment_name    VARCHAR2(150),
+  segment_type    VARCHAR2(30),
+  tablespace_name VARCHAR2(30),
+  size_mb         NUMBER,
+  blocks          NUMBER,
+  extents         NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_SIZE_OBJECT
+  is 'RDWH2.0 История размера каждого объекта в Oracle в мегабайтах';
+comment on column U1.NT_SIZE_OBJECT.sdt
+  is 'дата и время снятия показаний';
+comment on column U1.NT_SIZE_OBJECT.owner
+  is 'владелец';
+comment on column U1.NT_SIZE_OBJECT.size_mb
+  is 'размер в мегабайтах';
+comment on column U1.NT_SIZE_OBJECT.blocks
+  is 'количество блоков';
+comment on column U1.NT_SIZE_OBJECT.extents
+  is 'количество частей';
+grant select on U1.NT_SIZE_OBJECT to LOADDB;
+

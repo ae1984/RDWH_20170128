@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_CLIENT_CAL_TOTAL_PMTS
+refresh complete on demand
+as
+select r1111.client_id,
+--                  case when sum(r1111.monthly_client_pmt_bonus) < 0 then 0
+--                       else sum(r1111.monthly_client_pmt_bonus) end as
+                  sum(case when r1111.monthly_client_pmt_bonus < 0 then 0
+                          else r1111.monthly_client_pmt_bonus end
+                     ) as
+              total_pmts from (
+                  select r111.client_id, max(r111.planned_pmt_bonus) + min(r111.pmt_penalty) as monthly_client_pmt_bonus
+                       from v_report_cal_1 r111
+                       group by r111.yy_mm_report, r111.client_id) r1111
+            group by r1111.client_id;
+grant select on U1.M_CLIENT_CAL_TOTAL_PMTS to LOADDB;
+grant select on U1.M_CLIENT_CAL_TOTAL_PMTS to LOADER;
+
+

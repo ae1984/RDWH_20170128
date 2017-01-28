@@ -1,0 +1,25 @@
+﻿create materialized view U1.TMP_AVTO_CONTRACT_NUMBER
+refresh force on demand
+as
+select distinct pc2.c_num_dog
+                    from V_RBO_Z#PR_CRED pc
+                    join V_RBO_Z#KIND_CREDITS kc on pc.c_kind_credit = kc.id
+                    join V_RBO_Z#CRED_PROGRAM cp on kc.c_cred_program = cp.id
+                    join V_RBO_Z#PR_CRED pc2 on pc2.c_kas_pc_dog_ref = nvl(pc.c_kas_pc_dog_ref,pc.c_kas_pc_dog_t_ref)
+                                           or pc2.c_kas_pc_dog_t_ref = nvl(pc.c_kas_pc_dog_ref,pc.c_kas_pc_dog_t_ref)
+                   where cp.c_code in ('GU_AVTO','GU_AVTO_BU','GU_AVTO_REF')
+                     and (pc.c_date_close > to_date('17-06-2015','dd-mm-yyyy') or pc.c_date_close is null)
+                     and pc.c_date_begin <= to_date('17-06-2015','dd-mm-yyyy')
+                  union all
+                  select distinct pcd.c_num_dog
+                    from V_RBO_Z#PR_CRED pc
+                    join V_RBO_Z#KIND_CREDITS kc on pc.c_kind_credit = kc.id
+                    join V_RBO_Z#CRED_PROGRAM cp on kc.c_cred_program = cp.id
+                    join V_RBO_Z#KAS_PC_DOG  pcd on pcd.id = nvl(pc.c_kas_pc_dog_ref,pc.c_kas_pc_dog_t_ref)
+                   where cp.c_code in ('GU_AVTO','GU_AVTO_BU','GU_AVTO_REF')
+                     and (pc.c_date_close > to_date('17-06-2015','dd-mm-yyyy') or pc.c_date_close is null)
+                     and pc.c_date_begin <= to_date('17-06-2015','dd-mm-yyyy');
+grant select on U1.TMP_AVTO_CONTRACT_NUMBER to LOADDB;
+grant select on U1.TMP_AVTO_CONTRACT_NUMBER to LOADER;
+
+

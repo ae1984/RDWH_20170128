@@ -1,0 +1,25 @@
+﻿create materialized view U1.V_RFO_Z#KAS_ARCH_DATA
+refresh complete on demand
+as
+select ad.ID,
+       ad.SN,
+       ad.SU,
+       ad.C_SEC_RECL_DATE,
+       ad.C_FIRST_RECL_DATE,
+       ad.C_SEC_CORR_DATE,
+       ad.C_FIRST_CORR_DATE,
+       ad.C_CONTROL_DATE,
+       ad.C_POSTCTRL_DATE,
+       ad.C_CHECK_CA,
+       ad.C_CONTROL_ERRORS,
+       ad.C_USER_CONTROL_REF,
+       ad.C_POSTCTRL_USR_REF,
+       ad.C_USER_SEND_CA_REF,
+       ad.C_FOLDER_REF,
+       ad.C_ARCH_TYPE_REF,
+       ad.C_CANCEL_POINT
+  from ibs.Z#KAS_ARCH_DATA@rfo_snap ad;
+grant select on U1.V_RFO_Z#KAS_ARCH_DATA to LOADDB;
+grant select on U1.V_RFO_Z#KAS_ARCH_DATA to LOADER;
+
+

@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_18
+refresh force on demand
+as
+select
+
+       count( distinct
+       case
+         when  t.is_credit_rejected = 1
+          then   t.claim_id
+       end )                 as fail_share_30_d_count,
+
+       count( distinct    t.claim_id)      as share_30_d_count,
+
+       t.rfo_client_id       as rfo_client_id,
+       b.claim_id            as claim_id,
+       b.date_create  as date_create
+  from m_folder_con_cancel_online_1 b
+       left  join m_folder_con_cancel_online_1 t on t.rfo_client_id = b.rfo_client_id and t.date_create >= b.date_create-30 and t.date_create < trunc(b.date_create)
+ --where t.rfo_client_id = 31393192
+group by b.claim_id, t.rfo_client_id, b.date_create;
+grant select on U1.M_RFO_FRAUD_SEARCH_18 to LOADDB;
+
+

@@ -1,0 +1,215 @@
+﻿create materialized view U1.M_RBO_CONTRACT_DEL
+build deferred
+refresh complete on demand
+as
+select
+       db.rep_date,                     --отчетная дата
+       ca.rbo_client_id,                --id клиента
+       db.rbo_contract_id,              --id договора
+       ca.rfo_client_id,
+       ca.contract_number,              --номер договора
+       ca.start_date,                   --дата начала договора, учитывает дату encfyjdrb револьверности
+       to_char(ca.start_date,'yyyy - mm') as yy_mm_start_date, --дата начала договора, учитывает дату encfyjdrb револьверности в формате char: yyyy - mm
+       ca.cred_program_code,
+       ca.cred_program_name,
+       ca.cred_program_code_x,
+       ca.cred_program_name_x,
+       ca.is_card,                      --тип договора
+       db.is_refin_contract,            --признак догова: 1 - рефинансированный договор, 2 - результирующий договор на текущий день
+       db.is_ever_refin_contract,       --признак рефианасированного или результирующего договора когда либо
+       db.rbo_contract_id_to,           --id результирующего договора, на котором сейчас рефиананс
+       db.refin_date,                   --дата начала рефинансирования
+       db.refin_date_first,             --дата первого рефинансирования
+       db.total_percent_x,              --процент от общей задолженности по рефинансируемым и результирующем договорам
+       db.total_debt,                   --общая задолженность договора
+       db.total_debt_x,                 --общая рассчитанная задолженности с учетом рефинанса
+       db.del_days,                     --количество дней по договору
+       db.del_days_x,                   --количество дней по с учетом оживания
+       db.max_debt_used,                --максимальная задолженность по договору на отчетную дату
+       db.max_debt_used_x,              --максимальная задолженность по договору на отчетную дату с учетом рефинанса
+       db.del_days_max,                 -- макс дней просрочки на исходном договоре
+       db.del_days_max_x,               -- макс дней просрочки с учетом рефинанса
+       case when dp.delinq_days_pmt_1_0 > 0 then dp.total_debt_pmt_1_0 else 0 end as total_debt_pmt_1_0,
+       dp.max_debt_used_pmt_1_0,
+       case when dp.delinq_days_pmt_1_0_old > 0 then dp.total_debt_pmt_1_0_old else 0 end as total_debt_pmt_1_0_old,
+       dp.max_debt_used_pmt_1_0_old,
+       case when dp.delinq_days_pmt_1_1 > 1 then dp.total_debt_pmt_1_1 else 0 end as total_debt_pmt_1_1,
+       dp.max_debt_used_pmt_1_1,
+       case when dp.delinq_days_pmt_1_7 > 7 then dp.total_debt_pmt_1_7 else 0 end as total_debt_pmt_1_7,
+       dp.max_debt_used_pmt_1_7,
+       case when dp.delinq_days_pmt_1_15 > 15 then dp.total_debt_pmt_1_15 else 0 end as total_debt_pmt_1_15,
+       dp.max_debt_used_pmt_1_15,
+       case when dp.delinq_days_pmt_1_16 > 16 then dp.total_debt_pmt_1_16 else 0 end as total_debt_pmt_1_16,
+       dp.max_debt_used_pmt_1_16,
+       case when dp.delinq_days_pmt_1_30 > 30 then dp.total_debt_pmt_1_30 else 0 end as total_debt_pmt_1_30,
+       dp.max_debt_used_pmt_1_30,
+       case when dp.delinq_days_pmt_1_60 > 60 then dp.total_debt_pmt_1_60 else 0 end as total_debt_pmt_1_60,
+       dp.max_debt_used_pmt_1_60,
+       case when dp.delinq_days_pmt_1_90 > 90 then dp.total_debt_pmt_1_90 else 0 end as total_debt_pmt_1_90,
+       dp.max_debt_used_pmt_1_90,
+       case when dp.delinq_days_pmt_2_0 > 0 then dp.total_debt_pmt_2_0 else 0 end as total_debt_pmt_2_0,
+       dp.max_debt_used_pmt_2_0,
+       case when dp.delinq_days_pmt_2_7 > 7 then dp.total_debt_pmt_2_7 else 0 end as total_debt_pmt_2_7,
+       dp.max_debt_used_pmt_2_7,
+       case when dp.delinq_days_pmt_2_30 > 30 then dp.total_debt_pmt_2_30 else 0 end as total_debt_pmt_2_30,
+       dp.max_debt_used_pmt_2_30,
+       case when dp.delinq_days_pmt_2_60 > 60 then dp.total_debt_pmt_2_60 else 0 end as total_debt_pmt_2_60,
+       dp.max_debt_used_pmt_2_60,
+       case when dp.delinq_days_pmt_2_90 > 90 then dp.total_debt_pmt_2_90 else 0 end as total_debt_pmt_2_90,
+       dp.max_debt_used_pmt_2_90,
+
+       case when dp.delinq_days_pmt_3_0 > 0 then dp.total_debt_pmt_3_0 else 0 end as total_debt_pmt_3_0,
+       dp.max_debt_used_pmt_3_0,
+       case when dp.delinq_days_pmt_3_7 > 7 then dp.total_debt_pmt_3_7 else 0 end as total_debt_pmt_3_7,
+       dp.max_debt_used_pmt_3_7,
+       case when dp.delinq_days_pmt_3_30 > 30 then dp.total_debt_pmt_3_30 else 0 end as total_debt_pmt_3_30,
+       dp.max_debt_used_pmt_3_30,
+       case when dp.delinq_days_pmt_3_60 > 60 then dp.total_debt_pmt_3_60 else 0 end as total_debt_pmt_3_60,
+       dp.max_debt_used_pmt_3_60,
+       case when dp.delinq_days_pmt_3_90 > 90 then dp.total_debt_pmt_3_90 else 0 end as total_debt_pmt_3_90,
+       dp.max_debt_used_pmt_3_90,
+
+       case when dp.delinq_days_pmt_4_0 > 0 then dp.total_debt_pmt_4_0 else 0 end as total_debt_pmt_4_0,
+       dp.max_debt_used_pmt_4_0,
+       case when dp.delinq_days_pmt_4_7 > 7 then dp.total_debt_pmt_4_7 else 0 end as total_debt_pmt_4_7,
+       dp.max_debt_used_pmt_4_7,
+       case when dp.delinq_days_pmt_4_30 > 30 then dp.total_debt_pmt_4_30 else 0 end as total_debt_pmt_4_30,
+       dp.max_debt_used_pmt_4_30,
+       case when dp.delinq_days_pmt_4_60 > 60 then dp.total_debt_pmt_4_60 else 0 end as total_debt_pmt_4_60,
+       dp.max_debt_used_pmt_4_60,
+       case when dp.delinq_days_pmt_4_90 > 90 then dp.total_debt_pmt_4_90 else 0 end as total_debt_pmt_4_90,
+       dp.max_debt_used_pmt_4_90,
+
+       case when dp.delinq_days_pmt_5_0 > 0 then dp.total_debt_pmt_5_0 else 0 end as total_debt_pmt_5_0,
+       dp.max_debt_used_pmt_5_0,
+       case when dp.delinq_days_pmt_5_7 > 7 then dp.total_debt_pmt_5_7 else 0 end as total_debt_pmt_5_7,
+       dp.max_debt_used_pmt_5_7,
+       case when dp.delinq_days_pmt_5_30 > 30 then dp.total_debt_pmt_5_30 else 0 end as total_debt_pmt_5_30,
+       dp.max_debt_used_pmt_5_30,
+       case when dp.delinq_days_pmt_5_60 > 60 then dp.total_debt_pmt_5_60 else 0 end as total_debt_pmt_5_60,
+       dp.max_debt_used_pmt_5_60,
+       case when dp.delinq_days_pmt_5_90 > 90 then dp.total_debt_pmt_5_90 else 0 end as total_debt_pmt_5_90,
+       dp.max_debt_used_pmt_5_90,
+
+       case when dp.delinq_days_pmt_6_0 > 0 then dp.total_debt_pmt_6_0 else 0 end as total_debt_pmt_6_0,
+       dp.max_debt_used_pmt_6_0,
+       case when dp.delinq_days_pmt_6_7 > 7 then dp.total_debt_pmt_6_7 else 0 end as total_debt_pmt_6_7,
+       dp.max_debt_used_pmt_6_7,
+       case when dp.delinq_days_pmt_6_30 > 30 then dp.total_debt_pmt_6_30 else 0 end as total_debt_pmt_6_30,
+       dp.max_debt_used_pmt_6_30,
+       case when dp.delinq_days_pmt_6_30 > 60 then dp.total_debt_pmt_6_60 else 0 end as total_debt_pmt_6_60,
+       dp.max_debt_used_pmt_6_60,
+       case when dp.delinq_days_pmt_6_90 > 90 then dp.total_debt_pmt_6_90 else 0 end as total_debt_pmt_6_90,
+       dp.max_debt_used_pmt_6_90,
+
+       case when dp.delinq_days_pmt_7_0 > 0 then dp.total_debt_pmt_7_0 else 0 end as total_debt_pmt_7_0,
+       dp.max_debt_used_pmt_7_0,
+       case when dp.delinq_days_pmt_7_7 > 7 then dp.total_debt_pmt_7_7 else 0 end as total_debt_pmt_7_7,
+       dp.max_debt_used_pmt_7_7,
+       case when dp.delinq_days_pmt_7_30 > 30 then dp.total_debt_pmt_7_30 else 0 end as total_debt_pmt_7_30,
+       dp.max_debt_used_pmt_7_30,
+       case when dp.delinq_days_pmt_7_60 > 60 then dp.total_debt_pmt_7_60 else 0 end as total_debt_pmt_7_60,
+       dp.max_debt_used_pmt_7_60,
+       case when dp.delinq_days_pmt_7_90 > 90 then dp.total_debt_pmt_7_90 else 0 end as total_debt_pmt_7_90,
+       dp.max_debt_used_pmt_7_90,
+       --
+       case when dp.delinq_days_x_pmt_1_0 > 0 then dp.total_debt_x_pmt_1_0 else 0 end as total_debt_x_pmt_1_0,
+       dp.max_debt_used_x_pmt_1_0,
+       case when dp.delinq_days_x_pmt_1_0_old > 0 then dp.total_debt_x_pmt_1_0_old else 0 end as total_debt_x_pmt_1_0_old,
+       dp.max_debt_used_x_pmt_1_0_old,
+       case when dp.delinq_days_x_pmt_1_1 > 1 then dp.total_debt_x_pmt_1_1 else 0 end as total_debt_x_pmt_1_1,
+       dp.max_debt_used_x_pmt_1_1,
+       case when dp.delinq_days_x_pmt_1_7 > 7 then dp.total_debt_x_pmt_1_7 else 0 end as total_debt_x_pmt_1_7,
+       dp.max_debt_used_x_pmt_1_7,
+       case when dp.delinq_days_x_pmt_1_15 > 15 then dp.total_debt_x_pmt_1_15 else 0 end as total_debt_x_pmt_1_15,
+       dp.max_debt_used_x_pmt_1_15,
+       case when dp.delinq_days_x_pmt_1_16 > 16 then dp.total_debt_x_pmt_1_16 else 0 end as total_debt_x_pmt_1_16,
+       dp.max_debt_used_x_pmt_1_16,
+       case when dp.delinq_days_x_pmt_1_30 > 30 then dp.total_debt_x_pmt_1_30 else 0 end as total_debt_x_pmt_1_30,
+       dp.max_debt_used_x_pmt_1_30,
+       case when dp.delinq_days_x_pmt_1_60 > 60 then dp.total_debt_x_pmt_1_60 else 0 end as total_debt_x_pmt_1_60,
+       dp.max_debt_used_x_pmt_1_60,
+       case when dp.delinq_days_x_pmt_1_90 > 90 then dp.total_debt_x_pmt_1_90 else 0 end as total_debt_x_pmt_1_90,
+       dp.max_debt_used_x_pmt_1_90,
+
+       case when dp.delinq_days_x_pmt_2_0 > 0 then dp.total_debt_x_pmt_2_0 else 0 end as total_debt_x_pmt_2_0,
+       dp.max_debt_used_x_pmt_2_0,
+       case when dp.delinq_days_x_pmt_2_7 > 7 then dp.total_debt_x_pmt_2_7 else 0 end as total_debt_x_pmt_2_7,
+       dp.max_debt_used_x_pmt_2_7,
+       case when dp.delinq_days_x_pmt_2_30 > 30 then dp.total_debt_x_pmt_2_30 else 0 end as total_debt_x_pmt_2_30,
+       dp.max_debt_used_x_pmt_2_30,
+       case when dp.delinq_days_x_pmt_2_60 > 60 then dp.total_debt_x_pmt_2_60 else 0 end as total_debt_x_pmt_2_60,
+       dp.max_debt_used_x_pmt_2_60,
+       case when dp.delinq_days_x_pmt_2_90 > 90 then dp.total_debt_x_pmt_2_90 else 0 end as total_debt_x_pmt_2_90,
+       dp.max_debt_used_x_pmt_2_90,
+
+       case when dp.delinq_days_x_pmt_3_0 > 0 then dp.total_debt_x_pmt_3_0 else 0 end as total_debt_x_pmt_3_0,
+       dp.max_debt_used_x_pmt_3_0,
+       case when dp.delinq_days_x_pmt_3_7 > 7 then dp.total_debt_x_pmt_3_7 else 0 end as total_debt_x_pmt_3_7,
+       dp.max_debt_used_x_pmt_3_7,
+       case when dp.delinq_days_x_pmt_3_30 > 30 then dp.total_debt_x_pmt_3_30 else 0 end as total_debt_x_pmt_3_30,
+       dp.max_debt_used_x_pmt_3_30,
+       case when dp.delinq_days_x_pmt_3_60 > 60 then dp.total_debt_x_pmt_3_60 else 0 end as total_debt_x_pmt_3_60,
+       dp.max_debt_used_x_pmt_3_60,
+       case when dp.delinq_days_x_pmt_3_90 > 90 then dp.total_debt_x_pmt_3_90 else 0 end as total_debt_x_pmt_3_90,
+       dp.max_debt_used_x_pmt_3_90,
+
+       case when dp.delinq_days_x_pmt_4_0 > 0 then dp.total_debt_x_pmt_4_0 else 0 end as total_debt_x_pmt_4_0,
+       dp.max_debt_used_x_pmt_4_0,
+       case when dp.delinq_days_x_pmt_4_7 > 7 then dp.total_debt_x_pmt_4_7 else 0 end as total_debt_x_pmt_4_7,
+       dp.max_debt_used_x_pmt_4_7,
+       case when dp.delinq_days_x_pmt_4_30 > 30 then dp.total_debt_x_pmt_4_30 else 0 end as total_debt_x_pmt_4_30,
+       dp.max_debt_used_x_pmt_4_30,
+       case when dp.delinq_days_x_pmt_4_60 > 60 then dp.total_debt_x_pmt_4_60 else 0 end as total_debt_x_pmt_4_60,
+       dp.max_debt_used_x_pmt_4_60,
+       case when dp.delinq_days_x_pmt_4_90 > 90 then dp.total_debt_x_pmt_4_90 else 0 end as total_debt_x_pmt_4_90,
+       dp.max_debt_used_x_pmt_4_90,
+
+       case when dp.delinq_days_x_pmt_5_0 > 0 then dp.total_debt_x_pmt_5_0 else 0 end as total_debt_x_pmt_5_0,
+       dp.max_debt_used_x_pmt_5_0,
+       case when dp.delinq_days_x_pmt_5_7 > 7 then dp.total_debt_x_pmt_5_7 else 0 end as total_debt_x_pmt_5_7,
+       dp.max_debt_used_x_pmt_5_7,
+       case when dp.delinq_days_x_pmt_5_30 > 30 then dp.total_debt_x_pmt_5_30 else 0 end as total_debt_x_pmt_5_30,
+       dp.max_debt_used_x_pmt_5_30,
+       case when dp.delinq_days_x_pmt_5_60 > 60 then dp.total_debt_x_pmt_5_60 else 0 end as total_debt_x_pmt_5_60,
+       dp.max_debt_used_x_pmt_5_60,
+       case when dp.delinq_days_x_pmt_5_90 > 90 then dp.total_debt_x_pmt_5_90 else 0 end as total_debt_x_pmt_5_90,
+       dp.max_debt_used_x_pmt_5_90,
+
+       case when dp.delinq_days_x_pmt_6_0 > 0 then dp.total_debt_x_pmt_6_0 else 0 end as total_debt_x_pmt_6_0,
+       dp.max_debt_used_x_pmt_6_0,
+       case when dp.delinq_days_x_pmt_6_7 > 7 then dp.total_debt_x_pmt_6_7 else 0 end as total_debt_x_pmt_6_7,
+       dp.max_debt_used_x_pmt_6_7,
+       case when dp.delinq_days_x_pmt_6_30 > 30 then dp.total_debt_x_pmt_6_30 else 0 end as total_debt_x_pmt_6_30,
+       dp.max_debt_used_x_pmt_6_30,
+       case when dp.delinq_days_x_pmt_6_60 > 60 then dp.total_debt_x_pmt_6_60 else 0 end as total_debt_x_pmt_6_60,
+       dp.max_debt_used_x_pmt_6_60,
+       case when dp.delinq_days_x_pmt_6_90 > 90 then dp.total_debt_x_pmt_6_90 else 0 end as total_debt_x_pmt_6_90,
+       dp.max_debt_used_x_pmt_6_90,
+
+       case when dp.delinq_days_x_pmt_7_0 > 0 then dp.total_debt_x_pmt_7_0 else 0 end as total_debt_x_pmt_7_0,
+       dp.max_debt_used_x_pmt_7_0,
+       case when dp.delinq_days_x_pmt_7_7 > 7 then dp.total_debt_x_pmt_7_7 else 0 end as total_debt_x_pmt_7_7,
+       dp.max_debt_used_x_pmt_7_7,
+       case when dp.delinq_days_x_pmt_7_30 > 30 then dp.total_debt_x_pmt_7_30 else 0 end as total_debt_x_pmt_7_30,
+       dp.max_debt_used_x_pmt_7_30,
+       case when dp.delinq_days_x_pmt_7_60 > 60 then dp.total_debt_x_pmt_7_60 else 0 end as total_debt_x_pmt_7_60,
+       dp.max_debt_used_x_pmt_7_60,
+       case when dp.delinq_days_x_pmt_7_90 > 90 then dp.total_debt_x_pmt_7_90 else 0 end as total_debt_x_pmt_7_90,
+       dp.max_debt_used_x_pmt_7_90,
+       --
+       dp.plan_date_x_pmt_1,
+       dp.plan_date_x_pmt_2,
+       dp.plan_date_x_pmt_3,
+       dp.plan_date_x_pmt_4,
+       dp.plan_date_x_pmt_5,
+       dp.plan_date_x_pmt_6,
+       dp.plan_date_x_pmt_7,
+       db.is_on_balance
+  from u1.M_RBO_CONTRACT_DEL_BAS db
+  join u1.M_RBO_CONTRACT_BAS ca  on db.rbo_contract_id = ca.rbo_contract_id
+  left join u1.M_RBO_CONTRACT_DATA_PMT dp on dp.rbo_contract_id = db.rbo_contract_id;
+grant select on U1.M_RBO_CONTRACT_DEL to LOADDB;
+grant select on U1.M_RBO_CONTRACT_DEL to RISK_VERIF;
+
+

@@ -1,0 +1,34 @@
+﻿create table U1.T_GBQ_TRAFFIC
+(
+  id            NUMBER,
+  hit_id        VARCHAR2(50),
+  referral_path VARCHAR2(4000),
+  campaign      VARCHAR2(200),
+  source        VARCHAR2(200),
+  medium        VARCHAR2(200),
+  keyword       VARCHAR2(200),
+  ad_content    VARCHAR2(200),
+  campaign_id   VARCHAR2(200),
+  gcl_id        VARCHAR2(400),
+  dcl_id        VARCHAR2(400),
+  idate         TIMESTAMP(6)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on column U1.T_GBQ_TRAFFIC.id
+  is 'Идентификатор';
+comment on column U1.T_GBQ_TRAFFIC.hit_id
+  is 'ID посещения страницы';
+grant select on U1.T_GBQ_TRAFFIC to LOADDB;
+

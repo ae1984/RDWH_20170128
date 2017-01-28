@@ -1,0 +1,18 @@
+﻿create materialized view U1.TSTM_CONTRACT_PORT_DISCOUNT
+build deferred
+refresh force on demand
+as
+select /*+parallel(30)*/
+       contract_number,
+       rbo_contract_id,
+       rep_date,
+       max(total_discount) keep(dense_rank last order by abs(total_discount)) as total_discount,
+       max(is_card) keep(dense_rank last order by abs(total_discount)) as is_card,
+       max(contract_number_discount) keep(dense_rank last order by abs(total_discount)) as contract_number_discount,
+       max(rbo_contract_id_discount) keep(dense_rank last order by abs(total_discount)) as rbo_contract_id_discount
+  from T_CONTRACT_PORT_DISCOUNT_PRE0
+
+ group by rep_date, contract_number, rbo_contract_id;
+grant select on U1.TSTM_CONTRACT_PORT_DISCOUNT to LOADDB;
+
+

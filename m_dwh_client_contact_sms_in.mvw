@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_DWH_CLIENT_CONTACT_SMS_IN
+build deferred
+refresh complete on demand
+as
+select /*+ parallel 20 */
+       si.clsmsin_gid as id,
+       to_number(cl.clnt$rbo_source_pk)  as rbo_client_id,
+       cl.clnt_inn,
+       si.clsmsin_reg_date as phone_date,
+       si.clsmsin_cont_info_desc as phone_number,
+       si.CLSMSIN_REQUEST_DESC as text,
+       cl.clnt_name
+from DWH_MAIN.ACC_CLIENT_CONTACT_SMS_IN@DWH_PROD2 si
+ join (select r.ccinf_clnt_gid,r.ccinf_descripton,count(distinct r.ccinf_clnt_gid) over (partition by ccinf_descripton) cnt_cli
+            from  DWH_MAIN.REF_CLIENT_CONTACT_INFO@DWH_PROD2 r
+           where r.ccinf$end_date = to_date('31.12.9999','dd-mm-yyyy')
+             and r.ccinf_contact_chnl_type_cd = 101
+          ) ci on ci.ccinf_descripton = si.clsmsin_cont_info_desc and ci.cnt_cli = 1
+ join DWH_RAN.REF_CLIENT_V@DWH_PROD2 cl on cl.clnt_gid = ci.ccinf_clnt_gid and cl.clnt$end_date = to_date('31/12/9999','dd/mm/yyyy');
+grant select on U1.M_DWH_CLIENT_CONTACT_SMS_IN to LOADDB;
+grant select on U1.M_DWH_CLIENT_CONTACT_SMS_IN to LOADER;
+
+

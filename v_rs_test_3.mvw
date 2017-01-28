@@ -1,0 +1,47 @@
+﻿create materialized view U1.V_RS_TEST_3
+refresh complete on demand
+as
+select x.L1_rfo_client_id,
+          count(distinct case when x.L1_ph_by_L2_cli_cnt > 1 then x.rfo_client_id end) as
+      cnt_cli_L1ph_by_L2cli_above_1,
+          count(distinct case when x.L1_ph_by_L2_cli_cnt > 2 then x.rfo_client_id end) as
+      cnt_cli_L1ph_by_L2cli_above_2,
+          count(distinct case when x.L1_ph_by_L2_cli_cnt > 3 then x.rfo_client_id end) as
+      cnt_cli_L1ph_by_L2cli_above_3
+from (
+select distinct
+       t1.rfo_client_id as L1_rfo_client_id,
+       t1.phone_number as L1_phone_number,
+       t1.phone_type as L1_cli_L1_phone_link_type,
+       t2.phone_type as L1_phone_L2_cli_link_type,
+       t2.rfo_client_id,
+       case when t2.rfo_client_id = t1.rfo_client_id then 1 else 2 end as cli_level,
+           count(distinct case when t2.rfo_client_id != t1.rfo_client_id then t1.phone_number end)
+                 over (partition by t2.rfo_client_id) as
+       L1_ph_by_L2_cli_cnt,
+--       count(distinct t2.rfo_client_id) over (partition by t1.phone_number) as ANY_cli_by_L1_ph_cnt,
+           count(distinct case when t2.rfo_client_id != t1.rfo_client_id then t2.rfo_client_id end)
+                 over (partition by t1.phone_number) as
+       L2_cli_by_L1_ph_cnt,
+           count(distinct case when t2.rfo_client_id != t1.rfo_client_id and t1.phone_type = 'КОНТАКТ'
+                          then t1.phone_number end) over (partition by t2.rfo_client_id) as
+       L1_CONTACT1_ph_by_L2_cli_cnt,
+           count(distinct case when t2.rfo_client_id != t1.rfo_client_id and t2.phone_type = 'КОНТАКТ'
+                          then t1.phone_number end) over (partition by t2.rfo_client_id) as
+       L1_CONTACT2_ph_by_L2_cli_cnt,
+           count(distinct case when t2.rfo_client_id != t1.rfo_client_id and t2.phone_type = 'КОНТАКТ'
+                          then t2.rfo_client_id end) over (partition by t1.phone_number) as
+       L2_cli_by_L1_CONTACT2_ph_cnt
+
+from V_FORM_CLIENT_CONTACT_PHONE t1
+join V_FORM_CLIENT_CONTACT_PHONE t2 on t2.phone_number = t1.phone_number
+where --t1.phone_type in ('МОБИЛЬНЫЙ','ДОМАШНИЙ','КОНТАКТ','РАБОЧИЙ','ОРГАНИЗАЦИЯ') and
+      --t2.phone_type in ('МОБИЛЬНЫЙ','ДОМАШНИЙ','КОНТАКТ','РАБОЧИЙ','ОРГАНИЗАЦИЯ') and
+      t1.rfo_client_id = (select max(cl1.rfo_client_id) from V_CLIENT_RFO_BY_ID cl1
+                           where cl1.iin = '890823300820')  -- 7328098274 центральный узел ИИН 890823300820
+) x
+group by x.L1_rfo_client_id;
+grant select on U1.V_RS_TEST_3 to LOADDB;
+grant select on U1.V_RS_TEST_3 to LOADER;
+
+

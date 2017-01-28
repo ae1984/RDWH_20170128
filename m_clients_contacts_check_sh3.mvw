@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_CLIENTS_CONTACTS_CHECK_SH3
+refresh force on demand
+as
+select a.*,
+       b.folder_date_create
+from M_CLIENT_PHONE_MOBILE_TST a
+join v_folder_all_rfo b on a.folder_id = b.folder_id;
+grant select on U1.M_CLIENTS_CONTACTS_CHECK_SH3 to LOADDB;
+grant select on U1.M_CLIENTS_CONTACTS_CHECK_SH3 to LOADER;
+
+

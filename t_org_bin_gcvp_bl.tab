@@ -1,0 +1,25 @@
+﻿create table U1.T_ORG_BIN_GCVP_BL
+(
+  bin_code              VARCHAR2(20),
+  tax_org_name          VARCHAR2(2000),
+  iin_cnt_1             NUMBER,
+  cli_cred_debt_now_cnt NUMBER,
+  city                  VARCHAR2(200)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_ORG_BIN_GCVP_BL to LOADDB;
+grant select on U1.T_ORG_BIN_GCVP_BL to LOADER;
+grant select on U1.T_ORG_BIN_GCVP_BL to LOAD_MO;
+

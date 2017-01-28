@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_TMP_J_ZH_20141203
+refresh force on demand
+as
+select * from M_TMP_J_ZH_20141203@ee13;
+grant select on U1.M_TMP_J_ZH_20141203 to LOADDB;
+grant select on U1.M_TMP_J_ZH_20141203 to LOADER;
+
+

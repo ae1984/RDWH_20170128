@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_TMP_D_II3
+refresh force on demand
+as
+select
+rg.*,
+case when def.folder_id_first=ii1.folder_id then 'ИП' else 'Не ИП' end as II_clear,
+case when def.folder_id_first=ii2.folder_id then 'ИП' else 'Не ИП' end as II_all
+from m_tmp_d_risky_goods3 rg
+join M_CONTRACT_CAL_DEL def on rg.contract_number=def.contract_number
+left join M_TMP_D_II1 ii1 on def.folder_id_first=ii1.folder_id
+left join M_TMP_D_II2 ii2 on def.folder_id_first=ii2.folder_id;
+grant select on U1.M_TMP_D_II3 to LOADDB;
+grant select on U1.M_TMP_D_II3 to LOADER;
+
+

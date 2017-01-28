@@ -1,0 +1,18 @@
+﻿create table U1.NT_OBJECTSUSE2
+(
+  name     VARCHAR2(128),
+  name_ref VARCHAR2(128)
+)
+tablespace USERS
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+nologging;
+

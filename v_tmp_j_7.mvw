@@ -1,0 +1,25 @@
+﻿create materialized view U1.V_TMP_J_7
+refresh complete on demand
+as
+select dcd.*, j6.send_month, j6.sal_in_month, j6.org_bin_with_max_sal_in_mon,
+       j6.bank_of_org_with_max_sal_inmon, j6.org_name_with_max_sal_in_mon,
+       j6.org_region_name as org_region_name_in_mon
+from (
+        select t.rnn as iin, t.send_date,
+               d.f2 as org_bin_by_pmt,
+               round(t.amount * 8.1 + 1731) as sal_by_pmt,
+               t.name as bank_by_pmt,
+               o.org_name_max as org_name_by_pmt
+        from V_G3_P_VIEW t
+        join V_G3_ADF d on d.f1 = t.p_key and d.f2 not in ('940440000910','060240016519')
+        join TMP_EM_DEP_CLI_20140526 dc on dc.iin = t.rnn
+        left join V_GX_ORG o on o.bin = d.f2
+        where upper(t.p_name) not like '%KASPI BANK%'
+              and t.send_date > to_date('2013-01-01','yyyy-mm-dd')
+              and t.send_date < to_date('2014-02-01','yyyy-mm-dd')
+--              and t.rnn = '740921301643'
+) dcd left join V_TMP_J_6 j6 on j6.iin = dcd.iin and j6.send_month = to_char(dcd.send_date,'yyyy-mm');
+grant select on U1.V_TMP_J_7 to LOADDB;
+grant select on U1.V_TMP_J_7 to LOADER;
+
+

@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_FOLDER_MO_PMT
+refresh force on demand
+as
+select /*+ parallel(20) */ *
+from (
+    select
+           r.id rfolder_id,
+           r.date_create,
+           dp.code_int,
+           t.value_number
+    from MO_RFOLDER r
+    join MO_RFOLDER_PAR_VALUE t on t.rfolder_id = r.id
+    join V_MO_D_PAR dp on dp.id = t.d_par_id
+                          and dp.code_int in ('IN_SCO_FOLDER_ID',
+                                              'SC_PMT_NOM_RATE',
+                                              'IN_SCO_CRD_PAY_CUR'
+                                              )
+    where r.date_create >= to_date('01-01-2015', 'dd-mm-yyyy')
+) pivot (
+    max(value_number)
+    for code_int in ('IN_SCO_FOLDER_ID' as folder_id,
+                     'SC_PMT_NOM_RATE' as sc_pmt_nom_rate,
+                     'IN_SCO_CRD_PAY_CUR' as sc_pmt_rbo)
+)
+where folder_id is not null;
+grant select on U1.M_FOLDER_MO_PMT to LOADDB;
+
+

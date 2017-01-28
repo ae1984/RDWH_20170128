@@ -1,0 +1,47 @@
+﻿create materialized view U1.V_TMP_J_GK_2_V2
+refresh complete on demand
+as
+select o.bin, o.org_name_max, o.region_name,
+       a.emp_count, a.cli_in_db,
+       a.cli_with_contracts_active,
+       a.cli_credit_ever,
+       a.cli_credit_active,
+       a.cli_depo_active,
+       a.cli_credit_active_del30_now,
+       a.cli_credit_bad_ever,
+
+       a.is_cli_credit_active_del30_90,
+       a.is_cli_credit_active_del90,
+       a.is_cli_credit_delmaxever30_90,
+       a.is_cli_credit_delmaxever90
+from (
+    select g.org_bin, count(*) as emp_count, sum(g.is_cli_in_db) as cli_in_db,
+           sum(g.is_cli_with_contracts_active) as cli_with_contracts_active,
+           sum(g.is_cli_credit_ever) as cli_credit_ever,
+           sum(g.is_cli_credit_active) as cli_credit_active,
+           sum(g.is_cli_depo_active) as cli_depo_active,
+           sum(g.is_cli_credit_active_del30_now) as cli_credit_active_del30_now,
+           sum(g.is_cli_credit_bad_ever) as cli_credit_bad_ever,
+           ---
+           sum(g.is_cli_credit_active_del30_90) as is_cli_credit_active_del30_90,
+           sum(g.is_cli_credit_active_del90) as is_cli_credit_active_del90,
+           sum(g.is_cli_credit_active_del30_90) as is_cli_credit_delmaxever30_90,
+           sum(g.is_cli_credit_active_del90) as is_cli_credit_delmaxever90
+           ---
+    from V_TMP_J_GK_1_v2 g
+    group by g.org_bin
+) a join V_GX_ORG o on o.bin = a.org_bin and o.region_name in (
+                    'АЛМАТЫ',
+                    'АЛМАТИНСКАЯ',
+                    'АСТАНА',
+                    'АКТЮБИНСКАЯ',
+                    'КОСТАНАЙСКАЯ',
+                    'МАНГИСТАУСКАЯ',
+                    'КЫЗЫЛОРДИНСКАЯ',
+                    'АТЫРАУСКАЯ',
+                    'ЗАПАДНО-КАЗАХСТАНСКАЯ'
+                    );
+grant select on U1.V_TMP_J_GK_2_V2 to LOADDB;
+grant select on U1.V_TMP_J_GK_2_V2 to LOADER;
+
+

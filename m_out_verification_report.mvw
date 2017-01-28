@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_OUT_VERIFICATION_REPORT
+build deferred
+refresh force on demand
+as
+select /*+ parallel 5 */
+       trunc(to_date(vr.accept_date,'YYYY-MM-DD hh24:mi:ss')) as verification_date,
+       vr.product,
+       count(vr.folder_id),
+       count(distinct case when vr.verification_status = 'Отказ' then vr.folder_id end) as cnt_rej,
+       count(distinct case when vr.verification_status is null then vr.folder_id end) as cnt_rephoto,
+       count(distinct case when vr.verification_status = 'Подтверждён' then vr.folder_id end) as cnt_approv,
+
+       count(distinct case when (to_date(vr.close_time,'YYYY-MM-DD hh24:mi:ss') - to_date(vr.open_time,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 <= 600 then vr.folder_id end) as cnt_do_10min_1,
+       count(distinct case when (to_date(vr.open_time,'YYYY-MM-DD hh24:mi:ss') - to_date(vr.accept_datetime,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 <= 600 then vr.folder_id end) as cnt_do_10min_2,
+       count(distinct case when (to_date(vr.close_time,'YYYY-MM-DD hh24:mi:ss') - to_date(vr.accept_datetime,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 <= 600 then vr.folder_id end) as cnt_do_10min_3,
+
+       count(distinct case when (to_date(vr.close_time,'YYYY-MM-DD hh24:mi:ss') - to_date(vr.open_time,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 <= 180 then vr.folder_id end) as cnt_do_3min_1,
+       count(distinct case when (to_date(vr.open_time,'YYYY-MM-DD hh24:mi:ss') - to_date(vr.accept_datetime,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 <= 180 then vr.folder_id end) as cnt_do_3min_2,
+       count(distinct case when (to_date(vr.close_time,'YYYY-MM-DD hh24:mi:ss') - to_date(vr.accept_datetime,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 <= 180 then vr.folder_id end) as cnt_do_3min_3
+
+  from M_OUT_DWH_VERIFICATION_REP_ROW vr
+ where vr.mark = 'Вход'
+     --  and trunc(to_date(vr.accept_date,'YYYY-MM-DD hh24:mi:ss')) >= to_date('01.11.2015','dd.mm.yyyy')
+     --  and trunc(to_date(vr.close_time,'YYYY-MM-DD hh24:mi:ss')) between to_date('01.11.2015','dd.mm.yyyy') and to_date('13.11.2015','dd.mm.yyyy')
+       and vr.verification_type = 'CONTACT'
+       and vr.product in ('Автокредитование',
+                          'Кредит наличными',
+                          'Кредит Наличными 15 минут',
+                          'Кредит Наличными Повторнику',
+                          'Лучший Клиент – Наличные',
+                          'Экспресс-Кредитование-Товар',
+                          'Экспресс-кредиты (Услуги)')
+group by trunc(to_date(vr.accept_date,'YYYY-MM-DD hh24:mi:ss')), vr.product;
+grant select on U1.M_OUT_VERIFICATION_REPORT to LOADDB;
+grant select on U1.M_OUT_VERIFICATION_REPORT to RISK_VERIF;
+
+

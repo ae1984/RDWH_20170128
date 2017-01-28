@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_LAST_FORM_CLIENT
+refresh force on demand
+as
+select fc.rfo_client_id,
+     max(coalesce(m.c_code,'NA')) keep (dense_rank last order by fc.form_date_create) as last_form_marital_stat,
+     max(coalesce(fc.phone_mobile,'NA')) keep (dense_rank last order by fc.form_date_create) as last_form_phone_mob,
+     max(coalesce(fc.phone_home,'NA')) keep (dense_rank last order by fc.form_date_create) as last_form_phone_home,
+     max(coalesce(fc.inc_sal,0)) keep (dense_rank last order by fc.form_date_create) as inc_sal,
+     max(coalesce(fc.inc_sal,0)) keep (dense_rank last order by fc.form_date_create) +
+     max(coalesce(fc.inc_sal_add,0)) keep (dense_rank last order by fc.form_date_create) +
+     max(coalesce(fc.inc_sal_spouse,0)) keep (dense_rank last order by fc.form_date_create) +
+     max(coalesce(fc.inc_pension_benefits,0)) keep (dense_rank last order by fc.form_date_create)
+     as inc_all_last_form
+
+from u1.V_FORM_CLIENT_ALL_RFO fc
+left join u1.V_RFO_Z#CLIENT_INDEX m on m.c_value = fc.marital_status and m.c_parent_idx = 48934
+group by rfo_client_id;
+grant select on U1.M_LAST_FORM_CLIENT to LOADDB;
+grant select on U1.M_LAST_FORM_CLIENT to LOAD_MO;
+
+

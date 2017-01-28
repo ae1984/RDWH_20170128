@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_ONLINE_DEVICE_PRE_V2
+build deferred
+refresh force on demand
+as
+select
+  f.c_process_id as order_id,
+  trunc(f.c_date_create) as order_date,
+  f.c_date_create as order_datetime,
+  cl.c_client_ref as rfo_client_id,
+  cl.c_form_client_st#mobile#numb as phone_number,
+  dense_rank() over (order by cl.c_form_client_st#mobile#numb) as phone_id,
+  f.c_shop as shop_id,
+  case when ko.p_gaclientid is null or ko.p_gaclientid='-.-' then 'null' else ko.p_gaclientid end as ga_client_id,
+  dense_rank() over (order by case when ko.p_gaclientid is null or ko.p_gaclientid='-.-' then 'null' else ko.p_gaclientid end) as ga_id
+
+from u1.V_RFO_Z#KAS_ONLINE_BUY f
+join u1.V_RFO_Z#KAS_ONLINE_CLAIM cl on cl.c_buy_ref = f.id
+join u1.M_KASPISH_ORDERS ko on ko.code=f.c_process_id
+where f.c_date_create>=to_date('01.01.2016','dd.mm.yyyy');
+grant select on U1.M_ONLINE_DEVICE_PRE_V2 to LOADDB;
+
+

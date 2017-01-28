@@ -1,0 +1,48 @@
+﻿create materialized view U1.M_FOLDER_CON_CANCEL_ADD_1
+build deferred
+refresh complete on demand
+as
+select f.rfo_contract_id,
+       count(distinct d.deal_number) as prev_con_cnt,
+
+       count(distinct d2.deal_number) as prev_con_closed_cnt,
+       max(d2.x_amount) as amount_max_before,
+
+       count(distinct o.spof_end_date) as prior_optim_count,
+
+       /*max(ch.delinq_days_in_month) as prev_con_del_days_max,
+       count(distinct case when ch.fact_pmts_in_month > 0 then ch.yyyy_mm_num end) as fact_pmt_mon_before, ---
+       count(distinct case when ch.yyyy_mm_num >= to_number(to_char(add_months(f.folder_date_create_mi,-12),'yyyymm')) and
+                                ch.fact_pmts_in_month > 0 then ch.yyyy_mm_num end) as fact_pmt_mon_before_12_mon,*/
+
+       case when count(distinct d.deal_number) > 0 then 0 else 1 end as is_client_new,
+       case when count(kd.id) > 0 then 1 else 0 end is_sign_require,
+       case when k.c_code in ('CANCEL_ONL','CANCEL_ONL_ALT') then 1 else 0 end as is_credit_rejected,
+       t.id as claim_id
+from M_FOLDER_CON_CANCEL_BASE f
+left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = f.iin and
+                                       d.x_start_date_actual < trunc(f.folder_date_create_mi) and
+                                       d.x_is_credit_issued = 1
+
+left join V_DWH_PORTFOLIO_CURRENT d2 on d2.client_iin = f.iin and
+                                        d2.actual_end_date < trunc(f.folder_date_create_mi) and
+                                        d2.x_is_credit_issued = 1 and
+                                        d2.x_start_date_actual is not null and
+                                        d2.x_product_type != 'ОПТИМИЗАЦИЯ'
+
+left join V_DWH_PORTFOLIO_CURRENT d3 on d3.client_iin = f.iin and d3.x_is_credit_issued = 1
+left join M_DWH_ACC_SPECIAL_OFFER_CON o on o.contract_number = d3.deal_number and
+                                           o.spof_spec_offer_status_cd in ('EXECUTED','DEFAULT','WORK') and
+                                           o.spof_end_date < trunc(f.folder_date_create_mi)
+/*left join V_CLIENT_CAL cc on cc.client_iin_last = f.iin
+left join V_CLIENT_HISTORY ch on ch.client_id = cc.client_id and
+                                 ch.text_yyyy_mm < to_char(f.folder_date_create_mi,'yyyy - mm')*/
+
+left join V_RFO_Z#KAS_ONLINE_CLAIM t on t.c_folder_ref = f.folder_id and t.c_folder_ref is not null
+left join V_RFO_Z#KAS_UNIVERSA_REF s on s.collection_id = t.c_mng_vis_scen
+left join V_RFO_Z#KAS_UNIVERSAL_D kd on kd.id = s.c_value
+left join V_RFO_Z#KAS_UNIVERSAL_D k on k.id = t.c_check_result
+group by f.rfo_contract_id,t.id,k.c_code;
+grant select on U1.M_FOLDER_CON_CANCEL_ADD_1 to LOADDB;
+
+

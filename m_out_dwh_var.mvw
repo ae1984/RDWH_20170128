@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_OUT_DWH_VAR
+build deferred
+refresh complete on demand
+as
+select v.id,
+       v.name,
+       v.value,
+       v.question_id,
+       cast (v.portition_date as date) as portition_date
+  from verificator.OUT_DWH_VAR@verifais v;
+grant select on U1.M_OUT_DWH_VAR to LOADDB;
+grant select on U1.M_OUT_DWH_VAR to LOADER;
+grant select on U1.M_OUT_DWH_VAR to RISK_VERIF;
+
+

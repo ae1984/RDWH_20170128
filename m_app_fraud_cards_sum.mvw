@@ -1,0 +1,76 @@
+﻿create materialized view U1.M_APP_FRAUD_CARDS_SUM
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30)*/
+       t.app_id as app_id,
+       t.folder_date_create_mi,
+
+       sum(case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                 and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                 and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%') -- Карты
+                then case when substr(n.fld_054, 5, 3) = 'KZT' then n.fld_006 / 100  -- fld_054 = определяем код валюты на карте
+                          when u.currency = 'USD' then n.fld_006 * u.curs_value / 100
+                          when u.currency = 'EUR' then n.fld_006 * u.curs_value / 100
+                     end
+            end)                                                                                                 as sum_all,
+
+       sum(case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                 and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                 and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%')  -- Карты
+                 and n.fld_026 in (6011) -- Банкоматы
+                then case when substr(n.fld_054, 5, 3) = 'KZT' then n.fld_006 / 100  -- fld_054 = определяем код валюты на карте
+                          when u.currency = 'USD' then n.fld_006 * u.curs_value / 100
+                          when u.currency = 'EUR' then n.fld_006 * u.curs_value / 100
+                     end
+           end)                                                                                                  as sum_atm,
+
+       sum(case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                 and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                 and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%') -- Карты
+                 and n.fld_026 = 5732 -- Каспий кз
+                then case when substr(n.fld_054, 5, 3) = 'KZT' then n.fld_006 / 100  -- fld_054 = определяем код валюты на карте
+                          when u.currency = 'USD' then n.fld_006 * u.curs_value / 100
+                          when u.currency = 'EUR' then n.fld_006 * u.curs_value / 100
+                     end
+           end)                                                                                                  as sum_kspkz,
+
+       sum(case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%') -- Карты
+                            and n.fld_026 not in (6010, 6011) -- Кроме банкоматов и терминалов
+                            and substr(n.fld_022, 7, 1) not in ('1', 'S', 'T', 'U', 'V')  -- кроме операций по интернету отсекаем коды, у которых седьмая цифра равна: 1, S, T, U, V
+                            and not (n.fld_032 in (417661, 011540) and n.fld_026 = 5732) -- кроме операций на kaspi.kz, отсекаем коды: 5732 при FLD_032 равном 417661 и 011540
+                           then case when substr(n.fld_054, 5, 3) = 'KZT' then n.fld_006 / 100  -- fld_054 = определяем код валюты на карте
+                                     when u.currency = 'USD' then n.fld_006 * u.curs_value / 100
+                                     when u.currency = 'EUR' then n.fld_006 * u.curs_value / 100
+                                end
+           end)                                                                                                  as sum_pos,
+
+       sum(case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                 and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                 and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%')  -- Карты
+                 and n.fld_026 not in (6010, 6011) -- Кроме банкоматов и терминалов
+                 and substr(n.fld_022, 7, 1) in ('1', 'S', 'T', 'U', 'V')  -- операции через интернет
+                 and not (n.fld_032 in (417661, 011540) and n.fld_026 = 5732) -- кроме операций на kaspi.kz, отсекаем коды: 5732 при FLD_032 равном 417661 и 011540
+                 and n.fld_039 <> 600
+                then case when substr(n.fld_054, 5, 3) = 'KZT' then n.fld_006 / 100
+                          when u.currency = 'USD' then n.fld_006 * u.curs_value / 100
+                          when u.currency = 'EUR' then n.fld_006 * u.curs_value / 100
+                     end
+           end)                                                                                                  as sum_int
+  from U1.M_APP_MINER_BAS t
+  join U1.M_CLIENT_LINK       cl on    cl.rfo_client_id = t.rfo_client_id
+  join U1.V_RBO_Z#KAS_PC_CARD  c on      c.c_client_ref = cl.rbo_client_id
+  join U1.TM_SOAP_NOTIFY       n on n.stip_fld_102_bank = c.c_acc_num
+  left join U1.M_RBO_COURSES   u on      u.date_recount = trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                                and          u.currency = substr(n.fld_054, 5, 3)
+                                and u.currency in ('USD', 'EUR')
+ where t.folder_date_create >= to_date('01.01.2015', 'dd.mm.yyyy')
+   and n.iia_card_param_grp_1 not in ('A66','A57') --
+   and n.fld_039 in (000)  -- Статус операции
+ group by t.app_id,
+          t.folder_date_create_mi;
+grant select on U1.M_APP_FRAUD_CARDS_SUM to LOADDB;
+
+

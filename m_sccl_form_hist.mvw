@@ -1,0 +1,40 @@
+﻿create materialized view U1.M_SCCL_FORM_HIST
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       fld.rfo_client_id,
+       fld.app_id,
+       fld.folder_id,
+       fld.form_client_id,
+       fld.folder_date_create_mi,
+
+       fld.product_type,
+
+       f.inc_sal,
+       f.inc_sal_spouse,
+       f.inc_pension_benefits,
+       f.inc_sal_add,
+       f.inc_all,
+
+
+       f.children,
+       f.marital_status,
+
+       f.phone_mobile,
+       f.phone_home,
+
+       f.reg_address_city,
+       f.fact_address_city
+
+
+
+from u1.M_APP_MINER_BAS fld
+join u1.M_APP_MINER_FORM_CLIENT f on f.app_id = fld.app_id
+where fld.folder_date_create >= trunc(sysdate) - 90
+      --and t.rfo_client_id = 22792275
+--order by t.folder_date_create_mi;
+grant select on U1.M_SCCL_FORM_HIST to LOADDB;
+grant select on U1.M_SCCL_FORM_HIST to RTS_RDWH;
+
+

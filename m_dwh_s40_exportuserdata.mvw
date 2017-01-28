@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_DWH_S40_EXPORTUSERDATA
+build deferred
+refresh force on demand
+as
+select change_date,
+       audit_id,
+       dateval,
+       officenr,
+       usernr,
+       officeguid,
+       cashiernr,
+       attendedcustomer,
+       unattendedcustomer,
+       recalls,
+       resends,
+       avgservingtime,
+       longestservingtime,
+       firstlogin,
+       lastlogin,
+       nroflogins,
+       totalloggedintime
+  from DWH_STAGE.S40_EXPORTUSERDATA@RDWH_EXD;
+grant select on U1.M_DWH_S40_EXPORTUSERDATA to LOADDB;
+
+

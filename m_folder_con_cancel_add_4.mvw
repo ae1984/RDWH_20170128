@@ -1,0 +1,54 @@
+﻿create materialized view U1.M_FOLDER_CON_CANCEL_ADD_4
+refresh force on demand
+as
+select z.*,
+
+       case when z.is_match_gu = 0 or
+                 (z.is_match_gu = 1 and
+                  (z.is_form_match = 0 or (z.is_cancel_exists = 1 and z.is_not_fraud = 0))) then 1 else 3 end anketa_type,
+
+       case when z.is_cancel_exists = 1 and
+                 z.is_credit_after_fraud = 0 then 'VERIFY_PHOTO' else '' end mng_vis_reason,
+
+       case when z.is_cancel_exists > 0 and
+                 z.is_credit_after_fraud = 0 then 1 else 0 end as is_verif_manager_new,
+
+       case when z.is_cancel_exists > 0 then 1 else 0 end as is_verif_manager_old,
+
+       case when (z.is_cancel_exists > 0 and
+                  z.is_credit_after_fraud = 0) or
+                 z.is_cancel_exists > 0 then 1 else 0 end as is_verif_manager,
+
+       case when z.is_purse_exists > 0 and
+                 z.is_credit_exists = 0 then 1 else 0 end as is_verif_manager_by_purse
+
+from (select t.folder_id,
+             t.claim_id,
+             t.is_match_gu_1,
+             t.is_match_gu_2,
+             t.is_purse_exists,
+             t.is_form_match,
+             t.is_credit_exists,
+             t.is_match_gu,
+             t.sco_verif_need,
+
+             t2.is_rfo_cancel_exists,
+             t2.rfo_cancel_fld_date_create,
+             t2.is_mo_cancel_exists,
+             t2.mo_cancel_fld_date_create,
+             t2.is_approve_after_cancel,
+             t2.approve_fld_date_create,
+             t2.is_cancel_exists,
+             t2.is_credit_after_fraud,
+
+             t3.total_pmts,
+             t3.is_not_fraud
+
+      from m_folder_con_cnl_onl_pre41 t
+      left join m_folder_con_cnl_onl_pre42 t2 on t2.claim_id = t.claim_id
+      left join m_folder_con_cnl_onl_pre43 t3 on t3.claim_id = t.claim_id
+      ) z;
+grant select on U1.M_FOLDER_CON_CANCEL_ADD_4 to LOADDB;
+grant select on U1.M_FOLDER_CON_CANCEL_ADD_4 to LOADER;
+
+

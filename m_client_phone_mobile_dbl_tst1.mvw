@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_CLIENT_PHONE_MOBILE_DBL_TST1
+refresh complete on demand
+as
+select m.rfo_client_id,
+       m.phone_number,
+       m.folder_id,
+       min(trunc(phone_date)) as phone_date,
+       count(distinct m.phone_number) over (partition by m.rfo_client_id) as client_phone_cnt
+from M_CLIENT_PHONE_MOBILE_1 m
+group by m.rfo_client_id,
+         m.folder_id,
+         m.phone_number;
+grant select on U1.M_CLIENT_PHONE_MOBILE_DBL_TST1 to LOADDB;
+grant select on U1.M_CLIENT_PHONE_MOBILE_DBL_TST1 to LOADER;
+
+

@@ -1,0 +1,90 @@
+﻿create materialized view U1.M_TMP_J_AUTO_RBP_MATRIX_1
+refresh complete on demand
+as
+select to_char(d.x_start_date,'yyyy-mm') as x_start_month,
+           extract(year from d.x_start_date) as x_start_year,
+           floor(d.amount / 5000) * 5000 as amount,
+           case when v1.type_auto_credit in 'СТАНДАРТ' then 1 else 0 end as is_standard,
+           floor(months_between(d.plan_end_date, d.x_start_date)) as contract_term_months,
+           round(a.initial_payment / a.auto_price * 100) as initial_payment_rate,
+           coalesce(d.rate_value,0) as rate_value,
+           t.is_categ_a,
+           t.is_client_new_by_con,
+           p.report_status as pkb_rep_status,
+           qq.effective_rate,
+           floor(g.salary / 5000) * 5000 as gcvp_salary,
+           case when fc.inc_sal > 0 then round(g.salary / fc.inc_sal * 100) end as gcvp_to_form_sal,
+           g.gcvp_pmts_count_from_rep,
+           k.kdn_gcvp_salary,
+           v1.type_auto_credit,
+           k.is_kdn_regulated_sal_gcvp,
+
+           case when c.delinq_days_pmt_1 > 7 then 1 else 0 end as is_fpd,
+           case when c.delinq_days_pmt_2 > 7 then 1 else 0 end as is_spd,
+           ---
+           count(*) as cnt, count(distinct d.deal_number) as con_cnt,
+           count(distinct d.client_iin) as cli_cnt,
+           sum(d.amount) / 1000000 as amount_mln,
+
+
+--           sum(d.x_total_debt) / 1000000 as total_debt_mln,
+--           sum(case when d.x_delinq_days > 7 then d.x_total_debt end) / 1000000 as del_7_total_debt_mln
+
+           sum(x.max_debt_used_x) / 1000000 as max_debt_used_x_mln,
+           sum(x.total_debt_x) / 1000000 as total_debt_x_mln,
+           sum(case when x.del_days_x > 7 then x.total_debt_x end) / 1000000 as total_debt_x_del_7_mln,
+           sum(case when x.del_days_x > 30 then x.total_debt_x end) / 1000000 as total_debt_x_del_30_mln,
+           sum(case when x.del_days_x > 60 then x.total_debt_x end) / 1000000 as total_debt_x_del_60_mln,
+           sum(case when x.del_days_x > 90 then x.total_debt_x end) / 1000000 as total_debt_x_del_90_mln
+    from V_DWH_PORTFOLIO_CURRENT d
+    join M_CONTRACT_CAL_DEL c on c.contract_number = d.deal_number
+    join M_RBO_CONTRACT_BAS b on b.contract_number = d.deal_number
+    join (select distinct tt.* from RISK_MVERA.M_AUTO_V1 tt) V1 on v1.c_num_dog = b.contract_number
+    join (select distinct q.* from T_TMP_AUTO_EFF_RATES_20160605 q)qq on qq.contract_number = b.contract_number
+    join RISK_MVERA.M_RBO_CONTRACT_DEL x on x.rbo_contract_id = b.rbo_contract_id
+    join M_FOLDER_CON_CANCEL t on t.folder_id = d.folder_id_first
+    join V_FOLDER_ALL_RFO fa on fa.folder_id = d.folder_id_first
+    left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = fa.form_client_id
+    left join V_TIME_MINUTES tm on tm.yyyy_mm_dd_hh_mi = trunc(t.folder_date_create_mi,'mi')
+    left join V_PKB_REPORT p on p.folder_id = t.folder_id
+    left join V_CONTRACT_ALL_RFO_AUTO a on a.rfo_contract_id = t.rfo_contract_id
+    left join M_CONTRACT_PARAM_KDN5 k on k.deal_number = d.deal_number
+    left join (select fcc.rfo_contract_id, max(v.gcvp_rep_id) as gcvp_max_id
+                from V_GCVP_REPORT v
+                join M_FOLDER_CON_CANCEL fcc on fcc.iin = v.client_iin and
+                     (v.rep_date >= trunc(fcc.folder_date_create_mi) - 60 and v.rep_date <= trunc(fcc.folder_date_create_mi))
+                where v.error_code = 0
+                group by fcc.rfo_contract_id
+              ) gm on gm.rfo_contract_id = t.rfo_contract_id
+    left join (select v.gcvp_rep_id, max(v.salary) as salary,
+                      max(v.pmts_count_from_rep) as gcvp_pmts_count_from_rep
+              from V_GCVP_REPORT v
+              group by v.gcvp_rep_id
+    ) g on g.gcvp_rep_id = gm.gcvp_max_id
+    where d.x_is_credit_issued = 1 and
+          v1.cred_program_name != 'АВТОКРЕДИТОВАНИЕ БУ'
+          /*and v1.type_auto_credit is null*/
+
+    group by to_char(d.x_start_date,'yyyy-mm'),
+           extract(year from d.x_start_date),
+           floor(d.amount / 5000) * 5000,
+           case when v1.type_auto_credit in 'СТАНДАРТ' then 1 else 0 end,
+           floor(months_between(d.plan_end_date, d.x_start_date)),
+           round(a.initial_payment / a.auto_price * 100),
+           v1.type_auto_credit,
+           d.rate_value,
+           t.is_categ_a,
+           t.is_client_new_by_con,
+           p.report_status,
+           qq.effective_rate,
+           floor(g.salary / 5000) * 5000,
+           case when fc.inc_sal > 0 then round(g.salary / fc.inc_sal * 100) end,
+           g.gcvp_pmts_count_from_rep,
+           k.kdn_gcvp_salary,
+           k.is_kdn_regulated_sal_gcvp,
+           case when c.delinq_days_pmt_1 > 7 then 1 else 0 end,
+           case when c.delinq_days_pmt_2 > 7 then 1 else 0 end;
+grant select on U1.M_TMP_J_AUTO_RBP_MATRIX_1 to LOADDB;
+grant select on U1.M_TMP_J_AUTO_RBP_MATRIX_1 to LOADER;
+
+

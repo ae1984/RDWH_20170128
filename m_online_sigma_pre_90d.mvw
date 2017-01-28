@@ -1,0 +1,36 @@
+﻿create materialized view U1.M_ONLINE_SIGMA_PRE_90D
+build deferred
+refresh complete on demand
+as
+select  f.c_process_id as order_id,
+        cl.id as claim_id,
+        cl.c_folder_ref as folder_id,
+        trunc(f.c_date_create) as a_date,
+        f.c_date_create as full_date,
+        upper(s.c_code) as shop_code,
+        upper(s.c_name) as shop_name,
+        upper(p.c_code) as part_code,
+        upper(p.c_name) as part_name,
+        upper(s.c_address#place) as city_name,
+        cl.c_form_client_st#inn as iin,
+        cl.c_client_ref as client_id,
+        cl.c_form_client_st#mobile#numb as phone_mobile,
+        f.c_total_amount as total_amount,
+        1 as total_count,
+        upper(i.c_producer) as producer,
+        upper(i.c_model) as product_model,
+        tn.c_name as categ_name,
+
+        dense_rank() over (order by upper(i.c_model)) as prod_id,
+        dense_rank() over (order by upper(i.c_model), upper(s.c_address#place)) as prodcity_id
+
+from u1.V_RFO_Z#KAS_ONLINE_BUY f
+join u1.V_RFO_Z#KAS_ONLINE_CLAIM cl on cl.c_buy_ref = f.id
+join u1.V_RFO_Z#SHOPS s on s.id = f.c_shop
+join u1.V_RFO_Z#KAS_UNIVERSAL_D p on p.id=s.c_kas_grp_partners
+join u1.V_RFO_Z#PROD_INFO i on i.collection_id = f.c_prod_info
+join u1.V_RFO_Z#KAS_TOV_NAME tn on tn.id = i.c_name_ref
+where f.c_date_create >= trunc(sysdate - 90);
+grant select on U1.M_ONLINE_SIGMA_PRE_90D to LOADDB;
+
+

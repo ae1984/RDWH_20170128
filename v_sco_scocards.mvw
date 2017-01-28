@@ -1,0 +1,10 @@
+﻿create materialized view U1.V_SCO_SCOCARDS
+refresh complete on demand
+as
+select id, REGEXP_REPLACE(CONVERT(card_name,'AL32UTF8','RU8PC866'), '[^[:alnum:]-_() ]') as card_name,
+id_actual, ref, create_date, id_user
+from SCOCARDS@sc18;
+grant select on U1.V_SCO_SCOCARDS to LOADDB;
+grant select on U1.V_SCO_SCOCARDS to LOADER;
+
+

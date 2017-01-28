@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_TMP_J_Z49_IIN_BAD_DATES
+refresh force on demand
+as
+select distinct d.client_iin as iin
+from V_DWH_PORTFOLIO_CURRENT d
+join (
+    select * from M_TMP_J_Z49_IIN_PART_2 t
+    union select * from M_TMP_J_Z49_IIN_PART_3 t
+    union select * from M_TMP_J_Z49_IIN_PART_4 t
+) x on x.contract_number = d.deal_number
+where floor((d.begin_date - x.birth_date_dwh_rfo_iin) / 365) < 21 or
+      floor((d.begin_date - x.birth_date_dwh_rfo_iin) / 365) > 62;
+grant select on U1.M_TMP_J_Z49_IIN_BAD_DATES to LOADDB;
+grant select on U1.M_TMP_J_Z49_IIN_BAD_DATES to LOADER;
+
+

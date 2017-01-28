@@ -1,0 +1,166 @@
+﻿create materialized view U1.T_TMP_D_TK_PLUS_ONLINE1
+refresh force on demand
+as
+select
+onl.text_yyyy_mm_dd_week_day,
+onl.week_text_online_credit,
+onl.is_sign_require,
+onl.is_categ_a,
+onl.is_client_new_by_con,
+onl.x_dnp_name,
+onl.channel,
+
+count(*) as cnt,
+count(distinct onl.contract_number) as con_cnt,
+count(distinct onl.iin) as cli_cnt,
+sum(case when t.process_name = 'ОНЛАЙН КРЕДИТ' then d.amount end)/1000000 as sales_mln,
+
+
+------fpd0
+           sum(case when t.process_name = 'ОНЛАЙН КРЕДИТ' then case when fpd0.is_fpd_0>0 then d.amount else 0 end end) as fpd0_del_online,
+           sum(case when t.process_name != 'ОНЛАЙН КРЕДИТ' then case when fpd0.is_fpd_0>0 then d.amount else 0 end end) as fpd0_del_pos,
+
+------fpd7
+           sum(case when t.process_name = 'ОНЛАЙН КРЕДИТ' then case when fpd7.is_fpd_7>0 then d.amount else 0 end end) as fpd7_del_online,
+           sum(case when t.process_name != 'ОНЛАЙН КРЕДИТ' then case when fpd7.is_fpd_7>0 then d.amount else 0 end end) as fpd7_del_pos,
+
+
+------spd
+           sum(case when t.process_name = 'ОНЛАЙН КРЕДИТ' then case when spd.is_spd>0 then d.amount else 0 end end) as spd_del_online,
+           sum(case when t.process_name != 'ОНЛАЙН КРЕДИТ' then case when spd.is_spd>0 then d.amount else 0 end end) as spd_del_pos,
+-----total
+
+           sum(case when t.process_name = 'ОНЛАЙН КРЕДИТ' then d.amount end) as total_sum_online,
+           sum(case when t.process_name != 'ОНЛАЙН КРЕДИТ' then d.amount end) as total_sum_pos,
+
+
+
+
+case  when t.iin != xxxxx.iin then 'TK - одноразовый'
+      when t.iin = x.iin then 'TK + КН'
+      when t.iin = xx.iin then 'TK + ТК'
+      when t.iin = xxx.iin then 'TK + Оптимизация'
+      when t.iin = xxxx.iin then 'TK + АВТО'
+      else 'TK+' end as tk_history,
+
+case when y.prev_con_cnt = 0 then '0'
+     when y.prev_con_cnt = 1 then '1'
+     when y.prev_con_cnt = 2 then '2'
+     when y.prev_con_cnt >= 3  then '>=3' else 'Other' end as prev_con_cnt,
+
+case when t.process_name = 'ОНЛАЙН КРЕДИТ' then
+    case when t.amount_max_before = 0 then '0'
+         when (t.amount_max_before/t.contract_amount) > 5 then '> 5'
+         when (t.amount_max_before/t.contract_amount) > 4 then '> 4'
+         when (t.amount_max_before/t.contract_amount) > 3 then '> 3'
+         when (t.amount_max_before/t.contract_amount) > 2 then '> 2'
+         when (t.amount_max_before/t.contract_amount) > 1 then '> 1' else 'Other' end end as max_before
+
+
+
+from T_TMP_D_TK_PLUS_ONLINE onl
+join M_FOLDER_CON_CANCEL t on t.contract_number = onl.contract_number
+join V_DWH_PORTFOLIO_CURRENT d on d.deal_number = onl.contract_number
+
+
+left join m_tmp_contract_fpd0 fpd0 on fpd0.deal_number = onl.contract_number
+left join m_tmp_contract_fpd7 fpd7 on fpd7.deal_number = onl.contract_number
+left join m_tmp_contract_spd spd on spd.deal_number = onl.contract_number
+
+
+left join (select count(distinct d.deal_number) as prev_con_cnt, sc.iin
+          from T_TMP_D_TK_PLUS_ONLINE sc
+          left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = sc.iin and
+                                                   d.x_start_date_actual < trunc(sc.folder_date_create_mi) and
+                                                   d.x_is_credit_issued = 1 and
+                                                   d.actual_end_date is null and
+                                                   d.is_credit_active = 1 and
+                                                   d.x_is_card = 0
+
+          group by sc.iin) y on y.iin = onl.iin
+
+
+
+
+left join (select distinct d.client_iin as iin
+            from T_TMP_D_TK_PLUS_ONLINE sc
+            left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = sc.iin and
+                                                   d.x_start_date_actual > trunc(sc.folder_date_create_mi) and
+                                                   d.x_is_credit_issued = 1 and
+                                                   d.x_product_type in ('ДЕНЬГИ')
+
+
+) x on x.iin = onl.iin
+
+
+left join (select distinct d.client_iin as iin
+            from T_TMP_D_TK_PLUS_ONLINE sc
+            left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = sc.iin and
+                                                   d.x_start_date_actual > trunc(sc.folder_date_create_mi) and
+                                                   d.x_is_credit_issued = 1 and
+                                                   d.x_product_type not in ('ДЕНЬГИ') and
+                                                   d.x_product_type not in ('АВТО') and
+                                                   d.x_product_type not in ('КАРТЫ') and
+                                                   d.x_product_type in ('ТОВАРЫ')
+
+
+) xx on xx.iin = onl.iin
+
+
+left join (select distinct d.client_iin as iin
+            from T_TMP_D_TK_PLUS_ONLINE sc
+            left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = sc.iin and
+                                                   d.x_start_date_actual > trunc(sc.folder_date_create_mi) and
+                                                   d.x_is_credit_issued = 1 and
+                                                   d.x_product_type in ('ОПТИМИЗАЦИЯ')
+
+
+) xxx on xxx.iin = onl.iin
+
+
+left join (select distinct d.client_iin as iin
+            from T_TMP_D_TK_PLUS_ONLINE sc
+            left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = sc.iin and
+                                                   d.x_start_date_actual > trunc(sc.folder_date_create_mi) and
+                                                   d.x_is_credit_issued = 1 and
+                                                   d.x_product_type in ('АВТО')
+
+
+) xxxx on xxxx.iin = onl.iin
+
+left join (select distinct d.client_iin as iin
+            from T_TMP_D_TK_PLUS_ONLINE sc
+            left join V_DWH_PORTFOLIO_CURRENT d on d.client_iin = sc.iin and
+                                                   d.x_start_date_actual > trunc(sc.folder_date_create_mi) and
+                                                   d.x_is_credit_issued = 1
+) xxxxx on xxxxx.iin = onl.iin
+
+group by
+onl.text_yyyy_mm_dd_week_day,
+onl.week_text_online_credit,
+onl.is_sign_require,
+onl.is_categ_a,
+onl.is_client_new_by_con,
+onl.x_dnp_name,
+onl.channel,
+case  when t.iin != xxxxx.iin then 'TK - одноразовый'
+      when t.iin = x.iin then 'TK + КН'
+      when t.iin = xx.iin then 'TK + ТК'
+      when t.iin = xxx.iin then 'TK + Оптимизация'
+      when t.iin = xxxx.iin then 'TK + АВТО'
+      else 'TK+' end,
+case when y.prev_con_cnt = 0 then '0'
+     when y.prev_con_cnt = 1 then '1'
+     when y.prev_con_cnt = 2 then '2'
+     when y.prev_con_cnt >= 3  then '>=3' else 'Other' end,
+case when t.process_name = 'ОНЛАЙН КРЕДИТ' then
+    case when t.amount_max_before = 0 then '0'
+         when (t.amount_max_before/t.contract_amount) > 5 then '> 5'
+         when (t.amount_max_before/t.contract_amount) > 4 then '> 4'
+         when (t.amount_max_before/t.contract_amount) > 3 then '> 3'
+         when (t.amount_max_before/t.contract_amount) > 2 then '> 2'
+         when (t.amount_max_before/t.contract_amount) > 1 then '> 1' else 'Other' end end;
+grant select on U1.T_TMP_D_TK_PLUS_ONLINE1 to LOADDB;
+grant select on U1.T_TMP_D_TK_PLUS_ONLINE1 to LOADER;
+
+

@@ -1,0 +1,45 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_9
+build deferred
+refresh force on demand
+as
+select t3.*
+
+       ,(count_visit_guest+count_visit_guest_1d) as count_visit_guest_x
+       ,(count_visit_client+count_visit_client_1d) as count_visit_client_x
+from (
+      select t2.*
+
+             ,count(case when t2.is_loan_guest = 1 then t2.claim_id end) over (partition by t2.rfo_client_id, trunc(t2.date_create) order by ord_1d range between (ord_1d-1) preceding and 1 preceding) as count_visit_guest_1d
+             ,count(case when t2.is_loan_guest = 0 then t2.claim_id end) over (partition by t2.rfo_client_id, trunc(t2.date_create) order by ord_1d range between (ord_1d-1) preceding and 1 preceding) as count_visit_client_1d
+
+      from (
+            select t.claim_id,
+                   t.date_create,
+                   t.rfo_client_id
+
+                   ,x.is_loan_guest
+
+                   ,count(case when x.is_loan_guest = 1 then t.claim_id end) over (partition by t.rfo_client_id order by trunc(t.date_create) range between 90 preceding and 1 preceding) as count_visit_guest
+
+                   ,count(case when x.is_loan_guest = 0 then t.claim_id end) over (partition by t.rfo_client_id order by trunc(t.date_create) range between 90 preceding and 1 preceding) as count_visit_client
+
+                   ,dense_rank() over (partition by t.rfo_client_id, trunc(t.date_create) order by t.date_create) as ord_1d
+            from u1.M_FOLDER_CON_CANCEL_ONLINE_1 t
+            left join (
+                      select  a.pk,
+                              a.code,
+
+
+                              max(case when upper(t.p_description) like '%ГОСТ%' then 1 else 0 end) as is_loan_guest
+                      from u1.M_KASPISH_ORDERS a
+                      join u1.M_KASPISH_ORDERHISTORYENTRIES t on t.p_order = a.pk
+                      --where a.createdts > trunc(sysdate) - 2
+                      group by a.pk,
+                               a.code
+                     ) x on x.code = t.process_id
+            --where t.rfo_client_id = 31393192
+      ) t2
+) t3;
+grant select on U1.M_RFO_FRAUD_SEARCH_9 to LOADDB;
+
+

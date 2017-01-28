@@ -1,0 +1,48 @@
+﻿create materialized view U1.M_RFO_ONLINE_FLD_EKT_PRE1
+refresh complete on demand
+as
+select  /*+ driving_site(x) first_rows*/ *
+from
+(
+select /*+ driving_site(rd) no_merge*/
+ cd.c_d#type_cred#prod#prod_info11,
+ cd.c_num_dog,
+ cd.c_d#type_cred#serv#serv_info12,
+ rd.collection_id,
+ p.C_PROP as cr_program_id,
+ sd.c_code,
+ i.c_producer,
+ i.c_name,
+ i.c_model,
+ i.c_quant,
+ i.c_cost,
+ i.c_bill_summ,
+ i.c_price,
+ i.id info_id,
+ i.collection_id as INFO_collection_id,
+ i.c_type_tov,
+ cd.c_date_begin cred_date_begin,
+ cd.c_summa_full cred_summa_full,cd.c_info_cred#term_cred#quant,cd.c_info_cred#summa_cred
+  from IBS.Z#RDOC@RFO rd
+  join IBS.Z#FDOC@RFO fd
+    on fd.id = rd.c_doc
+   and fd.class_id = 'CREDIT_DOG'
+  join IBS.Z#CREDIT_DOG@RFO cd
+    on cd.id = rd.c_doc
+  join IBS.Z#STATUS_DOG@RFO sd
+    on sd.id = fd.c_status_doc
+  join IBS.Z#CRED_SCHEME@RFO cs
+    on cs.id = cd.c_cred_scheme
+  join IBS.Z#PROPERTIES@RFO p
+    on p.COLLECTION_ID = cs.c_add_prop
+  join IBS.Z#PROD_PROPERTY@RFO pr
+    on pr.id = p.C_PROP
+  left join IBS.Z#PROD_INFO@RFO i
+    on i.collection_id = cd.c_d#type_cred#prod#prod_info11
+ where fd.c_doc_date > sysdate - 3 / 24
+   and cd.c_shop is not null
+   and cd.c_num_dog is not null) x;
+grant select on U1.M_RFO_ONLINE_FLD_EKT_PRE1 to LOADDB;
+grant select on U1.M_RFO_ONLINE_FLD_EKT_PRE1 to LOADER;
+
+

@@ -1,0 +1,114 @@
+﻿create materialized view U1.M_RBO_CRED_LIM_CASE_FIN
+build deferred
+refresh complete on demand
+as
+with dat as
+ (select /*+parallel(5)*/ rep_date, --Отчетная Дата
+         rp.rbo_Client_id, --ИДЕНТИФИКАТОР КЛИЕНТА в РБО
+         case
+           when cbT.Rbo_Contract_Id is not null and
+                cbD.Rbo_Contract_Id is null then
+            'only TK'
+           when cbT.Rbo_Contract_Id is null and
+                cbD.Rbo_Contract_Id is not null then
+            'only KN'
+           else
+            'Card'
+         end as prod, --АКТИВНЫЕ КРЕДИТЫ КЛИЕНТА ПО ПРОДУКТАМ
+         sum(rp.total_debt) as tot_debt, -- АКТУАЛЬНЫЙ ОСНОВНОЙ ДОЛГ КЛИЕНТА НА СЕГОДНЯ В РАЗБИВКЕ ПО ПРОДУКТАМ
+         count(1) as num_active_credits, --КОЛИЧЕСТВО АКТИВНЫХ КРЕДИТОВ У КЛИЕНТА В РАЗБИВКЕ ПО ПРОДУКТАМ
+         sum(nvl(p.pmt_avg, 0)) + sum(nvl(p1.pmt_avg_10, 0)) as tot_pmt_active_con --СУММАРНЫЙ ПЛАТЕЖ КЛИЕНТА НА ОТЧЕТНУЮ ДАТУ В РАЗБИВКЕ ПО ПРОДУКТАМ
+    from u1.t_rbo_port rp
+    join u1.m_rbo_contract_bas cb
+      on rp.rbo_contract_id = cb.rbo_contract_id
+     and cb.cred_program_code not in
+         ('GU_AVTO', 'GU_AVTO_BU', 'AUTO', 'GU_AVTO_REF', 'GU_AVTO_ZALOG')
+    left join u1.m_rbo_contract_bas cbT
+      on rp.rbo_contract_id = cbT.rbo_contract_id
+     and cbT.product_type in ('ТОВАРЫ')
+    left join u1.m_rbo_contract_bas cbD
+      on rp.rbo_contract_id = cbD.rbo_contract_id
+     and cbD.product_type in ('ДЕНЬГИ')
+    left join u1.m_rbo_contract_bas cbK
+      on rp.rbo_contract_id = cbK.rbo_contract_id
+     and cbK.product_type in ('КАРТЫ')
+    left join u1.m_rbo_contract_credit_pmt p
+      on cb.rbo_contract_id = p.rbo_contract_id
+    left join u1.m_rbo_contract_card_pmt p1
+      on cb.rbo_contract_id = p1.rbo_contract_id
+     and rp.rep_date >= p1.date_begin
+     and rp.rep_date < p1.date_end
+   where rep_date = trunc(sysdate - 1)
+   group by rep_date,
+            rp.rbo_Client_id,
+            case
+              when cbT.Rbo_Contract_Id is not null and
+                   cbD.Rbo_Contract_Id is null then
+               'only TK'
+              when cbT.Rbo_Contract_Id is null and
+                   cbD.Rbo_Contract_Id is not null then
+               'only KN'
+              else
+               'Card'
+            end)
+
+select /*+parallel(5)*/  cl.rfo_client_id, --ИДЕНТИФИКАТОР КЛИЕНТА В РФО
+       case
+         when ta1.rbo_client_id is not null and
+              ta2.rbo_client_id is not null and
+              ta3.rbo_client_id is not null then
+          'TK - KN - KK'
+         when ta1.rbo_client_id is not null and
+              ta2.rbo_client_id is not null then
+          'TK - KN'
+         when ta1.rbo_client_id is not null and
+              ta3.rbo_client_id is not null then
+          'TK - KK'
+         when ta1.rbo_client_id is not null then
+          'TK'
+         when ta2.rbo_client_id is not null and
+              ta3.rbo_client_id is not null then
+          'KN - KK'
+         when ta2.rbo_client_id is not null then
+          'KN'
+         when ta3.rbo_client_id is not null then
+          'KK'
+         else
+          'NONE'
+       end as prod_type, --ИНФОРМАЦИЯ ПО АКТИВНЫМ КРЕДИТАМ КЛИЕНТА В РАЗБИВКЕ ПО ПРОДУКТАМ
+       nvl(ta1.num_active_credits, 0) + nvl(ta2.num_active_credits, 0) +
+       nvl(ta3.num_active_credits, 0) as NUM_ACTIVE_CREDITS --КОЛИЧЕСТВО ВСЕХ АКТИВНЫХ КРЕДИТОВ КЛИЕНТА
+      ,
+       ta1.num_active_credits as NUM_ACTIVE_TK --ВСЕГО СКОЛЬКО АКТИВНЫХ КРЕДИТОВ ПО ТОВАРНОМУ КРЕДИТУ
+      ,
+       ta2.num_active_credits as NUM_ACTIVE_KN --ВСЕГО СКОЛЬКО АКТИВНЫХ КРЕДИТОВ ПО ДЕНЕЖНОМУ КРЕДИТУ
+      ,
+       ta3.num_active_credits as NUM_ACTIVE_KK, --ВСЕГО СКОЛЬКО АКТИВНЫХ КРЕДИТОВ ПО КАРТОЧНОМУ КРЕДИТУ
+       nvl(ta1.tot_debt, 0) + nvl(ta2.tot_debt, 0) + nvl(ta3.tot_debt, 0) as total_debt_cli, --СУММАРНЫЙ АКТУАЛЬНЫЙ ДОЛГ КЛИЕНТА ПО ВВСЕМ ПРОДУКТАМ НА СЕГОДНЯ
+       nvl(ta1.tot_pmt_active_con, 0) + nvl(ta2.tot_pmt_active_con, 0) +
+       nvl(ta3.tot_pmt_active_con, 0) as total_pmt_cli --СУММАРНЫЙ ПЛАТЕЖ ВСЕХ КРЕДИТОВ КЛИЕНТА НА СЕГОДНЯ
+      ,
+       ta1.tot_debt as tot_debt_tk --ДОЛГ ПО ВСЕМ ТОВАРНЫМ КРЕДИТАМ
+      ,
+       ta2.tot_debt as tot_debt_kn --ДОЛГ ПО ВСЕМ ДЕНЕЖНЫМ КРЕДИТАМ
+      ,
+       ta3.tot_debt as tot_debt_kk --ДОЛГ ПО ВСЕМ КАРТОЧНЫМ КРЕДИТАМ
+      ,
+       ta1.tot_pmt_active_con as pmt_tk --СУММАРНЫ ПЛАТЕЖ ПО ТОВАРНЫМ КРЕДИТАМ
+      ,
+       ta2.tot_pmt_active_con as pmt_kn --СУММАРНЫ ПЛАТЕЖ ПО ДЕНЕЖНЫМ КРЕДИТАМ
+      ,
+       ta3.tot_pmt_active_con as pmt_kk --СУММАРНЫ ПЛАТЕЖ ПО КАРТОЧНЫМ КРЕДИТАМ
+  from u1.m_client_link cl
+  left join dat ta1
+    on ta1.rbo_client_id = cl.rbo_client_id
+       and ta1.prod = 'only TK'
+  left join dat ta2
+    on ta2.rbo_client_id = cl.rbo_client_id
+       and ta2.prod = 'only KN'
+  left join dat ta3
+    on ta3.rbo_client_id = cl.rbo_client_id
+       and ta3.prod = 'Card';
+grant select on U1.M_RBO_CRED_LIM_CASE_FIN to LOADDB;
+
+

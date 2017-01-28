@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_TMP_CLIENT_MIN_DATES_2
+using no index
+refresh force on demand
+as
+select coalesce(a.rfo_client_id, b.rfo_client_id) as rfo_client_id,
+       a.client_min_gcvp_pmt_date,
+       b.client_min_contract_begin_date
+from (
+  select f.rfo_client_id, min(t.min_pmt_date) as client_min_gcvp_pmt_date
+  from V_GCVP_REPORT t
+  join V_FOLDER_ALL_RFO f on f.folder_id = t.folder_id
+  group by f.rfo_client_id
+) a full outer join (
+  select f.rfo_client_id, min(t.begin_date) as client_min_contract_begin_date
+  from V_DWH_PORTFOLIO_CURRENT t
+  join V_FOLDER_ALL_RFO f on f.folder_id = t.folder_id_first
+  where t.x_is_credit_issued = 1
+  group by f.rfo_client_id
+) b on b.rfo_client_id = a.rfo_client_id;
+grant select on U1.M_TMP_CLIENT_MIN_DATES_2 to LOADDB;
+grant select on U1.M_TMP_CLIENT_MIN_DATES_2 to LOADER;
+
+

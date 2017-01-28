@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_SCCL_RBO_PAR4
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       cl.rfo_client_id
+
+       ,count(distinct case when fo.c_oper_date is not null then trunc(fo.c_oper_date, 'mm') end) as kspgl_pay_month_6m_cnt
+
+from u1.V_CLIENT_RFO_BY_ID cl
+left join u1.M_RBO_CONTRACT_BAS t on t.rfo_client_id = cl.rfo_client_id
+                                     and t.cred_program_code = 'ZP_KASPI_GOLD'
+left join u1.V_RBO_Z#KAS_PC_DOG a on a.id = t.rbo_contract_id
+left join u1.T_RBO_Z#KAS_PC_FO fo on fo.collection_id = a.c_fo_arr
+                                     and fo.c_is_storno = 0
+                                     and fo.c_doc_state = 'PROV'
+                                     and fo.c_oper_date >= add_months(trunc(sysdate), -6)
+left join u1.V_RBO_Z#VID_OPER_DOG vod on vod.id = fo.c_vid_oper_ref
+                                         and vod.c_code = 'PC_TO_CARD_ZP'
+--where fo.c_oper_date >= add_months(trunc(sysdate), -6)
+group by cl.rfo_client_id;
+grant select on U1.M_SCCL_RBO_PAR4 to LOADDB;
+grant select on U1.M_SCCL_RBO_PAR4 to RTS_RDWH;
+
+

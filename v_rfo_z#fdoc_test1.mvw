@@ -1,0 +1,20 @@
+﻿create materialized view U1.V_RFO_Z#FDOC_TEST1
+build deferred
+refresh complete on demand
+as
+select /*+ driving_site(t) */
+       t.id,
+       t.class_id,
+       t.c_num,
+       t.c_doc_date,
+       t.c_parent_fdoc,
+       t.c_status_doc,
+       t.c_date_audit,
+       t.sn,
+       t.su
+  from IBS.Z#FDOC@RFO_SNAP t
+where class_id in ('DEPOSIT','CONT_DEP','KAS_AUTO_ESTIM','KAS_BLOCK_CARD','DRAW_DOWN');
+grant select on U1.V_RFO_Z#FDOC_TEST1 to LOADDB;
+grant select on U1.V_RFO_Z#FDOC_TEST1 to LOADER;
+
+

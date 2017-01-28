@@ -1,0 +1,231 @@
+﻿create materialized view U1.M_RBO_CONTRACT_DATA_PMT_BUFF4
+build deferred
+refresh force on demand
+as
+select /*+parallel(5)*/
+        mp.po_rbo_contract_id
+       --,mp.rbo_contract_id
+
+
+       ,max(case when mp.diff_dt_x=0 then mp.rbo_contract_id end)      as mp_rbo_contract_id
+       ,max(case when mp.diff_dt_x=7 then  mp.rbo_contract_id end)     as mp7_rbo_contract_id
+       ,max(case when mp.diff_dt_x=30 then  mp.rbo_contract_id end)    as mp30_rbo_contract_id
+       ,max(case when mp.diff_dt_x=60 then  mp.rbo_contract_id end)    as mp60_rbo_contract_id
+
+
+       ,max(case when mp.diff_dt_x=0  and mp.cnt_pmt_plan = 1 then mp.rbo_contract_id end)        as mp1_0_rbo_contract_id
+       ,max(case when mp.diff_dt_x=1  and mp.cnt_pmt_plan = 1 then mp.rbo_contract_id end)        as mp1_1_rbo_contract_id
+       ,max(case when mp.diff_dt_x=7  and mp.cnt_pmt_plan = 1 then  mp.rbo_contract_id end)       as mp1_7_rbo_contract_id
+       ,max(case when mp.diff_dt_x=15 and mp.cnt_pmt_plan = 1 then  mp.rbo_contract_id end)       as mp1_15_rbo_contract_id
+       ,max(case when mp.diff_dt_x=16 and mp.cnt_pmt_plan = 1 then  mp.rbo_contract_id end)       as mp1_16_rbo_contract_id
+       ,max(case when mp.diff_dt_x=30 and mp.cnt_pmt_plan = 1 then  mp.rbo_contract_id end)       as mp1_30_rbo_contract_id
+       ,max(case when mp.diff_dt_x=60 and mp.cnt_pmt_plan = 1 then  mp.rbo_contract_id end)       as mp1_60_rbo_contract_id
+       ,max(case when mp.diff_dt_x=90 and mp.cnt_pmt_plan = 1 then  mp.rbo_contract_id end)       as mp1_90_rbo_contract_id
+       ,max(case when mp.diff_dt=0    and mp.cnt_pmt_plan = 1 then  mp.rbo_contract_id end)       as mp1_o_rbo_contract_id
+
+       ,max(case when mp.diff_dt_x=0  and mp.cnt_pmt_plan =2  then mp.rbo_contract_id end)        as mp2_0_rbo_contract_id
+       ,max(case when mp.diff_dt_x=1  and mp.cnt_pmt_plan =2  then mp.rbo_contract_id end)        as mp2_1_rbo_contract_id
+       ,max(case when mp.diff_dt_x=7  and mp.cnt_pmt_plan =2  then  mp.rbo_contract_id end)       as mp2_7_rbo_contract_id
+       ,max(case when mp.diff_dt_x=15 and mp.cnt_pmt_plan =2  then  mp.rbo_contract_id end)       as mp2_15_rbo_contract_id
+       ,max(case when mp.diff_dt_x=16 and mp.cnt_pmt_plan =2  then  mp.rbo_contract_id end)       as mp2_16_rbo_contract_id
+       ,max(case when mp.diff_dt_x=30 and mp.cnt_pmt_plan =2  then  mp.rbo_contract_id end)       as mp2_30_rbo_contract_id
+       ,max(case when mp.diff_dt_x=60 and mp.cnt_pmt_plan =2  then  mp.rbo_contract_id end)       as mp2_60_rbo_contract_id
+       ,max(case when mp.diff_dt_x=90 and mp.cnt_pmt_plan =2  then  mp.rbo_contract_id end)       as mp2_90_rbo_contract_id
+       ,max(case when mp.diff_dt=0    and mp.cnt_pmt_plan =2  then  mp.rbo_contract_id end)       as mp2_o_rbo_contract_id
+
+       ,max(case when mp.diff_dt_x=0  and mp.cnt_pmt_plan =3  then mp.rbo_contract_id end)        as mp3_0_rbo_contract_id
+       ,max(case when mp.diff_dt_x=1  and mp.cnt_pmt_plan =3  then mp.rbo_contract_id end)        as mp3_1_rbo_contract_id
+       ,max(case when mp.diff_dt_x=7  and mp.cnt_pmt_plan =3  then  mp.rbo_contract_id end)       as mp3_7_rbo_contract_id
+       ,max(case when mp.diff_dt_x=15 and mp.cnt_pmt_plan =3  then  mp.rbo_contract_id end)       as mp3_15_rbo_contract_id
+       ,max(case when mp.diff_dt_x=16 and mp.cnt_pmt_plan =3  then  mp.rbo_contract_id end)       as mp3_16_rbo_contract_id
+       ,max(case when mp.diff_dt_x=30 and mp.cnt_pmt_plan =3  then  mp.rbo_contract_id end)       as mp3_30_rbo_contract_id
+       ,max(case when mp.diff_dt_x=60 and mp.cnt_pmt_plan =3  then  mp.rbo_contract_id end)       as mp3_60_rbo_contract_id
+       ,max(case when mp.diff_dt_x=90 and mp.cnt_pmt_plan =3  then  mp.rbo_contract_id end)       as mp3_90_rbo_contract_id
+       ,max(case when mp.diff_dt=0    and mp.cnt_pmt_plan =3  then  mp.rbo_contract_id end)       as mp3_o_rbo_contract_id
+
+       ,max(case when mp.diff_dt_x=0  and mp.cnt_pmt_plan =4  then mp.rbo_contract_id end)        as mp4_0_rbo_contract_id
+       ,max(case when mp.diff_dt_x=1  and mp.cnt_pmt_plan =4  then mp.rbo_contract_id end)        as mp4_1_rbo_contract_id
+       ,max(case when mp.diff_dt_x=7  and mp.cnt_pmt_plan =4  then  mp.rbo_contract_id end)       as mp4_7_rbo_contract_id
+       ,max(case when mp.diff_dt_x=15 and mp.cnt_pmt_plan =4  then  mp.rbo_contract_id end)       as mp4_15_rbo_contract_id
+       ,max(case when mp.diff_dt_x=16 and mp.cnt_pmt_plan =4  then  mp.rbo_contract_id end)       as mp4_16_rbo_contract_id
+       ,max(case when mp.diff_dt_x=30 and mp.cnt_pmt_plan =4  then  mp.rbo_contract_id end)       as mp4_30_rbo_contract_id
+       ,max(case when mp.diff_dt_x=60 and mp.cnt_pmt_plan =4  then  mp.rbo_contract_id end)       as mp4_60_rbo_contract_id
+       ,max(case when mp.diff_dt_x=90 and mp.cnt_pmt_plan =4  then  mp.rbo_contract_id end)       as mp4_90_rbo_contract_id
+       ,max(case when mp.diff_dt=0    and mp.cnt_pmt_plan =4  then  mp.rbo_contract_id end)       as mp4_o_rbo_contract_id
+
+       ,max(case when mp.diff_dt_x=0  and mp.cnt_pmt_plan =5  then mp.rbo_contract_id end)        as mp5_0_rbo_contract_id
+       ,max(case when mp.diff_dt_x=1  and mp.cnt_pmt_plan =5  then mp.rbo_contract_id end)        as mp5_1_rbo_contract_id
+       ,max(case when mp.diff_dt_x=7  and mp.cnt_pmt_plan =5  then  mp.rbo_contract_id end)       as mp5_7_rbo_contract_id
+       ,max(case when mp.diff_dt_x=15 and mp.cnt_pmt_plan =5  then  mp.rbo_contract_id end)       as mp5_15_rbo_contract_id
+       ,max(case when mp.diff_dt_x=16 and mp.cnt_pmt_plan =5  then  mp.rbo_contract_id end)       as mp5_16_rbo_contract_id
+       ,max(case when mp.diff_dt_x=30 and mp.cnt_pmt_plan =5  then  mp.rbo_contract_id end)       as mp5_30_rbo_contract_id
+       ,max(case when mp.diff_dt_x=60 and mp.cnt_pmt_plan =5  then  mp.rbo_contract_id end)       as mp5_60_rbo_contract_id
+       ,max(case when mp.diff_dt_x=90 and mp.cnt_pmt_plan =5  then  mp.rbo_contract_id end)       as mp5_90_rbo_contract_id
+       ,max(case when mp.diff_dt=0    and mp.cnt_pmt_plan =5  then  mp.rbo_contract_id end)       as mp5_o_rbo_contract_id
+
+       ,max(case when mp.diff_dt_x=0  and mp.cnt_pmt_plan =6  then mp.rbo_contract_id end)        as mp6_0_rbo_contract_id
+       ,max(case when mp.diff_dt_x=1  and mp.cnt_pmt_plan =6  then mp.rbo_contract_id end)        as mp6_1_rbo_contract_id
+       ,max(case when mp.diff_dt_x=7  and mp.cnt_pmt_plan =6  then  mp.rbo_contract_id end)       as mp6_7_rbo_contract_id
+       ,max(case when mp.diff_dt_x=15 and mp.cnt_pmt_plan =6  then  mp.rbo_contract_id end)       as mp6_15_rbo_contract_id
+       ,max(case when mp.diff_dt_x=16 and mp.cnt_pmt_plan =6  then  mp.rbo_contract_id end)       as mp6_16_rbo_contract_id
+       ,max(case when mp.diff_dt_x=30 and mp.cnt_pmt_plan =6  then  mp.rbo_contract_id end)       as mp6_30_rbo_contract_id
+       ,max(case when mp.diff_dt_x=60 and mp.cnt_pmt_plan =6  then  mp.rbo_contract_id end)       as mp6_60_rbo_contract_id
+       ,max(case when mp.diff_dt_x=90 and mp.cnt_pmt_plan =6  then  mp.rbo_contract_id end)       as mp6_90_rbo_contract_id
+       ,max(case when mp.diff_dt=0    and mp.cnt_pmt_plan =6  then  mp.rbo_contract_id end)       as mp6_o_rbo_contract_id
+
+       ,max(case when mp.diff_dt_x=0  and mp.cnt_pmt_plan =7  then mp.rbo_contract_id end)        as mp7_0_rbo_contract_id
+       ,max(case when mp.diff_dt_x=1  and mp.cnt_pmt_plan =7  then mp.rbo_contract_id end)        as mp7_1_rbo_contract_id
+       ,max(case when mp.diff_dt_x=7  and mp.cnt_pmt_plan =7  then  mp.rbo_contract_id end)       as mp7_7_rbo_contract_id
+       ,max(case when mp.diff_dt_x=15 and mp.cnt_pmt_plan =7  then  mp.rbo_contract_id end)       as mp7_15_rbo_contract_id
+       ,max(case when mp.diff_dt_x=16 and mp.cnt_pmt_plan =7  then  mp.rbo_contract_id end)       as mp7_16_rbo_contract_id
+       ,max(case when mp.diff_dt_x=30 and mp.cnt_pmt_plan =7  then  mp.rbo_contract_id end)       as mp7_30_rbo_contract_id
+       ,max(case when mp.diff_dt_x=60 and mp.cnt_pmt_plan =7  then  mp.rbo_contract_id end)       as mp7_60_rbo_contract_id
+       ,max(case when mp.diff_dt_x=90 and mp.cnt_pmt_plan =7  then  mp.rbo_contract_id end)       as mp7_90_rbo_contract_id
+       ,max(case when mp.diff_dt=0    and mp.cnt_pmt_plan =7  then  mp.rbo_contract_id end)       as mp7_o_rbo_contract_id
+
+
+
+
+
+      ,sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=0   then  mp.total_debt_plus  end) as total_debt_x_pmt_1_0,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=1   then  mp.total_debt_plus  end) as total_debt_x_pmt_1_1,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=7   then  mp.total_debt_plus  end) as total_debt_x_pmt_1_7,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=15  then  mp.total_debt_plus  end) as total_debt_x_pmt_1_15,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=16  then  mp.total_debt_plus  end) as total_debt_x_pmt_1_16,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=30  then  mp.total_debt_plus  end) as total_debt_x_pmt_1_30,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=60  then  mp.total_debt_plus  end) as total_debt_x_pmt_1_60,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=90  then  mp.total_debt_plus  end) as total_debt_x_pmt_1_90,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt=0     then  mp.total_debt_plus  end) as total_debt_x_pmt_1_0_old,
+       --
+       sum(case when mp.cnt_pmt_plan = 2 and mp.diff_dt_x=0   then  mp.total_debt_plus end) as total_debt_x_pmt_2_0,
+       sum(case when mp.cnt_pmt_plan = 2 and mp.diff_dt_x=7   then  mp.total_debt_plus end) as total_debt_x_pmt_2_7,
+       sum(case when mp.cnt_pmt_plan = 2 and mp.diff_dt_x=30  then  mp.total_debt_plus end) as total_debt_x_pmt_2_30,
+       sum(case when mp.cnt_pmt_plan = 2 and mp.diff_dt_x=60  then  mp.total_debt_plus end) as total_debt_x_pmt_2_60,
+       sum(case when mp.cnt_pmt_plan = 2 and mp.diff_dt_x=90  then  mp.total_debt_plus end) as total_debt_x_pmt_2_90,
+       --
+       sum(case when mp.cnt_pmt_plan = 3 and mp.diff_dt_x=0   then  mp.total_debt_plus end) as total_debt_x_pmt_3_0,
+       sum(case when mp.cnt_pmt_plan = 3 and mp.diff_dt_x=7   then  mp.total_debt_plus end) as total_debt_x_pmt_3_7,
+       sum(case when mp.cnt_pmt_plan = 3 and mp.diff_dt_x=30  then  mp.total_debt_plus end) as total_debt_x_pmt_3_30,
+       sum(case when mp.cnt_pmt_plan = 3 and mp.diff_dt_x=60  then  mp.total_debt_plus end) as total_debt_x_pmt_3_60,
+       sum(case when mp.cnt_pmt_plan = 3 and mp.diff_dt_x=90  then  mp.total_debt_plus end) as total_debt_x_pmt_3_90,
+       --
+       sum(case when mp.cnt_pmt_plan = 4 and mp.diff_dt_x=0   then  mp.total_debt_plus end) as total_debt_x_pmt_4_0,
+       sum(case when mp.cnt_pmt_plan = 4 and mp.diff_dt_x=7   then  mp.total_debt_plus end) as total_debt_x_pmt_4_7,
+       sum(case when mp.cnt_pmt_plan = 4 and mp.diff_dt_x=30  then  mp.total_debt_plus end) as total_debt_x_pmt_4_30,
+       sum(case when mp.cnt_pmt_plan = 4 and mp.diff_dt_x=60  then  mp.total_debt_plus end) as total_debt_x_pmt_4_60,
+       sum(case when mp.cnt_pmt_plan = 4 and mp.diff_dt_x=90  then  mp.total_debt_plus end) as total_debt_x_pmt_4_90,
+       --
+       sum(case when mp.cnt_pmt_plan = 5 and mp.diff_dt_x=0   then  mp.total_debt_plus end) as total_debt_x_pmt_5_0,
+       sum(case when mp.cnt_pmt_plan = 5 and mp.diff_dt_x=7   then  mp.total_debt_plus end) as total_debt_x_pmt_5_7,
+       sum(case when mp.cnt_pmt_plan = 5 and mp.diff_dt_x=30  then  mp.total_debt_plus end) as total_debt_x_pmt_5_30,
+       sum(case when mp.cnt_pmt_plan = 5 and mp.diff_dt_x=60  then  mp.total_debt_plus end) as total_debt_x_pmt_5_60,
+       sum(case when mp.cnt_pmt_plan = 5 and mp.diff_dt_x=90  then  mp.total_debt_plus end) as total_debt_x_pmt_5_90,
+       --
+       sum(case when mp.cnt_pmt_plan = 6 and mp.diff_dt_x=0   then  mp.total_debt_plus end) as total_debt_x_pmt_6_0,
+       sum(case when mp.cnt_pmt_plan = 6 and mp.diff_dt_x=7   then  mp.total_debt_plus end) as total_debt_x_pmt_6_7,
+       sum(case when mp.cnt_pmt_plan = 6 and mp.diff_dt_x=30  then  mp.total_debt_plus end) as total_debt_x_pmt_6_30,
+       sum(case when mp.cnt_pmt_plan = 6 and mp.diff_dt_x=60  then  mp.total_debt_plus end) as total_debt_x_pmt_6_60,
+       sum(case when mp.cnt_pmt_plan = 6 and mp.diff_dt_x=90  then  mp.total_debt_plus end) as total_debt_x_pmt_6_90,
+       --
+       sum(case when mp.cnt_pmt_plan = 7 and mp.diff_dt_x=0   then  mp.total_debt_plus end) as total_debt_x_pmt_7_0,
+       sum(case when mp.cnt_pmt_plan = 7 and mp.diff_dt_x=7   then  mp.total_debt_plus end) as total_debt_x_pmt_7_7,
+       sum(case when mp.cnt_pmt_plan = 7 and mp.diff_dt_x=30  then  mp.total_debt_plus end) as total_debt_x_pmt_7_30,
+       sum(case when mp.cnt_pmt_plan = 7 and mp.diff_dt_x=60  then  mp.total_debt_plus end) as total_debt_x_pmt_7_60,
+       sum(case when mp.cnt_pmt_plan = 7 and mp.diff_dt_x=90  then  mp.total_debt_plus end) as total_debt_x_pmt_7_90,
+       -----------
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=0   then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_1_0,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=1   then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_1_1,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=7   then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_1_7,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=15  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_1_15,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=16  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_1_16,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=30  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_1_30,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=60  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_1_60,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=90  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_1_90,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt=0     then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_1_0_old,
+       --
+       sum(case when mp.cnt_pmt_plan = 2 and mp.diff_dt_x=0   then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_2_0,
+       sum(case when mp.cnt_pmt_plan = 2 and mp.diff_dt_x=7   then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_2_7,
+       sum(case when mp.cnt_pmt_plan = 2 and mp.diff_dt_x=30  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_2_30,
+       sum(case when mp.cnt_pmt_plan = 2 and mp.diff_dt_x=60  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_2_60,
+       sum(case when mp.cnt_pmt_plan = 2 and mp.diff_dt_x=90  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_2_90,
+       --
+       sum(case when mp.cnt_pmt_plan = 3 and mp.diff_dt_x=0   then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_3_0,
+       sum(case when mp.cnt_pmt_plan = 3 and mp.diff_dt_x=7   then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_3_7,
+       sum(case when mp.cnt_pmt_plan = 3 and mp.diff_dt_x=30  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_3_30,
+       sum(case when mp.cnt_pmt_plan = 3 and mp.diff_dt_x=60  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_3_60,
+       sum(case when mp.cnt_pmt_plan = 3 and mp.diff_dt_x=90  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_3_90,
+       --
+       sum(case when mp.cnt_pmt_plan = 4 and mp.diff_dt_x=0   then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_4_0,
+       sum(case when mp.cnt_pmt_plan = 4 and mp.diff_dt_x=7   then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_4_7,
+       sum(case when mp.cnt_pmt_plan = 4 and mp.diff_dt_x=30  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_4_30,
+       sum(case when mp.cnt_pmt_plan = 4 and mp.diff_dt_x=60  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_4_60,
+       sum(case when mp.cnt_pmt_plan = 4 and mp.diff_dt_x=90  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_4_90,
+       --
+       sum(case when mp.cnt_pmt_plan = 5 and mp.diff_dt_x=0   then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_5_0,
+       sum(case when mp.cnt_pmt_plan = 5 and mp.diff_dt_x=7   then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_5_7,
+       sum(case when mp.cnt_pmt_plan = 5 and mp.diff_dt_x=30  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_5_30,
+       sum(case when mp.cnt_pmt_plan = 5 and mp.diff_dt_x=60  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_5_60,
+       sum(case when mp.cnt_pmt_plan = 5 and mp.diff_dt_x=90  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_5_90,
+       --
+       sum(case when mp.cnt_pmt_plan = 6 and mp.diff_dt_x=0   then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_6_0,
+       sum(case when mp.cnt_pmt_plan = 6 and mp.diff_dt_x=7   then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_6_7,
+       sum(case when mp.cnt_pmt_plan = 6 and mp.diff_dt_x=30  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_6_30,
+       sum(case when mp.cnt_pmt_plan = 6 and mp.diff_dt_x=60  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_6_60,
+       sum(case when mp.cnt_pmt_plan = 6 and mp.diff_dt_x=90  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_6_90,
+       --
+       sum(case when mp.cnt_pmt_plan = 7 and mp.diff_dt_x=0   then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_7_0,
+       sum(case when mp.cnt_pmt_plan = 7 and mp.diff_dt_x=7   then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_7_7,
+       sum(case when mp.cnt_pmt_plan = 7 and mp.diff_dt_x=30  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_7_30,
+       sum(case when mp.cnt_pmt_plan = 7 and mp.diff_dt_x=60  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_7_60,
+       sum(case when mp.cnt_pmt_plan = 7 and mp.diff_dt_x=90  then  mp.total_debt_max_plus  end) as max_debt_used_x_pmt_7_90,
+       -----------
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=0   then  mp.del_days_plus   end) as delinq_days_x_pmt_1_0,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=1   then  mp.del_days_plus   end) as delinq_days_x_pmt_1_1,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=7   then  mp.del_days_plus   end) as delinq_days_x_pmt_1_7,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=15  then  mp.del_days_plus   end) as delinq_days_x_pmt_1_15,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=16  then  mp.del_days_plus   end) as delinq_days_x_pmt_1_16,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=30  then  mp.del_days_plus   end) as delinq_days_x_pmt_1_30,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=60  then  mp.del_days_plus   end) as delinq_days_x_pmt_1_60,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt_x=90  then  mp.del_days_plus   end) as delinq_days_x_pmt_1_90,
+       sum(case when mp.cnt_pmt_plan = 1 and mp.diff_dt=0     then  mp.del_days_plus   end) as delinq_days_x_pmt_1_0_old,
+       --
+       sum(case when mp.cnt_pmt_plan = 2 and mp.diff_dt_x=0   then  mp.del_days_plus   end) as delinq_days_x_pmt_2_0,
+       sum(case when mp.cnt_pmt_plan = 2 and mp.diff_dt_x=7   then  mp.del_days_plus   end) as delinq_days_x_pmt_2_7,
+       sum(case when mp.cnt_pmt_plan = 2 and mp.diff_dt_x=30  then  mp.del_days_plus   end) as delinq_days_x_pmt_2_30,
+       sum(case when mp.cnt_pmt_plan = 2 and mp.diff_dt_x=60  then  mp.del_days_plus   end) as delinq_days_x_pmt_2_60,
+       sum(case when mp.cnt_pmt_plan = 2 and mp.diff_dt_x=90  then  mp.del_days_plus   end) as delinq_days_x_pmt_2_90,
+       --
+       sum(case when mp.cnt_pmt_plan = 3 and mp.diff_dt_x=0   then  mp.del_days_plus   end) as delinq_days_x_pmt_3_0,
+       sum(case when mp.cnt_pmt_plan = 3 and mp.diff_dt_x=7   then  mp.del_days_plus   end) as delinq_days_x_pmt_3_7,
+       sum(case when mp.cnt_pmt_plan = 3 and mp.diff_dt_x=30  then  mp.del_days_plus   end) as delinq_days_x_pmt_3_30,
+       sum(case when mp.cnt_pmt_plan = 3 and mp.diff_dt_x=60  then  mp.del_days_plus   end) as delinq_days_x_pmt_3_60,
+       sum(case when mp.cnt_pmt_plan = 3 and mp.diff_dt_x=90  then  mp.del_days_plus   end) as delinq_days_x_pmt_3_90,
+       --
+       sum(case when mp.cnt_pmt_plan = 4 and mp.diff_dt_x=0   then  mp.del_days_plus   end) as delinq_days_x_pmt_4_0,
+       sum(case when mp.cnt_pmt_plan = 4 and mp.diff_dt_x=7   then  mp.del_days_plus   end) as delinq_days_x_pmt_4_7,
+       sum(case when mp.cnt_pmt_plan = 4 and mp.diff_dt_x=30  then  mp.del_days_plus   end) as delinq_days_x_pmt_4_30,
+       sum(case when mp.cnt_pmt_plan = 4 and mp.diff_dt_x=60  then  mp.del_days_plus   end) as delinq_days_x_pmt_4_60,
+       sum(case when mp.cnt_pmt_plan = 4 and mp.diff_dt_x=90  then  mp.del_days_plus   end) as delinq_days_x_pmt_4_90,
+       --
+       sum(case when mp.cnt_pmt_plan = 5 and mp.diff_dt_x=0   then  mp.del_days_plus   end) as delinq_days_x_pmt_5_0,
+       sum(case when mp.cnt_pmt_plan = 5 and mp.diff_dt_x=7   then  mp.del_days_plus   end) as delinq_days_x_pmt_5_7,
+       sum(case when mp.cnt_pmt_plan = 5 and mp.diff_dt_x=30  then  mp.del_days_plus   end) as delinq_days_x_pmt_5_30,
+       sum(case when mp.cnt_pmt_plan = 5 and mp.diff_dt_x=60  then  mp.del_days_plus   end) as delinq_days_x_pmt_5_60,
+       sum(case when mp.cnt_pmt_plan = 5 and mp.diff_dt_x=90  then  mp.del_days_plus   end) as delinq_days_x_pmt_5_90,
+       --
+       sum(case when mp.cnt_pmt_plan = 6 and mp.diff_dt_x=0   then  mp.del_days_plus   end) as delinq_days_x_pmt_6_0,
+       sum(case when mp.cnt_pmt_plan = 6 and mp.diff_dt_x=7   then  mp.del_days_plus   end) as delinq_days_x_pmt_6_7,
+       sum(case when mp.cnt_pmt_plan = 6 and mp.diff_dt_x=30  then  mp.del_days_plus   end) as delinq_days_x_pmt_6_30,
+       sum(case when mp.cnt_pmt_plan = 6 and mp.diff_dt_x=60  then  mp.del_days_plus   end) as delinq_days_x_pmt_6_60,
+       sum(case when mp.cnt_pmt_plan = 6 and mp.diff_dt_x=90  then  mp.del_days_plus   end) as delinq_days_x_pmt_6_90,
+       --
+       sum(case when mp.cnt_pmt_plan = 7 and mp.diff_dt_x=0   then  mp.del_days_plus   end) as delinq_days_x_pmt_7_0,
+       sum(case when mp.cnt_pmt_plan = 7 and mp.diff_dt_x=7   then  mp.del_days_plus   end) as delinq_days_x_pmt_7_7,
+       sum(case when mp.cnt_pmt_plan = 7 and mp.diff_dt_x=30  then  mp.del_days_plus   end) as delinq_days_x_pmt_7_30,
+       sum(case when mp.cnt_pmt_plan = 7 and mp.diff_dt_x=60  then  mp.del_days_plus   end) as delinq_days_x_pmt_7_60,
+       sum(case when mp.cnt_pmt_plan = 7 and mp.diff_dt_x=90  then  mp.del_days_plus   end) as delinq_days_x_pmt_7_90
+
+from M_RBO_CONTRACT_DATA_PMT_BUFF2 mp
+--where mp.rbo_contract_id=237021069692
+group by mp.po_rbo_contract_id;
+

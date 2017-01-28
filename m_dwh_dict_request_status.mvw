@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_DWH_DICT_REQUEST_STATUS
+build deferred
+refresh force on demand
+as
+select
+  request_status_cd ,
+  request_status$change_date,
+  request_status$row_status ,
+  request_status$audit_id ,
+  request_status$hash,
+  request_status$source,
+  request_status$provider,
+  request_status$source_pk,
+  request_status_code ,
+  request_status_name
+  from DWH_MAIN.DICT_REQUEST_STATUS@RDWH_EXD;
+

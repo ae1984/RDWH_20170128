@@ -1,0 +1,25 @@
+﻿create table U1.T_CLIENT_CATEG_HIST_PRE
+(
+  iin                        VARCHAR2(36),
+  rfo_client_id              NUMBER,
+  rbo_client_id              NUMBER,
+  last_month_workday         DATE,
+  prev_con_del_days_max      NUMBER,
+  fact_pmt_mon_before        NUMBER,
+  fact_pmt_mon_before_12_mon NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_CLIENT_CATEG_HIST_PRE to LOADDB;
+

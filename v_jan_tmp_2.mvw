@@ -1,0 +1,21 @@
+﻿create materialized view U1.V_JAN_TMP_2
+refresh force on demand
+as
+select p1.*, p2.diff_con_cnt, p2.total_debt, p1.total_debt_new - p2.total_debt as debt_diff
+from (select t.yy_mm_start, count(distinct t.contract_number) as diff_con_cnt_new,
+             sum(t.total_debt) as total_debt_new
+from V_PORTFOLIO t join V_CONTRACT_CAL c on c.contract_number = t.contract_number and c.is_refin_restruct_ever = 0
+where t.planned_pmt_month_new = 1 and t.planned_pmt_month != t.planned_pmt_month_new and
+      t.start_year = 2013 and t.delinq_days > 0 and t.total_debt > 0
+group by t.yy_mm_start
+) p1 left join (select t.yy_mm_start, count(distinct t.contract_number) as diff_con_cnt,
+             sum(t.total_debt) as total_debt
+from V_PORTFOLIO t join V_CONTRACT_CAL c on c.contract_number = t.contract_number and c.is_refin_restruct_ever = 0
+where t.planned_pmt_month = 1 and t.planned_pmt_month != t.planned_pmt_month_new and
+      t.start_year = 2013 and t.delinq_days > 0 and t.total_debt > 0
+group by t.yy_mm_start
+) p2 on p1.yy_mm_start = p2.yy_mm_start;
+grant select on U1.V_JAN_TMP_2 to LOADDB;
+grant select on U1.V_JAN_TMP_2 to LOADER;
+
+

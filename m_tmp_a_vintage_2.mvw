@@ -1,0 +1,100 @@
+﻿create materialized view U1.M_TMP_A_VINTAGE_2
+refresh force on demand
+as
+select
+ t.client_categ,
+ t.cred_program_name_x,
+ t.yy_mm_start_date,
+ t.yy_mm_report,
+ /*t.ppm,*/
+ sum (t.total_debt_x) as Debt_x,
+ avg (t.max_debt_used_x) as avg_sum,
+ Sum(t.max_debt_used_x),
+ t.yy_mm_report_last,
+ t.is_ever_refin_contract,
+
+count(distinct t.rfo_client_id ) as count_distinct_clients,
+count(distinct case when t.total_debt>0 then t.rfo_client_id else 0 end ) as count_clients_w_dbt,
+
+
+to_char(regexp_count(substr(t.pmt_full_code_3,-6),'1') + regexp_count(substr(t.pmt_full_code_3,-6),'0')) ||'-'||
+           to_char(regexp_count(substr(t.pmt_full_code_3,-3),'1') + regexp_count(substr(t.pmt_full_code_3,-3),'0')) as barcode_pmt_cnt,
+
+
+
+ Case when nvl(t.DEL_DAYS_MAX_X,0) < 8 then '000 – 007'
+           when nvl(t.DEL_DAYS_MAX_X,0) > 7 and nvl(t.DEL_DAYS_MAX_X,0) <31 then '008 – 030'
+             when nvl(t.DEL_DAYS_MAX_X,0) > 30 and nvl(t.DEL_DAYS_MAX_X,0) < 61 then '031 – 060'
+             when nvl(t.DEL_DAYS_MAX_X,0) > 60 and nvl(t.DEL_DAYS_MAX_X,0) < 91 then '061 - 090'
+           when nvl(t.DEL_DAYS_MAX_X,0) > 90 and nvl(t.DEL_DAYS_MAX_X,0) < 121 then '091 - 120'
+              when nvl(t.DEL_DAYS_MAX_X,0) > 120 and nvl(t.DEL_DAYS_MAX_X,0) < 151 then '121 - 150'
+             when nvl(t.DEL_DAYS_MAX_X,0) > 150 and nvl(t.DEL_DAYS_MAX_X,0) < 181 then '151 - 180'
+               when nvl(t.DEL_DAYS_MAX_X,0) > 180 and nvl(t.DEL_DAYS_MAX_X,0) < 211 then '181 - 210'
+           when nvl(t.DEL_DAYS_MAX_X,0) > 210 and nvl(t.DEL_DAYS_MAX_X,0) < 241 then '211 - 240'
+              when nvl(t.DEL_DAYS_MAX_X,0) > 240 and nvl(t.DEL_DAYS_MAX_X,0) < 271 then '241 - 270'
+              when nvl(t.DEL_DAYS_MAX_X,0) > 270 and nvl(t.DEL_DAYS_MAX_X,0) < 301 then '271 - 300'
+                 when nvl(t.DEL_DAYS_MAX_X,0) > 300 and nvl(t.DEL_DAYS_MAX_X,0) < 331 then '301 – 330'
+           when nvl(t.DEL_DAYS_MAX_X,0) > 330 and nvl(t.DEL_DAYS_MAX_X,0) < 361 then '331 - 360'
+             when nvl(t.DEL_DAYS_MAX_X,0) > 360  then '360 <' end as long_delinq_ever,
+
+            Case when nvl(t.DEL_DAYS_X,0) < 8 then '000 – 007'
+           when nvl(t.DEL_DAYS_X,0) > 7 and nvl(t.DEL_DAYS_X,0) <31 then '008 – 030'
+             when nvl(t.DEL_DAYS_X,0) > 30 and nvl(t.DEL_DAYS_X,0) < 61 then '031 – 060'
+             when nvl(t.DEL_DAYS_X,0) > 60 and nvl(t.DEL_DAYS_X,0) < 91 then '061 - 090'
+           when nvl(t.DEL_DAYS_X,0) > 90 and nvl(t.DEL_DAYS_X,0) < 121 then '091 - 120'
+              when nvl(t.DEL_DAYS_X,0) > 120 and nvl(t.DEL_DAYS_X,0) < 151 then '121 - 150'
+             when nvl(t.DEL_DAYS_X,0) > 150 and nvl(t.DEL_DAYS_X,0) < 181 then '151 - 180'
+               when nvl(t.DEL_DAYS_X,0) > 180 and nvl(t.DEL_DAYS_X,0) < 211 then '181 - 210'
+           when nvl(t.DEL_DAYS_X,0) > 210 and nvl(t.DEL_DAYS_X,0) < 241 then '211 - 240'
+              when nvl(t.DEL_DAYS_X,0) > 240 and nvl(t.DEL_DAYS_X,0) < 271 then '241 - 270'
+              when nvl(t.DEL_DAYS_X,0) > 270 and nvl(t.DEL_DAYS_X,0) < 301 then '271 - 300'
+                 when nvl(t.DEL_DAYS_X,0) > 300 and nvl(t.DEL_DAYS_X,0) < 331 then '301 – 330'
+           when nvl(t.DEL_DAYS_X,0) > 330 and nvl(t.DEL_DAYS_X,0) < 361 then '331 - 360'
+             when nvl(t.DEL_DAYS_X,0) > 360  then '360 <' end as long_delinq_current
+
+
+ from u1.M_RBO_CONTRACT_PORTFOLIO t
+
+
+ group by
+ t.yy_mm_report,
+ /*t.ppm,*/
+ t.yy_mm_start_date,
+ t.yy_mm_report_last,
+ t.is_ever_refin_contract,
+ t.cred_program_name_x,
+ Case when nvl(t.DEL_DAYS_MAX_X,0) < 8 then '000 – 007'
+           when nvl(t.DEL_DAYS_MAX_X,0) > 7 and nvl(t.DEL_DAYS_MAX_X,0) <31 then '008 – 030'
+              when nvl(t.DEL_DAYS_MAX_X,0) > 30 and nvl(t.DEL_DAYS_MAX_X,0) < 61 then '031 – 060'
+             when nvl(t.DEL_DAYS_MAX_X,0) > 60 and nvl(t.DEL_DAYS_MAX_X,0) < 91 then '061 - 090'
+           when nvl(t.DEL_DAYS_MAX_X,0) > 90 and nvl(t.DEL_DAYS_MAX_X,0) < 121 then '091 - 120'
+             when nvl(t.DEL_DAYS_MAX_X,0) > 120 and nvl(t.DEL_DAYS_MAX_X,0) < 151 then '121 - 150'
+             when nvl(t.DEL_DAYS_MAX_X,0) > 150 and nvl(t.DEL_DAYS_MAX_X,0) < 181 then '151 - 180'
+                when nvl(t.DEL_DAYS_MAX_X,0) > 180 and nvl(t.DEL_DAYS_MAX_X,0) < 211 then '181 - 210'
+           when nvl(t.DEL_DAYS_MAX_X,0) > 210 and nvl(t.DEL_DAYS_MAX_X,0) < 241 then '211 - 240'
+             when nvl(t.DEL_DAYS_MAX_X,0) > 240 and nvl(t.DEL_DAYS_MAX_X,0) < 271 then '241 - 270'
+             when nvl(t.DEL_DAYS_MAX_X,0) > 270 and nvl(t.DEL_DAYS_MAX_X,0) < 301 then '271 - 300'
+               when nvl(t.DEL_DAYS_MAX_X,0) > 300 and nvl(t.DEL_DAYS_MAX_X,0) < 331 then '301 – 330'
+           when nvl(t.DEL_DAYS_MAX_X,0) > 330 and nvl(t.DEL_DAYS_MAX_X,0) < 361 then '331 - 360'
+             when nvl(t.DEL_DAYS_MAX_X,0) > 360 then '360 <' end,
+Case when nvl(t.DEL_DAYS_X,0) < 8 then '000 – 007'
+           when nvl(t.DEL_DAYS_X,0) > 7 and nvl(t.DEL_DAYS_X,0) <31 then '008 – 030'
+             when nvl(t.DEL_DAYS_X,0) > 30 and nvl(t.DEL_DAYS_X,0) < 61 then '031 – 060'
+             when nvl(t.DEL_DAYS_X,0) > 60 and nvl(t.DEL_DAYS_X,0) < 91 then '061 - 090'
+           when nvl(t.DEL_DAYS_X,0) > 90 and nvl(t.DEL_DAYS_X,0) < 121 then '091 - 120'
+              when nvl(t.DEL_DAYS_X,0) > 120 and nvl(t.DEL_DAYS_X,0) < 151 then '121 - 150'
+             when nvl(t.DEL_DAYS_X,0) > 150 and nvl(t.DEL_DAYS_X,0) < 181 then '151 - 180'
+               when nvl(t.DEL_DAYS_X,0) > 180 and nvl(t.DEL_DAYS_X,0) < 211 then '181 - 210'
+           when nvl(t.DEL_DAYS_X,0) > 210 and nvl(t.DEL_DAYS_X,0) < 241 then '211 - 240'
+              when nvl(t.DEL_DAYS_X,0) > 240 and nvl(t.DEL_DAYS_X,0) < 271 then '241 - 270'
+              when nvl(t.DEL_DAYS_X,0) > 270 and nvl(t.DEL_DAYS_X,0) < 301 then '271 - 300'
+                 when nvl(t.DEL_DAYS_X,0) > 300 and nvl(t.DEL_DAYS_X,0) < 331 then '301 – 330'
+           when nvl(t.DEL_DAYS_X,0) > 330 and nvl(t.DEL_DAYS_X,0) < 361 then '331 - 360'
+             when nvl(t.DEL_DAYS_X,0) > 360  then '360 <' end,
+to_char(regexp_count(substr(t.pmt_full_code_3,-6),'1') + regexp_count(substr(t.pmt_full_code_3,-6),'0')) ||'-'||
+           to_char(regexp_count(substr(t.pmt_full_code_3,-3),'1') + regexp_count(substr(t.pmt_full_code_3,-3),'0')),
+t.client_categ;
+grant select on U1.M_TMP_A_VINTAGE_2 to LOADDB;
+grant select on U1.M_TMP_A_VINTAGE_2 to LOADER;
+
+

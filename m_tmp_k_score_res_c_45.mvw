@@ -1,0 +1,101 @@
+﻿create materialized view U1.M_TMP_K_SCORE_RES_C_45
+refresh complete on demand
+as
+select xx.*
+       , case when xx.inc_rise_prc_pre >= -20 and xx.inc_rise_prc_pre <=0 then 0
+         else score_card end score_card_f
+
+       , case when xx.inc_rise_prc_pre >= -20 and xx.inc_rise_prc_pre <=0 then xx.kdn_form_salary_max
+         else score_kdn end score_kdn_f
+
+       , case when xx.inc_rise_prc_pre >= -20 and xx.inc_rise_prc_pre <=0 then xx.form_income_gcvp_salary_max
+         else score_inc end score_inc_f
+
+       , case when xx.inc_rise_prc_pre >= -20 and xx.inc_rise_prc_pre <=0 then xx.is_kdn_regulated_sal_max
+         else score_is_kdn_regulated end score_is_kdn_regulated_f
+
+       , case when xx.inc_rise_prc_pre >= -20 and xx.inc_rise_prc_pre <=0
+              then 0
+         else inc_rise_prc_pre end inc_rise_prc
+
+
+from (
+select x.*,
+       case when x.form_income_gcvp_salary_max <= 0 then 0 else round((x.score_inc-x.form_income_gcvp_salary_max)/x.form_income_gcvp_salary_max*100, -1) end inc_rise_prc_pre
+from (
+select /*+ no_parallel */
+       k.*
+       ,t.inc_pred, t.kdn_pred, t.is_kdn_regulated_pred
+       ,t.inc_pred2, t.kdn_pred2, t.is_kdn_regulated_pred2
+       ,t.inc_pred3, t.kdn_pred3, t.is_kdn_regulated_pred3
+       ,t.inc_pred4, t.kdn_pred4, t.is_kdn_regulated_pred4
+
+       , case when t.is_kdn_regulated_sal_max = 1 and t.kdn_form_salary_max >= 45 and t.is_ref_hard = 0
+                then
+                  case
+                     when ((t.is_kdn_regulated_pred = 1 and t.kdn_pred < 45) or t.is_kdn_regulated_pred = 0) then 1
+                     when ((t.is_kdn_regulated_pred2 = 1 and t.kdn_pred2 < 45) or t.is_kdn_regulated_pred2 = 0) then 2
+                  else 0 end
+
+              when ((t.is_kdn_regulated_sal_max = 1 and t.kdn_form_salary_max < 45 and t.is_ref_hard = 0) or t.is_kdn_regulated_sal_max = 0)
+                then
+                  case
+                     when ((t.is_kdn_regulated_pred3 = 1 and t.kdn_pred3 < 45) or t.is_kdn_regulated_pred3 = 0) then 3
+                     when ((t.is_kdn_regulated_pred4 = 1 and t.kdn_pred4 < 45) or t.is_kdn_regulated_pred4 = 0) then 4
+                  else 0 end
+              else 0 end score_card
+
+        , case when t.is_kdn_regulated_sal_max = 1 and t.kdn_form_salary_max >= 45 and t.is_ref_hard = 0
+                then
+                  case
+                     when ((t.is_kdn_regulated_pred = 1 and t.kdn_pred < 45) or t.is_kdn_regulated_pred = 0) then t.is_kdn_regulated_pred
+                     when ((t.is_kdn_regulated_pred2 = 1 and t.kdn_pred2 < 45) or t.is_kdn_regulated_pred2 = 0) then t.is_kdn_regulated_pred2
+                  else t.is_kdn_regulated_sal_max end
+
+              when ((t.is_kdn_regulated_sal_max = 1 and t.kdn_form_salary_max < 45 and t.is_ref_hard = 0) or t.is_kdn_regulated_sal_max = 0)
+                then
+                  case
+                     when ((t.is_kdn_regulated_pred3 = 1 and t.kdn_pred3 < 45) or t.is_kdn_regulated_pred3 = 0) then is_kdn_regulated_pred3
+                     when ((t.is_kdn_regulated_pred4 = 1 and t.kdn_pred4 < 45) or t.is_kdn_regulated_pred4 = 0) then t.is_kdn_regulated_pred4
+                  else t.is_kdn_regulated_sal_max end
+              else t.is_kdn_regulated_sal_max end score_is_kdn_regulated
+
+        , case when t.is_kdn_regulated_sal_max = 1 and t.kdn_form_salary_max >= 45 and t.is_ref_hard = 0
+                then
+                  case
+                     when ((t.is_kdn_regulated_pred = 1 and t.kdn_pred < 45) or t.is_kdn_regulated_pred = 0) then t.kdn_pred
+                     when ((t.is_kdn_regulated_pred2 = 1 and t.kdn_pred2 < 45) or t.is_kdn_regulated_pred2 = 0) then t.kdn_pred2
+                  else t.kdn_form_salary_max end
+
+              when ((t.is_kdn_regulated_sal_max = 1 and t.kdn_form_salary_max < 45 and t.is_ref_hard = 0) or t.is_kdn_regulated_sal_max = 0)
+                then
+                  case
+                     when ((t.is_kdn_regulated_pred3 = 1 and t.kdn_pred3 < 45) or t.is_kdn_regulated_pred3 = 0) then t.kdn_pred3
+                     when ((t.is_kdn_regulated_pred4 = 1 and t.kdn_pred4 < 45) or t.is_kdn_regulated_pred4 = 0) then t.kdn_pred4
+                  else t.kdn_form_salary_max end
+              else t.kdn_form_salary_max end score_kdn
+
+         , case when t.is_kdn_regulated_sal_max = 1 and t.kdn_form_salary_max >= 45 and t.is_ref_hard = 0
+                then
+                  case
+                     when ((t.is_kdn_regulated_pred = 1 and t.kdn_pred < 45) or t.is_kdn_regulated_pred = 0) then t.inc_pred
+                     when ((t.is_kdn_regulated_pred2 = 1 and t.kdn_pred2 < 45) or t.is_kdn_regulated_pred2 = 0) then t.inc_pred2
+                  else t.form_income_gcvp_salary_max end
+
+              when ((t.is_kdn_regulated_sal_max = 1 and t.kdn_form_salary_max < 45 and t.is_ref_hard = 0) or t.is_kdn_regulated_sal_max = 0)
+                then
+                  case
+                     when ((t.is_kdn_regulated_pred3 = 1 and t.kdn_pred3 < 45) or t.is_kdn_regulated_pred3 = 0) then t.inc_pred3
+                     when ((t.is_kdn_regulated_pred4 = 1 and t.kdn_pred4 < 45) or t.is_kdn_regulated_pred4 = 0) then t.inc_pred4
+                  else t.form_income_gcvp_salary_max end
+              else t.form_income_gcvp_salary_max end score_inc
+
+
+from M_TMP_K_SCORE_FM_C t
+join u1.M_TMP_J_K5 k on k.deal_number = t.deal_number
+) x
+) xx;
+grant select on U1.M_TMP_K_SCORE_RES_C_45 to LOADDB;
+grant select on U1.M_TMP_K_SCORE_RES_C_45 to LOADER;
+
+

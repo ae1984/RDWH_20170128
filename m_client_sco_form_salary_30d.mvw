@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_CLIENT_SCO_FORM_SALARY_30D
+refresh force on demand
+as
+select t.rfo_client_id,
+       max(t.form_client_date) as form_date_create,
+       max(t.form_client_id) as form_id,
+       max(t.inc_sal) as form_salary_max
+from V_FORM_CLIENT_ALL_RFO t
+where t.form_client_date >= trunc(sysdate) - 30
+group by t.rfo_client_id;
+grant select on U1.M_CLIENT_SCO_FORM_SALARY_30D to LOADDB;
+grant select on U1.M_CLIENT_SCO_FORM_SALARY_30D to LOADER;
+grant select on U1.M_CLIENT_SCO_FORM_SALARY_30D to LOAD_MO;
+
+

@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_SC_CLIENT_DWH_DATA_PRE1
+build deferred
+refresh force on demand
+as
+select --+ parallel(30) parallel_index(30)
+       t.client_iin as iin,
+       max(t.x_client_id) as client_id,
+
+       sum(case when t.is_credit_active = 1 then t.x_total_debt end) pre_amount_rest
+from u1.v_dwh_portfolio_current t
+group by t.client_iin;
+grant select on U1.M_SC_CLIENT_DWH_DATA_PRE1 to LOADDB;
+grant select on U1.M_SC_CLIENT_DWH_DATA_PRE1 to LOAD_MO;
+
+

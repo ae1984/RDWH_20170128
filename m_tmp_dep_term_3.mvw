@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_TMP_DEP_TERM_3
+refresh force on demand
+as
+select m.contract_number,m.yy_mm_start_last_date,
+                  sum(case when t.c_cur_short = 'EUR' then t.c_saldo_in * 211.5
+                  when t.c_cur_short = 'USD' then t.c_saldo_in * 185.5
+                  when t.c_cur_short = 'KZT' then t.c_saldo_in end) c_sum_saldo_depn
+           from M_RBO_PORT_DEPN_TST t
+           join V_CLIENT_RFO_BY_ID cr on t.c_inn = cr.iin
+           join m_contract_cal_del m on m.rfo_client_id = cr.rfo_client_id and m.yy_mm_start_last_date = t.c_date_in
+           where t.c_date_begin <= t.c_date_in
+             and t.c_date_begin <= add_months(m.yy_mm_start_last_date,-3)
+           group by m.contract_number,m.yy_mm_start_last_date;
+grant select on U1.M_TMP_DEP_TERM_3 to LOADDB;
+grant select on U1.M_TMP_DEP_TERM_3 to LOADER;
+
+

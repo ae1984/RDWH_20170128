@@ -1,0 +1,51 @@
+﻿create materialized view U1.M_OUT_PORT_AUTO_PROV
+refresh force on demand
+as
+select /*+ parallel 30 */
+       tt.rep_date,
+       cb.gu_contract_number as contract_number_gu,
+       tt.zalog_contract_number as contract_number_loan,
+     -- c.zalog_contract_number as contract_number_loan,
+       tt.deal_number as contract_number,
+       tt.prod_type,
+       tt.total_debt,
+       tt.delinq_days,
+       tt.delinq_days_old,
+       tt.discount,
+       tt.eff_rate,
+       tt.reduced_cost,
+       tt.market_cost,
+       tt.total_ts_cost,
+       tt.total_set_cost,
+       tt.zalog_cost,
+       ((tt.market_cost * 0.7) / (1 + nvl(tt.eff_rate, 0))) as present_cost,
+       tt.is_on_balance
+from (select t.rep_date,
+             t.deal_number,
+             max(t.prod_type) prod_type,
+             max(t.total_debt) total_debt,
+             max(t.delinq_days) delinq_days,
+             max(t.delinq_days_old) delinq_days_old,
+             max(t.discount) discount,
+             max(t.eff_rate) eff_rate,
+             max(case when t.is_gu_sale = 1 then 0 else t.reduced_cost   end) reduced_cost,
+             max(case when t.is_gu_sale = 1 then 0 else t.market_cost    end) market_cost,
+             max(case when t.is_gu_sale = 1 then 0 else t.total_ts_cost  end) total_ts_cost,
+             max(case when t.is_gu_sale = 1 then 0 else t.total_set_cost end) total_set_cost,
+             max(case when t.is_gu_sale = 1 then 0 else t.zalog_cost     end) zalog_cost,
+             max(t.is_on_balance) as is_on_balance,
+             MAX(t.zalog_contract_number) as zalog_contract_number
+     from u1.T_DWH_PORT_AUTO t
+     where
+           t.rep_date >= add_months(trunc(sysdate,'mm'),-3)
+           and to_number(to_char(t.rep_date,'dd')) > 20
+           and t.rep_date not in (select distinct value from  M_RBO_CALENDAR_VALUE where calendar_name in ('HOLIDAYS','HOLIDAYS_W') )
+      group by t.rep_date,
+               t.deal_number) tt
+join u1.M_RBO_CONTRACT_BAS cb on cb.contract_number = tt.deal_number
+                                 and cb.cred_program_code in ('GU_AVTO_BU', 'GU_AVTO', 'AUTO','GU_AVTO_ZALOG','GU_AVTO_REF')
+/*left join (select distinct contract_number, zalog_contract_number
+           from u1.m_auto_collateral) c on c.contract_number = tt.deal_number*/;
+grant select on U1.M_OUT_PORT_AUTO_PROV to LOADDB;
+
+

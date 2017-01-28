@@ -1,0 +1,32 @@
+﻿create table U1.T_KASPIKZ_PAY_PAYINFOPARAMS
+(
+  id                NUMBER(20),
+  pay_info_id       NUMBER(20),
+  service_params_id NUMBER(10),
+  str_value         VARCHAR2(4000)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_KASPIKZ_PAY_PAYINFOPARAMS
+  is 'Параметры проведенных платежей через kaspi.kz';
+comment on column U1.T_KASPIKZ_PAY_PAYINFOPARAMS.id
+  is 'Идентификатор таблицы';
+comment on column U1.T_KASPIKZ_PAY_PAYINFOPARAMS.pay_info_id
+  is 'Ссылка на идентификатор платежа(FK на M_KASPIKZ_PAY_PAY_INFO)';
+comment on column U1.T_KASPIKZ_PAY_PAYINFOPARAMS.service_params_id
+  is 'Ссылка на справочник параметров плтежей(FK на M_KASPIKZ_PAY_SERVICE_PARAMS)';
+comment on column U1.T_KASPIKZ_PAY_PAYINFOPARAMS.str_value
+  is 'Значение параметра';
+grant select on U1.T_KASPIKZ_PAY_PAYINFOPARAMS to LOADDB;
+grant select on U1.T_KASPIKZ_PAY_PAYINFOPARAMS to LOADER;
+

@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_PARAMS_FOR_MODEL_PRE_13_1
+build deferred
+refresh force on demand
+as
+select  /*+parallel(20)*/
+        cln.rfo_client_id
+      , cln.mask_cellphone
+      ,trunc(cln.folder_date_create_mi) as dt
+from M_PARAMS_FOR_MODEL_PRE_0 cln--V_CLIENT_RFO_BY_ID cln
+
+--where cln.folder_date_create_mi >= to_date('01.01.2015','dd.mm.yyyy') and cln.mask_cellphone<>'-------'
+group by cln.rfo_client_id, cln.mask_cellphone,trunc(cln.folder_date_create_mi);
+grant select on U1.M_PARAMS_FOR_MODEL_PRE_13_1 to LOADDB;
+
+

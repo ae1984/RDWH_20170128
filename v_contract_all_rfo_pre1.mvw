@@ -1,0 +1,83 @@
+﻿create materialized view U1.V_CONTRACT_ALL_RFO_PRE1
+build deferred
+refresh force on demand
+as
+select /*+parallel(30)*/
+    cd2.id as rfo_contract_id,
+    cd2.c_num_dog as contract_number,
+    cd2.c_client_ref as rfo_client_id,
+    cast (1 as number) as is_card,
+    fd.c_doc_date as contract_date,
+    sd.c_code as contract_status_code,
+    upper(sd.c_name) as contract_status_name,
+    pr.c_code as cr_program_code,
+    upper(pr.c_name) as cr_program_name,
+    cast('КАРТА' as VARCHAR2(25)) as credit_type_of_contract,
+    cast('КАРТА' as VARCHAR2(25)) as credit_type_of_scheme,
+    cs.c_code as cr_scheme_code,
+    upper(cs.c_name) as cr_scheme_name,
+    ud.C_CODE as tariff_plan_code,
+    upper(ud.c_name) as tariff_plan_name,
+    cd2.c_num_dog as gu_contract_num,
+    cast(null as number) as is_aa_approved,
+    cast(null as VARCHAR2(4000)) as auto_calc_result,
+    trunc(cd2.c_date_begin) as date_begin,
+    trunc(cd2.c_date_set_revolv) as set_revolving_date,
+    cast(null as number) as shop_id,
+    cast (null as VARCHAR2(150)) as shop_code,
+    cast (null as VARCHAR2(510)) as shop_place,
+    fld.id as folder_id,
+    cd2.c_credit_limit as contract_amount,
+    cd2.c_wish_pay_sum as wish_pay_sum,
+    case when sd.c_code = 'RFO_CLOSE' then 1 -- СЛУЖЕБНОЕ
+         when sd.c_code in ('CANCEL','PREPARE','PREP_REVOLV') then 0 --ОТКАЗ, ПОДГОТОВКА, ПОДГОТОВКА К УСТНОВКЕ РЕВОЛЬВЕРНОСТИ
+         else 1 end as
+    is_credit_issued,
+    cd2.c_ver_gu as gu_version,
+    cd2.c_gu_sign_ldate as gu_sign_date,
+    cd2.c_date_gu as gu_date,
+    cd2.c_kas_add_prop as kas_add_prop,
+
+    ceil(months_between(cd2.c_date_end, cd2.c_date_begin)) as contract_term
+/*        CASE WHEN upper(sd.c_name) in (
+            'АКТИВНЫЙ',
+            'ЗАКРЫТ',
+            'ЗС НА ПРОСРОЧКЕ',
+            'ЗС РАБОТАЕТ',
+            'КС НА ПРОСРОЧКЕ',
+            'КС РАБОТАЕТ',
+            'ПОГАШЕН ДОСРОЧНО',
+            'ПОДПИСАН',
+            'ПОМЕЧЕН К ЗАКРЫТИЮ',
+            'ПРОСРОЧЕННЫЙ',
+            'РАБОТАЕТ',
+            'РАСТОРГНУТ') then 1 else 0 end as
+    is_credit_issued */
+from
+    u1.V_RFO_Z#KAS_PC_DOG cd2,
+    u1.V_RFO_Z#PROPERTIES p,
+    u1.V_RFO_Z#KAS_CARD_SCHEME cs,
+    u1.V_RFO_z#PROD_PROPERTY pr,
+    u1.V_RFO_Z#PROPERTY_GRP gr,
+    u1.V_RFO_Z#STATUS_DOG sd,
+    u1.V_RFO_Z#FDOC fd,
+    u1.V_RFO_Z#KAS_UNIVERSAL_D ud,
+    u1.V_RFO_Z#RDOC rd,---
+    u1.V_RFO_Z#FOLDERS fld,---
+    u1.V_RFO_Z#BUS_PROCESS bp
+where
+    cs.c_add_prop = p.collection_id and
+    gr.id = pr.c_group_prop and
+    gr.c_code = 'KAS_CRED_PROGRAM' and
+    p.c_prop = pr.id and
+    cs.id = cd2.c_pc_scheme and
+    fd.id = cd2.id and
+    sd.id = fd.c_status_doc and
+    cd2.c_tariff_plan = ud.id(+) and
+    fd.id = rd.c_doc(+) and fd.class_id = 'KAS_PC_DOG' and----
+    rd.collection_id = fld.c_docs(+) and
+    fld.c_business = bp.id(+) and
+    bp.c_code not in ('SEND_SMS_REQUISITES');
+grant select on U1.V_CONTRACT_ALL_RFO_PRE1 to LOADDB;
+
+

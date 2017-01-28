@@ -1,0 +1,28 @@
+﻿create materialized view U1.V_RBO_Z#PROL_CONTRACT
+refresh complete on demand
+as
+select
+      ID,
+      collection_id,
+      c_summa,
+      c_prol_begin,
+      c_prol_end,
+      c_note,
+      c_prc_rate,
+      c_changes,
+      c_num_prol,
+      c_add_agreement,
+      c_prev_account,
+      c_prev_summa,
+      c_limit_saldo,
+      c_uch_gr_risk,
+      c_prev_limit,
+      c_last_date_ending,
+      c_prol_plan_op,
+      c_vid_dog,
+      c_date_change
+ from rdwh.V_RBO_Z#PROL_CONTRACT@rdwh_exd T;
+grant select on U1.V_RBO_Z#PROL_CONTRACT to LOADDB;
+grant select on U1.V_RBO_Z#PROL_CONTRACT to LOADER;
+
+

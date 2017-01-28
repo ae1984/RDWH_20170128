@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_TST_KASPI_RED_SCO_REQUEST
+refresh force on demand
+as
+select  -- t.iin, h.rfo_client_id, s.* /*min(s.date_create)*/
+distinct first_value(s.id) over (partition by h.iin order by s.date_create desc) as id,
+first_value(s.process_request_id) over (partition by h.iin  order by s.date_create desc) process_request_id,
+first_value(s.client_id) over (partition by h.iin  order by s.date_create desc) client_id,
+first_value(s.code_process) over (partition by h.iin  order by s.date_create desc) code_process,
+first_value(s.date_create) over (partition by h.iin  order by s.date_create desc) date_create,
+first_value(s.folder_id) over (partition by h.iin  order by s.date_create desc) folder_id,
+first_value(h.iin) over (partition by h.iin  order by s.date_create desc) iin
+  from V_CLIENT_RFO_BY_IIN h
+  join MO_SCO_REQUEST s
+    on s.client_id = h.rfo_client_id and s.client_id=166344592 and s.folder_id=95657033708
+  -- and s.date_create > trunc(sysdate -700)
+   and s.code_process = 'MO_SCO'
+   and s.folder_id is not null;
+grant select on U1.M_TST_KASPI_RED_SCO_REQUEST to LOADDB;
+grant select on U1.M_TST_KASPI_RED_SCO_REQUEST to LOAD_MO;
+
+

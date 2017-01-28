@@ -1,0 +1,18 @@
+﻿create materialized view U1.V_BIG_CLIENT_DOC_CLEAN
+refresh force on demand
+as
+select t.creditinfoid,
+         max(t.iin) as iin,
+         max(t.rnn) as rnn,
+         max(t.number_doc_clean) keep (dense_rank last order by t.doc_id) as doc_number,
+         max(t.registrationdate) keep (dense_rank last order by t.doc_id) as registration_date,
+         max(t.issuedate) keep (dense_rank last order by t.doc_id) as issue_date,
+         max(t.expirationdate) keep (dense_rank last order by t.doc_id) as expiration_date
+  from V_BIG_CLIENT_DOC t
+  where length(t.number_doc_clean) = 9 and
+        (t.iin is not null or t.rnn is not null) and t.number_doc_clean is not null
+  group by t.creditinfoid;
+grant select on U1.V_BIG_CLIENT_DOC_CLEAN to LOADDB;
+grant select on U1.V_BIG_CLIENT_DOC_CLEAN to LOADER;
+
+

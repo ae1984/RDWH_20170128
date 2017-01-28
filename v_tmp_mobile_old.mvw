@@ -1,0 +1,22 @@
+﻿create materialized view U1.V_TMP_MOBILE_OLD
+build deferred
+refresh force on demand
+as
+select /*+ no_parallel*/distinct
+f.folder_id,
+f.folder_date_create,
+f.folder_state,
+p.c_cl_req_old#contacts,
+co_old.c_numb,
+co_old.c_affirmed,
+co_old.c_date_audit
+from v_folder_all_rfo f
+join u1.V_RFO_Z#RDOC rd on rd.collection_id = f.fld_c_docs
+join u1.V_RFO_Z#FDOC fd on fd.id = rd.c_doc
+join u1.V_RFO_Z#REQ_EDIT_CL_PRIV p on p.id = fd.id
+left join v_rfo_z#contacts co_old on c_cl_req_old#contacts = co_old.collection_id and co_old.c_private = 690120
+where f.process_name in ('ИЗМЕНЕНИЕ АНКЕТНЫХ ДАННЫХ КЛИЕНТА', 'КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НА КАРТУ');
+grant select on U1.V_TMP_MOBILE_OLD to LOADDB;
+grant select on U1.V_TMP_MOBILE_OLD to LOADER;
+
+

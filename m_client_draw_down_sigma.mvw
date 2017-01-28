@@ -1,0 +1,82 @@
+﻿create materialized view U1.M_CLIENT_DRAW_DOWN_SIGMA
+build deferred
+refresh complete on demand
+as
+with dat as (select rfo_client_id,
+                client_name,
+                client_iin,
+                max(folder_id )              keep (dense_rank last order by folder_date_create) as folder_id, --Текущая сумма списания с депозита по клиенту
+                max(folder_date_create)      as draw_op_date,
+                max(op_sum_kzt)              keep (dense_rank last order by folder_date_create) as op_sum_kzt, --Текущая сумма списания с депозита по клиенту
+                max(op_sum_kzt_avg)          keep (dense_rank last order by folder_date_create) as op_sum_kzt_avg, --Средняя сумма по клиенту на t-1- средняя сумма списания за всю историю
+                max(op_sum_kzt_stddev)       keep (dense_rank last order by folder_date_create) as op_sum_kzt_stddev,
+                max(avg_op_sum_kzt_dev)      keep (dense_rank last order by folder_date_create) as avg_op_sum_kzt_dev,
+                max(avg_dev_sigm_op_sum_kzt) keep (dense_rank last order by folder_date_create) as avg_dev_sigm_op_sum_kzt, --Среднее отклонение по клиенту на t-1-  - кол-во сигм на которое существует отклонение от среднего значения списания
+                max(sigm_op_sum_kzt)         keep (dense_rank last order by folder_date_create) as sigm_op_sum_kzt,
+                max(currency)                keep (dense_rank last order by folder_date_create) as currency,
+                max(is_verification)         keep (dense_rank last order by folder_date_create) as is_verification,    --Результат фотоверификации на заявке списания
+                max(create_user_name)        keep (dense_rank last order by folder_date_create) as create_user_name,
+                max(depart_code)             keep (dense_rank last order by folder_date_create) as depart_code
+           from (
+                select rfo_client_id,
+                       client_name,
+                       client_iin,
+                       folder_id,
+                       folder_date_create,
+                       op_sum_kzt,
+                       op_sum_kzt_avg,
+                       op_sum_kzt_stddev,
+                       op_sum_kzt - op_sum_kzt_avg as avg_op_sum_kzt_dev,
+                       case when op_sum_kzt_stddev != 0 then (op_sum_kzt - op_sum_kzt_avg) / op_sum_kzt_stddev end as avg_dev_sigm_op_sum_kzt,
+                       case when op_sum_kzt_stddev != 0 then floor((op_sum_kzt - op_sum_kzt_avg) / op_sum_kzt_stddev) end as sigm_op_sum_kzt,
+                       currency,
+                       is_verification,
+                       create_user_name,
+                       depart_code
+                  from (
+                       select rfo_client_id,
+                              client_name,
+                              client_iin,
+                              folder_id,
+                              folder_date_create,
+                              op_sum_kzt,
+                              avg(op_sum_kzt) over (partition by rfo_client_id order by folder_date_create
+                                               range between unbounded preceding and current row) as op_sum_kzt_avg,
+                              stddev(op_sum_kzt) over (partition by rfo_client_id order by folder_date_create
+                                               range between unbounded preceding and current row) as op_sum_kzt_stddev,
+                              currency,
+                              is_verification,
+                              create_user_name,
+                              depart_code
+                         from M_CLIENT_DRAW_DOWN
+                        )
+                )
+          group by rfo_client_id,
+                client_name,
+                client_iin)
+  select dt.rfo_client_id,
+         dt.client_name,
+         dt.client_iin,
+         dt.folder_id,
+         dt.draw_op_date,
+         dt.op_sum_kzt, --Текущая сумма списания с депозита по клиенту
+         dt.op_sum_kzt_avg, --Средняя сумма по клиенту на t-1- средняя сумма списания за всю историю
+         dt.op_sum_kzt_stddev,
+         dt.avg_op_sum_kzt_dev,
+         dt.avg_dev_sigm_op_sum_kzt, --Среднее отклонение по клиенту на t-1-  - кол-во сигм на которое существует отклонение от среднего значения списания
+         dt.sigm_op_sum_kzt,
+         dt.currency,
+         dt.is_verification,
+         case when ds.rfo_client_id is not null then 1 else 0 end as is_active_sms_service,
+         dt.create_user_name,
+         dt.depart_code,
+         di.depart_address
+    from dat dt
+    join T_DEPART_IMPORT                di on di.depart_code = dt.depart_code
+    left join M_CLIENT_DEPN_SMS_SERVICE ds on ds.rfo_client_id = dt.rfo_client_id
+                                        and ds.set_date is not null
+                                        and ds.set_date <= dt.draw_op_date
+                                        and coalesce(ds.end_date,trunc(sysdate+1)) >= dt.draw_op_date;
+grant select on U1.M_CLIENT_DRAW_DOWN_SIGMA to LOADDB;
+
+

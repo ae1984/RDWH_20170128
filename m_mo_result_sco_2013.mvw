@@ -1,0 +1,69 @@
+﻿create materialized view U1.M_MO_RESULT_SCO_2013
+using no index
+refresh complete on demand
+as
+select w.id as mogw_process_id,
+       to_char(w.id) as mogw_process_id_txt,
+       cast(w.date_start as date) as mogw_date_start,
+       t.process_id,
+       t.rfolder_id,
+       t.pr_par_in_sco_num_scoring,
+       t.pr_par_in_sco_folder_id,
+       t.pr_par_in_sco_client_id,
+       t.pr_par_in_sco_iin,
+       t.pr_par_in_sco_prescoring,
+       nvl(t.calc_par_mo_sco_reject_pre,t.pr_par_mo_sco_reject) as calc_par_mo_sco_reject_pre,
+       t.calc_par_client_bl_exists_sco,
+       t.calc_par_mo_sco_reject_pre as calc_par_mo_sco_reject_pre_raw,
+       t.pr_par_mo_sco_reject,
+       k.rfo_res_from_mo_id,
+       k.res_date as rfo_res_date,
+       k.c_client_ref as rfo_client_id,
+       k.c_folder_ref as rfo_folder_id,
+       k.c_result as rfo_result
+from
+    (select /*+ parallel 30 */
+           max(p.id) as process_id,
+           r.id rfolder_id,
+           avg(decode(dp.code_int, 'IN_SCO_NUM_SCORING', t.value_number)) as pr_par_IN_SCO_NUM_SCORING,
+           avg(decode(dp.code_int, 'IN_SCO_FOLDER_ID', t.value_number)) as pr_par_IN_SCO_FOLDER_ID,
+           avg(decode(dp.code_int, 'IN_SCO_CLIENT_ID', t.value_number)) as pr_par_IN_SCO_CLIENT_ID,
+           max(decode(dp.code_int, 'IN_SCO_IIN', t.value_text)) as pr_par_IN_SCO_IIN,
+           avg(decode(dp.code_int, 'IN_SCO_PRESCORING', t.value_number)) as pr_par_IN_SCO_PRESCORING,
+           avg(case when dp.code_int like 'MO_SCO_REJECT_PRE_%'
+               then t.value_number end) as calc_par_MO_SCO_REJECT_PRE,
+           avg(case when dp.code_int like 'CLIENT_BL_EXISTS_SCO'
+               then t.value_number end) as calc_par_CLIENT_BL_EXISTS_SCO,
+           avg(decode(dp.code_int, 'MO_SCO_REJECT', t.value_number)) as pr_par_MO_SCO_REJECT
+    from U1.MO_RFOLDER r
+    join U1.T_MO_RFOLDER_PAR_VALUE_2014 t on t.rfolder_id = r.id
+    join U1.V_MO_D_PAR dp on dp.id = t.d_par_id
+                       and (dp.code_int in ('IN_SCO_PROCESS_REQUEST_ID',
+                                              'IN_SCO_NUM_SCORING',
+                                              'IN_SCO_IIN',
+                                              'IN_SCO_FOLDER_ID',
+                                              'IN_SCO_CLIENT_ID',
+                                              'IN_SCO_PRESCORING',
+                                              'MO_SCO_REJECT',
+                                              'CLIENT_BL_EXISTS_SCO'
+                                              )
+                                              or dp.code_int like 'MO_SCO_REJECT_PRE_%')
+
+    join U1.mo_process p on p.rfolder_id = r.id
+                         and p.date_start >= to_date('01-01-2013', 'dd-mm-yyyy')
+                         and p.date_start < to_date('01-01-2014', 'dd-mm-yyyy')
+
+    join U1.v_mo_d_process dpr on dpr.id = p.d_process_id
+                              and dpr.code = 'MO_SCO'
+
+    where r.date_create >= to_date('01-01-2013', 'dd-mm-yyyy')
+          and r.date_create < to_date('01-01-2014', 'dd-mm-yyyy')
+          /*and r.id = 42065281*/
+    group by  r.id,r.date_create
+    ) t
+join U1.MOGW_PROCESS_MO1 w on w.process_id = t.process_id
+join U1.V_MO_RES_RFO_KAS_RES_FROM_MO k on k.c_res_mo_id = w.id;
+grant select on U1.M_MO_RESULT_SCO_2013 to LOADDB;
+grant select on U1.M_MO_RESULT_SCO_2013 to LOADER;
+
+

@@ -1,0 +1,23 @@
+﻿create materialized view U1.V_CLIENT_RFO_BY_RNN
+refresh complete on demand
+as
+select
+         c.x_rnn as
+     rnn,
+         max(c.x_iin) keep (dense_rank last order by c.id) as
+     iin,
+         max(c.id) as
+     rfo_client_id,
+         max(upper(cp.c_last_name) || ' ' || upper(cp.c_first_name) || ' ' ||
+           upper(cp.c_sur_name)) keep (dense_rank last order by c.id) as
+     client_name,
+         max(cp.c_date_pers) keep (dense_rank last order by c.id) as
+     birth_date
+from V_RFO_Z#CLIENT c, V_RFO_Z#CL_PRIV cp
+where c.id = cp.id and
+      c.x_rnn is not null
+group by c.x_rnn;
+grant select on U1.V_CLIENT_RFO_BY_RNN to LOADDB;
+grant select on U1.V_CLIENT_RFO_BY_RNN to LOADER;
+
+

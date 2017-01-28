@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_MATRIX_KDN_1_FORM_ONL
+build deferred
+refresh force on demand
+as
+select/*+parallel(1)*/ fm.claim_id,
+       fm.form_client_id,
+       fc2.form_income_salary,
+       fc2.form_income_total
+from (select fcc.claim_id,
+             max(fc.form_client_id) as form_client_id
+          from u1.M_FOLDER_CON_CANCEL_ONLINE fcc
+          join u1.V_FORM_CLIENT_ALL_RFO fc on
+                    (
+                        fc.form_client_id = fcc.form_client_id or
+                        (
+                             fcc.form_client_id is null and
+                             fc.rfo_client_id = fcc.rfo_client_id
+                        )
+                    )
+          group by fcc.claim_id
+) fm
+join (select fc.form_client_id,
+             coalesce(fc.inc_sal,0) as form_income_salary,
+             coalesce(fc.inc_sal,0) + coalesce(fc.inc_sal_add,0) +
+                coalesce(fc.inc_sal_spouse,0) + coalesce(fc.inc_rent,0) +
+                coalesce(fc.inc_pension_benefits,0) + coalesce(fc.inc_interest,0) as form_income_total
+          from V_FORM_CLIENT_ALL_RFO fc
+) fc2 on fc2.form_client_id = fm.form_client_id;
+grant select on U1.M_MATRIX_KDN_1_FORM_ONL to LOADDB;
+grant select on U1.M_MATRIX_KDN_1_FORM_ONL to LOADER;
+
+

@@ -1,0 +1,69 @@
+﻿create table U1.T_RFO_Z#KAS_ONLINE_BUY
+(
+  id                 NUMBER not null,
+  sn                 NUMBER,
+  su                 NUMBER,
+  c_date_create      DATE,
+  c_state_id         NUMBER,
+  c_process_id       VARCHAR2(100 CHAR),
+  c_total_amount     NUMBER,
+  c_shop             NUMBER,
+  c_prod_info        NUMBER,
+  c_partner_id       NUMBER,
+  c_paymenttype      VARCHAR2(100 CHAR),
+  c_add_prop         NUMBER not null,
+  c_delivery_type    NUMBER,
+  c_kaspi_shop_addr  VARCHAR2(200 CHAR),
+  c_kaspi_shop_sched VARCHAR2(100 CHAR)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RFO_Z#KAS_ONLINE_BUY
+  is 'KAS. Онлайн покупка';
+comment on column U1.T_RFO_Z#KAS_ONLINE_BUY.c_date_create
+  is 'Дата анкеты';
+comment on column U1.T_RFO_Z#KAS_ONLINE_BUY.c_state_id
+  is 'Состояние(FK на Z#STATUS_DOG)';
+comment on column U1.T_RFO_Z#KAS_ONLINE_BUY.c_process_id
+  is 'ID сквозного процесса - ID заказа';
+comment on column U1.T_RFO_Z#KAS_ONLINE_BUY.c_total_amount
+  is 'Общая сумма выбранных товаров (корзины)';
+comment on column U1.T_RFO_Z#KAS_ONLINE_BUY.c_shop
+  is 'Город/Магазин/Подразделение получения товара(FK на Z#SHOPS)';
+comment on column U1.T_RFO_Z#KAS_ONLINE_BUY.c_prod_info
+  is 'Информация по товарам(COLLECTION в Z#PROD_INFO)';
+comment on column U1.T_RFO_Z#KAS_ONLINE_BUY.c_partner_id
+  is 'Партнер(FK на Z#KAS_PARTNER)';
+comment on column U1.T_RFO_Z#KAS_ONLINE_BUY.c_paymenttype
+  is 'Вид продажи';
+comment on column U1.T_RFO_Z#KAS_ONLINE_BUY.c_add_prop
+  is 'Дополнительные свойства(COLLECTION в Z#PROPERTIES)';
+comment on column U1.T_RFO_Z#KAS_ONLINE_BUY.c_delivery_type
+  is 'Тип доставки(FK на Z#KAS_UNIVERSAL_D)';
+create unique index U1.T_RFO_Z#KAS_ONLINE_BUY_IND1 on U1.T_RFO_Z#KAS_ONLINE_BUY (ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#KAS_ONLINE_BUY
+  add constraint T_RFO_Z#KAS_ONLINE_BUY_PK primary key (ID);
+grant select on U1.T_RFO_Z#KAS_ONLINE_BUY to LOADDB;
+

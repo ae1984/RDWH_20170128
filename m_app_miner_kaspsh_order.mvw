@@ -1,0 +1,55 @@
+﻿create materialized view U1.M_APP_MINER_KASPSH_ORDER
+build deferred
+refresh force on demand
+as
+select am.app_id
+
+       ,x.is_loan_guest
+
+       ,count(case when x.is_loan_guest = 1 then am.app_id end)
+              over (partition by am.rfo_client_id order by trunc(am.folder_date_create_mi)
+                    range between 30 preceding and 1 preceding) as visit_guest_30d_cnt
+
+       ,count(case when x.is_loan_guest = 0 then am.app_id end)
+              over (partition by am.rfo_client_id order by trunc(am.folder_date_create_mi)
+                    range between 30 preceding and 1 preceding) as visit_client_30d_cnt
+
+       ,count(case when x.is_loan_guest = 1 then am.app_id end)
+              over (partition by am.rfo_client_id order by am.folder_date_create_mi
+                    range between 30 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as visit_guest_30d_cnt_x
+
+       ,count(case when x.is_loan_guest = 0 then am.app_id end)
+              over (partition by am.rfo_client_id order by am.folder_date_create_mi
+                    range between 30 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as visit_client_30d_cnt_x
+
+       --PRODUCT
+       ,count(case when x.is_loan_guest = 1 then am.app_id end)
+              over (partition by am.rfo_client_id, am.product_type order by trunc(am.folder_date_create_mi)
+                    range between 30 preceding and 1 preceding) as visit_guest_30d_pr_cnt
+
+       ,count(case when x.is_loan_guest = 0 then am.app_id end)
+              over (partition by am.rfo_client_id, am.product_type order by trunc(am.folder_date_create_mi)
+                    range between 30 preceding and 1 preceding) as visit_client_30d_pr_cnt
+
+       ,count(case when x.is_loan_guest = 1 then am.app_id end)
+              over (partition by am.rfo_client_id, am.product_type order by am.folder_date_create_mi
+                    range between 30 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as visit_guest_30d_pr_cnt_x
+
+       ,count(case when x.is_loan_guest = 0 then am.app_id end)
+              over (partition by am.rfo_client_id, am.product_type order by am.folder_date_create_mi
+                    range between 30 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as visit_client_30d_pr_cnt_x
+
+from U1.M_APP_MINER_BAS am
+left join u1.M_FOLDER_CON_CANCEL_ONLINE_1 t on t.claim_id = am.claim_id
+left join (
+            select a.pk,
+                   a.code,
+                   max(case when upper(t.p_description) like '%ГОСТ%' then 1 else 0 end) as is_loan_guest
+            from u1.M_KASPISH_ORDERS a
+            join u1.M_KASPISH_ORDERHISTORYENTRIES t on t.p_order = a.pk
+            group by a.pk,
+                     a.code
+           ) x on x.code = t.process_id;
+grant select on U1.M_APP_MINER_KASPSH_ORDER to LOADDB;
+
+

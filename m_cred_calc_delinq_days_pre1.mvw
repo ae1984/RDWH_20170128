@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_CRED_CALC_DELINQ_DAYS_PRE1
+build deferred
+refresh force on demand
+as
+select /*+ parallel(20)*/
+      pc.id rbo_cred_id,
+      fo.collection_id, fo.id, ','||fo.c_oper||',' c_oper, fo.c_kas_date_prov d_fo,
+      fo.c_summa - nvl((select c_summa from T_RBO_Z#FACT_OPER where id = fo.c_reverse_fo),0) n_sum_fo,
+      vod_fo.id r_oper, vod_fo.c_sposob_kvit#0 n_var_q, fo.c_reverse_fo, vod_fo.sys_name,
+      decode((select count(1) from V_RBO_Z#VID_OPER_DOG where c_depend_plan_oper is not null
+                 and c_reverse_vid_oper = vod_fo.id),0,0,1) is_revers, --является ли эта проводка обратной
+      pc.c_date_close
+ from T_RBO_Z#FACT_OPER      fo,
+      V_RBO_Z#VID_OPER_DOG vod_fo,
+      V_RBO_Z#PR_CRED pc
+where fo.collection_id = pc.c_list_pay
+  and fo.c_kas_date_prov <= trunc(sysdate)
+  and fo.c_kas_doc_state = 'PROV'
+  and vod_fo.id = fo.c_oper
+  and vod_fo.id in (select vod.id from V_RBO_Z#VID_OPER_DOG vod
+                     where vod.c_depend_plan_oper is not null
+                       and vod.c_sposob_kvit#0 in (2,3))
+ and not exists
+      (select 1 from T_RBO_Z#FACT_OPER where c_reverse_fo = fo.id);
+grant select on U1.M_CRED_CALC_DELINQ_DAYS_PRE1 to LOADDB;
+
+

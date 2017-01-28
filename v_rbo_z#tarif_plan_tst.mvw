@@ -1,0 +1,10 @@
+﻿create materialized view U1.V_RBO_Z#TARIF_PLAN_TST
+refresh complete on demand
+as
+select
+    *
+from rdwh.V_RBO_Z#TARIF_PLAN@rdwh_exd;
+grant select on U1.V_RBO_Z#TARIF_PLAN_TST to LOADDB;
+grant select on U1.V_RBO_Z#TARIF_PLAN_TST to LOADER;
+
+

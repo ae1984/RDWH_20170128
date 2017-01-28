@@ -1,0 +1,68 @@
+﻿create materialized view U1.TPD_001
+refresh force on demand
+as
+select
+
+substr(start_date,1,2) as day_,
+substr(start_date,4,2) as month_,
+substr(start_date,7,4) as year_,
+trunc(start_date) as date_,
+x_product_type,
+PROD,
+/*create_empl_name,
+create_empl_number,
+dept_name,
+dept_number,*/
+count(*) as count_check,
+sum(total_debt) as total_debt_sum,
+count(distinct deal_number) as count_contract,
+
+sum(case when coalesce(delinq_days,delinq_days_past,delinq_days_future) between 1 and 30 then 1 else 0 end) as def_agr_cnt,
+sum(case when coalesce(delinq_days,delinq_days_past,delinq_days_future) between 1 and 30 then total_debt else 0 end) as def_agr_vol
+
+
+from
+
+(select
+p.rep_date,
+p.START_DATE,
+coalesce(q1.date_due, t1.date_due) as plan_pmt_date_third,
+p.deal_number,
+lag(p.delinq_days) over(partition by p.deal_number order by p.rep_date) as delinq_days_past,
+lead(p.delinq_days) over(partition by p.deal_number order by p.rep_date) as delinq_days_future,
+p.DELINQ_DAYS,
+p.TOTAL_DEBT,
+/*dpc1.create_empl_name,
+dpc1.create_empl_number,
+dpc1.dept_name,
+dpc1.dept_number,*/
+dpc1.x_product_type,
+case when p.prod_type in ('АВТОКРЕДИТОВАНИЕ БУ','АВТОКРЕДИТОВАНИЕ') then 'АВТО'
+     when p.prod_type in ('АВТОЗАПЧАСТИ','ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)','ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)') then 'ТОВАРЫ'
+     when p.prod_type in ('КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ') then 'КНП'
+     when p.prod_type in ('КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ','ОСОБЕННЫЙ КЛИЕНТ -КН 15') then 'КН-15'
+     when p.prod_type in ('ЛУЧШИЙ КЛИЕНТ НАЛИЧНЫМИ') then 'ЛКН'
+     when p.prod_type in ('ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ') then 'ПКН'
+     when p.prod_type in ('КРЕДИТ НАЛИЧНЫМИ') then 'КН'
+     when p.prod_type in ('РЕВОЛЬВЕРНЫЕ КАРТЫ','ОСОБЕННЫЙ КЛИЕНТ - КК','ЗАРПЛАТНЫЕ КАРТЫ','КАРТА ВКЛАДЧИКА', 'ПРОСТАЯ КАРТА','ОВЕРДРАФТЫ','PC.ПОСТОЯННЫЙ КЛИЕНТ','ЛУЧШИЙ КЛИЕНТ') then 'КАРТЫ' end as PROD
+
+from u1.v_dwh_port p
+left join u1.v_dwh_portfolio_current dpc1 on dpc1.deal_number = p.DEAL_NUMBER
+left join u1.v_dwh_port_cards_credits c on c.deal_number = p.DEAL_NUMBER
+left join m_dwh_plan_card_3pmt t1 on t1.deal_number = p.DEAL_NUMBER and t1.date_due_rn = 3
+left join M_DWH_PLAN_CREDIT_3PMT q1 on q1.deal_number = p.DEAL_NUMBER and q1.date_due_rn =3
+
+where start_date>= sysdate-365 and (p.prod_type not in('РЕФИНАНСИРОВАНИЕ/РЕСТРУКТУРИЗАЦИЯ','РЕФИНАНСИРОВАНИЕ АВТОКРЕДИТА') or c.prod_name is null)
+
+)
+where rep_date = plan_pmt_date_third
+group by substr(start_date,1,2),
+substr(start_date,4,2),
+substr(start_date,7,4),
+trunc(start_date),
+x_product_type,
+PROD;
+grant select on U1.TPD_001 to LOADDB;
+grant select on U1.TPD_001 to LOADER;
+
+

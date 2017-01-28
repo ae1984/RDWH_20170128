@@ -1,0 +1,10 @@
+﻿create materialized view U1.M_OUT_VERIFICATION_DEMAND_PRE3
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/ pr.c_id_object, max(pr.c_date_load) as val
+from V_RFO_Z#KAS_EDIT_PRD_VERIF pr
+group by pr.c_id_object;
+grant select on U1.M_OUT_VERIFICATION_DEMAND_PRE3 to LOADDB;
+
+

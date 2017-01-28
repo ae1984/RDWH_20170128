@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_PORTFOLIO_CON_ORD_PRE_1
+using no index
+refresh complete on demand
+as
+select t.id, t.yy_mm_report, t.client_id, t.contract_no, t.product, t.start_date,
+       row_number() over (partition by t.client_id, t.yy_mm_report
+                              order by t.start_date, t.contract_no) as con_order_by_cli
+from V_DATA_ALL t
+--where t.contract_amount > 0
+where t.product not in ('Н_П','Н_ЗК','Н_КВ');
+grant select on U1.M_PORTFOLIO_CON_ORD_PRE_1 to LOADDB;
+grant select on U1.M_PORTFOLIO_CON_ORD_PRE_1 to LOADER;
+
+

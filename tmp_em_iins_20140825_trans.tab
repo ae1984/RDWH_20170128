@@ -1,0 +1,19 @@
+﻿create table U1.TMP_EM_IINS_20140825_TRANS
+(
+  iin VARCHAR2(250)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.TMP_EM_IINS_20140825_TRANS to LOADDB;
+grant select on U1.TMP_EM_IINS_20140825_TRANS to LOADER;
+

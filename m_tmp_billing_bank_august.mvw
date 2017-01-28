@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_TMP_BILLING_BANK_AUGUST
+refresh force on demand
+as
+select b.p_num, b.p_type_id, TRIM(b.iin) AS iin,b.report_type as rep_type ,b.p_date as p_date,b.rep_status,b.p_rep,
+case when b.rep_status='Субъект не найден' then 'БЕКИ'
+
+     else rtrim(b.report_type,' по физ. лицу')
+end  as  report_type
+
+from RISK_SDARYA.t_tmp_bank_august b;
+grant select on U1.M_TMP_BILLING_BANK_AUGUST to LOADDB;
+grant select on U1.M_TMP_BILLING_BANK_AUGUST to LOADER;
+
+

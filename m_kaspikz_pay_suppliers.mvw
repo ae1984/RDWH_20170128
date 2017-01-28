@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_KASPIKZ_PAY_SUPPLIERS
+refresh force on demand
+as
+select  t."intId" id,
+        t."vchExternalId" external_id,
+        t."vchName" name_val,
+        t."vchAlias" alias_val,
+        t."vchDescription" descr
+
+
+from "dbo"."tb_Payments_Suppliers"@"db_kr2" t;
+grant select on U1.M_KASPIKZ_PAY_SUPPLIERS to LOADDB;
+grant select on U1.M_KASPIKZ_PAY_SUPPLIERS to LOADER;
+
+

@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_NPS_KSPIKZ_LOG_SESSIONS
+refresh complete on demand
+as
+select d.userid
+                 from (select distinct t1.clkk$source_pk
+                         from DWH_MAIN.ACC_SESSIONS_KASPIKZ@DWH_PROD2 t
+                         join DWH_MAIN.REF_CLIENT_KASPIKZ_INFO@DWH_PROD2 t1
+                           on (t.sskk_clkk_gid = t1.clkk_gid)
+                        where trunc(t.sskk_start_date) > trunc(sysdate - 61)) f
+                 join kspkz_vregisteredusers20 d
+                   on d.userid = f.clkk$source_pk;
+grant select on U1.M_NPS_KSPIKZ_LOG_SESSIONS to LOADDB;
+grant select on U1.M_NPS_KSPIKZ_LOG_SESSIONS to LOADER;
+
+

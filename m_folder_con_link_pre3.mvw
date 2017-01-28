@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_FOLDER_CON_LINK_PRE3
+build deferred
+refresh force on demand
+as
+select/*+parallel(5)*/ vfa.folder_id,
+                 max(p.report_id) as kb_report_fld_id,
+                 max(case when p.report_source = 'ПКБ' then
+                      p.report_id
+                 end ) as pkb_report_fld_id,
+                 max(case when p.report_source = 'ГКБ' then
+                      p.report_id
+                 end) as gkb_report_fld_id
+
+          from V_FOLDER_ALL_RFO vfa
+          join V_RFO_Z#RDOC rd on rd.collection_id = vfa.fld_c_docs
+          join V_RFO_Z#FDOC fd on fd.id = rd.c_doc and fd.class_id = 'PKB_REPORT'
+          join V_PKB_REPORT_ALL p on p.report_id = fd.id
+          group by folder_id;
+grant select on U1.M_FOLDER_CON_LINK_PRE3 to LOADDB;
+
+

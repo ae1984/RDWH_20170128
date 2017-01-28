@@ -1,0 +1,13 @@
+﻿create materialized view U1.V_TMP_GCVP_SALARY
+refresh complete on demand
+as
+select g.client_iin, g.rep_date as report_date,
+       g.salary
+from TMP_RNN t
+join V_GCVP_REPORT g on g.client_iin = t.rnn
+where g.error_code = 0 and to_char(g.rep_date,'yyyy-mm') in ('2013-11','2013-12')
+group by g.client_iin, g.rep_date, g.salary;
+grant select on U1.V_TMP_GCVP_SALARY to LOADDB;
+grant select on U1.V_TMP_GCVP_SALARY to LOADER;
+
+

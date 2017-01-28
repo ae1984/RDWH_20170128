@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_PARAMS_FOR_MODEL_PRE_1
+build deferred
+refresh force on demand
+as
+select /*+parallel(30)*/ t.*, f.phone_mobile --47мин --95мин --71мин
+from (
+    select p.rbo_client_id, p.rep_date, p.del_days_cli_max, p.del_amount_cli_max
+          ,cl.rfo_client_id
+          ,max(form_client_id) as form_client_id
+    from  T_RBO_PORT p
+    join M_CLIENT_LINK cl on cl.rbo_client_id=p.rbo_client_id
+    join (--V_FORM_CLIENT_ALL_RFO
+        select nvl(t.form_client_date,t.form_date_create) as dt
+               ,t.rfo_client_id,t.phone_mobile,t.form_client_id
+        from V_FORM_CLIENT_ALL_RFO t
+        where t.phone_mobile is not null
+    ) f on f.rfo_client_id=cl.rfo_client_id and trunc(f.dt)<=p.rep_date
+    where p.del_days_cli_max>30 and p.del_amount_cli_max>1000
+    group by p.rbo_client_id, p.rep_date, p.del_days_cli_max, p.del_amount_cli_max
+            ,cl.rfo_client_id
+) t
+join V_FORM_CLIENT_ALL_RFO f on f.form_client_id=t.form_client_id;
+grant select on U1.M_PARAMS_FOR_MODEL_PRE_1 to LOADDB;
+
+

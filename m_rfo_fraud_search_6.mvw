@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_6
+build deferred
+refresh force on demand
+as
+select
+         t.rfo_client_id
+         ,t.date_create
+         ,t.claim_id
+         ,t.folder_id
+         ,count(distinct case when c.start_time>=add_months(t.date_create,-6) then c.id end) as SESSION_KSP_LAST_6_MNTH
+         ,count(distinct case when c.start_time between add_months(t.date_create,-6) and trunc(t.date_create) then c.id end) as SESSION_KSP_LAST_6_MNTH_t1
+    from M_FOLDER_CON_CANCEL_ONLINE_1 t
+    left join (
+      select  t.user_id
+              ,t.rfo_id
+              ,a.date_of_birth
+              ,a.reg_date
+      from M_KASPIKZ_USERS_ALL t
+      left join M_KASPIKZ_USERS a on a.id = t.user_id
+    ) a on a.rfo_id = to_char(t.rfo_client_id)
+    left join M_KASPIKZ_SESSIONS c on c.user_id = a.user_id and c.start_time<=t.date_create
+    --where t.rfo_client_id = 31393192
+    group by
+          t.rfo_client_id
+         ,t.date_create
+         ,t.claim_id
+         ,t.folder_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_6 to LOADDB;
+
+

@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_RTDM_DWH_CL_PARAM_PRE2
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       cl.rfo_client_id,
+
+       max(ch.delinq_days_in_month) as prev_con_del_days_max,
+
+       count(distinct case when ch.fact_pmts_in_month > 0 then ch.yyyy_mm_num end) as fact_pmt_mon_before,
+
+       count(distinct case when ch.yyyy_mm_num >= to_number(to_char(add_months(trunc(sysdate), -12), 'yyyymm'))
+                                and ch.fact_pmts_in_month > 0 then ch.yyyy_mm_num end) as fact_pmt_mon_before_12_mon
+
+from u1.V_CLIENT_RFO_BY_ID cl
+left join u1.V_CLIENT_CAL cc on cc.client_iin_last = cl.iin
+left join u1.V_CLIENT_HISTORY ch on ch.client_id = cc.client_id
+group by cl.rfo_client_id;
+grant select on U1.M_RTDM_DWH_CL_PARAM_PRE2 to LOADDB;
+
+

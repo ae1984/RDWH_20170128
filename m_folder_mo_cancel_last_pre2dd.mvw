@@ -1,0 +1,56 @@
+﻿create materialized view U1.M_FOLDER_MO_CANCEL_LAST_PRE2DD
+build deferred
+refresh force on demand
+as
+select /*+parallel(30)*/
+      p.rfolder_id,
+      p.folder_id,
+      p.date_create,
+      dp.code_int as par_code,
+      dp.name as par_name,
+
+      xx.reject_prior,
+      xx.reject_ver,
+      case
+        when xx.param_code like '%SC_AA%' and p.date_create >= to_date('28.04.2016', 'dd.mm.yyyy') then
+          2
+        else
+          dp.is_rejecting --xx.is_rejecting
+      end                    as is_rejecting
+      --xx.is_rejecting
+
+from u1.m_folder_mo_sco_request_dd p
+join u1.t_mo_rfolder_par_value_dd pv on pv.rfolder_id = p.rfolder_id
+join u1.v_mo_d_par dp on dp.id = pv.d_par_id
+join u1.M_MO_RFOLDER_CANCEL_VER_DD x on x.rfolder_id = p.rfolder_id
+join (select t.reject_code,
+       t.param_code,
+       t.lv,
+       t.batch_id,
+       t.batch_date,
+       t.prior_add,
+       coalesce(a.reject_prior3, t.reject_prior) as reject_prior,
+       t.reject_ver,
+       t.is_rejecting
+from u1.M_MO_REJECT_PARAM_HIST t
+left join u1.M_MO_REJECT_PARAM_HIST_AA a on a.reject_code = t.reject_code and
+                                            a.param_code = t.param_code and
+                                            a.lv = t.lv and
+                                            a.batch_id = t.batch_id) xx on xx.reject_code = x.reject_code and
+                                                                           xx.reject_ver = x.reject_ver and
+                                                                           xx.param_code = dp.code_int
+
+where ((pv.value_number > 0 and xx.param_code not in ('CLIENT_WL_EXISTS',
+                                                     'SC_CLIENT_DEPN_APPR_RES_PRE',
+                                                     'SC_CARD_CATEG_B_RES_PRE',
+                                                     'SC_APPR_CARD_81_RES_PRE')) or
+
+      (pv.value_number = 0 and xx.param_code in ('CLIENT_WL_EXISTS',
+                                                 'SC_CARD_CATEG_B_RES_PRE',
+                                                 'SC_APPR_CARD_81_RES_PRE')) or
+
+      (pv.value_number > 0 and xx.param_code = 'SC_CLIENT_DEPN_APPR_RES_PRE'))
+  and dp.is_critical = 1;
+grant select on U1.M_FOLDER_MO_CANCEL_LAST_PRE2DD to LOADDB;
+
+

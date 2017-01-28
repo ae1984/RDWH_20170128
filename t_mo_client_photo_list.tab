@@ -1,0 +1,23 @@
+﻿create table U1.T_MO_CLIENT_PHOTO_LIST
+(
+  rfo_client_id NUMBER,
+  photo_luna_id VARCHAR2(1000)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_MO_CLIENT_PHOTO_LIST to LOADDB;
+grant select on U1.T_MO_CLIENT_PHOTO_LIST to LOAD_MO;
+grant select, insert, update, delete, references, alter, index on U1.T_MO_CLIENT_PHOTO_LIST to RISK_ALEXEY;
+grant select, insert, update, delete, references, alter, index on U1.T_MO_CLIENT_PHOTO_LIST to RISK_ALEXEY2;
+

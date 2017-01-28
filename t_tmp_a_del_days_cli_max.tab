@@ -1,0 +1,21 @@
+﻿create table U1.T_TMP_A_DEL_DAYS_CLI_MAX
+(
+  rbo_client_id    NUMBER(32) not null,
+  del_days_cli_max NUMBER,
+  rep_date         DATE not null
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_A_DEL_DAYS_CLI_MAX to LOADDB;
+

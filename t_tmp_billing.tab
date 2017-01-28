@@ -1,0 +1,23 @@
+﻿create table U1.T_TMP_BILLING
+(
+  first_name  VARCHAR2(500),
+  last_name   VARCHAR2(500),
+  middle_name VARCHAR2(500),
+  ur_1        VARCHAR2(500),
+  ur_2        VARCHAR2(500),
+  inn_1       VARCHAR2(500),
+  inn_2       VARCHAR2(500),
+  p_user      VARCHAR2(500),
+  report_type VARCHAR2(500),
+  p_date      VARCHAR2(500),
+  ip          VARCHAR2(500)
+)
+tablespace USERS_ARC
+  pctfree 10
+  initrans 1
+  maxtrans 255
+nologging;
+grant select on U1.T_TMP_BILLING to LOADDB;
+grant select on U1.T_TMP_BILLING to LOADER;
+grant select, insert, update, delete, references, alter, index on U1.T_TMP_BILLING to RISK_SDARYA;
+

@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_KASPIKZ_CLIENT_PMT_3M
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30)*/
+        pi.rfo_client_id,
+        pi.inn,
+        count(1) as pay_count
+      ------------------------
+  from  u1.M_KASPIKZ_PAY pi
+  where  trunc(pi.pay_date,'mm') < trunc(sysdate,'mm')
+     and trunc(pi.pay_date,'mm') >= add_months(trunc(sysdate,'mm'),-3)
+     and pi.is_prov = 1
+
+group by
+        pi.rfo_client_id,
+        pi.inn;
+grant select on U1.M_KASPIKZ_CLIENT_PMT_3M to LOADDB;
+grant select on U1.M_KASPIKZ_CLIENT_PMT_3M to LOAD_MO;
+
+

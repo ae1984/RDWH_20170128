@@ -1,0 +1,58 @@
+﻿create table U1.DATA_ASOKR
+(
+  scoring_date      DATE not null,
+  folder_number     NUMBER not null,
+  folder_id         NUMBER not null,
+  rnn               VARCHAR2(12),
+  contract_number   VARCHAR2(20),
+  prescoring_result VARCHAR2(10) not null,
+  scoring_status    VARCHAR2(2),
+  scoring_result    VARCHAR2(1) not null,
+  iin               VARCHAR2(12)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 200M
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on column U1.DATA_ASOKR.scoring_date
+  is 'Date';
+comment on column U1.DATA_ASOKR.folder_number
+  is 'NumFolder';
+comment on column U1.DATA_ASOKR.folder_id
+  is 'IDFolder';
+comment on column U1.DATA_ASOKR.rnn
+  is 'RNN';
+comment on column U1.DATA_ASOKR.contract_number
+  is 'NumDog';
+comment on column U1.DATA_ASOKR.prescoring_result
+  is 'pS';
+comment on column U1.DATA_ASOKR.scoring_status
+  is 'ScStat';
+comment on column U1.DATA_ASOKR.scoring_result
+  is 'ScRes';
+create unique index U1.DATA_ASOKR_PK_IND on U1.DATA_ASOKR (FOLDER_ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.DATA_ASOKR
+  add constraint DATA_ASOKR_PK primary key (FOLDER_ID);
+grant select on U1.DATA_ASOKR to LOADDB;
+grant select on U1.DATA_ASOKR to LOADER;
+

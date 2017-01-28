@@ -1,0 +1,9 @@
+﻿create materialized view U1.V_TEST1_RDWHH1
+refresh complete on demand
+as
+select /*+ parallel(10)*/*
+from u1.v_test_1@rdwh11;
+grant select on U1.V_TEST1_RDWHH1 to LOADDB;
+grant select on U1.V_TEST1_RDWHH1 to LOADER;
+
+

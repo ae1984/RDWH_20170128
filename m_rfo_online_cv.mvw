@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_RFO_ONLINE_CV
+refresh force on demand
+as
+select *
+from (
+select
+max(x.update_date) keep (dense_rank last order by x.update_date) update_date,
+max(x.client_ref) keep (dense_rank last order by x.update_date) client_ref,
+max(x.anketa_type) keep (dense_rank last order by x.update_date) anketa_type,
+cast(null as varchar2(100)) as mng_vis_reason
+from u1.T_RFO_ONLINE_CV x
+group by x.client_ref
+) xx
+where xx.update_date >= trunc(sysdate) - 2;
+grant select on U1.M_RFO_ONLINE_CV to ETL;
+grant select on U1.M_RFO_ONLINE_CV to LOADDB;
+grant select on U1.M_RFO_ONLINE_CV to LOADER;
+
+

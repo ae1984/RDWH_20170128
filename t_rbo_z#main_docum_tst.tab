@@ -1,0 +1,38 @@
+﻿create table U1.T_RBO_Z#MAIN_DOCUM_TST
+(
+  id              NUMBER not null,
+  state_id        VARCHAR2(48),
+  c_document_date DATE,
+  c_sum_nt        NUMBER(17,2),
+  c_quit_doc      NUMBER,
+  c_sum           NUMBER(17,2),
+  c_rate_dt       NUMBER(20,6),
+  c_sum_po        NUMBER(17,2),
+  c_rate_kt       NUMBER(20,6),
+  c_vid_doc       NUMBER,
+  c_valuta        NUMBER,
+  c_valuta_po     NUMBER,
+  c_acc_dt        NUMBER,
+  c_acc_kt        NUMBER,
+  c_date_doc      DATE,
+  c_date_prov     DATE,
+  c_document_user NUMBER,
+  c_nazn          VARCHAR2(4000),
+  c_prov_user     NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RBO_Z#MAIN_DOCUM_TST to LOADDB;
+grant select on U1.T_RBO_Z#MAIN_DOCUM_TST to LOADER;
+

@@ -1,0 +1,11 @@
+﻿CREATE MATERIALIZED VIEW U1.M_PLAN_DEP
+REFRESH FORCE ON DEMAND
+AS
+SELECT trunc(sysdate)-25 as date_plan,
+sum(p.plan_dpst_trnsctn_plan_value) as sum_plan
+  FROM dwh_main.acc_plan_deposit@dwh_prod2 p
+WHERE p.plan_dpst_period_cd = '800320151101';
+grant select on U1.M_PLAN_DEP to LOADDB;
+grant select on U1.M_PLAN_DEP to LOADER;
+
+

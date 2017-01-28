@@ -1,0 +1,10 @@
+﻿create materialized view U1.M_CLIENT_DRAW_DOWN_PRE3
+build deferred
+refresh complete on demand
+as
+select /*+parallel(5)*/ distinct f3.id, f3.c_doc_date, r3.collection_id
+from T_RFO_Z#RDOC  r3
+join T_RFO_Z#FDOC  f3 on f3.id = r3.c_doc and f3.class_id = 'KAS_VERIFICATION';
+grant select on U1.M_CLIENT_DRAW_DOWN_PRE3 to LOADDB;
+
+

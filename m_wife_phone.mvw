@@ -1,0 +1,50 @@
+﻿create materialized view U1.M_WIFE_PHONE
+build deferred
+refresh force on demand
+as
+with all_select as(select /*+parallel(5)*/ t.form_client_id,
+                          t.form_client_date,
+                          t.rfo_client_id,
+                          f.iin,
+                          t.phone_number,
+                          t.phone_type,
+                          dense_rank() over (order by t.phone_number) as phone_id
+                     from u1.V_FORM_CLIENT_CONTACT_PHONE t
+                     left join u1.V_FORM_CLIENT_ALL_RFO f on f.form_client_id=t.form_client_id
+                    where t.phone_type in ('МОБИЛЬНЫЙ','МОБИЛЬНЫЙ СУПРУГИ','СУПРУГА') and length(t.phone_number) = 11
+                   ),
+     x_select as (select /*+parallel(5)*/ t.form_client_id,
+                         t.form_client_date,
+                         t.rfo_client_id,
+                         t.iin,
+                         t.phone_number,
+                         t.phone_type,
+                         t.phone_id
+                    from all_select t
+                   where t.phone_type='МОБИЛЬНЫЙ'
+                  ),
+     y_select as (select /*+parallel(5)*/ t.form_client_id,
+                         t.form_client_date,
+                         t.rfo_client_id,
+                         t.iin,
+                         t.phone_number,
+                         'СУПРУГ/СУПРУГА' as phone_type,
+                         t.phone_id
+                    from all_select t
+                   where t.phone_type in ('МОБИЛЬНЫЙ СУПРУГИ','СУПРУГА')
+                  )
+select /*+ parallel(10)*/
+       t1.form_client_id,
+       t1.rfo_client_id,
+       t1.iin,
+       max(t3.rfo_client_id) keep (dense_rank last order by t3.form_client_date) as wife_rfo_client_id,
+       max(t3.iin) keep (dense_rank last order by t3.form_client_date) as wife_iin
+  from X_SELECT t1
+  join Y_SELECT t2 on t2.rfo_client_id = t1.rfo_client_id
+                  and t2.form_client_id <= t1.form_client_id
+  join X_SELECT t3 on t3.phone_id = t2.phone_id
+                  and t3.form_client_id <= t2.form_client_id
+ group by t1.form_client_id, t1.rfo_client_id, t1.iin;
+grant select on U1.M_WIFE_PHONE to LOADDB;
+
+

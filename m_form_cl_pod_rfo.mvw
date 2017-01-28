@@ -1,0 +1,40 @@
+﻿create materialized view U1.M_FORM_CL_POD_RFO
+build deferred
+refresh complete on demand
+as
+select cp.id as form_cl_pod_id,
+       rfd.id as form_client_id,
+       f.c_client as rfo_client_id,
+       upper(p1.prop_name) as is_pl_birth_usa,  --Страна рождения США
+       upper(p2.prop_name) as address_usa,      --Адрес местожительства (регистрации) в США
+       upper(p3.prop_name) as is_resident_usa,  --Являетесь ли вы налогоплательщиком США
+       upper(cp.c_offshore) as offshore,               --Наличие Банковского/их счетов в Банке/ах расположенных в оффшорных зонах
+       upper(cp.c_ipdl_relation) as ipdl_relation      --Причастность к иностранному публичному должостному лицу, его членам семьи и близким родственникам
+  from V_RFO_Z#KAS_FORM_CL_POD cp
+  join V_RFO_Z#FDOC fd      on fd.id = cp.id
+  join V_RFO_Z#RDOC rd      on rd.c_doc = fd.id
+  join V_RFO_Z#FOLDERS f    on f.c_docs = rd.collection_id
+  join (select d.id, r.collection_id
+              from u1.V_RFO_Z#FDOC d
+              join u1.V_RFO_Z#RDOC r on r.c_doc = d.id
+                                    and d.class_id = 'FORM_CLIENT') rfd
+              on rfd.collection_id = rd.collection_id
+  left join (select pr1.collection_id, pr1.c_bool as prop_name
+             from V_RFO_Z#PROPERTIES pr1
+             join V_RFO_Z#PROPERTY_GRP pg1 on pg1.id = pr1.c_group_prop
+            where pg1.c_code = 'PL_BIRTH_USA'     --Страна рождения США
+             ) p1 on p1.collection_id = cp.c_cl_req#add_props
+  left join (select pr2.collection_id, pr2.c_str as prop_name
+             from V_RFO_Z#PROPERTIES pr2
+             join V_RFO_Z#PROPERTY_GRP pg2 on pg2.id = pr2.c_group_prop
+            where pg2.c_code = 'ADR_USA'          --Адрес регистрации/проживания в США
+             ) p2 on p2.collection_id = cp.c_cl_req#add_props
+  left join (select pr3.collection_id, pr3.c_bool as prop_name
+             from V_RFO_Z#PROPERTIES pr3
+             join V_RFO_Z#PROPERTY_GRP pg3 on pg3.id = pr3.c_group_prop
+            where pg3.c_code = 'RES_USA'          --Гражданин/резидент США для налоговых целей
+             ) p3 on p3.collection_id = cp.c_cl_req#add_props
+where rd.collection_id not in (84713548941,84064789204);
+grant select on U1.M_FORM_CL_POD_RFO to LOADDB;
+
+

@@ -1,0 +1,271 @@
+﻿create materialized view U1.M_RBO_CONTRACT_DATA_PMT_BUFF5
+build deferred
+refresh force on demand
+as
+select /*+parallel(5)*/
+             t.rep_date
+            ,rp.rbo_contract_id
+            ,mp.mp_rbo_contract_id
+            ,mp.mp7_rbo_contract_id
+            ,mp.mp30_rbo_contract_id
+            ,mp.mp60_rbo_contract_id
+            ,rp.total_debt_pmt_1_0
+            ,rp.total_debt_pmt_1_1
+            ,rp.total_debt_pmt_1_7
+            ,rp.total_debt_pmt_1_15
+            ,rp.total_debt_pmt_1_16
+            ,rp.total_debt_pmt_1_30
+            ,rp.total_debt_pmt_1_60
+            ,rp.total_debt_pmt_1_90
+            ,rp.total_debt_pmt_1_0_old
+            ,rp.total_debt_pmt_2_0
+            ,rp.total_debt_pmt_2_7
+            ,rp.total_debt_pmt_2_30
+            ,rp.total_debt_pmt_2_60
+            ,rp.total_debt_pmt_2_90
+            ,rp.total_debt_pmt_3_0
+            ,rp.total_debt_pmt_3_7
+            ,rp.total_debt_pmt_3_30
+            ,rp.total_debt_pmt_3_60
+            ,rp.total_debt_pmt_3_90
+            ,rp.total_debt_pmt_4_0
+            ,rp.total_debt_pmt_4_7
+            ,rp.total_debt_pmt_4_30
+            ,rp.total_debt_pmt_4_60
+            ,rp.total_debt_pmt_4_90
+            ,rp.total_debt_pmt_5_0
+            ,rp.total_debt_pmt_5_7
+            ,rp.total_debt_pmt_5_30
+            ,rp.total_debt_pmt_5_60
+            ,rp.total_debt_pmt_5_90
+            ,rp.total_debt_pmt_6_0
+            ,rp.total_debt_pmt_6_7
+            ,rp.total_debt_pmt_6_30
+            ,rp.total_debt_pmt_6_60
+            ,rp.total_debt_pmt_6_90
+            ,rp.total_debt_pmt_7_0
+            ,rp.total_debt_pmt_7_7
+            ,rp.total_debt_pmt_7_30
+            ,rp.total_debt_pmt_7_60
+            ,rp.total_debt_pmt_7_90
+            ,rp.max_debt_used_pmt_1_0
+            ,rp.max_debt_used_pmt_1_1
+            ,rp.max_debt_used_pmt_1_7
+            ,rp.max_debt_used_pmt_1_15
+            ,rp.max_debt_used_pmt_1_16
+            ,rp.max_debt_used_pmt_1_30
+            ,rp.max_debt_used_pmt_1_60
+            ,rp.max_debt_used_pmt_1_90
+            ,rp.max_debt_used_pmt_1_0_old
+            ,rp.max_debt_used_pmt_2_0
+            ,rp.max_debt_used_pmt_2_7
+            ,rp.max_debt_used_pmt_2_30
+            ,rp.max_debt_used_pmt_2_60
+            ,rp.max_debt_used_pmt_2_90
+            ,rp.max_debt_used_pmt_3_0
+            ,rp.max_debt_used_pmt_3_7
+            ,rp.max_debt_used_pmt_3_30
+            ,rp.max_debt_used_pmt_3_60
+            ,rp.max_debt_used_pmt_3_90
+            ,rp.max_debt_used_pmt_4_0
+            ,rp.max_debt_used_pmt_4_7
+            ,rp.max_debt_used_pmt_4_30
+            ,rp.max_debt_used_pmt_4_60
+            ,rp.max_debt_used_pmt_4_90
+            ,rp.max_debt_used_pmt_5_0
+            ,rp.max_debt_used_pmt_5_7
+            ,rp.max_debt_used_pmt_5_30
+            ,rp.max_debt_used_pmt_5_60
+            ,rp.max_debt_used_pmt_5_90
+            ,rp.max_debt_used_pmt_6_0
+            ,rp.max_debt_used_pmt_6_7
+            ,rp.max_debt_used_pmt_6_30
+            ,rp.max_debt_used_pmt_6_60
+            ,rp.max_debt_used_pmt_6_90
+            ,rp.max_debt_used_pmt_7_0
+            ,rp.max_debt_used_pmt_7_7
+            ,rp.max_debt_used_pmt_7_30
+            ,rp.max_debt_used_pmt_7_60
+            ,rp.max_debt_used_pmt_7_90
+            ,rp.delinq_days_pmt_1_0
+            ,rp.delinq_days_pmt_1_1
+            ,rp.delinq_days_pmt_1_7
+            ,rp.delinq_days_pmt_1_15
+            ,rp.delinq_days_pmt_1_16
+            ,rp.delinq_days_pmt_1_30
+            ,rp.delinq_days_pmt_1_60
+            ,rp.delinq_days_pmt_1_90
+            ,rp.delinq_days_pmt_1_0_old
+            ,rp.delinq_days_pmt_2_0
+            ,rp.delinq_days_pmt_2_7
+            ,rp.delinq_days_pmt_2_30
+            ,rp.delinq_days_pmt_2_60
+            ,rp.delinq_days_pmt_2_90
+            ,rp.delinq_days_pmt_3_0
+            ,rp.delinq_days_pmt_3_7
+            ,rp.delinq_days_pmt_3_30
+            ,rp.delinq_days_pmt_3_60
+            ,rp.delinq_days_pmt_3_90
+            ,rp.delinq_days_pmt_4_0
+            ,rp.delinq_days_pmt_4_7
+            ,rp.delinq_days_pmt_4_30
+            ,rp.delinq_days_pmt_4_60
+            ,rp.delinq_days_pmt_4_90
+            ,rp.delinq_days_pmt_5_0
+            ,rp.delinq_days_pmt_5_7
+            ,rp.delinq_days_pmt_5_30
+            ,rp.delinq_days_pmt_5_60
+            ,rp.delinq_days_pmt_5_90
+            ,rp.delinq_days_pmt_6_0
+            ,rp.delinq_days_pmt_6_7
+            ,rp.delinq_days_pmt_6_30
+            ,rp.delinq_days_pmt_6_60
+            ,rp.delinq_days_pmt_6_90
+            ,rp.delinq_days_pmt_7_0
+            ,rp.delinq_days_pmt_7_7
+            ,rp.delinq_days_pmt_7_30
+            ,rp.delinq_days_pmt_7_60
+            ,rp.delinq_days_pmt_7_90
+
+
+            ,case when mp.mp1_0_rbo_contract_id   is not null then mp.total_debt_x_pmt_1_0             else rp.total_debt_x_pmt_1_0 end as total_debt_x_pmt_1_0
+            ,case when mp.mp1_1_rbo_contract_id  is not null then mp.total_debt_x_pmt_1_1             else rp.total_debt_x_pmt_1_1  end as  total_debt_x_pmt_1_1
+            ,case when mp.mp1_7_rbo_contract_id  is not null then mp.total_debt_x_pmt_1_7             else rp.total_debt_x_pmt_1_7  end as  total_debt_x_pmt_1_7
+            ,case when mp.mp1_15_rbo_contract_id is not null then mp.total_debt_x_pmt_1_15            else rp.total_debt_x_pmt_1_15  end as  total_debt_x_pmt_1_15
+            ,case when mp.mp1_16_rbo_contract_id is not null then mp.total_debt_x_pmt_1_16            else rp.total_debt_x_pmt_1_16  end as  total_debt_x_pmt_1_16
+            ,case when mp.mp1_30_rbo_contract_id is not null then mp.total_debt_x_pmt_1_30            else rp.total_debt_x_pmt_1_30  end as  total_debt_x_pmt_1_30
+            ,case when mp.mp1_60_rbo_contract_id is not null then mp.total_debt_x_pmt_1_60            else rp.total_debt_x_pmt_1_60  end as  total_debt_x_pmt_1_60
+            ,case when mp.mp1_90_rbo_contract_id is not null then mp.total_debt_x_pmt_1_90            else rp.total_debt_x_pmt_1_90  end as  total_debt_x_pmt_1_90
+            ,case when mp.mp1_o_rbo_contract_id is not null then mp.total_debt_x_pmt_1_0_old         else rp.total_debt_x_pmt_1_0_old  end as  total_debt_x_pmt_1_0_old
+            ,case when mp.mp2_0_rbo_contract_id   is not null then mp.total_debt_x_pmt_2_0             else rp.total_debt_x_pmt_2_0  end as  total_debt_x_pmt_2_0
+            ,case when mp.mp2_7_rbo_contract_id  is not null then mp.total_debt_x_pmt_2_7             else rp.total_debt_x_pmt_2_7  end as  total_debt_x_pmt_2_7
+            ,case when mp.mp2_30_rbo_contract_id is not null then mp.total_debt_x_pmt_2_30            else rp.total_debt_x_pmt_2_30  end as  total_debt_x_pmt_2_30
+            ,case when mp.mp2_60_rbo_contract_id is not null then mp.total_debt_x_pmt_2_60            else rp.total_debt_x_pmt_2_60  end as  total_debt_x_pmt_2_60
+            ,case when mp.mp2_90_rbo_contract_id is not null then mp.total_debt_x_pmt_2_90            else rp.total_debt_x_pmt_2_90  end as  total_debt_x_pmt_2_90
+            ,case when mp.mp3_0_rbo_contract_id   is not null then mp.total_debt_x_pmt_3_0             else rp.total_debt_x_pmt_3_0  end as  total_debt_x_pmt_3_0
+            ,case when mp.mp3_7_rbo_contract_id  is not null then mp.total_debt_x_pmt_3_7             else rp.total_debt_x_pmt_3_7  end as  total_debt_x_pmt_3_7
+            ,case when mp.mp3_30_rbo_contract_id is not null then mp.total_debt_x_pmt_3_30            else rp.total_debt_x_pmt_3_30  end as  total_debt_x_pmt_3_30
+            ,case when mp.mp3_60_rbo_contract_id is not null then mp.total_debt_x_pmt_3_60            else rp.total_debt_x_pmt_3_60  end as  total_debt_x_pmt_3_60
+            ,case when mp.mp3_90_rbo_contract_id is not null then mp.total_debt_x_pmt_3_90            else rp.total_debt_x_pmt_3_90  end as  total_debt_x_pmt_3_90
+            ,case when mp.mp4_0_rbo_contract_id   is not null then mp.total_debt_x_pmt_4_0             else rp.total_debt_x_pmt_4_0  end as  total_debt_x_pmt_4_0
+            ,case when mp.mp4_7_rbo_contract_id  is not null then mp.total_debt_x_pmt_4_7             else rp.total_debt_x_pmt_4_7  end as  total_debt_x_pmt_4_7
+            ,case when mp.mp4_30_rbo_contract_id is not null then mp.total_debt_x_pmt_4_30            else rp.total_debt_x_pmt_4_30  end as  total_debt_x_pmt_4_30
+            ,case when mp.mp4_60_rbo_contract_id is not null then mp.total_debt_x_pmt_4_60            else rp.total_debt_x_pmt_4_60  end as  total_debt_x_pmt_4_60
+            ,case when mp.mp4_90_rbo_contract_id is not null then mp.total_debt_x_pmt_4_90            else rp.total_debt_x_pmt_4_90  end as  total_debt_x_pmt_4_90
+            ,case when mp.mp5_0_rbo_contract_id   is not null then mp.total_debt_x_pmt_5_0             else rp.total_debt_x_pmt_5_0  end as  total_debt_x_pmt_5_0
+            ,case when mp.mp5_7_rbo_contract_id  is not null then mp.total_debt_x_pmt_5_7             else rp.total_debt_x_pmt_5_7  end as  total_debt_x_pmt_5_7
+            ,case when mp.mp5_30_rbo_contract_id is not null then mp.total_debt_x_pmt_5_30            else rp.total_debt_x_pmt_5_30  end as  total_debt_x_pmt_5_30
+            ,case when mp.mp5_60_rbo_contract_id is not null then mp.total_debt_x_pmt_5_60            else rp.total_debt_x_pmt_5_60  end as  total_debt_x_pmt_5_60
+            ,case when mp.mp5_90_rbo_contract_id is not null then mp.total_debt_x_pmt_5_90            else rp.total_debt_x_pmt_5_90  end as  total_debt_x_pmt_5_90
+            ,case when mp.mp6_0_rbo_contract_id   is not null then mp.total_debt_x_pmt_6_0             else rp.total_debt_x_pmt_6_0  end as  total_debt_x_pmt_6_0
+            ,case when mp.mp6_7_rbo_contract_id  is not null then mp.total_debt_x_pmt_6_7             else rp.total_debt_x_pmt_6_7  end as  total_debt_x_pmt_6_7
+            ,case when mp.mp6_30_rbo_contract_id is not null then mp.total_debt_x_pmt_6_30            else rp.total_debt_x_pmt_6_30  end as  total_debt_x_pmt_6_30
+            ,case when mp.mp6_60_rbo_contract_id is not null then mp.total_debt_x_pmt_6_60            else rp.total_debt_x_pmt_6_60  end as  total_debt_x_pmt_6_60
+            ,case when mp.mp6_90_rbo_contract_id is not null then mp.total_debt_x_pmt_6_90            else rp.total_debt_x_pmt_6_90  end as  total_debt_x_pmt_6_90
+            ,case when mp.mp7_0_rbo_contract_id   is not null then mp.total_debt_x_pmt_7_0             else rp.total_debt_x_pmt_7_0  end as  total_debt_x_pmt_7_0
+            ,case when mp.mp7_7_rbo_contract_id  is not null then mp.total_debt_x_pmt_7_7             else rp.total_debt_x_pmt_7_7  end as  total_debt_x_pmt_7_7
+            ,case when mp.mp7_30_rbo_contract_id is not null then mp.total_debt_x_pmt_7_30            else rp.total_debt_x_pmt_7_30  end as  total_debt_x_pmt_7_30
+            ,case when mp.mp7_60_rbo_contract_id is not null then mp.total_debt_x_pmt_7_60            else rp.total_debt_x_pmt_7_60  end as  total_debt_x_pmt_7_60
+            ,case when mp.mp7_90_rbo_contract_id is not null then mp.total_debt_x_pmt_7_90            else rp.total_debt_x_pmt_7_90  end as  total_debt_x_pmt_7_90
+            ,case when mp.mp1_0_rbo_contract_id   is not null then mp.max_debt_used_x_pmt_1_0          else rp.max_debt_used_x_pmt_1_0  end as  max_debt_used_x_pmt_1_0
+            ,case when mp.mp1_1_rbo_contract_id  is not null then mp.max_debt_used_x_pmt_1_1          else rp.max_debt_used_x_pmt_1_1  end as  max_debt_used_x_pmt_1_1
+            ,case when mp.mp1_7_rbo_contract_id  is not null then mp.max_debt_used_x_pmt_1_7          else rp.max_debt_used_x_pmt_1_7  end as  max_debt_used_x_pmt_1_7
+            ,case when mp.mp1_15_rbo_contract_id is not null then mp.max_debt_used_x_pmt_1_15         else rp.max_debt_used_x_pmt_1_15  end as  max_debt_used_x_pmt_1_15
+            ,case when mp.mp1_16_rbo_contract_id is not null then mp.max_debt_used_x_pmt_1_16         else rp.max_debt_used_x_pmt_1_16  end as  max_debt_used_x_pmt_1_16
+            ,case when mp.mp1_30_rbo_contract_id is not null then mp.max_debt_used_x_pmt_1_30         else rp.max_debt_used_x_pmt_1_30  end as  max_debt_used_x_pmt_1_30
+            ,case when mp.mp1_60_rbo_contract_id is not null then mp.max_debt_used_x_pmt_1_60         else rp.max_debt_used_x_pmt_1_60  end as  max_debt_used_x_pmt_1_60
+            ,case when mp.mp1_90_rbo_contract_id is not null then mp.max_debt_used_x_pmt_1_90         else rp.max_debt_used_x_pmt_1_90  end as  max_debt_used_x_pmt_1_90
+            ,case when mp.mp1_o_rbo_contract_id is not null then mp.max_debt_used_x_pmt_1_0_old      else rp.max_debt_used_x_pmt_1_0_old  end as  max_debt_used_x_pmt_1_0_old
+            ,case when mp.mp2_0_rbo_contract_id   is not null then mp.max_debt_used_x_pmt_2_0          else rp.max_debt_used_x_pmt_2_0  end as  max_debt_used_x_pmt_2_0
+            ,case when mp.mp2_7_rbo_contract_id  is not null then mp.max_debt_used_x_pmt_2_7          else rp.max_debt_used_x_pmt_2_7  end as  max_debt_used_x_pmt_2_7
+            ,case when mp.mp2_30_rbo_contract_id is not null then mp.max_debt_used_x_pmt_2_30         else rp.max_debt_used_x_pmt_2_30  end as  max_debt_used_x_pmt_2_30
+            ,case when mp.mp2_60_rbo_contract_id is not null then mp.max_debt_used_x_pmt_2_60         else rp.max_debt_used_x_pmt_2_60  end as  max_debt_used_x_pmt_2_60
+            ,case when mp.mp2_90_rbo_contract_id is not null then mp.max_debt_used_x_pmt_2_90         else rp.max_debt_used_x_pmt_2_90  end as  max_debt_used_x_pmt_2_90
+            ,case when mp.mp3_0_rbo_contract_id   is not null then mp.max_debt_used_x_pmt_3_0          else rp.max_debt_used_x_pmt_3_0  end as  max_debt_used_x_pmt_3_0
+            ,case when mp.mp3_7_rbo_contract_id  is not null then mp.max_debt_used_x_pmt_3_7          else rp.max_debt_used_x_pmt_3_7  end as  max_debt_used_x_pmt_3_7
+            ,case when mp.mp3_30_rbo_contract_id is not null then mp.max_debt_used_x_pmt_3_30         else rp.max_debt_used_x_pmt_3_30  end as  max_debt_used_x_pmt_3_30
+            ,case when mp.mp3_60_rbo_contract_id is not null then mp.max_debt_used_x_pmt_3_60         else rp.max_debt_used_x_pmt_3_60  end as  max_debt_used_x_pmt_3_60
+            ,case when mp.mp3_90_rbo_contract_id is not null then mp.max_debt_used_x_pmt_3_90         else rp.max_debt_used_x_pmt_3_90  end as  max_debt_used_x_pmt_3_90
+            ,case when mp.mp4_0_rbo_contract_id   is not null then mp.max_debt_used_x_pmt_4_0          else rp.max_debt_used_x_pmt_4_0  end as  max_debt_used_x_pmt_4_0
+            ,case when mp.mp4_7_rbo_contract_id  is not null then mp.max_debt_used_x_pmt_4_7          else rp.max_debt_used_x_pmt_4_7  end as  max_debt_used_x_pmt_4_7
+            ,case when mp.mp4_30_rbo_contract_id is not null then mp.max_debt_used_x_pmt_4_30         else rp.max_debt_used_x_pmt_4_30  end as  max_debt_used_x_pmt_4_30
+            ,case when mp.mp4_60_rbo_contract_id is not null then mp.max_debt_used_x_pmt_4_60         else rp.max_debt_used_x_pmt_4_60  end as  max_debt_used_x_pmt_4_60
+            ,case when mp.mp4_90_rbo_contract_id is not null then mp.max_debt_used_x_pmt_4_90         else rp.max_debt_used_x_pmt_4_90  end as  max_debt_used_x_pmt_4_90
+            ,case when mp.mp5_0_rbo_contract_id   is not null then mp.max_debt_used_x_pmt_5_0          else rp.max_debt_used_x_pmt_5_0  end as  max_debt_used_x_pmt_5_0
+            ,case when mp.mp5_7_rbo_contract_id  is not null then mp.max_debt_used_x_pmt_5_7          else rp.max_debt_used_x_pmt_5_7  end as  max_debt_used_x_pmt_5_7
+            ,case when mp.mp5_30_rbo_contract_id is not null then mp.max_debt_used_x_pmt_5_30         else rp.max_debt_used_x_pmt_5_30  end as  max_debt_used_x_pmt_5_30
+            ,case when mp.mp5_60_rbo_contract_id is not null then mp.max_debt_used_x_pmt_5_60         else rp.max_debt_used_x_pmt_5_60  end as  max_debt_used_x_pmt_5_60
+            ,case when mp.mp5_90_rbo_contract_id is not null then mp.max_debt_used_x_pmt_5_90         else rp.max_debt_used_x_pmt_5_90  end as  max_debt_used_x_pmt_5_90
+            ,case when mp.mp6_0_rbo_contract_id   is not null then mp.max_debt_used_x_pmt_6_0          else rp.max_debt_used_x_pmt_6_0  end as  max_debt_used_x_pmt_6_0
+            ,case when mp.mp6_7_rbo_contract_id  is not null then mp.max_debt_used_x_pmt_6_7          else rp.max_debt_used_x_pmt_6_7  end as  max_debt_used_x_pmt_6_7
+            ,case when mp.mp6_30_rbo_contract_id is not null then mp.max_debt_used_x_pmt_6_30         else rp.max_debt_used_x_pmt_6_30  end as  max_debt_used_x_pmt_6_30
+            ,case when mp.mp6_60_rbo_contract_id is not null then mp.max_debt_used_x_pmt_6_60         else rp.max_debt_used_x_pmt_6_60  end as  max_debt_used_x_pmt_6_60
+            ,case when mp.mp6_90_rbo_contract_id is not null then mp.max_debt_used_x_pmt_6_90         else rp.max_debt_used_x_pmt_6_90  end as  max_debt_used_x_pmt_6_90
+            ,case when mp.mp7_0_rbo_contract_id   is not null then mp.max_debt_used_x_pmt_7_0          else rp.max_debt_used_x_pmt_7_0  end as  max_debt_used_x_pmt_7_0
+            ,case when mp.mp7_7_rbo_contract_id  is not null then mp.max_debt_used_x_pmt_7_7          else rp.max_debt_used_x_pmt_7_7  end as  max_debt_used_x_pmt_7_7
+            ,case when mp.mp7_30_rbo_contract_id is not null then mp.max_debt_used_x_pmt_7_30         else rp.max_debt_used_x_pmt_7_30  end as  max_debt_used_x_pmt_7_30
+            ,case when mp.mp7_60_rbo_contract_id is not null then mp.max_debt_used_x_pmt_7_60         else rp.max_debt_used_x_pmt_7_60  end as  max_debt_used_x_pmt_7_60
+            ,case when mp.mp7_90_rbo_contract_id is not null then mp.max_debt_used_x_pmt_7_90         else rp.max_debt_used_x_pmt_7_90  end as  max_debt_used_x_pmt_7_90
+            ,case when mp.mp1_0_rbo_contract_id   is not null then mp.delinq_days_x_pmt_1_0            else rp.delinq_days_x_pmt_1_0  end as  delinq_days_x_pmt_1_0
+            ,case when mp.mp1_1_rbo_contract_id  is not null then mp.delinq_days_x_pmt_1_1            else rp.delinq_days_x_pmt_1_1  end as  delinq_days_x_pmt_1_1
+            ,case when mp.mp1_7_rbo_contract_id  is not null then mp.delinq_days_x_pmt_1_7            else rp.delinq_days_x_pmt_1_7  end as  delinq_days_x_pmt_1_7
+            ,case when mp.mp1_15_rbo_contract_id is not null then mp.delinq_days_x_pmt_1_15           else rp.delinq_days_x_pmt_1_15  end as  delinq_days_x_pmt_1_15
+            ,case when mp.mp1_16_rbo_contract_id is not null then mp.delinq_days_x_pmt_1_16           else rp.delinq_days_x_pmt_1_16  end as  delinq_days_x_pmt_1_16
+            ,case when mp.mp1_30_rbo_contract_id is not null then mp.delinq_days_x_pmt_1_30           else rp.delinq_days_x_pmt_1_30  end as  delinq_days_x_pmt_1_30
+            ,case when mp.mp1_60_rbo_contract_id is not null then mp.delinq_days_x_pmt_1_60           else rp.delinq_days_x_pmt_1_60  end as  delinq_days_x_pmt_1_60
+            ,case when mp.mp1_90_rbo_contract_id is not null then mp.delinq_days_x_pmt_1_90           else rp.delinq_days_x_pmt_1_90  end as  delinq_days_x_pmt_1_90
+            ,case when mp.mp1_o_rbo_contract_id is not null then mp.delinq_days_x_pmt_1_0_old        else rp.delinq_days_x_pmt_1_0_old  end as  delinq_days_x_pmt_1_0_old
+            ,case when mp.mp2_0_rbo_contract_id   is not null then mp.delinq_days_x_pmt_2_0            else rp.delinq_days_x_pmt_2_0  end as  delinq_days_x_pmt_2_0
+            ,case when mp.mp2_7_rbo_contract_id  is not null then mp.delinq_days_x_pmt_2_7            else rp.delinq_days_x_pmt_2_7  end as  delinq_days_x_pmt_2_7
+            ,case when mp.mp2_30_rbo_contract_id is not null then mp.delinq_days_x_pmt_2_30           else rp.delinq_days_x_pmt_2_30  end as  delinq_days_x_pmt_2_30
+            ,case when mp.mp2_60_rbo_contract_id is not null then mp.delinq_days_x_pmt_2_60           else rp.delinq_days_x_pmt_2_60  end as  delinq_days_x_pmt_2_60
+            ,case when mp.mp2_90_rbo_contract_id is not null then mp.delinq_days_x_pmt_2_90           else rp.delinq_days_x_pmt_2_90  end as  delinq_days_x_pmt_2_90
+            ,case when mp.mp3_0_rbo_contract_id   is not null then mp.delinq_days_x_pmt_3_0            else rp.delinq_days_x_pmt_3_0  end as  delinq_days_x_pmt_3_0
+            ,case when mp.mp3_7_rbo_contract_id  is not null then mp.delinq_days_x_pmt_3_7            else rp.delinq_days_x_pmt_3_7  end as  delinq_days_x_pmt_3_7
+            ,case when mp.mp3_30_rbo_contract_id is not null then mp.delinq_days_x_pmt_3_30           else rp.delinq_days_x_pmt_3_30  end as  delinq_days_x_pmt_3_30
+            ,case when mp.mp3_60_rbo_contract_id is not null then mp.delinq_days_x_pmt_3_60           else rp.delinq_days_x_pmt_3_60  end as  delinq_days_x_pmt_3_60
+            ,case when mp.mp3_90_rbo_contract_id is not null then mp.delinq_days_x_pmt_3_90           else rp.delinq_days_x_pmt_3_90  end as  delinq_days_x_pmt_3_90
+            ,case when mp.mp4_0_rbo_contract_id   is not null then mp.delinq_days_x_pmt_4_0            else rp.delinq_days_x_pmt_4_0  end as  delinq_days_x_pmt_4_0
+            ,case when mp.mp4_7_rbo_contract_id  is not null then mp.delinq_days_x_pmt_4_7            else rp.delinq_days_x_pmt_4_7  end as  delinq_days_x_pmt_4_7
+            ,case when mp.mp4_30_rbo_contract_id is not null then mp.delinq_days_x_pmt_4_30           else rp.delinq_days_x_pmt_4_30  end as  delinq_days_x_pmt_4_30
+            ,case when mp.mp4_60_rbo_contract_id is not null then mp.delinq_days_x_pmt_4_60           else rp.delinq_days_x_pmt_4_60  end as  delinq_days_x_pmt_4_60
+            ,case when mp.mp4_90_rbo_contract_id is not null then mp.delinq_days_x_pmt_4_90           else rp.delinq_days_x_pmt_4_90  end as  delinq_days_x_pmt_4_90
+            ,case when mp.mp5_0_rbo_contract_id   is not null then mp.delinq_days_x_pmt_5_0            else rp.delinq_days_x_pmt_5_0  end as  delinq_days_x_pmt_5_0
+            ,case when mp.mp5_7_rbo_contract_id  is not null then mp.delinq_days_x_pmt_5_7            else rp.delinq_days_x_pmt_5_7  end as  delinq_days_x_pmt_5_7
+            ,case when mp.mp5_30_rbo_contract_id is not null then mp.delinq_days_x_pmt_5_30           else rp.delinq_days_x_pmt_5_30  end as  delinq_days_x_pmt_5_30
+            ,case when mp.mp5_60_rbo_contract_id is not null then mp.delinq_days_x_pmt_5_60           else rp.delinq_days_x_pmt_5_60  end as  delinq_days_x_pmt_5_60
+            ,case when mp.mp5_90_rbo_contract_id is not null then mp.delinq_days_x_pmt_5_90           else rp.delinq_days_x_pmt_5_90  end as  delinq_days_x_pmt_5_90
+            ,case when mp.mp6_0_rbo_contract_id   is not null then mp.delinq_days_x_pmt_6_0            else rp.delinq_days_x_pmt_6_0  end as  delinq_days_x_pmt_6_0
+            ,case when mp.mp6_7_rbo_contract_id  is not null then mp.delinq_days_x_pmt_6_7            else rp.delinq_days_x_pmt_6_7  end as  delinq_days_x_pmt_6_7
+            ,case when mp.mp6_30_rbo_contract_id is not null then mp.delinq_days_x_pmt_6_30           else rp.delinq_days_x_pmt_6_30  end as  delinq_days_x_pmt_6_30
+            ,case when mp.mp6_60_rbo_contract_id is not null then mp.delinq_days_x_pmt_6_60           else rp.delinq_days_x_pmt_6_60  end as  delinq_days_x_pmt_6_60
+            ,case when mp.mp6_90_rbo_contract_id is not null then mp.delinq_days_x_pmt_6_90           else rp.delinq_days_x_pmt_6_90  end as  delinq_days_x_pmt_6_90
+            ,case when mp.mp7_0_rbo_contract_id   is not null then mp.delinq_days_x_pmt_7_0            else rp.delinq_days_x_pmt_7_0  end as  delinq_days_x_pmt_7_0
+            ,case when mp.mp7_7_rbo_contract_id  is not null then mp.delinq_days_x_pmt_7_7            else rp.delinq_days_x_pmt_7_7  end as  delinq_days_x_pmt_7_7
+            ,case when mp.mp7_30_rbo_contract_id is not null then mp.delinq_days_x_pmt_7_30           else rp.delinq_days_x_pmt_7_30  end as  delinq_days_x_pmt_7_30
+            ,case when mp.mp7_60_rbo_contract_id is not null then mp.delinq_days_x_pmt_7_60           else rp.delinq_days_x_pmt_7_60  end as  delinq_days_x_pmt_7_60
+            ,case when mp.mp7_90_rbo_contract_id is not null then mp.delinq_days_x_pmt_7_90           else rp.delinq_days_x_pmt_7_90  end as  delinq_days_x_pmt_7_90
+
+            ,rp.plan_date_x_pmt_1
+            ,rp.plan_date_x_pmt_2
+            ,rp.plan_date_x_pmt_3
+            ,rp.plan_date_x_pmt_4
+            ,rp.plan_date_x_pmt_5
+            ,rp.plan_date_x_pmt_6
+            ,rp.plan_date_x_pmt_7
+            ,rp.plan_date_pmt_1
+            ,rp.plan_date_pmt_2
+            ,rp.plan_date_pmt_3
+            ,rp.plan_date_pmt_4
+            ,rp.plan_date_pmt_5
+            ,rp.plan_date_pmt_6
+            ,rp.plan_date_pmt_7
+
+from M_RBO_CONTRACT_DATA_PMT_BUFF3 rp
+join (select max(rep_date)as rep_date from t_rbo_port) t on 1 = 1
+left join M_RBO_CONTRACT_DATA_PMT_BUFF4 mp on mp.po_rbo_contract_id=rp.rbo_contract_id
+/*where rp.rbo_contract_id=237021069692
+union all
+select * from M_RBO_CONTRACT_DATA_PMT t
+where rbo_contract_id=237021069692*/;
+

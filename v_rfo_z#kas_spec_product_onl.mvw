@@ -1,0 +1,15 @@
+﻿create materialized view U1.V_RFO_Z#KAS_SPEC_PRODUCT_ONL
+build deferred
+refresh force on demand
+as
+select  kel.c_client,
+                   c2.c_prod_code_lev2,
+                   ksp.c_date_end  as date_end,
+                   ksp.c_date_edit as date_edit
+            from ibs.Z#KAS_EMP_LIMIT@rfo_snap kel
+            join ibs.Z#KAS_SPEC_PRODUCT@rfo_snap ksp               on ksp.collection_id = kel.c_spec_product and ksp.c_date_edit >= trunc(sysdate) - 1
+            join ibs.Z#KAS_SPEC_PROD_CL@rfo_snap c2                on c2.id = ksp.id
+            where kel.c_kas_sas_date >= trunc(sysdate) - 1;
+grant select on U1.V_RFO_Z#KAS_SPEC_PRODUCT_ONL to LOADDB;
+
+

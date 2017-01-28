@@ -1,0 +1,24 @@
+﻿create table U1.T_TMP_E_PMT_RBO_COMPARE
+(
+  begin_date         DATE,
+  deal_number        VARCHAR2(250 CHAR),
+  folder_id_first    NUMBER,
+  plan_pmt_first_sum NUMBER,
+  in_sco_crd_pay_cur NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_E_PMT_RBO_COMPARE to LOADDB;
+grant select on U1.T_TMP_E_PMT_RBO_COMPARE to LOADER;
+

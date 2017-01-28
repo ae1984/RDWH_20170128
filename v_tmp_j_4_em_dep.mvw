@@ -1,0 +1,30 @@
+﻿create materialized view U1.V_TMP_J_4_EM_DEP
+refresh force on demand
+as
+select x.iin, a.pmt_date, a.pmt_month, a.sal_by_pmt, b.sal_in_month, a.org_name, a.org_bin, a.bank
+from TMP_EM_DEP_G_20140327 x
+left join (select t.rnn as iin,
+             t.send_date as pmt_date,
+             to_char(t.send_date,'yyyy-mm') as pmt_month,
+             round(t.amount * 8.1 + 1731) as sal_by_pmt,
+             upper(t.p_name) as org_name,
+             d.f2 as org_bin,
+             upper(t.name) as bank
+      from V_G3_P_VIEW t
+      join V_G3_ADF d on d.f1 = t.p_key and d.f2 not in ('940440000910','060240016519')
+      where upper(t.p_name) not like '%KASPI BANK%'
+            and t.send_date < to_date('2014-02-01','yyyy-mm-dd')
+) a on a.iin = x.iin
+left join (
+      select t.rnn as iin, to_char(t.send_date,'yyyy-mm') as send_month,
+             round(sum(t.amount * 8.1 + 1731)) as sal_in_month
+      from V_G3_P_VIEW t
+      join V_G3_ADF d on d.f1 = t.p_key and d.f2 not in ('940440000910','060240016519')
+      where upper(t.p_name) not like '%KASPI BANK%'
+            and t.send_date < to_date('2014-02-01','yyyy-mm-dd')
+      group by t.rnn, to_char(t.send_date,'yyyy-mm')
+) b on b.iin = a.iin and b.send_month = a.pmt_month;
+grant select on U1.V_TMP_J_4_EM_DEP to LOADDB;
+grant select on U1.V_TMP_J_4_EM_DEP to LOADER;
+
+

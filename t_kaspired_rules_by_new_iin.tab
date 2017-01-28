@@ -1,0 +1,21 @@
+﻿create table U1.T_KASPIRED_RULES_BY_NEW_IIN
+(
+  iin         VARCHAR2(256),
+  rule        VARCHAR2(64),
+  insert_date DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_KASPIRED_RULES_BY_NEW_IIN to LOADDB;
+

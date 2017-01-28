@@ -1,0 +1,101 @@
+﻿create materialized view U1.M_FLD_CON_CNL_ONL_VERIF
+refresh force on demand
+as
+select z.*,
+
+       case when z.is_match_gu = 0 or
+                 (z.is_match_gu = 1 and
+                  (z.is_form_match = 0 or (z.is_cancel_exists = 1 and z.is_not_fraud = 0))) then 1 else 3 end anketa_type,
+
+       case when z.is_cancel_exists = 1 and
+                 z.is_approve_after_fraud = 0
+                 and (z.folder_date_create < to_date('03-07-2015','dd-mm-yyyy') or (z.folder_date_create >= to_date('03-07-2015','dd-mm-yyyy') and z.is_categ_a = 0) )
+                 and ( z.folder_date_create < to_date('17-07-2015','dd-mm-yyyy'))
+                   then 'VERIFY_PHOTO'
+            else '' end mng_vis_reason_new,
+
+      case when z.is_cancel_exists = 1
+                 and z.folder_date_create < to_date('01-04-2015','dd-mm-yyyy')
+                   then 'VERIFY_PHOTO'
+            else '' end mng_vis_reason_old,
+      case when z.is_cancel_exists = 1 and
+                 z.is_approve_after_fraud = 0 and
+                 (z.folder_date_create < to_date('03-07-2015','dd-mm-yyyy') or (z.folder_date_create >= to_date('03-07-2015','dd-mm-yyyy') and z.is_categ_a = 0) )
+                 and ( z.folder_date_create < to_date('17-07-2015','dd-mm-yyyy'))
+                   then 'VERIFY_PHOTO'
+           when z.is_cancel_exists = 1 and
+                z.folder_date_create < to_date('01-04-2015','dd-mm-yyyy')
+                   then 'VERIFY_PHOTO'
+            else '' end mng_vis_reason,
+
+      case when z.is_cancel_exists > 0 and
+                 z.is_approve_after_fraud = 0 and
+                 ( z.folder_date_create < to_date('03-07-2015','dd-mm-yyyy') or ( z.folder_date_create >= to_date('03-07-2015','dd-mm-yyyy') and z.is_categ_a = 0 ))
+                 and ( z.folder_date_create < to_date('17-07-2015','dd-mm-yyyy'))
+                  then 1
+            when z.is_cancel_exists > 0 and
+                 z.is_approve_after_fraud = 0 and
+                 ( z.folder_date_create < to_date('03-07-2015','dd-mm-yyyy') or ( z.folder_date_create >= to_date('03-07-2015','dd-mm-yyyy') and z.is_categ_a = 0 ))
+                 and (z.folder_date_create >= to_date('17-07-2015','dd-mm-yyyy'))
+                  then 2
+            when z.is_cancel_exists > 0 and
+                 z.is_approve_after_fraud = 0 and
+                 ( z.folder_date_create >= to_date('03-07-2015','dd-mm-yyyy') and z.is_categ_a = 1 )
+                  then 3
+            else 0 end as is_verif_manager_new,
+
+       case when z.is_cancel_exists > 0 and z.folder_date_create < to_date('01-04-2015','dd-mm-yyyy') then 1
+            --when z.folder_date_create >= to_date('01-04-2015','dd-mm-yyyy') then null
+         else 0 end as is_verif_manager_old,
+
+       case when z.is_cancel_exists > 0 and
+                 z.is_approve_after_fraud = 0 and
+                 ( z.folder_date_create < to_date('03-07-2015','dd-mm-yyyy') or ( z.folder_date_create >= to_date('03-07-2015','dd-mm-yyyy') and z.is_categ_a = 0 ))
+                 and ( z.folder_date_create < to_date('17-07-2015','dd-mm-yyyy'))
+                  then 1
+            when z.is_cancel_exists > 0 and
+                 z.is_approve_after_fraud = 0 and
+                 ( z.folder_date_create < to_date('03-07-2015','dd-mm-yyyy') or ( z.folder_date_create >= to_date('03-07-2015','dd-mm-yyyy') and z.is_categ_a = 0 ))
+                 and (z.folder_date_create >= to_date('17-07-2015','dd-mm-yyyy'))
+                  then 2
+            when z.is_cancel_exists > 0 and
+                 z.is_approve_after_fraud = 0 and
+                 ( z.folder_date_create >= to_date('03-07-2015','dd-mm-yyyy') and z.is_categ_a = 1 )
+                  then 3
+            when z.is_cancel_exists > 0 and z.folder_date_create < to_date('01-04-2015','dd-mm-yyyy') then 1
+            else 0 end as is_verif_manager,
+
+       case when z.is_purse_exists > 0 and
+                 z.is_credit_exists = 0 then 1 else 0 end as is_verif_manager_by_purse
+
+from (select t.folder_id,
+             t.claim_id,
+             trunc(t.folder_date_create_mi) as folder_date_create,
+             t.is_categ_a,
+             t.is_match_gu_1,
+             t.is_match_gu_2,
+             t.is_purse_exists,
+             t.is_form_match,
+             t.is_credit_exists,
+             t.is_match_gu,
+             t.sco_verif_need,
+             t2.is_rfo_cancel_exists,
+             t2.rfo_cancel_fld_date_create,
+             t2.is_mo_cancel_exists,
+             t2.mo_cancel_fld_date_create,
+             t2.is_approve_fld_exists,
+             t2.approve_fld_date_create,
+             t2.is_cancel_exists,
+             t2.is_approve_after_fraud,
+
+             t3.total_pmts,
+             t3.is_not_fraud
+
+      from M_FOLDER_CON_CNL_ONL_VERIF1 t
+      left join M_FOLDER_CON_CNL_ONL_VERIF2 t2 on t2.claim_id = t.claim_id
+      left join M_FOLDER_CON_CNL_ONL_VERIF3 t3 on t3.claim_id = t.claim_id
+      ) z;
+grant select on U1.M_FLD_CON_CNL_ONL_VERIF to LOADDB;
+grant select on U1.M_FLD_CON_CNL_ONL_VERIF to LOADER;
+
+

@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_TMP_J_ONLINE_112
+refresh complete on demand
+as
+select f.rfo_contract_id, f.expert_name, f.folder_date_create_mi, f.shop_name, f.iin, f.contract_amount,
+       f.is_credit_issued, f.is_sign_require, f.is_categ_a
+from u1.V_RFO_Z#KAS_ONLINE_BUY ob
+join u1.V_RFO_Z#KAS_ONLINE_CLAIM oc on ob.id = oc.c_buy_ref
+join u1.T_KASPIKZ_USER_REQUEST ur on oc.c_form_client_st#inn = ur.client_inn and trunc(ob.c_date_create) = trunc(ur.date_start)
+join M_FOLDER_CON_CANCEL f on f.claim_id = oc.id
+where ob.c_date_create > to_date('01.11.2015','dd.mm.yyyy') and
+      device_id = 11039299;
+grant select on U1.M_TMP_J_ONLINE_112 to LOADDB;
+
+

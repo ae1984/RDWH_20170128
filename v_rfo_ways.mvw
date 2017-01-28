@@ -1,0 +1,64 @@
+﻿create materialized view U1.V_RFO_WAYS
+using no index
+refresh complete on demand
+as
+select l.id as line_id,
+       bp.process_id,
+       bp.process_code,
+       bp.process_name,
+       bp.is_credit_process,
+           case when bpc.process_id is not null then 1 end as
+       is_actual_last_30_days,
+       w.id as way_id,
+       w.c_code as way_code, upper(w.c_name) as way_name,
+
+           case when w.c_code in (
+                        'KAS_FIRST_CRED_PC',
+                        'KAS_CREDIT_CASH_PC',
+                        'KAS_AUTO_CRED_PC',
+                        'KAS_FIRST_PC',
+                        'KAS_PC_RATES',
+                        'KAS_ONLINE_CREDIT') then 1 end as
+       is_credit_way,
+
+       p1.c_code as from_point_code,
+       upper(p1.c_name) as from_point_name,
+           case when p1.c_status_group = '#OPEN#' then 1 else 0 end as
+       is_from_point_active,
+           case when p1.id = w.c_start_point then 1 end as
+       is_from_point_first,
+
+       upper(l.c_name) as line_name,
+       p2.c_code as to_point_code,
+       upper(p2.c_name) as to_point_name,
+           case when p2.c_status_group = '#OPEN#' then 1 else 0 end as
+       is_to_point_active,
+           case when p_last.id is not null then 1 end as
+       is_to_point_last,
+
+           case when bp.is_credit_process = 1 and
+                (p2.c_code in ('EXECUTE','CREDIT_EXEC','KAS_CHK_DOC_PACK','TO_RECLAMATION',
+                   'ARCHIVE','ERR_ARCHIVE','KAS_SENT_PKD','KAS_WITHDRAWN1','KAS_WITHDRAWN2',
+                   'KAS_PKD_CONTROL','KAS_PKD_REV','TR_CHANGED',
+                   'TAKE_DEPART') or
+                 p2.c_priority >= 80) then 1 end as
+       is_credit_issued,
+           case when bp.is_credit_process = 1 and
+                p2.c_priority >= 80 then 1 end as
+       is_credit_issued_by_priority
+from V_RFO_Z#CM_WAY w
+    join V_RFO_Z#CM_LINE l on l.collection_id = w.c_lines
+    join V_RFO_Z#CM_POINT p1 on p1.id = l.c_from_p
+    join V_RFO_Z#CM_POINT p2 on p2.id = l.c_to_p
+    left join (select p3.id from V_RFO_Z#CM_POINT p3
+                  where not exists (select null from V_RFO_Z#CM_LINE l3
+                       where l3.c_from_p = p3.id)) p_last on p_last.id = p2.id
+    join (select distinct cp5.c_way, f5.c_business
+          from V_RFO_Z#CM_CHECKPOINT cp5
+          join V_RFO_Z#FOLDERS f5 on f5.id = cp5.id) wb on wb.c_way = w.id
+    join V_RFO_PROCESSES bp on bp.process_id = wb.c_business
+    left join V_RFO_PROCESSES_30_DAYS bpc on bpc.process_id = wb.c_business;
+grant select on U1.V_RFO_WAYS to LOADDB;
+grant select on U1.V_RFO_WAYS to LOADER;
+
+

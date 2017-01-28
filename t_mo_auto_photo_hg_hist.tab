@@ -1,0 +1,25 @@
+﻿create table U1.T_MO_AUTO_PHOTO_HG_HIST
+(
+  sdt            DATE,
+  rfolder_id     NUMBER,
+  in_ap_verif_id NUMBER,
+  ap_result_pre  NUMBER,
+  ap_result      NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_MO_AUTO_PHOTO_HG_HIST
+  is 'Ежедневное сохранение в историю объекта M_MO_AUTO_PHOTO_HG';
+grant select on U1.T_MO_AUTO_PHOTO_HG_HIST to LOADDB;
+

@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_TMP_ONLINE_GROUP1
+refresh complete on demand
+as
+select t.folder_date_create_mi, t.rfo_contract_id, t.contract_number,
+         t.folder_id, t.rfo_client_id, t.is_credit_issued
+  from M_FOLDER_CON_CANCEL t
+  where t.cr_program_name = 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР'
+    and exists (select null
+                from M_FOLDER_CON_CANCEL tt
+                where trunc(tt.folder_date_create_mi) < add_months(trunc(sysdate),-9)
+                  and (tt.is_credit_issued = 1 or coalesce(tt.cancel_prescoring, tt.cancel_middle_office,
+                                                           tt.cancel_cpr_aa, tt.cancel_verificator) is not null)
+                  and tt.rfo_client_id = t.rfo_client_id)
+    and not exists (
+        select null from V_FOLDER_ALL_RFO t1
+                    join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = t1.form_client_id
+                    where t1.is_credit_process = 1 and t1.rfo_client_id = t.rfo_client_id and fc.form_client_date<t.folder_date_create_mi)
+--) x
+--1786316
+-- 770746
+--2430212
+--2557062;
+grant select on U1.M_TMP_ONLINE_GROUP1 to LOADDB;
+grant select on U1.M_TMP_ONLINE_GROUP1 to LOADER;
+
+

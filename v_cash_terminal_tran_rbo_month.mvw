@@ -1,0 +1,104 @@
+﻿create materialized view U1.V_CASH_TERMINAL_TRAN_RBO_MONTH
+build deferred
+refresh complete on demand
+as
+select t.*,  sum(x.cash_doc_in_amount) as cash_doc_in_amount,
+       max(credit_product_card_num) as credit_product_card_num,------
+       max(credit_product_deposit_num) as credit_product_deposit_num,-----
+       /*x.is_acc_current,
+       x.is_acc_deposit,
+       x.is_same_phys_client,*/
+       sum(y.cash_doc_out_amount) as cash_doc_out_amount,
+       sum(z.c_amount) as terminal_in_amount,
+       case when (sum(coalesce(x.cash_doc_in_amount,0)) + sum(coalesce(z.c_amount,0))) > sum(coalesce(y.cash_doc_out_amount,0))
+             then (sum(coalesce(x.cash_doc_in_amount,0)) + sum(coalesce(z.c_amount,0))) - sum(coalesce(y.cash_doc_out_amount,0))
+             else 0 end as in_amount_day_end,
+        round((case when (sum(coalesce(x.cash_doc_in_amount,0)) + sum(coalesce(z.c_amount,0))) > sum(coalesce(y.cash_doc_out_amount,0))
+             then (sum(coalesce(x.cash_doc_in_amount,0)) + sum(coalesce(z.c_amount,0))) - sum(coalesce(y.cash_doc_out_amount,0))
+             else 0 end)/t.pmt_nom_rate,0) as pmt_cnt
+from V_CASH_TRANSACTIONS_RBO_ALL t
+left join
+(select  max(t.cash_doc_id) as cash_doc_id_in,
+            max(t.cash_doc_date) as cash_doc_date,
+            max(t.cash_doc_type_name) as cash_doc_type_name_in,
+            sum(t.cash_doc_in_amount) as cash_doc_in_amount,----
+            max(t.main_doc_client_iin) as main_doc_client_iin,
+            max(t.credit_acc_client_iin) as credit_acc_client_iin_in,
+            max(t.credit_acc_client_class_id) as credit_acc_client_class_id_in,
+            max(t.credit_product_card_num) as credit_product_card_num,---
+            max(t.credit_product_deposit_num) as credit_product_deposit_num,
+            ---max(t.credit_product_account_num),
+            max(t.credit_product_class_id) as credit_product_class_id_in,
+            /*t.is_acc_current,
+            t.is_acc_deposit,
+            t.is_same_phys_client,*/
+            max(t.cash_dept_num) as cash_dept_num,
+            max(t.cash_dept_name) as cash_dept_name
+    from V_CASH_TRANSACTIONS_RBO t
+    where t.credit_acc_client_class_id != 'CL_BANK_N' and
+               t.cash_doc_type_name = 'ПРИХОДНЫЙ КАССОВЫЙ ОРДЕР'
+               and t.is_same_phys_client = 1 and t.is_acc_current = 1
+    group by  t.cash_doc_date, t.main_doc_client_iin/*,
+          t.is_acc_current,
+            t.is_acc_deposit,
+            t.is_same_phys_client*/
+
+) x  on x.cash_doc_date >= t.main_doc_date  and x.cash_doc_date <= t.main_doc_date + 29 and
+        x.main_doc_client_iin = t.debit_acc_client_iin
+
+left join (select t.cash_doc_date,
+                  t.main_doc_client_iin,
+                  sum(t.cash_doc_out_amount) as cash_doc_out_amount,
+                  max(t.cash_dept_num) as cash_dept_num,
+                  max(t.cash_dept_name) as cash_dept_name
+           from V_CASH_TRANSACTIONS_RBO t
+           where t.cash_doc_type_name = 'РАСХОДНЫЙ КАССОВЫЙ ОРДЕР' and
+           t.debit_product_class_id != 'KAS_PC_DOG' and
+           t.debit_product_account_num = 2204 ---???????
+           group by t.cash_doc_date,
+                  t.main_doc_client_iin) y on y.cash_doc_date >= t.main_doc_date and y.cash_doc_date <= t.main_doc_date +29 and
+                                              y.main_doc_client_iin = t.debit_acc_client_iin
+--where cash_doc_in_amount is not null and cash_doc_out_amount is not null
+
+
+       -- where t.debit_acc_client_iin = '810407400177'
+left join (select a.c_product_ref,
+        sum(a.c_amount) as c_amount,
+        trunc(a.c_document_date) as c_document_date,
+        a.c_nazn,
+        a.c_oper_ref,
+        o.sys_name
+from  T_RBO_Z#KAS_ACASH_DOC a
+left join V_RBO_Z#VID_OPER_DOG o on o.id =a.c_oper_ref
+where substr(c_nazn,10,1)= 'R'and o.sys_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ'
+group by a.c_product_ref,
+        trunc(a.c_document_date),
+        a.c_nazn, a.c_oper_ref, o.sys_name) z on z.c_product_ref = t.pc_id/* t.debit_product_id*//*t.id*//*t.cr_id*/ and
+                                                 z.c_document_date >= t.main_doc_date and z.c_document_date <= t.main_doc_date + 29
+group by t.main_doc_state,
+         t.main_doc_type_name,
+         t.main_doc_date,
+         t.main_doc_sum_kzt,
+         t.debit_acc_num,
+         t.debit_acc_client_class_id,
+         t.debit_acc_client_iin,
+         t.debit_acc_client_rnn,
+         t.debit_product_id,
+         t.debit_product_class_id,
+         t.debit_product_state,
+         t.debit_product_card_num_pc,
+         t.debit_product_card_num_cr,
+         t.debit_product_account_num,
+         t.contract_number,
+         t.product_start_last,
+         t.contract_amount_first,
+         t.start_date_last,
+         t.client_iin_last,
+         t.pc_id,
+         t.pmt,
+         t.pmt_nom_rate,
+         t.cr_id;
+grant select on U1.V_CASH_TERMINAL_TRAN_RBO_MONTH to LOADDB;
+grant select on U1.V_CASH_TERMINAL_TRAN_RBO_MONTH to LOADER;
+
+

@@ -1,0 +1,69 @@
+﻿create materialized view U1.M_AR_KN_LKN
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30)*/  *
+  from ( select /*+ parallel(30)*/
+                r.date_create,
+                dp.code_int,
+                t.value_number,
+                t.value_text
+           from U1.MO_RFOLDER r
+                inner join ( select /*+ parallel(20)*/ * from u1.T_MO_RFOLDER_PAR_VALUE_2014
+                              union all
+                             select /*+ parallel(20)*/
+                                    x.id,
+                                    x.rfolder_id,
+                                    x.d_par_id,
+                                    x.value_text,
+                                    x.value_date,
+                                    x.value_number ,
+                                    x.date_create,
+                                    x.date_update,
+                                    x.d_par_datatype_id,
+                                    x.calc_par_value_last_id,
+                                    x.value_index,
+                                    x.d_par_object_id,
+                                    x.d_system_id
+                               from U1.T_MO_RFOLDER_PAR_VALUE_2015 x
+                              union all
+                             select /*+ parallel(20)*/
+                                    x.id,
+                                    x.rfolder_id,
+                                    x.d_par_id,
+                                    x.value_text,
+                                    x.value_date,
+                                    x.value_number ,
+                                    x.date_create,
+                                    x.date_update,
+                                    x.d_par_datatype_id,
+                                    x.calc_par_value_last_id,
+                                    x.value_index,
+                                    x.d_par_object_id,
+                                    x.d_system_id
+                               from U1.T_MO_RFOLDER_PAR_VALUE_2016 x ) t on t.rfolder_id = r.id
+                inner join U1.V_MO_D_PAR dp on dp.id = t.d_par_id
+                                           and dp.code_int in ( 'IN_SCO_CLIENT_ID',
+                                                                'IN_SCO_FOLDER_ID',
+                                                                'SC_CLIENT_FRESH_AR1',
+                                                                'SC_CONTRACT_AMOUNT_AR1',
+                                                                'SC_CONTRACT_TERM_MONTHS',
+                                                                'SC_DNP_NAME',
+                                                                'SC_GCVP_SAL_TO_SAL_GRP_AR1',
+                                                                'IN_SCO_NUM_SCORING'
+                                                              )
+       ) pivot ( max(value_text||to_char(value_number) )
+           for code_int in ( 'IN_SCO_CLIENT_ID'           as CLIENT_ID,
+                             'IN_SCO_FOLDER_ID'           as FOLDER_ID,
+                             'IN_SCO_NUM_SCORING'         as IN_SCO_NUM_SCORING,
+                             'SC_CLIENT_FRESH_AR1'        as CLIENT_FRESH_AR1,
+                             'SC_CONTRACT_AMOUNT_AR1'     as CONTRACT_AMOUNT_AR1,
+                             'SC_CONTRACT_TERM_MONTHS'    as CONTRACT_TERM_MONTHS,
+                             'SC_DNP_NAME'                as SC_DNP_NAME,
+                             'SC_GCVP_SAL_TO_SAL_GRP_AR1' as GCVP_SAL_TO_SAL_GRP_AR1,
+                             'IN_SCO_NUM_SCORING'         as NUM_SCORING  )
+      )
+ where NUM_SCORING in (9, 17);
+grant select on U1.M_AR_KN_LKN to LOADDB;
+
+

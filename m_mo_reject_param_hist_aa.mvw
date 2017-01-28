@@ -1,0 +1,52 @@
+﻿create materialized view U1.M_MO_REJECT_PARAM_HIST_AA
+build deferred
+refresh force on demand
+as
+select x.reject_code,
+       x.param_code,
+       x.lv,
+       x.batch_id,
+       x.batch_date,
+       x.prior_add,
+       x.reject_prior,
+       x.reject_ver,
+       x.is_rejecting,
+
+       y.reject_code2,
+       y.param_code2,
+
+       max(y.batch_id) as batch_id2,
+       max(y.reject_prior) keep (dense_rank last order by y.batch_id) as reject_prior2,
+
+       x.reject_prior + max(y.reject_prior) keep (dense_rank last order by y.batch_id) as reject_prior3
+
+from (select t.*
+      from U1.M_MO_REJECT_PARAM_HIST t
+      join U1.T_MO_REJECT_PARAM_LINK t2 on t2.reject_code = t.reject_code
+     ) x
+left join (select t.reject_code as reject_code2,
+                  t.param_code as param_code2,
+                  t.batch_id,
+                  t.reject_prior,
+                  t.reject_ver,
+
+                  t2.*
+           from U1.M_MO_REJECT_PARAM_HIST t
+           join U1.T_MO_REJECT_PARAM_LINK t2 on t2.param_code = t.param_code
+          ) y on y.reject_code = x.reject_code and
+                 y.batch_id <= x.batch_id
+group by x.reject_code,
+         x.param_code,
+         x.lv,
+         x.batch_id,
+         x.batch_date,
+         x.prior_add,
+         x.reject_prior,
+         x.reject_ver,
+         x.is_rejecting,
+
+         y.reject_code2,
+         y.param_code2;
+grant select on U1.M_MO_REJECT_PARAM_HIST_AA to LOADDB;
+
+

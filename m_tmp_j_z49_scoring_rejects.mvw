@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_TMP_J_Z49_SCORING_REJECTS
+refresh force on demand
+as
+select distinct fa.folder_id -- отказы скоринга (не всего АСОКР): --- все отказы, до контрольной группы
+                             -- отказы старого скоринга
+from V_FOLDER_ALL fa
+join M_TMP_J_Z49_TO_ASOKR ta on ta.folder_id = fa.folder_id -- связываем с отправленными на АСОКР
+where fa.scoring_result = 'N' and
+     fa.folder_create_date >= to_date('01.01.2013','dd.mm.yyyy') and
+     fa.folder_create_date < to_date('16.10.2013 17:01:58','dd.mm.yyyy hh24:mi:ss')
+union
+select distinct t3.folder_id -- и отказы нового скоринга
+from M_TMP_J_1003 t3
+join V_FOLDER_ALL_RFO f2 on f2.folder_id = t3.folder_id
+join M_TMP_J_Z49_TO_ASOKR ta on ta.folder_id = f2.folder_id -- связываем с отправленными на АСОКР
+where f2.folder_date_create >= to_date('16.10.2013 17:01:58','dd.mm.yyyy hh24:mi:ss') and
+     f2.folder_date_create < to_date('01.01.2014','dd.mm.yyyy');
+grant select on U1.M_TMP_J_Z49_SCORING_REJECTS to LOADDB;
+grant select on U1.M_TMP_J_Z49_SCORING_REJECTS to LOADER;
+
+

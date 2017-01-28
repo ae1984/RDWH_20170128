@@ -1,0 +1,34 @@
+﻿create table U1.PRODUCTS_RFO_DWH
+(
+  produst_rfo VARCHAR2(200),
+  produst_dwh VARCHAR2(200)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.PRODUCTS on U1.PRODUCTS_RFO_DWH (PRODUST_RFO, PRODUST_DWH)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.PRODUCTS_RFO_DWH to LOADDB;
+grant select on U1.PRODUCTS_RFO_DWH to LOADER;
+

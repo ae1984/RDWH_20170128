@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_TMP_J_NB_20150206_3
+refresh force on demand
+as
+select --c.yy_mm_start_last,
+       n1.is_salary_exists, --n1.is_pkb_debt_above_7mln,
+    -- ПРОВЕРКА
+    count(*) as con_cnt, count(distinct cc.contract_id) as con_dist_cnt, -- проверка - если эти два поля равны, значит выборка верна
+    -- ПРОДАЖИ
+    round(sum(cc.max_debt_used)/1000000) as sales_mln, -- продажи
+    sum(cc.max_debt_used) as sales, -- продажи
+    -- ПРОСРОЧКА
+    count(distinct case when n.is_del_60_plus = 1 then cc.contract_number end) /
+            count(distinct cc.contract_number) as del_rate_60_plus_quant,
+    sum(cc.delinq_rate * c.max_debt_used) / sum(c.max_debt_used) / 100 as del_rate, -- просрочка всего по-старому
+    sum(c.delinq_rate_npl * c.max_debt_used) / sum(c.max_debt_used) / 100 as del_rate_npl, -- USE THIS! - просрочка по NPL (>=90 days)
+    count(distinct case when c.delinq_rate_npl > 0 then c.contract_id end)/
+                      count(distinct c.contract_id) as del_rate_npl_by_quant,
+    count(distinct case when c.is_bad = 1 then c.contract_id end)/
+                      count(distinct c.contract_id) as del_rate_b_w_by_quant, -- USE THIS! - просрочка всего по-новому --- ДЛЯ ОТЧЕТА!!!!!!!! (на будущее)
+    avg(cc.contract_amount_first) as contract_amount_first_avg
+from V_CONTRACT_CAL cc
+join M_CONTRACT_CAL_DEL c on c.contract_number = cc.contract_number
+join M_CONTRACT_CAL_DEL_PLUS n on n.contract_number = cc.contract_number
+join M_TMP_J_NB_20150206_1 n1 on n1.folder_id = cc.folder_id_first
+--where not exists (select null from M_FOLDER_CON_CANCEL f
+--                  where f.folder_id = c.folder_id_first and f.is_refin = 1)
+group by n1.is_salary_exists--, n1.is_pkb_debt_above_7mln
+having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_J_NB_20150206_3 to LOADDB;
+grant select on U1.M_TMP_J_NB_20150206_3 to LOADER;
+
+

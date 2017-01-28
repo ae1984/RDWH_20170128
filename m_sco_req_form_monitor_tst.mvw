@@ -1,0 +1,107 @@
+﻿create materialized view U1.M_SCO_REQ_FORM_MONITOR_TST
+refresh force on demand
+as
+select x.date_create,x.product_type,x.field_name,--x.field_value, sco.value--,
+   count(distinct x.folder_id) cnt_folder ,
+   round(sum(case when x.field_value != nvl(sco.value,'null') then 1 else 0 end)/count(distinct x.folder_id),2)  as cnt_dif,
+   round(sum(case when sco.value is null then 1 else 0 end)/count(distinct x.folder_id),2)  as cnt_null_sco,
+   round(sum(case when x.field_value = 'null' then 1 else 0 end)/count(distinct x.folder_id),2)  as cnt_null_form
+from(
+select  date_create,folder_id,product_type,field_name,field_value
+from
+(select
+      trunc(f.folder_date_create) as date_create,
+      f.folder_id,
+      case when f.process_code = 'ONLINE_CRED' then 'ТОВАРЫ-ОНЛАЙН'
+                   else ff.product_type end as product_type,
+      nvl(fa.iin,'null') as inn,
+      nvl(fa.sex,'null') as sex,
+      nvl(fa.patronymic,'null') as sur_name,
+      nvl(fa.children,'null') as index_quant_child,
+      nvl(fa.dependants_count,'null') as index_quant_depend,
+      nvl(fa.is_bank_account_exists,'null') as nal_sch,
+      nvl(fa.reg_address_region,'null') as reg_region,
+      nvl(fa.fact_address_region,'null') as fact_region,
+      nvl(to_char(fa.inc_sal_add),'null') as add_salary,
+      nvl(to_char(fa.inc_rent),'null') as rent_profit  ,
+      nvl(to_char(fa.inc_sal),'null') as salary,
+      nvl(to_char(fa.inc_sal_spouse),'null') as wife_salary,
+      nvl(to_char(fa.exp_utilities),'null') as municipal_pay ,
+      nvl(to_char(fa.inc_pension_benefits),'null') as cash_benefit ,
+      nvl(to_char(fa.term_duration),'null') as term_cred ,
+      nvl(to_char(fa.amount),'null') as summa_cred ,
+      nvl(fa.education,'null') as index_education,
+      nvl(fa.real_estate_relation,'null') as nedvizhimost,
+      nvl(fa.org_sector,'null') as ot_bel,
+      nvl(fa.marital_status,'null') as index_family_status,
+      nvl(fa.job_position,'null') as  job,
+      nvl(to_char(fa.fact_address_date_begin,'dd-mm-yyyy'),'null') as fact_date_begin,
+      nvl(to_char(fa.reg_address_date_begin,'dd-mm-yyyy'),'null') as reg_date_begin
+from M_FOLDER_CON_CANCEL_BASE ff
+join V_FORM_CLIENT_ALL_RFO fa on ff.form_client_id = fa.form_client_id
+join V_FOLDER_ALL_RFO f on f.folder_id = ff.folder_id
+where trunc(f.folder_date_create) between trunc(sysdate)-15 and trunc(sysdate)-1
+)
+  unpivot
+          (field_value for field_name in
+                             (inn,
+                              sex,
+                              sur_name,
+                              index_quant_child,
+                              index_quant_depend,
+                              nal_sch,
+                              reg_region,
+                              fact_region,
+                              add_salary,
+                              rent_profit  ,
+                              salary,
+                              wife_salary,
+                              municipal_pay ,
+                              cash_benefit ,
+                              term_cred ,
+                              summa_cred ,
+                              index_education,
+                              nedvizhimost,
+                              ot_bel,
+                              index_family_status,
+                              job,
+                              fact_date_begin,
+                              reg_date_begin)
+                  )
+    ) x
+   left join (select  r.folder_id,r.date_create,rd.field_code,to_char(rd.value,'dd-mm-yyyy')as value,
+            dense_rank() over (partition by r.folder_id order by r.date_create desc) fld_rank
+            from MO_SCO_REQUEST r
+             left join MO_SCO_REQUEST_DATE rd on rd.sco_request_id = r.id and rd.field_code in ('FACT_DATE_BEGIN','REG_DATE_BEGIN')
+            where r.date_create >= trunc(sysdate)-15
+              and folder_id is not null
+     union all
+            select r.folder_id,r.date_create, rs.field_code,rs.value,
+                   dense_rank() over (partition by r.folder_id order by r.date_create desc) fld_rank
+            from MO_SCO_REQUEST r
+             left join MO_SCO_REQUEST_STR rs on rs.sco_request_id = r.id and  rs.field_code in ( 'INN','SEX','SUR_NAME')
+            where r.date_create >= trunc(sysdate)-15
+              and folder_id is not null
+    union all
+              select  r.folder_id,r.date_create,rn.field_code,to_char(rn.value) as value,
+                      dense_rank() over (partition by r.folder_id order by r.date_create desc) fld_rank
+            from MO_SCO_REQUEST r
+             left join MO_SCO_REQUEST_NUMB rn on rn.sco_request_id = r.id
+                                              and rn.field_code in ('ADD_SALARY ','RENT_PROFIT','SALARY','WIFE_SALARY','MUNICIPAL_PAY','CASH_BENEFIT','TERM_CRED','SUMMA_CRED')
+            where r.date_create >= trunc(sysdate)-15
+              and folder_id is not null
+    union all
+               select  r.folder_id,r.date_create,rdi.field_code,rdi.name as value,
+                      dense_rank() over (partition by r.folder_id order by r.date_create desc) fld_rank
+            from MO_SCO_REQUEST r
+             left join MO_SCO_REQUEST_DICT rdi on rdi.sco_request_id = r.id
+                                              and rdi.field_code in ('INDEX_QUANT_CHILD' ,'INDEX_QUANT_DEPEND' ,'NAL_SCH','FACT_REGION' ,'REG_REGION' ,'INDEX_EDUCATION','NEDVIZHIMOST','OT_BEL',
+                                                                    'INDEX_FAMILY_STATUS','JOB')
+            where r.date_create >= trunc(sysdate)-15
+              and folder_id is not null
+              ) sco  on sco.folder_id = x.folder_id and sco.field_code = x.field_name  and sco.fld_rank = 1
+    group by x.date_create,x.product_type,x.field_name;
+grant select on U1.M_SCO_REQ_FORM_MONITOR_TST to LOADDB;
+grant select on U1.M_SCO_REQ_FORM_MONITOR_TST to LOADER;
+
+

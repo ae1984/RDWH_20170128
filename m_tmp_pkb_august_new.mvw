@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_TMP_PKB_AUGUST_NEW
+refresh force on demand
+as
+select p.first_name,p.last_name,p.middle_name,p.ur_1,p.ur_2,p.inn_1,p.inn_2,p.p_user,
+p.rep_type,cast (p.p_date as varchar2(500)) as p_date,p.ip,
+case when p.rep_type='Информация о заемщике отсутствует' then 'БЕКИ'
+     when p.rep_type='Первичный Физическое лицо' then 'Первичный'
+     when p.rep_type='Расширенный Физическое лицо' then 'Расширенный'
+     else 'Стандартный'
+end  as  report_type
+
+from RISK_SDARYA.t_tmp_pkb_august_new p;
+grant select on U1.M_TMP_PKB_AUGUST_NEW to LOADDB;
+grant select on U1.M_TMP_PKB_AUGUST_NEW to LOADER;
+
+

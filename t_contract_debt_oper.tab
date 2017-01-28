@@ -1,0 +1,83 @@
+﻿create table U1.T_CONTRACT_DEBT_OPER
+(
+  rbo_contract_id    NUMBER(20) not null,
+  c_code_debt        VARCHAR2(75) not null,
+  c_name_debt        VARCHAR2(300),
+  c_date_begin_saldo DATE not null,
+  c_summa_saldo      NUMBER(17,2),
+  c_sum_oper_db      NUMBER(17,2),
+  c_sum_oper_cr      NUMBER(17,2),
+  is_card            NUMBER(1) not null
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_CONTRACT_DEBT_OPER
+  is 'Рассчитанная сумма задолженности по договорам по операциям';
+comment on column U1.T_CONTRACT_DEBT_OPER.rbo_contract_id
+  is 'Id депозитного договора';
+comment on column U1.T_CONTRACT_DEBT_OPER.c_code_debt
+  is 'Код вида задолженности';
+comment on column U1.T_CONTRACT_DEBT_OPER.c_name_debt
+  is 'Наименование вида задолженности';
+comment on column U1.T_CONTRACT_DEBT_OPER.c_date_begin_saldo
+  is 'Дата задолженности';
+comment on column U1.T_CONTRACT_DEBT_OPER.c_summa_saldo
+  is 'Сумма остатка задолженности на дату';
+comment on column U1.T_CONTRACT_DEBT_OPER.c_sum_oper_db
+  is 'Сумма операций по дебету за дату';
+comment on column U1.T_CONTRACT_DEBT_OPER.c_sum_oper_cr
+  is 'Сумма операций по кредиту за дату';
+comment on column U1.T_CONTRACT_DEBT_OPER.is_card
+  is 'Тип договора 0-кредитный, 1-карточный';
+create index U1.T_CONTRACT_DEBT_OPER_IND1 on U1.T_CONTRACT_DEBT_OPER (RBO_CONTRACT_ID, C_CODE_DEBT, C_DATE_BEGIN_SALDO)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_CONTRACT_DEBT_OPER_IND2 on U1.T_CONTRACT_DEBT_OPER (C_DATE_BEGIN_SALDO)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_CONTRACT_DEBT_OPER_IND3 on U1.T_CONTRACT_DEBT_OPER (RBO_CONTRACT_ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_CONTRACT_DEBT_OPER to LOADDB;
+grant select on U1.T_CONTRACT_DEBT_OPER to LOADER;
+

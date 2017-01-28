@@ -1,0 +1,49 @@
+﻿create materialized view U1.M_MO_BPM_OLD_FORM_CL_PAR
+build deferred
+refresh force on demand
+as
+select c_Inn, c_field_code, c_value_txt, c_value_num
+  from (selecT c_Inn,
+               c_field_code,
+               null c_value_txt,
+               c_value_num
+          from (select /*+ parallel(15)*/
+                 fc.c_inn,
+                 first_value(decode(tdc.c_code,
+                                    'ДОХОД ОТ АРЕНДЫ',
+                                    'RENT_PROFIT',
+                                    'ПЛАТЕЖИ ПО ОБЯЗАТЕЛЬСТВАМ',
+                                    'LIABILITY_PAY',
+                                    'ПРОЦЕНТНЫЙ ДОХОД',
+                                    'PRC_PROFIT',
+                                    tdc.c_code)) over(partition by fc.c_inn, tdc.c_code order by fc.c_date_create desc) as c_field_code,
+                 first_value(coalesce(idc.c_summa, 0)) over(partition by fc.c_inn, tdc.c_code order by fc.c_date_create desc) as c_value_num
+                  from V_RFO_Z#FORM_CLIENT fc
+                  join V_RFO_z#INFO_DT_CR idc
+                    on fc.c_info_dt_cr = idc.collection_id
+                  join V_RFO_Z#TYPE_DT_CR tdc
+                    on tdc.id = idc.c_type_info
+                 where tdc.c_code in ('ДОХОД ОТ АРЕНДЫ',
+                                      'ПЛАТЕЖИ ПО ОБЯЗАТЕЛЬСТВАМ',
+                                      'ПРОЦЕНТНЫЙ ДОХОД'))
+         where c_value_num != 0
+         group by c_Inn, c_field_code, c_value_num
+        union all
+        seleCT c_Inn, c_field_code, c_value_txt, null as c_value_num
+          from (seleCT /*+ parallel(15)*/
+                 d.c_Inn,
+                 first_value(UPPER(a2.c_code)) over(partition by d.c_Inn, a2.c_code order by d.c_date_create desc) as c_Field_code,
+                 first_value(UPPER(a3.c_code)) over(partition by d.c_Inn, a2.c_code order by d.c_date_create desc) as c_value_txt
+                  from V_rfo_Z#FORM_CLIENT d
+                  join V_rfo_Z#PROPERTIES a1
+                    on a1.COLLECTION_ID = d.c_add_prop
+                  join V_rfo_Z#PROPERTY_GRP a2
+                    on a1.C_GROUP_PROP = a2.id
+                  join V_rfo_Z#PROD_PROPERTY a3
+                    on a3.id = a1.c_prop
+                 where a2.c_code in ('OT_BEL', 'NAL_SCH'))
+         group by c_Inn, c_field_code, c_value_txt);
+grant select on U1.M_MO_BPM_OLD_FORM_CL_PAR to LOADDB;
+grant select on U1.M_MO_BPM_OLD_FORM_CL_PAR to LOAD_MO;
+
+

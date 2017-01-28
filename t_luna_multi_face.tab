@@ -1,0 +1,24 @@
+﻿create table U1.T_LUNA_MULTI_FACE
+(
+  luna_id NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_LUNA_MULTI_FACE
+  is 'Фото с несколькими лицами';
+comment on column U1.T_LUNA_MULTI_FACE.luna_id
+  is 'Идентификатор фото в LUNA';
+grant select on U1.T_LUNA_MULTI_FACE to LOADDB;
+grant select, insert, update, delete, references, alter, index, read on directory U1.T_LUNA_MULTI_FACE to RISK_GKIM;
+

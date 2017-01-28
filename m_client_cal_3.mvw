@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_CLIENT_CAL_3
+refresh force on demand
+as
+select h.rfo_client_id,
+       sum(case when h.begin_date > trunc(sysdate - 61) then h.x_amount else 0 end) as CRED_SUM_2M,
+       sum(case when h.begin_date < trunc(sysdate - 60) then h.x_amount else 0 end) as CRED_SUM_BEFORE_2M,
+       max(case when h.is_credit_active = 1 then coalesce(h.x_delinq_days, 0) end) as HAS_DELAY,
+       round(max(case when h.is_credit_active = 1 then coalesce(h.x_delinq_amount, 0) end)) as delinq_amount
+  from v_dwh_portfolio_current h
+ where h.x_is_credit_issued = 1
+ group by h.rfo_client_id;
+grant select on U1.M_CLIENT_CAL_3 to LOADDB;
+grant select on U1.M_CLIENT_CAL_3 to LOADER;
+grant select on U1.M_CLIENT_CAL_3 to LOAD_MO;
+
+

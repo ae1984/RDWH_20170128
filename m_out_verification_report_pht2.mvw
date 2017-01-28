@@ -1,0 +1,39 @@
+﻿create materialized view U1.M_OUT_VERIFICATION_REPORT_PHT2
+build deferred
+refresh force on demand
+as
+select /*+ parallel 5 */
+       trunc(to_date(vr.accept_date,'YYYY-MM-DD hh24:mi:ss')) as verification_date,
+       vr.product,
+       count(*) as cnt_fld,
+       count(case when vr.verification_status = 'Отказ' then vr.client_fio end) as cnt_rej,
+       count(case when vr.verification_status is null then vr.client_fio end) as cnt_rephoto,
+       count(case when vr.verification_status = 'Подтверждён' then vr.client_fio end) as cnt_approv,
+
+       count(case when (to_date(vr.close_time,'YYYY-MM-DD hh24:mi:ss') - to_date(vr.open_time,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 <= 60 then vr.client_fio end) as cnt_do_1min_1,
+       count(case when (to_date(vr.open_time,'YYYY-MM-DD hh24:mi:ss') - to_date(vr.accept_datetime,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 <= 60 then vr.client_fio end) as cnt_do_1min_2,
+       count(case when (to_date(vr.close_time,'YYYY-MM-DD hh24:mi:ss') - to_date(vr.accept_datetime,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 <= 60 then vr.client_fio end) as cnt_do_1min_3,
+
+       count(case when (to_date(vr.close_time,'YYYY-MM-DD hh24:mi:ss') - to_date(vr.open_time,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 <= 90 then vr.client_fio end) as cnt_do_1_5min_1,
+       count(case when (to_date(vr.open_time,'YYYY-MM-DD hh24:mi:ss') - to_date(vr.accept_datetime,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 <= 90 then vr.client_fio end) as cnt_do_1_5min_2,
+       count(case when (to_date(vr.close_time,'YYYY-MM-DD hh24:mi:ss') - to_date(vr.accept_datetime,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 <= 90 then vr.client_fio end) as cnt_do_1_5min_3
+
+  from M_OUT_DWH_VERIFICATION_REP_ROW vr
+ where cashe = 'Нет'
+       and vr.verification_type = 'PHOTO'
+       and vr.product in ('Автокредитование',
+                         'Кредит наличными',
+                         'Кредит Наличными 15 минут',
+                         'Кредит Наличными Повторнику',
+                         'Лучший Клиент – Наличные',
+                         'Экспресс-Кредитование-Товар',
+                         'Экспресс-кредиты (Услуги)',
+                         'Закрытие/расторжение депозитного договора',
+                         'Изменение анкетных данных',
+                         'Карта вкладчика',
+                         'Списание средств с депозитного договора')
+group by trunc(to_date(vr.accept_date,'YYYY-MM-DD hh24:mi:ss')), vr.product;
+grant select on U1.M_OUT_VERIFICATION_REPORT_PHT2 to LOADDB;
+grant select on U1.M_OUT_VERIFICATION_REPORT_PHT2 to RISK_VERIF;
+
+

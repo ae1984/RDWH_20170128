@@ -1,0 +1,22 @@
+﻿create table U1.T_KASPIKZ_PAY_SUBSCRIPTPARAMS
+(
+  id                    NUMBER(32) not null,
+  pay_service_params_id NUMBER(32),
+  pay_subscriptions_id  NUMBER(32),
+  str_value             VARCHAR2(4000)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_KASPIKZ_PAY_SUBSCRIPTPARAMS to LOADDB;
+

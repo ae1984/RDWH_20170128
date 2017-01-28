@@ -1,0 +1,38 @@
+﻿create table U1.T_RFO_Z#KAS_STRING_250
+(
+  id            NUMBER not null,
+  collection_id NUMBER,
+  c_value       VARCHAR2(250 CHAR),
+  sn            NUMBER,
+  su            NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+alter table U1.T_RFO_Z#KAS_STRING_250
+  add constraint PK_T_RFO_Z#KAS_STRING_250_ID primary key (ID)
+  using index 
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.PK_T_RFO_Z#KAS_STRING_250_ID nologging;
+grant select on U1.T_RFO_Z#KAS_STRING_250 to LOADDB;
+

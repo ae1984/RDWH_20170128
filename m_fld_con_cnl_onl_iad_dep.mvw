@@ -1,0 +1,62 @@
+﻿create materialized view U1.M_FLD_CON_CNL_ONL_IAD_DEP
+refresh force on demand
+as
+select /*+ parallel 30 */
+       y.*,
+       case when y.fc_sex is null then 0 else 1 end as is_fc_sex_exists,
+
+       case when y.anketa_type < 3 and
+                 ((y.onl_last_name != y.fc_last_name or (y.onl_last_name is null and y.fc_last_name is not null) or (y.onl_last_name is not null and y.fc_last_name is null)) or
+                 (y.onl_first_name != y.fc_first_name or (y.onl_first_name is null and y.fc_first_name is not null) or (y.onl_first_name is not null and y.fc_first_name is null)) or
+                 (y.onl_sur_name != y.fc_sur_name or (y.onl_sur_name is null and y.fc_sur_name is not null) or (y.onl_sur_name is not null and y.fc_sur_name is null)))
+                 then 1 else 0 end as is_fc_fio_diff,
+     case when y.anketa_type < 3 and
+                 ((y.onl_doc_type != y.fc_doc_type or (y.onl_doc_type is null and y.fc_doc_type is not null) or (y.onl_doc_type is not null and y.fc_doc_type is null)) or
+                 (y.onl_doc_num != y.fc_doc_num or (y.onl_doc_num is null and y.fc_doc_num is not null) or (y.onl_doc_num is not null and y.fc_doc_num is null)))
+                 then 1 else 0 end as is_fc_doc_diff,
+      case when y.anketa_type < 3 and
+                 ((y.onl_last_name != y.fc_last_name or (y.onl_last_name is null and y.fc_last_name is not null) or (y.onl_last_name is not null and y.fc_last_name is null)) or
+                 (y.onl_first_name != y.fc_first_name or (y.onl_first_name is null and y.fc_first_name is not null) or (y.onl_first_name is not null and y.fc_first_name is null)) or
+                 (y.onl_sur_name != y.fc_sur_name or (y.onl_sur_name is null and y.fc_sur_name is not null) or (y.onl_sur_name is not null and y.fc_sur_name is null)) or
+                 (y.onl_doc_type != y.fc_doc_type or (y.onl_doc_type is null and y.fc_doc_type is not null) or (y.onl_doc_type is not null and y.fc_doc_type is null)) or
+                 (y.onl_doc_num != y.fc_doc_num or (y.onl_doc_num is null and y.fc_doc_num is not null) or (y.onl_doc_num is not null and y.fc_doc_num is null))
+                )
+                 then 1 else 0 end as is_fc_diff
+
+from (
+      select t.id as claim_id,
+             max(cv.anketa_type) keep (dense_rank last order by cv.update_date) anketa_type,
+
+             max(t.c_form_client_st#sex#0) keep (dense_rank last order by b.c_date_create) onl_sex,
+             max(t.c_form_client_st#last_name) keep (dense_rank last order by b.c_date_create) onl_last_name,
+             max(t.c_form_client_st#first_name) keep (dense_rank last order by b.c_date_create) onl_first_name,
+             max(t.c_form_client_st#sur_name) keep (dense_rank last order by b.c_date_create) onl_sur_name,
+
+             max(t.c_form_client_st#main_doc#type) keep (dense_rank last order by b.c_date_create) onl_doc_type,
+             max(t.c_form_client_st#main_doc#num) keep (dense_rank last order by b.c_date_create) onl_doc_num,
+
+             max(t.c_form_client_st#mobile#numb) keep (dense_rank last order by b.c_date_create) onl_mobile#numb,
+             --анкета до
+             max(fc.c_cl_req#sex#0) keep (dense_rank last order by fc.c_date_create) as fc_sex,
+
+             max(fc.c_cl_req#last_name) keep (dense_rank last order by fc.c_date_create) as fc_last_name,
+             max(fc.c_cl_req#first_name) keep (dense_rank last order by fc.c_date_create) as fc_first_name,
+             max(fc.c_cl_req#sur_name) keep (dense_rank last order by fc.c_date_create) as fc_sur_name,
+
+             max(fc.c_cl_req#pasport#type) keep (dense_rank last order by fc.c_date_create) fc_doc_type,
+             max(fc.c_cl_req#pasport#num) keep (dense_rank last order by fc.c_date_create) fc_doc_num
+
+      from u1.V_RFO_Z#KAS_ONLINE_CLAIM t
+      join u1.V_RFO_Z#KAS_ONLINE_BUY b on b.id = t.c_buy_ref
+      left join u1.V_CLIENT_RFO_BY_ID cl on cl.rfo_client_id = t.c_client_ref
+      left join u1.V_RFO_Z#DEPOSIT fc on fc.c_cl_req#inn = cl.iin and
+                                      fc.c_date_create < b.c_date_create
+      left join u1.T_RFO_ONLINE_CV cv on cv.client_ref = t.c_client_ref and
+                                      cv.update_date <= b.c_date_create
+
+      group by t.id
+) y;
+grant select on U1.M_FLD_CON_CNL_ONL_IAD_DEP to LOADDB;
+grant select on U1.M_FLD_CON_CNL_ONL_IAD_DEP to LOADER;
+
+

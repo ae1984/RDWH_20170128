@@ -1,0 +1,8 @@
+﻿create materialized view U1.V_DWH_PORT_FPD_SPD_FPD7_TST
+refresh complete on demand
+as
+select * from table(dwh_port_fpd_spd_fpd7_tst) t;
+grant select on U1.V_DWH_PORT_FPD_SPD_FPD7_TST to LOADDB;
+grant select on U1.V_DWH_PORT_FPD_SPD_FPD7_TST to LOADER;
+
+

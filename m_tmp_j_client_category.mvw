@@ -1,0 +1,84 @@
+﻿create materialized view U1.M_TMP_J_CLIENT_CATEGORY
+refresh complete on demand
+as
+select c.iin,
+       min(case when coalesce(t.prev_con_closed_cnt,0) >= 2 and
+                     coalesce(t.prior_optim_count,0) = 0 and
+                     coalesce(t.prev_con_del_days_max,0) <= 15 and
+                     t.fact_pmt_mon_before >= 12 and
+                     t.fact_pmt_mon_before_12_mon > 0 then 'CAT A'
+                when coalesce(t.prev_con_closed_cnt,0) >= 1 and
+                     coalesce(t.prev_con_del_days_max,0) <= 30 and
+                     t.fact_pmt_mon_before >= 6 then 'CAT B'
+                when d.iin is not null then 'CAT C'
+                else 'CAT D'
+           end) as client_category,
+
+      case when sum(d.total_debt) > 0 then 'WITH ACTIVE CREDIT' else 'NO ACTIVE CREDIT' end as is_active_credit,
+      case when max(d.iin) is not null then 'WITH CREDIT EVER' else 'NO CREDIT EVER' end as is_credit_ever,
+      case when max(d.is_del_30_ever) = 1 then 'DEL 30 EVER' else 'NO DEL 30 EVER' end as is_del_30_ever, -- 2
+      case when max(d.is_del_60_ever) = 1 then 'DEL 60 EVER' else 'NO DEL 60 EVER' end as is_del_60_ever,
+      case when max(d.is_del_90_ever) = 1 then 'DEL 90 EVER' else 'NO DEL 90 EVER' end as is_del_90_ever,
+      case when max(d.is_del_1_now) = 1 then 'DEL 1 NOW' else 'NO DEL 1 NOW' end as is_del_1_now,
+      case when max(d.is_del_30_now) = 1 then 'DEL 30 NOW' else 'NO DEL 30 NOW' end as is_del_30_now,
+
+      case when max(d.is_fpd_7_ever) = 1 then 'FPD 7 EVER' else 'NO FPD 7 EVER' end as is_fpd_7_ever,
+      case when max(d.is_spd_ever) = 1 then 'SPD EVER' else 'NO SPD EVER' end as is_spd_ever,
+      case when max(d.is_tpd_ever) = 1 then 'TPD EVER' else 'NO TPD EVER' end as is_tpd_ever,
+
+      case when max(g.iin) is not null then 'WITH GOODS CREDIT EVER' else 'NO GOODS CREDIT EVER' end as is_goods_credit_ever,
+      case when max(g.is_active_goods_credit) = 1 then 'WITH ACTIVE GOODS CREDIT' else 'NO ACTIVE GOODS CREDIT' end as is_active_goods_credit,
+      case when max(g.is_inst_goods_credit_ever) = 1 then 'WITH INST GOODS CREDIT EVER' else 'NO INST GOODS CREDIT EVER' end as is_inst_goods_credit_ever,
+      case when max(g.is_active_inst_goods_credit) = 1 then 'WITH ACTIVE INST GOODS CREDIT' else 'NO ACTIVE INST GOODS CREDIT' end as is_active_inst_goods_credit,
+      case when max(g.is_goods_del_30_ever) = 1 then 'GOODS DEL 30 EVER' else 'NO GOODS DEL 30 EVER' end as is_goods_del_30_ever, -- 2
+      case when max(g.is_goods_del_60_ever) = 1 then 'GOODS DEL 60 EVER' else 'NO GOODS DEL 60 EVER' end as is_goods_del_60_ever,
+      case when max(g.is_goods_del_90_ever) = 1 then 'GOODS DEL 90 EVER' else 'NO GOODS DEL 90 EVER' end as is_goods_del_90_ever,
+      case when max(g.is_goods_del_1_now) = 1 then 'GOODS DEL 1 NOW' else 'NO GOODS DEL 1 NOW' end as is_goods_del_1_now,
+
+      case when max(kg.iin) is not null then 'WITH KASPI GOLD NOW' else 'NO KASPI GOLD NOW' end as is_kaspi_gold_now -- 2
+
+from u1.M_CLIENT_CAL_CATEG t
+left join u1.V_CLIENT_RFO_BY_ID c on c.rfo_client_id = t.rfo_client_id
+left join (
+  select c.iin,
+         sum(d.total_debt_x) as total_debt,
+         case when max(d.del_days_max_x) > 30 then 1 else 0 end as is_del_30_ever,
+         case when max(d.del_days_max_x) > 60 then 1 else 0 end as is_del_60_ever,
+         case when max(d.del_days_max_x) > 90 then 1 else 0 end as is_del_90_ever,
+         case when max(d.del_days_x) > 0 then 1 else 0 end as is_del_1_now,
+         case when max(d.del_days_x) > 30 then 1 else 0 end as is_del_30_now,
+         case when max(d.total_debt_x_pmt_1_7) > 0 then 1 else 0 end as is_fpd_7_ever,
+         case when max(d.total_debt_x_pmt_1_30) > 0 then 1 else 0 end as is_spd_ever,
+         case when max(d.total_debt_x_pmt_1_60) > 0 then 1 else 0 end as is_tpd_ever
+  from u1.M_RBO_CONTRACT_BAS t
+  join u1.M_RBO_CONTRACT_DEL d on d.rbo_contract_id = t.rbo_contract_id
+  join u1.V_CLIENT_RFO_BY_ID c on c.rfo_client_id = t.rfo_client_id
+  group by c.iin
+) d on d.iin = c.iin
+left join (
+  select c.iin,
+         max(case when d.total_debt_x > 0 then 1 else 0 end) as is_active_goods_credit,
+         max(case when round(months_between(t.date_plan_end,t.begin_date)) <= 3 then 1 else 0 end) as is_inst_goods_credit_ever,
+         max(case when round(months_between(t.date_plan_end,t.begin_date)) <= 3 and d.total_debt_x > 0
+                  then 1 else 0 end) as is_active_inst_goods_credit,
+         case when max(d.del_days_max_x) > 30 then 1 else 0 end as is_goods_del_30_ever,
+         case when max(d.del_days_max_x) > 60 then 1 else 0 end as is_goods_del_60_ever,
+         case when max(d.del_days_max_x) > 90 then 1 else 0 end as is_goods_del_90_ever,
+         case when max(d.del_days_x) > 0 then 1 else 0 end as is_goods_del_1_now
+  from u1.M_RBO_CONTRACT_BAS t
+  join u1.M_RBO_CONTRACT_DEL d on d.rbo_contract_id = t.rbo_contract_id
+  join u1.V_CLIENT_RFO_BY_ID c on c.rfo_client_id = t.rfo_client_id
+  where t.cred_program_name_x = 'ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)'
+  group by c.iin
+) g on g.iin = c.iin
+left join (
+  select distinct t.client_iin as iin
+  from u1.V_DWH_PORTFOLIO_CURRENT t
+  where t.prod_type = 'KASPI GOLD' and
+        t.x_is_credit_issued = 1 and
+        t.is_credit_active = 1
+) kg on kg.iin = c.iin
+group by c.iin;
+grant select on U1.M_TMP_J_CLIENT_CATEGORY to LOADDB;
+
+

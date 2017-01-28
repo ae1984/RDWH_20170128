@@ -1,0 +1,32 @@
+﻿create table U1.NT_FOLDER_HIST1
+(
+  sdt             DATE,
+  process_name    VARCHAR2(4000),
+  cnt             NUMBER,
+  cnt_contract    NUMBER,
+  contract_amount NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_FOLDER_HIST1
+  is 'агрегированная история по M_FOLDER_CON_CANCEL_BASE:
+select sysdate as sdt
+       ,t.process_name
+       , count(*)as cnt
+       , count(rfo_contract_id) as cnt_contract
+       , sum(t.contract_amount) as contract_amount  
+from M_FOLDER_CON_CANCEL_BASE t
+group by t.process_name';
+grant select on U1.NT_FOLDER_HIST1 to LOADDB;
+

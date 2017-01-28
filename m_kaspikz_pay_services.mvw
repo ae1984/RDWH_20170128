@@ -1,0 +1,47 @@
+﻿create materialized view U1.M_KASPIKZ_PAY_SERVICES
+build deferred
+refresh force on demand
+as
+select cast(t.intId as number(10)) as id,
+       cast(t.vchExternalId  as varchar2(100)) external_id,
+       upper(cast(t.vchAlias  as varchar2(100))) as alias_val,
+       upper(cast(t.vchName  as varchar2(100)) ) as name_val,
+       cast(t.vchPOSTerminalId  as varchar2(100)) pos_terminal_id,
+       cast(t.vchMerchantId  as varchar2(100)) merchant_id,
+       cast(t.vchPaymentInstrument  as varchar2(100)) payment_instrument,
+       cast(t.vchBiller  as varchar2(100)) biller,
+       upper(cast(t.vchDescription  as varchar2(100))) as descr,
+       cast(t.intSupplierId as number(10)) as supplier_id,
+       cast(t.intServiceCategoryId as number(10)) as service_category_id,
+       cast(t.bitAllowedForSubscription as number(3)) as allowed_for_subscription,
+       cast(t.bitAllowedForGetBalance as number(3)) as allowed_for_get_balance,
+       cast(t.intPaymentServiceOrder as number(10)) as payment_service_order,
+       cast(t.bitIsInvoiceable as number(3)) as is_invoiceable,
+       cast(t.bitIsActive as number(3)) as is_active,
+       cast(t.bintPaymentsCounter as number(20)) as payments_counter,
+       cast(t.dcmFee as number(19,4)) as fee_amount,
+       cast(t.dcmMinAmount as number(19,4)) as min_amount,
+       cast(t.dcmMaxAmount as number(19,4)) as max_amount,
+       cast(t.bitIsConsolidated as number(3)) as is_consolidated,
+       cast(t.bitIsNonRecurrent as number(3)) as is_non_recurrent,
+       cast(t.bitPaymentAmountOnDemand as number(3)) as payment_amount_on_demand,
+       cast(t.bitIsLightweightInvoice as number(3)) as is_lightweight_invoice,
+       cast(t.bitIsSpecialOfferOnly as number(3)) as is_special_offer_only,
+       cast(t.bitIsEnabled as number(3)) as is_enabled,
+       cast(t.vchInactiveStatusMessage  as varchar2(200)) inactive_status_message,
+       cast(t.vchBeneficiaryAccount as varchar2(60)) as beneficiary_account,
+       cast(t.vchBeneficiaryINN as varchar2(60)) as beneficiary_inn,
+      cast(t.vchBeneficiaryName  as varchar2(100)) beneficiary_name,
+      cast(t.vchBeneficiaryBIC as varchar2(100)) beneficiary_bic,
+       cast(t.bitIsVisible as number(3)) as is_visible,
+       cast(t.bitIsFixedSumInvoice as number(3)) as is_fixed_sum_invoice,
+       cast(t.bitIsOnlineInvoice as number(3)) as is_online_invoice,
+       cast(t.intParentServiceId as number(10)) as parent_service_id,
+       cast(upper(t.intGroupType) as varchar2(40)) as group_type,
+       cast(t.vchSubjectName as varchar(200)) vch_subj_name,
+       cast(t.sintReturnTypeId as number)  return_type
+from s37.tb_Payments_Services@rdwh_exd t;
+grant select on U1.M_KASPIKZ_PAY_SERVICES to LOADDB;
+grant select on U1.M_KASPIKZ_PAY_SERVICES to LOADER;
+
+

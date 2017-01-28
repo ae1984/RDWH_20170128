@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_TMP_J_RBP_DEL_1
+refresh force on demand
+as
+select --c.yy_mm_start_last,
+--    t.term_without_bwc, ceil(t.pmt/10000)*10000 as pmt,
+    t.term_without_bwc_for_all, ceil(t.pmt/10000)*10000 as pmt,
+    -- ПРОВЕРКА
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt, -- проверка - если эти два поля равны, значит выборка верна
+    -- ПРОДАЖИ
+    round(sum(c.max_debt_used)/1000000) as sales_mln, -- продажи
+    sum(c.max_debt_used) as sales, -- продажи
+    -- ПРОСРОЧКА
+    round(sum(c.delinq_rate_b_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b_w, -- USE THIS! - просрочка всего по-новому --- ДЛЯ ОТЧЕТА!!!!!!!!
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate, -- просрочка всего по-старому
+    round(sum(c.delinq_rate_pmt_1_45 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1_45, -- USE THIS! - просрочка 1-го платежа
+    round(sum(c.delinq_rate_npl * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_npl -- USE THIS! - просрочка по NPL (>=90 days)
+from M_CONTRACT_CAL_DEL c
+join M_TMP_J_BWC t on t.deal_number = c.contract_number
+where t.x_product_type = 'ДЕНЬГИ' and t.x_is_card = 0 and
+      /*t.is_credit_active = 0 and*/ t.term_without_bwc is not null and
+      t.x_start_date >= to_date('2010-01-01','yyyy-mm-dd') and
+      t.x_start_date < to_date('2013-01-01','yyyy-mm-dd')
+--group by t.term_without_bwc, ceil(t.pmt/10000)*10000
+group by t.term_without_bwc_for_all, ceil(t.pmt/10000)*10000
+--group by c.yy_mm_start_last
+having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_J_RBP_DEL_1 to LOADDB;
+grant select on U1.M_TMP_J_RBP_DEL_1 to LOADER;
+
+

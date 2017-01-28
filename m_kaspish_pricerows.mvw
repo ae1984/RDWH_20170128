@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_KASPISH_PRICEROWS
+build deferred
+refresh force on demand
+as
+select HJMPTS,
+       TYPEPKSTRING,
+       OWNERPKSTRING,
+       MODIFIEDTS,
+       CREATEDTS,
+       PK,
+       P_PG,
+       P_PRODUCT,
+       P_USER,
+       P_USERMATCHQUALIFIER,
+       P_PRODUCTMATCHQUALIFIER,
+       P_STARTTIME,
+       P_UG,
+       P_ENDTIME,
+       P_UNIT,
+       P_CURRENCY,
+       P_MATCHVALUE,
+       P_CATALOGVERSION,
+       P_MINQTD,
+       P_UNITFACTOR,
+       P_NET,
+       P_PRICE,
+       P_GIVEAWAYPRICE,
+       P_CHANNEL,
+       P_SEQUENCEID,
+       P_CITY,
+       ACLTS,
+       PROPTS,
+       P_PRODUCTID,
+       P_PRICETODOOR,
+       P_PRICETOPP,
+       P_TIMETODOOR,
+       P_TIMETOPP,
+       P_KASPIDELIVERY,
+       P_MAINPRICEROW
+from kaspi.pricerows@ks_std
+ where rownum > 0;
+grant select on U1.M_KASPISH_PRICEROWS to LOADDB;
+
+

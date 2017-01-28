@@ -1,0 +1,71 @@
+﻿create materialized view U1.M_NPS_CL_ACTIV_PRODUCT
+build deferred
+refresh complete on demand
+as
+selecT client_iin,
+       LISTAGG(f.prod_type, '; ') WITHIN GROUP(order by h.prod_type_order asc) as prod_type_list
+       from (select distinct case
+                       when dport.prod_type in
+                            ('PC.ПОСТОЯННЫЙ КЛИЕНТ',
+                             'ЛУЧШИЙ КЛИЕНТ',
+                             'ОСОБЕННЫЙ КЛИЕНТ - КК',
+                             'РЕВОЛЬВЕРНЫЕ КАРТЫ') then
+                        'КК'
+                       when dport.prod_type in
+                            ('АВТОЗАПЧАСТИ',
+                             'АВТОКРЕДИТОВАНИЕ',
+                             'АВТОКРЕДИТОВАНИЕ БУ') then
+                        'АК'
+                       when dport.prod_type in
+                            ('ЗАРПЛАТНЫЕ КАРТЫ') then
+                        'ЗП'
+                       when dport.prod_type in
+                            ('КРЕДИТ НАЛИЧНЫМИ',
+                             'КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ',
+                             'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ',
+                             'ОСОБЕННЫЙ КЛИЕНТ - КН',
+                             'ОСОБЕННЫЙ КЛИЕНТ -КН 15',
+                             'ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ',
+                             'ЛУЧШИЙ КЛИЕНТ НАЛИЧНЫМИ') then
+                        'КН'
+                       when dport.prod_type in ('ПРОСТАЯ КАРТА') then
+                        'ПК'
+                       when dport.prod_type in
+                            ('РЕФИНАНСИРОВАНИЕ АВТОКРЕДИТА',
+                             'РЕФИНАНСИРОВАНИЕ/РЕСТРУКТУРИЗАЦИЯ') then
+                        'РР'
+                       when dport.prod_type in
+                            ('ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)',
+                             'ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)',
+                             'КРЕДИТ НА ПОКУПКИ',
+                             'КРЕДИТ НА УСЛУГИ') then
+                        'ТК'
+                       when dport.prod_type in ('КАРТА ВКЛАДЧИКА') or
+                            dep.iin is not null then
+                        'Депозит'
+                     -- when dep.iin is not null then
+                     --    'Депозит2'
+                     --  when exists  (select iin from M_ALL_DEPOSITS_IIN where dport.client_iin=iin) then
+                     --   'Депозит'
+                       when dport.prod_type in ('ОВЕРДРАФТЫ') then
+                        ''
+                       else
+                        dport.prod_type
+                     end as prod_type,
+                     dport.client_iin/*,
+                     dport.deal_status *//*,
+                                                                        dport.prod_type as  prod_type_order*/
+           from V_DWH_PORTFOLIO_CURRENT dport
+           left join M_ALL_DEPOSITS_IIN dep
+             on dep.iin = dport.client_iin
+           where trunc(dport.begin_date) >
+                to_date('28.07.2006', 'dd.mm.yyyy')
+            and dport.deal_status in ('РАБОТАЕТ','КС РАБОТАЕТ','ЗС РАБОТАЕТ','НА ПРОСРОЧКЕ','КС НА ПРОСРОЧКЕ','ЗС НА ПРОСРОЧКЕ')) f
+           left join (select t.prod_type_order,t.prod_type
+                       from T_RDWH_PROD_TYPE t) h
+             on h.prod_type = f.prod_type
+group by f.client_iin;
+grant select on U1.M_NPS_CL_ACTIV_PRODUCT to LOADDB;
+grant select on U1.M_NPS_CL_ACTIV_PRODUCT to LOADER;
+
+

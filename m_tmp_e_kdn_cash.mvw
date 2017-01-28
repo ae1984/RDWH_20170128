@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_TMP_E_KDN_CASH
+refresh force on demand
+as
+select
+       m.contract_number,
+       m.cr_program_name,
+       m.contract_term_months,
+       k.kdn_form_salary_max,
+
+       case when m.contract_term_months >= 24 and m.contract_term_months < 36 and k.kdn_form_salary_max >= 100 and k.kdn_form_salary_max < 200 then 1
+            when m.contract_term_months >= 36 and m.contract_term_months < 48 and k.kdn_form_salary_max >= 80 then 1
+            when m.contract_term_months >= 48 and m.contract_term_months < 60 and k.kdn_form_salary_max >= 70 then 1
+            when m.contract_term_months >= 60 and k.kdn_form_salary_max >= 60 then 1
+       else 0 end as is_rejected,  -- правила КДН до закрутки (14.12.2014-24.12.2014)
+
+       case when m.contract_term_months >= 18 and m.contract_term_months < 24 and k.kdn_form_salary_max >= 100 then 1
+            when m.contract_term_months >= 36 and m.contract_term_months < 48 and k.kdn_form_salary_max >= 60 then 1
+            when m.contract_term_months >= 48 and m.contract_term_months < 60 and k.kdn_form_salary_max >= 40 then 1
+            when m.contract_term_months >= 60 and k.kdn_form_salary_max >= 20 then 1
+       else 0 end as is_rejected_2   -- правила КДН после закрутки (с 25.12.2014)
+
+from u1.M_FOLDER_CON_MINER m
+left join u1.M_TMP_J_K5 k on k.deal_number = m.contract_number
+where m.folder_date_create >= to_date('01.01.2013','dd.mm.yyyy') and
+      m.folder_date_create < to_date('01.07.2014','dd.mm.yyyy') and
+      m.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ');
+grant select on U1.M_TMP_E_KDN_CASH to LOADDB;
+grant select on U1.M_TMP_E_KDN_CASH to LOADER;
+
+

@@ -1,0 +1,41 @@
+﻿create materialized view U1.M_AUTO_COLLATERAL
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30*/
+        mz.contract_number,
+        mz.zalog_contract_number,
+        mz.date_open,                       --Дата создания договора
+        mz.date_begin,                   --Дата начала действия договора
+        mz.date_close,                      --Дата закрытия договора
+        mz.zalog_amount,                         --Сумма обеспечения
+        mz.valuta,
+        mz.rfo_client_zalog_id,
+        a.c_name auto_name,                                --Наименование залога
+
+        t.c_date_calc date_calc,                           --Дата расчета залогового обеспечения
+        trunc(t.c_date_calc, 'mm') date_calc_mm,           --Месяц расчета залогового обеспечения
+
+        t.c_num_half_make,                                 --Номер полугодия с даты производства
+        t.c_num_half_sale,                                 --Номер полугодия с даты покупки
+        t.c_cost_reduced_ts   as reduced_cost,               --Восстановленная стоимость
+        t.c_cost_market_ts  as market_cost,                 --Рыночная стоимость
+        t.c_cost_itog_ts  as total_ts_cost,                 --Итоговая оценочная стоимость (автомат)
+        t.c_cost_itog_set  as total_set_cost,               --Итоговая оценочная стоимость (ПОЗ)
+        t.c_cost_zalog  as zalog_cost,                      --Залоговая стоимость
+        t.c_fact_likv as liquidity_ratio,                   --Коэффициент ликвидности
+        mz.is_car_sale,
+         mz.gu_sale_amount as sale_amount,
+         mz.gu_sale_date_reg as sale_date,
+         mz.zal_sale_date,
+         mz.zal_sale_amount,
+         mz.zal_auto_seller,
+         mz.zal_mvd_date,
+         mz.zalog_id
+from M_RBO_ZALOG_BAS mz
+join V_RBO_Z#ZALOG_VALUES x on x.collection_id = mz.zalog_body
+join V_RBO_Z#ZALOG_BODY a on a.id = x.c_zalog_body
+join V_RBO_Z#KAS_ZALOG_OVERES t on t.collection_id = a.c_overest_arr;
+grant select on U1.M_AUTO_COLLATERAL to LOADDB;
+
+

@@ -1,0 +1,58 @@
+﻿create table U1.MO_RFOL_FORM
+(
+  formc_id                       NUMBER not null,
+  foldr_id                       NUMBER,
+  foldr_client                   NUMBER,
+  fdocx_doc_date                 DATE,
+  formc_sex#0                    NUMBER,
+  formc_date_birth               DATE,
+  formc_address_fact#place       VARCHAR2(510),
+  formc_address_reg#place        VARCHAR2(510),
+  formc_last_name                VARCHAR2(300),
+  formc_first_name               VARCHAR2(300),
+  formc_sur_name                 VARCHAR2(300),
+  formc_phone_home#numb          VARCHAR2(300),
+  formc_phone_work#numb          VARCHAR2(300),
+  formc_mobile#numb              VARCHAR2(300),
+  formc_inn                      VARCHAR2(36),
+  formc_name_org                 VARCHAR2(300),
+  formc_summa                    NUMBER(17,2),
+  ncity_name__address_reg        VARCHAR2(300),
+  cregi_name__address_reg        VARCHAR2(300),
+  ncity_name__address_fact       VARCHAR2(300),
+  cregi_name__address_fact       VARCHAR2(300),
+  cindx_value__education         VARCHAR2(765),
+  cindx_value__family            VARCHAR2(765),
+  pprop_code__job_pos            VARCHAR2(105),
+  pprop_name__job_pos            VARCHAR2(750),
+  propr_v_date__work_exp_last    DATE,
+  indtc_summa__inc_sal           NUMBER(17,2),
+  indtc_summa__inc_sal_add       NUMBER(17,2),
+  indtc_summa__inc_sal_spouse    NUMBER(17,2),
+  indtc_summa__inc_rent          NUMBER(17,2),
+  indtc_summa__inc_pension_benef NUMBER(17,2),
+  indtc_summa__inc_interest      NUMBER(17,2),
+  indtc_summa__exp_utilities     NUMBER(17,2),
+  indtc_summa__exp_transport     NUMBER(17,2),
+  indtc_summa__exp_children      NUMBER(17,2),
+  indtc_summa__exp_nutrition     NUMBER(17,2),
+  indtc_summa__exp_clothes       NUMBER(17,2),
+  indtc_summa__exp_obligations   NUMBER(17,2),
+  indtc_summa__exp_other         NUMBER(17,2)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO_RFOL_FORM to LOADDB;
+grant select on U1.MO_RFOL_FORM to LOADER;
+

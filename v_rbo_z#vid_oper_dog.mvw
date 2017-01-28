@@ -1,0 +1,17 @@
+﻿create materialized view U1.V_RBO_Z#VID_OPER_DOG
+refresh complete on demand
+as
+select t.*,
+       case when t.c_code_group = 'ДЕПОЗИТЫ' and
+                 t.c_code in ('PC_TO_DEP_FROM_PURSE','TO_DEP_FR_CARD','ВОЗВРАТ_ДЕП','ВОЗВРАТ_ДЕП_ATM',
+                              'ВОЗВРАТ_ДЕП_ATM_OBR','ВОЗВРАТ_ДЕП_POS','ВОЗВРАТ_ДЕП_POS_OBR','ВОЗВРАТ_ДЕП_БН',
+                              'ВОЗВРАТ_ДЕП_БН_ДП','ВОЗВРАТ_ДЕП_БН_КНВ','ВОЗВРАТ_ДЕП_ИО_БН','ВХ_ПЕРЕВОД','ВХ_ПЕРЕВОД_ДП',
+                              'ВХ_ПЕРЕВОД_ЗАРП','ВХ_ПЕРЕВОД_КНВ','ВХ_ПЕРЕВОД_ПРЕДОП','ВХ_ПЕРЕВОД_СЛУЖ','ЗАЧИСЛЕНИЕ_ДЕП',
+                              'ЗАЧИСЛЕНИЕ_ДЕП_ATM','ЗАЧИСЛЕНИЕ_ДЕП_POS','ЗАЧИСЛЕНИЕ_ДЕП_POS_OBR','ЗАЧИСЛЕНИЕ_ДЕП_ВТ',
+                              'ЗАЧИСЛЕНИЕ_ДЕП_КТ','ЗАЧИСЛЕНИЕ_ПРЕДОП','ЗАЧИСЛЕНИЕ_ПРЕДОП_POS','ЗАЧИСЛЕНИЕ_ПРЕДОП_КТ',
+                              'ВХ_ПЕРЕВОД_ОК')
+             then 1 else null end as c_check_oper_depn_cli
+  from rdwh.V_RBO_Z#VID_OPER_DOG@rdwh_exd t;
+grant select on U1.V_RBO_Z#VID_OPER_DOG to LOADDB;
+
+

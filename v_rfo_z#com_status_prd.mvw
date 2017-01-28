@@ -1,0 +1,15 @@
+﻿create materialized view U1.V_RFO_Z#COM_STATUS_PRD
+refresh force on demand
+as
+select id,
+        c_code,
+        c_name,
+        c_short_name_usb,
+        c_color,
+        sn,
+        su
+from ibs.Z#COM_STATUS_PRD@rfo_snap;
+grant select on U1.V_RFO_Z#COM_STATUS_PRD to LOADDB;
+grant select on U1.V_RFO_Z#COM_STATUS_PRD to LOADER;
+
+

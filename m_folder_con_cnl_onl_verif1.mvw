@@ -1,0 +1,111 @@
+﻿create materialized view U1.M_FOLDER_CON_CNL_ONL_VERIF1
+build deferred
+refresh force on demand
+as
+select zz.*,
+
+            greatest(zz.is_match_gu_1, zz.is_match_gu_1_2, zz.is_match_gu_2) as is_match_gu
+    from (
+        select t.folder_id,
+               t.claim_id,
+               t.folder_date_create_mi,
+               t.is_categ_a,
+                 -- определяем ГУ стартованные с 1 фев 2012 г.
+               max(case when d.deal_number is null then 0 else 1 end) as is_match_gu_1,
+                 -- определяем действующие ГУ
+               max(case when d2.deal_number is null then 0 else 1 end) as is_match_gu_1_2,
+
+               -- если исполнена заявка на выдачу кошелька после 1 фев 2012, то также можем запросить ПКБ
+               coalesce(max(purs.is_gu_match), 0) as is_match_gu_2,
+               max(case when purs.folder_id is null then 0 else 1 end) as is_purse_exists,
+
+               -- кредитные заявки и карты дошедшие до проверки АСОКР
+               coalesce(max(cv.is_form_match), 0) as is_form_match,
+
+               --добавляем признак наличия выданных когда-либо кредитов
+               max(case when cr.folder_id is null then 0 else 1 end) as is_credit_exists,
+
+               max(sc.sc_ver_need) as sco_verif_need
+          from (select ft.rfo_client_id,
+                       ft.folder_id,
+                       ft.claim_id,
+                       ft.folder_date_create_mi,
+                       ft.is_categ_a
+                from u1.M_FOLDER_CON_CANCEL ft
+                where ft.process_name = 'ОНЛАЙН КРЕДИТ'
+
+                union all
+                select ft2.rfo_client_id,
+                       ft2.folder_id,
+                       ft2.claim_id,
+                       ft2.folder_date_create_mi,
+                       ft2.is_categ_a
+                from u1.M_FOLDER_CON_CANCEL_ONLINE ft2
+              ) t
+
+        -- определяем действующие ГУ ил ГУ стартованные с 1 фев 2012 г.
+        -- карты?
+        left join V_DWH_PORTFOLIO_CURRENT d on d.x_is_credit_issued = 1 and
+                                               d.x_is_card = 1 and
+                                               d.rfo_client_id = t.rfo_client_id and
+                                               d.begin_date >= to_date('2012-02-01','yyyy-mm-dd')
+
+        left join V_DWH_PORTFOLIO_CURRENT d2 on d2.x_is_credit_issued = 1 and
+                                                d2.x_is_card = 1 and
+                                                d2.rfo_client_id = t.rfo_client_id and
+                                                d2.begin_date < t.folder_date_create_mi and
+                                                coalesce(d2.actual_end_date, d2.plan_end_date) >= t.folder_date_create_mi
+
+
+        -- если исполнена заявка на выдачу кошелька после 1 фев 2012, то также можем запросить ПКБ
+        left join  (select f.rfo_client_id,
+                           f.folder_id,
+                           f.folder_date_create,
+                           case when (f.folder_date_create >= to_date('2012-02-01','yyyy-mm-dd')) then 1 else 0 end is_gu_match
+                      from V_FOLDER_ALL_RFO f
+                      join V_CONTRACT_ALL_RFO c on c.folder_id = f.folder_id and c.is_card = 1
+                      where f.process_name = 'ВЫДАЧА КОШЕЛЬКА' and
+                            f.folder_state in ('ИСПОЛНЕНО','ОТПРАВЛЕНО В ЦА','АРХИВ','ПРОВЕРКА ДОСЬЕ',
+                                               'АРХИВ С ОШИБКАМИ','НА РЕКЛАМАЦИЮ')
+                    ) purs on purs.rfo_client_id = t.rfo_client_id and
+                              purs.folder_date_create < t.folder_date_create_mi
+
+
+        -- кредитные заявки и карты дошедшие до проверки АСОКР
+        left join (select f.rfo_client_id,
+                          f.folder_id,
+                          f.folder_date_create,
+                          case when ((cv.form_client_date is null) or (cv.form_client_date < add_months(sysdate, -9)))
+                                then 0 else 1 end is_form_match
+                   from V_FOLDER_ALL_RFO f
+                   join V_CONTRACT_ALL_RFO c on c.folder_id = f.folder_id
+                   left join V_FORM_CLIENT_ALL_RFO cv on f.form_client_id = cv.form_client_id
+                   where f.is_credit_process = 1 and
+                         f.folder_state not in ('НА ОФОРМЛЕНИИ','ФОРМИРОВАНИЕ ИНФОРМАЦИИ ПО КЛИЕНТУ В БЭК-ОФИСЕ',
+                                                'ОШИБКА ФОРМИРОВАНИЯ КЛИЕНТА В БЭК-ОФИСЕ','ОШИБКА СИК',
+                                                'ПОВТОРНОЕ ФОТОГРАФИРОВАНИЕ','ОШИБКА ПРИ ПРОВЕРКЕ','ВВОД КОДА',
+                                                'ФОРМИРОВАНИЕ ДОГОВОРА В БЭК-ОФИСЕ','ПРОСРОЧЕННАЯ','ОТКАЗАНО')
+                   ) cv on cv.rfo_client_id = t.rfo_client_id and
+                           cv.folder_date_create < t.folder_date_create_mi
+
+        --добавляем признак наличия выданных когда-либо кредитов
+        left join (select f.rfo_client_id,
+                          f.folder_id,
+                          f.folder_date_create
+                  from V_FOLDER_ALL_RFO f
+                  join V_CONTRACT_ALL_RFO c on c.folder_id = f.folder_id
+                 where f.is_credit_process = 1 and
+                       f.is_credit_issued = 1
+                   ) cr on cr.rfo_client_id = t.rfo_client_id and
+                           cr.folder_date_create < t.folder_date_create_mi
+       left join V_FOLDER_MO_SCO_VER_NEED sc on sc.folder_id = t.folder_id
+
+      group by t.folder_id,
+               t.claim_id,
+               t.folder_date_create_mi,
+               t.is_categ_a
+    ) zz;
+grant select on U1.M_FOLDER_CON_CNL_ONL_VERIF1 to LOADDB;
+grant select on U1.M_FOLDER_CON_CNL_ONL_VERIF1 to LOADER;
+
+

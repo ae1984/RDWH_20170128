@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_TMP_D_DEFAULTS5
+refresh force on demand
+as
+select
+
+c.yy_mm_start_last,
+count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt,
+round(sum(c.max_debt_used)/1000000) as sales_mln, -- продажи
+sum(c.delinq_rate_pmt_1 * c.max_debt_used) as debt_pmt1,
+sum(c.total_debt_last_rep_new_b_w) as debt_b_w,
+sum(c.total_debt_last_rep_new_b) as debt_b,
+sum(c.total_debt_last_rep_new_npl) as debt_npl,
+sum(c.delinq_rate * c.max_debt_used) as del_rate,
+sum(c.max_debt_used) as total_sum,
+risky_goods_all_count,
+max_risky_goods_same_count,
+cred_level,
+case when risky_goods_all_count=5 and cred_level=1 and max_risky_goods_same_count=1 then 1
+     when risky_goods_all_count=6 and cred_level=0 and max_risky_goods_same_count=1 then 1
+       else 0 end as effective_check
+from M_CONTRACT_CAL_DEL c
+join m_tmp_d_rg4 d1 on c.contract_number=d1.contract_number
+left join V_CONTRACT_CAL cc on cc.contract_number = c.contract_number and
+     cc.is_refin_restruct_first != 1 and yy_mm_start_last_date>='17.10.2013'
+where not exists (select null from M_FOLDER_CON_CANCEL f
+                  where f.folder_id = c.folder_id_first and f.is_refin = 1)
+group by c.yy_mm_start_last,
+risky_goods_all_count,
+max_risky_goods_same_count, cred_level,
+case when risky_goods_all_count=5 and cred_level=1 and max_risky_goods_same_count=1 then 1
+     when risky_goods_all_count=6 and cred_level=0 and max_risky_goods_same_count=1 then 1
+       else 0 end
+having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_D_DEFAULTS5 to LOADDB;
+grant select on U1.M_TMP_D_DEFAULTS5 to LOADER;
+
+

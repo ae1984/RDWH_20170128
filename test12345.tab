@@ -1,0 +1,68 @@
+﻿create table U1.TEST12345
+(
+  rfo_con_or_claim_id   NUMBER,
+  rfo_con_claim_type    VARCHAR2(6),
+  folder_con_date       DATE,
+  folder_con_date_time  DATE,
+  folder_id             NUMBER,
+  contract_number       VARCHAR2(300),
+  contract_amount       NUMBER,
+  process_code          VARCHAR2(300),
+  process_name          VARCHAR2(4000),
+  cp_c_point            NUMBER,
+  c_kas_vid_delivery    NUMBER,
+  cs_c_add_prop         NUMBER,
+  product1              CHAR(52),
+  product_type1         CHAR(12),
+  fd_c_status_doc       NUMBER,
+  client_ref            NUMBER,
+  cd_c_kas_add_prop     NUMBER,
+  gu_contract_num       VARCHAR2(300),
+  cd_c_kas_pc_dog_ref   NUMBER,
+  tariff_ref            NUMBER,
+  rfo_client_id         NUMBER,
+  iin                   VARCHAR2(36),
+  rnn                   VARCHAR2(36),
+  product               VARCHAR2(750),
+  product_type          VARCHAR2(22),
+  product_code          VARCHAR2(105),
+  ps_cancel             NUMBER,
+  vr_cancel             NUMBER,
+  mo_cancel             NUMBER,
+  cp_cancel             NUMBER,
+  mn_cancel             NUMBER,
+  cl_cancel             NUMBER,
+  cancel_type_point     VARCHAR2(20),
+  is_credit_issued      NUMBER,
+  is_aa_approved        NUMBER,
+  delivery_type         VARCHAR2(750),
+  bk_folder_id          NUMBER,
+  is_bk_aa_approved     NUMBER,
+  folder_date_create_mi DATE,
+  is_point_active       NUMBER,
+  tariff_plan_code      VARCHAR2(120),
+  folder_id_first       NUMBER,
+  cancel_prescoring     NUMBER,
+  cancel_verificator    NUMBER,
+  cancel_middle_office  NUMBER,
+  cancel_cpr_aa         NUMBER,
+  cancel_manager        NUMBER,
+  cancel_client         NUMBER,
+  cancel_controller     NUMBER,
+  is_bk_aa_approved_max NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.TEST12345 to LOADDB;
+

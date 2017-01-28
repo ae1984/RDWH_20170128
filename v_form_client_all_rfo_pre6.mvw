@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_FORM_CLIENT_ALL_RFO_PRE6
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/
+       distinct pr5.collection_id, pp5.c_name as prop_name
+             from V_RFO_Z#PROPERTIES pr5
+             join V_RFO_Z#PROD_PROPERTY pp5 on pp5.id = pr5.c_prop
+                                           and pp5.c_group_prop = pr5.c_group_prop
+             join V_RFO_Z#PROPERTY_GRP pg5  on pg5.id = pr5.c_group_prop
+             where pg5.c_code = 'NAL_SCH' --Наличие счета в банке  8821868 -- NAL_SCH;
+grant select on U1.V_FORM_CLIENT_ALL_RFO_PRE6 to LOADDB;
+
+

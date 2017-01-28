@@ -1,0 +1,37 @@
+﻿create table U1.T_GBQ_TIMING_INFO
+(
+  id                NUMBER,
+  hit_id            VARCHAR2(50),
+  timing_category   VARCHAR2(100),
+  timing_variable   VARCHAR2(100),
+  timing_label      VARCHAR2(100),
+  timing_value      NUMBER(18),
+  page_load         NUMBER(10),
+  dns               NUMBER(10),
+  page_download     NUMBER(10),
+  redirect_response NUMBER(10),
+  tcp_connect       NUMBER(10),
+  server_response   NUMBER(10),
+  dom_interactive   NUMBER(10),
+  content_load      NUMBER(10),
+  idate             TIMESTAMP(6)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on column U1.T_GBQ_TIMING_INFO.id
+  is 'Идентификатор';
+comment on column U1.T_GBQ_TIMING_INFO.hit_id
+  is 'ID посещения страницы';
+grant select on U1.T_GBQ_TIMING_INFO to LOADDB;
+

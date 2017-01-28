@@ -1,0 +1,144 @@
+﻿create materialized view U1.M_RDB_ANOM_ACT_AGENCY
+refresh complete on demand
+as
+select x.pos_code as pos_code,
+       p.pos_name,
+       p.x_dnp_name,
+       x.a_date as fld_date_cr,
+       x.fld_cnt as fld_cnt,
+       case
+         when sigma_fld > 3 then
+          1
+         else
+          0
+       end as ANOM_ACT_FLD,
+       case
+         when sigma_def > 3 then
+          1
+         else
+          0
+       end as ANOM_ACT_DEF,
+       case
+         when sigma_cred_amount > 3 then
+          1
+         else
+          0
+       end as ANOM_ACT_CRED_AMOUN,
+       case
+         when sigma_beki > 3 then
+          1
+         else
+          0
+       end as ANOM_ACT_BEKI,
+       case
+         when sigma_new_cli > 3 then
+          1
+         else
+          0
+       end as ANOM_ACT_NEW_CLI,
+       case
+         when sigma_existing_cli > 3 then
+          1
+         else
+          0
+       end as ANOM_ACT_EXISTING_CLI
+  from (select pos_code,
+               a_date,
+               -----requests
+               fld_cnt,
+               fld_cnt_stddev_90d,
+               fld_cnt_avg_90d,
+               fld_cnt - fld_cnt_avg_90d as avg_dev_fld,
+               (fld_cnt - fld_cnt_avg_90d) / fld_cnt_stddev_90d as sigma_fld,
+               -----credit_amount
+               credit_amount - cred_amount_avg_90d as avg_dev_cred_amount,
+               (credit_amount - cred_amount_avg_90d) /
+               cred_amount_stddev_90d as sigma_cred_amount,
+               -----beki
+               beki_cli_cnt - beki_cnt_avg_90d as avg_dev_beki,
+               (beki_cli_cnt - beki_cnt_avg_90d) / beki_cnt_stddev_90d as sigma_beki,
+               -----new clients
+               new_cli_cnt - new_cli_cnt_avg_90d as avg_dev_new_cli,
+               (new_cli_cnt - new_cli_cnt_avg_90d) / new_cli_cnt_stddev_90d as sigma_new_cli,
+               -----existing clients
+               existing_cli_cnt - exist_cli_cnt_avg_90d as avg_existing_cli,
+               (existing_cli_cnt - exist_cli_cnt_avg_90d) /
+               exist_cli_cnt_stddev_90d as sigma_existing_cli,
+               -----defaults
+               def_cnt,
+               def_cnt_stddev_90d,
+               def_cnt_avg_90d,
+               def_cnt - def_cnt_avg_90d as avg_dev_def,
+               (def_cnt - def_cnt_avg_90d) / def_cnt_stddev_90d as sigma_def
+          from (select pos_code,
+                       a_date,
+                       fld_cnt,
+                       credit_amount,
+                       beki_cli_cnt,
+                       new_cli_cnt,
+                       existing_cli_cnt,
+                       def_cnt,
+                       -----requests
+                       stddev(fld_cnt) over(partition by pos_code order by a_date range between 90 preceding and current row) as fld_cnt_stddev_90d,
+                       avg(fld_cnt) over(partition by pos_code order by a_date range between 90 preceding and current row) as fld_cnt_avg_90d,
+                       -----credit_amount
+                       stddev(credit_amount) over(partition by pos_code order by a_date range between 90 preceding and current row) as cred_amount_stddev_90d,
+                       avg(credit_amount) over(partition by pos_code order by a_date range between 90 preceding and current row) as cred_amount_avg_90d,
+                       -----beki
+                       stddev(beki_cli_cnt) over(partition by pos_code order by a_date range between 90 preceding and current row) as beki_cnt_stddev_90d,
+                       avg(beki_cli_cnt) over(partition by pos_code order by a_date range between 90 preceding and current row) as beki_cnt_avg_90d,
+                       -----new clients
+                       stddev(new_cli_cnt) over(partition by pos_code order by a_date range between 90 preceding and current row) as new_cli_cnt_stddev_90d,
+                       avg(new_cli_cnt) over(partition by pos_code order by a_date range between 90 preceding and current row) as new_cli_cnt_avg_90d,
+                       -----existing clients
+                       stddev(existing_cli_cnt) over(partition by pos_code order by a_date range between 90 preceding and current row) as exist_cli_cnt_stddev_90d,
+                       avg(existing_cli_cnt) over(partition by pos_code order by a_date range between 90 preceding and current row) as exist_cli_cnt_avg_90d,
+                       -----defaults
+                       stddev(def_cnt) over(partition by pos_code order by a_date range between 90 preceding and current row) as def_cnt_stddev_90d,
+                       avg(def_cnt) over(partition by pos_code order by a_date range between 90 preceding and current row) as def_cnt_avg_90d
+                  from (select c.pos_code,
+                               trunc(c.folder_date_create_mi) as a_date,
+                               count(distinct c.folder_id) as fld_cnt,
+                               sum(contract_amount) as credit_amount,
+                               count(distinct case
+                                       when vpr.report_status = 'БЕКИ' then
+                                        c.iin
+                                     end) as beki_cli_cnt,
+                               count(distinct case
+                                       when fpc.is_client_new = 1 then
+                                        c.iin
+                                     end) as new_cli_cnt,
+                               count(distinct case
+                                       when fpc.is_client_new = 0 then
+                                        c.iin
+                                     end) as existing_cli_cnt,
+                               count(distinct(case
+                                                when dpc.x_delinq_days > 0 then
+                                                 deal_number
+                                              end)) as def_cnt
+
+                          from M_FOLDER_con_cancel c
+                          left join v_dwh_portfolio_current dpc
+                            on c.contract_number = dpc.deal_number
+                          left join v_pkb_report vpr
+                            on c.folder_id = vpr.folder_id
+                          left join M_TMP_J_FLD_PREV_CON fpc
+                            on c.rfo_contract_id = fpc.rfo_contract_id
+                         where trunc(c.folder_date_create_mi) >=
+                               trunc(sysdate - 60)
+                         group by c.pos_code, trunc(c.folder_date_create_mi)) x
+                 order by 1, 2
+                )
+         where fld_cnt_stddev_90d != 0
+           and cred_amount_stddev_90d != 0
+           and beki_cnt_stddev_90d != 0
+           and new_cli_cnt_stddev_90d != 0
+           and exist_cli_cnt_stddev_90d != 0
+           and def_cnt_stddev_90d != 0) x
+  left join v_pos p
+    on p.pos_code = x.pos_code;
+grant select on U1.M_RDB_ANOM_ACT_AGENCY to LOADDB;
+grant select on U1.M_RDB_ANOM_ACT_AGENCY to LOADER;
+grant select on U1.M_RDB_ANOM_ACT_AGENCY to LOAD_RDWH_PROD;
+
+

@@ -1,0 +1,160 @@
+﻿create materialized view U1.M_DWH_KOLESA_KZ_PRE
+refresh force on demand
+as
+select /*+ parallel 20 */
+        tab.akk_id,
+        case when regexp_like(phone1_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone1_clear,'^[+]7','')
+             when regexp_like(phone1_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone1_clear,'^[7-8]{1}','')
+             when regexp_like(phone1_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone1_clear,'^[7-8]{2}','')
+             else to_char(phone1_clear)
+         end as phone1_clear,
+
+        case when regexp_like(phone2_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone2_clear,'^[+]7','')
+             when regexp_like(phone2_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone2_clear,'^[7-8]{1}','')
+             when regexp_like(phone2_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone2_clear,'^[7-8]{2}','')
+             else to_char(phone2_clear)
+         end as phone2_clear,
+
+        case when regexp_like(phone3_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone3_clear,'^[+]7','')
+             when regexp_like(phone3_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone3_clear,'^[7-8]{1}','')
+             when regexp_like(phone3_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone3_clear,'^[7-8]{2}','')
+             else to_char(phone3_clear)
+         end as phone3_clear,
+
+        case when regexp_like(phone4_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone4_clear,'^[+]7','')
+             when regexp_like(phone4_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone4_clear,'^[7-8]{1}','')
+             when regexp_like(phone4_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone4_clear,'^[7-8]{2}','')
+             else to_char(phone4_clear)
+         end as phone4_clear,
+
+        case when regexp_like(phone5_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone5_clear,'^[+]7','')
+             when regexp_like(phone5_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone5_clear,'^[7-8]{1}','')
+             when regexp_like(phone5_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone5_clear,'^[7-8]{2}','')
+             else to_char(phone5_clear)
+         end as phone5_clear,
+
+        case when regexp_like(phone6_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone6_clear,'^[+]7','')
+             when regexp_like(phone6_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone6_clear,'^[7-8]{1}','')
+             when regexp_like(phone6_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone6_clear,'^[7-8]{2}','')
+             else to_char(phone6_clear)
+         end as phone6_clear,
+
+        case when regexp_like(phone7_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone7_clear,'^[+]7','')
+             when regexp_like(phone7_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone7_clear,'^[7-8]{1}','')
+             when regexp_like(phone7_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone7_clear,'^[7-8]{2}','')
+             else to_char(phone7_clear)
+         end as phone7_clear,
+
+        case when regexp_like(phone8_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone8_clear,'^[+]7','')
+             when regexp_like(phone8_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone8_clear,'^[7-8]{1}','')
+             when regexp_like(phone8_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone8_clear,'^[7-8]{2}','')
+             else to_char(phone8_clear)
+         end as phone8_clear,
+
+        case when regexp_like(phone9_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone9_clear,'^[+]7','')
+             when regexp_like(phone9_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone9_clear,'^[7-8]{1}','')
+             when regexp_like(phone9_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone9_clear,'^[7-8]{2}','')
+             else to_char(phone9_clear)
+         end as phone9_clear,
+
+        case when regexp_like(phone10_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone10_clear,'^[+]7','')
+             when regexp_like(phone10_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone10_clear,'^[7-8]{1}','')
+             when regexp_like(phone10_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone10_clear,'^[7-8]{2}','')
+             else to_char(phone10_clear)
+         end as phone10_clear,
+
+        case when regexp_like(phone11_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone11_clear,'^[+]7','')
+             when regexp_like(phone11_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone11_clear,'^[7-8]{2}','')
+             when regexp_like(phone11_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone11_clear,'^[7-8]{1}','')
+             else to_char(phone11_clear)
+         end as phone11_clear,
+
+        case when regexp_like(phone12_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone12_clear,'^[+]7','')
+             when regexp_like(phone12_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone12_clear,'^[7-8]{2}','')
+             when regexp_like(phone12_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone12_clear,'^[7-8]{1}','')
+             else to_char(phone12_clear)
+         end as phone12_clear,
+
+        case when regexp_like(phone13_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone13_clear,'^[+]7','')
+             when regexp_like(phone13_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone13_clear,'^[7-8]{2}','')
+             when regexp_like(phone13_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone13_clear,'^[7-8]{1}','')
+             else to_char(phone13_clear)
+         end as phone13_clear,
+
+        case when regexp_like(phone14_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone14_clear,'^[+]7','')
+             when regexp_like(phone14_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone14_clear,'^[7-8]{2}','')
+             when regexp_like(phone14_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone14_clear,'^[7-8]{1}','')
+             else to_char(phone14_clear)
+         end as phone14_clear,
+
+        case when regexp_like(phone15_clear, '^[+]7[[:digit:]]{10}$') then regexp_replace(phone15_clear,'^[+]7','')
+             when regexp_like(phone15_clear, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(phone15_clear,'^[7-8]{2}','')
+             when regexp_like(phone15_clear, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(phone15_clear,'^[7-8]{1}','')
+             else to_char(phone15_clear)
+         end as phone15_clear
+  from (
+  select /*+ parallel 20 */
+         mn.akk_id,
+         substr(mn.akk_number_clear,1, decode(instr(mn.akk_number_clear,',',1),0,100,instr(mn.akk_number_clear,',',1)-1) ) as phone1_clear,
+         substr(mn.akk_number_clear,
+               decode(instr(mn.akk_number_clear,',',1,1),0,null,instr(mn.akk_number_clear,',',1,1)+1)
+               ,decode(instr(mn.akk_number_clear,',',1,2),0,100,instr(mn.akk_number_clear,',',1,2) - instr(mn.akk_number_clear,',',1,1) -1)
+               ) as phone2_clear,
+         substr(mn.akk_number_clear,
+               decode(instr(mn.akk_number_clear,',',1,2),0,null,instr(mn.akk_number_clear,',',1,2)+1)
+               ,decode(instr(mn.akk_number_clear,',',1,3),0,100,instr(mn.akk_number_clear,',',1,3) - instr(mn.akk_number_clear,',',1,2) -1)
+               ) as phone3_clear,
+         substr(mn.akk_number_clear,
+               decode(instr(mn.akk_number_clear,',',1,3),0,null,instr(mn.akk_number_clear,',',1,3)+1)
+               ,decode(instr(mn.akk_number_clear,',',1,4),0,100,instr(mn.akk_number_clear,',',1,4) - instr(mn.akk_number_clear,',',1,3) -1)
+               ) as phone4_clear,
+         substr(mn.akk_number_clear,
+               decode(instr(mn.akk_number_clear,',',1,4),0,null,instr(mn.akk_number_clear,',',1,4)+1)
+               ,decode(instr(mn.akk_number_clear,',',1,5),0,100,instr(mn.akk_number_clear,',',1,5) - instr(mn.akk_number_clear,',',1,4) -1)
+               ) as phone5_clear,
+         substr(mn.akk_number_clear,
+               decode(instr(mn.akk_number_clear,',',1,5),0,null,instr(mn.akk_number_clear,',',1,5)+1)
+               ,decode(instr(mn.akk_number_clear,',',1,6),0,100,instr(mn.akk_number_clear,',',1,6) - instr(mn.akk_number_clear,',',1,5) -1)
+               ) as phone6_clear,
+         substr(mn.akk_number_clear,
+               decode(instr(mn.akk_number_clear,',',1,6),0,null,instr(mn.akk_number_clear,',',1,6)+1)
+               ,decode(instr(mn.akk_number_clear,',',1,7),0,100,instr(mn.akk_number_clear,',',1,7) - instr(mn.akk_number_clear,',',1,6) -1)
+               ) as phone7_clear,
+         substr(mn.akk_number_clear,
+               decode(instr(mn.akk_number_clear,',',1,7),0,null,instr(mn.akk_number_clear,',',1,7)+1)
+               ,decode(instr(mn.akk_number_clear,',',1,8),0,100,instr(mn.akk_number_clear,',',1,8) - instr(mn.akk_number_clear,',',1,7) -1)
+               ) as phone8_clear,
+         substr(mn.akk_number_clear,
+               decode(instr(mn.akk_number_clear,',',1,8),0,null,instr(mn.akk_number_clear,',',1,8)+1)
+               ,decode(instr(mn.akk_number_clear,',',1,9),0,100,instr(mn.akk_number_clear,',',1,9) - instr(mn.akk_number_clear,',',1,8) -1)
+               ) as phone9_clear,
+         substr(mn.akk_number_clear,
+               decode(instr(mn.akk_number_clear,',',1,9),0,null,instr(mn.akk_number_clear,',',1,9)+1)
+               ,decode(instr(mn.akk_number_clear,',',1,10),0,100,instr(mn.akk_number_clear,',',1,10) - instr(mn.akk_number_clear,',',1,9) -1)
+               ) as phone10_clear,
+         substr(mn.akk_number_clear,
+               decode(instr(mn.akk_number_clear,',',1,10),0,null,instr(mn.akk_number_clear,',',1,10)+1)
+               ,decode(instr(mn.akk_number_clear,',',1,11),0,100,instr(mn.akk_number_clear,',',1,11) - instr(mn.akk_number_clear,',',1,10) -1)
+               ) as phone11_clear,
+         substr(mn.akk_number_clear,
+               decode(instr(mn.akk_number_clear,',',1,11),0,null,instr(mn.akk_number_clear,',',1,11)+1)
+               ,decode(instr(mn.akk_number_clear,',',1,12),0,100,instr(mn.akk_number_clear,',',1,12) - instr(mn.akk_number_clear,',',1,11) -1)
+               ) as phone12_clear,
+         substr(mn.akk_number_clear,
+               decode(instr(mn.akk_number_clear,',',1,12),0,null,instr(mn.akk_number_clear,',',1,12)+1)
+               ,decode(instr(mn.akk_number_clear,',',1,13),0,100,instr(mn.akk_number_clear,',',1,13) - instr(mn.akk_number_clear,',',1,12) -1)
+               ) as phone13_clear,
+         substr(mn.akk_number_clear,
+               decode(instr(mn.akk_number_clear,',',1,13),0,null,instr(mn.akk_number_clear,',',1,13)+1)
+               ,decode(instr(mn.akk_number_clear,',',1,14),0,100,instr(mn.akk_number_clear,',',1,14) - instr(mn.akk_number_clear,',',1,13) -1)
+               ) as phone14_clear,
+         substr(mn.akk_number_clear,
+               decode(instr(mn.akk_number_clear,',',1,14),0,null,instr(mn.akk_number_clear,',',1,14)+1)
+               ,decode(instr(mn.akk_number_clear,',',1,15),0,100,instr(mn.akk_number_clear,',',1,15) - instr(mn.akk_number_clear,',',1,14) -1)
+               ) as phone15_clear
+          from M_DWH_KOLESA_KZ mn
+                  ) tab;
+grant select on U1.M_DWH_KOLESA_KZ_PRE to LOADDB;
+grant select on U1.M_DWH_KOLESA_KZ_PRE to LOADER;
+
+

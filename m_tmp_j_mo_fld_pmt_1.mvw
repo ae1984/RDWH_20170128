@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_TMP_J_MO_FLD_PMT_1
+refresh complete on demand
+as
+select f.rfo_folder_id,
+       count(*) as cnt,
+       max(ppv.value_number) keep (dense_rank last order by p.id) as in_sco_crd_pay_cur
+from MO_RFOLDER f
+join MO_PROCESS p on p.rfolder_id = f.id and p.d_process_id = 1000
+join T_MO_PROCESS_PAR_VALUE_2015 ppv on ppv.process_id = p.id
+join V_MO_D_PAR dp on dp.id = ppv.d_par_id and dp.code_int = 'IN_SCO_CRD_PAY_CUR'
+group by f.rfo_folder_id;
+grant select on U1.M_TMP_J_MO_FLD_PMT_1 to LOADDB;
+grant select on U1.M_TMP_J_MO_FLD_PMT_1 to LOADER;
+
+

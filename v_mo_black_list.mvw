@@ -1,0 +1,263 @@
+﻿create materialized view U1.V_MO_BLACK_LIST
+using no index
+refresh complete on demand
+start with to_date('27-01-2017 22:00:00', 'dd-mm-yyyy hh24:mi:ss') next TRUNC(SYSDATE + 1) + 22/24 
+as
+select
+   y.*,
+       case
+          when y.note_type_priority_imp = 1 then 'LSBO'
+          when y.note_type_priority_imp = 2 then 'CRIMINAL'
+          when y.note_type_priority_imp = 3 then 'NOT MASS'
+          when y.note_type_priority_imp = 4 then 'INFO'
+          when y.note_type_priority_imp = 5 then 'DELINQ OTHER'
+          when y.note_type_priority_imp = 6 then 'OTHER'
+          when y.note_type_priority_imp = 7 then 'DELINQ'
+          when y.note_type_priority_imp = 9 then 'UNKNOWN'
+       end as
+   note_type_imp
+/*       case
+          when y.is_error = 0 and y.note_type_priority_imp = 7 and y.bisquit_del_iin is null then
+            case
+              when y.yy_mm_report_max_max is null
+                   then 1
+              when y.delinq_days_max_max > 360 and y.delinq_days_max_max <= 720 and
+                   y.total_pmts_max >= 6 and
+                   y.months_after_yy_mm_report_max > 24
+                   then 2
+              when y.delinq_days_max_max < 180 and
+                   y.total_pmts_max >= 6 and
+                   y.months_after_yy_mm_report_max > 12
+                   then 3
+              when y.delinq_days_max_max < 180 and
+                   y.total_pmts_max >= 12 and
+                   y.months_after_yy_mm_report_max > 1
+                   then 4
+              when y.delinq_days_max_max > 360 and y.delinq_days_max_max <= 720 and
+                   y.total_pmts_max >= 12 and
+                   y.months_after_yy_mm_report_max > 12
+                   then 5
+              when y.delinq_days_max_max > 720 and
+                   y.total_pmts_max >= 12 and
+                   y.months_after_yy_mm_report_max > 24
+                   then 6
+              else 0
+            end
+          else 0
+       end as
+   is_for_removal*/
+from (
+select x.*,
+     case
+       when x.note_type = 'LSBO' then 1
+       when x.note_type = 'CRIMINAL' then 2
+       when x.note_type = 'NOT MASS' then 3
+       when x.note_type = 'INFO' then 4
+       when x.note_type = 'DELINQ OTHER' then 5
+       when x.note_type = 'OTHER' then 6
+       when x.note_type = 'DELINQ' then 7
+       when x.note_type = 'UNKNOWN' then 9
+  end as note_type_priority,
+       min(case
+       when x.note_type = 'LSBO' then 1
+       when x.note_type = 'CRIMINAL' then 2
+       when x.note_type = 'NOT MASS' then 3
+       when x.note_type = 'INFO' then 4
+       when x.note_type = 'DELINQ OTHER' then 5
+       when x.note_type = 'OTHER' then 6
+       when x.note_type = 'DELINQ' then 7
+       when x.note_type = 'UNKNOWN' then 9 end) over (partition by x.iin) as
+  note_type_priority_imp
+from (
+select
+  b.*,
+  rd1.del_long as del_long_max_max,
+  rd2.del_long as del_long_max_min,
+    case
+      when b.note like '13' then 'LSBO'
+      when b.note like '(РАЗОВАЯ). КЛИЕНТ ПЕРЕМЕЩЁН В ЧЁРНЫЙ СПИСОК Т.К. КОЛИЧЕСТВО ДНЕЙ ПРОСРОЧКИ%' then 'DELINQ'
+      when b.note like ',А9' then 'INFO'
+      when b.note like 'A0000013' then 'LSBO'
+      when b.note like 'A7' then 'INFO'
+      when b.note like 'B20' then 'CRIMINAL'
+      when b.note like 'B-20' then 'CRIMINAL'
+      when b.note like 'А0000013' then 'LSBO'
+      when b.note like 'А01 СМ ФТИЭ' then 'OTHER'
+      when b.note like 'А1' then 'NOT MASS'
+      when b.note like 'A1' then 'NOT MASS'
+      when b.note like 'А1 (ПРОВИЗИЯ 100%)' then 'NOT MASS'
+      when b.note like 'А1 КХ "АБАЙ АВИ"' then 'NOT MASS'
+      when b.note like 'А1 (ПРОСРОЧЕННАЯ ЗАДОЛЖЕННОСТЬ ПО ЗАЛОГОВОМУ КРЕДИТУ)' then 'NOT MASS'
+      when b.note like 'А13' then 'OTHER'
+      when b.note like 'А14' then 'OTHER'
+      when b.note like 'А17' then 'OTHER'
+      when b.note like 'А18' then 'NOT MASS'
+      when b.note like 'А19' then 'INFO'
+      when b.note like 'А19 (ПО ПРОСЬБЕ ДНП)%' then 'INFO'
+      when b.note like 'А19, ПО ЗАЯВЛЕНИЮ МА%' then 'INFO'
+      when b.note like 'А19, ПО ЗАЯВЛЕНИЮ СЕ%' then 'INFO'
+      when b.note like 'А19, ПО ЗАЯВЛЕНИЮ СУ%' then 'INFO'
+      when b.note like 'А2' then 'INFO'
+      when b.note like 'А2 ( ПО ЗАЯВЛЕНИЮ МА%' then 'INFO'
+      when b.note like 'А2 (ПО ЗАЯВЛЕНИЮ СБ%' then 'INFO'
+      when b.note like 'А2 (ПО СЗ ОТ СБ)' then 'INFO'
+      when b.note like 'А2 (КРЕДИТ ВЫПЛАЧИВА%' then 'INFO'
+      when b.note like 'А2 (КРЕДИТ ЗА КЛИЕНТ%' then 'INFO'
+      when b.note like 'А2 (НЕ УДАЛЯТЬ)' then 'INFO'
+      when b.note like 'А2 (ПО ЗАЯВЛЕНИЮ БАБ%' then 'INFO'
+      when b.note like 'А2 (ПО ЗАЯВЛЕНИЮ КЛИ%' then 'INFO'
+      when b.note like 'А2 (ПО ЗАЯВЛЕНИЮ МАТ%' then 'INFO'
+      when b.note like 'А2 (ПО ЗАЯВЛЕНИЮ ОТ %' then 'INFO'
+      when b.note like 'А2 (ПО ЗАЯВЛЕНИЮ ОТЦ%' then 'INFO'
+      when b.note like 'А2 (ПО ЗАЯВЛЕНИЮ СЕС%' then 'INFO'
+      when b.note like 'А2 (ПО ЗАЯВЛЕНИЯ МАТ%' then 'INFO'
+      when b.note like 'А2 (ПО ПРОСЬБЕ МАТЕР%' then 'INFO'
+      when b.note like 'А2 , ПО ЗАЯВЛЕНИЮ СА%' then 'INFO'
+      when b.note like 'А2 ПО ЗАЯВЛЕНИЮ' then 'INFO'
+      when b.note like 'А2 ПО ЗАЯВЛЕНИЮ БАБУ%' then 'INFO'
+      when b.note like 'А2 ПО ЗАЯВЛЕНИЮ КЛИЕ%' then 'INFO'
+      when b.note like 'А2 ПО ЗАЯВЛЕНИЮ МАТЕ%' then 'INFO'
+      when b.note like 'А2 ПО ЗАЯВЛЕНИЮ СЕСТ%' then 'INFO'
+      when b.note like 'А2 ПО ПРОСЬБЕ МАТЕРИ' then 'INFO'
+      when b.note like 'А2 ПО СЗ ПО ПОЧТЕ' then 'OTHER'
+      when b.note like 'А3' then 'DELINQ OTHER'
+      when b.note like 'А4' then 'NOT MASS'
+      when b.note like 'А7' then 'INFO'
+      when b.note like 'А7 (ИНФОРМАЦИЯ ПРЕДО%' then 'OTHER'
+      when b.note like 'А7 (ПО ЗАЯВЛЕНИЮ МАТ%' then 'INFO'
+      when b.note like 'А7(ПО ЗАЯВЛЕНИЮ БАБУ%' then 'INFO'
+      when b.note like 'А8' then 'OTHER'
+      when b.note like 'А9' then 'INFO'
+      when b.note like 'В СВЯЗИ С ПОСТУПИВШИ%' then 'INFO'
+      when b.note like 'В СВЯЗИ С ПРЕДОСТАВЛ%' then 'OTHER'
+      when b.note like 'В СВЯЗИ С УТЕРЕЙ ДОК%' then 'INFO'
+      when b.note like 'В20' then 'CRIMINAL'
+      when b.note like 'В-20' then 'CRIMINAL'
+      when b.note like 'В20, БОЛЬШАЯ ПЕНЯ В %' then 'CRIMINAL'
+      when b.note like 'В-21' then 'OTHER'
+      when b.note like 'ДИРЕКТОР   ТОО "ЭФЭ"%' then 'NOT MASS'
+      when b.note like 'ДИРЕКТОР "ТОО ЮЛАЙ"' then 'NOT MASS'
+      when b.note like 'ДИРЕКТОР ТОО "ЕР-КА %' then 'NOT MASS'
+      when b.note like 'ДИРЕКТОР ТОО "ЖЕТЫСУ%' then 'NOT MASS'
+      when b.note like 'ДИРЕКТОР ТОО "МАКО",%' then 'NOT MASS'
+      when b.note like 'ДИРЕКТОР ТОО LKV-ТРА%' then 'NOT MASS'
+      when b.note like 'ДИРЕКТОР ТОО ПАВЛОДА%' then 'NOT MASS'
+      when b.note like 'ДИРЕКТОР ТОО ТРАНССН%' then 'NOT MASS'
+      when b.note like 'ИМЕЕТ ОТРИЦАТЕЛЬНУЮ %' then 'DELINQ OTHER'
+      when b.note like 'КЛАССИФИЦИРОВАН КАК %' then 'NOT MASS'
+      when b.note like 'КЛИЕНТ ПЕРЕМЕЩЁН В ЧЁРНЫЙ СПИСОК Т.К. КОЛИЧЕСТВО ДНЕЙ ПРОСРОЧКИ%' then 'DELINQ'
+      when b.note like 'КРЕДИТНАЯ КАТЕГОРИЯ %' then 'DELINQ'
+      when b.note like 'ЛИЦА РАНЕЕ СУДИМЫЕ Л%' then 'OTHER'
+      when b.note like 'ЛИЦО,  НАХОДЯЩЕЕСЯ В%' then 'OTHER'
+      when b.note like 'ЛИЦО, ИМЕЮЩЕЕ ОТРИЦА%' then 'OTHER'
+      when b.note like 'ЛИЦО, КЛАССИФИЦИРОВА%' then 'NOT MASS'
+      when b.note like 'ЛИЦО, О КОТОРОМ СУЩЕ%' then 'OTHER'
+      when b.note like 'ЛИЦО, ПРЕДОСТАВИВШЕЕ%' then 'INFO'
+      when b.note like 'ЛИЦО, У КОТОРОГО ИМЕ%' then 'DELINQ'
+      when b.note like 'ЛИЦО, ЯВЛЯЮЩЕЕСЯ/ЯВЛ%' then 'OTHER'
+      when b.note like 'НА 30 ДНЕЙ В ЧС' then 'OTHER'
+      when b.note like 'НАЛИЧИЕ ЗАДОЛЖЕННОСТ%' then 'OTHER'
+      when b.note like 'ОТНЕСЕН К КАТЕГОРИИ %' then 'OTHER'
+      when b.note like 'ПО СЗ' then 'OTHER'
+      when b.note like 'ПРЕДОСТАВИЛ ЗАВЕДОМО%' then 'OTHER'
+      when b.note like 'ПРОСРОЧЕННАЯ ЗАДОЛЖЕ%' then 'NOT MASS'
+      when b.note like 'СМ. ИП ЮБИЛЕЙНЫЙ. ЛИ%' then 'NOT MASS'
+      when b.note like 'СМ. ТОО "БАТЫС-ТАС" %' then 'NOT MASS'
+      when b.note like 'СМ. ТОО "СХП ПАВЛОВК%' then 'NOT MASS'
+      when b.note like 'СМОТРЕТЬ ТОО "МАЛХ-К%' then 'NOT MASS'
+      when b.note like 'СМОТРЕТЬ ТОО "МКО АЙ%' then 'NOT MASS'
+      when b.note like 'ЯВЛЯЕТСЯ/ЯВЛЯЛСЯ ГАР%' then 'OTHER'
+      when b.note like 'А2 ПО ПРОСЬБЕ МАТЕРИ%' then 'INFO'
+      when b.note like 'ДИРЕКТОР ТОО AMG TECHNOLOGY%' then 'NOT MASS'
+      when b.note like 'СМ. ТОО ДАНА PLUS (ДИРЕКТОР)' then 'NOT MASS'
+      when b.note like 'СМ/ ТОО "КОКШЕ-ИНТЕРЬЕР"' then 'NOT MASS'
+      when b.note like '0000013' then 'LSBO'
+      when b.note like 'А9 (ПО ИНИЦИАТИВЕ ОТ СБ)' then 'INFO'
+      when b.note like 'C2' then 'OTHER'
+      when b.note like 'A2 (ПО ЗАЯВЛЕНИЮ МАТЕРИ)' then 'INFO'
+      when b.note like 'D1' then 'OTHER'
+
+      when b.note like '%ЛСБОО%' then 'LSBO'
+      when b.note like 'ПО ЗАЯВЛЕНИЮ КЛИЕНТА%' then 'INFO'
+      when b.note like 'ПО ЗАЯВЛЕНИЮ МАТЕРИ%' then 'INFO'
+      when b.note like 'ПО ЗАЯВЛЕНИЮ СЕСТРЫ%' then 'INFO'
+      when b.note like 'ОТКЛЮЧЕНИЕ ПО ПРОТОКОЛУ%' then 'OTHER'
+      when b.note like '%ПОДОЗРЕВАЕМОЕ В ПРИЧАСТНОСТИ К ПОЛУЧЕНИЮ КРЕДИТА%' then 'INFO'
+
+      else 'UNKNOWN'
+  end note_type,
+      floor(MONTHS_BETWEEN(trunc(sysdate), to_date(b.yy_mm_report_max_max,'yyyy - mm'))) - 1 as
+  months_after_yy_mm_report_max
+from (
+select /*+ all_rows */
+  t.id as mo_black_list_id,
+  max(t.iin) as iin,
+  max(t.rnn) as rnn,
+  max(upper(t.name_last)) as surname,
+  max(upper(t.name_first)) as first_name,
+  max(upper(t.name_patronymic)) as patronymic,
+--  max(t.c_date_birth) as birth_date,
+  max(to_char(t.date_birth,'dd.mm.yyyy')) as birth_date_text,
+--  max(upper(ud.c_name)) as add_reason,
+  max(upper(t.add_cause_desc)) as note,
+--  max(t.c_date_add) as date_add,
+  max(to_char(trunc(t.add_date,'mm'),'dd.mm.yyyy')) as date_add_text,
+--  max(upper(u.c_name)) as user_name,
+--  max(u.c_num_tab) as user_num_tab,
+--  max(upper(ct.c_name)) as pers_doc_type,
+--  max(t.c_passport#num) as pers_doc_num,
+--  t.c_passport#seria as personal_doc_series,
+--  max(upper(t.c_passport#who)) as pers_doc_issuer,
+--  max(t.c_passport#date_doc) as pers_doc_date_begin,
+--  max(to_char(c_passport#date_doc,'dd.mm.yyyy')) as pers_doc_date_begin_text,
+--  max(t.c_passport#date_end) as pers_doc_date_end,
+--  max(to_char(c_passport#date_end,'dd.mm.yyyy')) as pers_doc_date_end_text,
+--  max(upper(t.c_passport#place)) as pers_doc_issue_place,
+--  max(upper(t.c_address)) as address,
+--  max(upper(t.c_place_birth)) as place_of_birth,
+--  t.c_passport#depart_code
+--  max(upper(u.c_username)) as user_login,
+--  max(upper(sd.c_name)) as dep_name,
+--  max(sd.c_code) as dep_code,
+--  max(t.c_date_edit) as date_edit,
+  max(to_char(trunc(t.change_date,'mm'),'dd.mm.yyyy')) as date_edit_text,
+--  max(nvl(t.x_iin,cr.iin)) as x_iin,
+  max(coalesce(cc1.yy_mm_report_max,cc2.yy_mm_report_max,
+     cc3.yy_mm_report_max,cc4.yy_mm_report_max)) as yy_mm_report_max_max,
+  min(coalesce(cc1.yy_mm_report_max,cc2.yy_mm_report_max,
+     cc3.yy_mm_report_max,cc4.yy_mm_report_max)) as yy_mm_report_max_min,
+  max(coalesce(cc1.delinq_days_max,cc2.delinq_days_max,
+     cc3.delinq_days_max,cc4.delinq_days_max)) as delinq_days_max_max,
+  min(coalesce(cc1.delinq_days_max,cc2.delinq_days_max,
+     cc3.delinq_days_max,cc4.delinq_days_max)) as delinq_days_max_min,
+  max(coalesce(cc1.total_pmts,cc2.total_pmts,
+     cc3.total_pmts,cc4.total_pmts)) as total_pmts_max,
+  min(coalesce(cc1.total_pmts,cc2.total_pmts,
+     cc3.total_pmts,cc4.total_pmts)) as total_pmts_min,
+  case when count(*) > 1 or max(t.iin) is null then 1 else 0 end as is_error,
+  nvl(max(t.iin), 'NO_IIN_' || to_char(max(t.id))) as x_iin,
+  max(bc.iin) as bisquit_del_iin
+--  t.c_kas_rnn_replaced
+from V_MO_CLIENT_BL t
+--left join V_RFO_Z#CERTIFIC_TYPE ct on ct.id = t.c_passport#type
+--left join V_RFO_Z#USER u on u.id = t.c_user_ref
+--left join V_RFO_Z#STRUCT_DEPART sd on sd.id = u.c_st_depart
+--left join V_RFO_Z#KAS_UNIVERSAL_D ud on ud.id = t.c_kas_reason
+--left join v_client_rfo_by_rnn cr on cr.rnn = t.x_rnn
+left join v_client_cal cc1 on cc1.client_iin_last = t.iin
+left join v_client_cal cc2 on cc2.client_iin_first = t.iin
+left join v_client_cal cc3 on cc3.client_rnn_last = t.rnn
+left join v_client_cal cc4 on cc4.client_rnn_first = t.rnn
+left join BISQUIT_CLIENTS_DELINQ bc on bc.iin = t.rnn
+group by t.id
+) b
+left join ref_delinq rd1 on rd1.days_del_from <= nvl(b.delinq_days_max_max,0) and
+                            rd1.days_del_to >= nvl(b.delinq_days_max_max,0)
+left join ref_delinq rd2 on rd2.days_del_from <= nvl(b.delinq_days_max_min,0) and
+                            rd2.days_del_to >= nvl(b.delinq_days_max_min,0)
+) x
+) y;
+grant select on U1.V_MO_BLACK_LIST to LOADDB;
+grant select on U1.V_MO_BLACK_LIST to LOADER;
+
+

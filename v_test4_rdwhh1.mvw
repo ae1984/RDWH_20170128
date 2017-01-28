@@ -1,0 +1,16 @@
+﻿create materialized view U1.V_TEST4_RDWHH1
+refresh complete on demand
+as
+select /*+ no_parallel*/
+       c_code,
+       c_name,
+       c_depn_debt_dog,
+       c_summa,
+       depn_id,
+       c_curr,
+       decode(c_curr,'KZT',1,'USD',184,'EUR',207,'RUR',3.5,1)*c_summa as c_summa_kzt
+from u1.v_test_1@rdwh11;
+grant select on U1.V_TEST4_RDWHH1 to LOADDB;
+grant select on U1.V_TEST4_RDWHH1 to LOADER;
+
+

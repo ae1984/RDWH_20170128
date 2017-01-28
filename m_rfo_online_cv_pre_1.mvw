@@ -1,0 +1,59 @@
+﻿create materialized view U1.M_RFO_ONLINE_CV_PRE_1
+build deferred
+refresh force on demand
+as
+select
+             cl.rfo_client_id,
+             cl.iin,
+             cl.rnn,
+             max(case
+                  when (t.actual_end_date is null or t.begin_date >= to_date('2012-02-01','yyyy-mm-dd') ) and t.rep_date is not null then
+                     1
+                  when trunc(f.folder_date_create) >= to_date('2012-02-01','yyyy-mm-dd') and -- если исполнена заявка на выдачу кошелька после 1 фев 2012, то также можем запросить ПКБ
+                       c.is_card = 1 and --  есть карта
+                       f.process_name = 'ВЫДАЧА КОШЕЛЬКА' and
+                       f.folder_state in ('ИСПОЛНЕНО','ОТПРАВЛЕНО В ЦА','АРХИВ','ПРОВЕРКА ДОСЬЕ','АРХИВ С ОШИБКАМИ','НА РЕКЛАМАЦИЮ') then
+                     1
+                   else
+                     0 end) as is_gu_match,
+            max(case when TRUNC(cv.form_client_date) >= add_months(TRUNC(sysdate), -9) and
+                          f.is_credit_process = 1 and
+                          c.folder_id is not null and
+                          f.folder_state not in ('НА ОФОРМЛЕНИИ','ФОРМИРОВАНИЕ ИНФОРМАЦИИ ПО КЛИЕНТУ В БЭК-ОФИСЕ',
+                                                 'ОШИБКА ФОРМИРОВАНИЯ КЛИЕНТА В БЭК-ОФИСЕ','ОШИБКА СИК',
+                                                 'ПОВТОРНОЕ ФОТОГРАФИРОВАНИЕ','ОШИБКА ПРИ ПРОВЕРКЕ','ВВОД КОДА',
+                                                 'ФОРМИРОВАНИЕ ДОГОВОРА В БЭК-ОФИСЕ','ПРОСРОЧЕННАЯ','ОТКАЗАНО') then
+                      1
+                    else
+                      0 end) is_form_match,-- кредитные заявки и карты дошедшие до проверки АСОКР после 1 фев 2012
+             max(case when c.is_card = 1 and --  есть карта
+                           f.process_name = 'ВЫДАЧА КОШЕЛЬКА' and
+                           f.folder_state in ('ИСПОЛНЕНО','ОТПРАВЛЕНО В ЦА','АРХИВ','ПРОВЕРКА ДОСЬЕ','АРХИВ С ОШИБКАМИ','НА РЕКЛАМАЦИЮ') then
+                         1
+                       else
+                         0
+                       end) as is_purse_exists,
+             max(case
+                  when f.is_credit_process = 1 and
+                       f.is_credit_issued = 1 and
+                       c.folder_id is not null then
+                          1
+                        else
+                          0 end) is_credit_exists
+
+      from V_CLIENT_RFO_BY_ID cl
+      left join V_DWH_PORTFOLIO_CURRENT t on t.rfo_client_id = cl.rfo_client_id and
+                                             t.x_is_credit_issued = 1 and
+                                             t.x_is_card = 1 and
+                                             t.rfo_client_id > 0
+      left join V_FOLDER_ALL_RFO f on f.rfo_client_id = cl.rfo_client_id
+      left join V_CONTRACT_ALL_RFO c on c.folder_id = f.folder_id
+      left join V_FORM_CLIENT_ALL_RFO cv on f.form_client_id = cv.form_client_id
+      group by cl.rfo_client_id,
+               cl.iin,
+               cl.rnn;
+grant select on U1.M_RFO_ONLINE_CV_PRE_1 to LOADDB;
+grant select on U1.M_RFO_ONLINE_CV_PRE_1 to LOADER;
+grant select on U1.M_RFO_ONLINE_CV_PRE_1 to LOAD_MO;
+
+

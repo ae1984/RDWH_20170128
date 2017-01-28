@@ -1,0 +1,7 @@
+﻿create materialized view U1.M_KASPIRED_RULES_BY_IIN
+refresh force on demand
+as
+select * from UPD_USER.UAD_KASPI_RED_RULES_BY_IIN t;
+grant select on U1.M_KASPIRED_RULES_BY_IIN to LOADDB;
+
+

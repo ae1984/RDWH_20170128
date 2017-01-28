@@ -1,0 +1,89 @@
+﻿create table U1.MO1_1_PROCESS_IN_PAR
+(
+  v_mo_process_id NUMBER not null,
+  param_code_int  VARCHAR2(128) not null,
+  value_number    NUMBER,
+  value_text      VARCHAR2(1024),
+  value_date      TIMESTAMP(6)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.MO1_1_PROCESS_IN_PAR_IND1 on U1.MO1_1_PROCESS_IN_PAR (V_MO_PROCESS_ID)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.MO1_1_PROCESS_IN_PAR_IND2 on U1.MO1_1_PROCESS_IN_PAR (PARAM_CODE_INT)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.MO1_1_PROCESS_IN_PAR_IND3 on U1.MO1_1_PROCESS_IN_PAR (VALUE_NUMBER, 0)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.MO1_1_PROCESS_IN_PAR_IND4 on U1.MO1_1_PROCESS_IN_PAR (VALUE_TEXT, 0)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.MO1_1_PROCESS_IN_PAR_IND5 on U1.MO1_1_PROCESS_IN_PAR (VALUE_DATE, 0)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.MO1_1_PROCESS_IN_PAR to LOADDB;
+grant select on U1.MO1_1_PROCESS_IN_PAR to LOADER;
+

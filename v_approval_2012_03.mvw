@@ -1,0 +1,135 @@
+﻿create materialized view U1.V_APPROVAL_2012_03
+refresh complete on demand
+as
+with x as ( -- все заявки
+    select f.folder_id, f.folder_date_create as folder_date,
+    --      f.is_credit_issued as is_credit_issued_fld,
+              case when f.is_credit_issued = 1 and /*c.is_credit_issued = 1 and*/ d.deal_number is not null
+                 then 1 else 0 end as
+          is_credit_issued, c.cr_program_name as product,
+          c.contract_number, crr.rfo_client_id, crr.iin, crr.rnn, d.deal_number, f.dnp_name,
+          cr1.pr_rep_total_fact_pmts_by_cli,
+              case when cr1.pr_rep_total_fact_pmts_by_cli < 2 then 1 else 0 end as
+          is_client_new,
+              case when ccl.is_cancel_by_bank_auto_wo_sco = 1 or -- если явный автооотказ
+                   (not (f.is_credit_issued = 1 and /*c.is_credit_issued = 1 and*/ d.deal_number is not null) and -- или кредит не выдан но без явного отказа, значит отказ банк авто не явный
+                   nvl(ccl.is_cancel_by_bank_auto_wo_sco,0) = 0 and nvl(ccl.is_cancel_by_bank_manual,0) = 0 and
+                   nvl(ccl.is_cancel_by_client,0) = 0) then 1 else 0 end as
+          is_cancel_by_bank_auto,
+          ccl.is_cancel_by_bank_manual,
+          ccl.is_cancel_by_client,
+          c.is_card
+    from V_CONTRACT_ALL_RFO c
+    join V_CLIENT_RFO_BY_ID crr on crr.rfo_client_id = c.rfo_client_id
+    join v_folder_all_rfo f on (f.credit_contract_id  = c.rfo_contract_id or
+                                f.card_contract_id = c.rfo_contract_id) and
+                                f.is_credit_process = 1 and f.is_form_exists = 1 and
+                                extract(year from f.folder_date_create) = 2012 and --------- УСТАНОВИТЬ
+                                extract(month from f.folder_date_create) = 3 --------- УСТАНОВИТЬ
+    left join (
+             select t.deal_number from V_DWH_PORTFOLIO_CURRENT t
+             where ((t.deal_status is null and t.x_total_debt > 0) or t.deal_status not in ('ОТКАЗ','ВВЕДЕН'))
+                   and t.prod_name not in ('ПРИВИЛЕГИРОВАННЫЙ','ЗАРПЛАТНЫЙ ПРОЕКТ')
+                   ) d  on d.deal_number = c.contract_number
+    left join (
+              select cr.rfo_client_id, t.yy_mm_report,
+                     max(nvl(t.pr_rep_total_fact_pmts_by_cli,0)) as pr_rep_total_fact_pmts_by_cli
+                    from V_REPORT_CAL_1 t
+                         join V_CLIENT_CAL c on c.client_id = t.client_id
+                         join V_CLIENT_RFO_BY_ID cr on cr.iin = c.client_iin_last
+                    group by cr.rfo_client_id, t.yy_mm_report) cr1
+            on cr1.rfo_client_id = c.rfo_client_id and
+               cr1.yy_mm_report = to_char(f.folder_date_create,'yyyy - mm')
+     left join ( -- собираем явные (с записями в отказах рфо и мониторинга) критичные (уровень 1) отказы
+          select f.folder_id,
+                     max(ctr.is_automatic) as
+                 is_cancel_by_bank_auto_wo_sco,
+                     max(case when ((ctr.is_automatic = 0 and ctr.is_by_client = 0) or -- если отказ не банк авто и не клиент из kas_cancel
+                          cmon.folder_id is not null -- или отказ мониторинга, значит отказ банка ручной
+                          ) then 1 else 0 end) as
+                 is_cancel_by_bank_manual, -- ручные отказы знаем наверняка
+                     max(case when ctr.is_by_client = 1 or f.folder_state = 'ОТКАЗ КЛИЕНТА'
+                           then 1 else 0 end) as
+                 is_cancel_by_client -- отказы клиента знаем наверняка (из kas_cancel и статуса папки)
+--                 max(case when ctr.is_by_client != 1 and (ctr.is_automatic != 1 or
+--                      cmon.folder_id is not null) then 1 end) as is_cancel_by_bank_manual
+          from v_folder_all_rfo f --V_RFO_Z#FOLDERS f
+               left join V_RFO_Z#KAS_CANCEL c on c.c_folders = f.folder_id -- f.id
+               left join CANCEL_TYPES_RFO ctr on ctr.id = c.c_type and ctr.c_err_level = 1
+               left join (
+                  select t.folder_id from V_MONITORING t where t.mon_result = 'ОТКАЗАНО'
+                  union
+                  select m.FOLDER_ID from V_MON_REJ m) cmon on cmon.folder_id = f.folder_id -- f.id
+          group by f.folder_id) ccl on ccl.folder_id = f.folder_id
+    where c.rfo_client_id is not null
+)
+select y.rfo_client_id,
+       y.folder_date_min,
+           decode(y.is_client_new,1,'N',0,'R') as
+       client_type,
+           case when y.is_credit_issued_first_fld = 1 then 'OK' -- одобрение
+--                when (y.is_cancel_by_client = 0 and y.is_cancel_by_bank_manual = 0 -- автоотказ банка
+--                          and y.is_cancel_by_bank_auto_wo_sco = 0) or -- если отказ скоринга
+--                     is_cancel_by_bank_auto_wo_sco = 1 then 'BA' -- или явно автоматический отказ
+                when y.is_cancel_by_bank_auto = 1 then 'BA'
+                when y.is_cancel_by_bank_manual = 1 then 'BM' -- ручной отказ банка
+                when y.is_cancel_by_client = 1 then 'CR' end as
+       refusal_type,
+           decode(y.is_credit_issued,1,'Y',0,'N') as
+       took_loan,
+           case when nvl(y.approval_days,0) in (0, 1)
+                     then to_char(nvl(y.approval_days,0))
+                when y.approval_days >= 2 and y.approval_days <= 7 then '2-7'
+                when y.approval_days >= 8 and y.approval_days <= 30 then '8-30'
+                when y.approval_days > 30 then '30 <' end as
+       time,
+           case when y.product_applied_first = y.product_approved_first
+                  or y.product_approved_first is null then 'S'
+                else 'D' end as
+       product_type,
+       y.product_applied_first, y.product_approved_first,
+       y.dnp_name,
+       y.iin, y.rnn
+from
+(select
+       x.rfo_client_id,
+       min(x.folder_date) as folder_date_min,
+           max(x.is_client_new) keep (dense_rank first order by x.folder_date, x.is_card) as
+       is_client_new,
+           max(x.is_credit_issued) keep (dense_rank first order by x.folder_date, x.is_card) as
+       is_credit_issued_first_fld,
+           max(x.is_credit_issued) as
+       is_credit_issued,
+
+           max(x.is_cancel_by_bank_auto) keep (dense_rank first order by x.folder_date, x.is_card) as
+       is_cancel_by_bank_auto,
+           max(x.is_cancel_by_bank_manual) keep (dense_rank first order by x.folder_date, x.is_card) as
+       is_cancel_by_bank_manual,
+           max(x.is_cancel_by_client) keep (dense_rank first order by x.folder_date, x.is_card) as
+       is_cancel_by_client,
+
+           max(x.dnp_name) keep (dense_rank first order by x.folder_date, x.is_card) as
+       dnp_name,
+
+           trunc(min(x1.folder_app_date_min)) - trunc(min(x.folder_date)) as
+       approval_days,
+           max(x.product) keep (dense_rank first order by x.folder_date, x.is_card) as
+       product_applied_first,
+           max(x1.product_approved) as
+       product_approved_first,
+       max(x.iin) as iin,
+       max(x.rnn) as rnn
+from x
+left join ( -- одобренные заявки
+      select x.rfo_client_id, min(x.folder_date) as folder_app_date_min,
+                   max(x.product) keep (dense_rank first order by x.folder_date, x.is_card) as
+             product_approved
+             from x where x.is_credit_issued = 1
+             group by x.rfo_client_id
+         ) x1 on x1.rfo_client_id = x.rfo_client_id
+group by x.rfo_client_id
+) y;
+grant select on U1.V_APPROVAL_2012_03 to LOADDB;
+grant select on U1.V_APPROVAL_2012_03 to LOADER;
+
+

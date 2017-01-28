@@ -1,0 +1,3 @@
+﻿create or replace synonym U1.M_RDWH_SC_KASPIRED_APPROVE_IIN
+  for U1.T_RDWH_SC_RED_APPROVE_IIN_2;
+

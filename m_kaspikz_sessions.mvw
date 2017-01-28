@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_KASPIKZ_SESSIONS
+build deferred
+refresh complete on demand
+as
+select t.portalid as portal_id,
+       t.starttime as start_time,
+       t.lastacttime as last_act_time ,
+       t.closetime as close_time ,
+       cast(t.isclosed as number(3)) as is_closed ,
+       cast(t.isvalid as number(3)) as is_valid ,
+       cast(t.sessioninfo as varchar2(200)) as session_info ,
+       cast(t.userid as number(20)) as user_id ,
+       cast(t.confirmationcodehash as varchar2(100)) as confirmation_code_hash ,
+       cast(t.confirmationapproved as number(3)) as confirmation_approved ,
+       cast(t.id as number(20)) as id ,
+       t.useraccesstype as user_access_type ,
+       cast(t.localestr as varchar2(100)) as locale_str,
+       t.SessionGuid as session_guid
+
+  from s37.tb_Framework_Sessions@rdwh_exd t;
+grant select on U1.M_KASPIKZ_SESSIONS to LOADDB;
+
+

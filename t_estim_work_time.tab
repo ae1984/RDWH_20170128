@@ -1,0 +1,23 @@
+﻿create table U1.T_ESTIM_WORK_TIME
+(
+  process_code      VARCHAR2(300),
+  week_day_short_en VARCHAR2(12),
+  time_begin        VARCHAR2(5),
+  time_end          VARCHAR2(5)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_ESTIM_WORK_TIME to LOADDB;
+grant select on U1.T_ESTIM_WORK_TIME to LOADER;
+

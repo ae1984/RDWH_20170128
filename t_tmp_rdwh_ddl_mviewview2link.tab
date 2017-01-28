@@ -1,0 +1,22 @@
+﻿create table U1.T_TMP_RDWH_DDL_MVIEWVIEW2LINK
+(
+  object_name   VARCHAR2(128),
+  created       DATE,
+  last_ddl_time DATE,
+  mview_view    VARCHAR2(128)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_RDWH_DDL_MVIEWVIEW2LINK to LOADDB;
+

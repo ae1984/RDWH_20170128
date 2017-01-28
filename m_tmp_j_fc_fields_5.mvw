@@ -1,0 +1,42 @@
+﻿create materialized view U1.M_TMP_J_FC_FIELDS_5
+refresh complete on demand
+as
+select to_char(f.folder_date_create_mi,'yyyy') as year, to_char(f.folder_date_create_mi,'yyyy-mm') as mon,
+       f.cr_program_name, f.is_credit_issued,
+       ---
+       fc.children, fc.dependants_count,
+       fc.education, fc.real_estate_relation,
+       ---
+       count(*) as cnt,
+       count(distinct f.rfo_contract_id) as cnt_rfo_con,
+       sum(d.max_debt_used_x) / 1000000 as sales_mln,
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_mln
+from M_FOLDER_CON_CANCEL f
+join M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = f.form_client_id
+left join V_RFO_Z#FORM_CLIENT fc2 on fc2.id = f.form_client_id
+
+left join (select fcc.rfo_contract_id, max(v.gcvp_rep_id) as gcvp_max_id
+          from V_GCVP_REPORT v
+          join M_FOLDER_CON_CANCEL fcc on fcc.iin = v.client_iin and
+               (v.rep_date >= trunc(fcc.folder_date_create_mi) - 60 and v.rep_date <= trunc(fcc.folder_date_create_mi))
+          where v.error_code = 0
+          group by fcc.rfo_contract_id
+) gm on gm.rfo_contract_id = f.rfo_contract_id
+left join (select v.gcvp_rep_id, max(v.salary) as salary,
+                  max(v.pmts_count_from_rep) as gcvp_pmts_count_from_rep
+          from V_GCVP_REPORT v
+          group by v.gcvp_rep_id
+) g on g.gcvp_rep_id = gm.gcvp_max_id
+
+where to_char(f.folder_date_create_mi,'yyyy') in ('2014','2015')
+group by to_char(f.folder_date_create_mi,'yyyy'), to_char(f.folder_date_create_mi,'yyyy-mm'),
+         f.cr_program_name, f.is_credit_issued,
+         ---
+         fc.children, fc.dependants_count,
+         fc.education, fc.real_estate_relation;
+grant select on U1.M_TMP_J_FC_FIELDS_5 to LOADDB;
+grant select on U1.M_TMP_J_FC_FIELDS_5 to LOADER;
+
+

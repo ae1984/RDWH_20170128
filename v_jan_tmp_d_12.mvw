@@ -1,0 +1,21 @@
+﻿create materialized view U1.V_JAN_TMP_D_12
+refresh force on demand
+as
+select
+    --c.yms, -- месяц выдачи
+--    count(c.contract_number) as con_cnt, count(distinct c.contract_id) as con_dist_cnt, -- кол-во договоров + проверка
+    c.contract_number,
+    case when c.max_debt_used > 0 then
+        case when c.delinq_days_last_rep > 0 and c.delinq_days_last_rep < 8 then c.total_debt_last_rep * 0.45
+                       when c.delinq_days_last_rep > 7 then c.total_debt_last_rep
+                       else 0 end / c.max_debt_used
+        else 0 end as del_rate, -- просрочка
+    c.max_debt_used---) / 1000000, 2) as sales_mln -- продажи в млн. тг
+from V_CONTRACT_CAL c
+where c.yms = '2014 - 01' --and c.max_debt_used > 0
+--group by c.yms
+--having sum(c.max_debt_used) > 0;
+grant select on U1.V_JAN_TMP_D_12 to LOADDB;
+grant select on U1.V_JAN_TMP_D_12 to LOADER;
+
+

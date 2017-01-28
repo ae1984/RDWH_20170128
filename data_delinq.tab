@@ -1,0 +1,26 @@
+﻿create table U1.DATA_DELINQ
+(
+  yy_mm_report     VARCHAR2(9),
+  contract_number  VARCHAR2(19),
+  deling_principal NUMBER,
+  deling_interest  NUMBER,
+  deling_total     NUMBER,
+  penalty          NUMBER,
+  is_card          NUMBER,
+  deling_total_2   NUMBER(38)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.DATA_DELINQ to LOADDB;
+grant select on U1.DATA_DELINQ to LOADER;
+

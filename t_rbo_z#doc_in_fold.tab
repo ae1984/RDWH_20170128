@@ -1,0 +1,59 @@
+﻿create table U1.T_RBO_Z#DOC_IN_FOLD
+(
+  id            NUMBER not null,
+  collection_id NUMBER,
+  c_document    NUMBER,
+  c_num         NUMBER,
+  c_patt_ref    NUMBER,
+  c_main        VARCHAR2(3)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RBO_Z#DOC_IN_FOLD
+  is 'Документ в папке платежей';
+comment on column U1.T_RBO_Z#DOC_IN_FOLD.c_document
+  is 'Документ(FK на Z#DOCUMENT)';
+comment on column U1.T_RBO_Z#DOC_IN_FOLD.c_num
+  is 'Номер документа в папке';
+comment on column U1.T_RBO_Z#DOC_IN_FOLD.c_patt_ref
+  is 'Ссылка на шаблон документа(FK на Z#PATTERN)';
+comment on column U1.T_RBO_Z#DOC_IN_FOLD.c_main
+  is 'Основной документ';
+create index U1.T_RBO_Z#DOC_IN_FOLD_IND1 on U1.T_RBO_Z#DOC_IN_FOLD (ID)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+create index U1.T_RBO_Z#DOC_IN_FOLD_IND2 on U1.T_RBO_Z#DOC_IN_FOLD (C_DOCUMENT)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter table U1.T_RBO_Z#DOC_IN_FOLD
+  add constraint T_RBO_Z#DOC_IN_FOLD_PK primary key (ID);
+grant select on U1.T_RBO_Z#DOC_IN_FOLD to LOADDB;
+

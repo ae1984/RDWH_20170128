@@ -1,0 +1,65 @@
+﻿create table U1.T_ETL_CHECK_OBJ
+(
+  id          NUMBER not null,
+  object_name VARCHAR2(256) not null,
+  column_name VARCHAR2(256),
+  check_code  VARCHAR2(256),
+  value       NUMBER,
+  proc_name   VARCHAR2(256),
+  is_active   NUMBER(1) not null
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.T_ETL_CHECK_OBJ_IND1 on U1.T_ETL_CHECK_OBJ (OBJECT_NAME)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create unique index U1.T_ETL_CHECK_OBJ_IND2 on U1.T_ETL_CHECK_OBJ (OBJECT_NAME, COLUMN_NAME, CHECK_CODE)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_ETL_CHECK_OBJ
+  add constraint T_ETL_CHECK_OBJ_PK primary key (ID)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.T_ETL_CHECK_OBJ_PK nologging;
+

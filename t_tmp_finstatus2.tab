@@ -1,0 +1,28 @@
+﻿create table U1.T_TMP_FINSTATUS2
+(
+  date_oper       DATE,
+  beneficiary     VARCHAR2(2000),
+  iik_benef       VARCHAR2(2000),
+  bik_benef       VARCHAR2(2000),
+  document_code   VARCHAR2(2000),
+  document_number VARCHAR2(2000),
+  debet           NUMBER,
+  credit          NUMBER,
+  pay_purpose     VARCHAR2(2000)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_FINSTATUS2 to LOADDB;
+grant select on U1.T_TMP_FINSTATUS2 to LOADER;
+

@@ -1,0 +1,388 @@
+﻿create materialized view U1.M_OUT_ONLINE_SHOP_RR1
+build deferred
+refresh complete on demand
+as
+select /*+ parallel(20) */
+       case when coalesce(t.is_categ_a, t1.is_categ_a) = 1 or coalesce(t.is_categ_b, t1.is_categ_b) = 1 then 'Хорошие повторники (Категория А, Б)'
+              when coalesce(t.is_client_new_by_con, t1.is_client_new_by_con) = 0 then 'Плохие повторники (Категория C)'
+              when coalesce(t.is_client_new_by_con, t1.is_client_new_by_con) = 1 then 'Новые клиенты (Категория D)'
+         end as client_category,
+
+       trunc(f.c_date_create) as date_r,
+       td.week_text_online_credit,
+       to_char(f.c_date_create, 'yyyy - mm') as month_r,
+
+       case when coalesce(t.is_sign_require, t1.is_sign_require) = 1 then 'С подписанием'
+            when coalesce(t.is_sign_require, t1.is_sign_require) = 0 then 'Без подписания' end as is_sign_require,
+
+       coalesce(t.is_client_new_by_con, t1.is_client_new_by_con) as is_client_new_by_con,
+       coalesce(t.is_categ_a, t1.is_categ_a) as is_categ_a,
+       coalesce(t.is_categ_b, t1.is_categ_b) as is_categ_b,
+       coalesce(t.x_dnp_name, t1.x_dnp_name) as city,
+       -----1st crater
+       case when a.c_check_result is not null and coalesce(t.is_credit_issued, t1.is_credit_issued) = 0 then 1 else 0 end as is_1st_crater,
+
+       case when a.c_check_result is not null and a.c_exec_comment like '%Быстрое решение%' then 'Отказ - Быстрое решение'
+            --when a.c_check_result is not null and a.c_exec_comment like '%Отказ. Сумма кредита превышает расчитанный лимит -1%' then 'Отказ - Матрица лимитов -1'
+
+            when a.c_check_result is not null and a.c_exec_comment like '%Отказ. Сумма кредита превышает расчитанный лимит%' then 'Отказ - Матрица лимитов'
+            when a.c_check_result is not null and x.cancel_type_name in ('ПКБ. ИМЕЕТСЯ ПРОСРОЧКА С УЧЕТОВ КУРСОВ ВАЛЮТ',
+                                                                            'ПРЕСКОРИНГ ПКБ ОТЧЕТА',
+                                                                            'ПКБ. ПРЕВЫШЕНО МАКСИМАЛЬНОЕ КОЛИЧЕСТВО КРЕДИТОВ') then 'Отказ - ПКБ'
+            when a.c_check_result is not null and (a.c_exec_comment like '%У клиента присутствует договор на реструктуризации/рефинансировании%' or
+                                                   a.c_exec_comment like '%К сожалению, согласно Вашей кредитной истории Вам отказано в выдаче займа. Вы допустили просрочку в нашем Банке, в связи с чем Банк не может выдать Вам кредит повторно%' or
+                                                   a.c_exec_comment like '%Максимальная просрочка (> 1000 тенге)%')
+                                                   then 'Отказ - У клиента есть просрочка'
+            when a.c_check_result is not null and (a.c_exec_comment like '%У клиента имеются арестованные счета%' or
+                                                   a.c_exec_comment like '%Налогового кодекса РК Банки второго уровня обязаны отказать в открытии счетов бездействующим налогоплательщикам%' or
+                                                   a.c_exec_comment like '%Клиент находится в списке бездействующих налогоплательщиков%'
+                                                  ) then 'Отказ - Арестованные счета/Бездействующий налогоплательщик'
+            when a.c_check_result is not null and a.c_exec_comment like '%Расчет АА для третьего Кредита%' then 'Отказ - АвтоАндеррайтинг'
+            when a.c_check_result is not null and a.c_exec_comment like '%Быстрое решение: Сумма заказа превышает альтернативное предложение%'
+                                                  then 'Отказ - Сумма заказа превышает альтернативное предложение'
+
+            when a.c_check_result is not null and a.c_exec_comment like '%Отказ Мидл-Офиса по ЧС%' then 'Отказ - Черный список'
+            when a.c_check_result is not null and a.c_exec_comment like '%Возраст вне допустимых рамок%' then 'Отказ - Возраст вне допустимых рамок'
+            when a.c_check_result is not null and a.c_exec_comment like '%Превышено количество актуальных кредитов!%' then 'Отказ - Матрица продуктов'
+            when a.c_check_result is not null and coalesce(t.cancel_middle_office, t1.cancel_middle_office) = 1 and a.c_exec_comment like '%Отказ при выполнении скоринга. При выполнении скоринга вернулся отказ%'
+                                                  then 'Отказ - МО (Мидл-офис)'
+            when a.c_check_result is not null and a.c_exec_comment like '%Отказ при проверке на антифрод%' then 'Отказ - при проверке на антифрод'
+            when a.c_check_result is null then 'Одобрен на сайте'
+            when a.c_check_result is not null then 'Прескоринг - другие отказы'
+
+              else 'UNDEF' end as rr_1st_crater,
+
+
+
+
+       ------2nd crater
+       --> 20160428_Mview  -- Kazymbetov_30023
+       case when a.c_check_result is null and coalesce(t.is_sign_require, t1.is_sign_require) = 1 and coalesce(t.is_credit_issued, t1.is_credit_issued) = 1 and xx.folder_id is not null then 'Одобрен на подписании'
+            when a.c_check_result is null and coalesce(t.is_sign_require, t1.is_sign_require) = 1 and coalesce(t.is_credit_issued, t1.is_credit_issued) = 0 and xx.folder_id is not null then
+            case when x.cancel_type_name in ('ПКБ. ИМЕЕТСЯ ПРОСРОЧКА С УЧЕТОВ КУРСОВ ВАЛЮТ',
+                                                                            'ПРЕСКОРИНГ ПКБ ОТЧЕТА',
+                                                                            'ПКБ. ПРЕВЫШЕНО МАКСИМАЛЬНОЕ КОЛИЧЕСТВО КРЕДИТОВ') then 'Отказ - ПКБ'
+              when coalesce(t.cancel_prescoring, t1.cancel_prescoring) = 1 or (coalesce(t.cancel_undefined, t1.cancel_undefined) = 1 and coalesce(t.folder_state, t1.folder_state) in ('ОТКАЗ АСОКР', 'ОТКАЗАНО')) then 'Отказ - Прескоринг'
+              when coalesce(t.cancel_middle_office, t1.cancel_middle_office) = 1 then 'Отказ - МО'
+              when coalesce(t.cancel_controller, t1.cancel_controller) = 1 then 'Отказ - Контроллер'
+              when coalesce(t.cancel_manager, t1.cancel_manager) = 1 and mn.cancel_type_name = 'КЛИЕНТ ОТКАЗАЛСЯ' then 'Отказ - Менеджер_Клиент отказался'
+              when coalesce(t.cancel_manager, t1.cancel_manager) = 1 and mn.cancel_type_name = 'НЕТРЕЗВОЕ СОСТОЯНИЕ/НАРКОТИЧЕСКОЕ ОПЬЯНЕНИЕ' then 'Отказ - Менеджер_Нетрезвое состояние'
+              when coalesce(t.cancel_manager, t1.cancel_manager) = 1 and mn.cancel_type_name = 'ПО ТЕХНИЧЕСКИМ ПРИЧИНАМ' then 'Отказ - Менеджер_Технические причины'
+              when coalesce(t.cancel_manager, t1.cancel_manager) = 1 and mn.cancel_type_name = 'ПОДОЗРЕНИЕ В МОШЕННИЧЕСТВЕ' then 'Отказ - Менеджер_Подозрение в мошенничестве'
+              when coalesce(t.cancel_manager, t1.cancel_manager) = 1 and mn.cancel_type_name = 'ТРЕБУЕТСЯ ИЗМЕНЕНИЕ АНКЕТНЫХ ДАННЫХ' then 'Отказ - Менеджер_Требуется ИАД'
+              when coalesce(t.cancel_manager, t1.cancel_manager) = 1 then 'Отказ - Менеджер'
+              when coalesce(t.cancel_cpr_aa, t1.cancel_cpr_aa) = 1 then 'Отказ - ЦПР'
+              when coalesce(t.cancel_verificator, t1.cancel_verificator) = 1 then 'Отказ - Верификатор'
+              when (coalesce(t.cancel_manager, t1.cancel_manager) is null or coalesce(t.cancel_manager, t1.cancel_manager) = 0) and
+                   coalesce(t.cancel_verificator, t1.cancel_verificator) is null and
+                   (coalesce(t.cancel_client, t1.cancel_client) = 1 or coalesce(t.folder_state, t1.folder_state) in ('ЗАКАЗ ОТМЕНЕН','ОТМЕНЕНО') or
+                                                                    (coalesce(t.cancel_undefined, t1.cancel_undefined) = 1 and t.folder_state in ('ПРОСРОЧЕННАЯ', 'СОГЛАСИЕ ПКБ/ГЦВП'))
+                   ) then 'Заказ отменен'
+       end end as rr_2nd_crater,
+
+       --< 20160428_Mview  -- Kazymbetov_30023
+
+
+       ------All req
+       case when a.c_check_result is not null or t1.cancel_prescoring = 1 then 'Отказан на сайте'
+           when coalesce(t.is_credit_issued, t1.is_credit_issued) = 0 and coalesce(t.folder_state, t1.folder_state) in ('НА ВЫДАЧЕ ТОВАРА', 'ЗАПОЛНЕНИЕ АНКЕТЫ КЛИЕНТА', 'ПРОСРОЧЕННАЯ', 'СОГЛАСИЕ ПКБ/ГЦВП') then 'Отсроченные заказы'
+           when coalesce(t.is_credit_issued, t1.is_credit_issued) = 0 and
+                               (
+                               t.cancel_prescoring = 1 or
+                               coalesce(t.cancel_middle_office, t1.cancel_middle_office) = 1 or
+                               --coalesce(t.cancel_manager, t1.cancel_manager) = 1 or
+                               coalesce(t.cancel_cpr_aa, t1.cancel_cpr_aa) = 1 or
+                               (coalesce(t.cancel_undefined, t1.cancel_undefined) = 1 and t.folder_state not in ('ЗАКАЗ ОТМЕНЕН','ОТМЕНЕНО', 'ПРОСРОЧЕННАЯ')) or
+                               coalesce(t.cancel_manager, t1.cancel_manager) = 1 or
+                               coalesce(t.cancel_verificator, t1.cancel_verificator) = 1 or
+                               coalesce(t.cancel_controller, t1.cancel_controller) = 1
+
+                               ) and xx.folder_id is not null
+                               then 'Отказан на подписании'
+            when coalesce(t.is_credit_issued, t1.is_credit_issued) = 1 then 'Выданные'
+            when coalesce(t.folder_state, t1.folder_state) in ('ЗАКАЗ ОТМЕНЕН', 'ОТМЕНЕНО') then 'Отмененные заказы' end as is_all_crater,
+
+
+
+
+
+       count(distinct a.id) as req_cnt,
+       count(distinct coalesce(t.rfo_client_id, t1.rfo_client_id)) as cli_cnt,
+
+       --> 20160414_Mview  -- Kazymbetov_30023
+       case
+         when kd1.c_name in ('Клиент без возможности запроса ПКБ/ГЦВП', 'Новый клиент')
+          and a.c_check_result is not null
+          and (x.cancel_type_name in ('ПКБ. ИМЕЕТСЯ ПРОСРОЧКА С УЧЕТОВ КУРСОВ ВАЛЮТ',
+                                      'ПРЕСКОРИНГ ПКБ ОТЧЕТА',
+                                      'ПКБ. ПРЕВЫШЕНО МАКСИМАЛЬНОЕ КОЛИЧЕСТВО КРЕДИТОВ')
+           or (a.c_exec_comment like '%У клиента присутствует договор на реструктуризации/рефинансировании%'
+           or a.c_exec_comment like '%К сожалению, согласно Вашей кредитной истории Вам отказано в выдаче займа. Вы допустили просрочку в нашем Банке, в связи с чем Банк не может выдать Вам кредит повторно%'
+           or a.c_exec_comment like '%Максимальная просрочка (> 1000 тенге)%')
+           or (xxx.par_name = 'ОНЛАЙН. БЕКИ, БЕЗ ЗП ГЦВП, НЕ А, НЕ Б, СУММА >= 150 000, БЕЗ КРЕД В КАСПИ'
+          and coalesce(t.cancel_middle_office, t1.cancel_middle_office) = 1)  ) then
+           'С запросом ПКБ/ГЦВП'
+         when kd1.c_name in ('Клиент без возможности запроса ПКБ/ГЦВП', 'Новый клиент') then
+           'Без запроса ПКБ/ГЦВП'
+         when kd1.c_name in ('Клиент с возможностью запроса ПКБ/ГЦВП') then
+           'С запросом ПКБ/ГЦВП'
+       end                                                                        as check_route,
+       --< 20160414_Mview  -- Kazymbetov_30023
+
+       --> 20160526_Mview  -- Kazymbetov_30023
+       a.c_term_period,
+       case
+       when coalesce(t.contract_amount, t1.contract_amount) <= 10000 then '1 500 - 10 000'
+       when coalesce(t.contract_amount, t1.contract_amount) <= 20000 then '10 001 - 20 000'
+       when coalesce(t.contract_amount, t1.contract_amount) <= 30000 then '20 001 - 30 000'
+       when coalesce(t.contract_amount, t1.contract_amount) <= 50000 then '30 001 - 50 000'
+       when coalesce(t.contract_amount, t1.contract_amount) <= 100000 then '50 001 - 100 000'
+       when coalesce(t.contract_amount, t1.contract_amount) <= 150000 then '100 001 - 150 000'
+       when coalesce(t.contract_amount, t1.contract_amount) <= 200000 then '150 001 - 200 000'
+       when coalesce(t.contract_amount, t1.contract_amount) <= 300000 then '200 001 - 300 000'
+       when coalesce(t.contract_amount, t1.contract_amount) <= 400000 then '300 001 - 400 000'
+       when coalesce(t.contract_amount, t1.contract_amount) <= 500000 then '400 001 - 500 000'
+       when coalesce(t.contract_amount, t1.contract_amount) <= 750000 then '500 001 - 750 000'
+       when coalesce(t.contract_amount, t1.contract_amount) >750000 then '> 750 000' end as cred_amount_cat,
+       --< 20160526_Mview  -- Kazymbetov_30023
+       case when dp.p_name = 'Доставка' then 'Доставка' else 'Без Доставки' end as delivery,
+       case when coalesce(t.process_name, t1.process_name) ='ОНЛАЙН КРЕДИТ' and coalesce(t.source_system, t1.source_system) ='BPM' then 'BPM'
+            else 'Остальные'
+       end as process_cat
+from u1.V_RFO_Z#KAS_ONLINE_CLAIM a
+     join u1.V_RFO_Z#KAS_ONLINE_BUY f on a.c_buy_ref = f.id and
+                                         trunc(f.c_date_create)>=to_date('01-09-2015','dd-mm-yyyy')
+     left join u1.M_FOLDER_CON_CANCEL t on t.folder_id = a.c_folder_ref and
+                                        t.process_name = 'ОНЛАЙН КРЕДИТ'
+     left join u1.M_FOLDER_CON_CANCEL_ONLINE t1 on t1.claim_id = a.id
+     join u1.V_TIME_DAYS td on td.yyyy_mm_dd = coalesce(trunc(t.folder_date_create_mi), trunc(t1.folder_date_create_mi))
+
+     left join (
+                select
+                distinct t2.folder_id,
+                vc.cancel_type_name,
+                row_number () over (partition by vc.folder_id order by cancel_date) as priority_cancel
+                from u1.t_cancel vc
+                join u1.m_folder_con_cancel t2 on t2.folder_id = vc.folder_id and
+                                                  t2.process_name = 'ОНЛАЙН КРЕДИТ' and
+                                                  t2.is_credit_issued = 0 and
+                                                  t2.cancel_prescoring = 1 and
+                                                  vc.cancel_level = 1 and
+                                                  trunc(t2.folder_date_create_mi)>= to_date('08-12-2014', 'dd-mm-yyyy')
+                ) x on x.folder_id = a.c_folder_ref and priority_cancel = 1
+
+     /*left join (select distinct t2.folder_id,
+                       vc.cancel_type_name,
+                       row_number () over (partition by vc.folder_id order by cancel_date) as priority_cancel
+                  from u1.t_cancel vc
+                  join u1.m_folder_con_cancel t2 on t2.folder_id = vc.folder_id and
+                                                   t2.process_name = 'ОНЛАЙН КРЕДИТ' and
+                                                   t2.is_credit_issued = 0 and
+                                                   t2.cancel_prescoring = 1 and
+                                                   vc.cancel_level = 1) x on x.folder_id = a.c_folder_ref and priority_cancel = 1*/
+
+     left join (select distinct r.folder_id
+                  from u1.V_FOLDER_ALL_RFO r
+                  join u1.v_folder_all_history f on r.folder_id=f.folder_id
+                       where f.user_name not in ('ПОЛЬЗОВАТЕЛЬ АВТОМАТИЧЕСКАЯ ОБРАБОТКА','ESB_USER')
+                             and r.process_name = 'ОНЛАЙН КРЕДИТ') xx on xx.folder_id = a.c_folder_ref
+     left join U1.V_RFO_Z#KAS_UNIVERSAL_D kd1 on kd1.id = a.c_check_route
+     --> 20160414_Mview  -- Kazymbetov_30023
+     left join (select ff.folder_id,
+                  min(mm.is_rejecting) as is_rejecting,
+                  max(mm.par_code) keep (dense_rank last order by mm.reject_prior) as par_code,
+                  max(mm.par_name) keep (dense_rank last order by mm.reject_prior) as par_name
+           from u1.M_FOLDER_CON_CANCEL ff
+           join u1.m_folder_mo_cancel_last mm on mm.folder_id = ff.folder_id and
+                                                        ff.process_name = 'ОНЛАЙН КРЕДИТ'
+           join ( select m2.rfolder_id,
+                         m2.folder_id,
+                         coalesce(max(case when m2.is_rejecting = 0 then m2.reject_prior end), 0) as reject_prior_apr,
+                         coalesce(max(case when m2.is_rejecting = 1 then m2.reject_prior end), 0) as reject_prior_can
+                  from u1.m_folder_mo_cancel_last m2
+                  group by m2.rfolder_id,
+                           m2.folder_id
+                 ) m3 on m3.folder_id = mm.folder_id and
+                         m3.reject_prior_apr <= mm.reject_prior
+           where ff.process_name = 'ОНЛАЙН КРЕДИТ' and
+                 ff.is_credit_issued = 0 and
+                 ff.cancel_middle_office = 1 and
+                 ff.folder_date_create_mi >= to_date('01012016', 'ddmmyyyy')
+                 and
+                 mm.par_code not in ('MO_SCO_IS_CTRL_GR_81',
+                                      'MO_SCO_REJECT',
+                                      'MO_SCO_REJECT_81',
+                                      'MO_SCO_REJECT_PRE_81'
+                                      )
+                 group by ff.folder_id
+           ) xxx on xxx.folder_id = a.c_folder_ref
+
+        left join ( select distinct t3.folder_id,
+                           vc.cancel_type_name,
+                           row_number () over (partition by vc.folder_id order by cancel_date) as priority_cancel
+                      from u1.t_cancel vc
+                      join u1.m_folder_con_cancel t3 on t3.folder_id = vc.folder_id and
+                                  t3.process_name = 'ОНЛАЙН КРЕДИТ' and
+                                  t3.is_credit_issued = 0 and
+                                  t3.cancel_manager = 1 and
+                                  vc.cancel_level = 1 and
+                                  vc.cancel_type_group = 'MANAGER' and
+                                  trunc(t3.folder_date_create_mi)>= to_date('08-12-2014', 'dd-mm-yyyy')
+                    ) mn on mn.folder_id = a.c_folder_ref and mn.priority_cancel = 1
+
+        /* left join (select distinct t2.folder_id,
+                       vc.cancel_type_name,
+                       row_number () over (partition by vc.folder_id order by cancel_date) as priority_cancel
+                  from u1.t_cancel vc
+                  join u1.m_folder_con_cancel t2 on t2.folder_id = vc.folder_id and
+                                                   t2.process_name = 'ОНЛАЙН КРЕДИТ' and
+                                                   t2.is_credit_issued = 0 and
+                                                   t2.cancel_manager = 1 and
+                                                   vc.cancel_level = 1) mn on mn.folder_id = a.c_folder_ref and mn.priority_cancel = 1*/
+
+         --< 20160414_Mview  -- Kazymbetov_30023
+         left join u1.M_KASPISH_ORDERS o on o.code = f.c_process_id
+         left  join u1.M_KASPISH_ENUMERATIONVALUES    st on st.pk = o.p_cancellationreason
+         left  join u1.M_KASPISH_ENUMERATIONVALUESLP stp on stp.itempk = st.pk and stp.langpk = 8796093317152
+         left  join u1.m_kaspish_deliverymodes         d on d.pk = o.deliverymodepk
+         left  join u1.m_kaspish_deliverymodeslp      dp on dp.itempk = d.pk
+                                                       and dp.langpk = 8796093317152
+
+group by case when coalesce(t.is_categ_a, t1.is_categ_a) = 1 or coalesce(t.is_categ_b, t1.is_categ_b) = 1 then 'Хорошие повторники (Категория А, Б)'
+                when coalesce(t.is_client_new_by_con, t1.is_client_new_by_con) = 0 then 'Плохие повторники (Категория C)'
+                when coalesce(t.is_client_new_by_con, t1.is_client_new_by_con) = 1 then 'Новые клиенты (Категория D)'
+           end,
+
+         trunc(f.c_date_create),
+         td.week_text_online_credit,
+         to_char(f.c_date_create, 'yyyy - mm'),
+
+         case when coalesce(t.is_sign_require, t1.is_sign_require) = 1 then 'С подписанием'
+              when coalesce(t.is_sign_require, t1.is_sign_require) = 0 then 'Без подписания' end,
+
+         coalesce(t.is_client_new_by_con, t1.is_client_new_by_con),
+         coalesce(t.is_categ_a, t1.is_categ_a),
+         coalesce(t.is_categ_b, t1.is_categ_b),
+
+         -----1st crater
+         case when a.c_check_result is not null and coalesce(t.is_credit_issued, t1.is_credit_issued) = 0 then 1 else 0 end,
+         case when a.c_check_result is not null and a.c_exec_comment like '%Быстрое решение%' then 'Отказ - Быстрое решение'
+              --when a.c_check_result is not null and a.c_exec_comment like '%Отказ. Сумма кредита превышает расчитанный лимит -1%' then 'Отказ - Матрица лимитов -1'
+
+              when a.c_check_result is not null and a.c_exec_comment like '%Отказ. Сумма кредита превышает расчитанный лимит%' then 'Отказ - Матрица лимитов'
+              when a.c_check_result is not null and x.cancel_type_name in ('ПКБ. ИМЕЕТСЯ ПРОСРОЧКА С УЧЕТОВ КУРСОВ ВАЛЮТ',
+                                                                              'ПРЕСКОРИНГ ПКБ ОТЧЕТА',
+                                                                              'ПКБ. ПРЕВЫШЕНО МАКСИМАЛЬНОЕ КОЛИЧЕСТВО КРЕДИТОВ') then 'Отказ - ПКБ'
+              when a.c_check_result is not null and (a.c_exec_comment like '%У клиента присутствует договор на реструктуризации/рефинансировании%' or
+                                                     a.c_exec_comment like '%К сожалению, согласно Вашей кредитной истории Вам отказано в выдаче займа. Вы допустили просрочку в нашем Банке, в связи с чем Банк не может выдать Вам кредит повторно%' or
+                                                     a.c_exec_comment like '%Максимальная просрочка (> 1000 тенге)%')
+                                                     then 'Отказ - У клиента есть просрочка'
+              when a.c_check_result is not null and (a.c_exec_comment like '%У клиента имеются арестованные счета%' or
+                                                     a.c_exec_comment like '%Налогового кодекса РК Банки второго уровня обязаны отказать в открытии счетов бездействующим налогоплательщикам%' or
+                                                     a.c_exec_comment like '%Клиент находится в списке бездействующих налогоплательщиков%'
+                                                    ) then 'Отказ - Арестованные счета/Бездействующий налогоплательщик'
+              when a.c_check_result is not null and a.c_exec_comment like '%Расчет АА для третьего Кредита%' then 'Отказ - АвтоАндеррайтинг'
+              when a.c_check_result is not null and a.c_exec_comment like '%Быстрое решение: Сумма заказа превышает альтернативное предложение%'
+                                                    then 'Отказ - Сумма заказа превышает альтернативное предложение'
+
+              when a.c_check_result is not null and a.c_exec_comment like '%Отказ Мидл-Офиса по ЧС%' then 'Отказ - Черный список'
+              when a.c_check_result is not null and a.c_exec_comment like '%Возраст вне допустимых рамок%' then 'Отказ - Возраст вне допустимых рамок'
+              when a.c_check_result is not null and a.c_exec_comment like '%Превышено количество актуальных кредитов!%' then 'Отказ - Матрица продуктов'
+              when a.c_check_result is not null and coalesce(t.cancel_middle_office, t1.cancel_middle_office) = 1 and a.c_exec_comment like '%Отказ при выполнении скоринга. При выполнении скоринга вернулся отказ%'
+                                                    then 'Отказ - МО (Мидл-офис)'
+              when a.c_check_result is not null and a.c_exec_comment like '%Отказ при проверке на антифрод%' then 'Отказ - при проверке на антифрод'
+              when a.c_check_result is null then 'Одобрен на сайте'
+              when a.c_check_result is not null then 'Прескоринг - другие отказы'
+
+                else 'UNDEF' end,
+
+
+
+
+         ------2nd crater
+       --> 20160428_Mview  -- Kazymbetov_30023
+       case when a.c_check_result is null and coalesce(t.is_sign_require, t1.is_sign_require) = 1 and coalesce(t.is_credit_issued, t1.is_credit_issued) = 1 and xx.folder_id is not null then 'Одобрен на подписании'
+            when a.c_check_result is null and coalesce(t.is_sign_require, t1.is_sign_require) = 1 and coalesce(t.is_credit_issued, t1.is_credit_issued) = 0 and xx.folder_id is not null then
+            case when x.cancel_type_name in ('ПКБ. ИМЕЕТСЯ ПРОСРОЧКА С УЧЕТОВ КУРСОВ ВАЛЮТ',
+                                                                            'ПРЕСКОРИНГ ПКБ ОТЧЕТА',
+                                                                            'ПКБ. ПРЕВЫШЕНО МАКСИМАЛЬНОЕ КОЛИЧЕСТВО КРЕДИТОВ') then 'Отказ - ПКБ'
+              when coalesce(t.cancel_prescoring, t1.cancel_prescoring) = 1 or (coalesce(t.cancel_undefined, t1.cancel_undefined) = 1 and coalesce(t.folder_state, t1.folder_state) in ('ОТКАЗ АСОКР', 'ОТКАЗАНО')) then 'Отказ - Прескоринг'
+              when coalesce(t.cancel_middle_office, t1.cancel_middle_office) = 1 then 'Отказ - МО'
+              when coalesce(t.cancel_controller, t1.cancel_controller) = 1 then 'Отказ - Контроллер'
+              when coalesce(t.cancel_manager, t1.cancel_manager) = 1 and mn.cancel_type_name = 'КЛИЕНТ ОТКАЗАЛСЯ' then 'Отказ - Менеджер_Клиент отказался'
+              when coalesce(t.cancel_manager, t1.cancel_manager) = 1 and mn.cancel_type_name = 'НЕТРЕЗВОЕ СОСТОЯНИЕ/НАРКОТИЧЕСКОЕ ОПЬЯНЕНИЕ' then 'Отказ - Менеджер_Нетрезвое состояние'
+              when coalesce(t.cancel_manager, t1.cancel_manager) = 1 and mn.cancel_type_name = 'ПО ТЕХНИЧЕСКИМ ПРИЧИНАМ' then 'Отказ - Менеджер_Технические причины'
+              when coalesce(t.cancel_manager, t1.cancel_manager) = 1 and mn.cancel_type_name = 'ПОДОЗРЕНИЕ В МОШЕННИЧЕСТВЕ' then 'Отказ - Менеджер_Подозрение в мошенничестве'
+              when coalesce(t.cancel_manager, t1.cancel_manager) = 1 and mn.cancel_type_name = 'ТРЕБУЕТСЯ ИЗМЕНЕНИЕ АНКЕТНЫХ ДАННЫХ' then 'Отказ - Менеджер_Требуется ИАД'
+              when coalesce(t.cancel_manager, t1.cancel_manager) = 1 then 'Отказ - Менеджер'
+              when coalesce(t.cancel_cpr_aa, t1.cancel_cpr_aa) = 1 then 'Отказ - ЦПР'
+              when coalesce(t.cancel_verificator, t1.cancel_verificator) = 1 then 'Отказ - Верификатор'
+              when (coalesce(t.cancel_manager, t1.cancel_manager) is null or coalesce(t.cancel_manager, t1.cancel_manager) = 0) and
+                   coalesce(t.cancel_verificator, t1.cancel_verificator) is null and
+                   (coalesce(t.cancel_client, t1.cancel_client) = 1 or coalesce(t.folder_state, t1.folder_state) in ('ЗАКАЗ ОТМЕНЕН','ОТМЕНЕНО') or
+                                                                    (coalesce(t.cancel_undefined, t1.cancel_undefined) = 1 and t.folder_state in ('ПРОСРОЧЕННАЯ', 'СОГЛАСИЕ ПКБ/ГЦВП'))
+                   ) then 'Заказ отменен'
+       end end,
+
+        --< 20160428_Mview  -- Kazymbetov_30023
+
+         ------All req
+         case when a.c_check_result is not null or t1.cancel_prescoring = 1 then 'Отказан на сайте'
+           when coalesce(t.is_credit_issued, t1.is_credit_issued) = 0 and coalesce(t.folder_state, t1.folder_state) in ('НА ВЫДАЧЕ ТОВАРА', 'ЗАПОЛНЕНИЕ АНКЕТЫ КЛИЕНТА', 'ПРОСРОЧЕННАЯ', 'СОГЛАСИЕ ПКБ/ГЦВП') then 'Отсроченные заказы'
+           when coalesce(t.is_credit_issued, t1.is_credit_issued) = 0 and
+                               (
+                               t.cancel_prescoring = 1 or
+                               coalesce(t.cancel_middle_office, t1.cancel_middle_office) = 1 or
+                               --coalesce(t.cancel_manager, t1.cancel_manager) = 1 or
+                               coalesce(t.cancel_cpr_aa, t1.cancel_cpr_aa) = 1 or
+                               (coalesce(t.cancel_undefined, t1.cancel_undefined) = 1 and t.folder_state not in ('ЗАКАЗ ОТМЕНЕН','ОТМЕНЕНО', 'ПРОСРОЧЕННАЯ')) or
+                               coalesce(t.cancel_manager, t1.cancel_manager) = 1 or
+                               coalesce(t.cancel_verificator, t1.cancel_verificator) = 1 or
+                               coalesce(t.cancel_controller, t1.cancel_controller) = 1
+
+                               ) and xx.folder_id is not null
+                               then 'Отказан на подписании'
+            when coalesce(t.is_credit_issued, t1.is_credit_issued) = 1 then 'Выданные'
+            when coalesce(t.folder_state, t1.folder_state) in ('ЗАКАЗ ОТМЕНЕН', 'ОТМЕНЕНО') then 'Отмененные заказы' end,
+         --> 20160414_Mview  -- Kazymbetov_30023
+         case
+           when kd1.c_name in ('Клиент без возможности запроса ПКБ/ГЦВП', 'Новый клиент')
+            and a.c_check_result is not null
+            and (x.cancel_type_name in ('ПКБ. ИМЕЕТСЯ ПРОСРОЧКА С УЧЕТОВ КУРСОВ ВАЛЮТ',
+                                        'ПРЕСКОРИНГ ПКБ ОТЧЕТА',
+                                        'ПКБ. ПРЕВЫШЕНО МАКСИМАЛЬНОЕ КОЛИЧЕСТВО КРЕДИТОВ')
+             or (a.c_exec_comment like '%У клиента присутствует договор на реструктуризации/рефинансировании%'
+             or a.c_exec_comment like '%К сожалению, согласно Вашей кредитной истории Вам отказано в выдаче займа. Вы допустили просрочку в нашем Банке, в связи с чем Банк не может выдать Вам кредит повторно%'
+             or a.c_exec_comment like '%Максимальная просрочка (> 1000 тенге)%')
+             or (xxx.par_name = 'ОНЛАЙН. БЕКИ, БЕЗ ЗП ГЦВП, НЕ А, НЕ Б, СУММА >= 150 000, БЕЗ КРЕД В КАСПИ'
+            and coalesce(t.cancel_middle_office, t1.cancel_middle_office) = 1)  ) then
+             'С запросом ПКБ/ГЦВП'
+           when kd1.c_name in ('Клиент без возможности запроса ПКБ/ГЦВП', 'Новый клиент') then
+             'Без запроса ПКБ/ГЦВП'
+           when kd1.c_name in ('Клиент с возможностью запроса ПКБ/ГЦВП') then
+             'С запросом ПКБ/ГЦВП'
+         end,  --< 20160414_Mview  -- Kazymbetov_30023
+         coalesce(t.x_dnp_name, t1.x_dnp_name),  -- 20160428_Mview  -- Kazymbetov_30023
+         --> 20160526_Mview  -- Kazymbetov_30023
+         a.c_term_period,
+         case
+         when coalesce(t.contract_amount, t1.contract_amount) <= 10000 then '1 500 - 10 000'
+         when coalesce(t.contract_amount, t1.contract_amount) <= 20000 then '10 001 - 20 000'
+         when coalesce(t.contract_amount, t1.contract_amount) <= 30000 then '20 001 - 30 000'
+         when coalesce(t.contract_amount, t1.contract_amount) <= 50000 then '30 001 - 50 000'
+         when coalesce(t.contract_amount, t1.contract_amount) <= 100000 then '50 001 - 100 000'
+         when coalesce(t.contract_amount, t1.contract_amount) <= 150000 then '100 001 - 150 000'
+         when coalesce(t.contract_amount, t1.contract_amount) <= 200000 then '150 001 - 200 000'
+         when coalesce(t.contract_amount, t1.contract_amount) <= 300000 then '200 001 - 300 000'
+         when coalesce(t.contract_amount, t1.contract_amount) <= 400000 then '300 001 - 400 000'
+         when coalesce(t.contract_amount, t1.contract_amount) <= 500000 then '400 001 - 500 000'
+         when coalesce(t.contract_amount, t1.contract_amount) <= 750000 then '500 001 - 750 000'
+         when coalesce(t.contract_amount, t1.contract_amount) >750000 then '> 750 000' end,
+         --< 20160526_Mview  -- Kazymbetov_30023
+         case when dp.p_name = 'Доставка' then 'Доставка' else 'Без Доставки' end,
+         case when coalesce(t.process_name, t1.process_name) ='ОНЛАЙН КРЕДИТ' and coalesce(t.source_system, t1.source_system) ='BPM' then 'BPM'
+              else 'Остальные'
+         end;
+grant select on U1.M_OUT_ONLINE_SHOP_RR1 to LOADDB;
+
+

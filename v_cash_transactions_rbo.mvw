@@ -1,0 +1,128 @@
+﻿create materialized view U1.V_CASH_TRANSACTIONS_RBO
+build deferred
+refresh complete on demand
+as
+select /*+ parallel 30*/
+    t.id as cash_doc_id,
+    t.state_id as cash_doc_state, -- CASHIER *CONFIRM DECLINE DELETED NO_WORK *PAY_ALL STORNO
+    t.c_document_date as cash_doc_date,
+    t.c_date_time as cash_doc_date_time,--дата и время совершения операции
+
+    upper(np.c_name) as cash_doc_type_name,
+    t.c_req_output#amount as cash_doc_out_amount,--выдано
+    t.c_req_input#amount as cash_doc_in_amount,--принято
+
+    md.id as main_doc_id,
+    md.state_id as main_doc_state,
+    md.c_req_man#inn as main_doc_client_iin,
+    upper(np2.c_name) as main_doc_type_name,
+    md.c_document_date as main_doc_date,
+    md.c_sum_nt as main_doc_sum_kzt,
+
+    upper(u.c_name) as cashier_name, --ФИО кассира
+    upper(n.c_num_pk) as cash_dept_num,--номер кассы
+    upper(n.c_name_pk) as cash_dept_name,--наименование кассы
+    dp.c_code as dept_code,
+    upper(dp.c_name) as dept_name,
+    upper(ud.c_name) as dnp_name,
+
+    md.c_quit_doc,
+
+    md.c_sum as main_doc_sum_debit,
+    fm1.c_cur_short as main_doc_curr_debit,
+    md.c_rate_dt as main_doc_rate_debit,
+    md.c_sum_po as main_doc_sum_credit,
+    fm2.c_cur_short as main_doc_curr_credit,
+    md.c_rate_kt as main_doc_rate_credit,
+
+    -- счет дебит
+    af1.c_main_v_id as debit_acc_num,
+    c1.class_id as debit_acc_client_class_id, -- CL_BANK_F  CL_BANK_N  CL_ORG  CL_PART  CL_PRIV
+    c1.c_inn as debit_acc_client_iin,
+    c1.c_kas_rnn as debit_acc_client_rnn,
+    p1.id as debit_product_id,
+    pd1.id as pc_id,----------new
+    p1.class_id as debit_product_class_id, -- BANK  DEPOSIT_PRIV  INSURANCE  KAS_PC_DOG  KAS_PROVIS
+                                           -- KAS_PROVIS_DZ  KAS_REQUES_PRIV  KAS_SIM_PORT  KRED_PERS
+                                           -- LONG_ORDER  LO_MERCHANT  NOTRADE  PARTNERS  RECONT_ACCOUNT
+                                           -- TECH_PROD  ZALOG
+    p1.state_id as debit_product_state,
+    pd1.c_num_dog as debit_product_card_num,
+    dpn1.c_num_dog as debit_product_deposit_num,
+    pl1.c_num as debit_product_account_num,--------
+    --cr1.c_num_dog as c_num_dog1,
+    cr1.c_num_dog as debit_product_card_num_cr,
+    --cr1.c_num_dog as contract_number_cr_debit,
+    cr1.id as cr_id,----------new
+    --cr1.c_kas_pc_dog_ref as c_kas_pc_dog_ref_debit,
+    --pd1.id as id_debit,
+
+    -- счет кредит
+    af2.c_main_v_id as credit_acc_num,
+    c2.class_id as credit_acc_client_class_id,
+    c2.c_inn as credit_acc_client_iin,
+    c2.c_kas_rnn as credit_acc_client_rnn,
+    p2.id as credit_product_id,
+    p2.class_id as credit_product_class_id,
+    p2.state_id as credit_product_state,
+    pd2.c_num_dog as credit_product_card_num,
+    dpn2.c_num_dog as credit_product_deposit_num,
+    --cr2.c_num_dog as credit_product_card_num_cr,
+    --cr2.c_num_dog as contract_number_credit,
+    --cr2.id as cr_id_credit,
+    --cr2.c_kas_pc_dog_ref as c_kas_pc_dog_ref_credit,
+    --pd2.id as id_credit,
+
+    --case when c2.class_id != 'CL_BANK_N' then pl2.c_num end as credit_product_account_num,-----
+    case when t.c_req_input#amount is not null and c2.class_id = 'CL_PRIV' then pl2.c_num end as credit_product_account_num,
+    case when t.c_req_input#amount is not null and (case when t.c_req_input#amount is not null and c2.class_id = 'CL_PRIV' then pl2.c_num end) = 2204 then 1 else 0 end as is_acc_current,
+    case when t.c_req_input#amount is not null and (case when t.c_req_input#amount is not null and c2.class_id = 'CL_PRIV' then pl2.c_num end) in (2205, 2206, 2207) then 1 else 0 end as is_acc_deposit,
+    case when t.c_req_input#amount is not null and c2.class_id = 'CL_PRIV' and md.c_req_man#inn = c2.c_inn then 1
+         when t.c_req_input#amount is not null and c2.class_id = 'CL_PRIV' and md.c_req_man#inn != c2.c_inn then 0 end as is_same_phys_client
+         /*then (case when (case when t.c_req_input#amount is not null then pl2.c_num end) = 2204 then 1 else 0 end) end  as is_acc_current,*/
+    /*case when upper(np.c_name) = 'ПРИХОДНЫЙ КАССОВЫЙ ОРДЕР'
+         then ( case when (case when t.c_req_input#amount is not null then pl2.c_num end) in (2205, 2206, 2207) then 1 else 0 end) end as is_acc_deposit*//*,
+    case when upper(np.c_name) = 'ПРИХОДНЫЙ КАССОВЫЙ ОРДЕР'
+         then (case when (case when t.c_req_input#amount is not null then pl2.c_num end) not in (2204, 2205, 2206, 2207) then 1 else 0 end) end as is_acc_other */
+
+    --cr2.c_num_dog as c_num_dog2
+
+
+from V_RBO_Z#CASH_DOCUMENT t
+join V_RBO_Z#NAME_PAYDOC np on np.id = t.c_vid_doc and np.id in (1916955, 1916991)
+left join V_RBO_Z#USER u on u.id = t.c_document_user
+left join V_RBO_Z#NOTRADE n on n.id = t.c_kassa
+left join V_RBO_Z#DEPART dp on dp.id = t.c_depart
+left join V_RBO_Z#KAS_UPRAVL_DNP ud on ud.id = dp.c_upravl_dnp_ref
+
+left join V_RBO_Z#DOCUMENT_REF dr on dr.collection_id = t.c_arr_provod
+join RBO_Z#MAIN_DOCUM md on md.id = dr.c_value
+join V_RBO_Z#NAME_PAYDOC np2 on np2.id = md.c_vid_doc and np2.id in (1916955, 1916991)
+left join V_RBO_Z#FT_MONEY fm1 on fm1.id = md.c_valuta
+left join V_RBO_Z#FT_MONEY fm2 on fm2.id = md.c_valuta_po
+
+-- счет дебит
+left join T_RBO_Z#AC_FIN af1 on af1.id = md.c_acc_dt
+left join V_RBO_Z#CLIENT c1 on c1.id = af1.c_client_v
+left join V_RBO_Z#PRODUCT p1 on p1.id = af1.c_kas_product_ref
+left join V_RBO_Z#PR_CRED cr1 on cr1.c_kas_pc_dog_ref = p1.id and cr1.c_date_begin = md.c_date_doc and cr1.c_summa_dog = md.c_sum_nt
+left join V_RBO_Z#KAS_PC_DOG pd1 on pd1.id = p1.id
+--left join V_RBO_Z#KAS_PC_DOG pd1 on pd1.id = p1.id
+left join V_RBO_Z#DEPN dpn1 on dpn1.id = p1.id
+--left join T_RBO_Z#AC_FIN ac1 on ac1.id = dpn1.c_account
+left join V_RBO_Z#PL_USV pl1 on pl1.id = af1.c_main_usv----
+--left join V_RBO_Z#PR_CRED cr1 on cr1.id = p1.id
+
+-- счет кредит
+left join T_RBO_Z#AC_FIN af2 on af2.id = md.c_acc_kt
+left join V_RBO_Z#CLIENT c2 on c2.id = af2.c_client_v
+left join V_RBO_Z#PRODUCT p2 on p2.id = af2.c_kas_product_ref
+--left join V_RBO_Z#PR_CRED cr2 on cr2.c_kas_pc_dog_ref = p2.id
+--left join V_RBO_Z#KAS_PC_DOG pd2 on pd2.id = cr2.c_kas_pc_dog_ref
+left join V_RBO_Z#KAS_PC_DOG pd2 on pd2.id = p2.id
+left join V_RBO_Z#DEPN dpn2 on dpn2.id = p2.id
+--left join T_RBO_Z#AC_FIN ac2 on ac2.id = dpn2.c_account
+left join V_RBO_Z#PL_USV pl2 on pl2.id = af2.c_main_usv;
+grant select on U1.V_CASH_TRANSACTIONS_RBO to LOADDB;
+
+

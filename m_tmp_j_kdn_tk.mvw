@@ -1,0 +1,71 @@
+﻿create materialized view U1.M_TMP_J_KDN_TK
+refresh force on demand
+as
+select /*round(k.kdn_form_salary_max/10)*10 as kdn_form_salary_max,
+       round(m.contract_term_months/3)*3 as contract_term_months,*/
+       case when k.kdn_form_salary_max >= 200 then 200
+              when k.kdn_form_salary_max >= 150 then 150
+              when k.kdn_form_salary_max >= 100 then 100
+              when k.kdn_form_salary_max >= 90 then 90
+              when k.kdn_form_salary_max >= 80 then 80
+              when k.kdn_form_salary_max >= 70 then 70
+              when k.kdn_form_salary_max >= 60 then 60
+              when k.kdn_form_salary_max >= 50 then 50
+              when k.kdn_form_salary_max >= 40 then 40
+              when k.kdn_form_salary_max >= 30 then 30
+              when k.kdn_form_salary_max >= 20 then 20
+              when k.kdn_form_salary_max >= 10 then 10
+              when k.kdn_form_salary_max >= 0 then 0 end as kdn_form_salary_max,
+         case when m.contract_term_months >= 60 then 60
+              when m.contract_term_months >= 48 then 48
+              when m.contract_term_months >= 36 then 36
+              when m.contract_term_months >= 24 then 24
+              when m.contract_term_months >= 18 then 18
+              when m.contract_term_months >= 12 then 12
+              when m.contract_term_months >= 9 then 9
+              when m.contract_term_months >= 6 then 6
+              when m.contract_term_months >= 3 then 3
+              when m.contract_term_months >= 0 then 0 end as contract_term_months,
+    count(*) as con_cnt, count(distinct cc.contract_id) as con_dist_cnt, -- проверка - если эти два поля равны, значит выборка верна
+    round(sum(cc.max_debt_used)/1000000) as sales_mln, -- продажи
+    sum(cc.max_debt_used) as sales, -- продажи
+    count(distinct case when n.is_del_60_plus = 1 then cc.contract_number end) /
+            count(distinct cc.contract_number) as del_rate_60_plus_quant
+from M_TMP_J_K5 k
+join M_FOLDER_CON_MINER m on m.contract_number = k.deal_number
+join V_CONTRACT_CAL cc on cc.contract_number = k.deal_number
+join M_TMP_J_CON_DEL_PLUS n on n.contract_number = cc.contract_number
+where cc.yy_mm_start_last like '2013%' and
+      m.contract_term_months is not null and
+      cc.product_start_last in (--'КН','КН-15','КНП',
+                            'ТК')
+--group by round(k.kdn_form_salary_max/10)*10,
+--        round(m.contract_term_months/3)*3
+group by case when k.kdn_form_salary_max >= 200 then 200
+              when k.kdn_form_salary_max >= 150 then 150
+              when k.kdn_form_salary_max >= 100 then 100
+              when k.kdn_form_salary_max >= 90 then 90
+              when k.kdn_form_salary_max >= 80 then 80
+              when k.kdn_form_salary_max >= 70 then 70
+              when k.kdn_form_salary_max >= 60 then 60
+              when k.kdn_form_salary_max >= 50 then 50
+              when k.kdn_form_salary_max >= 40 then 40
+              when k.kdn_form_salary_max >= 30 then 30
+              when k.kdn_form_salary_max >= 20 then 20
+              when k.kdn_form_salary_max >= 10 then 10
+              when k.kdn_form_salary_max >= 0 then 0 end,
+         case when m.contract_term_months >= 60 then 60
+              when m.contract_term_months >= 48 then 48
+              when m.contract_term_months >= 36 then 36
+              when m.contract_term_months >= 24 then 24
+              when m.contract_term_months >= 18 then 18
+              when m.contract_term_months >= 12 then 12
+              when m.contract_term_months >= 9 then 9
+              when m.contract_term_months >= 6 then 6
+              when m.contract_term_months >= 3 then 3
+              when m.contract_term_months >= 0 then 0 end
+having sum(cc.max_debt_used) > 0;
+grant select on U1.M_TMP_J_KDN_TK to LOADDB;
+grant select on U1.M_TMP_J_KDN_TK to LOADER;
+
+

@@ -1,0 +1,231 @@
+﻿create materialized view U1.V_CONTRACT_ALL_RFO_PRE2
+build deferred
+refresh complete on demand
+as
+select /*+ parallel(15) parallel_index(15) */
+    cd.id as rfo_contract_id,
+    cd.c_num_dog as contract_number,
+    cd.c_client_ref as rfo_client_id,
+    cast (0 as number) as is_card,
+    fd.c_doc_date as contract_date,
+    sd.c_code as contract_status_code,
+    upper(sd.c_name) as contract_status_name,
+    pr.c_code as cr_program_code,
+    upper(pr.c_name) as cr_program_name,
+    decode(cd.c_info_cred#type_cred#0,
+        1, 'ДЕНЬГИ',
+        2, 'ТОВАРЫ',
+        3, 'УСЛУГИ',
+        4, 'ИМЕННАЯ КАРТА',
+        5, 'АВТО',
+        'НЕ ОПРЕДЕЛЕН'
+        ) as credit_type_of_contract,
+    decode(cs.c_type_cred#0,
+        1, 'ДЕНЬГИ',
+        2, 'ТОВАРЫ',
+        3, 'УСЛУГИ',
+        4, 'ИМЕННАЯ КАРТА', -- не встречается
+        5, 'АВТО',
+        'НЕ ОПРЕДЕЛЕН'      -- не встречается
+        ) as credit_type_of_scheme,
+    cs.c_code as cr_scheme_code,
+    upper(cs.c_name) as cr_scheme_name,
+    ud.c_code as tariff_plan_code, --- получить через карточный договор и папку
+    upper(ud.c_name) as tariff_plan_name,
+    pcd.c_num_dog as gu_contract_num,
+    cd_aa.is_aa_approved,
+    upper(cd_aa.auto_calc_result) as auto_calc_result,
+    trunc(cd.c_date_begin) as date_begin,
+    cast(null as date) as set_revolving_date,
+    sh.id as shop_id,
+    sh.c_code as shop_code,
+    upper(sh.c_address#place) as shop_place,
+    fld.id as folder_id,
+    cd.c_info_cred#summa_cred_com as contract_amount,
+    cast(null as number) as wish_pay_sum,
+    case when sd.c_code = 'RFO_CLOSE' then 1 -- СЛУЖЕБНОЕ
+         when sd.c_code in ('CANCEL','PREPARE') then 0 --ОТКАЗ, ПОДГОТОВКА
+         else 1 end as
+    is_credit_issued,
+    cast(null as VARCHAR2(300)) as gu_version,
+    cast(null as DATE) as gu_sign_date,
+    cast(null as DATE) as gu_date,
+    cd.c_kas_add_prop as kas_add_prop,
+/*            CASE WHEN upper(sd.c_name) in (
+            'АКТИВНЫЙ',
+            'ЗАКРЫТ',
+            'ЗС НА ПРОСРОЧКЕ',
+            'ЗС РАБОТАЕТ',
+            'КС НА ПРОСРОЧКЕ',
+            'КС РАБОТАЕТ',
+            'ПОГАШЕН ДОСРОЧНО',
+            'ПОДПИСАН',
+            'ПОМЕЧЕН К ЗАКРЫТИЮ',
+            'ПРОСРОЧЕННЫЙ',
+            'РАБОТАЕТ',
+            'РАСТОРГНУТ') then 1 else 0 end as
+    is_credit_issued */
+
+    cd.c_info_cred#term_cred#quant as contract_term
+from
+    u1.V_RFO_Z#CREDIT_DOG cd,
+    u1.V_RFO_Z#PROPERTIES p,
+    u1.V_RFO_Z#CRED_SCHEME cs,
+    u1.V_RFO_z#PROD_PROPERTY pr,
+    u1.V_RFO_Z#PROPERTY_GRP gr,
+    u1.V_RFO_Z#KAS_PC_DOG pcd,
+    u1.V_RFO_Z#STATUS_DOG sd,
+    u1.V_RFO_Z#FDOC fd,
+    u1.V_RFO_Z#RDOC rd,
+    u1.V_RFO_Z#FOLDERS fld,
+    u1.V_RFO_Z#KAS_UNIVERSAL_D ud,
+    (select c.id,
+          --     p.c_str as auto_calc_result
+          case when p.c_str like '%Обход проверки ЦПР по композиционным условиям%'
+                      or p.c_str like 'Автоматический расчет%' then 1 else 0 end as is_aa_approved,
+          case when p.c_str is null
+                    then null
+                 when p.c_str like 'АА. ПВ%Обход%'
+                    then substr(p.c_str,1,24)
+                 when p.c_str like 'Автоматический расчет - Альтернатива.%'
+                    then 'Автоматический расчет - Альтернатива'
+                 when p.c_str like 'Документ «KAS. Результат автоматического калькулятора» не создан'
+                    then 'Документ с результатом не создан'
+                 when p.c_str like 'Клиент без кредитной истории. Требуется ручной расчет%Обход%'
+                    then 'БеКИ Обход'
+                 when p.c_str like 'Клиент без кредитной истории. Требуется ручной расчет%'
+                    then 'БеКИ'
+                 when p.c_str like 'Клиент ЛК. Количество дней между датой создания папки и последним начислением превышает максимально допустимое%Обход%'
+                    then 'ЛК. Кол-во дней после начисления Обход'
+                 when p.c_str like 'Клиент ЛК. Количество дней между датой создания папки и последним начислением превышает максимально допустимое%'
+                    then 'ЛК. Кол-во дней после начисления'
+                 when p.c_str like 'Количество дней между датой создания папки и последним начислением превышает максимально допустимое%Обход%'
+                    then 'Кол-во дней после начисления Обход'
+                 when p.c_str like 'Количество дней между датой создания папки и последним начислением превышает максимально допустимое%'
+                    then 'Кол-во дней после начисления'
+                 when p.c_str like 'Количество дней между начислениями превышает максимально допустимое%Обход%'
+                    then 'Кол-во дней между начислениями Обход'
+                 when p.c_str like 'Количество дней между начислениями превышает максимально допустимое%'
+                    then 'Кол-во дней между начислениями'
+                 when p.c_str like 'Количество начислений меньше минимально допустимого%Обход%'
+                    then 'Кол-во начислений Обход'
+                 when p.c_str like 'Количество начислений меньше минимально допустимого%'
+                    then 'Кол-во начислений'
+                 when p.c_str like 'Н% удалось расчитать коэффициент для расчета категории клиента%'
+                    then 'Коэффициент'
+                 when p.c_str like 'Нет отчета ГЦВП%'
+                    then 'Нет отчета ГЦВП'
+                 when p.c_str like 'Нет %отчета ПКБ%'
+                    then 'Нет отчета ПКБ'
+                 when p.c_str like 'Отказ автоандерайтинга. Альтернатива%Обход%'
+                    then 'Отказ Альтернатива Обход'
+                 when p.c_str like 'Отказ автоандерайтинга. Альтернатива%'
+                    then 'Отказ Альтернатива'
+                 when p.c_str like 'Отказ автоандерайтинга.%Обход%'
+                    then 'Отказ Обход'
+                 when p.c_str like 'Отказ автоандерайтинга.%'
+                    then 'Отказ'
+                 when p.c_str like 'Отказ по верификации%Обход%'
+                    then 'Отказ по верификации Обход'
+                 when p.c_str like 'Отказ по верификации%'
+                    then 'Отказ по верификации'
+                 when p.c_str like 'По ПКБ есть действующие%требуется ручной%'
+                    then 'По ПКБ есть действующие договора'
+                 when p.c_str like '%шибка%'
+                    then 'Ошибка'
+                 when p.c_str like 'Работодатель является физическим лицом%Обход%'
+                    then 'Работодатель физ лицо Обход'
+                 when p.c_str like 'Работодатель является физическим лицом%'
+                    then 'Работодатель физ лицо'
+                 when p.c_str like 'Рассчитанная сумма больше максимально разрешенной для автоматического расчета%Обход%'
+                    then 'Рассчит. сумма больше макс Обход'
+                 when p.c_str like 'Рассчитанная сумма больше максимально разрешенной для автоматического расчета%'
+                    then 'Рассчит. сумма больше макс'
+                 when p.c_str like 'Расчет не удался. Не найден подходящий срок%Обход%'
+                    then 'Не найден срок Обход'
+                 when p.c_str like 'Расчет не удался. Не найден подходящий срок%'
+                    then 'Не найден срок'
+                 when p.c_str like 'Расчитанная сумма%меньше минимальной%'
+                    then 'Рассчит. сумма меньше мин'
+                 when p.c_str like 'Сумма превышает максимально допустимую%'
+                    then 'Рассчит. сумма больше макс'
+                 when p.c_str like 'Автоматический расчет.%'
+                    then 'Автоматический расчет'
+                 when p.c_str like 'Сумма просроченных взносов превышает максимально допустимую%'
+                    then 'Сумма просрочки больше макс'
+                 when p.c_str like 'Требуется изменить срок до 39 месяцев или внести ПВ = 50%'
+                    then 'Изменить срок до 39 мес или ПВ=50%'
+                 when p.c_str like 'У клиента выявлен недопустимый класс по закрытому займу'
+                    then 'Класс по закр займу'
+                 when p.c_str like 'У клиента выявлен недопустимый класс по текущему займу'
+                    then 'Класс по тек займу'
+                 when p.c_str like 'У клиента выявлен недопустимый статус по закрытому займу'
+                    then 'Статус по закр займу'
+                 when p.c_str like 'У клиента выявлен недопустимый статус по текущему займу'
+                    then 'Статус по тек займу'
+                 when p.c_str like 'У клиента выявлена недопустимая форма расчета по закрытому займу'
+                    then 'Форма расчета по закр займу'
+                 when p.c_str like 'У клиента выявлена недопустимая форма расчета по текущему займу'
+                    then 'Форма расчета по тек займу'
+                 when p.c_str like 'У клиента есть непогашенная сумма превышающая максимально-допустимую по закрытому займу%'
+                    then 'Непогаш сумма по закр займу'
+                 when p.c_str like 'У клиента есть просрочка превышающая максимально-допустимую по закрытому займу%Обход%'
+                    then 'Посрочка по закр займу Обход'
+                 when p.c_str like 'У клиента есть просрочка превышающая максимально-допустимую по закрытому займу%'
+                    then 'Посрочка по закр займу'
+                 when p.c_str like 'У клиента есть просрочка превышающая максимально-допустимую по текущему займу%Обход%'
+                    then 'Посрочка по тек займу Обход'
+                 when p.c_str like 'У клиента есть просрочка превышающая максимально-допустимую по текущему займу%'
+                    then 'Посрочка по тек займу'
+                 when p.c_str like 'У клиента есть текущий займ (KASPI), который он не погасил в срок'
+                    then 'Непогашенный тек займ KASPI'
+                 when p.c_str like 'У клиента есть текущий займ, который он не погасил в срок%Обход%'
+                    then 'Непогашенный тек займ Обход'
+                 when p.c_str like 'У клиента есть текущий займ, который он не погасил в срок%'
+                    then 'Непогашенный тек займ'
+                 when p.c_str like 'У клиента есть текущий займ, по которому нет актуальной информации в ПКБ. Требуется ручной расчет'
+                    then 'Тек займ без актуально инфо в ПКБ'
+                 when p.c_str like 'У клиента имеется Ипотечный кредит в нашем Банке. Требуется ручной расчет%Обход%'
+                    then 'Ипотека в KASPI Обход'
+                 when p.c_str like 'У клиента имеется Ипотечный кредит в нашем Банке. Требуется ручной расчет%'
+                    then 'Ипотека в KASPI'
+                 when p.c_str like 'У Клиента наступил пенсионный возраст'
+                    then 'Пенсионный возраст'
+                 when p.c_str like 'У Клиента не заполнена дата окончания вида на жительство. Требуется ручной расчет'
+                    then 'Нет даты оконч вида на жительство'
+                 when p.c_str like 'У клиента по ПКБ-Отчету есть Заем, отсутствующий в РБО. Требуется ручной расчет'
+                    then 'По ПКБ есть займ, но нет в РБО'
+                 -- 2014-07-02 >>>
+                 when p.c_str like 'Требуется внести ПВ%'
+                    then 'Требуется внести ПВ'
+                 when p.c_str like 'АА. Не выполняются условия для предложения альтернативы.%'
+                    then 'Не выполняются условия для предл. альтернативы.'
+                 when p.c_str like 'Требуется изменить срок до % месяцев или внести ПВ = %'
+                    then 'Требуется изменить срок или внести ПВ'
+                 when p.c_str like 'Изменить срок до % мес или ПВ=%'
+                    then 'Изменить срок или ПВ'
+                 -- <<< 2014-07-02
+                 else p.c_str
+          end as auto_calc_result
+        from u1.V_RFO_Z#CREDIT_DOG c
+        join u1.V_RFO_Z#PROPERTIES p on p.COLLECTION_ID = c.c_kas_add_prop
+         and p.C_GROUP_PROP = (select pg.id from u1.V_RFO_Z#PROPERTY_GRP pg
+                where pg.c_code = 'KAS_AUTO_CALC_STATE')) cd_aa,
+        u1.V_RFO_Z#SHOPS sh
+where
+    cs.c_add_prop = p.collection_id and
+    gr.id = pr.c_group_prop and
+    gr.c_code = 'KAS_CRED_PROGRAM' and
+    p.c_prop = pr.id and
+    cs.id = cd.c_cred_scheme and
+    pcd.id(+) = cd.c_kas_pc_dog_ref and
+    fd.id = cd.id and
+    sd.id = fd.c_status_doc and
+    cs.c_kas_tp_ref = ud.id(+) and
+    cd_aa.id(+) = cd.id and
+    sh.id(+) = cd.c_shop and
+    fd.id = rd.c_doc(+) and fd.class_id = 'CREDIT_DOG' and
+    rd.collection_id = fld.c_docs(+);
+grant select on U1.V_CONTRACT_ALL_RFO_PRE2 to LOADDB;
+
+

@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_TMP_J_DEL_7
+refresh force on demand
+as
+select cc.yy_mm_start_last, d.prod_type,
+    -- ПРОВЕРКА
+    count(*) as con_cnt, count(distinct cc.contract_id) as con_dist_cnt, -- проверка - если эти два поля равны, значит выборка верна
+    -- ПРОДАЖИ
+    round(sum(cc.max_debt_used)/1000000) as sales_mln, -- продажи
+    sum(cc.max_debt_used) as sales, -- продажи
+    -- ПРОСРОЧКА
+    count(distinct case when n.is_del_60_plus = 1 then cc.contract_number end) /
+            count(distinct cc.contract_number) as del_rate_60_plus_quant
+from V_CONTRACT_CAL cc
+--join M_CONTRACT_CAL_DEL c on c.contract_number = cc.contract_number
+join V_DWH_PORTFOLIO_CURRENT d on d.deal_number = cc.contract_number
+join M_FOLDER_CON_CANCEL f on f.folder_id = cc.folder_id_first and
+                              f.contract_number = cc.contract_number
+join M_CONTRACT_CAL_DEL_PLUS n on n.contract_number = cc.contract_number
+where not exists (select null from M_FOLDER_CON_CANCEL f
+                  where f.folder_id = cc.folder_id_first and f.is_refin = 1) and
+      cc.is_refin_restruct_first != 1 and
+      d.prod_type in (
+          'КРЕДИТ НАЛИЧНЫМИ',
+          'КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ',
+          'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ',
+          'ЛУЧШИЙ КЛИЕНТ НАЛИЧНЫМИ',
+          'ОСОБЕННЫЙ КЛИЕНТ - КН',
+          'ОСОБЕННЫЙ КЛИЕНТ -КН 15',
+          'ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ',
+          'ЭКСПРЕСС-КРЕДИТЫ (ДЕНЬГИ)'
+      ) --and (cc.yy_mm_start_last >= '2014 - 01' and cc.yy_mm_start_last <= '2014 - 06')
+group by cc.yy_mm_start_last, d.prod_type
+having sum(cc.max_debt_used) > 0;
+grant select on U1.M_TMP_J_DEL_7 to LOADDB;
+grant select on U1.M_TMP_J_DEL_7 to LOADER;
+
+

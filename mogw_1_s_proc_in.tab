@@ -1,0 +1,21 @@
+﻿create table U1.MOGW_1_S_PROC_IN
+(
+  id   NUMBER not null,
+  name VARCHAR2(256) not null
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MOGW_1_S_PROC_IN to LOADDB;
+grant select on U1.MOGW_1_S_PROC_IN to LOADER;
+

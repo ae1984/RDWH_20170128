@@ -1,0 +1,75 @@
+﻿create materialized view U1.M_RBO_CRED_LIM_CASE_FIN2
+build deferred
+refresh force on demand
+as
+with dat as
+
+(select /*+parallel(1)*/
+                    rep_date,
+                    rp.rbo_Client_id,
+                    case
+                         when cbT.Rbo_Contract_Id is not null and cbD.Rbo_Contract_Id is null then 'only TK'
+                         when cbT.Rbo_Contract_Id is null and cbD.Rbo_Contract_Id is not null then 'only KN'
+                         else 'Card' end as prod,
+                    sum(rp.total_debt) as tot_debt,
+                    count(1) as num_active_credits,
+                    sum(nvl(p.pmt_avg,0))+ sum(nvl(p1.pmt_avg_10,0)) as tot_pmt_active_con
+                    from u1.t_rbo_port rp
+
+                         join u1.m_rbo_contract_bas cb on rp.rbo_contract_id = cb.rbo_contract_id and cb.cred_program_code not in ('GU_AVTO','GU_AVTO_BU','AUTO','GU_AVTO_REF','GU_AVTO_ZALOG')
+                    left join u1.m_rbo_contract_bas cbT on rp.rbo_contract_id = cbT.rbo_contract_id and cbT.product_type in ('ТОВАРЫ')
+                    left join u1.m_rbo_contract_bas cbD on rp.rbo_contract_id = cbD.rbo_contract_id and cbD.product_type in ('ДЕНЬГИ')
+                    left join u1.m_rbo_contract_bas cbK on rp.rbo_contract_id = cbK.rbo_contract_id and cbK.product_type in ('КАРТЫ')
+                    left join u1.m_rbo_contract_credit_pmt p on cb.rbo_contract_id = p.rbo_contract_id
+                    left join u1.m_rbo_contract_card_pmt p1 on cb.rbo_contract_id = p1.rbo_contract_id and rp.rep_date>= p1.date_begin and rp.rep_date <p1.date_end
+                    where rep_date = trunc(sysdate-1)
+                    group by
+                          rep_date,
+                          rp.rbo_Client_id,
+
+                               case
+                               when cbT.Rbo_Contract_Id is not null and cbD.Rbo_Contract_Id is null then 'only TK'
+                               when cbT.Rbo_Contract_Id is null and cbD.Rbo_Contract_Id is not null then 'only KN'
+                               else 'Card' end)
+select /*+parallel(1)*/
+       cl.rfo_client_id,
+
+
+case when ta1.rbo_client_id is not null and ta2.rbo_client_id is not null and ta3.rbo_client_id is not null then 'TK - KN - KK'
+     when ta1.rbo_client_id is not null and ta2.rbo_client_id is not null then 'TK - KN'
+     when ta1.rbo_client_id is not null and ta3.rbo_client_id is not null then 'TK - KK'
+     when ta1.rbo_client_id is not null then 'TK'
+     when ta2.rbo_client_id is not null and ta3.rbo_client_id is not null then 'KN - KK'
+     when ta2.rbo_client_id is not null then 'KN'
+     when ta3.rbo_client_id is not null then 'KK'
+     else 'NONE' end as prod_type,
+
+     nvl(ta1.num_active_credits,0)+nvl(ta2.num_active_credits,0)+nvl(ta3.num_active_credits,0) as NUM_ACTIVE_CREDITS
+     ,ta1.num_active_credits as NUM_ACTIVE_TK
+     ,ta2.num_active_credits as NUM_ACTIVE_KN
+     ,ta3.num_active_credits as NUM_ACTIVE_KK,
+     nvl(ta1.tot_debt,0) +nvl(ta2.tot_debt,0)+nvl(ta3.tot_debt,0) as total_debt_cli,
+     nvl(ta1.tot_pmt_active_con,0) +nvl(ta2.tot_pmt_active_con,0)+nvl(ta3.tot_pmt_active_con,0) as total_pmt_cli
+     ,ta1.tot_debt as tot_debt_tk
+     ,ta2.tot_debt as tot_debt_kn
+     ,ta3.tot_debt as tot_debt_kk
+     ,ta1.tot_pmt_active_con as pmt_tk
+     ,ta2.tot_pmt_active_con as pmt_kn
+     ,ta3.tot_pmt_active_con as pmt_kk
+
+
+
+  from  u1.m_client_link  cl
+  left join dat ta1 on ta1.rbo_client_id = cl.rbo_client_id
+
+                  and ta1.prod = 'only TK'
+  left join dat ta2 on ta2.rbo_client_id = cl.rbo_client_id
+
+                     and ta2.prod ='only KN'
+
+  left join dat ta3 on ta3.rbo_client_id = cl.rbo_client_id
+
+                  and ta3.prod ='Card';
+grant select on U1.M_RBO_CRED_LIM_CASE_FIN2 to LOADDB;
+
+

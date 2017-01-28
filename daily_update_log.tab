@@ -1,0 +1,56 @@
+﻿create table U1.DAILY_UPDATE_LOG
+(
+  id          NUMBER(32) not null,
+  process     VARCHAR2(500),
+  p_begin     TIMESTAMP(6),
+  p_end       TIMESTAMP(6),
+  p_detail    VARCHAR2(4000),
+  p_total_min VARCHAR2(10),
+  p_status    VARCHAR2(50),
+  p_date      DATE not null,
+  proc_type   VARCHAR2(50)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on column U1.DAILY_UPDATE_LOG.process
+  is 'Наименование процесса обновления данных';
+comment on column U1.DAILY_UPDATE_LOG.p_begin
+  is 'Время начала процесса';
+comment on column U1.DAILY_UPDATE_LOG.p_end
+  is 'Время окончания процесса';
+comment on column U1.DAILY_UPDATE_LOG.p_detail
+  is 'Детализация процесса обновления данных';
+comment on column U1.DAILY_UPDATE_LOG.p_total_min
+  is 'Сколько минут занял процесс';
+comment on column U1.DAILY_UPDATE_LOG.p_status
+  is 'Текущий статус процесса';
+comment on column U1.DAILY_UPDATE_LOG.p_date
+  is 'Дата (день!)';
+alter table U1.DAILY_UPDATE_LOG
+  add constraint DAILY_UPDATE_LOG_PK primary key (ID)
+  using index 
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.DAILY_UPDATE_LOG_PK nologging;
+grant select on U1.DAILY_UPDATE_LOG to LOADDB;
+grant select on U1.DAILY_UPDATE_LOG to LOADER;
+

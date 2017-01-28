@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_TMP_J_FC_FIELDS_6
+refresh complete on demand
+as
+select to_char(f.folder_date_create_mi,'yyyy') as year, to_char(f.folder_date_create_mi,'yyyy-mm') as mon,
+       to_char(f.folder_date_create_mi,'yyyy-mm-dd') as day,
+       f.cr_program_name, f.is_credit_issued, f.is_client_new_by_con,
+       case when m.cli_age_based_on_fld = 0 then 'ПЕРВАЯ ЗАЯВКА' else 'НЕ ПЕРВАЯ ЗАЯВКА' end as is_client_new_by_fld,
+       fc.is_auto_exists,
+       case when a.auto_count > 0 then 'АВТО ГАИ ЕСТЬ' else 'АВТО ГАИ НЕТ' end as is_auto_gai_exists,
+       ---
+       count(*) as cnt,
+       count(distinct f.rfo_contract_id) as cnt_rfo_con,
+       sum(d.max_debt_used_x) / 1000000 as sales_mln,
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_mln
+from M_FOLDER_CON_CANCEL f
+join M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = f.form_client_id
+left join V_RFO_Z#FORM_CLIENT fc2 on fc2.id = f.form_client_id
+left join M_AUTO_IIN_INFO a on a.iin = f.iin
+left join M_FOLDER_CON_MINER m on m.rfo_contract_id = f.rfo_contract_id
+where to_char(f.folder_date_create_mi,'yyyy') in ('2014','2015')
+group by to_char(f.folder_date_create_mi,'yyyy'), to_char(f.folder_date_create_mi,'yyyy-mm'),
+         to_char(f.folder_date_create_mi,'yyyy-mm-dd'),
+         f.cr_program_name, f.is_credit_issued, f.is_client_new_by_con,
+         case when m.cli_age_based_on_fld = 0 then 'ПЕРВАЯ ЗАЯВКА' else 'НЕ ПЕРВАЯ ЗАЯВКА' end,
+         fc.is_auto_exists,
+         case when a.auto_count > 0 then 'АВТО ГАИ ЕСТЬ' else 'АВТО ГАИ НЕТ' end;
+grant select on U1.M_TMP_J_FC_FIELDS_6 to LOADDB;
+grant select on U1.M_TMP_J_FC_FIELDS_6 to LOADER;
+
+

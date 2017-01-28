@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_OUT_DWH_SCHEMA
+refresh complete on demand
+as
+select s.id,
+       cast (s.close_time as date) as close_time,
+       cast (s.open_time as date) as open_time,
+       s.schema_result,
+       s.schema_type,
+       s.script_name,
+       s.contact_id,
+       s.process_id,
+       cast (s.portition_date as date) as portition_date,
+       result_reason
+  from verificator.OUT_DWH_SCHEMA@verifais s;
+grant select on U1.M_OUT_DWH_SCHEMA to LOADDB;
+grant select on U1.M_OUT_DWH_SCHEMA to LOADER;
+grant select on U1.M_OUT_DWH_SCHEMA to RISK_VERIF;
+
+

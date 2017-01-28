@@ -1,0 +1,137 @@
+﻿create table U1.T_RFO_Z#MAIN_DOCUM
+(
+  id                           NUMBER not null,
+  c_date_val                   DATE,
+  c_summa                      NUMBER(17,2),
+  c_sum_po                     NUMBER(17,2),
+  c_sum_nt                     NUMBER(17,2),
+  c_acc_dt                     VARCHAR2(25 CHAR),
+  c_acc_kt                     VARCHAR2(25 CHAR),
+  c_bic_bank_dt                VARCHAR2(9 CHAR),
+  c_acc_bank_dt                VARCHAR2(25 CHAR),
+  c_name_dt                    VARCHAR2(255 CHAR),
+  c_bic_bank_kt                VARCHAR2(9 CHAR),
+  c_acc_bank_kt                VARCHAR2(25 CHAR),
+  c_name_kt                    VARCHAR2(255 CHAR),
+  c_cash_plan_symb             NUMBER(3),
+  c_nazn                       VARCHAR2(2000 CHAR),
+  c_kod_nazn_pay               VARCHAR2(16 CHAR),
+  c_type_main_doc              NUMBER,
+  c_rnn_dt                     VARCHAR2(12 CHAR),
+  c_rnn_kt                     VARCHAR2(12 CHAR),
+  c_code_remitt                NUMBER,
+  c_code_benefic               NUMBER,
+  c_filial                     VARCHAR2(160 CHAR),
+  c_valuta                     NUMBER,
+  c_num_dog                    VARCHAR2(100 CHAR),
+  c_bank_benef_name            VARCHAR2(255 CHAR),
+  c_certificate_kt#type        NUMBER,
+  c_certificate_kt#num         VARCHAR2(20 CHAR),
+  c_certificate_kt#seria       VARCHAR2(16 CHAR),
+  c_certificate_kt#who         VARCHAR2(128 CHAR),
+  c_certificate_kt#date_doc    DATE,
+  c_certificate_kt#place       VARCHAR2(128 CHAR),
+  c_certificate_kt#date_end    DATE,
+  c_certificate_kt#depart_code VARCHAR2(15 CHAR),
+  c_certificate_dt#type        NUMBER,
+  c_certificate_dt#num         VARCHAR2(20 CHAR),
+  c_certificate_dt#seria       VARCHAR2(16 CHAR),
+  c_certificate_dt#who         VARCHAR2(128 CHAR),
+  c_certificate_dt#date_doc    DATE,
+  c_certificate_dt#place       VARCHAR2(128 CHAR),
+  c_certificate_dt#date_end    DATE,
+  c_certificate_dt#depart_code VARCHAR2(15 CHAR),
+  c_kas_doc_id_ext             VARCHAR2(128 CHAR),
+  c_kas_acc_bal_dt             VARCHAR2(10 CHAR),
+  c_kas_acc_bal_kt             VARCHAR2(10 CHAR),
+  c_kas_add_props              NUMBER,
+  sn                           NUMBER,
+  su                           NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RFO_Z#MAIN_DOCUM
+  is 'Платежный документ';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_date_val
+  is 'Дата валютирования';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_summa
+  is 'Сумма ДТ';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_sum_po
+  is 'Сумма КТ';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_sum_nt
+  is 'Сумма НП';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_acc_dt
+  is 'Счет для проводки ДТ';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_acc_kt
+  is 'Счет для проводки КТ';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_bic_bank_dt
+  is 'БИК Банка ДТ';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_acc_bank_dt
+  is 'Счет Банка ДТ';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_name_dt
+  is 'Наименование плательщика';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_bic_bank_kt
+  is 'БИК Банка КТ';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_acc_bank_kt
+  is 'Счет Банка КТ';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_name_kt
+  is 'Наименование получателя';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_cash_plan_symb
+  is 'Символ кассового плана';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_nazn
+  is 'Назначение платежа';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_kod_nazn_pay
+  is 'Код назначения платежа';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_type_main_doc
+  is 'Вид документа(FK на Z#TYPE_MAIN_DOCUM)';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_rnn_dt
+  is 'РНН плательщика';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_rnn_kt
+  is 'РНН получателя';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_code_remitt
+  is 'КОд';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_code_benefic
+  is 'КБе';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_filial
+  is 'Филиал';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_valuta
+  is 'Валюта(FK на Z#FT_MONEY)';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_num_dog
+  is 'Номер для договоров';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_bank_benef_name
+  is 'Наименование банка бенефициара';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_kas_doc_id_ext
+  is 'KAS. ID платежного документа в бэк';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_kas_acc_bal_dt
+  is 'KAS. Балансовый счет дебета';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_kas_acc_bal_kt
+  is 'KAS. Балансовый счет кредита';
+comment on column U1.T_RFO_Z#MAIN_DOCUM.c_kas_add_props
+  is 'KAS. Дополнительные свойства(COLLECTION в Z#PROPERTIES)';
+create unique index U1.T_RFO_Z#MAIN_DOCUM_IND1 on U1.T_RFO_Z#MAIN_DOCUM (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#MAIN_DOCUM
+  add constraint T_RFO_Z#MAIN_DOCUM_PK primary key (ID);
+grant select on U1.T_RFO_Z#MAIN_DOCUM to LOADDB;
+

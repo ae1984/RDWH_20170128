@@ -1,0 +1,25 @@
+﻿create materialized view U1.V_TRANSPORT_INS_GPO
+using no index
+refresh complete on demand
+as
+select
+  tg.collection_id as gpo_transports_id,
+  tg.id as tran_id,
+  t.c_vin as vin,
+  t.c_model as model,
+  upper(tg.c_kas_model_str) as model_desc,
+  tg.c_size_d as engine_volume,
+  upper(tg.c_color) as color,
+  t.c_years as prod_year
+from V_RFO_Z#KAS_TRANSP_GPO tg
+left join V_RFO_Z#TRANSPORT_BODY tb on tb.id = tg.c_type_k
+left join V_RFO_Z#TRANSPORT t on t.id = tg.id
+left join V_RFO_Z#TRANSPORT_MODEL tm on tm.id = t.c_model_ref
+--left join V_RFO_Z#TRANSPORT_BRAND tb on tb.id = tm.c_brand--  t.c_brand_ref
+--left join V_RFO_Z#TRANSPORT_PROD tp on tp.id = tg.m.c_production_ref
+--left join v_Rfo_Z#transport_Prod tp on tp.id = tg.
+--where t.id = 8056413156;
+grant select on U1.V_TRANSPORT_INS_GPO to LOADDB;
+grant select on U1.V_TRANSPORT_INS_GPO to LOADER;
+
+

@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_TMP_J_DEL_3_EKT
+refresh force on demand
+as
+select c.yy_mm_start_last,
+    -- ПРОВЕРКА
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt, -- проверка - если эти два поля равны, значит выборка верна
+    -- ПРОДАЖИ
+    round(sum(c.max_debt_used)/1000000) as sales_mln, -- продажи
+    sum(c.max_debt_used) as sales, -- продажи
+    -- ПРОСРОЧКА
+    round(sum(c.delinq_rate_b_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b_w, -- USE THIS! - просрочка всего по-новому --- ДЛЯ ОТЧЕТА!!!!!!!!
+    round(count(distinct case when c.is_bad = 1 then c.contract_id end)/
+                      count(distinct c.contract_id) * 100,1) as del_rate_b_w_by_quant, -- USE THIS! - просрочка всего по-новому --- ДЛЯ ОТЧЕТА!!!!!!!! (на будущее)
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate, -- просрочка всего по-старому
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1, -- USE THIS! - просрочка 1-го платежа
+    round(sum(c.delinq_rate_pmt_1_45 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1_45, -- USE THIS! - просрочка 1-го платежа
+    round(sum(c.delinq_rate_npl * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_npl -- USE THIS! - просрочка по NPL (>=90 days)
+from M_CONTRACT_CAL_DEL c
+join V_CONTRACT_CAL cc on cc.contract_number = c.contract_number and
+     cc.is_refin_restruct_first != 1
+where not exists (select null from M_FOLDER_CON_CANCEL f
+                  where f.folder_id = c.folder_id_first and f.is_refin = 1) and
+      cc.product_first = 'ТК'
+group by c.yy_mm_start_last
+having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_J_DEL_3_EKT to LOADDB;
+grant select on U1.M_TMP_J_DEL_3_EKT to LOADER;
+
+

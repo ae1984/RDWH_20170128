@@ -1,0 +1,39 @@
+﻿create materialized view U1.M_RBO_OPER_EXCH
+build deferred
+refresh force on demand
+as
+select md.id as main_doc_id,
+       md.C_DOCUMENT_NUM as documnet_num,
+       u.c_name as expert_name,
+       md.c_date_prov as date_prov,
+       md.c_ASTR_DATE_PROV as ASTR_DATE_PROV,
+       md.c_quit_doc as quit_doc,
+       af.c_name as acc_dt ,
+       af2.c_name as acc_kt,
+       p1.c_num as nps_dt,
+       p2.c_num as nps_kt,
+       md.c_valuta as valuta,
+       md.C_TYPE_MESS as TYPE_MESS,
+       pd.c_name as PAYDOC_name,
+       d.depart_code,
+       d.depart_name,
+       d.x_dnp_name,
+       md.c_sum_po as summ,
+       md.c_nazn as nazn,
+       case when regexp_like(md.c_nazn,'RUR') then 'RUR'
+            when regexp_like(md.c_nazn,'USD') then 'USD'
+            when regexp_like(md.c_nazn,'EUR') then 'EUR'
+       end as currency
+from T_RBO_Z#MAIN_DOCUM_EXCH2 md
+left join v_rbo_Z#NAME_PAYDOC pd on pd.id = md.C_VID_DOC
+left join V_RBO_Z#USER u on md.c_PROV_USER = u.id
+left join V_RBO_Z#AC_FIN af on af.id = md.c_acc_dt
+left join V_RBO_Z#AC_FIN af2 on af2.id = md.c_acc_kt
+left join V_RBO_Z#PL_USV p1 on p1.id = af.c_main_usv
+left join V_RBO_Z#PL_USV p2 on p2.id = af2.c_main_usv
+left join M_RBO_DEPART  d on d.depart_id = md.c_depart
+where md.c_quit_doc is null;
+grant select on U1.M_RBO_OPER_EXCH to LOADDB;
+grant select on U1.M_RBO_OPER_EXCH to LOADER;
+
+

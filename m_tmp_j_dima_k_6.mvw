@@ -1,0 +1,34 @@
+﻿create materialized view U1.M_TMP_J_DIMA_K_6
+refresh force on demand
+as
+select yy_mm_report,
+       count(distinct client_id) as cli_all_cnt,
+       count(distinct case when contract_cnt_by_cli_in_mon in (1) then client_id end) as cli_con_1_cnt,
+       count(distinct case when contract_cnt_by_cli_in_mon in (2) then client_id end) as cli_con_2_cnt,
+       count(distinct case when contract_cnt_by_cli_in_mon in (3) then client_id end) as cli_con_3_cnt,
+       count(distinct case when contract_cnt_by_cli_in_mon in (4) then client_id end) as cli_con_4_cnt,
+--       count(distinct case when contract_cnt_by_cli_in_mon in (5) then client_id end) as cli_con_5_cnt,
+       count(distinct case when contract_cnt_by_cli_in_mon >= 5 then client_id end) as cli_con_5_more_cnt,
+
+       count(distinct case when contract_cnt_by_cli_in_mon in (1) and coalesce(delinq_days,0) <= 90 then client_id end) as cli_con_1_not_npl_cnt,
+       count(distinct case when contract_cnt_by_cli_in_mon in (2) and coalesce(delinq_days,0) <= 90 then client_id end) as cli_con_2_not_npl_cnt,
+       count(distinct case when contract_cnt_by_cli_in_mon in (3) and coalesce(delinq_days,0) <= 90 then client_id end) as cli_con_3_not_npl_cnt,
+       count(distinct case when contract_cnt_by_cli_in_mon in (4) and coalesce(delinq_days,0) <= 90 then client_id end) as cli_con_4_not_npl_cnt,
+--       count(distinct case when contract_cnt_by_cli_in_mon in (5) and coalesce(delinq_days,0) <= 90 then client_id end) as cli_con_5_not_npl_cnt,
+       count(distinct case when contract_cnt_by_cli_in_mon >= 5 and coalesce(delinq_days,0) <= 90 then client_id end) as cli_con_5_more_not_npl_cnt,
+       count(distinct case when delinq_days > 90 then client_id end) as cli_npl_cnt,
+
+       count(distinct case when coalesce(delinq_days,0) = 0 then client_id end) as cli_no_del_cnt
+from (
+  select a.yy_mm_report, a.client_id,
+         count(distinct a.contract_no) as contract_cnt_by_cli_in_mon,
+         max(a.delinq_days) as delinq_days
+  from v_data_all a
+  where a.yy_mm_report_date >= to_date('01.12.2010','dd.mm.yyyy') and
+        a.contract_amount > 0 --and a.total_debt > 0
+  group by a.yy_mm_report, a.client_id
+) group by yy_mm_report;
+grant select on U1.M_TMP_J_DIMA_K_6 to LOADDB;
+grant select on U1.M_TMP_J_DIMA_K_6 to LOADER;
+
+

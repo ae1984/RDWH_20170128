@@ -1,0 +1,108 @@
+﻿create materialized view U1.M_CRED_PREPARE_30D
+build deferred
+refresh complete on demand
+as
+select/*+ parallel(1)*/ *
+from (
+select cd.id                     as con_num,
+       cd.c_client_ref           as client_id,
+       fld.id                    as folder_id,
+       cd.c_info_cred#summa_cred cred_sum,
+       cd.c_date_begin,
+       sd.c_code                 as st_dog_code,
+       cmpt.c_code               as cm_point_code,
+       cmpt.c_priority           as cm_point_pri,
+       pr.c_code                 as cr_program_code,
+       cmch.c_date_create as folder_date_create
+  from u1.V_RFO_Z#CREDIT_DOG cd
+  join u1.V_RFO_Z#CRED_SCHEME cs
+    on cs.id = cd.c_cred_scheme
+  join u1.V_RFO_Z#PROPERTIES p
+    on cs.c_add_prop = p.collection_id
+  join u1.V_RFO_z#PROD_PROPERTY pr
+    on p.c_prop = pr.id
+  join u1.V_RFO_Z#FDOC fd
+    on fd.id = cd.id
+  join u1.V_RFO_Z#STATUS_DOG sd
+    on sd.id = fd.c_status_doc
+  join u1.V_RFO_Z#FDOC fd
+    on fd.id = cd.id
+  join u1.V_RFO_Z#RDOC rd
+    on rd.c_doc = fd.id
+  join u1.V_RFO_Z#FOLDERS fld
+    on fld.c_docs = rd.collection_id
+  join V_RFO_Z#CM_CHECKPOINT cmch
+    on cmch.ID = fld.ID
+  join u1.V_RFO_Z#CM_POINT cmpt
+    on cmpt.ID = cmch.C_POINT
+ where cd.c_date_begin > trunc(sysdate) - 30
+   and sd.c_code = 'PREPARE'
+   and cmpt.c_code not like '%CANCEL%'
+   and cmpt.c_code not like '%FAILED%'
+   and cmpt.c_code not like '%EXPIRE%'
+   and cmpt.c_code not like '%ERR_CREATE_CLIENT_B%'
+   and cmpt.c_code not like '%ERR_CREATE_DOG_B%'
+
+union all
+
+select pd.id             as con_num,
+       pd.c_client_ref   as client_id,
+       fld.id            as folder_id,
+       pd.c_credit_limit as cred_sum,
+       pd.c_date_begin,
+       sdc.c_code        as st_dog_code,
+       cmpt.c_code       as cm_point_code,
+       cmpt.c_priority   as cm_point_pri,
+       pr.c_code         as cr_program_code,
+       cmch.c_date_create as folder_date_create
+  from u1.V_RFO_Z#KAS_PC_DOG pd
+  join u1.V_RFO_Z#KAS_CARD_SCHEME cs
+    on cs.id = pd.c_pc_scheme
+  join V_RFO_Z#PROPERTIES p
+    on cs.c_add_prop = p.collection_id
+  join u1.V_RFO_z#PROD_PROPERTY pr
+    on p.c_prop = pr.id
+  join u1.V_RFO_Z#PROPERTY_GRP gr
+    on gr.c_code = 'KAS_CRED_PROGRAM'
+  join u1.V_RFO_Z#KAS_UNIVERSAL_D ud
+    on pd.c_tariff_plan = ud.id
+  join u1.V_RFO_Z#FDOC fd
+    on fd.id = pd.id
+  join u1.V_RFO_Z#RDOC rd
+    on rd.c_doc = fd.id
+  join u1.V_RFO_Z#FOLDERS fld
+    on fld.c_docs = rd.collection_id
+  join V_RFO_Z#CM_CHECKPOINT cmch
+    on cmch.ID = fld.ID
+  join u1.V_RFO_Z#CM_POINT cmpt
+    on cmpt.ID = cmch.C_POINT
+  join u1.V_RFO_Z#BUS_PROCESS bp
+    on bp.id = fld.c_business
+  join u1.V_RFO_Z#STATUS_DOG sdc
+    on sdc.id = fd.c_status_doc
+ where pd.c_date_begin > trunc(sysdate) - 30
+   and sdc.c_code = 'PREPARE'
+   and cmpt.c_code not like '%CANCEL%'
+   and cmpt.c_code not like '%FAILED%'
+   and cmpt.c_code not like '%EXPIRE%'
+   and cmpt.c_code not like '%ERR_CREATE_CLIENT_B%'
+   and cmpt.c_code not like '%ERR_CREATE_DOG_B%'
+   and bp.c_code in ('OPEN_CRED_PRIV_PC',
+                     'KAS_AUTO_CRED_PRIV_PC',
+                     'KAS_CREDIT_CASH_PRIV_PC',
+                     'SET_REVOLV',
+                     'KAS_OPEN_CRED_PRIV_MIN',
+                     'KAS_AUTO_CRED_PRIV',
+                     'OPEN_PC',
+                     'KAS_CREDIT_CASH_PRIV',
+                     'OPEN_CRED_PRIV',
+                     'OPEN_TRANSH',
+                     'OPEN_CRED_PRIV_CRL',
+                     'OPEN_CRED_PRIV_OLD',
+                     'ONLINE_CRED')
+);
+grant select on U1.M_CRED_PREPARE_30D to LOADDB;
+grant select on U1.M_CRED_PREPARE_30D to LOADER;
+grant select on U1.M_CRED_PREPARE_30D to LOAD_MO;
+
+

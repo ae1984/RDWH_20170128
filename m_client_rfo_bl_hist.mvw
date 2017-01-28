@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_CLIENT_RFO_BL_HIST
+refresh force on demand
+as
+select cl.client_id,
+       bl.iin,
+       bl.add_date,
+       bl.delete_date
+from
+    (select t.c_inn iin,
+           min(t.c_date_add) add_date,
+           null delete_date
+    from v_rfo_z#black_list_cl t
+    where t.c_inn is not null
+    group by t.c_inn, t.c_date_add
+
+    union all
+    select t.c_inn iin,
+           t.c_date_add add_date,
+           t.c_date_delete delete_date
+    from V_RFO_Z#KAS_BLACK_LIST_D t
+    where t.c_inn is not null and t.c_date_delete is not null
+    group by t.c_inn, t.c_date_add, t.c_date_delete) bl
+join m_client_cal_iin cl on cl.client_iin_last = bl.iin;
+grant select on U1.M_CLIENT_RFO_BL_HIST to LOADDB;
+grant select on U1.M_CLIENT_RFO_BL_HIST to LOADER;
+
+

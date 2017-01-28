@@ -1,0 +1,40 @@
+﻿create materialized view U1.M_MO_RES_SCO_CANCEL_DAY_P1X_14
+using no index
+refresh complete on demand
+as
+with
+rmx as (select t.c_folder_ref,
+               max(t.c_client_ref) as c_client_ref,
+               max(t.res_date) as res_date,
+               max(t.c_res_mo_id) keep (dense_rank last order by t.res_date) as c_res_mo_id,
+               max(t.c_result) keep (dense_rank last order by t.res_date) as c_result,
+               max(t.rfo_res_from_mo_id) keep (dense_rank last order by t.res_date) as rfo_res_from_mo_id
+        from V_MO_RES_RFO_KAS_RES_FROM_MO t
+        where t.c_folder_ref is not null and
+              t.res_date >= to_date('01012014', 'ddmmyyyy') and
+              t.res_date <  to_date('01012015', 'ddmmyyyy')
+        group by t.c_folder_ref
+)
+select
+       /*+parallel(30) parallel_index(30) */
+       r.c_folder_ref as rfo_res_folder_id,
+       r.c_client_ref as rfo_res_client_id,
+       r.res_date as rfo_res_date,
+       r.rfo_res_from_mo_id,
+       r.c_result as rfo_result,
+       c.par_code as cancel_type_code,
+       c.par_name as cancel_type_name,
+       c.is_rejecting,
+       m.scorecard_num as scorecard_num,
+        m.rfolder_id ,
+       w.process_id,
+       w.id as mogw_process_id
+from rmx r
+join MOGW_PROCESS_MO1 w on w.id = r.c_res_mo_id and
+                           trunc(w.date_start) = trunc(r.res_date)
+join M_FOLDER_MO_SCO_REQUEST_2014 m on r.c_folder_ref = m.folder_id
+join M_FOLDER_MO_CANCEL_LAST c on c.folder_id = r.c_folder_ref;
+grant select on U1.M_MO_RES_SCO_CANCEL_DAY_P1X_14 to LOADDB;
+grant select on U1.M_MO_RES_SCO_CANCEL_DAY_P1X_14 to LOADER;
+
+

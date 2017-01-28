@@ -1,0 +1,86 @@
+﻿create materialized view U1.M_APP_MINER_FORM_GUESS_PR_90DX
+build deferred
+refresh force on demand
+as
+select t.app_id,
+
+       -----90 days x
+       count(distinct case when coalesce(f2.children, 'НЕТ') != coalesce(f.children, 'НЕТ')
+                           then coalesce(f2.children, 'НЕТ') end
+            ) as dif_children_90d_pr_cnt_x, --
+
+       count(distinct case when f2.marital_status != f.marital_status
+                           then f2.marital_status end
+            ) as dif_marital_90d_pr_cnt_x, --
+
+       count(distinct case when coalesce(f2.inc_sal, 0) != coalesce(f.inc_sal, 0)
+                           then coalesce(f2.inc_sal, 0) end
+            ) as dif_inc_sal_90d_pr_cnt_x, --
+
+       count(distinct case when coalesce(f2.inc_sal_add, 0) != coalesce(f.inc_sal_add, 0)
+                           then coalesce(f2.inc_sal_add, 0) end
+            ) as dif_inc_sal_add_90d_pr_cnt_x, --
+
+       count(distinct case when coalesce(f2.inc_sal_spouse, 0) != coalesce(f.inc_sal_spouse, 0)
+                           then coalesce(f2.inc_sal_spouse, 0) end
+            ) as dif_inc_sal_sp_90d_pr_cnt_x, --
+
+       count(distinct case when coalesce(f2.inc_pension_benefits, 0) != coalesce(f.inc_pension_benefits, 0)
+                           then coalesce(f2.inc_pension_benefits, 0) end
+            ) as dif_inc_pens_90d_pr_cnt_x, --
+
+       ---
+       count(distinct case when coalesce(f2.phone_mobile, 'NA') != coalesce(f.phone_mobile, 'NA')
+                           then coalesce(f2.phone_mobile, 'NA') end
+            ) as dif_phone_mob_90d_pr_cnt_x, --
+
+       count(distinct case when coalesce(f2.phone_home, 'NA') != coalesce(f.phone_home, 'NA')
+                           then coalesce(f2.phone_home, 'NA') end
+            ) as dif_phone_home_90d_pr_cnt_x, --
+
+       count(distinct case when coalesce(f2.reg_address_city, 'NA') != coalesce(f.reg_address_city, 'NA')
+                           then coalesce(f2.reg_address_city, 'NA') end
+            ) as dif_city_reg_90d_pr_cnt_x, --
+
+       count(distinct case when coalesce(f2.fact_address_city, 'NA') != coalesce(f.fact_address_city, 'NA')
+                           then coalesce(f2.fact_address_city, 'NA') end
+            ) as dif_city_fact_90d_pr_cnt_x,
+
+       --
+       avg(f2.inc_sal) as inc_sal_avg_90d_pr_x,
+       avg(f2.inc_all) as inc_all_avg_90d_pr_x,
+
+       min(f2.inc_sal) as inc_sal_min_90d_pr_x,
+       min(f2.inc_all) as inc_all_min_90d_pr_x,
+
+       max(f2.inc_sal) as inc_sal_max_90d_pr_x,
+       max(f2.inc_all) as inc_all_max_90d_pr_x,
+
+       case when avg(f2.inc_sal) > 0 then round(max(f.inc_sal) / avg(f2.inc_sal) * 100) end as inc_sal_to_avg_90d_pr_rat_x, --
+       case when avg(f2.inc_all) > 0 then round(max(f.inc_all) / avg(f2.inc_all) * 100) end as inc_all_to_avg_90d_pr_rat_x, --
+
+       case when min(f2.inc_sal) > 0 then round(max(f.inc_sal) / min(f2.inc_sal) * 100) end as inc_sal_to_min_90d_pr_rat_x,
+       case when min(f2.inc_all) > 0 then round(max(f.inc_all) / min(f2.inc_all) * 100) end as inc_all_to_min_90d_pr_rat_x,
+
+       case when max(f2.inc_sal) > 0 then round(max(f.inc_sal) / max(f2.inc_sal) * 100) end as inc_sal_to_max_90d_pr_rat_x,
+       case when max(f2.inc_all) > 0 then round(max(f.inc_all) / max(f2.inc_all) * 100) end as inc_all_to_max_90d_pr_rat_x
+
+
+from  u1.M_APP_MINER_BAS t
+left join u1.M_APP_MINER_FORM_CLIENT f on f.app_id = t.app_id
+left join u1.M_APP_MINER_BAS t2 on t2.rfo_client_id = t.rfo_client_id
+                                   and t2.app_id != t.app_id
+                                   and t2.folder_date_create >= trunc(t.folder_date_create) - 90
+                                   and t2.folder_date_create_mi < t.folder_date_create_mi
+
+                                   and t.product_type = t2.product_type
+
+left join u1.M_APP_MINER_FORM_CLIENT f2 on f2.app_id = t2.app_id
+where t.folder_date_create >= to_date('01012015', 'ddmmyyyy')
+--and t.rfo_client_id = 22792275
+group by t.app_id
+--, x.folder_date_create_mi
+--order by x.folder_date_create_mi;
+grant select on U1.M_APP_MINER_FORM_GUESS_PR_90DX to LOADDB;
+
+

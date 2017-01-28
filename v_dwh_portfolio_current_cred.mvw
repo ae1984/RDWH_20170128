@@ -1,0 +1,11 @@
+﻿create materialized view U1.V_DWH_PORTFOLIO_CURRENT_CRED
+refresh force on demand
+as
+select p.begin_date, p.actual_end_date, p.plan_end_date
+from U1.V_DWH_PORTFOLIO_CURRENT p
+where p.prod_name not in ('КАРТА ВКЛАДЧИКА', 'ПРИВИЛЕГИРОВАННЫЙ', 'КАРТА БЕЗ ВКЛАДА', 'ЗАРПЛАТНЫЙ ПРОЕКТ', 'KASPIGOLD', 'KASPIGOLD – TAIBURYL', 'KASPIGOLD – СОТРУДНИК KASPI',
+'БЫВШИЙ ЗАРПЛАТНЫЙ ПРОЕКТ','НОВЫЙ ЗАРПЛАТНЫЙ ПРОЕКТ', 'НОВЫЙ ЗАРПЛАТНЫЙ ПРОЕКТ - TAIBURYL', 'НОВЫЙ ЗАРПЛАТНЫЙ ПРОЕКТ – СОТРУДНИК KASPI');
+grant select on U1.V_DWH_PORTFOLIO_CURRENT_CRED to LOADDB;
+grant select on U1.V_DWH_PORTFOLIO_CURRENT_CRED to LOADER;
+
+

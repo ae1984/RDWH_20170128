@@ -1,0 +1,38 @@
+﻿create table U1.T_CONTRACT_PORT_DISCOUNT_PRE
+(
+  contract_number          VARCHAR2(88),
+  rbo_contract_id          NUMBER,
+  rep_date                 DATE,
+  total_discount           NUMBER,
+  is_card                  NUMBER,
+  contract_number_discount VARCHAR2(88),
+  rbo_contract_id_discount NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.I_CONTRACT_PORT_DISCOUNT_PRE_1 on U1.T_CONTRACT_PORT_DISCOUNT_PRE (REP_DATE, RBO_CONTRACT_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_CONTRACT_PORT_DISCOUNT_PRE to LOADDB;
+

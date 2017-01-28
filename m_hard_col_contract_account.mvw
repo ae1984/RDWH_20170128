@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_HARD_COL_CONTRACT_ACCOUNT
+build deferred
+refresh force on demand
+as
+select * from DEBTCOLL.CONTRACT_ACCOUNT@HCOL;
+grant select on U1.M_HARD_COL_CONTRACT_ACCOUNT to LOADDB;
+
+

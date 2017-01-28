@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_TMP_J_FLD_SEGM_FLD
+refresh complete on demand
+as
+select --noparallel
+       f.rfo_contract_id, f.rfo_client_id
+from M_FOLDER_CON_CANCEL f
+join V_CLIENT_RFO_BY_ID c on c.rfo_client_id = f.rfo_client_id
+--join M_TMP_J_FLD_PREV_CON pc on pc.rfo_contract_id = f.rfo_contract_id and pc.prev_con_cnt >= 2
+join M_TMP_J_FLD_PREV_CON_CLOSED pcc on pcc.rfo_contract_id = f.rfo_contract_id --and pcc.prev_con_closed_cnt >= 2
+join M_TMP_J_FLD_PREV_CON_DEL_CLHST pd on pd.rfo_contract_id = f.rfo_contract_id --and coalesce(pd.prev_con_del_days_max,0) <= 15
+where c.iin is not null and f.is_refin = 0 and
+      pcc.prev_con_closed_cnt >= 2 and
+      coalesce(pd.prev_con_del_days_max,0) <= 15 and
+      f.contract_amount <= pcc.amount_max_before and --* 1.25
+      f.folder_date_create_mi > trunc(sysdate) - 7;
+grant select on U1.M_TMP_J_FLD_SEGM_FLD to LOADDB;
+grant select on U1.M_TMP_J_FLD_SEGM_FLD to LOADER;
+
+

@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_TMP_J_SN_1
+refresh complete on demand
+as
+select distinct t.folder_id, /*t.folder_date,*/ t.rfo_client_id,
+       t_prev.rfo_client_id as rfo_client_id_circle_1/*,
+       trunc(t.folder_date) - trunc(t_prev.folder_date) as folder_circle_1_age_days*/
+from V_FORM_CLIENT_CONTACT_PHONE t
+join V_FORM_CLIENT_CONTACT_PHONE t_prev on t_prev.phone_number = t.phone_number and
+                                           t_prev.folder_date < t.folder_date and
+                                           trunc(t_prev.folder_date) > add_months(trunc(t.folder_date), -12) and
+                                           t_prev.rfo_client_id != t.rfo_client_id and
+                                           t_prev.phone_type_simple != 'РАБОЧИЙ'
+where t.folder_date > add_months(trunc(sysdate), -36) and
+      t.phone_type_simple != 'РАБОЧИЙ' and
+      not exists (select null from M_TMP_J_SN_2_NUM_ABOVE_20 a where a.phone_number = t.phone_number);
+grant select on U1.M_TMP_J_SN_1 to LOADDB;
+grant select on U1.M_TMP_J_SN_1 to LOADER;
+
+

@@ -1,0 +1,44 @@
+﻿create materialized view U1.RISK_MV_M_RBO_ACC_SENDER_IN
+build deferred
+refresh complete on demand
+as
+select coalesce(md.c_kl_dt#2#1,af_dt.c_main_v_id) as acc_sender,
+       coalesce(md.c_kl_dt#2#inn,cl_dt.c_inn) as inn_sender,
+       coalesce(md.c_kl_dt#2#2,af_dt.c_name) as name_sender,
+       /*case when md.c_kl_dt#2#3 = 334693543 then 'ALMNKZKA'
+            else to_char(md.c_kl_dt#2#3) end*/
+       coalesce(bn.c_bic,to_char(md.c_kl_dt#2#3)) as bic_sender,
+       md.c_kl_kt#2#1 as acc_recipient,
+       md.c_kl_kt#2#inn as inn_recipient,
+       md.c_kl_kt#2#2 as name_recipient,
+       af.c_main_v_id,
+       cl.c_name,
+       md.c_nazn as nazn_po,
+       md.c_sum as amount_po,
+       md.c_date_prov date_prov,
+       fm.c_cur_short as curreny_po,
+       md.id,
+       md.c_quit_doc,
+       ci.rbo_client_id,
+       ci.rfo_client_id,
+       ci.cnt_work_credit,
+       ci.cnt_work_card,
+       case when fp.c_main_v_id is not null then 1 else 0 end as is_acc_pc_dog
+  from s02.Z#MAIN_DOCUM@rdwh_exd md
+  join V_RBO_Z#AC_FIN            af on af.id = md.c_acc_kt
+  join V_RBO_Z#CLIENT            cl on cl.id = af.c_client_v
+  join V_RBO_Z#FT_MONEY          fm on fm.id = md.c_valuta
+  left join risk_mvera.V_RBO_Z#CL_BANK_N bn on bn.id = md.c_kl_dt#2#3
+  join M_RBO_CLIENT_INFO         ci on ci.c_inn = md.c_kl_kt#2#inn
+  left join V_RBO_Z#AC_FIN       af_dt on af_dt.id = md.c_acc_dt
+  left join V_RBO_Z#CLIENT            cl_dt on cl_dt.id = af_dt.c_client_v
+  left join risk_mvera.m_acc_fin_pc_dog fp on fp.c_main_v_id = md.c_kl_kt#2#1
+ where c_date_prov >= to_date('01-01-2016','dd-mm-yyyy')
+   and c_date_prov <  trunc(sysdate)
+   and nvl(c_kl_dt#2#3,334692543) = 334692543  --со внешних счетов
+   and md.c_quit_doc is not null
+   and md.state_id = 'PROV';
+grant select on U1.RISK_MV_M_RBO_ACC_SENDER_IN to LOADDB;
+grant select on U1.RISK_MV_M_RBO_ACC_SENDER_IN to LOADER;
+
+

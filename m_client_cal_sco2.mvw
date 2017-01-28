@@ -1,0 +1,72 @@
+﻿create materialized view U1.M_CLIENT_CAL_SCO2
+refresh force on demand
+as
+select --+ parallel(30) parallel_index(30)
+       s1.client_id,
+       sum(coalesce(s2.other_deal_pmt, s3.other_deal_pmt, s1.other_deal_pmt)) as other_deal_pmt, -- сначала берем списанные,
+                                   -- затем значение платежа, если была просрочка, затем платеж с договора
+       count(distinct case when s2.other_deal_pmt is not null
+                      then s1.deal_number end) as other_written_off_con_count,
+       count(distinct case when s3.other_deal_pmt is null and s3.other_deal_pmt is not null
+                      then s1.deal_number end) as other_delinq_con_count,
+       count(distinct case when s1.other_deal_pmt is null and s3.other_deal_pmt is null and s1.other_deal_pmt is not null
+                      then s1.deal_number end) as other_ok_con_count
+from (
+    select t.x_client_id client_id,
+           t.deal_number,
+           --t.rfo_client_id deal_rfo_client_id,
+           --d.deal_number as other_deal_number, --все договора клиента, существующие на момент выдачи
+           coalesce(t.pmt, t.pmt_old) as other_deal_pmt
+    from V_DWH_PORTFOLIO_CURRENT t
+    where t.x_is_credit_issued = 1 and
+          t.pmt > 0 and
+          t.x_start_date_actual <= trunc(sysdate) and -- начались до или в день выдачи
+          coalesce(t.actual_end_date, t.plan_end_date) > trunc(sysdate) -- закончились или должны закончиться позже дня выдачи
+) s1
+left join (
+    select x.client_id,
+       x.deal_number,
+       --x.is_on_balance,
+       x.other_deal_pmt
+    from (
+        select --+ parallel 30
+               to_number(dp2.client_id) client_id,
+               dp2.deal_number,
+               --dp2.deal_number as other_deal_number, -- часть договоров, которые были на внебалансе в день выдачи
+               max(dp2.is_on_balance) keep (dense_rank last order by dp2.REP_DATE) as is_on_balance,
+               max(dp2.total_debt) keep (dense_rank last order by dp2.REP_DATE) as other_deal_pmt                   -- платеж по ним - это вся задолженность
+        from DWH_PORT dp2
+        where dp2.REP_DATE > to_date('01102014', 'ddmmyyyy')
+        group by dp2.client_id, dp2.deal_number
+    ) x
+    where --to_number(dp2.client_id) = t.x_client_id and
+          --dp2.deal_number != t.deal_number and
+          --dp2.rep_date = t.x_start_date and
+          x.is_on_balance = 'W'
+) s2 on s2.client_id = s1.client_id and s2.deal_number = s1.deal_number
+left join (
+    select x.client_id,
+           x.deal_number,
+           --x.is_on_balance,
+           coalesce(d2.pmt, d2.pmt_old) + coalesce(x.delinq_amount,0) as other_deal_pmt
+    from (
+        select --+ parallel 30
+               to_number(dp2.client_id) client_id,
+               dp2.deal_number,
+               --dp2.deal_number as other_deal_number, -- часть договоров, которые были на внебалансе в день выдачи
+               max(dp2.delinq_days) keep (dense_rank last order by dp2.REP_DATE) as delinq_days,
+               max(dp2.delinq_amount) keep (dense_rank last order by dp2.REP_DATE) as delinq_amount                   -- платеж по ним - это вся задолженность
+        from DWH_PORT dp2
+        where dp2.REP_DATE > to_date('01102014', 'ddmmyyyy')
+        group by dp2.client_id, dp2.deal_number
+    ) x
+    join V_DWH_PORTFOLIO_CURRENT d2 on d2.deal_number = x.deal_number
+    where x.delinq_days > 0
+) s3 on s3.client_id = s1.client_id and s3.deal_number = s1.deal_number
+
+group by s1.client_id;
+grant select on U1.M_CLIENT_CAL_SCO2 to LOADDB;
+grant select on U1.M_CLIENT_CAL_SCO2 to LOADER;
+grant select on U1.M_CLIENT_CAL_SCO2 to LOAD_MO;
+
+

@@ -1,0 +1,197 @@
+﻿create materialized view U1.V_REPORT_CAL_1_PRE_1
+using no index
+refresh complete on demand
+as
+select /*+ leading(rcac c) use_hash(d) parallel(30) parallel_index(30) */
+  distinct x.*,
+      case when x.num_months = 0 then 0
+      else x.num_months - x.is_card + 1 end as
+  planned_pmt_month,
+      case when x.num_months_new = 0 then 0
+      else x.num_months_new - x.is_card + 1 end as
+  planned_pmt_month_new,
+      -- плановый бонус > 0 только есть total_debt > 0 или если эхто последний отчет с данным договором
+      -- (т.е. платеж прошел и договор закрылся в этом месяце)
+      case when x.total_debt > 0
+                or x.yy_mm_report = x.contract_last_yy_mm_report then
+          case when x.num_months - x.is_card >= 0 then 1
+          else 0 end
+      else 0 end
+  planned_pmt_bonus,
+      case when x.total_debt > 0
+                or x.yy_mm_report = x.contract_last_yy_mm_report then
+          case when x.num_months_new - x.is_card >= 0 then 1
+          else 0 end
+      else 0 end
+  planned_pmt_bonus_new,
+      case when (x.num_months = 0 or x.num_months - x.is_card + 1 = 0) then 0
+      else ceil(nvl(x.delinq_days,0)/30.62) end as
+  delinq_mm,
+      case when (x.num_months_new = 0 or x.num_months_new - x.is_card + 1 = 0) then 0
+      else ceil(nvl(x.delinq_days,0)/30.62) end as
+  delinq_mm_new,
+      nvl(max(x.total_debt) over (partition by x.contract_number order by x.report_month
+          range between 1 preceding and 1 preceding), 0) as
+  total_debt_preceding,
+
+  -- 2012-09-21 starting parameters
+      max(x.contract_amount) over (partition by x.client_id order by x.report_month
+          range between unbounded preceding and 1 preceding) as
+  pr_rep_con_amount_max_by_cli,
+      max(x.delinq_days) over (partition by x.client_id order by x.report_month
+          range between unbounded preceding and 1 preceding) as
+  pr_rep_con_del_days_max_by_cli,
+      sum(x.total_debt) over (partition by x.client_id order by x.report_month
+          range between 1 preceding and 1 preceding) as
+  pr_rep_tot_debt_all_con_by_cli,
+      count(x.contract_number) over (partition by x.client_id order by x.report_month
+          range between 1 preceding and 1 preceding) as
+  pr_rep_number_of_con_by_cli,
+
+--------------------------------
+/*      case
+        when x.is_card = 2 then
+           round((case when x.total_debt > 0 then x.total_debt else 0 end) * 0.07, 0)
+        when round(months_between(x.end_date, x.start_date)) > 0 then
+           round(x.contract_amount/(1 - 1/
+              power((1 + 0.42/12), round(months_between(x.end_date, x.start_date)))
+           )*0.42/12, 0)
+        else
+           null
+      end as
+  pmt  */
+--------------------------------
+     case
+       when /*x.end_date is null and nvl(x.contract_amount,0) > 0 and*/ x.total_debt > 0 then
+           case when x.product in ('КК', 'ХК', 'ПРК') then
+                    /*case when x.contract_amount * 0.07 < 5000
+                         then 5000 else*/ round(x.contract_amount * 0.07, 0)
+                    /*end*/
+                when x.product in ('ЛК', 'ПК', 'ЗК') then
+                    /*case when x.total_debt * 0.07 < 5000
+                         then 5000 else*/ round(x.total_debt * 0.07, 0)
+                    /*end*/
+--           end
+--       when round(months_between(x.end_date, x.start_date)) > 0 and x.total_debt > 0 then
+           /*case*/
+                when x.product = 'КНП' then
+                   round(x.contract_amount/(1 - 1/
+                      power((1 + 0.33/12), round(months_between(x.end_date, x.start_date)))
+                   )*0.33/12, 0)
+                when x.product = 'ТК' then
+                   round(x.contract_amount/(1 - 1/
+                      power((1 + 0.15/12), round(months_between(x.end_date, x.start_date)))
+                   )*0.15/12, 0)
+                when x.product in ('ЛКН', 'ПКН') then
+                   round(x.contract_amount/(1 - 1/
+                      power((1 + 0.56/12), round(months_between(x.end_date, x.start_date)))
+                   )*0.56/12, 0)
+                when x.product = 'КН' then
+                   round(x.contract_amount/(1 - 1/
+                      power((1 + 0.37/12), round(months_between(x.end_date, x.start_date)))
+                   )*0.37/12, 0)
+                when x.product = 'КН-15' then
+                   round(x.contract_amount/(1 - 1/
+                      power((1 + 0.57/12), round(months_between(x.end_date, x.start_date)))
+                   )*0.57/12, 0)
+                when x.product = 'ЭКД' then
+                   round(x.contract_amount/(1 - 1/
+                      power((1 + 0.57/12), round(months_between(x.end_date, x.start_date)))
+                   )*0.57/12, 0)
+                when x.product in ('АВТО', 'АВТО_БУ') then
+                   round(x.contract_amount/(1 - 1/
+                      power((1 + 0.21/12), round(months_between(x.end_date, x.start_date)))
+                   )*0.21/12, 0)
+             end
+     end as
+  pmt_in_rep
+--------------------------------
+
+from (
+--==========================================================
+select
+  d.id,
+  d.yy_mm_report,
+      MONTHS_BETWEEN(to_date(d.yy_mm_report,'yyyy - mm'), to_date('2002 - 12','yyyy - mm')) as
+  report_month,
+  d.delinq_days, --
+  d.delinq_days_old,
+  d.contract_amount, -- --
+  d.total_debt, --
+  d.start_date, -- --
+  d.end_date, -- --
+      d.contract_no as
+  contract_number,
+  d.rnn,
+  d.iin,
+      substr(ltrim(d.contract_no, 'R'),1,7) as
+  client_id,
+  d.product,
+      case when MONTHS_BETWEEN(to_date(d.yy_mm_report,'yyyy - mm'), to_date(c.start_date_first,'yyyy - mm')) < 0 then 0
+      else nvl(MONTHS_BETWEEN(to_date(d.yy_mm_report,'yyyy - mm'), to_date(c.start_date_first,'yyyy - mm')), 0) end as
+  num_months,
+      /*case when MONTHS_BETWEEN(to_date(d.yy_mm_report,'yyyy - mm'), to_date(c.start_date_last,'yyyy - mm')) < 0 then 0
+      else nvl(MONTHS_BETWEEN(to_date(d.yy_mm_report,'yyyy - mm'), to_date(c.start_date_last,'yyyy - mm')), 0) end as
+  num_months_new,*/
+      case when c.is_refin_restruct_ever = 1
+           then (case when MONTHS_BETWEEN(to_date(d.yy_mm_report,'yyyy - mm'), to_date(c.start_date_first,'yyyy - mm')) < 0 then 0
+                 else nvl(MONTHS_BETWEEN(to_date(d.yy_mm_report,'yyyy - mm'), to_date(c.start_date_first,'yyyy - mm')), 0) end)
+           else (case when MONTHS_BETWEEN(to_date(d.yy_mm_report,'yyyy - mm'), to_date(c.start_date_last,'yyyy - mm')) < 0 then 0
+                 else nvl(MONTHS_BETWEEN(to_date(d.yy_mm_report,'yyyy - mm'), to_date(c.start_date_last,'yyyy - mm')), 0) end)
+           end as
+  num_months_new,
+--      case when d.end_date is null then 2 else 1 end as
+--  is_card,
+      decode(d.is_card,1,2,0,1) as
+  is_card,
+      case when nvl(d.total_debt,0) > 0 then 'OPEN'
+      when nvl(d.total_debt,0) < 0 then 'DEPO'
+      else 'SLEEP' end as
+  status,
+  d.yy_mm_start,
+      to_number(substr(d.yy_mm_start,1,4)) as
+  start_year,
+      case when nvl(d.delinq_days,0) > 0 then 'Y' else 'N' end as
+  delinq,
+--  rd.del_short,
+--  rd.del_middle,
+  rd.del_long,
+      rd2.del_long as
+  del_long_old,
+      rd3.del_long as
+  del_long_old_5,
+      rcac.categ as
+  contract_amount_categ,
+  c.contract_last_yy_mm_report,
+  round(rp.provision / 100 * d.total_debt,0) as provision
+from v_data_all d,
+     ref_delinq rd,
+     ref_delinq rd2,
+     ref_delinq_old rd3,
+     REF_CONTRACT_AMOUNT_CATEG rcac,
+     V_REPORT_CAL_1_PRE_02_PROV d_rp, -- new
+     REF_PROVISIONS rp,
+/*     (select dd.contract_no,
+             max(dd.yy_mm_report) as contract_last_yy_mm_report,
+                 nvl2(min(dd.start_date), to_char(min(dd.start_date), 'yyyy - mm'), null) as start_date_first
+            from v_data_all dd
+            group by dd.contract_no) c*/
+      V_REPORT_CAL_1_PRE_01_CON c
+where (rd.days_del_from <= nvl(d.delinq_days,0) and rd.days_del_to >= nvl(d.delinq_days,0)) and
+      (rd2.days_del_from <= nvl(d.delinq_days_old,0) and rd2.days_del_to >= nvl(d.delinq_days_old,0)) and
+      (rd3.days_del_from <= nvl(d.delinq_days,0) and rd3.days_del_to >= nvl(d.delinq_days,0)) and
+      (rcac.amount_from <= nvl(d.contract_amount,0) and rcac.amount_to >= nvl(d.contract_amount,0)) and
+      d_rp.yy_mm_report = d.yy_mm_report and
+      (rp.days_del_from <= nvl(d.delinq_days,0) and rp.days_del_to >= nvl(d.delinq_days,0) and
+                rp.a_date = d_rp.ref_prov_date) and
+      d.contract_no = c.contract_no
+--      and d.contract_no = '1016556-002' -- '1498627-004' -- '1526265-001' -- 'R2369701-001' --------------------------------------------------
+) x /*
+) xx
+) xxx
+) xxxx
+) xxxxx*/;
+grant select on U1.V_REPORT_CAL_1_PRE_1 to LOADDB;
+grant select on U1.V_REPORT_CAL_1_PRE_1 to LOADER;
+
+

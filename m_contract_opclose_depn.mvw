@@ -1,0 +1,57 @@
+﻿create materialized view U1.M_CONTRACT_OPCLOSE_DEPN
+build deferred
+refresh complete on demand
+as
+select c.c_client as rfo_client_id,
+        c.id as rfo_depn_id,
+        c.c_num_dog as contract_number,
+        c.c_date_begin as rfo_date_begin,
+        c.c_end_date as rfo_date_ending,
+        c.c_summ as rfo_contract_amount,
+        bp.c_name as process_name_open,
+        f.id as folder_id_open,
+        fd.c_doc_date as doc_date_open,
+        u.c_name as create_user_open,
+        sd.c_name as  doc_status_open,
+        fdd.process_name_close,
+        fdd.folder_id_close,
+        fdd.c_doc_date as doc_date_close,
+        fdd.user_name as create_user_close,
+        fdd.status_name as  doc_status_close,
+        dd.id as rbo_depn_id,
+        dd.c_date_begin as rbo_date_begin,
+        dd.c_date_close as rbo_date_close,
+        dd.c_date_ending as rbo_date_ending,
+        dd.c_summa_dog as rbo_contract_amount,
+        sp.c_name      as contract_status,
+        cast(
+        case when vd.c_has_timeout = 1 then 'СРОЧНЫЙ'
+             when vd.c_has_timeout = 0 then 'ТЕКУЩИЙ'
+        end as varchar2(200)) as has_timeout
+  from u1.V_RFO_Z#CONTRACT    c
+  join u1.V_RFO_Z#FDOC_TEST1 fd on fd.id = c.id
+                               and fd.class_id = 'CONT_DEP'
+  join u1.V_RFO_Z#RDOC    rd on rd.c_doc = fd.id
+  join u1.V_RFO_Z#FOLDERS f on f.c_docs = rd.collection_id
+  join u1.V_RFO_Z#STATUS_DOG    sd on sd.id = fd.c_status_doc
+  join u1.V_RFO_Z#BUS_PROCESS bp on bp.id = f.c_business
+                                and bp.c_code = 'INPUT_ANKETA_DEPOSIT'
+  join u1.V_RFO_Z#CM_CHECKPOINT cc on cc.id = f.id
+  join u1.V_RFO_Z#USER           u on u.id = cc.c_create_user
+  left join ( select fd1.c_parent_fdoc, fd1.c_doc_date, u1.c_name as user_name, sd1.c_name as status_name,
+                     f1.id as folder_id_close, bp1.c_name as process_name_close
+                from u1.V_RFO_Z#FDOC_TEST1 fd1
+                join u1.V_RFO_Z#RDOC rd1 on rd1.c_doc = fd1.id
+                join u1.V_RFO_Z#FOLDERS f1 on f1.c_docs = rd1.collection_id
+                join u1.V_RFO_Z#BUS_PROCESS bp1 on bp1.id = f1.c_business
+                                      and bp1.c_code = 'CLOSE_DEPOSIT'
+                join u1.V_RFO_Z#CM_CHECKPOINT cc1 on cc1.id = f1.id
+                join u1.V_RFO_Z#USER           u1 on u1.id = cc1.c_create_user
+                join u1.V_RFO_Z#STATUS_DOG    sd1 on sd1.id = fd1.c_status_doc) fdd on fdd.c_parent_fdoc = fd.id
+   left join u1.V_RBO_Z#DEPN dd on dd.id = c.c_id_req
+   left join u1.V_RBO_Z#COM_STATUS_PRD sp on sp.id = dd.c_com_status
+   left join u1.V_RBO_Z#VID_DEPOSIT    vd on vd.id = dd.c_vid_dog;
+grant select on U1.M_CONTRACT_OPCLOSE_DEPN to LOADDB;
+grant select on U1.M_CONTRACT_OPCLOSE_DEPN to LOADER;
+
+

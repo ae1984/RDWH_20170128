@@ -1,0 +1,79 @@
+﻿create materialized view U1.M_CLIENT_CAL_SCO4
+refresh force on demand
+as
+selecT iin, max(pmt_in_rep_sum_by_cli) as pmt_in_rep_sum_by_cli
+  from (selecT iin,
+               first_value(pmt_in_rep_sum_by_cli) OVER(PARTITION BY iin ORDER BY report_month desc) as pmt_in_rep_sum_by_cli
+          from (select xx.iin,
+                       sum(xx.pmt_in_rep) as pmt_in_rep_sum_by_cli,
+                       xx.report_month
+                  from (selecT case
+                                 when x.total_debt > 0 then
+                                  case
+                                    when x.product in ('КК', 'ХК', 'ПРК') then
+                                     round(x.contract_amount * 0.07, 0)
+                                    when x.product in ('ЛК', 'ПК', 'ЗК') then
+                                     round(x.total_debt * 0.07, 0)
+                                    when x.product = 'КНП' then
+                                     round(x.contract_amount /
+                                           (1 - 1 /
+                                           power((1 + 0.33 / 12),
+                                                      round(months_between(x.end_date,
+                                                                           x.start_date)))) * 0.33 / 12,
+                                           0)
+                                    when x.product = 'ТК' then
+                                     round(x.contract_amount /
+                                           (1 - 1 /
+                                           power((1 + 0.15 / 12),
+                                                      round(months_between(x.end_date,
+                                                                           x.start_date)))) * 0.15 / 12,
+                                           0)
+                                    when x.product in ('ЛКН', 'ПКН') then
+                                     round(x.contract_amount /
+                                           (1 - 1 /
+                                           power((1 + 0.56 / 12),
+                                                      round(months_between(x.end_date,
+                                                                           x.start_date)))) * 0.56 / 12,
+                                           0)
+                                    when x.product = 'КН' then
+                                     round(x.contract_amount /
+                                           (1 - 1 /
+                                           power((1 + 0.37 / 12),
+                                                      round(months_between(x.end_date,
+                                                                           x.start_date)))) * 0.37 / 12,
+                                           0)
+                                    when x.product = 'КН-15' then
+                                     round(x.contract_amount /
+                                           (1 - 1 /
+                                           power((1 + 0.57 / 12),
+                                                      round(months_between(x.end_date,
+                                                                           x.start_date)))) * 0.57 / 12,
+                                           0)
+                                    when x.product = 'ЭКД' then
+                                     round(x.contract_amount /
+                                           (1 - 1 /
+                                           power((1 + 0.57 / 12),
+                                                      round(months_between(x.end_date,
+                                                                           x.start_date)))) * 0.57 / 12,
+                                           0)
+                                    when x.product in ('АВТО', 'АВТО_БУ') then
+                                     round(x.contract_amount /
+                                           (1 - 1 /
+                                           power((1 + 0.21 / 12),
+                                                      round(months_between(x.end_date,
+                                                                           x.start_date)))) * 0.21 / 12,
+                                           0)
+                                  end
+                               end as pmt_in_rep,
+                               MONTHS_BETWEEN(to_date(x.yy_mm_report,
+                                                      'yyyy - mm'),
+                                              to_date('2002 - 12', 'yyyy - mm')) as report_month,
+                               x.iin
+                          from v_data_all x) xx
+                 group by xx.iin, xx.report_month))
+ group by iin;
+grant select on U1.M_CLIENT_CAL_SCO4 to LOADDB;
+grant select on U1.M_CLIENT_CAL_SCO4 to LOADER;
+grant select on U1.M_CLIENT_CAL_SCO4 to LOAD_MO;
+
+

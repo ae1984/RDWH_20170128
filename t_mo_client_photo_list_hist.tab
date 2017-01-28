@@ -1,0 +1,34 @@
+﻿create table U1.T_MO_CLIENT_PHOTO_LIST_HIST
+(
+  sdt           DATE,
+  rfo_client_id NUMBER,
+  photo_luna_id VARCHAR2(4000)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.IDX_MO_CL_PHOTO_LIST_HIST_1 on U1.T_MO_CLIENT_PHOTO_LIST_HIST (SDT, RFO_CLIENT_ID)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_MO_CLIENT_PHOTO_LIST_HIST to LOADDB;
+

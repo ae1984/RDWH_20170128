@@ -1,0 +1,39 @@
+﻿create table U1.ZZ_DATA_DEPOSIT_CLIENTS
+(
+  client_iin VARCHAR2(12),
+  usd        NUMBER,
+  kzt_usd    NUMBER,
+  eur        NUMBER,
+  kzt_eur    NUMBER,
+  kzt        NUMBER,
+  kzt_kzt    NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.DATA_DEPOSIT_CLIENTS_IND1 on U1.ZZ_DATA_DEPOSIT_CLIENTS (CLIENT_IIN)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.ZZ_DATA_DEPOSIT_CLIENTS to LOADDB;
+grant select on U1.ZZ_DATA_DEPOSIT_CLIENTS to LOADER;
+

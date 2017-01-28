@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_TMP_J_AUTO_MVD_1
+refresh complete on demand
+as
+select t.begin_date, t.create_empl_name, t.deal_number, t.prod_type,
+       t.x_amount, t.x_delinq_days, t.client_iin,
+       p.mvd_iin, p.vin,
+       p.mvd_update_date_min,
+       p.mvd_update_date_max
+from V_DWH_PORTFOLIO_CURRENT t
+left join (
+    select t.contract_number, max(t.vin) as vin
+    from V_CONTRACT_ALL_RFO_AUTO t
+    where t.contract_number is not null and t.is_credit_issued = 1
+    group by t.contract_number
+) a on a.contract_number = t.deal_number
+left join (
+    select v.mvd_iin, v.vin,
+           min(v.mvd_status_date) as mvd_update_date_min,
+           max(v.mvd_status_date) as mvd_update_date_max
+    from DWH_AUTO_VIN v
+    where v.mvd_iin is not null and
+          v.vin is not null
+    group by v.mvd_iin, v.vin
+) p on p.mvd_iin = t.client_iin and p.vin = a.vin
+where --t.create_empl_name = 'АМАНОВА БОТАГОЗ КОЙШЫБАЕВНА' and
+      t.x_is_credit_issued = 1 and t.x_product_type = 'АВТО';
+grant select on U1.M_TMP_J_AUTO_MVD_1 to LOADDB;
+grant select on U1.M_TMP_J_AUTO_MVD_1 to LOADER;
+
+

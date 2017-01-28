@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_SCCL_DWH_CL_PAR1
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       cl.rfo_client_id,
+
+       count(distinct d.deal_number) as prev_con_cnt,
+
+       count(distinct d2.deal_number) as prev_con_closed_cnt,
+       max(d2.x_amount) as amount_max_before,
+
+       count(distinct o.spof_end_date) as prior_optim_count,
+
+
+       case when count(distinct d.deal_number) > 0 then 0 else 1 end as is_client_new_by_con
+
+from u1.V_CLIENT_RFO_BY_ID cl
+left join u1.V_DWH_PORTFOLIO_CURRENT d on d.client_iin = cl.iin
+                                       and d.x_start_date_actual is not null
+                                       and d.x_is_credit_issued = 1
+
+left join u1.V_DWH_PORTFOLIO_CURRENT d2 on d2.client_iin = cl.iin
+                                           and d2.actual_end_date is not null
+                                           and d2.x_is_credit_issued = 1
+                                           and d2.x_start_date_actual is not null
+                                           and d2.x_product_type != 'ОПТИМИЗАЦИЯ'
+
+left join u1.V_DWH_PORTFOLIO_CURRENT d3 on d3.client_iin = cl.iin
+                                           and d3.x_is_credit_issued = 1
+left join u1.M_DWH_ACC_SPECIAL_OFFER_CON o on o.contract_number = d3.deal_number
+                                              and o.spof_spec_offer_status_cd in ('EXECUTED','DEFAULT','WORK')
+group by cl.rfo_client_id;
+grant select on U1.M_SCCL_DWH_CL_PAR1 to LOADDB;
+grant select on U1.M_SCCL_DWH_CL_PAR1 to RTS_RDWH;
+
+

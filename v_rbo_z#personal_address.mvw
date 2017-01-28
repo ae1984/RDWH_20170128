@@ -1,0 +1,29 @@
+﻿create materialized view U1.V_RBO_Z#PERSONAL_ADDRESS
+using no index
+refresh complete on demand
+as
+select t.id,
+       t.collection_id,
+       t.c_city,
+       t.c_post_code,
+       upper(t.c_street) as c_street,
+       t.c_house,
+       t.c_flat,
+       upper(t.c_district) as c_district,
+       t.c_type,
+       t.c_korpus,
+       upper(t.c_short_city) as c_short_city,
+       t.c_short_str,
+       t.class_id,
+       t.c_street_ref,
+       t.c_date_beg,
+       upper(t.c_street_str) as c_street_str,
+       t.c_date_audit,
+       t.c_affirmed,
+       t.c_activ,
+       t.c_houses_ref
+  from rdwh.V_RBO_Z#PERSONAL_ADDRESS@rdwh_exd t;
+grant select on U1.V_RBO_Z#PERSONAL_ADDRESS to LOADDB;
+grant select on U1.V_RBO_Z#PERSONAL_ADDRESS to LOADER;
+
+

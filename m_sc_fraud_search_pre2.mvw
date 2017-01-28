@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_SC_FRAUD_SEARCH_PRE2
+build deferred
+refresh force on demand
+as
+select   /*+ parallel 30 */
+         t.rfo_client_id
+         ,count(distinct case when b.date_create>=trunc(sysdate)-30 and b.date_create < trunc(sysdate) and b.folder_id is null then b.claim_id end) as count_applications_30_d
+         ,count(distinct case when b.date_create>=trunc(sysdate)-30 and b.folder_id is null then b.claim_id end) as count_applications_30_d_x
+
+         ,count(distinct case when b.date_create>=add_months(trunc(sysdate),-3) and b.date_create < trunc(sysdate) then trunc(b.date_create) end) as count_day_app_onl
+
+         ,count(distinct case when b.date_create>=trunc(sysdate)-30 and b.date_create < trunc(sysdate) and b.folder_id is null and upper(b.status_name) like '%ОТКАЗ%' then b.claim_id end) as count_fail_30_d
+         ,nvl(max(distinct case when b.date_create>=add_months(trunc(sysdate),-3) and b.date_create < trunc(sysdate) then b.total_amount end),0) as max_sum_online_ekt_3_m
+
+from u1.V_CLIENT_RFO_BY_ID t
+left join u1.M_FOLDER_CON_CANCEL_ONLINE_1 b on b.rfo_client_id = t.rfo_client_id --and b.date_create < t.date_create
+group by t.rfo_client_id;
+grant select on U1.M_SC_FRAUD_SEARCH_PRE2 to LOADDB;
+
+

@@ -1,0 +1,34 @@
+﻿create materialized view U1.M_OUT_VERIFICATION_REP_PHOTO
+build deferred
+refresh force on demand
+as
+select v.product                                                                                                                                          as product,
+       trunc(to_date(v.accept_date,'YYYY-MM-DD hh24:mi:ss'))                                                                                              as accept_date,
+       count(case when v.cashe = 'Нет' and v.verification_type = 'PHOTO' then v.product end )                                                             as received,
+       count(case when v.cashe = 'Нет' and v.verification_type = 'PHOTO' and v.verification_status = 'Отказ' and v.repeat_photo = 0 then v.product end )  as fail,
+       count(case when v.cashe = 'Нет' and v.verification_type = 'PHOTO' and v.verification_status = 'Отказ' and v.repeat_photo = 1 then v.product end )  as editing,
+       count(case when v.cashe = 'Нет' and v.verification_type = 'PHOTO' and v.verification_status = 'Отказ' and v.repeat_photo = 2 then v.product end )  as rephoto,
+       count(case when v.cashe = 'Нет' and v.verification_type = 'PHOTO' and v.verification_status = 'Подтверждён' then v.product end )                   as approved,
+       count(case when v.cashe = 'Да' and v.verification_type = 'PHOTO' and v.verification_status = 'Отказ' then v.product end )                          as unprocessed,
+
+       count(case when (to_date(v.close_time,'YYYY-MM-DD hh24:mi:ss') - to_date(v.open_time,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 < 60
+                  and v.verification_type = 'PHOTO' and v.cashe = 'Нет' then v.product end )                                                              as cnt_1min_1,
+       count(case when (to_date(v.open_time,'YYYY-MM-DD hh24:mi:ss') - to_date(v.accept_datetime,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 < 60
+                  and v.verification_type = 'PHOTO' and v.cashe = 'Нет' then v.product end )                                                              as cnt_1min_2,
+       count(case when (to_date(v.close_time,'YYYY-MM-DD hh24:mi:ss') - to_date(v.accept_datetime,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 < 60
+                  and v.verification_type = 'PHOTO' and v.cashe = 'Нет' then v.product end )                                                              as cnt_1min_3,
+
+       count(case when (to_date(v.close_time,'YYYY-MM-DD hh24:mi:ss') - to_date(v.open_time,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 < 90
+                  and v.verification_type = 'PHOTO' and v.cashe = 'Нет' then v.product end )                                                              as cnt_15min_1,
+       count(case when (to_date(v.open_time,'YYYY-MM-DD hh24:mi:ss') - to_date(v.accept_datetime,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 < 90
+                  and v.verification_type = 'PHOTO' and v.cashe = 'Нет' then v.product end )                                                              as cnt_15min_2,
+       count(case when (to_date(v.close_time,'YYYY-MM-DD hh24:mi:ss') - to_date(v.accept_datetime,'YYYY-MM-DD hh24:mi:ss'))*24*60*60 < 90
+                  and v.verification_type = 'PHOTO' and v.cashe = 'Нет' then v.product end )                                                              as cnt_15min_3
+
+  from M_OUT_DWH_VERIFICATION_REP_ROW v
+
+ group by v.product, trunc(to_date(v.accept_date,'YYYY-MM-DD hh24:mi:ss'));
+grant select on U1.M_OUT_VERIFICATION_REP_PHOTO to LOADDB;
+grant select on U1.M_OUT_VERIFICATION_REP_PHOTO to RISK_VERIF;
+
+

@@ -1,0 +1,19 @@
+﻿create table U1.NT_OBJECTSUSE3
+(
+  object_name VARCHAR2(30),
+  oname       VARCHAR2(30),
+  process_dt  DATE
+)
+tablespace USERS
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+nologging;
+

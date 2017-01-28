@@ -1,0 +1,77 @@
+﻿create table U1.T_KASPIKZ_ACC_INFO_ACC
+(
+  id              NUMBER(38),
+  user_id         NUMBER(38),
+  simple_id       NUMBER(10),
+  branch          VARCHAR2(50 CHAR),
+  bank_id         VARCHAR2(50 CHAR),
+  bank_number     VARCHAR2(50 CHAR),
+  account_name    VARCHAR2(50 CHAR),
+  balance         NUMBER(38,2),
+  currency        CHAR(3 CHAR),
+  account_type    VARCHAR2(20 CHAR),
+  extended_info   VARCHAR2(2000 CHAR),
+  last_upd_date   DATE,
+  is_closed       NUMBER(10),
+  is_blocked      NUMBER(10),
+  is_visible      NUMBER(10),
+  is_active       NUMBER(10),
+  is_name_changed NUMBER(10)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on column U1.T_KASPIKZ_ACC_INFO_ACC.id
+  is 'Идентификатор таблицы';
+comment on column U1.T_KASPIKZ_ACC_INFO_ACC.user_id
+  is 'ИД пользователя';
+comment on column U1.T_KASPIKZ_ACC_INFO_ACC.simple_id
+  is 'Счетчик в рамках пользователя';
+comment on column U1.T_KASPIKZ_ACC_INFO_ACC.branch
+  is 'Точка/Отделение';
+comment on column U1.T_KASPIKZ_ACC_INFO_ACC.bank_id
+  is 'ИД договора';
+comment on column U1.T_KASPIKZ_ACC_INFO_ACC.bank_number
+  is 'Номер договора';
+comment on column U1.T_KASPIKZ_ACC_INFO_ACC.account_name
+  is 'Название для счета (заполняется клиентом)';
+comment on column U1.T_KASPIKZ_ACC_INFO_ACC.balance
+  is 'Баланс на счете';
+comment on column U1.T_KASPIKZ_ACC_INFO_ACC.currency
+  is 'Валюта';
+comment on column U1.T_KASPIKZ_ACC_INFO_ACC.account_type
+  is 'Тип счета';
+comment on column U1.T_KASPIKZ_ACC_INFO_ACC.extended_info
+  is 'Детальная информация';
+comment on column U1.T_KASPIKZ_ACC_INFO_ACC.last_upd_date
+  is 'Дата последнего обновления';
+comment on column U1.T_KASPIKZ_ACC_INFO_ACC.is_closed
+  is 'признак закрытия';
+comment on column U1.T_KASPIKZ_ACC_INFO_ACC.is_blocked
+  is 'признак блокировки';
+comment on column U1.T_KASPIKZ_ACC_INFO_ACC.is_active
+  is 'признак активности';
+create index U1.T_KASPIKZ_ACC_INFO_ACC_IND1 on U1.T_KASPIKZ_ACC_INFO_ACC (USER_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_KASPIKZ_ACC_INFO_ACC to LOADDB;
+

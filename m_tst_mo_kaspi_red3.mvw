@@ -1,0 +1,7 @@
+﻿create materialized view U1.M_TST_MO_KASPI_RED3
+refresh force on demand
+as
+selecT * from u1.M_TST_KASPI_RED@motest;
+grant select on U1.M_TST_MO_KASPI_RED3 to LOADDB;
+
+

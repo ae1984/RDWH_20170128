@@ -1,0 +1,38 @@
+﻿create table U1.T_SALARY_AVERAGE
+(
+  ym_date       DATE not null,
+  ym_str        VARCHAR2(20) not null,
+  salary        NUMBER not null,
+  salary_double NUMBER,
+  is_stat       NUMBER(1)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_SALARY_AVERAGE
+  is 'Статистика по средней заработной плате(информация с агенства статистики)';
+comment on column U1.T_SALARY_AVERAGE.ym_date
+  is 'Отчетная дата dd-mm-yyyy';
+comment on column U1.T_SALARY_AVERAGE.ym_str
+  is 'Отчетная дата yyyy - mm';
+comment on column U1.T_SALARY_AVERAGE.salary
+  is 'Средняя заработная плата';
+comment on column U1.T_SALARY_AVERAGE.salary_double
+  is 'Двойная средняя заработная плата';
+comment on column U1.T_SALARY_AVERAGE.is_stat
+  is 'Признак 1 - данные с агенства по статистике, 0 -нет';
+alter table U1.T_SALARY_AVERAGE
+  add constraint IS_STAT_CHK
+  check (is_stat in (0,1));
+grant select on U1.T_SALARY_AVERAGE to LOADDB;
+grant select on U1.T_SALARY_AVERAGE to LOADER;
+

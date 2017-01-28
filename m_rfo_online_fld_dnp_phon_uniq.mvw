@@ -1,0 +1,252 @@
+﻿create materialized view U1.M_RFO_ONLINE_FLD_DNP_PHON_UNIQ
+refresh complete on demand
+as
+select LISTAGG(t.folder_id, '; ') WITHIN GROUP(order by t.folder_id) as folder_id_list,
+       LISTAGG(to_char(t.folder_date_create, 'dd.mm.yyyy HH24:MI:SS'), '; ') WITHIN GROUP(order by t.folder_id) as folder_date_create_list,
+       LISTAGG(t.folder_date_create_hour, '; ') WITHIN GROUP(order by t.folder_id) as folder_date_create_hour_list,
+       t.x_dnp_region,
+       t.x_dnp_name,
+       t.dep_code,
+       t.dep_name,
+       LISTAGG(t.process_name, '; ') WITHIN GROUP(order by t.folder_id) as process_list,
+       LISTAGG(t.folder_state, '; ') WITHIN GROUP(order by t.folder_id) as folder_state_list,
+       t.cient_iin,
+       LISTAGG(t.product, '; ') WITHIN GROUP(order by t.folder_id) as product_list,
+       t.client_name_last,
+       t.client_name_first,
+       t.client_name_patronymic,
+       t.client_name_short,
+       t.mobile_phones,
+       LISTAGG(t.manager_name, '; ') WITHIN GROUP(order by t.folder_id) as manager_name_list,
+       LISTAGG(t.manager_id, '; ') WITHIN GROUP(order by t.folder_id) as manager_id_list,
+       t.rfo_client_id,
+       t.data_refresh_hour,
+       t.prod_type as prod_activ_list,
+       decode(t.userid, null, 'нет', 'да') as is_regkspkz,
+       case
+         when t.userid in (select d.userid
+                             from kspkz_vuserpayment20 d
+                            where d.paymenttime > sysdate - 61) then
+          'да'
+         when t.userid in (select n.userid from M_NPS_KSPIKZ_LOG_SESSIONS n) then
+          'нет'
+         else
+          null
+       end as is_paykspkz
+  from (select distinct f.id as folder_id,
+                         f.c_date_create as folder_date_create,
+                         to_number(to_char(f.c_date_create, 'hh24')) as folder_date_create_hour,
+                         po.x_dnp_region,
+                         po.x_dnp_name,
+                         sd.c_code as dep_code,
+                         sd.c_name as dep_name,
+                         bp.c_name as process_name,
+                         cmp.c_name as folder_state,
+                         f.c_inn as cient_iin,
+                         case
+                           when upper(bp.c_name) like '%ДЕПОЗ%' then
+                            'Депозит'
+                           when pr.c_name is null then
+                            ' - '
+                           else
+                            pr.c_name
+                         end as product,
+                         translate(upper(f.c_last_name),
+                                   chr(53388) || chr(53384) || chr(53383) ||
+                                   chr(53904) || chr(53390) || chr(53380) ||
+                                   chr(53381),
+                                   chr(53914) || chr(54168) || chr(53934) ||
+                                   chr(54184) || chr(53936) || chr(53906) ||
+                                   chr(53922)) as client_name_last,
+                         translate(upper(f.c_first_name),
+                                   chr(53388) || chr(53384) || chr(53383) ||
+                                   chr(53904) || chr(53390) || chr(53380) ||
+                                   chr(53381),
+                                   chr(53914) || chr(54168) || chr(53934) ||
+                                   chr(54184) || chr(53936) || chr(53906) ||
+                                   chr(53922)) as client_name_first,
+                         translate(upper(f.c_sur_name),
+                                   chr(53388) || chr(53384) || chr(53383) ||
+                                   chr(53904) || chr(53390) || chr(53380) ||
+                                   chr(53381),
+                                   chr(53914) || chr(54168) || chr(53934) ||
+                                   chr(54184) || chr(53936) || chr(53906) ||
+                                   chr(53922)) as client_name_patronymic,
+                         translate(upper(f.c_last_name) || ' ' ||
+                                   upper(f.c_first_name) || ' ' ||
+                                   upper(f.c_sur_name),
+                                   chr(53388) || chr(53384) || chr(53383) ||
+                                   chr(53904) || chr(53390) || chr(53380) ||
+                                   chr(53381),
+                                   chr(53914) || chr(54168) || chr(53934) ||
+                                   chr(54184) || chr(53936) || chr(53906) ||
+                                   chr(53922)) as client_name_short,
+                         coalesce(mp.mobile_phones, mp2.mobile_phones) as mobile_phones,
+                         u.c_name as manager_name,
+                         u.id as manager_id,--id_manager
+                         f.c_client as rfo_client_id,
+                         mx.data_refresh_hour - 1 as data_refresh_hour,
+                         ksp.userid,
+                         dport2.prod_type_list as prod_type
+         --операции
+           from M_RFO_ONLINE_FLD f
+           left join V_RFO_Z#PROD_PROPERTY pr
+             on f.cr_program_id = pr.id
+         --======================================================
+         --- join (select pc.client_iin
+         ---        from V_DWH_PORTFOLIO_CURRENT pc
+         ---      where nvl(pc.x_delinq_days, 0) = 0
+         ---      group by pc.client_iin) pc
+         ---  on f.c_inn = pc.client_iin ---=====2.Исключить клиентов из выгружаемого списка:(2)у которых проблемный/просроченный кредит
+         --=======================================================
+           join V_RFO_Z#BUS_PROCESS bp
+             on bp.id = f.c_business
+               ---===================================================
+            and bp.c_code not in
+                ('REJECTION', 'REPAYMENT', 'CLOSE_PC', 'KAS_SET_AP_SERV') ---=======2.Исключить клиентов из выгружаемого списка:(6)автооплата; (3)которые закрывают кредит
+         ---===================================================
+           join V_RFO_Z#STRUCT_DEPART sd
+             on sd.id = f.c_st_depart
+         /*  join V_RFO_Z#KAS_UPRAVL_DNP dnp
+         on dnp.id = sd.c_upravl_dnp_ref -- жесткая связка (только с ДНП)*/
+         --====================================================
+           join t_nps_dict_rfo_dso dict_dep ---Справочник кол-во обзвона на отделение
+             on dict_dep.dep_code = sd.c_code
+            and dict_dep.cl_cnt in (4,20) --только необходимые отделения
+         --====================================================
+
+           join V_RFO_Z#CM_POINT cmp
+             on cmp.id = f.c_point
+           join V_POS po
+             on po.pos_code = sd.c_code
+           left join (select r.id,
+                            LISTAGG(r.c_numb, '; ') within group(order by r.c_numb) as mobile_phones
+                       from M_RFO_ONLINE_FLD r
+                      where r.c_activ = 1
+                        and r.c_allow_cc_2 = 1
+                      group by r.id) mp
+             on mp.id = f.id
+           left join (select r.id,
+                            LISTAGG(r.c_numb, '; ') within group(order by r.c_numb) as mobile_phones
+                       from M_RFO_ONLINE_FLD r
+                      where r.c_activ = 1
+                        and not (r.c_allow_cc_2 = 1)
+                      group by r.id) mp2
+             on mp2.id = f.id
+           left join V_RFO_Z#USER u
+             on u.id = f.c_create_user
+           join V_RFO_POINTS rp
+             on rp.way_id = f.c_way
+            and rp.point_code = cmp.c_code
+            and rp.is_point_active = 0
+           left join kspkz_vregisteredusers20 ksp --Вытащить данные по kaspi.kz
+             on ksp.iin = f.c_inn
+           left join ---Вытащить все активные продукты клиента
+         M_NPS_CL_ACTIV_PRODUCT dport2
+             on dport2.client_iin = f.c_inn
+         --дата последнего рефреша матъюхи M_RFO_ONLINE_FLD
+          cross join (select to_number(to_char(t.last_refresh_date, 'hh24')) as data_refresh_hour
+                       from DBA_MVIEWS t --все въюхи
+                      where t.owner = 'U1'
+                        and t.mview_name = 'M_RFO_ONLINE_FLD') mx
+          where /*po.pos_type = 'ОТДЕЛЕНИЕ'
+                             and*/
+          ((bp.c_code in ('OPEN_CRED_PRIV_PC',
+                          --              'KAS_SAFE_CREDIT',
+                          'KAS_AUTO_CRED_PRIV_PC',
+                          'KAS_CREDIT_CASH_PRIV_PC',
+                          'SET_REVOLV',
+                          'KAS_OPEN_CRED_PRIV_MIN',
+                          'KAS_AUTO_CRED_PRIV',
+                          'OPEN_PC',
+                          'KAS_CREDIT_CASH_PRIV',
+                          --      'KAS_PC_PURSE',
+                          'OPEN_CRED_PRIV',
+                          'OPEN_TRANSH',
+                          'OPEN_CRED_PRIV_CRL',
+                          'OPEN_CRED_PRIV_OLD') and
+          (f.is_credit_issued_con = 1 and
+          ((cmp.c_code in ('EXECUTE',
+                              'CREDIT_EXEC',
+                              'KAS_CHK_DOC_PACK',
+                              'TO_RECLAMATION',
+                              'ARCHIVE',
+                              'ERR_ARCHIVE',
+                              'KAS_SENT_PKD',
+                              'KAS_WITHDRAWN1',
+                              'KAS_WITHDRAWN2',
+                              'KAS_PKD_CONTROL',
+                              'KAS_PKD_REV',
+                              'TR_CHANGED',
+                              'TAKE_DEPART') or cmp.c_priority >= 80) and
+          bp.c_code in ('OPEN_CRED_PRIV_PC',
+                            --              'KAS_SAFE_CREDIT',
+                            'KAS_AUTO_CRED_PRIV_PC',
+                            'KAS_CREDIT_CASH_PRIV_PC',
+                            'SET_REVOLV',
+                            'KAS_OPEN_CRED_PRIV_MIN',
+                            'KAS_AUTO_CRED_PRIV',
+                            'OPEN_PC',
+                            'KAS_CREDIT_CASH_PRIV',
+                            --      'KAS_PC_PURSE',
+                            'OPEN_CRED_PRIV',
+                            'OPEN_TRANSH',
+                            'OPEN_CRED_PRIV_CRL',
+                            'OPEN_CRED_PRIV_OLD')))) or
+          bp.c_code not in ('OPEN_CRED_PRIV_PC',
+                             --              'KAS_SAFE_CREDIT',
+                             'KAS_AUTO_CRED_PRIV_PC',
+                             'KAS_CREDIT_CASH_PRIV_PC',
+                             'SET_REVOLV',
+                             'KAS_OPEN_CRED_PRIV_MIN',
+                             'KAS_AUTO_CRED_PRIV',
+                             'OPEN_PC',
+                             'KAS_CREDIT_CASH_PRIV',
+                             --      'KAS_PC_PURSE',
+                             'OPEN_CRED_PRIV',
+                             'OPEN_TRANSH',
+                             'OPEN_CRED_PRIV_CRL',
+                             'OPEN_CRED_PRIV_OLD'))
+         ---=======2.Исключить клиентов из выгружаемого списка:(1)операция «выдача кредита»: отказали в выдаче кредита;
+       and (f.c_kas_sys_ref = 2019973175 or f.c_kas_sys_ref is null)
+         --  and po.x_dnp_name = 'АЛМАТЫ'
+         -- убрать тех, кому отказали в кредите в течение недели назад
+       and not exists
+          (select null
+             from M_FOLDER_CON_CANCEL sd
+            where trunc(sd.folder_date_create_mi) > trunc(sysdate - 7)
+              and sd.is_credit_issued = 0
+              and sd.is_point_active = 0 /*and sd.pos_type='ОТДЕЛЕНИЕ'*/
+              and sd.x_dnp_region in
+                  ('АЛМАТЫ', 'КАСКЕЛЕН', 'ТАЛГАР')
+              and (sd.cancel_client <> 1 or sd.cancel_client is null)
+              and sd.iin = f.c_inn
+            group by sd.iin)
+       and not exists (select null
+          from M_ZUP_1C_STAFF_OUT pe
+         where pe.iin = f.c_inn
+           and pe.firing_date is null)
+       and not exists
+          (select null
+             from T_NPS_CLIENT_PHONED_ALL cl_ph
+            where insert_date < sysdate - 1 / 24
+              and cl_ph.client_iin = f.c_inn) ---вырежим тех клиентов кому уже звонили
+       and mx.data_refresh_hour > to_number(to_char(f.c_date_create, 'hh24'))) t
+ group by t.cient_iin,
+          t.client_name_last,
+          t.client_name_first,
+          t.client_name_patronymic,
+          t.client_name_short,
+          t.mobile_phones,
+          t.rfo_client_id,
+          t.data_refresh_hour,
+          t.x_dnp_region,
+          t.x_dnp_name,
+          t.dep_code,
+          t.dep_name,
+          t.userid,
+          t.prod_type;
+grant select on U1.M_RFO_ONLINE_FLD_DNP_PHON_UNIQ to LOADDB;
+grant select on U1.M_RFO_ONLINE_FLD_DNP_PHON_UNIQ to LOADER;
+
+

@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_TMP_J_DEL_Z49_BAD_CONS_TOADD
+refresh force on demand
+as
+select
+    c.folder_id_first,
+    c.contract_number,
+    trunc(f.folder_date_create) as folder_date_create,
+    to_char(f.folder_date_create,'yyyy - mm') as folder_yyyy_mm_create,
+    c.yy_mm_start_last,
+    c.delinq_days_last_rep
+from M_CONTRACT_CAL_DEL c
+join M_TMP_J_Z49_TO_ASOKR ca on ca.folder_id = c.folder_id_first
+join V_FOLDER_ALL_RFO f on f.folder_id = ca.folder_id
+join V_CONTRACT_CAL cc on cc.contract_number = c.contract_number
+join V_PORTFOLIO pp on pp.contract_number = c.contract_number and pp.yy_mm_report = '2014 - 01'
+where not exists (select null from M_FOLDER_CON_CANCEL f
+                  where f.folder_id = c.folder_id_first and f.is_refin = 1) and ----!
+      exists (select null from V_PORTFOLIO p where p.contract_number = c.contract_number and
+                          p.planned_pmt_month = 1 and p.delinq_days > 7) and
+      c.yy_mm_start_last like '2013 - %' and cc.contract_amount_first > 0 and
+      cc.product_program_first != 'ПРИВИЛЕГИРОВАННЫЙ' and
+      cc.cr_prog_name_rbo_last != 'ОВЕРДРАФТЫ' and
+      cc.is_refin_restruct_ever = 0 and
+      c.delinq_days_last_rep > 0 and
+      pp.delinq_days > 0 and
+      c.is_card = 1 and -- не карты
+      trunc(f.folder_date_create) = cc.start_date_first and
+      to_char(f.folder_date_create,'yyyy - mm') = c.yy_mm_start_last;
+grant select on U1.M_TMP_J_DEL_Z49_BAD_CONS_TOADD to LOADDB;
+grant select on U1.M_TMP_J_DEL_Z49_BAD_CONS_TOADD to LOADER;
+
+

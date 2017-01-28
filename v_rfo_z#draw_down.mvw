@@ -1,0 +1,44 @@
+﻿create materialized view U1.V_RFO_Z#DRAW_DOWN
+refresh complete on demand
+as
+select /*+ driving_site*/
+       t.id,
+       t.c_id_req,
+       t.c_payer_summ,
+       t.c_transfer_summ,
+       t.c_rate,
+       t.c_small_coin,
+       t.c_settlement_summ,
+       t.c_tariff_summ,
+       t.c_cash_type#0,
+       t.c_cash_type#transfer#bank,
+       t.c_cash_type#transfer#num_acc,
+       t.c_cash_type#transfer#name_kt,
+       t.c_cash_type#transfer#inn_kt,
+       t.c_type#transfer#code_benefic13,
+       t.c_cash_type#transfer#note,
+       t.c_h_type#trans_card#num_card15,
+       t.c_type#trans_card#valid_thru16,
+       t.c_certificate#type,
+       t.c_certificate#num,
+       t.c_certificate#seria,
+       t.c_certificate#who,
+       t.c_certificate#date_doc,
+       t.c_certificate#place,
+       t.c_certificate#date_end,
+       t.c_certificate#depart_code,
+       t.c_nazn,
+       t.c_kod_nazn_pay,
+       t.c__type#trans_card#num_card216,
+       t.c_kas_close_summ,
+       t.c_kas_dog_tariffs,
+       t.c_kas_kbk,
+       t.c_kas_is_convert,
+       t.c_kas_transfer_typ,
+       t.sn,
+       t.su
+  from ibs.z#draw_down@rfo_snap t;
+grant select on U1.V_RFO_Z#DRAW_DOWN to LOADDB;
+grant select on U1.V_RFO_Z#DRAW_DOWN to LOADER;
+
+

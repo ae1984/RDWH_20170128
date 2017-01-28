@@ -1,0 +1,75 @@
+﻿create materialized view U1.M_SCCL_RFO_FORM_PAR1_AUTO
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       cl.rfo_client_id,
+
+       --t.folder_date_create,
+       --t.folder_date_create_mi,
+       --f.inc_sal,
+       --f.inc_all,
+       --(t.folder_date_create_mi - trunc(t.folder_date_create_mi)),
+
+       --count 30, 90 day
+       count(case when t.folder_date_create >= trunc(sysdate) - 30 then t.app_id end) as frm_cnt_30d_aut,
+       count(case when t.folder_date_create >= trunc(sysdate) - 90 then t.app_id end) as frm_cnt_90d_aut,
+
+
+       --inc_sal sum 30, 90 day
+       sum(case when t.folder_date_create >= trunc(sysdate) - 30 then f.inc_sal end) as inc_sal_sum_30d_aut,
+       sum(case when t.folder_date_create >= trunc(sysdate) - 90 then f.inc_sal end) as inc_sal_sum_90d_aut,
+
+
+       --inc_all sum 30, 90 day
+       sum(case when t.folder_date_create >= trunc(sysdate) - 30 then f.inc_all end) as inc_all_sum_30d_aut,
+       sum(case when t.folder_date_create >= trunc(sysdate) - 90 then f.inc_all end) as inc_all_sum_90d_aut,
+
+
+       /*count(distinct case when f.form_client_id is not null then f.form_client_id end)
+                      over (partition by t.rfo_client_id order by t.folder_date_create
+                            range between 30 preceding and 1 preceding) as form_cnt_30d,
+
+       count(distinct case when f.form_client_id is not null then f.form_client_id end)
+                      over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                           range between 30 + (t.folder_date_create_mi - trunc(t.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as form_cnt_30d_x,
+
+       count(distinct case when f.form_client_id is not null then f.form_client_id end)
+                      over (partition by t.rfo_client_id order by t.folder_date_create
+                           range between 90 preceding and 1 preceding) as form_cnt_90d,
+
+       count(distinct case when f.form_client_id is not null then f.form_client_id end)
+                      over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                           range between 90 + (t.folder_date_create_mi - trunc(t.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as form_cnt_90d_x,*/
+
+
+       --inc_sal aggregate 30 day
+       min(case when t.folder_date_create >= trunc(sysdate) - 30 then f.inc_sal end) as inc_sal_min_30d_aut,
+       avg(case when t.folder_date_create >= trunc(sysdate) - 30 then f.inc_sal end) as inc_sal_avg_30d_aut,
+       max(case when t.folder_date_create >= trunc(sysdate) - 30 then f.inc_sal end) as inc_sal_max_30d_aut,
+
+       --inc_sal aggregate 90 day
+       min(case when t.folder_date_create >= trunc(sysdate) - 90 then f.inc_sal end) as inc_sal_min_90d_aut,
+       avg(case when t.folder_date_create >= trunc(sysdate) - 90 then f.inc_sal end) as inc_sal_avg_90d_aut,
+       max(case when t.folder_date_create >= trunc(sysdate) - 90 then f.inc_sal end) as inc_sal_max_90d_aut,
+
+       --inc_all aggregate 30 day
+       min(case when t.folder_date_create >= trunc(sysdate) - 30 then f.inc_all end) as inc_all_min_30d_aut,
+       avg(case when t.folder_date_create >= trunc(sysdate) - 30 then f.inc_all end) as inc_all_avg_30d_aut,
+       max(case when t.folder_date_create >= trunc(sysdate) - 30 then f.inc_all end) as inc_all_max_30d_aut,
+
+       --inc_all aggregate 90 day
+       min(case when t.folder_date_create >= trunc(sysdate) - 90 then f.inc_all end) as inc_all_min_90d_aut,
+       avg(case when t.folder_date_create >= trunc(sysdate) - 90 then f.inc_all end) as inc_all_avg_90d_aut,
+       max(case when t.folder_date_create >= trunc(sysdate) - 90 then f.inc_all end) as inc_all_max_90d_aut
+
+from u1.V_CLIENT_RFO_BY_ID cl
+join u1.M_APP_MINER_BAS t on t.rfo_client_id = cl.rfo_client_id
+                             and t.folder_date_create >= trunc(sysdate) - 90
+join u1.M_APP_MINER_FORM_CLIENT f on f.app_id = t.app_id
+where t.product_type = 'АВТО'
+group by cl.rfo_client_id;
+grant select on U1.M_SCCL_RFO_FORM_PAR1_AUTO to LOADDB;
+grant select on U1.M_SCCL_RFO_FORM_PAR1_AUTO to RTS_RDWH;
+
+

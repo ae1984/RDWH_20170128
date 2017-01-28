@@ -1,0 +1,47 @@
+﻿create materialized view U1.M_PRODUCT_SPD
+refresh complete on demand
+as
+select substr(start_date, 1, 2) as day_,
+       substr(start_date, 4, 2) as month_,
+       substr(start_date, 7, 4) as year_,
+       trunc(start_date) as date_,
+       x_product_type,
+       prod,
+       count(1) as count_check,
+       sum(total_debt) as total_debt_sum,
+       count(distinct deal_number) as count_contract,
+       sum(case
+
+             when coalesce(delinq_days_future,delinq_days_old,delinq_days_past) >= 25 then
+              1
+             else
+              0
+           end) as def_agr_cnt,
+       sum(case
+
+             when coalesce(delinq_days_future,delinq_days_old,delinq_days_past) >= 25 then
+              total_debt
+             else
+              0
+           end) as def_agr_vol,
+           is_online,
+           is_categ_a,
+           is_categ_b
+  from (select *
+          from M_FPD_SPD_PRE
+         where plan_date_due_rn = 1
+           and rep_date = plan_pmt_date_first + 30)
+ group by substr(start_date, 1, 2),
+          substr(start_date, 4, 2),
+          substr(start_date, 7, 4),
+          trunc(start_date),
+          x_product_type,
+          prod,
+          is_online,
+          is_categ_a,
+          is_categ_b;
+grant select on U1.M_PRODUCT_SPD to LOADDB;
+grant select on U1.M_PRODUCT_SPD to LOADER;
+grant select on U1.M_PRODUCT_SPD to LOAD_RDWH_PROD;
+
+

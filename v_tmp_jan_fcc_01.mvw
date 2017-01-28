@@ -1,0 +1,15 @@
+﻿create materialized view U1.V_TMP_JAN_FCC_01
+refresh force on demand
+as
+select t.folder_id, t.folder_date_create_mi, t.rfo_client_id,
+       count(t.folder_id) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+             range between 1 preceding and current row) as prior_fld_in_24h_count,
+       count(t.folder_id) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+             range between 2 preceding and current row) as prior_fld_in_48h_count,
+       count(t.folder_id) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+             range between 7 preceding and current row) as prior_fld_in_1w_count
+from (select distinct folder_id, folder_date_create_mi, rfo_client_id from M_FOLDER_CON_CANCEL) t;
+grant select on U1.V_TMP_JAN_FCC_01 to LOADDB;
+grant select on U1.V_TMP_JAN_FCC_01 to LOADER;
+
+

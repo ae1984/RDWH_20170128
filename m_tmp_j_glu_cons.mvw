@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_TMP_J_GLU_CONS
+refresh force on demand
+as
+select d.* from V_DWH_PORTFOLIO_CURRENT d
+join (
+    select distinct coalesce(c.deal_number, c2.deal_number) as deal_number
+    from M_TMP_J_GLU t
+    left join V_DWH_PORTFOLIO_CURRENT c on c.client_iin = t.c_rnn
+    left join V_DWH_PORTFOLIO_CURRENT c2 on c2.client_rnn = t.c_rnn
+) x on x.deal_number = d.deal_number
+where d.x_is_credit_issued = 1
+union
+select d2.* from V_DWH_PORTFOLIO_CURRENT d2
+join M_TMP_J_GLU_IIN_ALL y on y.iin = d2.client_iin
+where d2.x_is_credit_issued = 1;
+grant select on U1.M_TMP_J_GLU_CONS to LOADDB;
+grant select on U1.M_TMP_J_GLU_CONS to LOADER;
+
+

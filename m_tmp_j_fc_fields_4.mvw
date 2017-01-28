@@ -1,0 +1,104 @@
+﻿create materialized view U1.M_TMP_J_FC_FIELDS_4
+refresh complete on demand
+as
+select to_char(f.folder_date_create_mi,'yyyy') as year, to_char(f.folder_date_create_mi,'yyyy-mm') as mon,
+       f.cr_program_name, f.product_type, f.is_credit_issued,
+       ---
+       round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) as work_experience_last_place,
+
+
+       case when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) is null then 'null'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 1 then '00-01'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 4 then '01-03'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 7 then '04-06'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 19 then '07-18'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 48 then '1.5-3 года'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 72 then '3-5 лет'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 96 then '6-7 лет'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 132 then '8-10 лет'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) >= 132 then '11 и более лет' end
+       as work_experience_last_place_1,
+
+       case when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 12 then '0 лет'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 24 then '1 год'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 36 then '2 года'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 48 then '3 года'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 60 then '4 года'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) >= 60 then '5 и более лет'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) is null then 'null' end
+       as work_experience_last_place_2,
+
+       case when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 12 then 'менее 1 года'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 24 then '1 год'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 36 then '2 года'
+--            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 48 then '3 года'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 60 then '3-4 года'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) >= 60 then '5 и более лет'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) is null then 'null' end
+       as work_experience_last_place_3,
+
+       round(fc.inc_pension_benefits / 5000) * 5000 as pension_benefits,
+       round(g.salary / 5000) * 5000 as gcvp_salary,
+       ---
+       count(*) as cnt,
+       count(distinct f.rfo_contract_id) as cnt_rfo_con,
+       sum(d.max_debt_used_x) / 1000000 as sales_mln,
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_mln
+from M_FOLDER_CON_CANCEL f
+join M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = f.form_client_id
+left join V_RFO_Z#FORM_CLIENT fc2 on fc2.id = f.form_client_id
+
+left join (select fcc.rfo_contract_id, max(v.gcvp_rep_id) as gcvp_max_id
+          from V_GCVP_REPORT v
+          join M_FOLDER_CON_CANCEL fcc on fcc.iin = v.client_iin and
+               (v.rep_date >= trunc(fcc.folder_date_create_mi) - 60 and v.rep_date <= trunc(fcc.folder_date_create_mi))
+          where v.error_code = 0
+          group by fcc.rfo_contract_id
+) gm on gm.rfo_contract_id = f.rfo_contract_id
+left join (select v.gcvp_rep_id, max(v.salary) as salary,
+                  max(v.pmts_count_from_rep) as gcvp_pmts_count_from_rep
+          from V_GCVP_REPORT v
+          group by v.gcvp_rep_id
+) g on g.gcvp_rep_id = gm.gcvp_max_id
+
+where to_char(f.folder_date_create_mi,'yyyy') in ('2014','2015')
+group by to_char(f.folder_date_create_mi,'yyyy'), to_char(f.folder_date_create_mi,'yyyy-mm'),
+         f.cr_program_name, f.product_type, f.is_credit_issued,
+         ---
+         round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)),
+
+       case when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) is null then 'null'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 1 then '00-01'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 4 then '01-03'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 7 then '04-06'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 19 then '07-18'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 48 then '1.5-3 года'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 72 then '3-5 лет'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 96 then '6-7 лет'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 132 then '8-10 лет'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) >= 132 then '11 и более лет' end,
+
+       case when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 12 then '0 лет'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 24 then '1 год'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 36 then '2 года'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 48 then '3 года'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 60 then '4 года'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) >= 60 then '5 и более лет'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) is null then 'null' end,
+
+       case when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 12 then 'менее 1 года'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 24 then '1 год'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 36 then '2 года'
+--            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 48 then '3 года'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) < 60 then '3-4 года'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) >= 60 then '5 и более лет'
+            when round(months_between(f.folder_date_create_mi, fc.work_experience_last_place)) is null then 'null' end,
+
+         round(fc.inc_pension_benefits / 5000) * 5000,
+         round(g.salary / 5000) * 5000;
+grant select on U1.M_TMP_J_FC_FIELDS_4 to LOADDB;
+grant select on U1.M_TMP_J_FC_FIELDS_4 to LOADER;
+
+

@@ -1,0 +1,38 @@
+﻿create materialized view U1.M_TMP_J_KDN_TK_NOV_14
+refresh force on demand
+as
+select case when k.kdn_form_salary_max >= 200 then 200
+              when k.kdn_form_salary_max >= 150 then 150
+              when k.kdn_form_salary_max >= 100 then 100
+              when k.kdn_form_salary_max >= 90 then 90
+              when k.kdn_form_salary_max >= 80 then 80
+              when k.kdn_form_salary_max >= 70 then 70
+              when k.kdn_form_salary_max >= 60 then 60
+              when k.kdn_form_salary_max >= 50 then 50
+              when k.kdn_form_salary_max >= 40 then 40
+              when k.kdn_form_salary_max >= 30 then 30
+              when k.kdn_form_salary_max >= 20 then 20
+              when k.kdn_form_salary_max >= 10 then 10
+              when k.kdn_form_salary_max >= 0 then 0 end as kdn_form_salary_max,
+         case when m.contract_term_months >= 60 then 60
+              when m.contract_term_months >= 48 then 48
+              when m.contract_term_months >= 36 then 36
+              when m.contract_term_months >= 24 then 24
+              when m.contract_term_months >= 18 then 18
+              when m.contract_term_months >= 12 then 12
+              when m.contract_term_months >= 9 then 9
+              when m.contract_term_months >= 6 then 6
+              when m.contract_term_months >= 3 then 3
+              when m.contract_term_months >= 0 then 0 end as contract_term_months,
+         cc.contract_number,
+         cc.max_debt_used
+from M_TMP_J_K5 k
+join M_FOLDER_CON_MINER m on m.contract_number = k.deal_number
+join V_CONTRACT_CAL cc on cc.contract_number = k.deal_number
+where cc.yy_mm_start_last like '2014 - 11' and
+      m.contract_term_months is not null and
+      cc.product_start_last in ('ТК');
+grant select on U1.M_TMP_J_KDN_TK_NOV_14 to LOADDB;
+grant select on U1.M_TMP_J_KDN_TK_NOV_14 to LOADER;
+
+

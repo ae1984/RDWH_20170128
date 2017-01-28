@@ -1,0 +1,13 @@
+﻿create materialized view U1.MV_MO_SMART_CACHE_PKB
+using no index
+refresh complete on demand
+as
+select
+  t.*
+
+from v_mo_smart_cache_pkb t
+where t.CLIENT_REF is not null;
+grant select on U1.MV_MO_SMART_CACHE_PKB to LOADDB;
+grant select on U1.MV_MO_SMART_CACHE_PKB to LOADER;
+
+

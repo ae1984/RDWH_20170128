@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_TDWH_CLIENT_COORDINATES_SQ2
+refresh complete on demand
+as
+select /*+ parallel 30 */ c.clnt_inn,trunc(t.longitude, 2) longitude,trunc(t.latitude, 2) latitude, trunc(t.longitude, 2) || ' - ' || trunc(t.latitude, 2) square
+   from M_TDWH_CLIENT_COORDINATES t
+   join V_DWH_CLIENT_PHYS_CURRENT c on c.clnt_gid=t.client_dwh_id
+  where t.city = 'АЛМАТЫ'
+    and abs(t.is_correct) <= 10
+group by c.clnt_inn, trunc(t.longitude, 2),trunc(t.latitude, 2),trunc(t.longitude, 2) || ' - ' || trunc(t.latitude, 2);
+grant select on U1.M_TDWH_CLIENT_COORDINATES_SQ2 to LOADDB;
+grant select on U1.M_TDWH_CLIENT_COORDINATES_SQ2 to LOADER;
+
+

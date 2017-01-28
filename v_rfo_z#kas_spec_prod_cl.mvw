@@ -1,0 +1,34 @@
+﻿create materialized view U1.V_RFO_Z#KAS_SPEC_PROD_CL
+refresh force on demand
+as
+select id,
+      collection_id,
+      c_cr_limit,
+      c_status,
+      c_type_categ,
+      c_source,
+      c_folder_ref,
+      c_cln_accept_ref,
+      c_camp_type_code,
+      c_camp_name_code,
+      c_prod_code_lev1,
+      c_prod_code_lev2,
+      c_prod_code_lev3,
+      c_smart_script_id,
+      c_cell_package_sk,
+      c_display_offer,
+      c_param_array,
+      c_dog_ref,
+      c_priority,
+      c_date_out,
+      c_ext_id,
+      c_program_ref,
+      c_pc_dog_ref,
+      c_create_date,
+      sn,
+      su
+from ibs.Z#KAS_SPEC_PROD_CL@rfo_snap;
+grant select on U1.V_RFO_Z#KAS_SPEC_PROD_CL to LOADDB;
+grant select on U1.V_RFO_Z#KAS_SPEC_PROD_CL to LOADER;
+
+

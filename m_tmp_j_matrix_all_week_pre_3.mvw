@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_TMP_J_MATRIX_ALL_WEEK_PRE_3
+build deferred
+refresh complete on demand
+as
+select /*+parallel(2)*/  distinct r.folder_id
+from u1.V_FOLDER_ALL_RFO r
+join u1.v_folder_all_history f on r.folder_id=f.folder_id
+where f.user_name not in ('ПОЛЬЗОВАТЕЛЬ АВТОМАТИЧЕСКАЯ ОБРАБОТКА','ESB_USER') and r.process_name = 'ОНЛАЙН КРЕДИТ';
+grant select on U1.M_TMP_J_MATRIX_ALL_WEEK_PRE_3 to LOADDB;
+
+

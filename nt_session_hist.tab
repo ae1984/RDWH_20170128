@@ -1,0 +1,25 @@
+﻿create table U1.NT_SESSION_HIST
+(
+  sdt      DATE,
+  username VARCHAR2(30),
+  machine  VARCHAR2(64),
+  osuser   VARCHAR2(30),
+  module   VARCHAR2(64),
+  cnt_ses  NUMBER,
+  status   VARCHAR2(200)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_SESSION_HIST to LOADDB;
+

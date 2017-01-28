@@ -1,0 +1,40 @@
+﻿create table U1.TK_AR1
+(
+  month_ratif      VARCHAR2(7),
+  date_ratif       VARCHAR2(10),
+  sales            NUMBER,
+  sales_mln        NUMBER,
+  req_cnt          NUMBER,
+  cli_cnt          NUMBER,
+  fld_con_approved NUMBER,
+  rr_prescoring    NUMBER,
+  rr_middle_office NUMBER,
+  rr_controller    NUMBER,
+  cancel_client    NUMBER,
+  rr_manager       NUMBER,
+  rr_cpr           NUMBER,
+  rr_verificator   NUMBER,
+  rr_overtime      NUMBER,
+  rr_aa            NUMBER,
+  rej_req_cnt      NUMBER,
+  rr_blacklist     NUMBER,
+  rr_tax           NUMBER,
+  rr_arest         NUMBER,
+  new_cli_cnt      NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.TK_AR1 to LOADDB;
+grant select on U1.TK_AR1 to LOADER;
+

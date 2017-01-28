@@ -1,0 +1,38 @@
+﻿create table U1.MO_RFOL_CONTRACT_CARD
+(
+  cmchp_id                  NUMBER,
+  foldr_client              NUMBER,
+  kpdog_id                  NUMBER not null,
+  kpdog_num_dog             VARCHAR2(300),
+  kpdog_credit_limit        NUMBER(17,2),
+  kpdog_date_begin          DATE,
+  kpdog_date_end            DATE,
+  kcacs_id                  NUMBER,
+  kcacs_code                VARCHAR2(120),
+  kcacs_name                VARCHAR2(300),
+  pprop_id__kpdog_cr_prog   NUMBER,
+  pprop_code__kpdog_cr_prog VARCHAR2(105),
+  pprop_name__kpdog_cr_prog VARCHAR2(750),
+  stdog_id__kpdog           NUMBER,
+  stdog_code__kpdog         VARCHAR2(150),
+  stdog_name__kpdog         VARCHAR2(300),
+  kunid_id__kpdog_tar_pln   NUMBER,
+  kunid_code__kpdog_tar_pln VARCHAR2(120),
+  kunid_name__kpdog_tar_pln VARCHAR2(750)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO_RFOL_CONTRACT_CARD to LOADDB;
+grant select on U1.MO_RFOL_CONTRACT_CARD to LOADER;
+

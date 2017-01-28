@@ -1,0 +1,23 @@
+﻿CREATE MATERIALIZED VIEW U1.M_MO_T_ORG_BL
+REFRESH COMPLETE ON DEMAND
+AS
+SELECT ID,
+        BIN,
+        ORG_NAME,
+        ADD_CAUSE_DESC,
+        ADD_DATE,
+        CHANGE_CAUSE_DESC,
+        CHANGE_DATE,
+        APEX_USER_ADD,
+        APEX_USER_LAST_CHANGE,
+        OS_USER_ADD,
+        OS_USER_LAST_CHANGE,
+        ORACLE_USER_ADD,
+        ORACLE_USER_LAST_CHANGE,
+        IP_ADDRESS_ADD,
+        IP_ADDRESS_LAST_CHANGE
+  from T_ORG_BL@MO1_PROD;
+grant select on U1.M_MO_T_ORG_BL to LOADDB;
+grant select on U1.M_MO_T_ORG_BL to LOADER;
+
+

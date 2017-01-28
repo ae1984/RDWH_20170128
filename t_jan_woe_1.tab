@@ -1,0 +1,35 @@
+﻿create table U1.T_JAN_WOE_1
+(
+  param_tr     VARCHAR2(200),
+  param_name   VARCHAR2(200),
+  bin_val      VARCHAR2(200),
+  med_val      NUMBER,
+  cnt_good     NUMBER,
+  cnt_bad      NUMBER,
+  cnt_all      NUMBER,
+  cnt_good_cum NUMBER,
+  cnt_bad_cum  NUMBER,
+  cnt_all_cum  NUMBER,
+  dgood        NUMBER,
+  dbad         NUMBER,
+  dall         NUMBER,
+  woe          NUMBER,
+  iv_pre       NUMBER,
+  iv           NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 16K
+    next 16K
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_JAN_WOE_1 to LOADDB;
+grant select on U1.T_JAN_WOE_1 to LOADER;
+

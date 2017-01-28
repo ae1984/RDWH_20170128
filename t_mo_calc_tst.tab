@@ -1,0 +1,98 @@
+﻿create table U1.T_MO_CALC_TST
+(
+  id                NUMBER not null,
+  d_calc_id         NUMBER not null,
+  date_start        TIMESTAMP(6),
+  process_id        NUMBER not null,
+  date_end          TIMESTAMP(6),
+  error_code        NUMBER(1) default 0 not null,
+  error_msg         VARCHAR2(2048),
+  d_process_calc_id NUMBER,
+  d_calc_type_id    NUMBER,
+  d_cacl_group_id   NUMBER
+)
+partition by range (DATE_START) interval (NUMTOYMINTERVAL(1, 'MONTH'))
+subpartition by hash (ID)
+(
+  partition P0 values less than (TIMESTAMP' 2013-09-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP17090 tablespace USERS_ARC,
+    subpartition SYS_SUBP17091 tablespace USERS_ARC,
+    subpartition SYS_SUBP17092 tablespace USERS_ARC,
+    subpartition SYS_SUBP17093 tablespace USERS_ARC,
+    subpartition SYS_SUBP17094 tablespace USERS_ARC,
+    subpartition SYS_SUBP17095 tablespace USERS_ARC,
+    subpartition SYS_SUBP17096 tablespace USERS_ARC,
+    subpartition SYS_SUBP17097 tablespace USERS_ARC,
+    subpartition SYS_SUBP17098 tablespace USERS_ARC,
+    subpartition SYS_SUBP17099 tablespace USERS_ARC,
+    subpartition SYS_SUBP17100 tablespace USERS_ARC,
+    subpartition SYS_SUBP17101 tablespace USERS_ARC,
+    subpartition SYS_SUBP17102 tablespace USERS_ARC,
+    subpartition SYS_SUBP17103 tablespace USERS_ARC,
+    subpartition SYS_SUBP17104 tablespace USERS_ARC,
+    subpartition SYS_SUBP17105 tablespace USERS_ARC,
+    subpartition SYS_SUBP17106 tablespace USERS_ARC,
+    subpartition SYS_SUBP17107 tablespace USERS_ARC,
+    subpartition SYS_SUBP17108 tablespace USERS_ARC,
+    subpartition SYS_SUBP17109 tablespace USERS_ARC,
+    subpartition SYS_SUBP17110 tablespace USERS_ARC,
+    subpartition SYS_SUBP17111 tablespace USERS_ARC,
+    subpartition SYS_SUBP17112 tablespace USERS_ARC,
+    subpartition SYS_SUBP17113 tablespace USERS_ARC,
+    subpartition SYS_SUBP17114 tablespace USERS_ARC,
+    subpartition SYS_SUBP17115 tablespace USERS_ARC,
+    subpartition SYS_SUBP17116 tablespace USERS_ARC,
+    subpartition SYS_SUBP17117 tablespace USERS_ARC,
+    subpartition SYS_SUBP17118 tablespace USERS_ARC,
+    subpartition SYS_SUBP17119 tablespace USERS_ARC,
+    subpartition SYS_SUBP17120 tablespace USERS_ARC,
+    subpartition SYS_SUBP17121 tablespace USERS_ARC
+  ),
+  partition SYS_P17154 values less than (TIMESTAMP' 2013-10-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP17122 tablespace USERS_ARC,
+    subpartition SYS_SUBP17123 tablespace USERS_ARC,
+    subpartition SYS_SUBP17124 tablespace USERS_ARC,
+    subpartition SYS_SUBP17125 tablespace USERS_ARC,
+    subpartition SYS_SUBP17126 tablespace USERS_ARC,
+    subpartition SYS_SUBP17127 tablespace USERS_ARC,
+    subpartition SYS_SUBP17128 tablespace USERS_ARC,
+    subpartition SYS_SUBP17129 tablespace USERS_ARC,
+    subpartition SYS_SUBP17130 tablespace USERS_ARC,
+    subpartition SYS_SUBP17131 tablespace USERS_ARC,
+    subpartition SYS_SUBP17132 tablespace USERS_ARC,
+    subpartition SYS_SUBP17133 tablespace USERS_ARC,
+    subpartition SYS_SUBP17134 tablespace USERS_ARC,
+    subpartition SYS_SUBP17135 tablespace USERS_ARC,
+    subpartition SYS_SUBP17136 tablespace USERS_ARC,
+    subpartition SYS_SUBP17137 tablespace USERS_ARC,
+    subpartition SYS_SUBP17138 tablespace USERS_ARC,
+    subpartition SYS_SUBP17139 tablespace USERS_ARC,
+    subpartition SYS_SUBP17140 tablespace USERS_ARC,
+    subpartition SYS_SUBP17141 tablespace USERS_ARC,
+    subpartition SYS_SUBP17142 tablespace USERS_ARC,
+    subpartition SYS_SUBP17143 tablespace USERS_ARC,
+    subpartition SYS_SUBP17144 tablespace USERS_ARC,
+    subpartition SYS_SUBP17145 tablespace USERS_ARC,
+    subpartition SYS_SUBP17146 tablespace USERS_ARC,
+    subpartition SYS_SUBP17147 tablespace USERS_ARC,
+    subpartition SYS_SUBP17148 tablespace USERS_ARC,
+    subpartition SYS_SUBP17149 tablespace USERS_ARC,
+    subpartition SYS_SUBP17150 tablespace USERS_ARC,
+    subpartition SYS_SUBP17151 tablespace USERS_ARC,
+    subpartition SYS_SUBP17152 tablespace USERS_ARC,
+    subpartition SYS_SUBP17153 tablespace USERS_ARC
+  )
+);
+grant select on U1.T_MO_CALC_TST to LOADDB;
+grant select on U1.T_MO_CALC_TST to LOADER;
+

@@ -1,0 +1,10 @@
+﻿create materialized view U1.M_ECO_OFF_ONL
+refresh force on demand
+as
+select t1.iin, t1.rfo_id, t1.off, t2.onl
+from UPD_USER.ECO_OFF t1
+join UPD_USER.ECO_ONL t2 on  t1.rfo_id = t2.rfo_id;
+grant select on U1.M_ECO_OFF_ONL to LOADDB;
+grant select on U1.M_ECO_OFF_ONL to LOAD_MO;
+
+

@@ -1,0 +1,414 @@
+﻿create materialized view U1.M_CONTRACT_CAL_DEL_TEST
+refresh force on demand
+as
+select
+  x.*,
+      case when (delinq_rate_pmt_1 > 0 and con_fact_pmts < 2) or
+                (delinq_rate_pmt_2_01 > 0 and con_fact_pmts < 3) or
+                (delinq_rate_pmt_3_001 > 0 and con_fact_pmts < 4) or
+                (delinq_rate_pmt_4_0001 > 0 and con_fact_pmts < 5) or
+                (delinq_rate_pmt_5_00001 > 0 and con_fact_pmts < 6) then 1 else 0 end as
+  is_fraud_1,
+      case when ((delinq_rate_pmt_1 > 0 and con_fact_pmts < 2) or
+                (delinq_rate_pmt_2_01 > 0 and con_fact_pmts < 3) or
+                (delinq_rate_pmt_3_001 > 0 and con_fact_pmts < 4) or
+                (delinq_rate_pmt_4_0001 > 0 and con_fact_pmts < 5) or
+                (delinq_rate_pmt_5_00001 > 0 and con_fact_pmts < 6)) and max_debt_used > 0 then
+           nvl(total_debt_last_rep_new,0) / max_debt_used * 100
+         else 0 end as
+  delinq_rate_frd_1,
+      case when ((delinq_rate_pmt_1 > 0 and con_fact_pmts < 2) or
+                (delinq_rate_pmt_2_01 > 0 and con_fact_pmts < 3) or
+                (delinq_rate_pmt_3_001 > 0 and con_fact_pmts < 4) or
+                (delinq_rate_pmt_4_0001 > 0 and con_fact_pmts < 5) or
+                (delinq_rate_pmt_5_00001 > 0 and con_fact_pmts < 6)) then max_debt_used end as
+  max_debt_used_frd_1,
+      case when ((delinq_rate_pmt_1 > 0 and con_fact_pmts < 2) or
+                (delinq_rate_pmt_2_01 > 0 and con_fact_pmts < 3) or
+                (delinq_rate_pmt_3_001 > 0 and con_fact_pmts < 4) or
+                (delinq_rate_pmt_4_0001 > 0 and con_fact_pmts < 5) or
+                (delinq_rate_pmt_5_00001 > 0 and con_fact_pmts < 6)) then total_debt_last_rep_new end as
+  total_debt_last_rep_new_frd_1,
+
+      /*case when ((con_planned_pmts > 0 and con_fact_pmts = 0) or---0 платежей
+                --(con_planned_pmts >= 2 and con_fact_pmts = 1 and delinq_rate_pmt_1 = 0 and p2.total_debt >= 5000) or
+                (con_planned_pmts >= 2 and con_fact_pmts < 3 and delinq_rate_pmt_1 = 0 and delinq_rate_pmt_2_01 > 0 and
+                 total_debt_pmt_2 >= 5000) or--- 1 платеж и не платил
+--                (pmt_cnt = 1 and delinq_rate_pmt_2_01 > 0 and con_fact_pmts < 3 and total_debt_pmt_2 >= 5000) or--в 1-й день 1 платеж и не платил
+--                (pmt_cnt = 2 and delinq_rate_pmt_3_001 > 0 and con_fact_pmts < 4 and total_debt_pmt_3 >= 5000) or--в 1-й день 2 платежа и не платил
+                (pmt_cnt = 3 and delinq_rate_pmt_4_0001 > 0 and con_fact_pmts < 5 and total_debt_pmt_4 >= 5000) or--в 1-й день 3 платежа и не платил
+                (pmt_cnt = 4 and delinq_rate_pmt_5_00001 > 0 and con_fact_pmts < 6 and total_debt_pmt_5 >= 5000))--в 1-й день 4 платежа и не платил
+           then 1 else 0 end as
+  is_fraud_2,*/
+
+/*      case when (con_planned_pmts > 0 and con_fact_pmts = 0) then 1
+           when (delinq_rate_pmt_1 = 0 and delinq_rate_pmt_2_01 > 0 and -- 1 мес без просрочки, 2-ой мес на просрочке
+                 total_debt_pmt_2 >= 5000 and con_planned_pmts >= 2 and -- должен уже внести минимум 2 платежа
+                 con_fact_pmts <= 2 -- заплатил один платеж и 2 для учета того, закрытие договора у нас считается за платеж
+                 ) then 1
+           else 0 end as
+  is_fraud_2_01,*/
+
+-------------------
+
+      case when (con_planned_pmts >= 1 and -- должен был платить
+                 con_fact_pmts < 2 and -- сделал 0 платежей или 1 платеж, т.к. если договор закрывается и рефинансируется,
+                                       -- то в R-DWH сейчас по нему +1 платеж
+                 delinq_rate_pmt_1 > 0 and -- просрочка 1-го платежа > 0
+                 max_debt_used >= 5000     -- макс задолженность по договору >= 5000 - не овердрафты
+                 ) then 1 else 0 end as
+  is_fraud_2_0,--- 0 платежей
+
+       case when (con_planned_pmts >= 2 and -- должен был сделать минимум 2 платежа
+                  con_fact_pmts < 3 and -- сделал 1 платежей или 2 платежа, т.к. если договор закрывается и рефинансируется,
+                                        -- то в R-DWH сейчас по нему +1 платеж
+                  delinq_rate_pmt_1 = 0 and -- просрочка 1-го платежа была = 0
+                  delinq_rate_pmt_2_01 > 0 and -- просрочка 2-го платежа > 0
+                  max_debt_used >= 5000 -- макс задолженность по договору >= 5000 - не овердрафты
+                  ) then 1 else 0 end as
+  is_fraud_2_1,--- 1 платеж и не платил
+
+      case when (con_planned_pmts >= 1 and -- должен был платить
+                 con_fact_pmts < 2 and -- сделал 0 платежей или 1 платеж, т.к. если договор закрывается и рефинансируется,
+                                       -- то в R-DWH сейчас по нему +1 платеж
+                 delinq_rate_pmt_1 > 0 and -- просрочка 1-го платежа > 0
+                 max_debt_used >= 5000     -- макс задолженность по договору >= 5000 - не овердрафты
+                 ) or
+                 (con_planned_pmts >= 2 and -- должен был сделать минимум 2 платежа
+                  con_fact_pmts < 3 and -- сделал 1 платежей или 2 платежа, т.к. если договор закрывается и рефинансируется,
+                                        -- то в R-DWH сейчас по нему +1 платеж
+                  delinq_rate_pmt_1 = 0 and -- просрочка 1-го платежа была = 0
+                  delinq_rate_pmt_2_01 > 0 and -- просрочка 2-го платежа > 0
+                  max_debt_used >= 5000 -- макс задолженность по договору >= 5000 - не овердрафты
+                  ) then 1 else 0 end as
+  is_fraud_2_01,--- 0 платежей ИЛИ 1 платеж и не платил = is_fraud_2_0 ИЛИ is_fraud_2_1
+
+------------------
+       case when (pmt_cnt_day = 3 and delinq_rate_pmt_4_0001 > 0 and con_fact_pmts < 5 and total_debt_pmt_4 >= 5000)
+            then 1 else 0 end as
+  is_fraud_2_3,--в 1-й день 3 платежа и не платил
+       case when (pmt_cnt_day = 4 and delinq_rate_pmt_5_00001 > 0 and con_fact_pmts < 6 and total_debt_pmt_5 >= 5000)
+            then 1 else 0 end as
+  is_fraud_2_4,--в 1-й день 4 платежа и не платил
+       case when (pmt_cnt_month = 3 and delinq_rate_pmt_4_0001 > 0 and con_fact_pmts < 5 and total_debt_pmt_4 >= 5000)
+            then 1 else 0 end as
+  is_fraud_2_3_m,--в 1-й месяц 3 платежа и не платил
+       case when (pmt_cnt_month = 4 and delinq_rate_pmt_5_00001 > 0 and con_fact_pmts < 6 and total_debt_pmt_5 >= 5000)
+            then 1 else 0 end as
+  is_fraud_2_4_m--в 1-й месяц 4 платежа и не платил
+
+        /*case when (delinq_rate_pmt_1 > 0 and con_fact_pmts < 3) or
+                (delinq_rate_pmt_2_01 > 0 and con_fact_pmts < 4) or
+                (delinq_rate_pmt_3_001 > 0 and con_fact_pmts < 5) or
+                (delinq_rate_pmt_4_0001 > 0 and con_fact_pmts < 6) or
+                (delinq_rate_pmt_5_00001 > 0 and con_fact_pmts < 7) then 1 else 0 end as
+  is_fraud_2,
+      case when ((delinq_rate_pmt_1 > 0 and con_fact_pmts < 3) or
+                (delinq_rate_pmt_2_01 > 0 and con_fact_pmts < 4) or
+                (delinq_rate_pmt_3_001 > 0 and con_fact_pmts < 5) or
+                (delinq_rate_pmt_4_0001 > 0 and con_fact_pmts < 6) or
+                (delinq_rate_pmt_5_00001 > 0 and con_fact_pmts < 7)) and max_debt_used > 0 then
+           nvl(total_debt_last_rep_new,0) / max_debt_used * 100
+         else 0 end as
+  delinq_rate_frd_2,
+      case when ((delinq_rate_pmt_1 > 0 and con_fact_pmts < 3) or
+                (delinq_rate_pmt_2_01 > 0 and con_fact_pmts < 4) or
+                (delinq_rate_pmt_3_001 > 0 and con_fact_pmts < 5) or
+                (delinq_rate_pmt_4_0001 > 0 and con_fact_pmts < 6) or
+                (delinq_rate_pmt_5_00001 > 0 and con_fact_pmts < 7)) then max_debt_used end as
+  max_debt_used_frd_2,
+      case when ((delinq_rate_pmt_1 > 0 and con_fact_pmts < 3) or
+                (delinq_rate_pmt_2_01 > 0 and con_fact_pmts < 4) or
+                (delinq_rate_pmt_3_001 > 0 and con_fact_pmts < 5) or
+                (delinq_rate_pmt_4_0001 > 0 and con_fact_pmts < 6) or
+                (delinq_rate_pmt_5_00001 > 0 and con_fact_pmts < 7)) then total_debt_last_rep_new end as
+  total_debt_last_rep_new_frd_2*/
+
+from (
+select
+  c2.contract_id,
+  c.contract_number,
+  cc.client_id,
+  c2.yms,
+  c.yy_mm_start_last,
+  c2.yy_mm_start_first,
+  to_number(substr(c.yy_mm_start_last,1,4)||substr(c.yy_mm_start_last,8,2)) as yy_mm_start_last_num,
+  to_number(substr(c2.yy_mm_start_first,1,4)||substr(c2.yy_mm_start_first,8,2)) as yy_mm_start_first_num,
+  to_date(c.yy_mm_start_last, 'yyyy - mm') as yy_mm_start_last_date,
+  to_date(c2.yy_mm_start_first, 'yyyy - mm') as yy_mm_start_first_date,
+
+  c.max_debt_used, -- sales
+
+  p1.total_debt as total_debt_pmt_1,
+  p2.total_debt as total_debt_pmt_2,
+  p3.total_debt as total_debt_pmt_3,
+  p4.total_debt as total_debt_pmt_4,
+  p5.total_debt as total_debt_pmt_5,
+  p6.total_debt as total_debt_pmt_6,
+
+  p1.max_debt_used as max_debt_used_pmt_1,
+  p2.max_debt_used as max_debt_used_pmt_2,
+  p3.max_debt_used as max_debt_used_pmt_3,
+  p4.max_debt_used as max_debt_used_pmt_4,
+  p5.max_debt_used as max_debt_used_pmt_5,
+  p6.max_debt_used as max_debt_used_pmt_6,
+
+  p1.delinq_days as delinq_days_pmt_1,
+  p2.delinq_days as delinq_days_pmt_2,
+  p3.delinq_days as delinq_days_pmt_3,
+  p4.delinq_days as delinq_days_pmt_4,
+  p5.delinq_days as delinq_days_pmt_5,
+  p6.delinq_days as delinq_days_pmt_6,
+
+  ct.pmt_cnt_1_day as pmt_cnt_day,-----
+  ct.pmt_cnt_month,-------
+-----------
+  case when cc.client_status in ('B','W') then 1 else 0 end as is_bad,
+
+  case when (case when cc.client_status = 'G' then nvl(c.max_debt_used,0) *
+--             0.4
+             (case when c2.product_first in ('КН','КНП') then 0.5 else 0.4 end)
+       else 0 end -
+     case when cc.client_status in ('B','W') then nvl(c.total_debt_last_rep_new,0)
+       else 0 end) < 0 then 1 else 0 end as is_bad_by_profit,
+-----------
+  case when cc.client_status in ('B','W') then c.max_debt_used end as max_debt_used_B_W,
+  case when cc.client_status = 'B' then c.max_debt_used end as max_debt_used_B,
+  case when cc.client_status = 'W' then c.max_debt_used end as max_debt_used_W,
+  case when cc.client_status = 'G' then c.max_debt_used end as max_debt_used_G,
+  case when cc.delinq_days_max_last_rep >= 90 then c.max_debt_used end as max_debt_used_NPL,
+  case when p1.delinq_days > 7 then p1.max_debt_used end as max_debt_used_FPD,
+
+  c.total_debt_last_rep_new,
+  c2.total_debt_last_rep,
+
+  case when cc.client_status in ('B','W') then c.total_debt_last_rep_new end as total_debt_last_rep_new_B_W,
+  case when cc.client_status = 'B' then c.total_debt_last_rep_new end as total_debt_last_rep_new_B,
+  case when cc.client_status = 'W' then c.total_debt_last_rep_new end as total_debt_last_rep_newd_W,
+  case when cc.client_status = 'G' then c.total_debt_last_rep_new end as total_debt_last_rep_new_G,
+  case when cc.delinq_days_max_last_rep >= 90 then c.total_debt_last_rep_new end as total_debt_last_rep_new_NPL,
+
+  case when p1.delinq_days > 7 then p1.total_debt end as total_debt_FPD,
+
+  case when p1.delinq_days >= 1 and p1.delinq_days <= 7 then p1.total_debt end as total_debt_FPD_1_7,
+
+  case when p1.delinq_days >= 8 and p1.delinq_days <= 30 then p1.total_debt end as total_debt_FPD_8_30,
+
+  case when p1.delinq_days > 7 then p1.total_debt
+       when p1.delinq_days > 0 and p1.delinq_days < 8 then p1.total_debt * 0.45
+   end as total_debt_FPD_45,
+
+  c.delinq_days_max,
+
+  case when c.delinq_days_max >= 90 then 100
+       else c.delinq_rate end as delinq_rate,
+
+---- нестандартная просрочка
+  case when c2.contract_amount_max > 0 then
+        case when c.delinq_days_last_rep > 0 then c.total_debt_last_rep
+             else 0 end / c2.contract_amount_max * 100
+        else 0 end as delinq_rate_by_amount,
+
+  case when c2.contract_amount_max > 0 then
+        case when c.delinq_days_last_rep_new > 0 then c.total_debt_last_rep_new
+             else 0 end / c2.contract_amount_max * 100
+        else 0 end as delinq_rate_by_amount_new,
+----
+
+  nvl(c2.delinq_rate,0) as delinq_rate_last_rep,
+
+    case when cc.delinq_days_max_last_rep >= 90 and c.max_debt_used > 0 then
+           nvl(c.total_debt_last_rep_new,0) / c.max_debt_used * 100
+         else 0 end as delinq_rate_NPL,
+
+    case when cc.client_status in ('B','W') and c.max_debt_used > 0 then
+           nvl(c.total_debt_last_rep_new,0) / c.max_debt_used * 100
+         else 0 end as delinq_rate_B_W,
+
+    case when cc.client_status = 'B' and c.max_debt_used > 0 then
+           nvl(c.total_debt_last_rep_new,0) / c.max_debt_used * 100
+         else 0 end as delinq_rate_B,
+
+    case when cc.client_status = 'W' and c.max_debt_used > 0 then
+           nvl(c.total_debt_last_rep_new,0) / c.max_debt_used * 100
+         else 0 end as delinq_rate_W,
+
+/*    case when cc.client_status = 'G' and c.max_debt_used > 0 and
+              c.delinq_days_last_rep_new > 7 then
+           nvl(c.total_debt_last_rep_new,0) / c.max_debt_used * 100
+         else 0 end as delinq_rate_G,*/
+
+    case when cc.client_status = 'G' and c.max_debt_used > 0 then
+                case when c.delinq_days_last_rep > 0 and c.delinq_days_last_rep < 8 then
+                          nvl(c.total_debt_last_rep_new,0) * 0.45
+                     when c.delinq_days_last_rep > 7 then
+                          nvl(c.total_debt_last_rep_new,0)
+                else 0 end / c.max_debt_used * 100
+         else 0 end as delinq_rate_G,
+
+  nvl(c.delinq_days_last_rep,0) as delinq_days_last_rep,
+  nvl(c.delinq_days_last_rep_new,0) as delinq_days_last_rep_new,
+
+  case when cc.client_status = 'G' then nvl(c.max_debt_used,0) *
+--             0.4
+             (case when c2.product_first in ('КН','КНП') then 0.5 else 0.4 end)
+       else 0 end as income,
+
+  case when cc.client_status in ('B','W') then nvl(c.total_debt_last_rep_new,0)
+       else 0 end as expense,
+
+  case when cc.client_status = 'G' then nvl(c.max_debt_used,0) *
+--             0.4
+             (case when c2.product_first in ('КН','КНП') then 0.5 else 0.4 end)
+       else 0 end -
+     case when cc.client_status in ('B','W') then nvl(c.total_debt_last_rep_new,0)
+       else 0 end as profit,
+
+  c.product_first,
+  c.product_start_last,
+  c.product_last,
+
+  c2.is_card,
+  c2.start_total_fact_pmts_by_cli,
+  c2.folder_id_first,
+  c2.rfo_client_id,
+
+---
+  case when p1.max_debt_used > 0 then
+        case when p1.delinq_days > 0 then p1.total_debt
+             else 0 end / p1.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_1,
+
+  case when p1.max_debt_used > 0 then
+        case when p1.delinq_days > 0 and p1.delinq_days < 8 then p1.total_debt * 0.45
+             when p1.delinq_days > 7 then p1.total_debt
+             else 0 end / p1.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_1_45,
+---
+
+/*  case when c.max_debt_used > 0 then
+        case when p1.delinq_days > 0 and p1.delinq_days < 8 then p1.total_debt * 0.45
+             when p1.delinq_days > 7 then p1.total_debt
+             else 0 end / c.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_1_45_old,
+
+  case when c.max_debt_used > 0 then
+        case when p1.delinq_days > 0 then p1.total_debt
+             else 0 end / c.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_1_old,*/
+
+  case when p1.max_debt_used > 0 then
+        case when p1.delinq_days >= 1 and p1.delinq_days <= 7 then p1.total_debt
+             else 0 end / p1.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_1_7,
+
+  case when p1.max_debt_used > 0 then
+        case when p1.delinq_days >= 8 and p1.delinq_days <= 30 then p1.total_debt
+             else 0 end / p1.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_8_30,
+
+  case when p2.max_debt_used > 0 then
+            case when p2.delinq_days > 7 then p2.total_debt else 0 end / p2.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_2_X1,
+
+/*  case when p2.max_debt_used > 0 then
+            case when p2.delinq_days > 7 and p2.delinq_days < 31 then p2.total_debt else 0 end / p2.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_2_01,*/
+
+  case when p3.max_debt_used > 0 then
+            case when p3.delinq_days > 7 then p3.total_debt else 0 end / p3.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_3_XX1,
+
+/*  case when p3.max_debt_used > 0 then
+            case when p3.delinq_days > 7 and p3.delinq_days < 31 then p3.total_debt else 0 end / p3.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_3_001,*/
+
+
+  case when p4.max_debt_used > 0 then
+            case when p4.delinq_days > 7 then p4.total_debt else 0 end / p4.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_4_XXX1,
+
+  case when p2.max_debt_used > 0 then
+            case when p2.delinq_days > 7 and p2.delinq_days < 31 then p2.total_debt else 0 end / p2.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_2_01,
+
+  case when p3.max_debt_used > 0 then
+            case when p3.delinq_days > 7 and p3.delinq_days < 31 then p3.total_debt else 0 end / p3.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_3_001,
+
+  case when p4.max_debt_used > 0 then
+            case when p4.delinq_days > 7 and p4.delinq_days < 31 then p4.total_debt else 0 end / p4.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_4_0001,
+
+  case when p5.max_debt_used > 0 then
+            case when p5.delinq_days > 7 then p5.total_debt else 0 end / p5.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_5_XXXX1,
+
+  case when p5.max_debt_used > 0 then
+            case when p5.delinq_days > 7 and p5.delinq_days < 31 then p5.total_debt else 0 end / p5.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_5_00001,
+
+  case when p6.max_debt_used > 0 then
+            case when p6.delinq_days > 7 then p6.total_debt else 0 end / p6.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_6_XXXXX1,
+
+  case when p6.max_debt_used > 0 then
+            case when p6.delinq_days > 7 and p6.delinq_days < 31 then p6.total_debt else 0 end / p6.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_6_000001,
+
+  case when p2.max_debt_used > 0 then
+            case when p2.delinq_days >= 31 then p2.total_debt else 0 end / p2.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_2_11,
+
+  case when p3.max_debt_used > 0 then
+            case when p3.delinq_days >= 61 then p3.total_debt else 0 end / p3.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_3_111,
+
+  case when p4.max_debt_used > 0 then
+            case when p4.delinq_days >= 91 then p4.total_debt else 0 end / p4.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_4_1111,
+
+  case when p5.max_debt_used > 0 then
+            case when p5.delinq_days >= 121 then p5.total_debt else 0 end / p5.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_5_11111,
+
+  case when p6.max_debt_used > 0 then
+            case when p6.delinq_days >= 151 then p6.total_debt else 0 end / p6.max_debt_used * 100
+        else 0 end as delinq_rate_pmt_6_111111,
+
+  c2.fact_pmts as con_fact_pmts,
+  c2.planned_pmts as con_planned_pmts,----
+
+  cc.client_status,
+
+  k5.kdn_form_salary_max,
+  k5.is_kdn_regulated_sal_max,
+  k5.form_income_gcvp_salary_max,
+  round((coalesce(k5.contract_pmt,0) + coalesce(k5.other_deal_pmt,0) + coalesce(k5.pkb_pmt,0))) kdn_pmt_max,
+  case when vfa.process_code = 'ONLINE_CRED'
+    then 1
+    else 0 end is_online
+from M_CONTRACT_START_CON_ORD_X c
+join V_CONTRACT_CAL c2 on c2.contract_number = c.contract_number
+join V_CLIENT_CAL cc on cc.client_id = c.client_id
+left join V_PORTFOLIO p1 on c.contract_number = p1.contract_number and
+                            p1.planned_pmt_month_new = 1
+left join V_PORTFOLIO p2 on c.contract_number = p2.contract_number and
+                            p2.planned_pmt_month_new = 2
+left join V_PORTFOLIO p3 on c.contract_number = p3.contract_number and
+                            p3.planned_pmt_month_new = 3
+left join V_PORTFOLIO p4 on c.contract_number = p4.contract_number and
+                            p4.planned_pmt_month_new = 4
+left join V_PORTFOLIO p5 on c.contract_number = p5.contract_number and
+                            p5.planned_pmt_month_new = 5
+left join V_PORTFOLIO p6 on c.contract_number = p6.contract_number and
+                            p6.planned_pmt_month_new = 6
+left join V_CASH_TERMINAL_TRAN_RBO ct on ct.contract_number = c.contract_number
+left join M_CONTRACT_PARAM_KDN5 k5 on k5.deal_number = c.contract_number
+left join  V_FOLDER_ALL_RFO vfa on   vfa.folder_id = c2.folder_id_first
+where c2.contract_number != '1600762-001'
+) x;
+grant select on U1.M_CONTRACT_CAL_DEL_TEST to LOADDB;
+grant select on U1.M_CONTRACT_CAL_DEL_TEST to LOADER;
+
+

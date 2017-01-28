@@ -1,0 +1,46 @@
+﻿create materialized view U1.M_OUT_CANCEL_MANAGER_COMMMENT2
+refresh complete on demand
+as
+select /*+ parallel 30 */
+       t.folder_id,
+       t.folder_number,
+       t.cr_program_name,
+       trunc(t.folder_date_create_mi) as folder_date_create,
+       t.iin,
+       fc.surname||' '||fc.first_name||' '||fc.patronymic as client,
+       t.x_dnp_name,
+       t.pos_code,
+       p.phone_number,
+       c.user_name as expert_name,
+       c.cancel_type_name,
+       f.manager_result_note,
+       t.process_name,
+       t.folder_state,
+       t.cancel_prescoring,
+       t.cancel_middle_office,
+       t.cancel_cpr_aa,
+       t.cancel_verificator,
+       round(fc.amount,2) as amount,
+       cancel_type_group,
+       t.cancel_manager,
+       t.cancel_client
+from u1.M_FOLDER_CON_CANCEL t
+join u1.V_FOLDER_ALL_RFO f on f.folder_id = t.folder_id
+join u1.V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = f.form_client_id
+join u1.V_CANCEL c on c.folder_id = t.folder_id
+join u1.V_FORM_CLIENT_CONTACT_PHONE p on p.folder_id = t.folder_id and p.phone_type = 'МОБИЛЬНЫЙ'
+where t.cancel_manager is not null
+      and (c.cancel_type_group in ('MANAGER') or c.cancel_type_group in ('CLIENT_PC_TO_EKT'))
+      and (t.cancel_manager = 1 or t.cancel_client = 1)
+      and c.cancel_type_group not in ('GCVP','NIGHT_PRS_PKB','NIGHT_PRS_FC')
+      and c.cancel_type_group <> 'AUTO'
+      and c.cancel_type_code <> 'AA_CALC_4_3RD_LOAN'
+      and t.is_credit_issued = 0
+      and t.is_point_active = 0
+      and t.folder_date_create_mi >= add_months(trunc(sysdate,'mm'),-1)
+      and c.cancel_level = 1
+      and c.user_name!= 'ПОЛЬЗОВАТЕЛЬ АВТОМАТИЧЕСКАЯ ОБРАБОТКА';
+grant select on U1.M_OUT_CANCEL_MANAGER_COMMMENT2 to LOADDB;
+grant select on U1.M_OUT_CANCEL_MANAGER_COMMMENT2 to LOADER;
+
+

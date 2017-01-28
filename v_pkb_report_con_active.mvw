@@ -1,0 +1,46 @@
+﻿create materialized view U1.V_PKB_REPORT_CON_ACTIVE
+using no index
+refresh complete on demand
+as
+select x.pkb_id,
+       nvl(sum(x.pmt_kzt),0) as pmt_active_all_sum,
+       nvl(sum(case when x.is_delinq = 0 then x.pmt_kzt end),0) as pmt_active_good_sum,
+       round(nvl(sum(x.pmt_kzt_draft),0)) as pmt_draft_active_all_sum,
+       round(nvl(sum(case when x.is_delinq = 0 then x.pmt_kzt_draft end),0)) as pmt_draft_active_good_sum,
+       nvl(sum(x.card_limit_kzt),0) as card_limit_active_all_sum,
+       nvl(sum(case when x.is_delinq = 0 then x.card_limit_kzt end),0) as card_limit_active_good_sum--,
+--       min(contract_date_begin) as contract_date_begin_min
+from (
+select pr1.id as pkb_id,
+           to_number(replace(replace(replace(regexp_substr(pc.c_monthly_payment,'[^A-Z]+'),' ',''),' ',''),',','.')) *
+               decode(regexp_substr(pc.c_monthly_payment,'[A-Z]+'),'KZT',1,'USD',150,'EUR',200,'GBP',230,'RUB',5,'RUR',5,1) as
+       pmt_kzt,
+           case when round(months_between(to_date(nullif(pc.c_date_end,'n/a'),'dd.mm.yyyy'),to_date(pc.c_date_begin,'dd.mm.yyyy'))) > 0 then
+               to_number(replace(replace(replace(regexp_substr(pc.c_total_ammount,'[^A-Z]+'),' ',''),' ',''),',','.')) *
+                   decode(regexp_substr(pc.c_total_ammount,'[A-Z]+'),'KZT',1,'USD',150,'EUR',200,'GBP',230,'RUB',5,'RUR',5,1) /
+                   round(months_between(to_date(nullif(pc.c_date_end,'n/a'),'dd.mm.yyyy'),to_date(pc.c_date_begin,'dd.mm.yyyy'))) end as
+       pmt_kzt_draft,
+           case when pc.c_total_ammount is null then
+               to_number(replace(replace(replace(regexp_substr(pc.c_credit_limit,'[^A-Z]+'),' ',''),' ',''),',','.')) *
+                   decode(regexp_substr(pc.c_credit_limit,'[A-Z]+'),'KZT',1,'USD',150,'EUR',200,'GBP',230,'RUB',5,'RUR',5,1) end as
+       card_limit_kzt,
+       case when pc.c_contr_status like '%Исполнение обязательств по договору приостановлено%' or
+                      pc.c_contr_status like '%переведена в разряд убытков%' or
+                      pc.c_contr_status like '%списана за баланс%' or
+                      pc.c_contr_status like '%от 91 до 360%' or
+                      pc.c_contr_status like '%свыше 90 дней%' or
+                      pc.c_contr_status like '%свыше 360 дней%' or
+                      to_number(replace(replace(replace(regexp_substr(pc.c_overdue_sum,'[^A-Z]+'),' ',''),' ',''),',','.')) *
+                           decode(regexp_substr(pc.c_overdue_sum,'[A-Z]+'),'KZT',1,'USD',150,'EUR',200,'GBP',230,'RUB',5,'RUR',5,
+                                  'US',150,'KZ',1,'U',150,'K',1,1)
+                           > 4500 then 1 else 0 end as
+       is_delinq--,
+--       pc.c_date_begin as contract_date_begin
+from V_RFO_Z#PKB_REPORT pr1
+join V_RFO_Z#KAS_PKB_CI pc on pc.collection_id = pr1.c_ci
+where pc.c_monthly_payment is not null
+) x group by x.pkb_id;
+grant select on U1.V_PKB_REPORT_CON_ACTIVE to LOADDB;
+grant select on U1.V_PKB_REPORT_CON_ACTIVE to LOADER;
+
+

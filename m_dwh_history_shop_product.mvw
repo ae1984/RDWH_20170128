@@ -1,0 +1,27 @@
+﻿create materialized view U1.M_DWH_HISTORY_SHOP_PRODUCT
+build deferred
+refresh complete on demand
+as
+select shpro_product_id as shop_product_id,
+       shpro_merchant_id as shop_merchant_id,
+       shpro_article_number as article_number,
+       shpro_catalog_version as catalog_version,
+       shpro_approval as approved,
+       shpro_ean as eur_product_number,
+       shpro_manufacturer as product_producer,
+       shpro_content_unit as content_unit,
+       shpro_manufacturer_aid as manufacturer_aid,
+       shpro_delivery_time as delivery_time,
+       shpro_package_quantity as package_quantity,
+       shpro_currency_id as currency_id,
+       shpro_price as price,
+       shpro_city_id as city_id,
+       shpro_identifier as name__product,
+       shpro_category_name as catalog_product,
+       shpro$change_date as date_change,
+       shpro_id as id,
+       shpro_gid as shop_product_dwh_id
+  from DWH_MAIN.REF_SHOP_PRODUCT@dwh_prod2;
+grant select on U1.M_DWH_HISTORY_SHOP_PRODUCT to LOADDB;
+
+

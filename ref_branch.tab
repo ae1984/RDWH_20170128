@@ -1,0 +1,49 @@
+﻿create table U1.REF_BRANCH
+(
+  id         NUMBER(38) not null,
+  old_branch VARCHAR2(40) not null,
+  new_branch VARCHAR2(40) not null
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+create index U1.REF_BRANCH_IDX_1 on U1.REF_BRANCH (OLD_BRANCH)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.REF_BRANCH
+  add constraint REF_BRANCH_PK1 primary key (ID)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.REF_BRANCH_PK1 nologging;
+grant select on U1.REF_BRANCH to LOADDB;
+grant select on U1.REF_BRANCH to LOADER;
+

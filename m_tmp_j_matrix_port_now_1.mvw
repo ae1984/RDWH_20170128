@@ -1,0 +1,48 @@
+﻿create materialized view U1.M_TMP_J_MATRIX_PORT_NOW_1
+refresh complete on demand
+as
+select case when f.process_name = 'ОНЛАЙН КРЕДИТ' then 'ОНЛАЙН-КРЕДИТ ЭКТ' else b.cred_program_name_x end as product,
+       to_char(b.start_date,'yyyy') as start_year,
+       to_char(b.start_date,'yyyy-mm') as start_month,
+       to_char(b.start_date_actual,'yyyy') as start_year_actual,
+       to_char(b.start_date_actual,'yyyy-mm') as start_month_actual,
+       b.x_dnp_name as city,
+       floor(months_between(trunc(sysdate), c.birth_date) / 12) as client_age_years,
+       case when b.is_credit_active = 0 then 'ДОГОВОР ЗАКРЫТ'
+            when b.is_credit_active = 1 then 'ДОГОВОР ОТКРЫТ' end as is_credit_active,
+       ---
+       count(*) as cnt, count(distinct b.rbo_contract_id) as contract_cnt,
+       sum(d.max_debt_used_x) / 1000000 as sales_mln,
+
+       sum(case when d.del_days_x > 7  then d.total_debt_x end) / 1000000 as del_debt_7d_mln,
+       sum(case when d.del_days_x > 30 then d.total_debt_x end) / 1000000 as del_debt_30d_mln,
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_mln,
+       sum(case when d.del_days_x > 90 then d.total_debt_x end) / 1000000 as del_debt_90d_mln,
+
+       sum(case when d.del_days_max_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_ever_mln,
+       sum(case when d.del_days_max_x > 90 then d.total_debt_x end) / 1000000 as del_debt_90d_ever_mln
+
+from M_RBO_CONTRACT_BAS b
+left join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+left join V_CLIENT_RFO_BY_ID c on c.rfo_client_id = b.rfo_client_id
+left join M_FOLDER_CON_CANCEL f on f.folder_id = b.folder_id_first and f.contract_number = b.contract_number
+group by case when f.process_name = 'ОНЛАЙН КРЕДИТ' then 'ОНЛАЙН-КРЕДИТ ЭКТ' else b.cred_program_name_x end,
+         to_char(b.start_date,'yyyy'), to_char(b.start_date,'yyyy-mm'),
+         to_char(b.start_date_actual,'yyyy'), to_char(b.start_date_actual,'yyyy-mm'), b.x_dnp_name,
+         floor(months_between(trunc(sysdate), c.birth_date) / 12),
+         case when b.is_credit_active = 0 then 'ДОГОВОР ЗАКРЫТ'
+            when b.is_credit_active = 1 then 'ДОГОВОР ОТКРЫТ' end
+
+-----
+/*select t.is_credit_active, t.deal_status, count(*)
+from V_DWH_PORTFOLIO_CURRENT t
+where t.x_is_credit_issued = 1
+group by t.is_credit_active, t.deal_status
+
+select t.status_name, count(*)
+from M_RBO_CONTRACT_BAS t
+group by t.status_name  */;
+grant select on U1.M_TMP_J_MATRIX_PORT_NOW_1 to LOADDB;
+grant select on U1.M_TMP_J_MATRIX_PORT_NOW_1 to LOADER;
+
+

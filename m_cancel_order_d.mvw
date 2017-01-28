@@ -1,0 +1,113 @@
+﻿create materialized view U1.M_CANCEL_ORDER_D
+build deferred
+refresh force on demand
+as
+select z.code_int,
+       z.par_name,
+       z.rule_order,
+       z.rule_order_desc,
+       z.rule_order_desc_2,
+       z.hex_template,
+
+       z.barcode  as barcode,
+
+       instr(max(z.barcode) keep (dense_rank last order by z.rule_order_desc) over (), '1') older_indx,
+       rule_order_desc_gr,
+       rule_gr
+from (
+    select yyyy.code_int,
+           yyyy.par_name,
+           yyyy.rule_order,
+           yyyy.rule_order_desc,
+           yyyy.rule_order_desc_2,
+           --to_char(yyyy.rule_order_desc_2, '0' || yyyy.hex_template),
+           --to_char(yyyy.rule_order_desc_2),
+           yyyy.hex_template,
+           /*
+           trim(
+             replace(
+              replace(
+                replace(
+                  replace(
+                    replace(trim(to_char(yyyy.rule_order_desc_2, '0' || yyyy.hex_template)),
+                    '0', '0000'),
+                  '1', '0001'),
+                '2', '0010'),
+              '4', '0100'),
+            '8', '1000')
+          ) barcode*/
+          rpad( lpad(1, rule_order, 0), (FIRST_VALUE(yyyy.rule_order) OVER(order by yyyy.rule_order desc)), 0)  as barcode,
+          case when yyyy.rule_order_desc < 100 then yyyy.rule_order_desc
+               when yyyy.rule_order_desc < 200 then yyyy.rule_order_desc-100
+          end as rule_order_desc_gr,
+          case when yyyy.rule_order_desc < 100 then 1
+               when yyyy.rule_order_desc < 200 then 2
+          end as rule_gr
+          --rpad(1, rule_order_desc, 0) as barcode
+    from (
+
+        select yyy.code_int, yyy.par_name, yyy.rule_order, yyy.rule_order_desc, yyy.rule_order_desc_2, yyy.hex_number_length,
+               listagg(case when rule_order_desc <= yyy.hex_number_length then 'X' else null end, '') within group (order by yyy.rule_order_desc) over () as hex_template
+        from (
+              select yy.code_int,
+                     yy.par_name,
+                     yy.rule_order,
+                     yy.rule_order_desc,
+                     power(2, yy.rule_order_desc - 1) as rule_order_desc_2,
+
+                     ceil(max(yy.rule_order_desc) over ()/4) as hex_number_length
+
+              from (
+                    select y.code_int,
+                           y.par_name,
+                           rank() over (order by y.rule_order_by_date) as rule_order,
+                           rank() over (order by y.rule_order_by_date desc) as rule_order_desc
+                    from (
+                          select t.code_int,
+                                 r.par_name,
+                          --       r.min_date_start,
+                                 rank() over (order by r.min_date_start, r.par_code) as rule_order_by_date
+                          from u1.M_FOLDER_MO_CANCEL_LAST_PRE_D t
+                          left join u1.M_MO_RULE_START r on r.par_code = t.code_int
+                          where t.is_rejecting = 1 and
+                                t.code_int not like 'MO_SCO_REJECT%' and
+                                t.code_int not like 'SC_AA_REJECT%'
+
+                          union all
+                          select code_int,par_name,rule_order_by_date
+                          from U1.T_RDWH_CANCEL_ORDER_LIST
+
+                          /*select 'RFO_PRESCO_PKB_ACT_CRD',      'PKB_ACT_CRD_CNT1',     -1012 from dual
+                          union all select 'RFO_PRESCO_CALL_STAT_TEL',    'КОЛ_СТАЦ_ТЕЛЕФОНОВ',   -1011 from dual
+                          union all select 'RFO_PRESCO_NONRESIDENT',      'НЕ_РЕЗИДЕНТ',          -1010 from dual
+                          union all select 'RFO_PRESCO_AGE_NOT_APPLIC',   'ВОЗРАСТ_НЕДОПУСТИМ',   -1009 from dual
+                          union all select 'RFO_PRESCO_GCVP_SAL_LESS',    'GCVP_SAL_LESS',        -1008 from dual
+                          union all select 'RFO_PRESCO_GCVP_DAYS_ELAPS',  'GCVP_DAYS_ELAPS_OVER', -1007 from dual
+                          union all select 'RFO_PRESCO_PKB_CRD_OVERDUE',  'PKB_CRD_OVERDUE_CUR',  -1006 from dual
+                          union all select 'RFO_PRESCO_ATMPTS_4D8M30',    'ПОПЫТОК_БОЛЕЕ_4Д8М30', -1005 from dual
+                          union all select 'RFO_PRESCO_CLN_MAX_DELAY',    'CLN_MAX_DELAY',        -1004 from dual
+                          union all select 'RFO_PRESCO_MONEY_CRED_EXIST', 'CLN_MONEY_CRED_EXIST', -1003 from dual
+                          union all select 'RFO_PRESCO_VERIF_RATING',     'VERIFICATION_RATING',  -1002 from dual
+                          union all select 'RFO_PRESCO_REF_PART_IN_ACT',  'REFUSAL_PART_IN_ACT',  -1001 from dual
+
+
+                          union all select 'RFO_AA_VID_NA_ZHITEL',        'RFO_AA_VID_NA_ZHITEL',  1000 from dual
+                          union all select 'RFO_AA_PENS_AGE',             'RFO_AA_PENS_AGE',       1001 from dual
+                          union all select 'RFO_AA_DP_AUTO',              'RFO_AA_DP_AUTO',        1002 from dual
+                          union all select 'RFO_AA_VERIFICATION',         'RFO_AA_VERIFICATION',   1003 from dual
+                          union all select 'RFO_AA_PKB',                  'RFO_AA_PKB',            1004 from dual
+                          union all select 'RFO_AA_GCVP',                 'RFO_AA_GCVP',           1005 from dual
+                          union all select 'RFO_AA_CALCUL_KN',            'RFO_AA_CALCUL_KN',      1006 from dual
+                          union all select 'RFO_AA_DOC_NOT_CREAT',        'RFO_AA_DOC_NOT_CREAT',  1007 from dual
+
+
+
+                          union all select 'RFO_POST_MANUAL',              'RFO_POST_MANUAL',      10000 from dual*/
+                    ) y
+              ) yy
+        ) yyy
+    ) yyyy
+) z;
+grant select on U1.M_CANCEL_ORDER_D to LOADDB;
+
+

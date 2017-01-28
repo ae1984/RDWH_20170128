@@ -1,0 +1,52 @@
+﻿create table U1.T_NPS_DICT_TERMINAL_ADDRESS
+(
+  id          NUMBER not null,
+  name_object VARCHAR2(128),
+  pt          VARCHAR2(128),
+  reg_addres  VARCHAR2(512),
+  fact_addres VARCHAR2(512)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create unique index U1.PT_UNIQ on U1.T_NPS_DICT_TERMINAL_ADDRESS (PT)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_NPS_DICT_TERMINAL_ADDRESS
+  add constraint PK_TERM_ADD primary key (ID)
+  using index 
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.PK_TERM_ADD nologging;
+grant select on U1.T_NPS_DICT_TERMINAL_ADDRESS to LOADDB;
+grant select on U1.T_NPS_DICT_TERMINAL_ADDRESS to LOADER;
+

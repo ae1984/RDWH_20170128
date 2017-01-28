@@ -1,0 +1,36 @@
+﻿create table U1.TMP_LEAVING_EMP
+(
+  product_type         VARCHAR2(22),
+  date_create          VARCHAR2(7),
+  expert_id            NUMBER,
+  expert_name          VARCHAR2(400),
+  pos_info             VARCHAR2(2551),
+  client_category      VARCHAR2(3),
+  appl_count           NUMBER,
+  client_count         NUMBER,
+  contr_count          NUMBER,
+  contr_amount         NUMBER,
+  beki_cnt             NUMBER,
+  verif_photo_negative NUMBER,
+  actual_def0          NUMBER,
+  hist_def60           NUMBER,
+  sales_share_in_pos   NUMBER,
+  def_share_in_pos     NUMBER,
+  emp_count_in_pos     NUMBER,
+  iad_folder_cnt       NUMBER,
+  iad_client_cnt       NUMBER,
+  cnt_folder           NUMBER
+)
+tablespace USERS_ARC
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+nologging;
+

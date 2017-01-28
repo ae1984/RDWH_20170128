@@ -1,0 +1,48 @@
+﻿create table U1.T_ORDERS_26_06
+(
+  order_number            NUMBER,
+  balance_all_dep_beg_m   NUMBER,
+  deposit_life_length     NUMBER,
+  sum_pritok_dep_3_m      NUMBER,
+  share_usd_dep_sum       NUMBER,
+  avg_count_app_onl_day   NUMBER,
+  avg_sum_online_ekt_3_m  NUMBER,
+  avg_term_cred_plan      NUMBER,
+  count_category_3_m      NUMBER,
+  count_fail_30_d         NUMBER,
+  count_fail_online_30_d  NUMBER,
+  count_mob_kspkz         NUMBER,
+  count_visit_client      NUMBER,
+  installment_incom_avg   NUMBER,
+  life_length             NUMBER,
+  max_zp_h                NUMBER,
+  min_sum_appl_kn_30_d    NUMBER,
+  min_sum_online_ekt_3_m  NUMBER,
+  pkb_count_kzt           NUMBER,
+  share_month_kaspikz_6_m NUMBER,
+  sum_pay_cred_3_m        NUMBER,
+  sum_pay_kspkz_30_d      NUMBER,
+  total_max_delay         NUMBER,
+  last_year_max_delay     NUMBER,
+  diff_mx_sm_price_h      NUMBER,
+  count_shops_on_client   NUMBER,
+  max_count_app_onl_day   NUMBER,
+  top_1_purchase          NUMBER,
+  count_comp_by_client    NUMBER,
+  count_kn_ever           NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_ORDERS_26_06 to LOADDB;
+

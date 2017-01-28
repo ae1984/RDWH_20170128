@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_RBO_CONTRACT_BAS_PRE1
+build deferred
+refresh complete on demand
+as
+select /*+ parallel(10) */
+                    rbo_contract_id,
+                    min(td.c_date_begin_saldo) as debt_date_first
+               from u1.T_CONTRACT_DEBT_OPER  td
+              where td.c_code_debt != 'PC_CRED_LIMIT'  --исключаем кредитиный лимит(не задолженность)
+                and td.c_summa_saldo != 0              --исключаем пустые обороты в течении дня
+              group by td.rbo_contract_id;
+grant select on U1.M_RBO_CONTRACT_BAS_PRE1 to LOADDB;
+
+

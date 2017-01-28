@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_TMP_J_111
+refresh force on demand
+as
+select x.*, d.begin_date, d.set_revolving_date, d.plan_end_date, d.actual_end_date,
+       d.prod_type, d.prod_name, d.client_iin, d.x_total_debt, d.x_amount, d.x_delinq_days
+from (
+select c.contract_number,
+       max(r.contract_number) as ref_contract_number,
+       count(distinct trunc(r.spof_end_date,'mm')/* || r.contract_number*/) as ref_res_count,
+       case when (min(r.restr_prior) = 1) then 1 else 0 end is_hard_ever,
+       case when (min(r.restr_prior) = 2) then 1 else 0 end is_soft_ever
+from RISK_GKIM.T_TMP_CON_J c
+left join M_DWH_ACC_SPECIAL_OFFER_CON r on c.contract_number = r.contract_number and
+          r.spof_spec_offer_status_cd in ('WORK', 'DEFAULT', 'EXECUTED')
+group by c.contract_number
+) x left join V_DWH_PORTFOLIO_CURRENT d on d.deal_number = x.contract_number;
+grant select on U1.M_TMP_J_111 to LOADDB;
+grant select on U1.M_TMP_J_111 to LOADER;
+
+

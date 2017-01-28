@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_TMP_J_SEX_1
+refresh complete on demand
+as
+select d.birth_year,
+       d.is_iin_exists,
+       d.is_last_name_exists,
+       d.sex_iin,
+       d.sex_rfo,
+       d.patronymic_type,
+       d.last_name_type,
+       d.first_name_type,
+       d.is_in_tax_db,
+       d.tax_patronymic_type,
+       ---
+       count(*) as cnt, count(distinct d.rfo_client_id) as cli_cnt
+from M_TMP_J_SEX_1_DET d
+group by d.birth_year,
+         d.is_iin_exists,
+         d.is_last_name_exists,
+         d.sex_iin,
+         d.sex_rfo,
+         d.patronymic_type,
+         d.last_name_type,
+         d.first_name_type,
+         d.is_in_tax_db,
+         d.tax_patronymic_type;
+grant select on U1.M_TMP_J_SEX_1 to LOADDB;
+grant select on U1.M_TMP_J_SEX_1 to LOADER;
+
+

@@ -1,0 +1,53 @@
+﻿create materialized view U1.M_TMP_J_CLI_SEGMENT_1
+refresh complete on demand
+as
+select d.client_iin,
+       floor(months_between(trunc(sysdate), min(d.x_start_date_actual))) as first_con_start_mon_ago,
+       floor(months_between(trunc(sysdate), max(d.x_start_date_actual))) as last_con_start_mon_ago,
+
+       count(distinct d.deal_number) as contract_all_cnt,
+       count(distinct case when d.is_credit_active = 1 then d.deal_number end) as contract_active_cnt,
+       count(distinct case when d.is_credit_active = 0 then d.deal_number end) as contract_closed_cnt,
+
+       count(distinct case when d.x_product_type not in ('ОПТИМИЗАЦИЯ') then d.deal_number end) as contract_no_opt_all_cnt,
+       count(distinct case when d.x_product_type not in ('ОПТИМИЗАЦИЯ') and d.is_credit_active = 1 then d.deal_number end) as contract_no_opt_active_cnt,
+       count(distinct case when d.x_product_type not in ('ОПТИМИЗАЦИЯ') and d.is_credit_active = 0 then d.deal_number end) as contract_no_opt_closed_cnt,
+
+       count(distinct case when d.x_product_type not in ('КАРТЫ','ОПТИМИЗАЦИЯ') then d.deal_number end) as contract_no_card_opt_all_cnt,
+       count(distinct case when d.x_product_type not in ('КАРТЫ','ОПТИМИЗАЦИЯ') and d.is_credit_active = 1 then d.deal_number end) as contract_no_card_opt_activ_cnt,
+       count(distinct case when d.x_product_type not in ('КАРТЫ','ОПТИМИЗАЦИЯ') and d.is_credit_active = 0 then d.deal_number end) as contract_no_card_opt_close_cnt,
+
+       count(distinct case when d.x_product_type = 'ДЕНЬГИ' then d.deal_number end) as contract_cash_all_cnt,
+       count(distinct case when d.x_product_type = 'ДЕНЬГИ' and d.is_credit_active = 1 then d.deal_number end) as contract_cash_active_cnt,
+       count(distinct case when d.x_product_type = 'ДЕНЬГИ' and d.is_credit_active = 0 then d.deal_number end) as contract_cash_closed_cnt,
+
+       count(distinct case when d.x_product_type = 'ТОВАРЫ' then d.deal_number end) as contract_goods_all_cnt,
+       count(distinct case when d.x_product_type = 'ТОВАРЫ' and d.is_credit_active = 1 then d.deal_number end) as contract_goods_active_cnt,
+       count(distinct case when d.x_product_type = 'ТОВАРЫ' and d.is_credit_active = 0 then d.deal_number end) as contract_goods_closed_cnt,
+
+       count(distinct case when d.x_product_type = 'АВТО' then d.deal_number end) as contract_auto_all_cnt,
+       count(distinct case when d.x_product_type = 'АВТО' and d.is_credit_active = 1 then d.deal_number end) as contract_auto_active_cnt,
+       count(distinct case when d.x_product_type = 'АВТО' and d.is_credit_active = 0 then d.deal_number end) as contract_auto_closed_cnt,
+
+       count(distinct case when d.x_product_type = 'КАРТЫ' then d.deal_number end) as contract_card_all_cnt,
+       count(distinct case when d.x_product_type = 'КАРТЫ' and d.is_credit_active = 1 then d.deal_number end) as contract_card_active_cnt,
+       count(distinct case when d.x_product_type = 'КАРТЫ' and d.is_credit_active = 0 then d.deal_number end) as contract_card_closed_cnt,
+
+       count(distinct case when d.x_product_type = 'ОПТИМИЗАЦИЯ' then d.deal_number end) as contract_opt_all_cnt,
+       count(distinct case when d.x_product_type = 'ОПТИМИЗАЦИЯ' and d.is_credit_active = 1 then d.deal_number end) as contract_opt_active_cnt,
+       count(distinct case when d.x_product_type = 'ОПТИМИЗАЦИЯ' and d.is_credit_active = 0 then d.deal_number end) as contract_opt_closed_cnt,
+
+       case when max(d.x_delinq_days) >  0 then 1 else 0 end as is_del_01_plus_now,
+       case when max(d.x_delinq_days) > 15 then 1 else 0 end as is_del_15_plus_now,
+       case when max(d.x_delinq_days) > 30 then 1 else 0 end as is_del_30_plus_now,
+       case when max(d.x_delinq_days) > 60 then 1 else 0 end as is_del_60_plus_now,
+       case when max(d.x_delinq_days) > 90 then 1 else 0 end as is_del_90_plus_now
+from V_DWH_PORTFOLIO_CURRENT d
+where d.x_is_credit_issued = 1 and d.client_iin is not null and
+      d.x_start_date_actual is not null --and
+--      d.x_product_type in ('ДЕНЬГИ','ТОВАРЫ','АВТО','КАРТЫ')
+group by d.client_iin;
+grant select on U1.M_TMP_J_CLI_SEGMENT_1 to LOADDB;
+grant select on U1.M_TMP_J_CLI_SEGMENT_1 to LOADER;
+
+

@@ -1,0 +1,97 @@
+﻿create materialized view U1.M_LINK_FOLDER_DRAW_DOWN_TST
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30 */
+       --count(1), count(distinct folder_id)
+       vfa.folder_id,
+       vfa.folder_date_create,
+       vfa.rfo_client_id,
+       vfa.process_code,
+       vfa.process_name,
+       vfa.pos_code,
+       vfa.folder_state,
+       vfa.expert_login,
+       vfa.expert_name,
+       dd.id as draw_dawn_id,
+       dd.c_payer_summ as draw_payer_sum,
+       dd.c_nazn as draw_nazn,
+       dd.c_kod_nazn_pay as draw_kod_nazn_pay,
+       dd.c_transfer_summ as draw_transfer_summ,
+       dd.c_rate as draw_rate,
+       dd.c_small_coin as draw_small_coin,
+       dd.c_settlement_summ as draw_settlement_summ,
+       dd.c_tariff_summ as draw_tariff_summ,
+       dd.c_cash_type#0 as draw_cash_type#0,
+       dd.c_cash_type#transfer#bank as draw_bank,
+       dd.c_cash_type#transfer#num_acc as draw_num_acc,
+       dd.c_cash_type#transfer#name_kt as draw_name_kt,
+       dd.c_cash_type#transfer#inn_kt as draw_inn_kt,
+       dd.c_type#transfer#code_benefic13 as draw_code_benefic13,
+       dd.c_cash_type#transfer#note as draw_note,
+       dd.c_h_type#trans_card#num_card15 as draw_num_card15,
+       dd.c_type#trans_card#valid_thru16 as draw_valid_thru16,
+       dd.c_certificate#type as draw_type,
+       dd.c_certificate#num as draw_num,
+       dd.c_certificate#seria as draw_seria,
+       dd.c_certificate#who as draw_who,
+       dd.c_certificate#date_doc as draw_date_doc,
+       dd.c_certificate#place as draw_place,
+       dd.c_certificate#date_end as draw_date_end,
+       dd.c_certificate#depart_code as draw_depart_code,
+       dd.c_id_req as draw_id_req,
+       mdd.doc_main_max_id as main_docum_id,
+       mdd.name_dt,
+       mdd.name_kt,
+       mdd.acc_dt,
+       mdd.acc_ct,
+       mdd.main_doc_nazn,
+       mdd.main_doc_summa,
+       mdd.rbo_main_doc_id,
+       tmd.c_name as type_main_docum/*,
+       c.c_client as contract_client,
+       ci2.client_name as contr_client_name,
+       ci2.iin as contr_client_iin,
+       dpn.c_num_dog as depn_num_dog,
+       dpn.c_date_begin as depn_date_begin,
+       dpn.c_date_close as depn_date_close,
+       dpn.id,
+       dpn.c_list_pay,
+       foo.c_cash as is_cash,
+       foo.c_valuta as valuta,
+       case when foo.collection_id is null then
+              0
+            else
+              1 end as is_po_exists */
+from u1.V_FOLDER_ALL_RFO  vfa
+join u1.V_RFO_Z#RDOC        r on r.collection_id = vfa.fld_c_docs
+join u1.V_RFO_Z#FDOC        f on f.id = r.c_doc
+                             and f.class_id = 'DRAW_DOWN'
+join u1.V_RFO_Z#DRAW_DOWN  dd on dd.id = f.id
+join M_INFO_MAIN_DOCUM    mdd on mdd.collection_id = vfa.fld_c_docs
+                             and mdd.main_doc_summa = dd.c_payer_summ
+left join u1.V_RFO_Z#TYPE_MAIN_DOCUM tmd on tmd.id = mdd.main_doc_type
+/*left join  M_INFO_MAIN_DOCUM mdd on mdd.collection_id = vfa.fld_c_docs and round(mdd.main_doc_summa) = round(dd.c_payer_summ)
+
+left join u1.V_RFO_Z#FDOC_TEST1 f2 on f2.id = f.c_parent_fdoc and f2.class_id = 'CONT_DEP'
+left join u1.V_RFO_Z#CONTRACT c on c.id = f2.id
+left join u1.V_RBO_Z#DEPN dpn on dpn.id = c.c_id_req
+left join u1.V_CLIENT_RFO_BY_ID ci on ci.rfo_client_id = vfa.rfo_client_id
+left join u1.V_CLIENT_RFO_BY_ID ci2 on ci2.rfo_client_id = c.c_client
+left join (select fo.collection_id,
+                 fo.c_date,
+                 fo.c_summa,
+                 fo.c_cash,
+                 fo.c_valuta
+           from
+               u1.T_RBO_Z#FACT_OPER fo
+          left join u1.V_RBO_Z#VID_OPER_DOG vod on vod.id = fo.c_oper
+          left join u1.V_RBO_Z#TAKE_IN_DEBT td on  vod.c_take_debt = td.collection_id
+          left join u1.V_RBO_Z#VID_DEBT vd on td.c_debt = vd.id
+          where vod.c_code_group = 'ДЕПОЗИТЫ' and
+                vd.c_code = 'ОСТ_ВКЛАД' and
+                td.c_dt =1) foo on foo.collection_id = dpn.c_list_pay and round(foo.c_summa) = round(dd.c_payer_summ) and foo.c_date =  trunc(vfa.folder_date_create)*/
+where vfa.process_code in ('CLOSE_DEPOSIT','DRAW_DOWN');
+grant select on U1.M_LINK_FOLDER_DRAW_DOWN_TST to LOADDB;
+
+

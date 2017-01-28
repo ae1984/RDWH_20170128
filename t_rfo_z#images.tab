@@ -1,0 +1,38 @@
+﻿create table U1.T_RFO_Z#IMAGES
+(
+  id            NUMBER not null,
+  collection_id NUMBER,
+  c_name        VARCHAR2(210),
+  c_date        DATE,
+  c_fold_id     NUMBER,
+  c_uid         VARCHAR2(210),
+  c_load_date   DATE
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_RFO_Z#IMAGES
+  is 'Изображения';
+comment on column U1.T_RFO_Z#IMAGES.c_name
+  is 'Наименование';
+comment on column U1.T_RFO_Z#IMAGES.c_date
+  is 'Дата';
+comment on column U1.T_RFO_Z#IMAGES.c_fold_id
+  is 'ID папки';
+comment on column U1.T_RFO_Z#IMAGES.c_uid
+  is 'UID фотографии';
+comment on column U1.T_RFO_Z#IMAGES.c_load_date
+  is 'Дата выгрузки фотографии';
+grant select on U1.T_RFO_Z#IMAGES to LOADDB;
+grant select on U1.T_RFO_Z#IMAGES to LOADER_RFO;
+

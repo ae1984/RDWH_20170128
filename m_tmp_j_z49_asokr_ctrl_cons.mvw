@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_TMP_J_Z49_ASOKR_CTRL_CONS
+refresh force on demand
+as
+select *
+from M_TMP_J_Z49_ASOKR_CTRL_GROUP t
+join V_CONTRACT_CAL c on c.folder_id_first = t.folder_id
+where c.contract_amount_first > 0
+      and c.product_program_first != 'ПРИВИЛЕГИРОВАННЫЙ' and
+      c.cr_prog_name_rbo_last != 'ОВЕРДРАФТЫ' and
+      c.is_refin_restruct_ever = 0 and
+      c.contract_number not in (
+          select max(case when c.is_card = 2 then c.contract_number end)
+          from M_TMP_J_Z49_ASOKR_CTRL_GROUP t
+          join V_CONTRACT_CAL c on c.folder_id_first = t.folder_id
+/*          where c.contract_amount_first > 0
+          and c.product_program_first != 'ПРИВИЛЕГИРОВАННЫЙ'*/
+          group by t.folder_id having count(*) > 1)
+--) -- 5801;
+grant select on U1.M_TMP_J_Z49_ASOKR_CTRL_CONS to LOADDB;
+grant select on U1.M_TMP_J_Z49_ASOKR_CTRL_CONS to LOADER;
+
+

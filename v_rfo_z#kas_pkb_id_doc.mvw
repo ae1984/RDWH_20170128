@@ -1,0 +1,22 @@
+﻿create materialized view U1.V_RFO_Z#KAS_PKB_ID_DOC
+build deferred
+refresh force on demand
+as
+select id,
+      collection_id,
+      c_info_type,
+      c_name,
+      c_issuance_date,
+      c_reg_date,
+      c_issuance_loc,
+      c_rank,
+      c_expire_date,
+      c_num,
+      c_source,
+      sn,
+      su,
+      c_fio
+from ibs.Z#KAS_PKB_ID_DOC@rfo_snap;
+grant select on U1.V_RFO_Z#KAS_PKB_ID_DOC to LOADDB;
+
+

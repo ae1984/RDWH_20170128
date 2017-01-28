@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_TMP_PKB_REP_DIFF_DATE_F
+refresh force on demand
+as
+select distinct report_iin_rnn,  v.report_id, /*v.folder_id,*/ v.report_status,v.report_type,v.rfo_report_date_time  from v_pkb_report v
+left join RISK_SDARYA.T_TMP_BILLING_BANK t on v.report_iin_rnn=t.iin and v.rfo_report_date=trunc(to_date(t.p_date,'dd.mm.yyyy hh24:mi:ss'))
+          where
+          RFO_REPORT_DATE>=to_date('01.07.2015','dd.mm.yyyy')
+          and RFO_REPORT_DATE<=to_date('31.07.2015','dd.mm.yyyy')
+          and is_from_cache=0
+          and v.report_status ='БЕКИ'
+          and t.iin is null;
+grant select on U1.M_TMP_PKB_REP_DIFF_DATE_F to LOADDB;
+grant select on U1.M_TMP_PKB_REP_DIFF_DATE_F to LOADER;
+
+

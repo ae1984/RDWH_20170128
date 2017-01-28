@@ -1,0 +1,65 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_BAS
+build deferred
+refresh complete on demand
+as
+select fo.rfo_client_id,
+       fo.claim_id,
+       fo.date_create,
+       nvl(bb.avg_term_cred_plan,0)   as avg_term_cred_plan,
+       trunc(fo.date_create) - trunc(tt.begin_date) as life_length,
+       nvl(cd.del_days_cli_max, 0)            as total_max_delay,
+       --nvl(pp.con_active_cnt, 0)              as pkb_count_kzt,
+       bb.count_kn_ever                       as count_kn_ever,
+       xx.sum_pay_cred_3_m,
+       rr.total_max_delay_2years
+
+from u1.M_FOLDER_CON_CANCEL_ONLINE_1 fo
+left join (select ff.claim_id,
+                  sum(round(months_between(cb.date_plan_end, cb.begin_date), 0)) / count(cb.rbo_contract_id)   as avg_term_cred_plan,
+                  count(case when cb.product_type = 'ДЕНЬГИ' then cb.rbo_contract_id end)  as count_kn_ever
+             from u1.M_FOLDER_CON_CANCEL_ONLINE_1 ff
+             join u1.M_RBO_CONTRACT_BAS           cb on cb.rfo_client_id = ff.rfo_client_id
+                                                    and cb.begin_date < trunc(ff.date_create)
+                                                    and cb.is_card = 0
+            group by ff.claim_id ) bb on bb.claim_id = fo.claim_id
+
+left join (select ff.claim_id,
+                  min(begin_date) as begin_date
+           from u1.M_FOLDER_CON_CANCEL_ONLINE_1 ff
+           join   (select t1.rfo_client_id, t1.begin_date
+                   from u1.M_RBO_CONTRACT_BAS t1
+                   union all
+                   select dd.rfo_client_id, dd.begin_date
+                   from u1.M_RBO_CONTRACT_DEPOSIT_BAS dd
+                   where dd.is_has_timeout = 1) t3 on t3.rfo_client_id = ff.rfo_client_id
+                                                      and t3.begin_date < trunc(ff.date_create)
+            group by ff.claim_id) tt on tt.claim_id = fo.claim_id
+
+left join (select ff.claim_id,
+                  max(del_days_max) as del_days_cli_max
+           from u1.M_FOLDER_CON_CANCEL_ONLINE_1 ff
+           join u1.M_CLIENT_LINK cl on cl.rfo_client_id = ff.rfo_client_id
+           join u1.V_RBO_PORT rp on rp.rbo_client_id = cl.rbo_client_id
+                                    and rp.rep_date < trunc(ff.date_create)
+           group by ff.claim_id) cd on cd.claim_id = fo.claim_id
+
+/*left join ( select max(p.report_date) report_date, t.claim_id, t.date_create,
+                   max(p.con_active_cnt) keep (dense_rank last order by  p.report_date) as con_active_cnt
+            from u1.M_FOLDER_CON_CANCEL_ONLINE_1 t
+            left  join u1.M_PKB_REPORT_ADD p on p.iin_rnn = t.claim_client_iin
+                                                and p.report_date < trunc(t.date_create)
+            where p.con_active_cnt is not null
+            group by t.claim_id, t.date_create ) pp on pp.claim_id = fo.claim_id*/
+
+left join u1.M_RFO_FRAUD_SEARCH_PCFO xx on xx.claim_id = fo.claim_id
+
+left join (select ff.claim_id, max(rp.delinq_days) as total_max_delay_2years
+             from u1.M_FOLDER_CON_CANCEL_ONLINE_1 ff
+             join u1.M_CLIENT_LINK                cl on cl.rfo_client_id = ff.rfo_client_id
+             join u1.V_RBO_PORT                   rp on rp.rbo_client_id = cl.rbo_client_id
+                                                    and rp.rep_date < trunc(ff.date_create)
+                                                    and rp.rep_date >= add_months(trunc(ff.date_create),-24)
+            group by ff.claim_id )   rr on rr.claim_id = fo.claim_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_BAS to LOADDB;
+
+

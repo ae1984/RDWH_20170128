@@ -1,0 +1,36 @@
+﻿create table U1.T_CONTRACT_DEPN_OPER_NEW
+(
+  id              NUMBER not null,
+  rbo_client_id   NUMBER not null,
+  rbo_contract_id NUMBER not null,
+  product_name    VARCHAR2(1400 CHAR),
+  product_code    VARCHAR2(16 CHAR),
+  is_has_timeout  VARCHAR2(1 CHAR),
+  debt_code       VARCHAR2(25 CHAR),
+  debt_name       VARCHAR2(100 CHAR),
+  oper_code       VARCHAR2(50 CHAR),
+  oper_name       VARCHAR2(100 CHAR),
+  currency_short  VARCHAR2(3 CHAR),
+  currency_id     NUMBER,
+  date_doc_prov   DATE,
+  sum_oper_db     NUMBER(17,2),
+  sum_oper_cr     NUMBER(17,2),
+  is_dt_ct        VARCHAR2(1 CHAR),
+  oper_summa      NUMBER(17,2)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_CONTRACT_DEPN_OPER_NEW to LOADDB;
+grant select on U1.T_CONTRACT_DEPN_OPER_NEW to LOADER;
+

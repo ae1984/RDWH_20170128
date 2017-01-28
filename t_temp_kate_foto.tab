@@ -1,0 +1,23 @@
+﻿create table U1.T_TEMP_KATE_FOTO
+(
+  foto_now     VARCHAR2(100),
+  foto_prev    VARCHAR2(100),
+  a            VARCHAR2(10),
+  like_percent VARCHAR2(10)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TEMP_KATE_FOTO to LOADDB;
+grant select on U1.T_TEMP_KATE_FOTO to LOADER;
+

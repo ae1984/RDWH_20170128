@@ -1,0 +1,28 @@
+﻿create table U1.T_RDWH_CANCEL_ORDER_LIST
+(
+  code_int           VARCHAR2(128),
+  par_name           VARCHAR2(128),
+  rule_order_by_date NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RDWH_CANCEL_ORDER_LIST
+  is 'Правила';
+comment on column U1.T_RDWH_CANCEL_ORDER_LIST.code_int
+  is 'Код';
+comment on column U1.T_RDWH_CANCEL_ORDER_LIST.par_name
+  is 'Название параметра';
+comment on column U1.T_RDWH_CANCEL_ORDER_LIST.rule_order_by_date
+  is 'Порядок правила';
+grant select on U1.T_RDWH_CANCEL_ORDER_LIST to LOADDB;
+

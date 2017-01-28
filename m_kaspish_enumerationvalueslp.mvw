@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_KASPISH_ENUMERATIONVALUESLP
+build deferred
+refresh force on demand
+as
+select
+"ITEMPK","ITEMTYPEPK","LANGPK","P_NAME"
+from kaspi.ENUMERATIONVALUESLP@ks_std
+where rownum >=0;
+grant select on U1.M_KASPISH_ENUMERATIONVALUESLP to LOADDB;
+
+

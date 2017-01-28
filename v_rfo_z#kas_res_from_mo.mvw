@@ -1,0 +1,21 @@
+﻿CREATE MATERIALIZED VIEW U1.V_RFO_Z#KAS_RES_FROM_MO
+BUILD DEFERRED
+USING NO INDEX
+REFRESH FORCE ON DEMAND
+AS
+SELECT z#kas_res_from_mo.id id,
+            z#kas_res_from_mo.c_date c_date,
+            z#kas_res_from_mo.c_client_ref c_client_ref,
+            z#kas_res_from_mo.c_folder_ref c_folder_ref,
+            z#kas_res_from_mo.o$result c_result,
+            z#kas_res_from_mo.c_type_process c_type_process,
+            z#kas_res_from_mo.c_res_mo_id c_res_mo_id,
+            z#kas_res_from_mo.c_use_ch_res_arr c_use_ch_res_arr,
+            z#kas_res_from_mo.c_res_rbp_arr,
+            z#kas_res_from_mo.sn sn,
+            z#kas_res_from_mo.su su
+  FROM IBS.Z#KAS_RES_FROM_MO@RFO_SNAP Z#KAS_RES_FROM_MO;
+grant select on U1.V_RFO_Z#KAS_RES_FROM_MO to LOADDB;
+grant select on U1.V_RFO_Z#KAS_RES_FROM_MO to LOADER;
+
+

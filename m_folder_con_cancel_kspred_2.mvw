@@ -1,0 +1,85 @@
+﻿create materialized view U1.M_FOLDER_CON_CANCEL_KSPRED_2
+build deferred
+using no index
+refresh force on demand
+as
+select /*+ parallel 10 */
+       x.*,
+       --Категория А
+       case when coalesce(x.prev_con_closed_cnt, 0) >= 2 and     --Закрыл несколько кредитов
+                 coalesce(x.prior_optim_count, 0) = 0 and        --Не было оптимизации
+                 coalesce(x.prev_con_del_days_max, 0) <= 15 and  --Не допускал просрочку > 15
+                 coalesce(x.fact_pmt_mon_before, 0) >= 12 and    --Кол-во платежей
+                 coalesce(x.fact_pmt_mon_before_12_mon, 0) > 0   --Платил в течении последних 12 мес
+            then 1 else 0 end as is_categ_a,
+
+      case when coalesce(x.prev_con_closed_cnt, 0) >= 1 and     --Закрыл несколько кредитов
+                 coalesce(x.prev_con_del_days_max, 0) < 31 and  --Не допускал просрочку > 30
+                 coalesce(x.fact_pmt_mon_before, 0) >= 6        --Кол-во платежей
+            then 1 else 0 end as is_categ_b
+from (
+      select r.folder_id,
+             --coalesce(c.iin, r.claim_client_iin) iin,
+             count(distinct d.deal_number) as prev_con_cnt,
+
+             count(distinct d2.deal_number) as prev_con_closed_cnt,
+             max(d2.x_amount) as amount_max_before,
+
+             count(distinct o.spof_end_date) as prior_optim_count,
+
+             /*max(ch.delinq_days_in_month) as prev_con_del_days_max,
+             count(distinct case when ch.fact_pmts_in_month > 0 then ch.yyyy_mm_num end) as fact_pmt_mon_before, ---
+             count(distinct case when ch.yyyy_mm_num >= to_number(to_char(add_months(f.folder_date_create_mi,-12),'yyyymm')) and
+                                      ch.fact_pmts_in_month > 0 then ch.yyyy_mm_num end) as fact_pmt_mon_before_12_mon,*/
+
+             case when count(distinct d.deal_number) > 0 then 0 else 1 end as is_client_new_by_con,
+
+             max(ch.delinq_days_in_month) as prev_con_del_days_max,
+             count(distinct case when ch.fact_pmts_in_month > 0 then ch.yyyy_mm_num end) as fact_pmt_mon_before, ---
+             count(distinct case when ch.yyyy_mm_num >= to_number(to_char(add_months(r.folder_date_create_mi, -12),'yyyymm')) and
+                                      ch.fact_pmts_in_month > 0 then ch.yyyy_mm_num end) as fact_pmt_mon_before_12_mon
+
+             /*a3.prev_con_del_days_max,
+             a3.fact_pmt_mon_before,
+             a3.fact_pmt_mon_before_12_mon,
+
+             --Категория А
+             case when coalesce(a1.prev_con_closed_cnt, 0) >= 2 and     --Закрыл несколько кредитов
+                       coalesce(a1.prior_optim_count, 0) = 0 and        --Не было оптимизации
+                       coalesce(a3.prev_con_del_days_max, 0) <= 15 and  --Не допускал просрочку > 15
+                       coalesce(a3.fact_pmt_mon_before, 0) >= 12 and    --Кол-во платежей
+                       coalesce(a3.fact_pmt_mon_before_12_mon, 0) > 0   --Платил в течении последних 12 мес
+                  then 1 else 0 end as is_categ_a*/
+
+      from u1.M_FOLDER_CON_CANCEL_KSPRED_1 r
+      left join u1.V_CLIENT_RFO_BY_ID c on c.rfo_client_id = r.rfo_client_id
+
+      left join u1.V_DWH_PORTFOLIO_CURRENT d on d.client_iin = coalesce(c.iin, r.iin)
+                                                and d.x_start_date_actual < trunc(r.folder_date_create_mi)
+                                                and d.x_is_credit_issued = 1
+
+      left join u1.V_DWH_PORTFOLIO_CURRENT d2 on d2.client_iin = coalesce(c.iin, r.iin)
+                                                 and d2.actual_end_date < trunc(r.folder_date_create_mi)
+                                                 and d2.x_is_credit_issued = 1
+                                                 and d2.x_product_type != 'ОПТИМИЗАЦИЯ'
+
+      left join u1.V_DWH_PORTFOLIO_CURRENT d3 on d3.client_iin = coalesce(c.iin, r.iin)
+                                                 and d3.x_is_credit_issued = 1
+
+      left join u1.M_DWH_ACC_SPECIAL_OFFER_CON o on o.contract_number = d3.deal_number
+                                                    and o.spof_spec_offer_status_cd in ('EXECUTED','DEFAULT','WORK')
+                                                    and o.spof_end_date < trunc(r.folder_date_create_mi)
+
+      left join u1.V_CLIENT_CAL cc on cc.client_iin_last = coalesce(c.iin, r.iin)
+      left join u1.V_CLIENT_HISTORY ch on ch.client_id = cc.client_id
+                                          and ch.text_yyyy_mm < to_char(r.folder_date_create_mi, 'yyyy - mm')
+
+
+
+      where r.folder_date_create_mi < trunc(sysdate)
+
+      group by r.folder_id
+) x;
+grant select on U1.M_FOLDER_CON_CANCEL_KSPRED_2 to LOADDB;
+
+

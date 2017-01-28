@@ -1,0 +1,29 @@
+﻿create table U1.NT_KILLED_SESSIONS
+(
+  sdt            DATE,
+  sql_id         VARCHAR2(13),
+  sql_exec_start DATE,
+  module         VARCHAR2(64),
+  machine        VARCHAR2(64),
+  username       VARCHAR2(30),
+  osuser         VARCHAR2(30),
+  action         VARCHAR2(64),
+  cnt            NUMBER,
+  sql_text       VARCHAR2(1000),
+  descr          VARCHAR2(500)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_KILLED_SESSIONS to LOADDB;
+

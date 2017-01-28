@@ -1,0 +1,51 @@
+﻿create materialized view U1.V_ASOKR_RESULT
+refresh complete on demand
+as
+select k.deal_number, --№заявки
+       k.begin_date x_start_date, --дата
+       k.prod_type, --тип продукта
+       k.client_iin, --ИИН
+       ----
+       p.x_amount, --сумма
+       p.pmt_nom_rate, --платеж
+       round(MONTHS_BETWEEN(p.plan_end_date, p.begin_date)) term_months, --срок
+       ----
+       k.form_income_gcvp_salary_max income, --доход
+       ---
+       k.pkb_pmt,
+       k.contract_pmt,
+       k.other_deal_pmt,
+       ---
+       f.score_inc_f2,
+       f.score_is_kdn_regulated_f2,
+       k.is_ref_hard,
+       case when f.score_is_kdn_regulated_f2 = 1 and f.is_ref_hard = 0 then
+            round(f.score_kdn_f2, 2)
+       else null end score_kdn_f2,
+
+       case when f.score_is_kdn_regulated_f2 = 1 and f.is_ref_hard = 0 and f.score_kdn_f2 >= 45 then
+            1
+       else 0 end is_dummy
+       ---
+       --,r.calc_par_mo_sco_reject_pre --финальный ответ
+  from M_TMP_J_K5 k
+  join M_TMP_K_SCORE_RES_2_45_2 f on k.deal_number = f.deal_number
+  join v_dwh_portfolio_current p on k.deal_number = p.deal_number
+/*  join V_MO_RESULT_SCO r on k.folder_id_first = r.rfo_folder_id
+   and r.mogw_process_id in
+       ( -- по папке берем последний результат MO_SCO
+        select max(m.mogw_process_id)
+          from V_MO_RESULT_SCO m
+         where m.rfo_folder_id is not null
+           and m.rfo_res_from_mo_id >
+               ( -- берем со старта боевой эксплуатации
+                select min(c.cancel_rfo_res_from_mo_id) - 1
+                  from V_MO_RES_RFO_CANCEL c
+                 where c.cancel_type_code = 'MO_SCO_REJECT')
+         group by m.rfo_folder_id)*/
+                                            --prod sysdate - 7
+ where trunc(k.begin_date) >= to_date('01042014', 'ddmmyyyy');
+grant select on U1.V_ASOKR_RESULT to LOADDB;
+grant select on U1.V_ASOKR_RESULT to LOADER;
+
+

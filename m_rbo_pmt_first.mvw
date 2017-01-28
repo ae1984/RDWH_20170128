@@ -1,0 +1,52 @@
+﻿create materialized view U1.M_RBO_PMT_FIRST
+build deferred
+refresh force on demand
+as
+select --+ parallel(30) parallel_index(30)
+       cc.id as pr_cred_id, cc.c_num_dog as contract_number,
+       cc.c_date_begin as date_begin,
+       coalesce(x.plan_pmt_first_sum, y.plan_pmt_first_sum) as plan_pmt_first_sum,
+       coalesce(x.plan_pmt_first_date, y.plan_pmt_first_date) as plan_pmt_first_date,
+       coalesce(x.is_from_history, y.is_from_history) as is_from_history
+from V_RBO_Z#PR_CRED cc
+left join (-- с историей
+    select a.pr_cred_id,
+           sum(p.c_summa) as plan_pmt_first_sum,
+           min(pl_oper_hist_oper_date_min) as plan_pmt_first_date,
+           1 as is_from_history
+    from (select c.id as pr_cred_id,
+                 min(ph.c_pln_opr_arr_stat) as pl_oper_hist_arr_stat_min,
+                 min(p.c_date) keep (dense_rank first order by ph.c_pln_opr_arr_stat) as pl_oper_hist_oper_date_min
+                 --min(p.c_date) as pl_oper_hist_oper_date_min
+          from V_RBO_Z#PR_CRED c
+          join V_RBO_Z#PLAN_OPER_HIST ph on ph.collection_id = c.c_lst_plan_pay_hst
+          join T_RBO_Z#PLAN_OPER p on p.collection_id = ph.c_pln_opr_arr_stat and
+                                      p.c_date > c.c_date_begin
+          --where c.c_num_dog = 'R1325111-001/CRD-4'
+          group by c.id
+    ) a
+    join T_RBO_Z#PLAN_OPER p on p.collection_id = a.pl_oper_hist_arr_stat_min and
+                          p.c_date = a.pl_oper_hist_oper_date_min
+    group by a.pr_cred_id
+) x on x.pr_cred_id = cc.id
+left join (-- без истории
+    select a.pr_cred_id,
+           sum(p.c_summa) as plan_pmt_first_sum,
+           min(pl_oper_date_min) as plan_pmt_first_date,
+           0 as is_from_history
+    from (select c.id as pr_cred_id,
+                 min(c.c_list_plan_pay) as list_plan_pay_min,
+                 min(p.c_date) as pl_oper_date_min
+          from V_RBO_Z#PR_CRED c
+          join T_RBO_Z#PLAN_OPER p on p.collection_id = c.c_list_plan_pay and
+                                p.c_date > c.c_date_begin
+          --where c.c_num_dog = 'R1015674-001/CRD-2'
+          group by c.id
+    ) a
+    join T_RBO_Z#PLAN_OPER p on p.collection_id = a.list_plan_pay_min and
+                          p.c_date = a.pl_oper_date_min
+    group by a.pr_cred_id
+) y on y.pr_cred_id = cc.id;
+grant select on U1.M_RBO_PMT_FIRST to LOADDB;
+
+

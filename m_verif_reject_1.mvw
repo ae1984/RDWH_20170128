@@ -1,0 +1,77 @@
+﻿create materialized view U1.M_VERIF_REJECT_1
+build deferred
+refresh force on demand
+as
+select mvv.verification_id,
+       mvv.rfo_verification_id,
+       mvv.rfo_client_id,
+       mvv.demand_folder_id,
+       mvv.verify_folder_id,
+       mvv.person_tabnum,
+       mvv.send_to_verification_dtm,
+       mvv.verification_date,
+       mvv.verification_status,
+       mvv.verification_type_id,
+       mvv.demand_open_dtm,
+       mvv.demand_close_dtm,
+       mvv.smart_script_begin_dtm,
+       mvv.smart_script_finish_dtm,
+       mvv.time_work_demand,
+       mvv.time_wait_in_stock_demand,
+       mvv.smart_script_work_time,
+       mvv.segment_group,
+       mvv.verify_group,
+       mvv.employee_group,
+       mvv.verify_pr_cr,
+       mvv.smart_script_name,
+       mvv.verification_scheme,
+       mvv.smart_script_result,
+       mvv.smart_script_step_code,
+       mvv.smart_script_step_name,
+       mvv.question,
+       mvv.answer_name,
+       mvv.answer_text,
+       mvv.verification_result_id,
+       mvv.verification_result_name,
+       mvv.inserted_date,
+       nvl(mvv.verify_folder_id, mvv.demand_folder_id) as folder_id,
+       bb.verif_photo_result as rfo_verif_photo,
+       bb.verif_phone_result as rfo_verif_phone,
+       bb.verif_doc_status as rfo_verif_doc_status,
+       (mvv.smart_script_finish_dtm - mvv.smart_script_begin_dtm)*24*60*60 as verif_time,
+       (kv.c_date_last_edit - bb.verif_doc_date)* 24 * 60 * 60 as rfo_time,
+       cc.product_type,
+       c.folder_date_create,
+       c.folder_state as status_papki,
+       c.process_name as business_process,
+       c.expert_name as manager,
+       c.pos_code as otdelenie,
+       c.dnp_name as gorod
+  from u1.M_VERIFICATION mvv
+  left join u1.V_VERIFICATION bb on nvl(mvv.verify_folder_id, mvv.demand_folder_id) = bb.folder_id
+  left join U1.V_FOLDER_ALL_RFO c on nvl(mvv.verify_folder_id, mvv.demand_folder_id) = c.folder_id
+  left join U1.V_CLIENT_RFO_BY_ID n on n.rfo_client_id = c.rfo_client_id
+  left join U1.T_RFO_Z#KAS_VERIFICATION kv on bb.verif_doc_id = kv.id
+  left join u1.M_FOLDER_CON_CANCEL cc on nvl(mvv.verify_folder_id, mvv.demand_folder_id) = cc.folder_id
+ where (mvv.question in (
+                      /*'Имеется ли негативная информация?&nbsp;(Бомж, надпись "Откажите", "Клиент пришел с посредником", надпись на фото "Web cam")',
+                      'Имеется ли негативная информация?Клиент является сотрудником АО "Kaspi Bank"?',*/
+                      --'Фото клиента и фото документа цветные (похожи на оригинал)?',
+                      /*'Имеется ли негативная информация? Например: Клиент похож на бомжа, есть снимки с комментарием "Клиент с посредником", "Клиент ушел" и т.д.',
+                      'Имеется ли негативная информация? Клиент является сотрудником АО "Kaspi Bank"?',*/
+                      'На документе уд. личности и фото Клиента изображен один человек?',
+                      --'Фото клиента и фото документа цветные?',
+                      'Фото Клиента (уд.личности и снимок Клиента) совпадает с фото из предыдущей заявки?',
+                      /*'Имеется ли негативная информация? К примеру, Клиент похож на бомжа, менеджер отправляет фото с комментарием "Клиент с посредником" и т.д.',
+                      'Имеется ли негативная информация?',*/
+                      --'Фото клиента и фото документа цветные (похожи на оригинал) ?',
+                      /*'Имеется ли негативная информация?',*/
+                      --'Фото клиента и фото документа цветные?',
+                      'На документе уд. личности и фото Клиента изображен один человек? ')
+    or mvv.question like '%совпадает с фото из предыдущей заявки?%')
+   and mvv.answer_text = 'НЕТ'
+   and verification_scheme = 'PHOTO'
+   and trunc(verification_date) >= to_date('01.01.2013', 'dd.mm.yyyy');
+grant select on U1.M_VERIF_REJECT_1 to LOADDB;
+
+

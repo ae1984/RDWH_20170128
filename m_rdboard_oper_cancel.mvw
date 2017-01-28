@@ -1,0 +1,7 @@
+﻿create materialized view U1.M_RDBOARD_OPER_CANCEL
+refresh force on demand
+as
+select * from T_OPER_CANCEL_RDWH@rdboard;
+grant select on U1.M_RDBOARD_OPER_CANCEL to LOADDB;
+
+

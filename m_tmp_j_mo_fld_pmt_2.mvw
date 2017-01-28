@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_TMP_J_MO_FLD_PMT_2
+refresh complete on demand
+as
+select f.rfo_folder_id,
+       count(*) as cnt,
+       max(case when dp.code_int = 'SC_PMT_NOM_RATE' then cpv.value_number end) keep (
+                dense_rank last order by p.id) as sc_pmt_nom_rate,
+       max(case when dp.code_int = 'SC_PMT_RBO' then cpv.value_number end) keep (
+                dense_rank last order by p.id) as sc_pmt_rbo
+from MO_RFOLDER f
+join MO_PROCESS p on p.rfolder_id = f.id and p.d_process_id = 1000
+join MO_CALC c on c.process_id = p.id
+join T_MO_CALC_PAR_VALUE_2015 cpv on cpv.calc_id = c.id
+join V_MO_D_CALC_PAR dcp on dcp.id = cpv.d_calc_par_id and dcp.is_out = 1
+join V_MO_D_PAR dp on dp.id = cpv.d_par_id and dp.code_int in ('SC_PMT_NOM_RATE','SC_PMT_RBO')
+group by f.rfo_folder_id;
+grant select on U1.M_TMP_J_MO_FLD_PMT_2 to LOADDB;
+grant select on U1.M_TMP_J_MO_FLD_PMT_2 to LOADER;
+
+

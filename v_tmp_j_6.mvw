@@ -1,0 +1,30 @@
+﻿create materialized view U1.V_TMP_J_6
+refresh complete on demand
+as
+select im.*, o.org_name_max as org_name_with_max_sal_in_mon, o.region_name as org_region_name
+from (
+    select iin, send_month,
+           sum(sal_in_month_by_org) as sal_in_month,
+           max(org_bin) keep (dense_rank last
+                          order by sal_in_month_by_org) as org_bin_with_max_sal_in_mon,
+           max(bank_in_month_by_org_max_pmt) keep (dense_rank last
+                          order by sal_in_month_by_org, org_bin) as bank_of_org_with_max_sal_inmon
+    from (
+        select t.rnn as iin, to_char(t.send_date,'yyyy-mm') as send_month,
+               d.f2 as org_bin,
+               round(sum(t.amount * 8.1 + 1731)) as sal_in_month_by_org,
+               max(t.name) keep (dense_rank last order by t.amount) as bank_in_month_by_org_max_pmt
+        from V_G3_P_VIEW t
+        join V_G3_ADF d on d.f1 = t.p_key and d.f2 not in ('940440000910','060240016519')
+        join TMP_EM_DEP_CLI_20140526 dc on dc.iin = t.rnn
+        where upper(t.p_name) not like '%KASPI BANK%'
+              and t.send_date > to_date('2013-01-01','yyyy-mm-dd')
+              and t.send_date < to_date('2014-02-01','yyyy-mm-dd')
+--              and t.rnn = '740921301643'
+        group by t.rnn, to_char(t.send_date,'yyyy-mm'), d.f2
+    ) group by iin, send_month
+) im left join V_GX_ORG o on o.bin = im.org_bin_with_max_sal_in_mon -- to get org names;
+grant select on U1.V_TMP_J_6 to LOADDB;
+grant select on U1.V_TMP_J_6 to LOADER;
+
+

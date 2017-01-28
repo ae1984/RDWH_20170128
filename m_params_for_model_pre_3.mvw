@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_PARAMS_FOR_MODEL_PRE_3
+build deferred
+refresh force on demand
+as
+select /*+parallel(20)*/
+        cln.rfo_client_id
+       ,cln.app_id
+       ,cln.folder_date_create_mi
+       ,case when count(distinct cln1.app_id)>0 then 1 else 0 end as APPLICATION_FLAG
+       ,count(distinct cln1.app_id) as COUNT_APPLICATION
+from M_APP_MINER_BAS cln--V_CLIENT_RFO_BY_ID cln
+left join M_APP_MINER_BAS cln1 on cln1.rfo_client_id=cln.rfo_client_id and cln1.folder_date_create_mi <trunc(cln.folder_date_create_mi)
+where cln.folder_date_create_mi >= to_date('01.01.2015','dd.mm.yyyy')
+group by cln.rfo_client_id
+       ,cln.app_id
+       ,cln.folder_date_create_mi;
+grant select on U1.M_PARAMS_FOR_MODEL_PRE_3 to LOADDB;
+
+

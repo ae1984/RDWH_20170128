@@ -1,0 +1,54 @@
+﻿create materialized view U1.M_FLD_CON_CNL_ONL_IAD_MOB
+refresh complete on demand
+as
+select rfo_client_id,
+       folder_id,
+       folder_date_create,
+       count(distinct numb_old) as old_mob_cnt,
+       count(distinct numb_new) as new_mob_cnt,
+       max(is_mob_change) as is_mob_change
+from(
+      select /*+ parallel 20*/ distinct
+             b.rfo_client_id,
+             b.folder_id,
+             b.folder_date_create,
+             con.id con_mobile_id,
+             con.c_numb_clear as numb_new,
+             con.c_activ as activ_new,
+             con.c_affirmed as affirmed_new,
+             con2.id con_old_mobile_id,
+             con2.c_numb_clear as numb_old,
+             con2.c_activ as activ_old,
+             con2.c_affirmed as affirmed_old,
+             case when nvl(con.c_numb,'no') != nvl(con2.c_numb,'no') then 1 else 0 end as is_mob_change
+      from (
+              select  c_client_ref,c_date_create
+              from V_RFO_Z#KAS_ONLINE_CLAIM c1
+              join V_RFO_Z#KAS_UNIVERSA_REF s1 on s1.collection_id = c1.c_mng_vis_scen
+              join V_RFO_Z#KAS_UNIVERSAL_D kd1 on kd1.id = s1.c_value
+              join V_RFO_Z#KAS_ONLINE_BUY f on c1.c_buy_ref = f.id
+              where kd1.c_name = 'Подойти к менеджеру для изменения анкетных данных') a--16 280
+      join v_folder_all_rfo b on a.c_client_ref = b.rfo_client_id and
+                                 b.process_name = 'ИЗМЕНЕНИЕ АНКЕТНЫХ ДАННЫХ КЛИЕНТА' and
+                                 b.folder_date_create > a.c_date_create and
+                                 b.folder_date_create <= a.c_date_create + 3
+      join u1.V_RFO_Z#RDOC rd on rd.collection_id = b.fld_c_docs
+      join u1.V_RFO_Z#FDOC fd on fd.id = rd.c_doc
+      join u1.V_RFO_Z#REQ_EDIT_CL_PRIV p on p.id = fd.id
+      join (select c1.* from u1.v_rfo_z#contacts c1
+                       join U1.v_rfo_z#owner_com c on c.id = c1.c_private and
+                            c.c_code = 'MOBILE'
+                 ) con2 on con2.collection_id = p.c_cl_req_old#contacts
+      left join (select c1.* from u1.v_rfo_z#contacts c1
+                   join U1.v_rfo_z#owner_com c on c.id = c1.c_private and
+                            c.c_code = 'MOBILE'
+                 ) con on con.collection_id = p.c_cl_req_new#contacts
+
+     )
+group by rfo_client_id,
+       folder_id,
+       folder_date_create;
+grant select on U1.M_FLD_CON_CNL_ONL_IAD_MOB to LOADDB;
+grant select on U1.M_FLD_CON_CNL_ONL_IAD_MOB to LOADER;
+
+

@@ -1,0 +1,18 @@
+﻿create materialized view U1.V_RFO_Z#CONT_DEP
+refresh complete on demand
+as
+select id,
+        c_currency,
+        c_dep_scheme,
+        c_id_back,
+        c_templates,
+        c_eff_prc,
+        c_deposit_fix_arr,
+        c_cancel_rates,
+        c_kas_num_dog_bsq,
+        c_kas_acc_bsq
+from ibs.Z#CONT_DEP@rfo_snap;
+grant select on U1.V_RFO_Z#CONT_DEP to LOADDB;
+grant select on U1.V_RFO_Z#CONT_DEP to LOADER;
+
+

@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_AUTO_IIN_INFO_ALL
+refresh complete on demand
+as
+select a.iin as iin,
+       a.send_date,
+       count(*) as auto_count,
+       max(a.ar_model_year) as model_year_max,
+       min(a.ar_model_year) as model_year_min,
+       max(a.rus) keep (dense_rank last order by a.ar_model_year) as model_year_max_mark,
+       max(a.code) keep (dense_rank last order by a.ar_model_year, a.rus) as model_year_max_model,
+       max(a.model_origin_country) keep (dense_rank last order by a.ar_model_year, a.rus) as model_origin_country,
+       max(a.model_assemblage_country) keep (dense_rank last order by a.ar_model_year, a.rus) as model_assemblage_country,
+       max(a.model_manuf_factory) keep (dense_rank last order by a.ar_model_year, a.rus) as model_manuf_factory,
+       max(a.model_body_type) keep (dense_rank last order by a.ar_model_year, a.rus) as model_body_type,
+       max(a.model_car_type) keep (dense_rank last order by a.ar_model_year, a.rus) as model_car_type,
+       --max(a.model_doors_count) keep (dense_rank last order by a.ar_model_year, a.rus) as model_doors_count,
+       max(a.model_kpp_type) keep (dense_rank last order by a.ar_model_year, a.rus) as model_kpp_type,
+       --max(a.model_steering_column_place) keep (dense_rank last order by a.ar_model_year, a.rus) as model_steering_column_place,
+       max(a.model_engine_type) keep (dense_rank last order by a.ar_model_year, a.rus) as model_engine_type,
+       max(a.model_drive) keep (dense_rank last order by a.ar_model_year, a.rus) as model_drive,
+       max(a.model_engine_volume) keep (dense_rank last order by a.ar_model_year, a.rus) as model_engine_volume
+
+from M_AUTO_IIN_INFO_PRE2_1 a
+group by a.iin, a.send_date;
+grant select on U1.M_AUTO_IIN_INFO_ALL to LOADDB;
+grant select on U1.M_AUTO_IIN_INFO_ALL to LOADER;
+
+

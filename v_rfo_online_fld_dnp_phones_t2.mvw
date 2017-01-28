@@ -1,0 +1,8 @@
+﻿create materialized view U1.V_RFO_ONLINE_FLD_DNP_PHONES_T2
+refresh complete on demand
+as
+select * from V_RFO_ONLINE_FLD_DNP_PHONES t;
+grant select on U1.V_RFO_ONLINE_FLD_DNP_PHONES_T2 to LOADDB;
+grant select on U1.V_RFO_ONLINE_FLD_DNP_PHONES_T2 to LOADER;
+
+

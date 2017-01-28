@@ -1,0 +1,100 @@
+﻿create materialized view U1.M_TMP_J_K_PREG
+refresh force on demand
+as
+select y.*,
+       y.pmt_as_num+y.plan_pmt_as_num pmt_as_num2,
+       y.pmt_sum/y.plan_pmt_cnt*1.0 pmt_sum_rate
+from (
+    select xxx.*,
+           (case when xxx."1_PMT" is null then 0 else 1 end +
+           case when xxx."2_PMT" is null then 0 else 1 end +
+           case when xxx."3_PMT" is null then 0 else 1 end) hist_cnt,
+
+           POWER(10, xxx.plan_pmt_cnt) plan_pmt_as_num,
+
+           to_number(
+             decode(xxx."13_PMT", 0, '0', 1, '1', 2, '1', '0') ||
+             decode(xxx."12_PMT", 0, '0', 1, '1', 2, '1', '0') ||
+             decode(xxx."11_PMT", 0, '0', 1, '1', 2, '1', '0') ||
+             decode(xxx."10_PMT", 0, '0', 1, '1', 2, '1', '0') ||
+             decode(xxx."9_PMT", 0, '0', 1, '1', 2, '1', '0') ||
+             decode(xxx."8_PMT", 0, '0', 1, '1', 2, '1', '0') ||
+             decode(xxx."7_PMT", 0, '0', 1, '1', 2, '1', '0') ||
+             decode(xxx."6_PMT", 0, '0', 1, '1', 2, '1', '0') ||
+             decode(xxx."5_PMT", 0, '0', 1, '1', 2, '1', '0') ||
+             decode(xxx."4_PMT", 0, '0', 1, '1', 2, '1', '0') ||
+             decode(xxx."3_PMT", 0, '0', 1, '1', 2, '1', '0') ||
+             decode(xxx."2_PMT", 0, '0', 1, '1', 2, '1', '0') ||
+             decode(xxx."1_PMT", 0, '0', 1, '1', 2, '1', '0')) pmt_as_num,
+
+
+             decode(xxx."13_PMT", 0, '0', 1, '1', 2, '2', '0') +
+             decode(xxx."12_PMT", 0, '0', 1, '1', 2, '2', '0') +
+             decode(xxx."11_PMT", 0, '0', 1, '1', 2, '2', '0') +
+             decode(xxx."10_PMT", 0, '0', 1, '1', 2, '2', '0') +
+             decode(xxx."9_PMT", 0, '0', 1, '1', 2, '2', '0') +
+             decode(xxx."8_PMT", 0, '0', 1, '1', 2, '2', '0') +
+             decode(xxx."7_PMT", 0, '0', 1, '1', 2, '2', '0') +
+             decode(xxx."6_PMT", 0, '0', 1, '1', 2, '2', '0') +
+             decode(xxx."5_PMT", 0, '0', 1, '1', 2, '2', '0') +
+             decode(xxx."4_PMT", 0, '0', 1, '1', 2, '2', '0') +
+             decode(xxx."3_PMT", 0, '0', 1, '1', 2, '2', '0') +
+             decode(xxx."2_PMT", 0, '0', 1, '1', 2, '2', '0') +
+             decode(xxx."1_PMT", 0, '0', 1, '1', 2, '2', '0') pmt_sum
+
+    from (
+          select xxy.contract_number,
+                 xxy.client_iin,
+                 xxy.yy_mm_start,
+                 --xx.yy_mm_report,
+                 xxy.pmt_exists,
+                 xxy.pmt_num,
+                 max(xxy.pmt_num) keep (dense_rank last order by xxy.pmt_num) over (partition by xxy.contract_number) plan_pmt_cnt
+
+          from (
+              select xx.contract_number,
+                     xx.client_iin,
+                     xx.yy_mm_start,
+                     xx.yy_mm_report,
+                     xx.pmt_exists,
+                     rank() over (partition by xx.contract_number order by xx.yy_mm_report_num desc) pmt_num
+              from (
+                  select x.*,
+                         case when (x.total_debt < x.total_dept_pre)
+                              then case when nvl(x.delinq_days, 0) > 0 then 1 else 2 end
+                              when (x.total_debt >= x.total_dept_pre)
+                              then case when nvl(x.delinq_days, 0) > 0 then 0 else null end
+                         end pmt_exists
+                  from (
+                      select t.contract_number,
+                             p.client_iin,
+                             da.yy_mm_report_num,
+                             da.yy_mm_report,
+                             da.yy_mm_start,
+                             da.contract_no,
+                             da.total_debt,
+                             da.delinq_days,
+                             da.contract_amount,
+
+                             lag(da.total_debt, 1, da.contract_amount) over (partition by da.contract_no order by da.yy_mm_report_num) total_dept_pre
+
+                      from M_FOLDER_CON_MINER t
+                      left join v_data_all da on da.contract_no = t.contract_number
+                      join v_dwh_portfolio_current p on p.deal_number = t.contract_number
+                                                        and p.x_is_refin_prod_type = 0
+                                                        and p.begin_date >= to_date('01012013', 'ddmmyyyy')
+                      --where t.contract_number = 'R1456991-001/CRD-3'
+                  ) x
+              ) xx
+           ) xxy
+        )
+        pivot (
+          sum(pmt_exists) pmt
+          for pmt_num in (1,2,3,4,5,6,7,8,9,10,11,12,13)
+    ) xxx
+) y
+where y.hist_cnt >= 3;
+grant select on U1.M_TMP_J_K_PREG to LOADDB;
+grant select on U1.M_TMP_J_K_PREG to LOADER;
+
+

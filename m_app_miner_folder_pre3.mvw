@@ -1,0 +1,137 @@
+﻿create materialized view U1.M_APP_MINER_FOLDER_PRE3
+build deferred
+refresh force on demand
+as
+select t1.app_id
+
+       /*,t1.rfo_client_id
+       ,t1.app_days_cnt_drank
+       ,t1.app_days_cnt_pr_drank
+       ,t1.app_days_cnt_drank_rev
+       ,t1.app_days_cnt_pr_drank_rev
+
+       ,t1.app_fail_days_cnt_drank
+       ,t1.app_fail_days_cnt_pr_drank
+       ,t1.app_fail_days_cnt_drank_rev
+       ,t1.app_fail_days_cnt_pr_drank_rev*/
+
+       ,count(case when t1.app_days_cnt_drank = 1 then trunc(t1.folder_date_create_mi) end)
+                 over (partition by t1.rfo_client_id order by trunc(t1.folder_date_create_mi)
+                       range between 90 preceding and 1 preceding) as app_days_90d_cnt
+
+       ,count(case when t1.app_days_cnt_pr_drank = 1 then trunc(t1.folder_date_create_mi) end)
+                 over (partition by t1.rfo_client_id, t1.product_type order by trunc(t1.folder_date_create_mi)
+                       range between 90 preceding and 1 preceding) as app_days_90d_pr_cnt
+
+       --30 days
+       ,count(case when t1.app_days_cnt_drank = 1 then trunc(t1.folder_date_create_mi) end)
+                 over (partition by t1.rfo_client_id order by trunc(t1.folder_date_create_mi)
+                       range between 30 preceding and 1 preceding) as app_days_30d_cnt
+
+       ,count(case when t1.app_days_cnt_pr_drank = 1 then trunc(t1.folder_date_create_mi) end)
+                 over (partition by t1.rfo_client_id, t1.product_type order by trunc(t1.folder_date_create_mi)
+                       range between 30 preceding and 1 preceding) as app_days_30d_pr_cnt
+
+       --
+       ,count(case when t1.app_fail_days_cnt_drank = 1 then trunc(t1.folder_date_create_mi) end)
+                 over (partition by t1.rfo_client_id order by trunc(t1.folder_date_create_mi)
+                       range between 30 preceding and 1 preceding) as app_fail_days_30d_cnt
+
+       ,count(case when t1.app_fail_days_cnt_pr_drank = 1 then trunc(t1.folder_date_create_mi) end)
+                 over (partition by t1.rfo_client_id, t1.product_type order by trunc(t1.folder_date_create_mi)
+                       range between 30 preceding and 1 preceding) as app_fail_days_30d_pr_cnt
+
+       --
+       ,max(t1.app_days_cnt_drank) over (partition by t1.rfo_client_id order by trunc(t1.folder_date_create_mi)
+                                         range between 90 preceding and 1 preceding) as max_app_days_cnt_90d
+
+       ,avg(case when t1.app_days_cnt_drank_rev = 1 then t1.app_days_cnt_drank end)
+                 over (partition by t1.rfo_client_id order by trunc(t1.folder_date_create_mi)
+                       range between 90 preceding and 1 preceding) as avg_app_days_cnt_90d
+
+
+       ,max(t1.app_days_cnt_pr_drank) over (partition by t1.rfo_client_id, t1.product_type order by trunc(t1.folder_date_create_mi)
+                                            range between 90 preceding and 1 preceding) as max_app_days_cnt_90d_pr
+
+       ,avg(case when t1.app_days_cnt_pr_drank_rev = 1 then t1.app_days_cnt_pr_drank end)
+                 over (partition by t1.rfo_client_id, t1.product_type order by trunc(t1.folder_date_create_mi)
+                       range between 90 preceding and 1 preceding) as avg_app_days_cnt_90d_pr
+
+       --
+       ,max(t1.app_days_cnt_drank) over (partition by t1.rfo_client_id order by trunc(t1.folder_date_create_mi)
+                                         range between 30 preceding and 1 preceding) as max_app_days_cnt_30d
+
+       ,avg(case when t1.app_days_cnt_drank_rev = 1 then t1.app_days_cnt_drank end)
+                 over (partition by t1.rfo_client_id order by trunc(t1.folder_date_create_mi)
+                       range between 30 preceding and 1 preceding) as avg_app_days_cnt_30d
+
+
+       ,max(t1.app_days_cnt_pr_drank) over (partition by t1.rfo_client_id, t1.product_type order by trunc(t1.folder_date_create_mi)
+                                            range between 30 preceding and 1 preceding) as max_app_days_cnt_30d_pr
+
+       ,avg(case when t1.app_days_cnt_pr_drank_rev = 1 then t1.app_days_cnt_pr_drank end)
+                 over (partition by t1.rfo_client_id, t1.product_type order by trunc(t1.folder_date_create_mi)
+                       range between 30 preceding and 1 preceding) as avg_app_days_cnt_30d_pr
+from (
+      select am.*
+
+             ,dense_rank() over (partition by am.rfo_client_id, trunc(am.folder_date_create_mi) order by am.folder_date_create_mi) as app_days_cnt_drank
+             ,dense_rank() over (partition by am.rfo_client_id, am.product_type, trunc(am.folder_date_create_mi) order by am.folder_date_create_mi) as app_days_cnt_pr_drank
+
+             ,dense_rank() over (partition by am.rfo_client_id, trunc(am.folder_date_create_mi) order by am.folder_date_create_mi desc) as app_days_cnt_drank_rev
+             ,dense_rank() over (partition by am.rfo_client_id, am.product_type, trunc(am.folder_date_create_mi) order by am.folder_date_create_mi desc) as app_days_cnt_pr_drank_rev
+
+             ,case when (coalesce(am.cancel_prescoring, 0)
+                                  + coalesce(am.cancel_middle_office, 0)
+                                  + coalesce(am.cancel_controller, 0)
+                                  --+ coalesce(am.cancel_client, 0)
+                                  + coalesce(am.cancel_manager, 0)
+                                  + coalesce(am.cancel_cpr_aa, 0)
+                                  + coalesce(am.cancel_verificator, 0)
+                                  --+ coalesce(am.cancel_undefined, 0)
+                                  ) > 0 or am.is_credit_rejected = 1
+                   then dense_rank() over (partition by am.rfo_client_id, trunc(am.folder_date_create_mi) order by am.folder_date_create_mi)
+               end as app_fail_days_cnt_drank
+
+              ,case when (coalesce(am.cancel_prescoring, 0)
+                                  + coalesce(am.cancel_middle_office, 0)
+                                  + coalesce(am.cancel_controller, 0)
+                                  --+ coalesce(am.cancel_client, 0)
+                                  + coalesce(am.cancel_manager, 0)
+                                  + coalesce(am.cancel_cpr_aa, 0)
+                                  + coalesce(am.cancel_verificator, 0)
+                                  --+ coalesce(am.cancel_undefined, 0)
+                                  ) > 0 or am.is_credit_rejected = 1
+                   then dense_rank() over (partition by am.rfo_client_id, am.product_type, trunc(am.folder_date_create_mi) order by am.folder_date_create_mi)
+               end as app_fail_days_cnt_pr_drank
+
+              ,case when (coalesce(am.cancel_prescoring, 0)
+                                  + coalesce(am.cancel_middle_office, 0)
+                                  + coalesce(am.cancel_controller, 0)
+                                  --+ coalesce(am.cancel_client, 0)
+                                  + coalesce(am.cancel_manager, 0)
+                                  + coalesce(am.cancel_cpr_aa, 0)
+                                  + coalesce(am.cancel_verificator, 0)
+                                  --+ coalesce(am.cancel_undefined, 0)
+                                  ) > 0 or am.is_credit_rejected = 1
+                   then dense_rank() over (partition by am.rfo_client_id, trunc(am.folder_date_create_mi) order by am.folder_date_create_mi desc)
+               end as app_fail_days_cnt_drank_rev
+
+              ,case when (coalesce(am.cancel_prescoring, 0)
+                                  + coalesce(am.cancel_middle_office, 0)
+                                  + coalesce(am.cancel_controller, 0)
+                                  --+ coalesce(am.cancel_client, 0)
+                                  + coalesce(am.cancel_manager, 0)
+                                  + coalesce(am.cancel_cpr_aa, 0)
+                                  + coalesce(am.cancel_verificator, 0)
+                                  --+ coalesce(am.cancel_undefined, 0)
+                                  ) > 0 or am.is_credit_rejected = 1
+                   then dense_rank() over (partition by am.rfo_client_id, am.product_type, trunc(am.folder_date_create_mi) order by am.folder_date_create_mi desc)
+               end as app_fail_days_cnt_pr_drank_rev
+
+      from u1.M_APP_MINER_BAS am
+      where am.folder_date_create >= to_date('01012015', 'ddmmyyyy') - 90
+      ) t1;
+grant select on U1.M_APP_MINER_FOLDER_PRE3 to LOADDB;
+
+

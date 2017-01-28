@@ -1,0 +1,68 @@
+﻿create materialized view U1.M_CONTRACT_PARAM_KDN1_PRE
+build deferred
+refresh force on demand
+as
+select deal_number,
+                  max(coalesce(report_id1, report_id2, report_id3,
+                               report_id4, report_id5, report_id6,
+                               report_id7)) as pkb_rep_id,
+                  case when max(report_id1) is not null then 1
+                       when max(report_id2) is not null then 2
+                       when max(report_id3) is not null then 3
+                       when max(report_id4) is not null then 4
+                       when max(report_id5) is not null then 5
+                       when max(report_id6) is not null then 6
+                       when max(report_id7) is not null then 7 else 0 end as pkb_rep_found_type,
+                  case when max(report_id1) is not null then max(x_start_date_actual) - max(rfo_report_date1)
+                       when max(report_id2) is not null then max(x_start_date_actual) - max(rfo_report_date2)
+                       when max(report_id3) is not null then max(x_start_date_actual) - max(rfo_report_date3)
+                       when max(report_id4) is not null then max(x_start_date_actual) - max(rfo_report_date4)
+                       when max(report_id5) is not null then max(x_start_date_actual) - max(rfo_report_date5)
+                       when max(report_id6) is not null then max(x_start_date_actual) - max(rfo_report_date6)
+                       when max(report_id7) is not null then max(x_start_date_actual) - max(rfo_report_date7)
+                            else null end as pkb_age_days
+             from (  select c4.deal_number,p1.folder_id,p1.report_iin_rnn,
+                     c4.x_start_date_actual,
+                     max(case when p1.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ') then p1.report_id end) as report_id1,
+                     (p2.report_id) as report_id2,
+                     max(case when p3.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ') then p3.report_id  end) as report_id3,
+                     max(case when p1.report_type = 'ПЕРВИЧНЫЙ' then p1.report_id  end) as report_id4,
+                     max(case when p3.report_type = 'ПЕРВИЧНЫЙ' then p3.report_id  end) as report_id5,
+                     max(case when p6.report_iin_rnn = c4.client_iin then p6.report_id end) as report_id6,
+                     max(case when p6.report_iin_rnn = c4.client_rnn then p6.report_id end) as report_id7 ,
+                     max( case when p1.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ') then p1.rfo_report_date end) as  rfo_report_date1,
+                     ( p2.rfo_report_date) as rfo_report_date2,
+                     max(case when p3.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ') then p3.rfo_report_date  end) as rfo_report_date3,
+                     max(case when p1.report_type = 'ПЕРВИЧНЫЙ' then p1.rfo_report_date  end) as rfo_report_date4,
+                     max(case when p3.report_type = 'ПЕРВИЧНЫЙ' then p3.rfo_report_date  end) as rfo_report_date5,
+                     max(case when p6.report_iin_rnn = c4.client_iin then p6.rfo_report_date end) as rfo_report_date6,
+                     max(case when p6.report_iin_rnn = c4.client_rnn then p6.rfo_report_date end)  as rfo_report_date7
+
+            from V_DWH_PORTFOLIO_CURRENT c4
+            left join V_PKB_REPORT p1 on p1.folder_id = c4.folder_id_first            -- ищем станд или расш в папке
+                                      --p4  p1.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ')
+            left join V_PKB_REPORT p2 on p2.report_iin_rnn = c4.client_iin and           -- или в тот же день
+                                         p2.rfo_report_date = c4.x_start_date_actual and
+                                         p2.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ')
+            left join V_PKB_REPORT p3 on p3.report_iin_rnn = c4.client_iin and           -- или в течение 3 месяцев (для ночных или авто)
+                                         p3.rfo_report_date < c4.x_start_date_actual and
+                                         p3.rfo_report_date >= c4.x_start_date_actual - 90
+                                      --p5.   p3.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ')
+            /*left join V_PKB_REPORT p4 on p4.folder_id = c4.folder_id_first and           -- если станд или расш нет, то ищем первичный в папке
+                                         p4.report_type = 'ПЕРВИЧНЫЙ'*/
+       /*     left join V_PKB_REPORT p5 on p5.report_iin_rnn = c4.client_iin and           -- если нет, то в течение 90 дней
+                                         p5.rfo_report_date < c4.x_start_date_actual and
+                                         p5.rfo_report_date >= c4.x_start_date_actual - 90 and
+                                       --  p5.report_type in ('ПЕРВИЧНЫЙ')*/
+            left join V_PKB_REPORT p6 on (p6.report_iin_rnn = c4.client_iin or  p6.report_iin_rnn = c4.client_rnn) and            -- или ищем любой до договора по ИИН клиента
+                                         p6.rfo_report_date <= c4.x_start_date_actual
+           /* left join V_PKB_REPORT p7 on p7.report_iin_rnn   = c4.client_rnn and            -- или ищем любой до договора по РНН клиента
+                                         p7.rfo_report_date <= c4.x_start_date_actual*/
+--where deal_number = 'R1015711-001/CRD-8'
+group by c4.deal_number,p1.folder_id,p1.report_iin_rnn,
+                     c4.x_start_date_actual,p2.report_id,p2.rfo_report_date
+ )
+            group by deal_number;
+grant select on U1.M_CONTRACT_PARAM_KDN1_PRE to LOADDB;
+
+

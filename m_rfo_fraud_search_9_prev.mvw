@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_9_PREV
+build deferred
+refresh force on demand
+as
+select
+         t.rfo_client_id
+         ,t.date_create
+         ,t.claim_id
+         ,count(distinct a.claim_id) as COUNT_VISIT_GUEST
+    from M_FOLDER_CON_CANCEL_ONLINE_1 t
+    left join (
+        select
+            d.id as claim_id
+            ,c.c_date_create as date_create
+            ,d.c_client_ref as rfo_client_id
+        from M_KASPISH_ORDERHISTORYENTRIES t
+        join M_KASPISH_ORDERS a on a.pk = t.p_order
+        join M_KASPISH_ONLINE_BUY_PROP b on b.pk = a.pk and upper(b.p_description) = upper('Loan requested')
+        join V_RFO_Z#KAS_ONLINE_BUY c on c.c_process_id = a.code
+        join V_RFO_Z#KAS_ONLINE_CLAIM d on d.c_buy_ref = c.id
+        where upper(t.p_description) like '%ГОСТ%'
+    ) a on a.rfo_client_id = t.rfo_client_id and
+           a.date_create <= t.date_create and
+           a.date_create >= t.date_create - 90
+    group by
+          t.rfo_client_id
+         ,t.date_create
+         ,t.claim_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_9_PREV to LOADDB;
+
+

@@ -1,0 +1,40 @@
+﻿create materialized view U1.V_AMOUNT_BY_CLIENT
+refresh complete on demand
+as
+select distinct p.deal_number,
+       max(cl.iin) as client_iin,
+       max(cl.rnn) as client_rnn,
+       max(cl.surname) as client_surname,
+       max(cl.first_name) as client_first_name,
+       max(cl.patronymic) as client_patronymic,
+       max(coalesce(cl.amount,x.amount)) as amount,
+       max(p.x_is_card) as x_is_card
+from V_FORM_CLIENT_ALL_RFO cl
+join V_FOLDER_ALL_RFO f on f.form_client_id = cl.form_client_id and f.is_credit_process = 1
+join V_DWH_PORTFOLIO_CURRENT p on p.folder_id_first = f.folder_id and p.deal_status not in ('ОТКАЗ','ВВЕДЕН')
+--                               and to_char(p.begin_date,'yyyy - mm - dd') >= '2013 - 09 - 01'
+                               and p.begin_date >= to_date('2013-09-01','yyyy-mm-dd')
+left join
+(select distinct f.folder_id, cr.c_info_cred#summa_cred as amount
+from V_FORM_CLIENT_ALL_RFO cl
+join V_FOLDER_ALL_RFO f on f.form_client_id = cl.form_client_id and f.is_credit_process = 1
+join V_DWH_PORTFOLIO_CURRENT p on p.folder_id_first = f.folder_id and p.deal_status not in ('ОТКАЗ','ВВЕДЕН')
+                               --and to_char(p.begin_date,'yyyy - mm - dd') >= '2013 - 09 - 01'
+                               and p.begin_date >= to_date('2013-09-01','yyyy-mm-dd')
+join V_RFO_Z#CREDIT_DOG cr on cr.c_num_dog = p.deal_number
+
+union all
+
+select distinct f.folder_id,c.c_kas_calc_limit as amount
+from V_FORM_CLIENT_ALL_RFO cl
+join V_FOLDER_ALL_RFO f on f.form_client_id = cl.form_client_id and f.is_credit_process = 1
+join V_DWH_PORTFOLIO_CURRENT p on p.folder_id_first = f.folder_id and p.deal_status not in ('ОТКАЗ','ВВЕДЕН')
+                               --and to_char(p.begin_date,'yyyy - mm - dd') >= '2013 - 09 - 01'
+                               and p.begin_date >= to_date('2013-09-01','yyyy-mm-dd')
+join V_RFO_Z#KAS_PC_DOG c on c.c_num_dog = p.deal_number) x on x.folder_id = f.folder_id
+where coalesce(cl.amount,x.amount) is not null
+group by p.deal_number;
+grant select on U1.V_AMOUNT_BY_CLIENT to LOADDB;
+grant select on U1.V_AMOUNT_BY_CLIENT to LOADER;
+
+

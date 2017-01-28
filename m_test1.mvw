@@ -1,0 +1,10 @@
+﻿create materialized view U1.M_TEST1
+refresh force on demand
+as
+select h.* from risk_aAMAN.T_TEST_KASPI_RED_A4 t
+join V_CLIENT_RFO_BY_IIN h
+    on h.iin = t.iin;
+grant select on U1.M_TEST1 to LOADDB;
+grant select on U1.M_TEST1 to LOAD_MO;
+
+

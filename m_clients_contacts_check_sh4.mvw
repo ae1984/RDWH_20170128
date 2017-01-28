@@ -1,0 +1,68 @@
+﻿create materialized view U1.M_CLIENTS_CONTACTS_CHECK_SH4
+refresh force on demand
+as
+select  a.RFO_CLIENT_ID,
+        a.RBO_CLIENT_ID,
+        a.IIN,
+        a.MOBILE_NUMBER_CLEAR,
+        a.COUNT_IN_CONTACTS,
+        a.MAX_PAY_DATE,
+        a.HAVE_KASPI_LOGIN,
+        a.HAVE_OTHER_KASPI_LOGIN,
+        a.THIS_MAX_CALL_DATE,
+        a.OTHER_MAX_CALL_DATE,
+        a.OTHER_CLIENT_HAS_CALL,
+        a.SUCCESS_OUT_CALL,
+        a.MAX_SEND_DATE,
+        a.PHOTO_VERIFICATION_CANCEL,
+        a.HAVE_CREDIT,
+        a.HAVE_DEPOSIT,
+        a.FOLDERS_COUNT,
+        a.LAST_FOLDER_DATE,
+        a.LAST_SUCCESS_FOLDER_DATE,
+        a.TEXT,
+        a.MAX_AUDIT,
+        a.active_deposit,
+        a.pay_terminal,
+        a.last_pay_terminal_date,
+        a.max_date_other_cli_cont,
+        a.cnt_other_cli_cont,
+        a.max_pkb_rep_date,
+        count(distinct case when f.folder_id is not null and f.folder_date_create < a.max_audit then f.folder_id end) as cnt_in_prev_fold,
+        count(distinct case when f.folder_id is not null then f.folder_id end) as cnt_in_all_fold,
+        max(case when f.folder_id is not null then f.folder_date_create end) as max_in_all_fold_date,
+        max(case when f.folder_id is not null and f.folder_date_create < a.max_audit then f.folder_date_create end) as max_in_prev_fold_date
+from M_CLIENTS_CONTACTS_CHECK_SH2 a
+left join M_CLIENTS_CONTACTS_CHECK_SH3 f on a.rfo_client_id = f.rfo_client_id and a.mobile_number_clear = f.phone_number_cur_clear----предыдущие анкеты Клиента
+group by
+        a.RFO_CLIENT_ID,
+        a.RBO_CLIENT_ID,
+        a.IIN,
+        a.MOBILE_NUMBER_CLEAR,
+        a.COUNT_IN_CONTACTS,
+        a.MAX_PAY_DATE,
+        a.HAVE_KASPI_LOGIN,
+        a.HAVE_OTHER_KASPI_LOGIN,
+        a.THIS_MAX_CALL_DATE,
+        a.OTHER_MAX_CALL_DATE,
+        a.OTHER_CLIENT_HAS_CALL,
+        a.SUCCESS_OUT_CALL,
+        a.MAX_SEND_DATE,
+        a.PHOTO_VERIFICATION_CANCEL,
+        a.HAVE_CREDIT,
+        a.HAVE_DEPOSIT,
+        a.FOLDERS_COUNT,
+        a.LAST_FOLDER_DATE,
+        a.LAST_SUCCESS_FOLDER_DATE,
+        a.TEXT,
+        a.MAX_AUDIT,
+        a.active_deposit,
+        a.pay_terminal,
+        a.last_pay_terminal_date,
+        a.max_date_other_cli_cont,
+        a.cnt_other_cli_cont,
+        a.max_pkb_rep_date;
+grant select on U1.M_CLIENTS_CONTACTS_CHECK_SH4 to LOADDB;
+grant select on U1.M_CLIENTS_CONTACTS_CHECK_SH4 to LOADER;
+
+

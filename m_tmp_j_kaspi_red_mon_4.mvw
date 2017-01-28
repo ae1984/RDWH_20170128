@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_TMP_J_KASPI_RED_MON_4
+build deferred
+refresh complete on demand
+as
+select tt.folder_id, max(case when instr(pp.params_out, 'MO_SCO_REJECT#1') > 0 then 1 else 0 end) as "Скоринг отказал",
+    max(case when rf1.d_par_id = 2356 then rf1.value_number  end) as appr_by_iin,
+    max(case when rf1.d_par_id = 2358 then rf1.value_number  end) as appr_by_mobile,
+    max(case when rf1.d_par_id = 2360 then rf1.value_number  end) as appr_by_partn,
+    max(case when rf1.d_par_id = 1501 then rf1.value_number  end) as client_is_employer,
+    max(case when rf1.d_par_id = 2125 then rf1.value_number  end) as kaspi_red_limit
+    ,max(case when rf1.d_par_id = 2090 then rf1.value_text  end) as CLIENT_CATEGORY
+    ,max(case when rf1.d_par_id = 2354 then rf1.value_text  end) as CLIENT_CATEGORY_UNION
+    ,max(case when rf1.d_par_id = 2399 then rf1.value_number  end) as SC_KASPIRED_APPR_OTHER_RES_PRE
+    ,max(case when rf1.d_par_id = 2400 then rf1.value_number  end) as SC_KASPIRED_APPR_TOP_RES_PRE
+from u1.sco_request@mo1_prod tt
+join u1.process@mo1_prod pp on pp.process_request_id = tt.process_request_id and pp.date_start > trunc(sysdate)
+join u1.rfolder_par_value@mo1_prod rf1 on rf1.rfolder_id = pp.rfolder_id and rf1.date_create > trunc(sysdate) and rf1.d_par_id in(2356, 2358, 2360, 1501,2125,2090,2354,2399,2400)
+join u1.sco_request_str@mo1_prod st on st.sco_request_id = tt.id
+where st.field_code = 'BUSINESS_PROC' and st.value = 'KASPI_RED'
+      and tt.date_create > trunc(sysdate)
+group by tt.folder_id;
+grant select on U1.M_TMP_J_KASPI_RED_MON_4 to LOADDB;
+
+

@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_CLIENT_DEPN_MO
+refresh complete on demand
+as
+select  mcd.rfo_client_id,
+        mcd.date_begin ,
+        mcd.date_close,
+        round(mcd.val_cource *mcd.sum_depn,2) sum_depn_kzt
+from M_CLIENT_DEPN mcd
+where  mcd.date_close is null;
+grant select on U1.M_CLIENT_DEPN_MO to LOADDB;
+grant select on U1.M_CLIENT_DEPN_MO to LOADER;
+grant select on U1.M_CLIENT_DEPN_MO to LOAD_MO;
+
+

@@ -1,0 +1,114 @@
+﻿create materialized view U1.V_CLIENT_CAL
+refresh complete on demand
+as
+select /*+ parallel(30) parallel_index(30)*/
+  c.client_id,
+  c.contract_number_first,
+  c.client_name,
+  c.product_first,
+  c.product_refin_first,
+  c.product_program_first,
+  c.start_date_first,
+  c.end_date_first,
+  c.contract_amount_first,
+  c.expert_name_first,
+  c.pos_code_first,
+  c.product_last,
+  c.product_refin_last,
+  c.product_program_last,
+  case when c1.delinq_days_max >= 90 then 'B'
+       when rc.ref_res_count > 1 then 'B'
+       when ppz.client_id is not null then 'B'
+       when rc.ref_res_count = 1 and coalesce(ccc.delinq_days_max_last_rep,0) >= 30 then 'B'
+       when rc.ref_res_count = 1 and coalesce(ccc.delinq_days_max_last_rep,0) < 30 then 'W'
+       when coalesce(ccc.delinq_days_max_last_rep,0) >= 60 and
+            coalesce(ccc.delinq_days_max_last_rep,0) < 90 then 'W'
+       else 'G'
+     end as client_status,    -- статус клиента 2014-04-22
+  rc.ref_res_count,
+  c1.start_date_last,
+  c1.end_date_last,
+  c1.contract_amount_last,
+  c1.expert_name_last,
+  c1.pos_code_last,
+  c1.contract_amount_max,
+  c1.contract_amount_min,
+  c1.max_debt_used,
+  c1.delinq_days_max,
+  c1.delinq_days_max_last_con,
+  c1.contract_amount_all_con_last,
+  c1.total_debt_all_con_last,
+  c1.delinq_days_max_last,
+  c1.number_of_contracts,
+  c2.contract_amount_categ_first,
+  c2.contract_amount_categ_last,
+  c2.client_pmt_max,
+  c2.yy_mm_report_max,
+  c2.provision_max,
+  cccc.client_rnn_first,
+  cccc.client_rnn_last,
+  c_iin.client_iin_first,
+  c_iin.client_iin_last,
+  to_char(c.start_date_first, 'yyyy - mm') as yy_mm_start_first,
+  months_between(to_date(to_char(c.start_date_first, 'yyyy - mm'),'yyyy - mm'),
+         to_date('2002 - 12','yyyy - mm')) as yy_mm_start_first_num,
+  to_char(c1.start_date_last, 'yyyy - mm') as yy_mm_start_last,
+  months_between(to_date(to_char(c1.start_date_last, 'yyyy - mm'),'yyyy - mm'),
+         to_date('2002 - 12','yyyy - mm')) as yy_mm_start_last_num,
+  cc.total_pmts,
+  case when c1.delinq_days_max > 90 then 1 else 0 end as is_high_delinq,
+  coalesce(ccc.total_debt_sum_last_rep,0) as total_debt_sum_last_rep,
+  coalesce(ccc.contract_amount_sum_last_rep,0) as contract_amount_sum_last_rep,
+  coalesce(ccc.delinq_days_max_last_rep,0) as delinq_days_max_last_rep,
+  coalesce(ccc.number_of_contracts_last_rep,0) as number_of_contracts_last_rep,
+  case when cccc.client_rnn_first != cccc.client_rnn_last then '!' else null end as is_rnn_changed,
+  coalesce(fa2.number_of_folders_total,0)    as number_of_folders_total,
+  coalesce(fa2.number_of_folders_1_month,0)  as number_of_folders_1_month,
+  coalesce(fa2.number_of_folders_2_months,0) as number_of_folders_2_months,
+  coalesce(fa2.number_of_folders_3_months,0) as number_of_folders_3_months,
+  coalesce(fa2.number_of_folders_6_months,0) as number_of_folders_6_months,
+  coalesce(fa2.number_of_rejections_1_week,0) as number_of_rejections_1_week,
+  fa2.birth_date_client as birth_date,
+  fa2.birth_place_client as birth_place,
+  co.is_refin_restruct_ever,
+  co.yms_res_first,
+  co.yms_res_last
+from
+    M_CLIENT_CAL_PRE_C c,
+    M_CLIENT_CAL_PRE_C1 c1,
+    M_CLIENT_CAL_CONT_AMOUNT_CATEG c2,
+    M_CLIENT_CAL_TOTAL_PMTS cc,
+    M_CLIENT_CAL_TOTAL_DEPT ccc,
+    M_CLIENT_CAL_RNN cccc,
+    M_CLIENT_CAL_IIN c_iin,
+    V_CLIENT_FOLDER_ALL_CAL fa2,
+    M_CLIENT_CAL_REFIN_RESTRUCT co,
+      ( -- реф рестр договора по клиенту
+        select c.client_id, count(distinct r.spof_end_date || r.contract_number) as ref_res_count
+          from M_DWH_ACC_SPECIAL_OFFER_CON r
+          join V_CONTRACT_CAL c on c.contract_number = r.contract_number
+          where r.spof_spec_offer_status_cd in ('WORK', 'DEFAULT', 'EXECUTED')
+          group by c.client_id
+      ) rc,
+      ( -- клиенты. по которым были выставлены ПТП
+        select c.client_id
+          from T_PTP_CONTRACT_LOAD ptp
+          join V_CONTRACT_CAL c on c.contract_number = ptp.contract_number
+          group by c.client_id
+      ) ppz
+where
+      c.client_id = c1.client_id(+) and
+      c.client_id = c2.client_id(+) and
+      c.client_id = cc.client_id(+) and
+      c.client_id = ccc.client_id(+) and
+      c.client_id = cccc.client_id(+) and
+      c.client_id = c_iin.client_id(+) and
+      c_iin.client_iin_last = fa2.client_iin(+) and
+      c.client_id = co.client_id(+) and
+      c.client_id = rc.client_id(+) and
+      c.client_id = ppz.client_id(+);
+grant select on U1.V_CLIENT_CAL to LOADDB;
+grant select on U1.V_CLIENT_CAL to LOADER;
+grant select on U1.V_CLIENT_CAL to LOAD_MO;
+
+

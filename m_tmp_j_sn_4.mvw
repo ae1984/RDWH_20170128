@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_TMP_J_SN_4
+refresh complete on demand
+as
+select fd.folder_id, count(distinct fd.rfo_client_iin_circle_1) as cli_circ_1_cnt_all,
+       count(distinct case when fd.del_days_max_by_cli_circle_1 > 30
+                 then fd.rfo_client_iin_circle_1 end) as cli_circ_1_cnt_del_above_30,
+       count(distinct case when fd.del_days_max_by_cli_circle_1 > 7
+                 then fd.rfo_client_iin_circle_1 end) as cli_circ_1_cnt_del_above_7
+from M_TMP_J_SN_3 fd
+group by fd.folder_id;
+grant select on U1.M_TMP_J_SN_4 to LOADDB;
+grant select on U1.M_TMP_J_SN_4 to LOADER;
+
+

@@ -1,0 +1,36 @@
+﻿create materialized view U1.M_RBO_REFIN_PORT
+build deferred
+refresh force on demand
+as
+select /*+parallel(30)*/
+       rp.rep_date,
+       v.rbo_contract_id,
+       rp.rbo_client_id,
+       round(rp.total_debt*v.part_percent,2) as total_debt_plus,
+       case when v.part_percent = 0 then null else rp.delinq_days end as del_days_plus,
+       case when v.part_percent = 0 then null else rp.delinq_days_cli end as del_days_cli_plus,
+       greatest((max(round(rp.total_debt*v.part_percent,2)) over (partition by v.rbo_contract_id
+                        order by rp.rep_date range between unbounded preceding and current row)),
+                coalesce(vmin.total_debt_max,0))         as total_debt_max_plus,
+       greatest(coalesce((max(case when v.part_percent = 0 then null else rp.delinq_days end)
+                          over (partition by v.rbo_contract_id
+                          order by rp.rep_date range between unbounded preceding and current row)),vmin.del_days_max),
+                coalesce(vmin.del_days_max,(max(case when v.part_percent = 0 then null else rp.delinq_days end)
+                         over (partition by v.rbo_contract_id
+                         order by rp.rep_date range between unbounded preceding and current row)))) as del_days_max_plus,
+       greatest(coalesce((max(case when v.part_percent = 0 then null else rp.delinq_days_cli end)
+                          over (partition by v.rbo_contract_id
+                          order by rp.rep_date range between unbounded preceding and current row)),vmin.del_days_cli_max),
+                coalesce(vmin.del_days_cli_max,(max(case when v.part_percent = 0 then null else rp.delinq_days_cli end)
+                         over (partition by v.rbo_contract_id
+                         order by rp.rep_date range between unbounded preceding and current row)))) as del_days_cli_max_plus,
+       v.min_refin_date
+ from M_RBO_CONTR_AFTER_REF_PERCENT v
+ join u1.V_RBO_PORT rp on rp.rbo_contract_id = v.rbo_contract_id_to
+                      and rp.rep_date >= v.date_change
+                      and rp.rep_date <= coalesce(v.date_change_end,trunc(sysdate))
+ left join M_RBO_REFIN_PORT_PRE1 vmin on vmin.rbo_contract_id = v.rbo_contract_id;
+grant select on U1.M_RBO_REFIN_PORT to LOADDB;
+grant select on U1.M_RBO_REFIN_PORT to LOADER;
+
+

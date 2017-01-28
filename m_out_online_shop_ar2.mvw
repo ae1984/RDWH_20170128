@@ -1,0 +1,236 @@
+﻿create materialized view U1.M_OUT_ONLINE_SHOP_AR2
+build deferred
+refresh force on demand
+as
+select
+  trunc(f.c_date_create) as date_ratif,
+  to_char(f.c_date_create,'mm-yyyy') as month_ratif,
+  td.week_num_online_credit,
+  td.week_text_online_credit,
+  case when sh.c_address#place='Али' then 'Алматы' else sh.c_address#place end as city,
+
+  ----
+          sum(case when t.is_credit_issued=1 then t.contract_amount end) as sales,
+          round(sum(case when t.is_credit_issued=1 then t.contract_amount end)/1000000) as sales_mln,
+
+          count(distinct a.c_buy_ref) as prelim_req_cnt,
+          count(distinct a.c_client_ref) as prelim_cli_cnt,
+          count(distinct case when a.c_check_result is null then a.c_buy_ref end) as prelim_approved_cnt,
+          count(distinct case when a.c_check_result is null then a.c_client_ref end) as prelim_approved_cli_cnt,
+
+
+          count(distinct t.folder_id) as fld_req_cnt,
+          count(distinct t.rfo_client_id) as fld_cli_cnt,
+          count(distinct case when t.is_credit_issued = 1 then t.rfo_client_id end) as fld_approved_cli_cnt,
+          count(distinct case when t.is_credit_issued = 1 then t.rfo_contract_id end) as fld_approved_cnt,
+          count(distinct case when t.is_credit_issued = 0 then t.rfo_contract_id end) as fld_rejected_cnt,
+          count(distinct case when (t.is_credit_issued = 0 and t.cancel_prescoring = 1) or (a.c_check_result is not null and a.c_folder_ref is null) then a.c_buy_ref end) as rr_prescoring_all,
+          count(distinct case when t.is_credit_issued = 0 and t.cancel_prescoring = 1 then t.rfo_contract_id end) as rr_prescoring,
+          count(distinct case when t.is_credit_issued = 0 and t.cancel_middle_office = 1 then t.rfo_contract_id end) as rr_middle_office,
+          count(distinct case when t.is_credit_issued = 0 and t.cancel_controller=1 then t.rfo_contract_id end) as rr_controller,
+          count(distinct case when t.is_credit_issued = 0 and t.cancel_client = 1 then t.rfo_contract_id end) as cancel_client,
+          count(distinct case when t.is_credit_issued = 0 and t.cancel_manager = 1 then t.rfo_contract_id end) as rr_manager,
+          count(distinct case when t.is_credit_issued = 0 and t.cancel_cpr_aa = 1 then t.rfo_contract_id end) as rr_cpr,
+          count(distinct case when t.is_credit_issued = 0 and t.cancel_verificator = 1 then t.rfo_contract_id end) as rr_verificator,
+          count(distinct case when t.is_credit_issued = 0 and t.cancel_undefined = 1 then t.rfo_contract_id end) as rr_overtime,
+
+  ----Crater
+
+  case when a.c_check_result is not null then 1
+            when a.c_check_result is null and t.is_credit_issued=0 and (t.cancel_prescoring = 1 or t.cancel_middle_office = 1
+            or t.cancel_controller = 1 or t.cancel_verificator = 1 or t.cancel_manager = 1 or t.cancel_cpr_aa = 1
+            or t.is_aa_reject = 1) then 0
+               else 2 end as is_first_crater,
+  case when a.c_check_result is null and t.is_credit_issued=1 then 0
+            when a.c_check_result is null then 1
+                 else 2 end as is_issued_crater,
+
+  ----Reject Reasons
+  cast(case when a.c_check_result is null and coalesce(t.is_credit_issued, t1.is_credit_issued) = 1 then 'Выданные'
+       when a.c_check_result is not null or coalesce(t.is_credit_issued, t1.is_credit_issued) = 0
+            then
+                  case when a.c_check_result is not null and a.c_exec_comment like '%Быстрое решение%' then 'Быстрое решение:Отказ'
+                       when coalesce(t.cancel_prescoring, t1.cancel_prescoring) = 1 then 'Прескоринг'
+                       when t.cancel_undefined = 1 and t.folder_state in ('ОТКАЗ АСОКР', 'ОТКАЗАНО') then 'Прескоринг'
+                       when t.cancel_middle_office = 1 then 'Миддл - офис'
+                       when t.cancel_controller = 1 then 'Контроллер'
+                       when t.cancel_verificator = 1 then 'Верификация'
+                       when t.cancel_manager = 1 then 'Менеджер'
+                       when t.cancel_cpr_aa = 1 then 'ЦПР'
+                       when t.is_aa_reject = 1 then 'AA'
+
+                       when t.cancel_client = 1 or t.folder_state in ('ЗАКАЗ ОТМЕНЕН','ОТМЕНЕНО') or (t.cancel_undefined = 1 and t.folder_state in ('ПРОСРОЧЕННАЯ', 'СОГЛАСИЕ ПКБ/ГЦВП')) then 'Отмененные заказы'
+                       when t.folder_state='НА ВЫДАЧЕ ТОВАРА' then 'НА ВЫДАЧЕ ТОВАРА'
+                         else 'Undef' end end as varchar2(250)) as reject_reason,
+
+  -----Is_sign
+  coalesce(t.is_sign_require, t1.is_sign_require) as is_sign_require,
+  case when a.c_folder_ref=aa.folder_id then 1 else 0 end as is_came,
+          count(distinct case when a.c_check_result is null and coalesce(t.is_sign_require, t1.is_sign_require)=1 then a.c_buy_ref end) as sign_require_cnt,
+          count(distinct case when a.c_folder_ref is not null and a.c_check_result is null and coalesce(t.is_sign_require, t1.is_sign_require)=0 then a.c_buy_ref end) as sign_non_require_cnt,
+          count(distinct case when coalesce(t.is_sign_require, t1.is_sign_require)=1 and a.c_folder_ref=aa.folder_id then a.c_folder_ref end) as sign_came_cnt,
+          count(distinct case when coalesce(t.is_sign_require, t1.is_sign_require)=1 and a.c_folder_ref=aa.folder_id and t.is_credit_issued=1 then a.c_folder_ref end) as sign_came_appr_cnt,
+          count(distinct case when a.c_check_result is null and coalesce(t.is_sign_require, t1.is_sign_require)=0 and t.is_credit_issued = 1 then a.c_buy_ref end) as sign_non_require_issued_cnt,
+
+
+          count(distinct case when a.c_check_result is null and coalesce(t.is_sign_require, t1.is_sign_require)=1 then a.c_client_ref end) as sign_require_cli_cnt,
+          count(distinct case when a.c_check_result is null and coalesce(t.is_sign_require, t1.is_sign_require)=0 then a.c_client_ref end) as sign_non_require_cli_cnt,
+          count(distinct case when coalesce(t.is_sign_require, t1.is_sign_require)=1 and a.c_folder_ref=aa.folder_id then a.c_client_ref end) as sign_came_cli_cnt,
+          count(distinct case when coalesce(t.is_sign_require, t1.is_sign_require)=1 and a.c_folder_ref=aa.folder_id and t.is_credit_issued=1 then a.c_client_ref end) as sign_came_appr_cli_cnt,
+          count(distinct case when a.c_check_result is null and coalesce(t.is_sign_require, t1.is_sign_require)=0 and t.is_credit_issued = 1 then t.rfo_client_id end) as sign_non_requ_issued_cli_cnt,
+
+
+  -----Is_client_new
+
+  cast(case when coalesce(t.is_categ_a, t1.is_categ_a) = 1 or coalesce(t.is_categ_b, t1.is_categ_b) = 1 then 'Хорошие повторники (Категория А, Б)'
+       when coalesce(t.is_client_new_by_con, t1.is_client_new_by_con) = 0 then 'Плохие повторники (Категория C)'
+       when coalesce(t.is_client_new_by_con, t1.is_client_new_by_con) = 1 then 'Новые клиенты (Категория D)'
+  end as varchar2(250)) as client_category,
+
+
+
+  -----Category A
+
+  cast(case when coalesce (t.is_categ_a, t1.is_categ_a) = 1 then 'Категория А'
+       when coalesce (t.is_categ_a, t1.is_categ_a) = 0 then 'Остальные'
+         else 'Other' end as varchar2(250)) as client_segmentation,
+  coalesce (t.is_categ_b, t1.is_categ_b) as is_categ_b,
+  case
+         when kd1.c_name in ('Клиент без возможности запроса ПКБ/ГЦВП', 'Новый клиент')
+          and a.c_check_result is not null
+          and (x.cancel_type_name in ('ПКБ. ИМЕЕТСЯ ПРОСРОЧКА С УЧЕТОВ КУРСОВ ВАЛЮТ',
+                                      'ПРЕСКОРИНГ ПКБ ОТЧЕТА',
+                                      'ПКБ. ПРЕВЫШЕНО МАКСИМАЛЬНОЕ КОЛИЧЕСТВО КРЕДИТОВ')
+           or (a.c_exec_comment like '%У клиента присутствует договор на реструктуризации/рефинансировании%'
+           or a.c_exec_comment like '%К сожалению, согласно Вашей кредитной истории Вам отказано в выдаче займа. Вы допустили просрочку в нашем Банке, в связи с чем Банк не может выдать Вам кредит повторно%'
+           or a.c_exec_comment like '%Максимальная просрочка (> 1000 тенге)%')
+           or (xxx.par_name = 'ОНЛАЙН. БЕКИ, БЕЗ ЗП ГЦВП, НЕ А, НЕ Б, СУММА >= 150 000, БЕЗ КРЕД В КАСПИ'
+          and coalesce(t.cancel_middle_office, t1.cancel_middle_office) = 1)  ) then
+           'С запросом ПКБ/ГЦВП'
+         when kd1.c_name in ('Клиент без возможности запроса ПКБ/ГЦВП', 'Новый клиент') then
+           'Без запроса ПКБ/ГЦВП'
+         when kd1.c_name in ('Клиент с возможностью запроса ПКБ/ГЦВП') then
+           'С запросом ПКБ/ГЦВП'
+       end                                                                        as check_route
+
+          from V_RFO_Z#KAS_ONLINE_CLAIM a
+          join V_RFO_Z#KAS_ONLINE_BUY f on a.c_buy_ref = f.id
+          left join M_FOLDER_CON_CANCEL t on t.folder_id = a.c_folder_ref and
+                                             t.process_name = 'ОНЛАЙН КРЕДИТ'
+          left join M_FOLDER_CON_CANCEL_ONLINE t1 on t1.claim_id = a.id
+          left join V_RFO_Z#SHOPS sh on f.c_shop=sh.id
+          join V_TIME_DAYS td on td.yyyy_mm_dd = trunc(f.c_date_create)
+
+          left join
+          (select distinct r.folder_id
+             from V_FOLDER_ALL_RFO r
+             join v_folder_all_history f on r.folder_id=f.folder_id
+            where f.user_name not in ('ПОЛЬЗОВАТЕЛЬ АВТОМАТИЧЕСКАЯ ОБРАБОТКА','ESB_USER')
+               and r.process_name = 'ОНЛАЙН КРЕДИТ') aa on a.c_folder_ref=aa.folder_id
+          left join U1.V_RFO_Z#KAS_UNIVERSAL_D kd1 on kd1.id = a.c_check_route
+          left join (
+                select
+                distinct t2.folder_id,
+                vc.cancel_type_name,
+                row_number () over (partition by vc.folder_id order by cancel_date) as priority_cancel
+                from u1.t_cancel vc
+                join u1.m_folder_con_cancel t2 on t2.folder_id = vc.folder_id and
+                                                  t2.process_name = 'ОНЛАЙН КРЕДИТ' and
+                                                  t2.is_credit_issued = 0 and
+                                                  t2.cancel_prescoring = 1 and
+                                                  vc.cancel_level = 1 and
+                                                  trunc(t2.folder_date_create_mi)>= to_date('08-12-2014', 'dd-mm-yyyy')
+                ) x on x.folder_id = a.c_folder_ref and priority_cancel = 1
+          left join (select ff.folder_id,
+                  min(mm.is_rejecting) as is_rejecting,
+                  max(mm.par_code) keep (dense_rank last order by mm.reject_prior) as par_code,
+                  max(mm.par_name) keep (dense_rank last order by mm.reject_prior) as par_name
+           from u1.M_FOLDER_CON_CANCEL ff
+           join u1.m_folder_mo_cancel_last mm on mm.folder_id = ff.folder_id and
+                                                        ff.process_name = 'ОНЛАЙН КРЕДИТ'
+           join ( select m2.rfolder_id,
+                         m2.folder_id,
+                         coalesce(max(case when m2.is_rejecting = 0 then m2.reject_prior end), 0) as reject_prior_apr,
+                         coalesce(max(case when m2.is_rejecting = 1 then m2.reject_prior end), 0) as reject_prior_can
+                  from u1.m_folder_mo_cancel_last m2
+                  group by m2.rfolder_id,
+                           m2.folder_id
+                 ) m3 on m3.folder_id = mm.folder_id and
+                         m3.reject_prior_apr <= mm.reject_prior
+           where ff.process_name = 'ОНЛАЙН КРЕДИТ' and
+                 ff.is_credit_issued = 0 and
+                 ff.cancel_middle_office = 1 and
+                 ff.folder_date_create_mi >= to_date('01012016', 'ddmmyyyy')
+                 and
+                 mm.par_code not in ('MO_SCO_IS_CTRL_GR_81',
+                                      'MO_SCO_REJECT',
+                                      'MO_SCO_REJECT_81',
+                                      'MO_SCO_REJECT_PRE_81'
+                                      )
+                 group by ff.folder_id
+           ) xxx on xxx.folder_id = a.c_folder_ref
+
+  where trunc(f.c_date_create) >= to_date('01-01-2015','dd-mm-yyyy') and
+        trunc(f.c_date_create) <= trunc(sysdate) - 2
+  group by
+  trunc(f.c_date_create),
+  to_char(f.c_date_create,'mm-yyyy'),
+  td.week_num_online_credit,
+  td.week_text_online_credit,
+  case when sh.c_address#place='Али' then 'Алматы' else sh.c_address#place end,
+  case when a.c_check_result is not null then 1
+            when a.c_check_result is null and t.is_credit_issued=0 and (t.cancel_prescoring = 1 or t.cancel_middle_office = 1
+            or t.cancel_controller = 1 or t.cancel_verificator = 1 or t.cancel_manager = 1 or t.cancel_cpr_aa = 1
+            or t.is_aa_reject = 1) then 0
+               else 2 end,
+  case when a.c_check_result is null and t.is_credit_issued=1 then 0
+            when a.c_check_result is null then 1
+                 else 2 end,
+  case when a.c_check_result is null and coalesce(t.is_credit_issued, t1.is_credit_issued) = 1 then 'Выданные'
+       when a.c_check_result is not null or coalesce(t.is_credit_issued, t1.is_credit_issued) = 0
+            then
+                  case when a.c_check_result is not null and a.c_exec_comment like '%Быстрое решение%' then 'Быстрое решение:Отказ'
+                       when coalesce(t.cancel_prescoring, t1.cancel_prescoring) = 1 then 'Прескоринг'
+                       when t.cancel_undefined = 1 and t.folder_state in ('ОТКАЗ АСОКР', 'ОТКАЗАНО') then 'Прескоринг'
+                       when t.cancel_middle_office = 1 then 'Миддл - офис'
+                       when t.cancel_controller = 1 then 'Контроллер'
+                       when t.cancel_verificator = 1 then 'Верификация'
+                       when t.cancel_manager = 1 then 'Менеджер'
+                       when t.cancel_cpr_aa = 1 then 'ЦПР'
+                       when t.is_aa_reject = 1 then 'AA'
+
+                       when t.cancel_client = 1 or t.folder_state in ('ЗАКАЗ ОТМЕНЕН','ОТМЕНЕНО') or (t.cancel_undefined = 1 and t.folder_state in ('ПРОСРОЧЕННАЯ', 'СОГЛАСИЕ ПКБ/ГЦВП')) then 'Отмененные заказы'
+                       when t.folder_state='НА ВЫДАЧЕ ТОВАРА' then 'НА ВЫДАЧЕ ТОВАРА'
+                         else 'Undef' end end,
+  coalesce(t.is_sign_require, t1.is_sign_require),
+  coalesce (t.is_categ_b, t1.is_categ_b),
+  case when a.c_folder_ref=aa.folder_id then 1 else 0 end,
+  case when coalesce(t.is_categ_a, t1.is_categ_a) = 1 or coalesce(t.is_categ_b, t1.is_categ_b) = 1 then 'Хорошие повторники (Категория А, Б)'
+       when coalesce(t.is_client_new_by_con, t1.is_client_new_by_con) = 0 then 'Плохие повторники (Категория C)'
+       when coalesce(t.is_client_new_by_con, t1.is_client_new_by_con) = 1 then 'Новые клиенты (Категория D)'
+  end,
+  case when coalesce (t.is_categ_a, t1.is_categ_a) = 1 then 'Категория А'
+       when coalesce (t.is_categ_a, t1.is_categ_a) = 0 then 'Остальные'
+         else 'Other' end,
+  case
+         when kd1.c_name in ('Клиент без возможности запроса ПКБ/ГЦВП', 'Новый клиент')
+          and a.c_check_result is not null
+          and (x.cancel_type_name in ('ПКБ. ИМЕЕТСЯ ПРОСРОЧКА С УЧЕТОВ КУРСОВ ВАЛЮТ',
+                                      'ПРЕСКОРИНГ ПКБ ОТЧЕТА',
+                                      'ПКБ. ПРЕВЫШЕНО МАКСИМАЛЬНОЕ КОЛИЧЕСТВО КРЕДИТОВ')
+           or (a.c_exec_comment like '%У клиента присутствует договор на реструктуризации/рефинансировании%'
+           or a.c_exec_comment like '%К сожалению, согласно Вашей кредитной истории Вам отказано в выдаче займа. Вы допустили просрочку в нашем Банке, в связи с чем Банк не может выдать Вам кредит повторно%'
+           or a.c_exec_comment like '%Максимальная просрочка (> 1000 тенге)%')
+           or (xxx.par_name = 'ОНЛАЙН. БЕКИ, БЕЗ ЗП ГЦВП, НЕ А, НЕ Б, СУММА >= 150 000, БЕЗ КРЕД В КАСПИ'
+          and coalesce(t.cancel_middle_office, t1.cancel_middle_office) = 1)  ) then
+           'С запросом ПКБ/ГЦВП'
+         when kd1.c_name in ('Клиент без возможности запроса ПКБ/ГЦВП', 'Новый клиент') then
+           'Без запроса ПКБ/ГЦВП'
+         when kd1.c_name in ('Клиент с возможностью запроса ПКБ/ГЦВП') then
+           'С запросом ПКБ/ГЦВП'
+       end;
+grant select on U1.M_OUT_ONLINE_SHOP_AR2 to DEK_USER;
+grant select on U1.M_OUT_ONLINE_SHOP_AR2 to LOADDB;
+grant select on U1.M_OUT_ONLINE_SHOP_AR2 to LOADER;
+
+

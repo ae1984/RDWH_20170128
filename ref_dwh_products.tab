@@ -1,0 +1,27 @@
+﻿create table U1.REF_DWH_PRODUCTS
+(
+  prod_name            VARCHAR2(255 CHAR),
+  prod_type            VARCHAR2(255 CHAR),
+  product_program      VARCHAR2(100),
+  product              VARCHAR2(20),
+  is_refin_restruct    NUMBER(1),
+  product_refin        VARCHAR2(20),
+  first_pmt_days       NUMBER(3),
+  first_pmt_days_refin NUMBER(3)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.REF_DWH_PRODUCTS to LOADDB;
+grant select on U1.REF_DWH_PRODUCTS to LOADER;
+

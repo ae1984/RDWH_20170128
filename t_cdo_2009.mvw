@@ -1,0 +1,69 @@
+﻿create materialized view U1.T_CDO_2009
+refresh complete on demand
+as
+select /*+ parallel(20)*/
+                    to_date('01-07-2009','dd-mm-yyyy') as rep_date,
+                    mcd.rbo_contract_id,
+                    sum(case when mcd.c_code_debt in ('КРЕДИТ','PC_CRED') and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end)                          principal,
+                    sum(case when mcd.c_code_debt in ('УЧТЕН_ПРОЦЕНТЫ','PC_PRC_CRED','ПЛАТА_ВЕДЕНИЕ',
+                                               'PC_PRC_CRED_ADD')              and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end)              interest,
+                    sum(case when mcd.c_code_debt in ('PC_OVERLIMIT') and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end)                              overlimit,
+                    sum(case when mcd.c_code_debt in ('PC_PRC_OVERLIMIT','PC_PRC_OVERLIMIT_ADD') and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end)   overlimit_interest,
+                    sum(case when mcd.c_code_debt in ('PC_OVERDRAFT','EK_CRED_OVER') and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end)               overdraft,
+                    sum(case when mcd.c_code_debt in ('PC_PRC_OVERDRAFT','PC_PRC_OVERDRAFT_ADD') 
+                                                                   and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end)                          overdraft_interest,
+
+                    sum(case when mcd.c_code_debt in ('ПРОСРОЧ_КРЕДИТ','PC_OVRD_CRED') and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end)             principal_del,
+                    sum(case when mcd.c_code_debt in ('ПРОСРОЧ_ПРОЦЕНТЫ','ПРОЦ_КРЕД_112','PC_OVRD_PRC_CRED','PC_PRC_OVRD_CRED',
+                                               'ПЛАТА_ВЕДЕНИЕ_ПРОСРОЧ','PC_PRC_OVRD_CRED_ADD')
+                                                                                      and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end)       interest_del,
+                    sum(case when mcd.c_code_debt in ('PC_OVRD_OVERLIMIT') and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end)                         overlimit_del,
+                    sum(case when mcd.c_code_debt in ('PC_OVRD_PRC_OVERLIMIT','PC_PRC_OVRD_OVERLIMIT',
+                                               'PC_PRC_OVRD_OVERLIMIT_ADD')       and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end)           overlimit_interest_del,
+                    sum(case when mcd.c_code_debt in ('PC_OVRD_OVERDRAFT','EK_OVR_OVER') and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end)           overdraft_del,
+                    sum(case when mcd.c_code_debt in ('PC_OVRD_PRC_OVERDRAFT','PC_PRC_OVRD_OVERDRAFT',
+                                               'PC_PRC_OVRD_OVERDRAFT_ADD')       and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end)           overdraft_interest_del,
+
+                    sum(case when mcd.c_code_debt in ('КРЕД_ВНБ_ПРИБ','PC_VNB_OVRD_CRED') 
+                                                                                   and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end)          w_principal_del,
+                    sum(case when mcd.c_code_debt in ('ПРОСРОЧЕН_ПР_НА_ВНБ','ПРЦ_КРЕД_112_ВНБ','PC_VNB_OVRD_PRC_CRED',
+                                               'PC_VNB_PRC_OVRD_CRED','ПЛАТА_ВЕДЕНИЕ_ПР_ВНБ')
+                                                                                   and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end)          w_interest_del,
+                    sum(case when mcd.c_code_debt in ('PC_VNB_OVRD_OVERLIMIT') and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end)                     w_overlimit_del,
+                    sum(case when mcd.c_code_debt in ('PC_VNB_OVRD_PRC_OVERLIMIT','PC_VNB_PRC_OVRD_OVERLIMIT')
+                                                                                            and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end) w_overlimit_interest_del,
+                    sum(case when mcd.c_code_debt in ('PC_VNB_OVRD_OVERDRAFT','EK_OVR_OVER_ВНБ') and sign(mcd.c_summa_saldo) != -1 
+                                                                                  then mcd.c_summa_saldo else 0 end)   w_overdraft_del,
+                    sum(case when mcd.c_code_debt in ('PC_VNB_OVRD_PRC_OVERDRAFT','PC_VNB_PRC_OVRD_OVERDRAFT')
+                                                                                            and sign(mcd.c_summa_saldo) != -1 
+                                                                                         then mcd.c_summa_saldo else 0 end) w_overdraft_interest_del,
+                    sum(case when mcd.c_code_debt in ('PC_CRED_LIMIT') then mcd.c_summa_saldo else 0 end)                             pc_cred_limit, --свободный кредитный лимит
+                    mcd.is_card
+              from u1.T_CONTRACT_DEBT_OPER mcd
+              where mcd.c_date_begin_saldo = (select max(c_date_begin_saldo) 
+                                          from u1.T_CONTRACT_DEBT_OPER
+                                         where rbo_contract_id = mcd.rbo_contract_id  
+                                           and c_code_debt = mcd.c_code_debt
+                                           and c_date_begin_saldo <= to_date('01-07-2009','dd-mm-yyyy'))
+                and mcd.c_date_begin_saldo <= to_date('01-07-2009','dd-mm-yyyy')  
+              group by mcd.rbo_contract_id, mcd.is_card;
+grant select on U1.T_CDO_2009 to LOADDB;
+grant select on U1.T_CDO_2009 to LOADER;
+
+

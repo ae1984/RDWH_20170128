@@ -1,0 +1,42 @@
+﻿create materialized view U1.M_JAN_TMP_KPI_APPROVAL_1
+refresh complete on demand
+as
+select /*+ parallel(15) */cln.*, folder.approval_folders from (
+select trunc(q1.folder_date_create_mi) as data,
+round((count(case when trunc(q.dat) - trunc(q1.folder_date_create_mi) < 2 then 1 end)/count(*))*100,2) as approval_clients,
+round((count(case when trunc(q.dat) - trunc(q1.folder_date_create_mi) < 1 then 1 end)/count(*))*100,2) as approval_clients_in_day
+from (
+    select min(f.folder_date_create_mi) as folder_date_create_mi,
+           f.rfo_client_id,
+           trunc(f.folder_date_create_mi,'mm') as create_date
+    from m_folder_con_cancel f where f.is_refin = 0 and f.is_point_active = 0 --and f.cr_program_name
+--                               in ('АВТОКРЕДИТ','АВТОКРЕДИТОВАНИЕ','АВТОКРЕДИТОВАНИЕ БУ','КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ')
+    group by f.rfo_client_id,trunc(f.folder_date_create_mi,'mm')
+) q1 left join (
+    select min(f.folder_date_create_mi) as dat,
+           f.rfo_client_id,
+           trunc(f.folder_date_create_mi,'mm') as create_date
+    from M_FOLDER_CON_CANCEL f
+    where f.is_credit_issued = 1 and f.is_refin = 0 and f.is_point_active = 0 --and f.cr_program_name
+--                               in ('АВТОКРЕДИТ','АВТОКРЕДИТОВАНИЕ','АВТОКРЕДИТОВАНИЕ БУ','КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ')
+    group by f.rfo_client_id,trunc(f.folder_date_create_mi,'mm')
+) q on q.rfo_client_id = q1.rfo_client_id and q.create_date = q1.create_date
+group by trunc(q1.folder_date_create_mi)
+) cln
+
+left join (
+select trunc(f1.folder_date_create_mi) as data,
+round(count (distinct case when a.is_credit_issued = 1 then f1.rfo_contract_id end)/
+                                                                      count(distinct f1.rfo_contract_id)*100,2) as approval_folders
+from M_FOLDER_CON_CANCEL f1
+join (
+select distinct f.rfo_contract_id, max(f.is_credit_issued) as is_credit_issued from m_folder_con_cancel f
+where f.is_refin = 0 and f.is_point_active = 0 --and f.cr_program_name in ('АВТОКРЕДИТ','АВТОКРЕДИТОВАНИЕ','АВТОКРЕДИТОВАНИЕ БУ','КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ')
+group by f.rfo_contract_id) a on f1.rfo_contract_id = a.rfo_contract_id
+where f1.is_refin = 0 and f1.is_point_active = 0 --and f1.cr_program_name in ('АВТОКРЕДИТ','АВТОКРЕДИТОВАНИЕ','АВТОКРЕДИТОВАНИЕ БУ','КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ')
+group by trunc(f1.folder_date_create_mi)
+)folder on cln.data = folder.data;
+grant select on U1.M_JAN_TMP_KPI_APPROVAL_1 to LOADDB;
+grant select on U1.M_JAN_TMP_KPI_APPROVAL_1 to LOADER;
+
+

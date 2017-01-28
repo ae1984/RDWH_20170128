@@ -1,0 +1,26 @@
+﻿create table U1.T_TMP_SH_FROM_CHANGE_092014
+(
+  verif_send_date     VARCHAR2(100),
+  folder_date_open    VARCHAR2(100),
+  folder_date_close   VARCHAR2(100),
+  prod_type           VARCHAR2(100),
+  client_iin          VARCHAR2(100),
+  folder_number       VARCHAR2(100),
+  smart_script_result VARCHAR2(100)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_SH_FROM_CHANGE_092014 to LOADDB;
+grant select on U1.T_TMP_SH_FROM_CHANGE_092014 to LOADER;
+

@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_RBO_CONTRACT_PORTFOLIO
+build deferred
+refresh complete on demand
+as
+select /*+ parallel (15) parallel_index (15)*/cp.*,
+       case when coalesce(a1.prev_con_closed_cnt, 0) >= 2 and     --Закрыл несколько кредитов
+             coalesce(a1.prior_optim_count, 0) = 0 and        --Не было оптимизации
+             coalesce(a2.prev_con_del_days_max, 0) <= 15 and  --Не допускал просрочку > 15
+             coalesce(a2.fact_pmt_mon_before, 0) >= 12 and    --Кол-во платежей
+             coalesce(a2.fact_pmt_mon_before_12_mon, 0) > 0 then  --Платил в течении последних 12 мес
+                'КАТЕГОРИЯ А'
+            when coalesce(a1.prev_con_closed_cnt, 0) >= 1 and     --Закрыл несколько кредитов
+             coalesce(a2.prev_con_del_days_max, 0) < 31 and  --Не допускал просрочку > 30
+             coalesce(a2.fact_pmt_mon_before, 0) >= 6 then    --Кол-во платежей
+                'КАТЕГОРИЯ Б'
+        end as client_categ_on_date
+  from u1.M_RBO_CONTRACT_PORTFOLIO_BASE cp
+  left join u1.M_RBO_CONTRACT_PORTFOLIO_ADD_1 a1 on a1.rbo_contract_id = cp.rbo_contract_id and a1.rep_date = cp.rep_date
+  left join U1.M_RBO_CONTRACT_PORTFOLIO_ADD_2 a2 on a2.rbo_contract_id = cp.rbo_contract_id and a2.rep_date = cp.rep_date;
+grant select on U1.M_RBO_CONTRACT_PORTFOLIO to LOADDB;
+
+

@@ -1,0 +1,166 @@
+﻿create table U1.T_PKB_REPORT_PARAM
+(
+  report_id              NUMBER,
+  report_date            DATE,
+  report_date_time       DATE,
+  iin_rnn                VARCHAR2(60),
+  pkb_merged_contract_id NUMBER,
+  report_type            VARCHAR2(200),
+  report_status          VARCHAR2(60),
+  is_from_cache          NUMBER(1),
+  active_contracts_raw   VARCHAR2(400),
+  active_contracts       VARCHAR2(400),
+  closed_contracts_raw   VARCHAR2(400),
+  closed_contracts       VARCHAR2(400),
+  total_debt_raw         VARCHAR2(400),
+  total_debt             NUMBER,
+  delinq_amount_raw      VARCHAR2(400),
+  delinq_amount          NUMBER,
+  pkb_contract_status    VARCHAR2(400),
+  contract_status        VARCHAR2(4000),
+  contract_status_clean  VARCHAR2(4000),
+  monthly_payment_raw    VARCHAR2(60),
+  monthly_payment        NUMBER,
+  c_last_update          VARCHAR2(36),
+  c_currency             VARCHAR2(30),
+  c_appl_date            VARCHAR2(36),
+  c_date_begin           VARCHAR2(36),
+  c_date_end             VARCHAR2(36),
+  c_fact_gash_date       VARCHAR2(36),
+  outstanding_sum_raw    VARCHAR2(120),
+  outstanding_sum        NUMBER,
+  overdue_sum_raw        VARCHAR2(120),
+  overdue_sum            NUMBER,
+  c_subj_role            VARCHAR2(300),
+  c_fin_inst             VARCHAR2(600),
+  c_amount               VARCHAR2(120),
+  amount                 NUMBER,
+  c_credit_usage         VARCHAR2(300),
+  c_residual_amount      VARCHAR2(120),
+  credit_limit_raw       VARCHAR2(120),
+  credit_limit           NUMBER,
+  c_ovrd_instalments     VARCHAR2(30)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_PKB_REPORT_PARAM
+  is 'Отчет ПКБ. Информация по договорам из отчета ПКБ';
+comment on column U1.T_PKB_REPORT_PARAM.report_id
+  is 'Идентификатор отчета ПКБ';
+comment on column U1.T_PKB_REPORT_PARAM.report_date
+  is 'Дата отчета(dd-mm-yyyy)';
+comment on column U1.T_PKB_REPORT_PARAM.report_date_time
+  is 'Дата отчета(dd-mm-yyyy hh24:mi:ss)';
+comment on column U1.T_PKB_REPORT_PARAM.iin_rnn
+  is 'РНН/ИНН клиента';
+comment on column U1.T_PKB_REPORT_PARAM.pkb_merged_contract_id
+  is 'Идентификатор информации по договорам';
+comment on column U1.T_PKB_REPORT_PARAM.report_type
+  is 'Тип отчета';
+comment on column U1.T_PKB_REPORT_PARAM.report_status
+  is 'Статус отчета';
+comment on column U1.T_PKB_REPORT_PARAM.is_from_cache
+  is 'Признак ссылки на оригинал ПКБ(1-есть,0-нет)';
+comment on column U1.T_PKB_REPORT_PARAM.active_contracts_raw
+  is 'Кол-во действующих договоров';
+comment on column U1.T_PKB_REPORT_PARAM.active_contracts
+  is 'Отформатированное кол-во действующих договоров';
+comment on column U1.T_PKB_REPORT_PARAM.closed_contracts_raw
+  is 'Кол-во зaвepшeнных договоров';
+comment on column U1.T_PKB_REPORT_PARAM.closed_contracts
+  is 'Отформатированное кол-во зaвepшeнных договоров';
+comment on column U1.T_PKB_REPORT_PARAM.total_debt_raw
+  is 'Общая непогашенная сумма';
+comment on column U1.T_PKB_REPORT_PARAM.total_debt
+  is 'Общая непогашенная сумма(числовое значение, с учетом валют)';
+comment on column U1.T_PKB_REPORT_PARAM.delinq_amount_raw
+  is 'Сумма просроченных взносов по всем договорам';
+comment on column U1.T_PKB_REPORT_PARAM.delinq_amount
+  is 'Сумма просроченных взносов по всем договорам(числовое значение, с учетом валют)';
+comment on column U1.T_PKB_REPORT_PARAM.pkb_contract_status
+  is 'Статус контракта';
+comment on column U1.T_PKB_REPORT_PARAM.contract_status
+  is 'Статус договора из отчета';
+comment on column U1.T_PKB_REPORT_PARAM.contract_status_clean
+  is 'Отформатированный статус договора';
+comment on column U1.T_PKB_REPORT_PARAM.monthly_payment_raw
+  is 'Сумма ежемесячного платежа';
+comment on column U1.T_PKB_REPORT_PARAM.monthly_payment
+  is 'Сумма ежемесячного платежа(числовое значение, с учетом валют)';
+comment on column U1.T_PKB_REPORT_PARAM.c_last_update
+  is 'Дата последнего обновления';
+comment on column U1.T_PKB_REPORT_PARAM.c_currency
+  is 'Код валюты';
+comment on column U1.T_PKB_REPORT_PARAM.c_appl_date
+  is 'Дата заявки';
+comment on column U1.T_PKB_REPORT_PARAM.c_date_begin
+  is 'Фактическая дата выдачи кредита';
+comment on column U1.T_PKB_REPORT_PARAM.c_date_end
+  is 'Дата завершения срока действия договора';
+comment on column U1.T_PKB_REPORT_PARAM.c_fact_gash_date
+  is 'Фактическая дата погашения';
+comment on column U1.T_PKB_REPORT_PARAM.outstanding_sum_raw
+  is 'Непогашенная сумма по кредиту';
+comment on column U1.T_PKB_REPORT_PARAM.outstanding_sum
+  is 'Непогашенная сумма по кредиту(числовое значение, с учетом валют)';
+comment on column U1.T_PKB_REPORT_PARAM.overdue_sum_raw
+  is 'Сумма просроченных взносов';
+comment on column U1.T_PKB_REPORT_PARAM.overdue_sum
+  is 'Сумма просроченных взносов(числовое значение, с учетом валют)';
+comment on column U1.T_PKB_REPORT_PARAM.c_subj_role
+  is 'Роль субъекта';
+comment on column U1.T_PKB_REPORT_PARAM.c_fin_inst
+  is 'Источник информации (Кредитор)';
+comment on column U1.T_PKB_REPORT_PARAM.c_amount
+  is 'Использованная сумма';
+comment on column U1.T_PKB_REPORT_PARAM.amount
+  is 'Использованная сумма(числовое значение, с учетом валют)';
+comment on column U1.T_PKB_REPORT_PARAM.c_credit_usage
+  is 'ID использования кредита';
+comment on column U1.T_PKB_REPORT_PARAM.c_residual_amount
+  is 'Oстаточнaя cумма';
+comment on column U1.T_PKB_REPORT_PARAM.credit_limit_raw
+  is 'Kредитный лимит';
+comment on column U1.T_PKB_REPORT_PARAM.credit_limit
+  is 'Kредитный лимит(числовое значение, с учетом валют)';
+comment on column U1.T_PKB_REPORT_PARAM.c_ovrd_instalments
+  is 'Кол-во дней просрочки';
+create index U1.T_PKB_REPORT_PARAM_IND1 on U1.T_PKB_REPORT_PARAM (REPORT_ID)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_PKB_REPORT_PARAM_IND2 on U1.T_PKB_REPORT_PARAM (IIN_RNN)
+  tablespace USERS_ARC
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_PKB_REPORT_PARAM to LOADDB;
+grant select on U1.T_PKB_REPORT_PARAM to LOADER;
+

@@ -1,0 +1,21 @@
+﻿create table U1.T_WORKDAYS
+(
+  workday       DATE,
+  workday_start DATE,
+  workday_end   DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_WORKDAYS to LOADDB;
+

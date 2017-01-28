@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_GCVP_COUNT
+refresh complete on demand
+as
+select g.rep_date, count(distinct g.gcvp_rep_id ) as count_gcvp
+from u1.v_gcvp_report g
+where g.is_from_cache = 0
+group by g.rep_date;
+grant select on U1.M_GCVP_COUNT to LOADDB;
+grant select on U1.M_GCVP_COUNT to LOADER;
+
+

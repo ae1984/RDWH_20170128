@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_AC_CLIENT_VERIF
+build deferred
+refresh force on demand
+as
+select x.rfo_client_id
+from (
+      select f.rfo_client_id,
+             max(d2.x_amount) as amount_max_before,
+             count(distinct d2.deal_number) as prev_con_closed_cnt,
+             count(distinct o.spof_end_date) as prior_optim_count,
+             max(ch.delinq_days_in_month) as prev_con_del_days_max,
+             count(distinct case
+                     when ch.fact_pmts_in_month > 0 then
+                      ch.yyyy_mm_num
+                   end) as fact_pmt_mon_before,
+             count(distinct case
+                     when ch.yyyy_mm_num >=
+                          to_number(to_char(add_months((sysdate - 1), -12),
+                                            'yyyymm')) and
+                          ch.fact_pmts_in_month > 0 then
+                      ch.yyyy_mm_num
+                   end) as fact_pmt_mon_before_12_mon
+      from u1.V_CLIENT_RFO_BY_ID f
+      left join u1.V_DWH_PORTFOLIO_CURRENT d2 on d2.client_iin = f.iin and
+                                                 d2.x_is_credit_issued = 1 and
+                                                 d2.actual_end_date is not null and
+                                                 d2.x_product_type != 'ОПТИМИЗАЦИЯ'
+      left join u1.V_DWH_PORTFOLIO_CURRENT d3 on d3.client_iin = f.iin and
+                                                 d3.x_is_credit_issued = 1
+      left join u1.M_DWH_ACC_SPECIAL_OFFER_CON o on o.contract_number = d3.deal_number and
+                                                    o.spof_spec_offer_status_cd in ('EXECUTED', 'DEFAULT', 'WORK')
+      left join u1.V_CLIENT_CAL cc on cc.client_iin_last = f.iin
+      left join u1.V_CLIENT_HISTORY ch on ch.client_id = cc.client_id
+group by f.rfo_client_id) x
+where coalesce(x.prev_con_closed_cnt, 0) >= 2 and --Закрыл несколько кредитов
+      coalesce(x.prior_optim_count, 0) = 0 and --Не было оптимизации
+      coalesce(x.prev_con_del_days_max, 0) <= 15 and --Не допускал просрочку > 15
+      coalesce(x.fact_pmt_mon_before, 0) >= 12 and --Кол-во платежей
+      coalesce(x.fact_pmt_mon_before_12_mon, 0) > 0 --Платил в течении последних 12 мес;
+grant select on U1.M_AC_CLIENT_VERIF to ETL;
+grant select on U1.M_AC_CLIENT_VERIF to LOADDB;
+grant select on U1.M_AC_CLIENT_VERIF to LOADER;
+
+

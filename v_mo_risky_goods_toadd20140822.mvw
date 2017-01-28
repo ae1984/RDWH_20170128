@@ -1,0 +1,11 @@
+﻿create materialized view U1.V_MO_RISKY_GOODS_TOADD20140822
+refresh force on demand
+as
+select 1162 + rownum as id, product_name, 5 as risk_level from (
+select distinct r.product_name from V_TMP_JAN_RGOODS_3 r
+where not exists (select null from V_MO_RISKY_GOODS m where m.title = r.product_name) and product_name not like '%CУМКА ДЛЯ%'
+order by 1);
+grant select on U1.V_MO_RISKY_GOODS_TOADD20140822 to LOADDB;
+grant select on U1.V_MO_RISKY_GOODS_TOADD20140822 to LOADER;
+
+

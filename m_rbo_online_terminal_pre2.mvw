@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_RBO_ONLINE_TERMINAL_PRE2
+refresh complete on demand
+as
+select f.id,
+       f.c_document_date,
+       f.c_amount,
+      to_number( replace(replace(regexp_substr(f.c_nazn, '(\[IDDOG#.*?\])', 1),
+                       '[IDDOG#',
+                       ''),
+               ']',
+               '')) prod_id,
+       f.class_id,
+       f.pt,
+       f.name_object,
+       f.reg_addres
+  from M_RBO_ONLINE_TERMINAL_PRE1 f
+  where f.c_nazn like '%IDDOG#%'
+  and f.state_id = 'PROV';
+grant select on U1.M_RBO_ONLINE_TERMINAL_PRE2 to LOADDB;
+grant select on U1.M_RBO_ONLINE_TERMINAL_PRE2 to LOADER;
+
+

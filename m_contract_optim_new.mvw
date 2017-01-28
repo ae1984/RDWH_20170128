@@ -1,0 +1,62 @@
+﻿create materialized view U1.M_CONTRACT_OPTIM_NEW
+build deferred
+refresh force on demand
+as
+select b.rbo_contract_id,
+       b.contract_number,
+       b.rbo_client_id,
+       b.date_fact_end,
+       so.spof_start_date as date_new_opt,
+       so.spof_end_date,
+       so.restr_name,
+       case when restr_name in ('Изменение условий договора',
+                                'Изменение условий договора (не на просрочке)',
+                                'Оптимизация',
+                                'Отсрочка платежа',
+                                'Рефинансирование',
+                                'Рефинансирование договора (не на просрочке)',
+                                'Рефинансирование/реструктуризация с остановкой начисления процентов и комиссий',
+                                'Рефинансирование/реструктуризация со скидкой на банковское обслуживание')
+             then 'SOFT'
+       when restr_name in ( 'Новое рефинансирование договоров Хард',
+                            'Рефинансирование автокредита',
+                            'Отсрочка платежа (ДХК)',
+                            'Отсрочка платежа (проблемных)')  then 'HARD' end as restr_source,
+       spis_restr,
+       spof_cancel_date   ,
+       spis_date
+from u1.M_RBO_CONTRACT_BAS b
+join (select c.contract_number,
+             min(c.spof_end_date) as spof_end_date,
+             min(c.spof_start_date) as spof_start_date,
+             count(1) as cnt_spof,
+             max(rt.restructing_type_name) keep (dense_rank first order by c.spof_end_date)  as restr_name,
+             listagg(rt.restructing_type_name,';') within group (order by c.spof_end_date) as spis_restr,
+             listagg(to_char(c.spof_start_date,'dd-mm-yyyy'),';') within group (order by c.spof_end_date) as spis_date,
+             min(c.spof_cancel_date) as spof_cancel_date,
+             min(SPOF$ROW_STATUS)  keep (dense_rank first order by c.spof_end_date)  as ROW_STATUS
+      from u1.M_DWH_ACC_SPECIAL_OFFER_CON c
+      join u1.M_DWH_DICT_RESTRUCTING_TYPE rt on rt.restructing_type_cd = c.spof_restructing_type_cd
+      where c.spof_spec_offer_status_cd in ('EXECUTED','DEFAULT','WORK','SWITCHED')
+       and  rt.restructing_type_name in ('Изменение условий договора',
+                                          'Изменение условий договора (не на просрочке)',
+                                          'Новое рефинансирование договоров Хард',
+                                          'Оптимизация',
+                                          'Отсрочка платежа',
+                                          'Отсрочка платежа (ДХК)',
+                                          'Отсрочка платежа (проблемных)',
+                                          'Рефинансирование',
+                                          'Рефинансирование автокредита',
+                                          'Рефинансирование договора (не на просрочке)',
+                                          'Рефинансирование/реструктуризация с остановкой начисления процентов и комиссий',
+                                          'Рефинансирование/реструктуризация со скидкой на банковское обслуживание'
+                                          )
+      group by contract_number
+      having min(c.spof_end_date) >= to_date('01-04-2015','dd-mm-yyyy')
+      ) so on so.contract_number = b.contract_number --and pb.rep_date >= so.spof_start_date
+where not exists (select 1
+                from u1.T_OP_FIX x
+                where x.contract_number = b.contract_number);
+grant select on U1.M_CONTRACT_OPTIM_NEW to LOADDB;
+
+

@@ -1,0 +1,36 @@
+﻿create table U1.DATA_ORG_TYPE_TMP
+(
+  bin          VARCHAR2(20),
+  manage_type  VARCHAR2(200),
+  org_name_tax VARCHAR2(4000),
+  org_form     VARCHAR2(200),
+  jsc_type     VARCHAR2(200)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+create index U1.DATA_ORG_TYPE_TMP_IND1 on U1.DATA_ORG_TYPE_TMP (BIN)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.DATA_ORG_TYPE_TMP to LOADDB;
+grant select on U1.DATA_ORG_TYPE_TMP to LOADER;
+

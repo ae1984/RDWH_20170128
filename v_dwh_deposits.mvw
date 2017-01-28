@@ -1,0 +1,13 @@
+﻿create materialized view U1.V_DWH_DEPOSITS
+using no index
+refresh complete on demand
+as
+select t.*,
+       decode(dpst_crnc_gid,'USD',184.5,'EUR',253,'KZT',1) * dpst_amount as amount_kzt,
+       case when t.deal_status_name in ('РАБОТАЕТ','ПОМЕЧЕН К ЗАКРЫТИЮ','ЗАМОРОЖЕН') then 1
+            else 0 end as is_active
+from DWH_SAN.V_RISKS_DEPOSITS@DWH_PROD2 t;
+grant select on U1.V_DWH_DEPOSITS to LOADDB;
+grant select on U1.V_DWH_DEPOSITS to LOADER;
+
+

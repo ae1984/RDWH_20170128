@@ -1,0 +1,46 @@
+﻿create materialized view U1.M_SCCL_RBO_PAR3
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       cl.rfo_client_id
+
+       ,sum(case when p.date_oper >= trunc(sysdate) - 90
+                 then coalesce(p.principal, 0) +
+                      coalesce(p.interest, 0) +
+                      coalesce(p.commiss, 0) +
+                      coalesce(p.fine, 0)
+             end) as cl_incom_90d_sum
+
+       ,round(avg(case when p.date_oper >= trunc(sysdate) - 90
+                       then coalesce(p.principal, 0) +
+                            coalesce(p.interest, 0) +
+                            coalesce(p.commiss, 0) +
+                            coalesce(p.fine, 0)
+                   end)) as cl_incom_90d_avg
+
+       --30 days
+       ,sum(case when p.date_oper >= trunc(sysdate) - 30
+                 then coalesce(p.principal, 0) +
+                      coalesce(p.interest, 0) +
+                      coalesce(p.commiss, 0) +
+                      coalesce(p.fine, 0)
+             end) as cl_incom_30d_sum
+
+       ,round(avg(case when p.date_oper >= trunc(sysdate) - 30
+                       then coalesce(p.principal, 0) +
+                            coalesce(p.interest, 0) +
+                            coalesce(p.commiss, 0) +
+                            coalesce(p.fine, 0)
+                   end)) as cl_incom_30d_avg
+
+from u1.V_CLIENT_RFO_BY_ID cl
+join u1.M_RBO_CONTRACT_BAS b on b.rfo_client_id = cl.rfo_client_id
+join u1.T_CONTRACT_INCOME_PRE p on p.rbo_contract_id = b.rbo_contract_id
+                                   and p.date_oper >= trunc(sysdate) - 90
+group by cl.rfo_client_id;
+grant select on U1.M_SCCL_RBO_PAR3 to LOADDB;
+grant select on U1.M_SCCL_RBO_PAR3 to LOAD_MO;
+grant select on U1.M_SCCL_RBO_PAR3 to RTS_RDWH;
+
+

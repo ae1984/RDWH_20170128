@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_TMP_R_DEL_MAN_POS_DNP
+refresh force on demand
+as
+select distinct  fa.folder_id,
+             fa.expert_name,
+             max(fa.expert_position) keep (dense_rank last order by fa.folder_date_create)  over(partition by fa.expert_name) expert_position,
+             max(fa.pos_code) keep (dense_rank last order by fa.folder_date_create)  over(partition by fa.expert_name) pos_code,
+             max(p.pos_name) keep (dense_rank last order by fa.folder_date_create) over(partition by fa.expert_name) pos_name,
+             max(fa.dnp_name) keep (dense_rank last order by fa.folder_date_create)  over(partition by fa.expert_name) dnp_name,
+             max(c.cr_program_code) keep (dense_rank last order by fa.folder_date_create)  over(partition by fa.expert_name) cr_program_code
+      from v_folder_all_rfo fa
+      join V_CONTRACT_ALL_RFO c on c.folder_id = fa.folder_id and
+                                c.cr_program_code != 'INSURANCE' and -- страховки не показываем
+                                c.cr_program_code != 'DEP_CARD' and -- КАРТА ВКЛАДЧИКА
+                                c.cr_program_code != 'KAS_PC_DOG' and
+                                not (nvl(fa.delivery_type,'NONE') = 'БК' /*and c.is_card = 0*/)
+      left join V_POS p on p.pos_code = fa.pos_code
+      where
+             fa.expert_name not like '%(БЛОК)%'
+             and fa.expert_name not like 'ESB_USER%'
+             and fa.expert_name not like ('%ПОЛЬЗОВАТЕЛЬ АВТОМАТИЧЕСКАЯ ОБРАБОТКА%');
+grant select on U1.M_TMP_R_DEL_MAN_POS_DNP to LOADDB;
+grant select on U1.M_TMP_R_DEL_MAN_POS_DNP to LOADER;
+
+

@@ -1,0 +1,52 @@
+﻿create materialized view U1.M_PKB_REPORT_PARAM1
+build deferred
+refresh complete on demand
+as
+select fld.c_client as rfo_client_id,
+       fld.id as folder_id,
+       pp.report_id,
+       pp.report_date,
+       pp.report_date_time,
+       pp.iin_rnn,
+       pp.pkb_merged_contract_id,
+       pp.report_type,
+       pp.report_status,
+       pp.is_from_cache,
+       pp.active_contracts_raw,
+       pp.active_contracts,
+       pp.closed_contracts_raw,
+       pp.closed_contracts,
+       pp.total_debt_raw,
+       pp.total_debt,
+       pp.delinq_amount_raw,
+       pp.delinq_amount,
+       pp.pkb_contract_status,
+       pp.contract_status,
+       pp.contract_status_clean,
+       pp.monthly_payment_raw,
+       pp.monthly_payment,
+       pp.last_update as c_last_update,
+       pp.currency as c_currency,
+       pp.appl_date as c_appl_date,
+       pp.date_begin as c_date_begin,
+       pp.date_end as c_date_end,
+       pp.fact_gash_date as c_fact_gash_date,
+       pp.outstanding_sum_raw,
+       pp.outstanding_sum,
+       pp.overdue_sum_raw,
+       pp.overdue_sum,
+       pp.subj_role as c_subj_role,
+       pp.fin_inst as c_fin_inst,
+       pp.c_amount,
+       pp.amount,
+       pp.credit_usage as c_credit_usage,
+       pp.residual_amount as c_residual_amount,
+       pp.credit_limit_raw,
+       pp.credit_limit,
+       pp.ovrd_instalments as c_ovrd_instalments
+  from T_PKB_REPORT pp
+  left join V_RFO_Z#RDOC rd on rd.c_doc = pp.report_id
+  left join V_RFO_Z#FOLDERS fld on fld.c_docs = rd.collection_id;
+grant select on U1.M_PKB_REPORT_PARAM1 to LOADDB;
+
+

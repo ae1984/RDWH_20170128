@@ -1,0 +1,46 @@
+﻿create materialized view U1.M_CONTRACT_PAYMENT_DAYOPEN_PRE
+refresh complete on demand
+as
+select /*+ parallel(30)*/
+       b.x_client_id,
+       b.deal_number as contract_number,
+       b.begin_date,
+       b.x_start_date_actual,
+       b.plan_end_date,
+       b.actual_end_date,
+       b.set_revolving_date,
+       b.deal_status as contract_status,
+       b.card_limit,
+       nvl(b.amount, b.x_amount) as amount,
+       b.prod_type,
+       b.create_empl_number,
+       b.pmt,
+       pc.oper_date as as_of_date,
+       pc.contract_number as dcard_number,
+       sum(pc.amount) as amount_eq,
+       pc.oper_payment_name
+  from u1.V_DWH_PORTFOLIO_CURRENT b
+  join u1.M_RBO_PAYMENT_CARD     pc on pc.contract_number = substr(b.deal_number, 1, 12)
+                                   and pc.oper_date >= b.x_start_date_actual
+                                   and (pc.oper_date - b.x_start_date_actual between 0 and 1)
+ where b.begin_date >= to_date('01.01.2013', 'dd.mm.yyyy')
+ group by b.x_client_id,
+       b.deal_number,
+       b.begin_date,
+       b.x_start_date_actual,
+       b.plan_end_date,
+       b.actual_end_date,
+       b.set_revolving_date,
+       b.deal_status,
+       b.card_limit,
+       nvl(b.amount, b.x_amount),
+       b.prod_type,
+       b.create_empl_number,
+       b.pmt,
+       pc.oper_date,
+       pc.contract_number,
+       pc.oper_payment_name;
+grant select on U1.M_CONTRACT_PAYMENT_DAYOPEN_PRE to LOADDB;
+grant select on U1.M_CONTRACT_PAYMENT_DAYOPEN_PRE to LOADER;
+
+

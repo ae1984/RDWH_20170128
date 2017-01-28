@@ -1,0 +1,31 @@
+﻿create materialized view U1.V_DWH_TOTAL_DEBT_BY_DATE
+refresh complete on demand
+as
+select x.rep_date, sum(x.total_debt) as total_debt
+from
+(select c.cdld_rep_date as rep_date,
+sum(nvl(c.cdld_pc_cred,0) +
+    nvl(c.cdld_pc_prc,0) +
+      nvl(c.cdld_pc_overlimit,0) +
+      nvl(c.cdld_pc_overdraft,0) +
+      nvl(c.cdld_pc_ovrd_cred,0) +
+      nvl(c.cdld_pc_ovrd_prc,0) +
+      nvl(c.cdld_pc_ovrd_overlimit,0) +
+      nvl(c.cdld_pc_ovrd_overdraft,0)) as total_debt
+from DM_CARDSDAILY_LD c
+group by c.cdld_rep_date
+
+union all
+
+select s.exld_rep_date as rep_date,
+sum(nvl(s.exld_fgu_cred,0) +
+    nvl(s.exld_fgu_prc,0) +
+    nvl(s.exld_fgu_ovrd_cred,0) +
+    nvl(s.exld_fgu_ovrd_prc,0)) as total_debt---spgu
+from DM_SPGU_LD s
+group by s.exld_rep_date) x
+group by x.rep_date;
+grant select on U1.V_DWH_TOTAL_DEBT_BY_DATE to LOADDB;
+grant select on U1.V_DWH_TOTAL_DEBT_BY_DATE to LOADER;
+
+

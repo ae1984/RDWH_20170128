@@ -1,0 +1,28 @@
+﻿create table U1.T_DWH_PROVISIONS_MSP
+(
+  rep_date      DATE not null,
+  prod          VARCHAR2(3) not null,
+  long_delinq   VARCHAR2(15) not null,
+  value_calc    NUMBER not null,
+  value_nb      NUMBER,
+  is_on_balance NUMBER(1) not null,
+  rep_lvl       NUMBER(2) not null,
+  rep_type      VARCHAR2(7),
+  name          VARCHAR2(50)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_DWH_PROVISIONS_MSP to LOADDB;
+grant select on U1.T_DWH_PROVISIONS_MSP to LOADER;
+

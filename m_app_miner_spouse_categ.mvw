@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_APP_MINER_SPOUSE_CATEG
+build deferred
+refresh force on demand
+as
+select am.app_id,
+       am.rfo_client_id
+
+       ,h.wife_cat
+
+       ,case when h.wife_cat = 'NO SPOUSE' then am.cli_cat
+        else am.cli_cat||' '||h.wife_cat  end as cat_union
+
+       ,m.wife_rfo_client_id
+
+from u1.M_APP_MINER_BAS am
+left join u1.M_WIFE_PHONE m on m.form_client_id = am.form_client_id
+left join (select hh.*,
+                  case when hh.rfo_client_id is not null then
+                       case when hh.is_categ_a = 1 then 'A'
+                            when hh.is_categ_b = 1 then 'B'
+                            when hh.is_client_new = 0 then 'C'
+                            when hh.is_client_new = 1 then 'D' end
+                       else 'NO SPOUSE' end as wife_cat
+             from u1.T_CLIENT_CATEG_HIST hh)    h on h.rfo_client_id = m.wife_rfo_client_id
+                                                 and to_char(h.last_month_workday,'yyyy - mm') = to_char(add_months(trunc(am.folder_date_create_mi),-1),'yyyy - mm')
+where am.folder_date_create >= to_date('01012015', 'ddmmyyyy')
+--and t.rfo_client_id = 22792275
+--order by t.folder_date_create_mi;
+grant select on U1.M_APP_MINER_SPOUSE_CATEG to LOADDB;
+
+

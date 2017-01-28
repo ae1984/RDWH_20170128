@@ -1,0 +1,78 @@
+﻿create table U1.T_RBO_Z#KAS_ACASH_DOC
+(
+  id               NUMBER not null,
+  class_id         VARCHAR2(48),
+  state_id         VARCHAR2(48),
+  c_amount         NUMBER(17,2),
+  c_device         NUMBER,
+  c_device_id      VARCHAR2(120),
+  c_document_date  DATE,
+  c_fiscal_num     VARCHAR2(75),
+  c_oper_ref       NUMBER,
+  c_product_ref    NUMBER,
+  c_quit_doc_ref   NUMBER,
+  c_state_hist_arr NUMBER not null,
+  c_nazn           VARCHAR2(1500),
+  c_ft_money_ref   NUMBER,
+  c_send_sms_sign  VARCHAR2(3),
+  c_ppk_number     VARCHAR2(1500),
+  c_kas_dic_ref    NUMBER,
+  c_serv_ref       NUMBER,
+  c_amount_fee     NUMBER(17,2),
+  c_date_prov      DATE,
+  sn               NUMBER,
+  su               NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RBO_Z#KAS_ACASH_DOC
+  is 'KAS. Документы автоматизированной кассы';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.state_id
+  is 'статус';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_amount
+  is 'сумма';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_device
+  is 'устройство(fk на z#kas_cash_reg)';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_device_id
+  is 'id транзакции в устройстве';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_document_date
+  is 'дата и время';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_fiscal_num
+  is 'фискальный номер чека';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_oper_ref
+  is 'тип операции(fk на z#vid_oper_dog)';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_product_ref
+  is 'продукт(fk на z#product)';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_quit_doc_ref
+  is 'сводный документ(fk на z#document)';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_state_hist_arr
+  is 'история смены состояний(collection в z#kas_hist_st_ak)';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_nazn
+  is 'назначение платежа';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_ft_money_ref
+  is 'валюта(fk на z#ft_money)';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_send_sms_sign
+  is 'признак  отправки смс уведомления';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_ppk_number
+  is 'ппк';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_kas_dic_ref
+  is 'тип идентификации(fk на z#kas_dic)';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_serv_ref
+  is 'поставщик услуг(fk на z#product)';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_amount_fee
+  is 'сумма комиссии';
+comment on column U1.T_RBO_Z#KAS_ACASH_DOC.c_date_prov
+  is 'дата проводки';
+grant select on U1.T_RBO_Z#KAS_ACASH_DOC to LOADDB;
+grant select on U1.T_RBO_Z#KAS_ACASH_DOC to LOADER;
+

@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_FOLDER_MO_ONL_BAD_SHOP_PRE
+build deferred
+refresh force on demand
+as
+select /*+ parallel(3)*/
+           r.id rfolder_id,
+           r.date_create,
+           dp.code_int,
+           case when dp.d_par_datatype_code = 'NUMBER' then to_char(t.value_number)
+                when dp.d_par_datatype_code = 'DATE' then to_char(t.value_date, 'dd-mm-yyyy hh24:mi:ss')
+           else t.value_text end as value_number
+    from u1.MO_RFOLDER r
+    join u1.T_MO_RFOLDER_PAR_VALUE_2016 t on t.rfolder_id = r.id
+    join u1.T_MO_RFOLDER_PAR_VALUE_2016 t2 on t2.rfolder_id = r.id and
+                                           t2.d_par_id = 1004 and
+                                           t2.value_text = 'EC_GOODS'
+    join u1.V_MO_D_PAR dp on dp.id = t.d_par_id
+                           and dp.code_int in ('IN_SCO_IIN',
+                                               'IN_SCO_CLIENT_ID',
+                                               'IN_SCO_FOLDER_ID',
+                                               'IN_SCO_POS_CODE',
+
+                                               'SC_IS_CATEG_A',
+                                               'SC_IS_CATEG_B',
+                                               'IN_SCO_GCVP_PAYMENT_QTY',
+                                               'SC_GCVP_SAL_TO_SAL',
+
+                                               'SC_GENERAL_CONTRACT_AMOUNT',
+                                               'SC_IS_ACTIVITY_MATCHE',
+
+                                               'SC_EKT_NOT_A_BAD_GCVP_BAD_SHOP_RES_PRE',
+
+                                               'MO_SCO_REJECT_8',
+                                               'MO_SCO_REJECT'
+                                              )
+    where r.date_create >= trunc(sysdate) - 7;
+

@@ -1,0 +1,18 @@
+﻿create materialized view U1.M_CLIENT_CAL_TOTAL_DEPT
+refresh complete on demand
+as
+select --substr(ltrim(d1.contract_no, 'R'),1,7) as client_id,
+              d1.client_id,
+                sum(d1.total_debt) as total_debt_sum_last_rep,
+                sum(d1.contract_amount) as contract_amount_sum_last_rep,
+                max(d1.delinq_days) as delinq_days_max_last_rep,
+                count(d1.contract_no) as number_of_contracts_last_rep
+              from v_data_all d1
+              where d1.yy_mm_report = (select max(yy_mm_report) from v_data_all)
+                    and d1.total_debt >0
+--              group by substr(ltrim(d1.contract_no, 'R'),1,7)
+              group by d1.client_id--substr(ltrim(d1.contract_no, 'R'),1,7);
+grant select on U1.M_CLIENT_CAL_TOTAL_DEPT to LOADDB;
+grant select on U1.M_CLIENT_CAL_TOTAL_DEPT to LOADER;
+
+

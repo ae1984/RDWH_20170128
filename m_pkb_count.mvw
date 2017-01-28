@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_PKB_COUNT
+refresh complete on demand
+as
+select pp.*,
+       pp.cnt_prim + pp.cnt_ext + pp.cnt_stnd + pp.cnt_notfound as cnt_all
+  from ((
+        select /*+ parallel 5 */
+              nvl(p.pkb_report_date,p.rfo_report_date) as pkb_report_date,
+              report_id,
+              case when p.report_status = 'БЕКИ' then 'SubjectNotFound' else p.report_type end as report_type
+         from u1.v_pkb_report p
+        where p.is_from_cache = 0) pp
+        pivot (
+              count(distinct report_id)
+              for report_type in ('ПЕРВИЧНЫЙ' as cnt_prim, 'РАСШИРЕННЫЙ' as cnt_ext, 'СТАНДАРТНЫЙ' as cnt_stnd,'SubjectNotFound' as cnt_notfound)
+        )) pp;
+grant select on U1.M_PKB_COUNT to LOADDB;
+grant select on U1.M_PKB_COUNT to LOADER;
+
+

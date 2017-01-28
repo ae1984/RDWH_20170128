@@ -1,0 +1,31 @@
+﻿create materialized view U1.V_TMP_PHOTO_TEST_5
+using no index
+refresh complete on demand
+as
+select distinct
+a.*,
+i.c_date as c_date_prev,
+i.c_name as c_name_prev,
+i.c_uid as c_uid_prev
+from (
+select a.*,
+max(b.folder_id) keep (dense_rank last order by b.folder_date_create) as folder_id_prev,
+max(b.folder_date_create) keep (dense_rank last order by b.folder_date_create) as folder_date_create_prev,
+max(b.folder_state) keep (dense_rank last order by b.folder_date_create) as folder_state_prev
+from V_TMP_PHOTO_TEST_4 a
+join v_folder_all_rfo b on a.rfo_client_id = b.rfo_client_id and a.folder_date_create > b.folder_date_create
+join v_verification dq on b.folder_id = dq.folder_id and dq.verif_photo_result = 'ОДОБРЕНИЕ'
+join V_RFO_Z#IMAGES i on i.c_fold_id = b.folder_id and upper(i.c_name) like '%FOTO_FL%'
+group by
+a.rfo_client_id,
+a.folder_id,
+a.folder_date_create,
+a.c_date,
+a.c_name,
+a.c_uid,
+a.c_inn) a
+join V_RFO_Z#IMAGES i on i.c_fold_id = a.folder_id_prev and upper(i.c_name) like '%FOTO_FL%';
+grant select on U1.V_TMP_PHOTO_TEST_5 to LOADDB;
+grant select on U1.V_TMP_PHOTO_TEST_5 to LOADER;
+
+

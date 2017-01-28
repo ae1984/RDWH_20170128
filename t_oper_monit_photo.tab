@@ -1,0 +1,44 @@
+﻿create table U1.T_OPER_MONIT_PHOTO
+(
+  fio                     VARCHAR2(500),
+  iin                     VARCHAR2(100),
+  date_photo              DATE,
+  subj_opin               VARCHAR2(100),
+  mp                      VARCHAR2(200),
+  mp_opin                 VARCHAR2(100),
+  process                 VARCHAR2(500),
+  note                    VARCHAR2(200),
+  comments                VARCHAR2(1000),
+  bl_vl                   VARCHAR2(1000),
+  change_date             DATE,
+  rfo_user_id             NUMBER,
+  rfo_user_login          VARCHAR2(64),
+  rfo_user_depart         VARCHAR2(128),
+  rfo_user_depart_code    VARCHAR2(32),
+  rfo_user_tabel_number   VARCHAR2(32),
+  rfo_black_list_id       NUMBER,
+  apex_user_add           VARCHAR2(64),
+  apex_user_last_change   VARCHAR2(64),
+  os_user_add             VARCHAR2(64),
+  os_user_last_change     VARCHAR2(64),
+  oracle_user_add         VARCHAR2(64),
+  oracle_user_last_change VARCHAR2(64),
+  ip_address_add          VARCHAR2(64),
+  ip_address_last_change  VARCHAR2(64)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_OPER_MONIT_PHOTO to LOADDB;
+grant select on U1.T_OPER_MONIT_PHOTO to LOADER;
+

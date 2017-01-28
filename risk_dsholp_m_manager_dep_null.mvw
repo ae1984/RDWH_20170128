@@ -1,0 +1,36 @@
+﻿create materialized view U1.RISK_DSHOLP_M_MANAGER_DEP_NULL
+refresh complete on demand
+as
+select fld.id as folder_id,
+        uc.c_name as user_name,
+        uc.c_empl as user_clien_id,
+        dd.c_num_dog as contract_number,
+        cc.c_client as rfo_client_id,
+        c.c_inn client_inn,
+        cp.c_last_name||' '||cp.c_first_name||' '||cp.c_sur_name client_name,
+        csp.c_code status_code,
+        csp.c_name status_name,
+        dd.c_date_begin dep_date_begin,
+        dd.c_date_close dep_date_close,
+        c2.*
+   from V_RFO_Z#FDOC_TEST1 f
+   join V_RFO_Z#DEPOSIT d on d.id = f.id
+   join V_RFO_Z#RDOC r on f.id = r.c_doc  --r.collection_id
+   join V_RFO_Z#FOLDERS fld on fld.c_docs = r.collection_id
+   join V_RFO_Z#RDOC rb on rb.collection_id = r.collection_id
+   join V_RFO_Z#FDOC_TEST1 fb on fb.id = rb.c_doc
+                       and fb.class_id = 'CONT_DEP'
+   join V_RFO_Z#CONTRACT cc on cc.id = fb.id
+   join V_RFO_Z#CLIENT c on c.id = cc.c_client
+   join V_RFO_Z#CL_PRIV cp on cp.id = c.id
+   join V_RBO_Z#DEPN dd on dd.id = cc.c_id_req
+   join V_RBO_Z#COM_STATUS_PRD csp on csp.id = dd.c_com_status
+   join V_RFO_Z#CM_CHECKPOINT cp on cp.id = fld.id
+   left join V_RFO_Z#USER uc on uc.id = cp.c_create_user
+   left join M_ZUP_1C_STAFF_OUT2 c2 on  c2.tab_num = uc.c_num_tab
+  where f.class_id = 'DEPOSIT'
+    and uc.c_empl is null;
+grant select on U1.RISK_DSHOLP_M_MANAGER_DEP_NULL to LOADDB;
+grant select on U1.RISK_DSHOLP_M_MANAGER_DEP_NULL to LOADER;
+
+

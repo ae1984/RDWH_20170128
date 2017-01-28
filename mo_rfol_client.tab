@@ -1,0 +1,35 @@
+﻿create table U1.MO_RFOL_CLIENT
+(
+  clien_id               NUMBER not null,
+  clien_inn              VARCHAR2(36),
+  clien_kas_rnn          VARCHAR2(36),
+  clprv_last_name        VARCHAR2(750),
+  clprv_first_name       VARCHAR2(750),
+  clprv_sur_name         VARCHAR2(750),
+  clprv_date_pers        DATE,
+  clprv_sex#0            NUMBER,
+  clprv_resident         VARCHAR2(3),
+  clprv_pasport#num      VARCHAR2(60),
+  clprv_pasport#who      VARCHAR2(384),
+  clprv_pasport#date_doc DATE,
+  clprv_pasport#date_end DATE,
+  certt_id               NUMBER,
+  certt_code             VARCHAR2(60),
+  certt_name             VARCHAR2(384)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO_RFOL_CLIENT to LOADDB;
+grant select on U1.MO_RFOL_CLIENT to LOADER;
+

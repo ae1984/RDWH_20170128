@@ -1,0 +1,26 @@
+﻿create table U1.T_SCORE_DM_EKT_BW_RES
+(
+  clas_glm_1_11_pred NUMBER,
+  is_bad3            NUMBER,
+  rfo_contract_id    NUMBER,
+  contract_id        NUMBER,
+  contract_number    VARCHAR2(250 CHAR),
+  score_bal          NUMBER,
+  score_period       NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_SCORE_DM_EKT_BW_RES to LOADDB;
+grant select on U1.T_SCORE_DM_EKT_BW_RES to LOADER;
+

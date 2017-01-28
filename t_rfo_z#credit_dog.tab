@@ -1,0 +1,129 @@
+﻿create table U1.T_RFO_Z#CREDIT_DOG
+(
+  id                             NUMBER not null,
+  c_summa_full                   NUMBER(17,2),
+  c_cred_scheme                  NUMBER,
+  c_info_cred#summa_cred         NUMBER(17,2),
+  c_info_cred#term_cred#quant    NUMBER(10),
+  c_info_cred#term_cred#unit     NUMBER,
+  c_info_cred#type_cred#0        NUMBER,
+  c_d#type_cred#cash#get_type#07 NUMBER,
+  c_cash#get_type#transfer#bank8 NUMBER,
+  c_h#get_type#transfer#num_acc9 VARCHAR2(25 CHAR),
+  c_get_type#transfer#num_card10 VARCHAR2(32 CHAR),
+  c_d#type_cred#prod#prod_info11 NUMBER,
+  c_d#type_cred#serv#serv_info12 NUMBER,
+  c_info_cred#pay_now            NUMBER(17,2),
+  c_info_cred#rate_prc           NUMBER(21,6),
+  c_info_cred#debts              NUMBER(17,2),
+  c_info_cred#eff_prc            NUMBER(17,2),
+  c_info_cred#summa_cred_com     NUMBER(17,2),
+  c_id_back                      VARCHAR2(128 CHAR),
+  c_num_cred_acc                 VARCHAR2(25 CHAR),
+  c_date_end                     DATE,
+  c_id_depart                    VARCHAR2(32 CHAR),
+  c_plan_payment                 NUMBER,
+  c_num_dep_acc                  VARCHAR2(25 CHAR),
+  c_templates                    NUMBER,
+  c_day_pay                      NUMBER(2),
+  c_shop                         NUMBER,
+  c_policy#num                   VARCHAR2(100 CHAR),
+  c_policy#date_beg              DATE,
+  c_policy#date_end              DATE,
+  c_date_begin                   DATE,
+  c_num_dog                      VARCHAR2(100 CHAR),
+  c_kas_date_begin               DATE,
+  c_id_req                       VARCHAR2(128 CHAR),
+  c_#get_type#transfer#name_kt11 VARCHAR2(255 CHAR),
+  c_h#get_type#transfer#inn_kt12 VARCHAR2(12 CHAR),
+  c_type#transfer#code_benefic13 NUMBER,
+  c_ash#get_type#transfer#note14 VARCHAR2(100 CHAR),
+  c_t_type#trans_card#num_card15 VARCHAR2(32 CHAR),
+  c_type#trans_card#valid_thru15 VARCHAR2(5 CHAR),
+  c_monthly_pay                  NUMBER,
+  c_cred#emb_card#card_product18 NUMBER,
+  c__cred#emb_card#emboss_name19 VARCHAR2(32 CHAR),
+  c_password                     VARCHAR2(250 CHAR),
+  c_info_cred#kas_summa_com      NUMBER(17,2),
+  c_kas_add_prop                 NUMBER,
+  c_red#kas_auto#kas_info_auto20 NUMBER,
+  c__type#trans_card#num_card215 VARCHAR2(32 CHAR),
+  c_ype_cred#prod#kas_add_info18 NUMBER,
+  c_kas_pc_dog_ref               NUMBER,
+  c_info_cred#kas_cred_purpose   NUMBER,
+  c_info_cred#kas_cr_purp_str    VARCHAR2(2000 CHAR),
+  c_client_ref                   NUMBER,
+  sn                             NUMBER,
+  su                             NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RFO_Z#CREDIT_DOG
+  is 'Транш';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_summa_full
+  is 'Сумма кредита (с процентами)';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_cred_scheme
+  is 'Кредитная схема(FK на Z#CRED_SCHEME)';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_id_back
+  is 'ID в бэк-офисе';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_num_cred_acc
+  is 'Номер ссудного счета';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_date_end
+  is 'Дата окончания действия';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_id_depart
+  is 'ID подразделения банка, в котором открыт договор';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_plan_payment
+  is 'Плановый график гашения(COLLECTION в Z#SCHEDULE_PAYMENT)';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_num_dep_acc
+  is 'Номер депозитного счета';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_templates
+  is 'Шаблоны договоров(COLLECTION в Z#PRINT_TMPL_CS)';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_day_pay
+  is 'День платежа';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_shop
+  is 'Магазин(FK на Z#SHOPS)';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_date_begin
+  is 'Дата начала действия';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_num_dog
+  is 'Номер для договоров';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_kas_date_begin
+  is 'Каспийский. Запрашиваемая дата выдачи';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_id_req
+  is 'ID запроса на формирование договора в бэк-офисе';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_monthly_pay
+  is 'Ежемесячный платеж';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_password
+  is 'Кодовое слово';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_kas_add_prop
+  is 'KAS. Дополнительные свойства(COLLECTION в Z#PROPERTIES)';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_kas_pc_dog_ref
+  is 'Карточный договор ГУ(FK на Z#KAS_PC_DOG)';
+comment on column U1.T_RFO_Z#CREDIT_DOG.c_client_ref
+  is 'KAS. Клиент(FK на Z#CLIENT)';
+create unique index U1.T_RFO_Z#CREDIT_DOG_IND1 on U1.T_RFO_Z#CREDIT_DOG (ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#CREDIT_DOG
+  add constraint T_RFO_Z#CREDIT_DOG_PK primary key (ID);
+grant select on U1.T_RFO_Z#CREDIT_DOG to LOADDB;
+

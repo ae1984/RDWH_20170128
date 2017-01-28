@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_TMP_J_DEL_REP_M1
+refresh complete on demand
+as
+select t.rep_date, t.prod_type,
+       sum(t.total_debt) as debt_all,
+----------------------
+       sum(case when t.rep_date - c.x_start_date >= 30 then t.total_debt end) as debt_30_all,
+       sum(case when t.rep_date - c.x_start_date >= 30 and t.delinq_days > 0 then t.total_debt end) as debt_30_del_1,
+
+       sum(case when t.rep_date - c.x_start_date >= 37 then t.total_debt end) as debt_37_all,
+       sum(case when t.rep_date - c.x_start_date >= 37 and t.delinq_days >= 8 then t.total_debt end) as debt_37_del_8,
+
+       sum(case when t.rep_date - c.x_start_date >= 61 then t.total_debt end) as debt_61_all,
+       sum(case when t.rep_date - c.x_start_date >= 61 and t.delinq_days >= 31 then t.total_debt end) as debt_61_del_31,
+
+       sum(case when t.rep_date - c.x_start_date >= 91 then t.total_debt end) as debt_91_all,
+       sum(case when t.rep_date - c.x_start_date >= 91 and t.delinq_days >= 61 then t.total_debt end) as debt_91_del_61,
+
+       sum(case when t.rep_date - c.x_start_date >= 122 then t.total_debt end) as debt_122_all,
+       sum(case when t.rep_date - c.x_start_date >= 122 and t.delinq_days >= 91 then t.total_debt end) as debt_122_del_91
+from DWH_PORT t
+join V_DWH_PORTFOLIO_CURRENT c on c.deal_number = t.deal_number
+where t.rep_date >= to_date('2014-01-01','yyyy-mm-dd')
+group by t.rep_date, t.prod_type;
+grant select on U1.M_TMP_J_DEL_REP_M1 to LOADDB;
+grant select on U1.M_TMP_J_DEL_REP_M1 to LOADER;
+
+

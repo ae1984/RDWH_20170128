@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_SCCL_TERM_MOB_PAR2
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       t.nasn_pay as mobile_phone,
+
+       trunc(min(t.document_date)) as trm_mob_pay_date_180d_min,
+
+       count(distinct t.acash_doc_id) as trm_mob_pay_180d_cnt,
+       sum(t.amount) as trm_mob_pay_180d_sum,
+       round(avg(t.amount)) as trm_mob_pay_180d_avg,
+
+       count(distinct t.cash_reg_code) as unique_terminal_qty
+
+from u1.M_CASH_TERMINAL t
+where t.document_date >= trunc(sysdate) - 180
+      and t.prov_date is not null
+      and t.product = 'PARTNERS'
+group by t.nasn_pay;
+grant select on U1.M_SCCL_TERM_MOB_PAR2 to LOADDB;
+grant select on U1.M_SCCL_TERM_MOB_PAR2 to LOAD_MO;
+
+

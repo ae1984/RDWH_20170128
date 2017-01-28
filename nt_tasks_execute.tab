@@ -1,0 +1,160 @@
+﻿create table U1.NT_TASKS_EXECUTE
+(
+  id            NUMBER not null,
+  ins_dt        DATE default sysdate,
+  group_num     NUMBER,
+  task_num      NUMBER,
+  task_name     VARCHAR2(100),
+  sql_exec      CLOB,
+  task_start    DATE,
+  task_end      DATE,
+  err           XMLTYPE,
+  status        VARCHAR2(100),
+  detail        VARCHAR2(1000),
+  object_name   VARCHAR2(100),
+  job_prefix    VARCHAR2(100),
+  update_log_id NUMBER,
+  send_mail     DATE,
+  task_id       NUMBER
+)
+tablespace USERS_F
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+nologging;
+comment on table U1.NT_TASKS_EXECUTE
+  is 'RDWH2.0 Параллельное исполнение разных запросов';
+comment on column U1.NT_TASKS_EXECUTE.id
+  is 'Уникальный ID задачи';
+comment on column U1.NT_TASKS_EXECUTE.ins_dt
+  is 'Дата и время добавления записи в таблицу';
+comment on column U1.NT_TASKS_EXECUTE.group_num
+  is 'Номер группы от 1 до 9999999 в рамках которой распараллеливание не критично';
+comment on column U1.NT_TASKS_EXECUTE.task_num
+  is 'Номер задачи в группе от 1 до 9999999';
+comment on column U1.NT_TASKS_EXECUTE.task_name
+  is 'Название задачи';
+comment on column U1.NT_TASKS_EXECUTE.sql_exec
+  is 'PLSQL на исполение';
+comment on column U1.NT_TASKS_EXECUTE.task_start
+  is 'Дата и время начала исполнения задачи';
+comment on column U1.NT_TASKS_EXECUTE.task_end
+  is 'Дата и время окончания исполнения задачи';
+comment on column U1.NT_TASKS_EXECUTE.err
+  is 'Описание возможной ошибки (XML)';
+comment on column U1.NT_TASKS_EXECUTE.status
+  is 'Статус задачи';
+comment on column U1.NT_TASKS_EXECUTE.detail
+  is 'Детали';
+comment on column U1.NT_TASKS_EXECUTE.object_name
+  is 'Имя объекта';
+comment on column U1.NT_TASKS_EXECUTE.job_prefix
+  is 'Имя задания';
+comment on column U1.NT_TASKS_EXECUTE.update_log_id
+  is 'ID update_log';
+comment on column U1.NT_TASKS_EXECUTE.send_mail
+  is 'отправлено письмо? дата-да null-нет';
+comment on column U1.NT_TASKS_EXECUTE.task_id
+  is 'id задачи (с 19/10/2016)';
+create index U1.IDX_TASKS_EXECUTE_2 on U1.NT_TASKS_EXECUTE (TASK_START)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_TASKS_EXECUTE_3 on U1.NT_TASKS_EXECUTE (STATUS)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_TASKS_EXECUTE_4 on U1.NT_TASKS_EXECUTE (TASK_NAME)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_TASKS_EXECUTE_5 on U1.NT_TASKS_EXECUTE (UPDATE_LOG_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_TASKS_EXECUTE_6 on U1.NT_TASKS_EXECUTE (TASK_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_TASKS_EXECUTE_DT_GR_STS on U1.NT_TASKS_EXECUTE (INS_DT, GROUP_NUM, STATUS)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.NT_TASKS_EXECUTE
+  add constraint PK_NT_TASKS_EXECUTE primary key (ID)
+  using index 
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.PK_NT_TASKS_EXECUTE nologging;
+grant select on U1.NT_TASKS_EXECUTE to LOADDB;
+

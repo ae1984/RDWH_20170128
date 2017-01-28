@@ -1,0 +1,36 @@
+﻿create table U1.T_REQUEST_DUPLICATE_TST2
+(
+  id                 NUMBER(20) not null,
+  method             VARCHAR2(48) not null,
+  referer_id         NUMBER(20),
+  uri_id             NUMBER(20) not null,
+  user_agent_id      NUMBER(20) not null,
+  user_id            NUMBER(20),
+  session_id         NUMBER(20),
+  asp_session_id     VARCHAR2(96),
+  date_start         DATE,
+  process_time       NUMBER(10) not null,
+  server_name        VARCHAR2(96),
+  request_trace_guid CHAR(108),
+  client_ip          RAW(16),
+  nc_client_ip       RAW(16),
+  raw_uri_id         NUMBER(20),
+  actual_uri_id      NUMBER(20),
+  request_parameters VARCHAR2(3072)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_REQUEST_DUPLICATE_TST2 to LOADDB;
+grant select on U1.T_REQUEST_DUPLICATE_TST2 to LOADER;
+

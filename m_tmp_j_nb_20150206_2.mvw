@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_TMP_J_NB_20150206_2
+refresh force on demand
+as
+select is_salary_exists,-- is_pkb_debt_above_7mln,
+       count(distinct f.folder_id) as fld_cnt, count(*) as cnt_2,
+       count(distinct case when f.is_credit_issued = 1 then f.folder_id end) as fld_approved_cnt,
+       count(distinct case when f.is_credit_issued = 1 then f.folder_id end) /
+                count(distinct f.folder_id) as approval_rate
+from M_TMP_J_NB_20150206_1 f
+join V_FOLDER_ALL_RFO fa on fa.folder_id = f.folder_id
+group by is_salary_exists--, is_pkb_debt_above_7mln;
+grant select on U1.M_TMP_J_NB_20150206_2 to LOADDB;
+grant select on U1.M_TMP_J_NB_20150206_2 to LOADER;
+
+

@@ -1,0 +1,35 @@
+﻿create table U1.TMP_UAD_TEMPRORARY
+(
+  rfo_id                      NUMBER,
+  bylo_ili_est_auto           NUMBER,
+  years_from_issue_ever       NUMBER,
+  years_from_issue            NUMBER,
+  count_application           NUMBER,
+  days_from_first_mob_payment NUMBER,
+  unique_contact_persons      NUMBER,
+  subs_with_delay_in_contact  NUMBER,
+  operator_value              NUMBER,
+  delay_contact_flag          NUMBER,
+  avg_pmt                     NUMBER(18,2),
+  ttl_pmt_amt                 NUMBER(18,2),
+  pmt_qty                     NUMBER,
+  share_of_kaspikz_pmt        NUMBER,
+  unique_kaspikz_client       NUMBER,
+  unique_terminal_qty         NUMBER,
+  client_life_length          NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.TMP_UAD_TEMPRORARY to LOADDB;
+

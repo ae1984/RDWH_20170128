@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_KASPISH_CATALOGS
+build deferred
+refresh force on demand
+as
+select HJMPTS,
+       TYPEPKSTRING,
+       OWNERPKSTRING,
+       MODIFIEDTS,
+       CREATEDTS,
+       PK,
+       P_URLPATTERNS,
+       P_DEFAULTCATALOG,
+       P_PREVIEWURLTEMPLATE,
+       P_BUYER,
+       P_ID,
+	     P_SUPPLIER,
+       P_ACTIVECATALOGVERSION,
+       ACLTS,
+       PROPTS
+  from kaspi.catalogs@ks_std
+ where rownum > 0;
+grant select on U1.M_KASPISH_CATALOGS to LOADDB;
+
+

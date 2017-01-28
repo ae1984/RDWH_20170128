@@ -1,0 +1,55 @@
+﻿create table U1.T_TMP_J_ONL_ROM_IMP
+(
+  process_id              VARCHAR2(100),
+  segment                 VARCHAR2(100),
+  segment_0001            VARCHAR2(100),
+  date_create             VARCHAR2(100),
+  client_dwh_id           NUMBER,
+  age                     NUMBER,
+  ii                      VARCHAR2(100),
+  reg_date_kaspkz         VARCHAR2(100),
+  reg_kaspikz_length      NUMBER,
+  session_ksp_last_6_mnth NUMBER,
+  count_month_kaspikz_6_m NUMBER,
+  count_serv_kspkz_6_m    NUMBER,
+  count_pay_kspkz_30_d    NUMBER,
+  avg_sum_pay_kspkz_30_d  NUMBER,
+  kommunalka_kaspikz_6_m  NUMBER,
+  kaspi_gold_active       NUMBER,
+  count_salary_6_m        NUMBER,
+  count_applications_30_d NUMBER,
+  count_fail_30_d         NUMBER,
+  fail_share_30_d         NUMBER,
+  count_appl_kn_30_d      NUMBER,
+  max_sum_appl_kn_30_d    NUMBER,
+  avg_zp_h                NUMBER,
+  count_day_app_onl       NUMBER,
+  max_count_category_day  NUMBER,
+  max_count_models_day    NUMBER,
+  max_count_fail_onl_day  NUMBER,
+  max_sum_online_ekt_3_m  NUMBER,
+  last_year_max_delay     NUMBER,
+  income_form             NUMBER,
+  days_last_gcvp          NUMBER,
+  income_gcvp             NUMBER,
+  diff_zp_form_gcvp       NUMBER,
+  ex_terminal_share       NUMBER,
+  count_visit_guest       NUMBER,
+  pkb_debt_kzt            NUMBER,
+  avg_sum_pay_cred_3_m    NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_J_ONL_ROM_IMP to LOADDB;
+

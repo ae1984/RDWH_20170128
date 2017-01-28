@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_APP_MINER_EXT
+build deferred
+refresh force on demand
+as
+select am.app_id
+
+       ,max(a.innet_index) as innet_index
+       ,max(onl.onl) as is_online
+       ,max(ofln.off) as is_offline
+
+from U1.M_APP_MINER_BAS am
+left join (select to_char(client_dwh_id) as client_dwh_id,
+                  pc.rfo_client_id,
+                  pc.rbo_client_id,
+                  pc.clnt_iin,
+                  pc.clnt_inn,
+                  internet_index as innet_index
+                  --,innet_index_not_kaspikz
+             from u1.T_LOAD_INTERNET_INDEX_20160711 ii
+             join u1.V_DWH_CLIENT_PHYS_CURRENT pc on pc.clnt_gid = ii.client_dwh_id
+           ) a on a.rfo_client_id = am.rfo_client_id
+
+left join UPD_USER.ECO_ONL onl on onl.rfo_id = am.rfo_client_id
+left join UPD_USER.ECO_OFF ofln on ofln.rfo_id = am.rfo_client_id
+where am.folder_date_create_mi >= to_date('2015-01-01','yyyy-mm-dd')
+group by am.app_id;
+grant select on U1.M_APP_MINER_EXT to LOADDB;
+
+

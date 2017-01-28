@@ -1,0 +1,51 @@
+﻿create table U1.T_MO_RESULT_SCO_CANCEL_DAY
+(
+  cancel_id          NUMBER,
+  folder_id          NUMBER,
+  rfo_client_id      NUMBER,
+  cancel_date        DATE,
+  cancel_err_level   VARCHAR2(30),
+  cancel_type_group  VARCHAR2(63),
+  cancel_type_code   VARCHAR2(128) not null,
+  cancel_type_name   VARCHAR2(128),
+  scorecard          VARCHAR2(15),
+  rfo_res_from_mo_id NUMBER not null,
+  rfo_res_date       DATE,
+  rfo_res_client_id  NUMBER,
+  rfo_res_folder_id  NUMBER,
+  rfo_result         VARCHAR2(4000),
+  process_code       VARCHAR2(128) not null,
+  process_id         NUMBER not null,
+  mogw_process_id    NUMBER not null,
+  mogw_date_start    DATE
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_MO_RESULT_SCO_CANCEL_DAY
+  is 'snapshot table for snapshot U1.V_MO_RESULT_SCO_CANCEL_DAY_P1';
+create index U1.T_MO_RESULT_SCO_C_DAY_IND1 on U1.T_MO_RESULT_SCO_CANCEL_DAY (CANCEL_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_MO_RESULT_SCO_CANCEL_DAY to LOADDB;
+grant select on U1.T_MO_RESULT_SCO_CANCEL_DAY to LOADER;
+

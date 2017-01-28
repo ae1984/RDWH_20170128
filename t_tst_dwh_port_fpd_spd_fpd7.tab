@@ -1,0 +1,33 @@
+﻿create table U1.T_TST_DWH_PORT_FPD_SPD_FPD7
+(
+  rep_date          DATE,
+  start_date        DATE,
+  delinq_days       NUMBER,
+  debt              NUMBER,
+  count_client      NUMBER,
+  count_deal_number NUMBER,
+  fpd               DATE,
+  spd               DATE,
+  fpd60             DATE,
+  fpd7              DATE,
+  sales_num         NUMBER,
+  fpd_num           NUMBER,
+  spd_num           NUMBER,
+  fpd60_num         NUMBER,
+  fpd7_num          NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TST_DWH_PORT_FPD_SPD_FPD7 to LOADDB;
+

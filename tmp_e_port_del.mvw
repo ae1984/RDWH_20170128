@@ -1,0 +1,38 @@
+﻿create materialized view U1.TMP_E_PORT_DEL
+refresh force on demand
+as
+select /*+ noparallel */
+       t.contract_number,
+       p.rep_date,
+       p.total_debt,
+       p.delinq_days,
+       p.is_on_balance,
+       case when dc.restruct_type is null then 1
+            when dc.restruct_type = 'SOFT' then 2
+            when dc.restruct_type = 'HARD' then 3
+       end as restr_type,
+       dc.restruct_count,
+      case when p.delinq_days = 0 or p.delinq_days is null then 'no_del'
+           when p.delinq_days >= 1 and p.delinq_days < 31 then 'del_1_30'
+           when p.delinq_days >= 31 and p.delinq_days < 61  then 'del_31_60'
+           when p.delinq_days >= 61 and p.delinq_days < 91  then 'del_61_90'
+           else 'del_up_90'
+      end as del_cat,
+      case when p.delinq_days = 0 or p.delinq_days is null then 0
+           when p.delinq_days >= 1 and p.delinq_days < 31 then 1
+           when p.delinq_days >= 31 and p.delinq_days < 61  then 2
+           when p.delinq_days >= 61 and p.delinq_days < 91  then 3
+           else 4
+      end as del_cat_num
+
+from DWH_PORT p
+join M_DWH_ACC_SPECIAL_OFFER_CON t on t.contract_number = p.deal_number
+join V_DWH_PORT_CARDS_CREDITS_HD h on h.contract_number = p.deal_number
+join V_DWH_PORTFOLIO_CURRENT dc on dc.deal_number = p.deal_number
+where p.rep_date = to_date('30.09.2014','dd.mm.yyyy') and
+      t.spof_spec_offer_status_cd in ('EXECUTED','DEFAULT','WORK') /*and
+      dc.restruct_type = 'HARD'*/;
+grant select on U1.TMP_E_PORT_DEL to LOADDB;
+grant select on U1.TMP_E_PORT_DEL to LOADER;
+
+

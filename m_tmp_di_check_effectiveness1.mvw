@@ -1,0 +1,99 @@
+﻿create materialized view U1.M_TMP_DI_CHECK_EFFECTIVENESS1
+refresh force on demand
+as
+select
+
+to_char(x.date_ratif,'yyyy-mm') as month_ratif,
+td.week_text_online_credit,
+x.par_name,
+x.par_code,
+x.is_categ_a,
+x.is_sign_require,
+x.is_client_new_by_con,
+case when xx.folder_id = x.folder_id then 1 else 0 end as is_cntrl_group,
+----FPDs
+
+       count(x.contract_number) as con_cnt,
+       count(distinct x.contract_number) as con_cnt_dist,
+       count(*) as cnt,
+       sum(d.max_debt_used_x) / 1000000 as sales_mln,
+       sum(d.max_debt_used_x) as sales,
+
+       sum(case when d.del_days_x > 7  then d.total_debt_x end) as del_debt_7d,
+       sum(case when trunc(x.date_ratif) <= add_months(sysdate,-2) and d.del_days_x > 30 then d.total_debt_x end) as del_debt_30d,
+       sum(case when trunc(x.date_ratif) <= add_months(sysdate,-3) and d.del_days_x > 60 then d.total_debt_x end) as del_debt_60d,
+       sum(case when trunc(x.date_ratif) <= add_months(sysdate,-4) and d.del_days_x > 90 then d.total_debt_x end) as del_debt_90d,
+
+       sum(case when trunc(x.date_ratif) <= add_months(sysdate,-2) and d.del_days_max_x > 30 then d.total_debt_x end) as del_debt_30d_ever,
+       sum(case when trunc(x.date_ratif) <= add_months(sysdate,-3) and d.del_days_max_x > 60 then d.total_debt_x end) as del_debt_60d_ever,
+       sum(case when trunc(x.date_ratif) <= add_months(sysdate,-4) and d.del_days_max_x > 90 then d.total_debt_x end) as del_debt_90d_ever,
+
+       count(case when trunc(x.date_ratif) <= add_months(sysdate,-2) and d.del_days_max_x > 30 then b.rbo_contract_id end) as del_30d_ever_cnt,
+       count(case when trunc(x.date_ratif) <= add_months(sysdate,-3) and d.del_days_max_x > 60 then b.rbo_contract_id end) as del_60d_ever_cnt,
+       count(case when trunc(x.date_ratif) <= add_months(sysdate,-4) and d.del_days_max_x > 90 then b.rbo_contract_id end) as del_90d_ever_cnt,
+
+       sum(d.total_debt_x_pmt_1_0) as pmt_1_0d_del_debt,
+       sum(d.max_debt_used_x_pmt_1_0) as pmt_1_0d_sales,
+       sum(d.total_debt_x_pmt_1_7) as pmt_1_7d_del_debt,
+       sum(d.max_debt_used_x_pmt_1_7) as pmt_1_7d_sales,
+       sum(d.total_debt_x_pmt_2_7) as pmt_2_7d_del_debt,
+       sum(d.max_debt_used_x_pmt_2_7) as pmt_2_7d_sales,
+       sum(d.total_debt_x_pmt_3_7) as pmt_3_7d_del_debt,
+       sum(d.max_debt_used_x_pmt_3_7) as pmt_3_7d_sales,
+       sum(d.total_debt_x_pmt_4_7) as pmt_4_7d_del_debt,
+       sum(d.max_debt_used_x_pmt_4_7) as pmt_4_7d_sales,
+       sum(d.total_debt_x_pmt_5_7) as pmt_5_7d_del_debt,
+       sum(d.max_debt_used_x_pmt_5_7) as pmt_5_7d_sales,
+       sum(d.total_debt_x_pmt_6_7) as pmt_6_7d_del_debt,
+       sum(d.max_debt_used_x_pmt_6_7) as pmt_6_7d_sales,
+
+       sum(d.total_debt_x_pmt_1_30) as pmt_1_30d_del_debt,
+       sum(d.max_debt_used_x_pmt_1_30) as pmt_1_30d_sales,
+       sum(d.total_debt_x_pmt_1_60) as pmt_1_60d_del_debt,
+       sum(d.max_debt_used_x_pmt_1_60) as pmt_1_60d_sales
+
+from (select
+    distinct
+    t.contract_number,
+    t.folder_date_create_mi as date_ratif,
+    mo.par_name,
+    mo.par_code,
+    mo.folder_id,
+    t.is_categ_a,
+    t.is_sign_require,
+    t.is_client_new_by_con,
+    row_number () over (partition by mo.folder_id order by rs.min_date_start) as rn
+    from u1.m_folder_mo_cancel_last mo
+    join m_folder_con_cancel t on t.folder_id = mo.folder_id and
+                                  t.process_name = 'ОНЛАЙН КРЕДИТ' and
+                                  mo.is_rejecting = 1 and
+                                  t.is_credit_issued = 1
+    join u1.m_mo_rule_start rs on mo.par_code = rs.par_code
+
+) x
+left join M_RBO_CONTRACT_BAS b on b.folder_id_first = x.folder_id and b.contract_number = x.contract_number
+left join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+join V_TIME_DAYS td on td.yyyy_mm_dd = trunc(x.date_ratif)
+left join
+       (select distinct t2.folder_id
+        from M_FOLDER_MO_CANCEL_LAST mo
+        join m_folder_con_cancel t2 on t2.folder_id = mo.folder_id and t2.process_name = 'ОНЛАЙН КРЕДИТ'
+        where trunc(t2.folder_date_create_mi)>= to_date('28.01.2015','dd.mm.yyyy') and
+              trunc(t2.folder_date_create_mi)<= to_date('13.03.2015','dd.mm.yyyy') and
+              mo.is_rejecting = 1 and t2.is_credit_issued = 1
+       ) xx on xx.folder_id = x.folder_id
+where x.rn = 1
+group by
+
+to_char(x.date_ratif,'yyyy-mm') ,
+td.week_text_online_credit,
+x.par_name,
+x.par_code,
+x.is_categ_a,
+x.is_sign_require,
+x.is_client_new_by_con,
+case when xx.folder_id = x.folder_id then 1 else 0 end;
+grant select on U1.M_TMP_DI_CHECK_EFFECTIVENESS1 to LOADDB;
+grant select on U1.M_TMP_DI_CHECK_EFFECTIVENESS1 to LOADER;
+
+

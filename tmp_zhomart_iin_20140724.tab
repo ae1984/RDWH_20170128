@@ -1,0 +1,19 @@
+﻿create table U1.TMP_ZHOMART_IIN_20140724
+(
+  iin VARCHAR2(50)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.TMP_ZHOMART_IIN_20140724 to LOADDB;
+grant select on U1.TMP_ZHOMART_IIN_20140724 to LOADER;
+

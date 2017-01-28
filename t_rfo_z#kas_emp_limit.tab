@@ -1,0 +1,38 @@
+﻿create table U1.T_RFO_Z#KAS_EMP_LIMIT
+(
+  id             NUMBER not null,
+  c_inn          VARCHAR2(36),
+  c_name         VARCHAR2(480),
+  c_cr_limit     NUMBER(17,2),
+  c_tarif        NUMBER,
+  c_status       NUMBER,
+  c_date_end     DATE,
+  c_product      NUMBER,
+  c_market_code  NUMBER,
+  c_upload_date  DATE,
+  c_spec_product NUMBER not null,
+  c_birth_date   DATE,
+  c_last_name    VARCHAR2(750),
+  c_first_name   VARCHAR2(750),
+  c_sur_name     VARCHAR2(750),
+  c_client       NUMBER,
+  c_ext_code     VARCHAR2(150),
+  c_kas_sas_date DATE,
+  sn             NUMBER,
+  su             NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RFO_Z#KAS_EMP_LIMIT to LOADDB;
+

@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_DWH_SHOP_MERCHANT_REVIEW
+refresh force on demand
+as
+select /*+ noparallel */
+       merchant_review_id,
+       user_id,
+       merchant_id,
+       merchant_review_comment as merchant_comment,
+       date_create,
+       rating
+  from dwh_stage.S43_MERCHANT_REVIEW@dwh_prod2;
+grant select on U1.M_DWH_SHOP_MERCHANT_REVIEW to LOADDB;
+grant select on U1.M_DWH_SHOP_MERCHANT_REVIEW to LOADER;
+
+

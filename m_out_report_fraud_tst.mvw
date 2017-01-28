@@ -1,0 +1,203 @@
+﻿create materialized view U1.M_OUT_REPORT_FRAUD_TST
+build deferred
+refresh complete on demand
+as
+select type_event_risk,date_event,depart_name,object_event,description_event,reason_event,type_event,
+       after_event,amount_event,valuta,result_event,to_char(comments) as comments,mm_yyyy_report_date,acc_num
+  from (
+select f.c_main_v_id as acc_num,
+       ft.type_event_risk,
+       f.c_date_prov_new  as date_event,
+       ft.depart_name,
+       ft.object_event,
+       ft.description_event,
+       ft.reason_event,
+       ft.type_event,
+       ft.after_event,
+       sum(f.c_sum*(case when f.is_db_kt = 'КРЕДИТ' then -1 else 1 end)) as amount_event,
+       f.valuta,
+       ft.result_event , f.comments, f.mm_yyyy_report_date
+  from (select ff.*,
+               case when ff.is_db_kt = 'КРЕДИТ' then min(ff.c_date_doc_x) over (partition by ff.mm_yyyy_report_date, ff.comments)
+                    else ff.c_date_doc_x end as c_date_prov_new
+          from T_OUT_REPORT_FRAUD ff) f
+  join T_OUT_REPORT_FRAUD_TYPE ft on ft.type_report = f.type_report
+ where f.type_report = 'КРАЖА ТЕРМИНАЛА ИБСО'
+ group by f.type_report, f.c_main_v_id, f.quarter, f.comments,
+       ft.type_event_risk,
+       f.c_date_prov_new,
+       ft.depart_name,
+       ft.object_event,
+       ft.description_event,
+       ft.reason_event,
+       ft.type_event,
+       ft.after_event,
+       ft.result_event,
+       f.valuta,
+       f.mm_yyyy_report_date)
+ where amount_event >= 100000.00
+   and mm_yyyy_report_date = to_char(add_months(sysdate,-1),'mm-yyyy')
+union all
+select type_event_risk,date_event,depart_name,object_event,description_event,reason_event,type_event,
+       after_event,amount_event,valuta,result_event,to_char(comments),mm_yyyy_report_date, acc_num
+  from (
+select ft.type_event_risk,
+       f.c_main_v_id as acc_num,
+       f.c_date_prov_new  as date_event,
+       ft.depart_name,
+       ft.object_event,
+       ft.description_event,
+       ft.reason_event,
+       ft.type_event,
+       ft.after_event,
+       sum(f.c_sum*(case when f.is_db_kt = 'КРЕДИТ' then -1 else 1 end)) as amount_event,
+       f.valuta,
+       ft.result_event,
+       to_number(substr(ltrim(ltrim(f.comments ,'R'),'D'),1,7)) as comments,
+       f.mm_yyyy_report_date
+  from (select ff.*,
+               case when ff.is_db_kt = 'КРЕДИТ'
+                    then min(ff.c_date_doc_x) over (partition by ff.mm_yyyy_report_date, to_number(substr(ltrim(ltrim(ff.comments ,'R'),'D'),1,7)))
+                    else ff.c_date_doc_x end as c_date_prov_new
+          from T_OUT_REPORT_FRAUD ff
+         where ff.type_report = 'ОФОРМЛЕНИЕ КРЕДИТА НА 3-Е ЛИЦО'
+           and ff.mm_yyyy_report_date = to_char(add_months(sysdate,-1),'mm-yyyy')) f
+  join T_OUT_REPORT_FRAUD_TYPE ft on ft.type_report = f.type_report
+ where f.c_sum > 0
+   and f.comments is not null
+ group by ft.type_event_risk,
+       f.c_main_v_id,
+       f.c_date_prov_new,
+       ft.depart_name,
+       ft.object_event,
+       ft.description_event,
+       ft.reason_event,
+       ft.type_event,
+       ft.after_event,
+       f.valuta,
+       ft.result_event,
+       f.mm_yyyy_report_date,
+       to_number(substr(ltrim(ltrim(f.comments ,'R'),'D'),1,7))
+      )
+where amount_event >= 100000.00
+union all
+select type_event_risk,date_event,depart_name,object_event,description_event,reason_event,type_event,
+       after_event,amount_event_kzt,valuta,result_event,to_char(comments),mm_yyyy_report_date, acc_num
+  from (select ft.type_event_risk,
+               f.c_main_v_id as acc_num,
+               f.c_main_v_id as comments,
+               min(f.c_date_doc_x) as date_event,
+               ft.depart_name,
+               ft.object_event,
+               ft.description_event,
+               ft.reason_event,
+               ft.type_event,
+               ft.after_event,
+               sum((case when f.is_db_kt = 'ДЕБЕТ' then 1 else -1 end)*f.c_sum) as amount_event,
+               sum((case when f.is_db_kt = 'ДЕБЕТ' then 1 else -1 end)*f.c_sum*(case when f.valuta = 'USD' then mc.curs_usd
+                           when f.valuta = 'EUR' then mc.curs_eur
+                           when f.valuta = 'RUR' then mc.curs_rur
+                           when f.valuta = 'GBP' then mc.curs_gbp
+                           when f.valuta = 'KGS' then mc.curs_kgs
+                           else 1 end)) as amount_event_kzt,
+               f.valuta,
+               ft.result_event,
+               f.quarter,
+               f.mm_yyyy_report_date
+         from (select *
+                 from t_out_report_fraud
+                where type_report = 'НЕДОСТАЧА В КАССЕ'
+                  and mm_yyyy_report_date = to_char(add_months(sysdate,-1),'mm-yyyy')
+               ) f
+         join T_OUT_REPORT_FRAUD_TYPE ft on ft.type_report = f.type_report
+                                        and ft.type_report = 'НЕДОСТАЧА В КАССЕ'
+         join M_COURSES               mc on mc.date_recount = trunc(sysdate,'mm')
+         group by ft.type_event_risk,
+               f.c_main_v_id,
+               ft.depart_name,
+               ft.object_event,
+               ft.description_event,
+               ft.reason_event,
+               ft.type_event,
+               ft.after_event,
+               f.valuta,
+               ft.result_event,
+               f.quarter,
+               f.mm_yyyy_report_date)
+where amount_event_kzt >= 100000.00
+union all
+select ft.type_event_risk,
+       f.c_date_doc_x,
+       f.comments as depart_name,
+       ft.object_event,
+       f.c_nazn as description_event,
+       ft.reason_event,
+       ft.type_event,
+       case when f.is_db_kt = 'ДЕБЕТ' then 'Отнесение на дебиторскую задолженность'
+            else 'Отнесение на кредиторскую задолженность' end as after_event,
+       f.c_sum,
+       f.valuta,
+       ft.result_event,
+       f.is_db_kt,
+       f.mm_yyyy_report_date,
+       f.c_main_v_id as acc_num
+  from T_OUT_REPORT_FRAUD f
+  join T_OUT_REPORT_FRAUD_TYPE ft on ft.type_report = f.type_report
+                                 and ft.type_report = 'ВОЗМЕЩЕНИЕ ПО РЕШЕНИЮ СУДА'
+ where f.mm_yyyy_report_date = to_char(add_months(sysdate,-1),'mm-yyyy')
+   and upper(f.c_nazn) not like '%ЗАКРЫТИЕ ДОХОДОВ/РАСХОДОВ%'
+   and f.c_sum >=  100000.00
+union all
+select ft.type_event_risk,
+       f.c_date_doc_x,
+       f.comments as depart_name,
+       ft.object_event,
+       f.c_nazn as description_event,
+       ft.reason_event,
+       ft.type_event,
+       ft.after_event,
+       f.c_sum,
+       f.valuta,
+       ft.result_event,
+       f.is_db_kt,
+       f.mm_yyyy_report_date,
+       f.c_main_v_id as acc_num
+  from T_OUT_REPORT_FRAUD f
+  join T_OUT_REPORT_FRAUD_TYPE ft on ft.type_report = f.type_report
+                                 and ft.type_report = 'НЕУСТОЙКА,ШТРАФ,ПЕНЯ'
+ where f.mm_yyyy_report_date = to_char(add_months(sysdate,-1),'mm-yyyy')
+   and upper(f.c_nazn) not like '%ЗАКРЫТИЕ ДОХОДОВ/РАСХОДОВ%'
+   and f.c_sum >=  100000.00
+   union all
+select ft.type_event_risk,
+       fc.dateoperation,
+       fc.office as depart_name,
+       ft.object_event,
+       fc.document as description_event,
+       ft.reason_event,
+       ft.type_event,
+       ft.after_event,
+       sum(fc.sumoperation) as sumoperation,
+       null as valuta,
+       ft.result_event,
+       null as comments,
+       to_char(fc.dateoperation,'mm-yyyy') as mm_yyyy_report_date,
+       null as acc_num
+  from T_OUT_FRAUD_1C fc
+  join T_OUT_REPORT_FRAUD_TYPE ft on ft.type_report = 'ДОСРОЧНОЕ СПИСАНИЕ'
+ where to_char(fc.dateoperation,'mm-yyyy') = to_char(add_months(sysdate,-1),'mm-yyyy')
+   and fc.document like '%Списание%'
+  group by ft.type_event_risk,
+       fc.dateoperation,
+       fc.office,
+       ft.object_event,
+       ft.reason_event,
+       ft.type_event,
+       ft.after_event,
+       ft.result_event,
+       to_char(fc.dateoperation,'mm-yyyy'),
+       fc.document
+  having sum(fc.sumoperation) >= 100000.00;
+grant select on U1.M_OUT_REPORT_FRAUD_TST to LOADDB;
+
+

@@ -1,0 +1,19 @@
+﻿create materialized view U1.V_JAN_MO_TMP_1
+refresh force on demand
+as
+select f.folder_id, f.folder_date_create, f.folder_number, f.rfo_client_id,
+       f.process_code, f.process_name, f.route_code, f.route_name, f.folder_state,
+       f.card_contract_id, f.credit_contract_id, f.card_contract_number, f.credit_contract_number,
+       f.pos_code, f.dnp_name, f.expert_login
+from V_FOLDER_ALL_RFO f
+where f.is_credit_process = 1 and
+      trunc(f.folder_date_create) = trunc(sysdate) - 2 and
+      f.is_credit_issued = 1 and
+      not exists (select * from V_RFO_Z#KAS_RES_FROM_MO t
+                    where trunc(t.c_date) = trunc(sysdate) - 2 and
+                          t.c_type_process = 'MO_SCO' and
+                          t.c_folder_ref = f.folder_id);
+grant select on U1.V_JAN_MO_TMP_1 to LOADDB;
+grant select on U1.V_JAN_MO_TMP_1 to LOADER;
+
+

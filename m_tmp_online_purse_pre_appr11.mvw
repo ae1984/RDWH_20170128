@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_TMP_ONLINE_PURSE_PRE_APPR11
+refresh force on demand
+as
+select t.iin,
+       cl.rfo_client_id,
+       max(k.kdn_form_salary_max) keep (dense_rank last order by k.x_start_date) kdn_form_salary_max,
+       max(k.is_kdn_regulated_sal_max) keep (dense_rank last order by k.x_start_date) is_kdn_regulated_sal_max,
+
+       max(k.x_start_date) keep (dense_rank last order by k.x_start_date) x_start_date,
+       max(k.deal_number) keep (dense_rank last order by k.x_start_date) deal_number,
+       max(k.folder_id_first) keep (dense_rank last order by k.x_start_date) folder_id_first,
+       max(k.pkb_rep_id) keep (dense_rank last order by k.x_start_date) pkb_rep_id,
+       max(k.form_client_id) keep (dense_rank last order by k.x_start_date) form_client_id
+from T_TMP_ONLINE_PURSE_PRE_APPR11 t
+join v_client_rfo_by_id cl on cl.iin = t.iin
+left join m_contract_param_kdn5 k on k.client_iin = cl.iin
+group by t.iin,
+         cl.rfo_client_id;
+grant select on U1.M_TMP_ONLINE_PURSE_PRE_APPR11 to LOADDB;
+grant select on U1.M_TMP_ONLINE_PURSE_PRE_APPR11 to LOADER;
+
+

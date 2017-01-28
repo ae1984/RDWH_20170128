@@ -1,0 +1,103 @@
+﻿create materialized view U1.M_MO_VECTOR_PARAMS
+build deferred
+refresh force on demand
+as
+select distinct
+       t.app_id                          as app_id,
+       t.folder_date_create_mi           as folder_date_create,
+       cc.birth_date_date                as in_aa_date_birth,
+       t.folder_id                       as folder_id,
+       --''                                as form_changed_fields,
+       gr.list_organization              as gcvp_arr_org,
+       gr.org_bin_last                   as gcvp_arr_org_bin,
+       gr.org_rnn_last                   as gcvp_arr_org_rnn,
+       --''                                as gcvp_arr_pay_date,
+       gr.avg_gcvp_payment               as gcvp_average_amount,
+       gr.rep_date                       as gcvp_date,
+       gr.pmts_count_from_rep            as gcvp_payment_qty,
+       gr.salary                         as gcvp_salary,
+       cc.marital_status                 as index_family_status,
+       ph.phone_number_clear             as phone_numb,
+       /*''                                as phone_result,
+       ''                                as phone_res_date,*/
+       ph.phone_type                     as phone_type,
+       pk.report_date_time               as pkb_report_date,
+       --pk.contract_status                as pkb_contr_stat,
+       --pk.credit_limit                   as pkb_cred_lim,
+       --pk.fin_inst                       as pkb_fin_inst,
+       --pk.monthly_payment                as pkb_month_pay,
+       pk.active_contracts               as pkb_num_contrcts,
+       pk.closed_contracts               as pkb_num_fin_contr,
+       --pk.outstanding_sum                as pkb_outst_sum,
+       --pk.overdue_sum                    as pkb_overd_sum,
+       pk.report_type                    as pkb_report_type,
+       pk.report_status                  as pkb_status,
+       pk.delinq_amount                  as pkb_sum_overd_pay,
+       pk.total_debt                     as pkb_ttl_outst_sum,
+       --''                                as verif_contacts_res,
+       first_value(vr.verification_status) over(partition by t.app_id order by vr.open_time desc)  as verif_photo_res,
+       nvl(cc.children, 'НЕТ')           as index_quant_child,
+       nvl(cc.dependants_count, 'НЕТ')   as index_quant_depend,
+       /*case
+         when t.folder_date_create_mi between to_date(zu.hiring_date_txt, 'dd.mm.yyyy') and nvl(to_date(zu.firing_date_txt, 'dd.mm.yyyy'), sysdate) then
+           1
+         else
+           0
+       end                               as is_employer,*/
+       /*''                                as nal_sch,
+       ''                                as ot_bel,*/
+       cc.citizenship                    as resident,
+       cc.inc_sal                        as salary,
+       cc.sex                            as sex,
+       cc.work_experience_last_place     as stazh_date,
+       nvl(cc.inc_sal_spouse, 0)         as wife_salary,
+       --''                                as pkb_is_bad,
+       pd.cnt_same_home_phone            as cnt_same_home_phone,
+       pm.cnt_same_mob_phone             as cnt_same_mob_phone,
+       pc.cnt_same_contact_phone         as cnt_same_contact_phone,
+       nvl(t.prev_con_del_days_max, 0)   as rdwh_cc_delinq_days_max,
+       t.fact_pmt_mon_before             as rdwh_cc_total_pmts,
+       --''                                as verif_iad_in_tovar,
+       case when t.is_categ_a = 1 then 'CAT А'
+            when t.is_categ_b = 1 then 'CAT B'
+            when t.is_client_new_by_con = 0 then 'CAT C'
+            when t.is_client_new_by_con = 1 then 'CAT D'
+       end                               as category_a_b_c_d,
+       d.balance_all_dep_beg_x,
+       d.balance_all_dep_beg_m_x,
+       d.sum_pritok_dep_3_m_x,
+       d.deposit_life_length_x,
+       d.share_usd_dep_sum_x
+
+  from u1.M_APP_MINER_BAS t
+       left join U1.V_FORM_CLIENT_ALL_RFO          cc on cc.form_client_id = t.form_client_id
+       left join u1.M_FOLDER_CON_LINK      pp on         pp.app_id = t.app_id
+       left join (select distinct
+                         rr.gcvp_rep_id,
+                         rr.list_organization,
+                         rr.org_bin_last,
+                         rr.org_rnn_last,
+                         rr.avg_gcvp_payment,
+                         rr.rep_date,
+                         rr.pmts_count_from_rep,
+                         rr.salary
+                    from U1.V_GCVP_REPORT rr )     gr on    gr.gcvp_rep_id = pp.gcvp_report_id
+       left join U1.V_FORM_CLIENT_CONTACT_PHONE    ph on ph.form_client_id = cc.form_client_id
+                                                     and     ph.phone_type = 'МОБИЛЬНЫЙ'
+       left join U1.T_PKB_REPORT                   pk on      pk.report_id = pp.pkb_report_pr_id
+       left join U1.M_OUT_DWH_VERIFICATION_REP_ROW vr on      vr.folder_id = t.folder_id
+                                                     and vr.verification_type = 'PHOTO'
+       --left join U1.M_ZUP_1C_STAFF                 zu on         zu.tax_id = cc.iin
+       left join U1.M_MO_VECTOR_PARAMS_CONTACT_PH  pc on pc.form_client_id = t.form_client_id
+       left join U1.M_MO_VECTOR_PARAMS_HOME_PH     pd on pd.form_client_id = t.form_client_id
+       left join U1.M_MO_VECTOR_PARAMS_MOBILE_PH   pm on pm.form_client_id = t.form_client_id
+       left join RISK_AKNAZAR.M_RFO_FRAUD_SEARCH_DEPO_ALL d on d.rfo_con_or_claim_id = t.app_id
+
+
+ where t.product_type = 'ТОВАРЫ'
+   and t.contract_amount <= 100000
+   and t.folder_date_create >= to_date('01.01.2015', 'dd.mm.yyyy')
+   and t.folder_date_create <= to_date('30.11.2015', 'dd.mm.yyyy');
+grant select on U1.M_MO_VECTOR_PARAMS to LOADDB;
+
+

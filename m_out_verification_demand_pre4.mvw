@@ -1,0 +1,10 @@
+﻿create materialized view U1.M_OUT_VERIFICATION_DEMAND_PRE4
+build deferred
+refresh force on demand
+as
+select /*+parallel(5)*/ s.collection_id,  max(to_date(substr(s.c_s1, 1, instr(s.c_s1, '???') - 1), 'dd.mm.yyyy hh24:mi:ss')) as val
+from T_RFO_Z#KAS_UNIVERSAL_S s
+group by s.collection_id;
+grant select on U1.M_OUT_VERIFICATION_DEMAND_PRE4 to LOADDB;
+
+

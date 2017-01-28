@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_OUT_PTP_ACCOUNT
+refresh force on demand
+as
+select out_accountnumber as act_which_must_set_ptp_dwh_id,
+      coalesce(c.dcard_contragent_clnt_gid,cred.crdt_contragent_clnt_gid, dep.dpst_contragent_clnt_gid) as client_dwh_id,
+      ACCOUNT_NUMBER_ID as ACCOUNT_DWH_ID,
+      CONTRACT_DWH_ID as CONTRACT_DWH_ID,
+      BVU_REQUEST_SENT_AT as DATE_SEND_MESSAGE,
+      BANK as BIK,
+      BVU_RESP_RECIEVED_AT as DATE_GOT_MESSAGE,
+      ACCOUNT_NUMBER as DELAY_AMOUNT_ON_MOMENT_SEND,
+      BVU_REQUEST_SENT_BY as MANAGER_PTP_WHICH_SEND_MSG,
+      PTP_GROUP as GROUP_PTP
+from DWH_STAGE.S55_OUT_ACCOUNTNUMBER@RDWH_EXD a
+left join DWH_MAIN.REF_DEAL_CARD@rdwh_exd c on c.dcard_crt_gid = a.contract_dwh_id and c.dcard$row_status = 'A'
+                                            AND sysdate BETWEEN c.dcard$start_date AND c.dcard$end_date
+left join DWH_MAIN.REF_DEAL_CREDIT@rdwh_exd cred on cred.crdt_crt_gid = a.contract_dwh_id and cred.crdt$row_status = 'A'
+                                                 AND sysdate BETWEEN cred.crdt$start_date AND cred.crdt$end_date
+
+left join DWH_MAIN.REF_DEAL_DEPOSIT@rdwh_exd dep on dep.dpst_crt_gid = a.contract_dwh_id and dep.dpst$row_status = 'A'
+                                                  AND sysdate BETWEEN dep.dpst$start_date AND dep.dpst$end_date;
+grant select on U1.M_OUT_PTP_ACCOUNT to LOADDB;
+grant select on U1.M_OUT_PTP_ACCOUNT to LOADER;
+
+

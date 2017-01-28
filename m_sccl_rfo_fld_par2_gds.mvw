@@ -1,0 +1,51 @@
+﻿create materialized view U1.M_SCCL_RFO_FLD_PAR2_GDS
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30) */
+       cl.rfo_client_id
+
+       ,count(case when am.folder_date_create_mi >= trunc(sysdate) - 30 then am.app_id end) as app_30d_pr_cnt
+       ,count(case when am.folder_date_create_mi >= trunc(sysdate) - 90 then am.app_id end) as app_90d_pr_cnt
+
+        --shop cnt distinct
+       ,count(distinct case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                            then am.shop_code end) as shop_30d_pr_cnt
+
+       --3 month
+       ,coalesce(max(case when am.folder_date_create_mi >= add_months(am.folder_date_create_mi, -3)
+                          then am.contract_amount end), 0) as max_app_amount_3m_pr
+
+       ----------
+       --CLIENT
+       --30 days
+       ,coalesce(max(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                          then am.contract_amount end), 0) as max_app_amount_30d_pr
+
+       ,coalesce(min(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                          then am.contract_amount end), 0) as min_app_amount_30d_pr
+
+       ,round(coalesce(avg(case when am.folder_date_create_mi >= trunc(sysdate) - 30
+                                then am.contract_amount end), 0)) as avg_app_amount_30d_pr
+
+       ,coalesce(max(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                          then am.contract_amount end), 0) as max_app_amount_90d_pr
+
+       ,coalesce(min(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                          then am.contract_amount end), 0) as min_app_amount_90d_pr
+
+       ,round(coalesce(avg(case when am.folder_date_create_mi >= trunc(sysdate) - 90
+                                then am.contract_amount end), 0)) as avg_app_amount_90d_pr
+
+
+
+from u1.V_CLIENT_RFO_BY_ID cl
+left join u1.M_APP_MINER_BAS am on am.rfo_client_id = cl.rfo_client_id
+                                   and am.folder_date_create >= trunc(sysdate) - 150
+                                   and am.product_type = 'ТОВАРЫ'
+group by cl.rfo_client_id;
+grant select on U1.M_SCCL_RFO_FLD_PAR2_GDS to LOADDB;
+grant select on U1.M_SCCL_RFO_FLD_PAR2_GDS to LOAD_MO;
+grant select on U1.M_SCCL_RFO_FLD_PAR2_GDS to RTS_RDWH;
+
+

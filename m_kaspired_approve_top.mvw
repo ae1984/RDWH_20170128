@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_KASPIRED_APPROVE_TOP
+build deferred
+refresh force on demand
+as
+select t.iin as client_iin,
+       listagg(t.rule, ';') within group (order by t.rule) as rule_list
+from u1.T_KASPIRED_RULES_TOP t
+where trunc(t.insert_date) = (select max(trunc(tt.insert_date)) from u1.T_KASPIRED_RULES_TOP tt)
+group by t.iin;
+grant select on U1.M_KASPIRED_APPROVE_TOP to LOAD_MO;
+
+

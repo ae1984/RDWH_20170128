@@ -1,0 +1,8 @@
+﻿create materialized view U1.V_RBO_Z#KAS_ZALOG_OVERES
+refresh complete on demand
+as
+select * from rdwh.V_RBO_Z#KAS_ZALOG_OVERES@rdwh_exd;
+grant select on U1.V_RBO_Z#KAS_ZALOG_OVERES to LOADDB;
+grant select on U1.V_RBO_Z#KAS_ZALOG_OVERES to LOADER;
+
+

@@ -1,0 +1,22 @@
+﻿create table U1.FLD_019_DISCRIPTION
+(
+  country       VARCHAR2(3),
+  country_code  VARCHAR2(3),
+  country_short VARCHAR2(3),
+  country_name  VARCHAR2(255)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.FLD_019_DISCRIPTION to LOADDB;
+

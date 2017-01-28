@@ -1,0 +1,97 @@
+﻿create table U1.NT_WAIT_HIST
+(
+  sdt             DATE,
+  sid             NUMBER,
+  serial#         NUMBER,
+  status          VARCHAR2(8),
+  osuser          VARCHAR2(30),
+  machine         VARCHAR2(64),
+  module          VARCHAR2(64),
+  action          VARCHAR2(64),
+  sql_id          VARCHAR2(13),
+  sql_exec_start  DATE,
+  state           VARCHAR2(19),
+  seconds_in_wait NUMBER,
+  wait_class_id   NUMBER,
+  wait_class#     NUMBER,
+  wait_class      VARCHAR2(64),
+  event           VARCHAR2(64),
+  event#          NUMBER,
+  wait_time       NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_WAIT_HIST
+  is 'rdhw2 История ожиданий (шаг 1 минута) ';
+comment on column U1.NT_WAIT_HIST.sdt
+  is 'Время записи';
+comment on column U1.NT_WAIT_HIST.sid
+  is 'идентификатор сессии';
+comment on column U1.NT_WAIT_HIST.serial#
+  is 'Сессия серийный номер. Используется для однозначной идентификации объектов данной сессии. Гарантии, что команды уровня сеанса применяются к соответствующим объектам сессии, если сессия заканчивается и начинается другая сессия с тем же идентификатором сеанса.';
+comment on column U1.NT_WAIT_HIST.status
+  is 'Status of the session:
+ACTIVE - Session currently executing SQL
+INACTIVE
+KILLED - Session marked to be killed
+CACHED - Session temporarily cached for use by Oracle*XA
+SNIPED - Session inactive, waiting on the client';
+comment on column U1.NT_WAIT_HIST.osuser
+  is 'имя пользователя ';
+comment on column U1.NT_WAIT_HIST.machine
+  is 'Название компьютера';
+comment on column U1.NT_WAIT_HIST.module
+  is 'Название текущего выполняемого модуля, как установлено путем вызова процедуры DBMS_APPLICATION_INFO.SET_MODULE';
+comment on column U1.NT_WAIT_HIST.action
+  is 'Название текущего выполняемого действия, как установлено путем вызова процедуры DBMS_APPLICATION_INFO.SET_ACTION';
+comment on column U1.NT_WAIT_HIST.sql_id
+  is 'SQL идентификатор оператора SQL, который в настоящее время выполняется';
+comment on column U1.NT_WAIT_HIST.sql_exec_start
+  is 'Время, когда выполнение SQL в настоящее время выполняемого этой сессии началась; NULL, если SQL_ID является NULL';
+comment on column U1.NT_WAIT_HIST.state
+  is 'Wait state:
+0 - WAITING (the session is currently waiting)
+-2 - WAITED UNKNOWN TIME (duration of last wait is unknown)
+-1 - WAITED SHORT TIME (last wait <1/100th of a second)
+>0 - WAITED KNOWN TIME (WAIT_TIME = duration of last wait)';
+comment on column U1.NT_WAIT_HIST.seconds_in_wait
+  is 'Если WAIT_TIME = 0, то SECONDS_IN_WAIT это секунды, проведенные в текущем состоянии ожидания. Если WAIT_TIME> 0, то SECONDS_IN_WAIT является секунд с момента начала последнего ожидания, и SECONDS_IN_WAIT - WAIT_TIME / 100 является активным секунд с момента последнего ожидания закончился.';
+comment on column U1.NT_WAIT_HIST.wait_class_id
+  is 'Идентификатор класса ожидания';
+comment on column U1.NT_WAIT_HIST.wait_class#
+  is 'Количество классе ожидания';
+comment on column U1.NT_WAIT_HIST.wait_class
+  is 'Имя класса ожидания';
+comment on column U1.NT_WAIT_HIST.event
+  is 'Ресурс или событие, для которого сеанс ожидает
+Смотрите также: Приложение C, "Oracle Wait Events"';
+comment on column U1.NT_WAIT_HIST.event#
+  is 'номер события';
+comment on column U1.NT_WAIT_HIST.wait_time
+  is 'Ненулевое значение является последней сессии время ожидания. Нулевое значение означает, что сеанс в настоящее время ждет.';
+create index U1.IDX_WAIT_HIST_1 on U1.NT_WAIT_HIST (SDT)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.NT_WAIT_HIST to LOADDB;
+

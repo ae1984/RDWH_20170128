@@ -1,0 +1,57 @@
+﻿create table U1.NT_RDWH_SCHEMA_CHANGES_HIST
+(
+  id          NUMBER,
+  obj_type    VARCHAR2(100),
+  obj_name    VARCHAR2(100),
+  old_code    CLOB,
+  change_date DATE,
+  sh_user     VARCHAR2(100),
+  os_user     VARCHAR2(100),
+  user_host   VARCHAR2(100),
+  user_ip     VARCHAR2(100),
+  new_code    CLOB,
+  ora_event   VARCHAR2(100),
+  program     VARCHAR2(100),
+  err         VARCHAR2(100)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_RDWH_SCHEMA_CHANGES_HIST
+  is 'RDWH2.0 Аудит изменений исходных кодов (история)';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES_HIST.obj_type
+  is 'Тип объекта';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES_HIST.obj_name
+  is 'Название объекта';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES_HIST.old_code
+  is 'Исходный код объекта до компиляции';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES_HIST.change_date
+  is 'Дата/время компиляции';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES_HIST.sh_user
+  is 'Имя пользователя';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES_HIST.os_user
+  is 'Имя пользователя в домене';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES_HIST.user_host
+  is 'Имя локальной машины';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES_HIST.user_ip
+  is 'IP адрес';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES_HIST.new_code
+  is 'Компилируемый код ';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES_HIST.ora_event
+  is 'Событие';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES_HIST.program
+  is 'Название программы, из которой произвелась компиляция';
+comment on column U1.NT_RDWH_SCHEMA_CHANGES_HIST.err
+  is 'Возможно возникшие ошибочные события';
+grant select on U1.NT_RDWH_SCHEMA_CHANGES_HIST to LOADDB;
+

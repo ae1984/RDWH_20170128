@@ -1,0 +1,55 @@
+﻿create materialized view U1.V_MO_EMUL_RFOL_FOLDER
+using no index
+refresh complete on demand
+as
+select fld.id                    as foldr_id, -- folder_id
+--       fld.c_n                   as foldr_c_n,
+       fld.c_client              as foldr_client, -- client_id
+--       fld.c_result_oper         as foldr_result_oper,
+--       fld.c_result_oper_note    as foldr_result_oper_note,
+--       bp.id                     as bproc_id,
+       bp.c_code                 as bproc_code,
+--       bp.c_name                 as bproc_name,
+--       u1.id                     as kunid_id__kas_vid_delivery,
+--       u1.c_code                 as kunid_code__kas_vid_delivery,
+--       u1.c_name                 as kunid_name__kas_vid_delivery,
+--       u2.id                     as kunid_id__kas_sys_ref,
+       u2.c_code                 as kunid_code__kas_sys_ref,
+--       u2.c_name                 as kunid_name__kas_sys_ref,
+       cp.c_date_create          as cmchp_date_create,
+--       cmw.id                    as cmway_id,
+--       cmw.c_name                as cmway_name,
+       cmw.c_code                as cmway_code,
+--       cmp.id                    as cmpnt_id,
+--       cmp.c_name                as cmpnt_name,
+       cmp.c_code                as cmpnt_code,
+       cmp.c_priority            as cmpnt_priority,
+--       u.id                      as userx_id,
+       u.c_username              as userx_username,
+--       u.c_name                  as userx_name,
+--       sd.id                     as stdpt_id,
+       sd.c_code                 as stdpt_code,
+--       sd.c_name                 as stdpt_name,
+--       dnp.id                    as kudnp_id,
+       dnp.c_code                as kudnp_code,
+       dnp.c_name                as kudnp_name--,
+--       rn.id                     as krdnp_id,
+--       rn.c_name                 as krdnp_name
+from V_RFO_Z#CM_CHECKPOINT cp
+join V_RFO_Z#FOLDERS fld on fld.id = cp.id
+join V_RFO_Z#CM_WAY cmw on cmw.id = cp.c_way and
+     cmw.id in (1441324352, 6503652354, 84522668, 1441325149, 578214112) -- кредитные маршруты
+join V_RFO_Z#BUS_PROCESS bp on bp.id = fld.c_business
+--left join ibs.Z#KAS_UNIVERSAL_D@rfo_test u1 on u1.id = fld.c_kas_vid_delivery
+left join V_RFO_Z#KAS_UNIVERSAL_D u2 on u2.id = fld.c_kas_sys_ref
+join V_RFO_Z#CM_POINT cmp on cmp.id = cp.c_point
+left join V_RFO_Z#USER u on u.id = cp.c_create_user
+left join V_RFO_Z#STRUCT_DEPART sd on sd.id = cp.c_st_depart
+left join V_RFO_Z#KAS_UPRAVL_DNP dnp on dnp.id = sd.c_upravl_dnp_ref
+--left join ibs.Z#KAS_REGION_DNP@rfo_test rn on rn.id = dnp.c_region_ref
+--where fld.id = 6407913912
+where cp.c_date_create > trunc(sysdate) - 30;
+grant select on U1.V_MO_EMUL_RFOL_FOLDER to LOADDB;
+grant select on U1.V_MO_EMUL_RFOL_FOLDER to LOADER;
+
+

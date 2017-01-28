@@ -1,0 +1,89 @@
+﻿create materialized view U1.M_TMP_J_CLI_1
+refresh complete on demand
+as
+select is_deposit,
+       is_deposit_active,
+       is_deposit_depo,
+       is_deposit_acc_demand,
+       is_deposit_acc_current,
+       is_deposit_depo_active,
+       is_deposit_acc_demand_active,
+       is_deposit_acc_current_active,
+       is_credit,
+       is_credit_active,
+       ---
+       count(*) as cnt,
+       count(distinct iin) as iin_cnt
+from (
+select iin,
+       max(is_deposit) as is_deposit,
+       max(is_deposit_active) as is_deposit_active,
+       max(is_deposit_depo) as is_deposit_depo,
+       max(is_deposit_acc_demand) as is_deposit_acc_demand,
+       max(is_deposit_acc_current) as is_deposit_acc_current,
+       max(is_deposit_depo_active) as is_deposit_depo_active,
+       max(is_deposit_acc_demand_active) as is_deposit_acc_demand_active,
+       max(is_deposit_acc_current_active) as is_deposit_acc_current_active,
+       max(is_credit) as is_credit,
+       max(is_credit_active) as is_credit_active
+from (
+select dc.clnt_inn as iin,
+       1 as is_deposit,
+       t.is_active as is_deposit_active,
+       case when t.product_type_name = 'ДОГОВОР СРОЧНОГО ВКЛАДА' then 1 else 0 end as is_deposit_depo,
+       case when t.product_type_name = 'СЧЕТ ДО ВОСТРЕБОВАНИЯ' then 1 else 0 end as is_deposit_acc_demand,
+       case when t.product_type_name = 'ТЕКУЩИЙ СЧЕТ' then 1 else 0 end as is_deposit_acc_current,
+       case when t.product_type_name = 'ДОГОВОР СРОЧНОГО ВКЛАДА' and t.is_active = 1 then 1 else 0 end as is_deposit_depo_active,
+       case when t.product_type_name = 'СЧЕТ ДО ВОСТРЕБОВАНИЯ' and t.is_active = 1 then 1 else 0 end as is_deposit_acc_demand_active,
+       case when t.product_type_name = 'ТЕКУЩИЙ СЧЕТ' and t.is_active = 1 then 1 else 0 end as is_deposit_acc_current_active,
+       null as is_credit,
+       null as is_credit_active
+from V_DWH_DEPOSITS t
+join V_DWH_CLIENT_PHYS_CURRENT dc on dc.clnt_gid = t.clnt_gid
+where t.deal_status_name not in ('АННУЛИРОВАН','ОТКАЗ') and
+      dc.clnt_inn is not null
+union all
+select t.client_iin as iin,
+       null as is_deposit,
+       null as is_deposit_active,
+       null as is_deposit_depo,
+       null as is_deposit_acc_demand,
+       null as is_deposit_acc_current,
+       null as is_deposit_depo_active,
+       null as is_deposit_acc_demand_active,
+       null as is_deposit_acc_current_active,
+       1 as is_credit,
+       t.is_credit_active
+from V_DWH_PORTFOLIO_CURRENT t
+where t.x_is_credit_issued = 1 and
+      t.client_iin is not null
+union all --
+select t.iin,
+       null as is_deposit,
+       null as is_deposit_active,
+       null as is_deposit_depo,
+       null as is_deposit_acc_demand,
+       null as is_deposit_acc_current,
+       null as is_deposit_depo_active,
+       null as is_deposit_acc_demand_active,
+       null as is_deposit_acc_current_active,
+       null as is_credit,
+       null as is_credit_active
+from V_CLIENT_RFO_BY_IIN t --
+) x
+group by iin
+) y
+group by is_deposit,
+         is_deposit_active,
+         is_deposit_depo,
+         is_deposit_acc_demand,
+         is_deposit_acc_current,
+         is_deposit_depo_active,
+         is_deposit_acc_demand_active,
+         is_deposit_acc_current_active,
+         is_credit,
+         is_credit_active;
+grant select on U1.M_TMP_J_CLI_1 to LOADDB;
+grant select on U1.M_TMP_J_CLI_1 to LOADER;
+
+

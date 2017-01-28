@@ -1,0 +1,68 @@
+﻿create materialized view U1.M_APP_MINER_CASH_TERM
+build deferred
+refresh force on demand
+as
+select x.app_id
+
+       ,x.trm_pay_cred_90d_sum
+       ,x.trm_pay_cred_90d_sum_x
+       ,x.trm_pay_90d_cnt
+       ,x.trm_pay_90d_cnt_x
+       ,x.trm_ext_pay_90d_cnt
+       ,x.trm_ext_pay_90d_cnt_x
+
+       ,case when x.trm_pay_90d_cnt > 0 then round(x.trm_ext_pay_90d_cnt/x.trm_pay_90d_cnt*100) end as trm_ext_pay_90d_rat
+       ,case when x.trm_pay_90d_cnt_x > 0 then round(x.trm_ext_pay_90d_cnt_x/x.trm_pay_90d_cnt_x*100) end as trm_ext_pay_90d_rat_x
+from (
+      select t.app_id,
+
+             coalesce(sum(case when ct.document_date >= trunc(t.folder_date_create_mi) - 90
+                                    and ct.document_date < trunc(t.folder_date_create_mi)
+                                    and ((ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'БЕЗНАЛИЧНОЕ ПОПОЛНЕНИЕ')
+                                          or (ct.product = 'KRED_PERS' and ct.cash_oper_name = 'ДОСРОЧНОЕ ГАШЕНИЕ КРЕДИТА')
+                                          or (ct.product = null and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                                          or (ct.product = 'KRED_PERS' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                                          or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ'))
+                               then ct.amount end), 0) as trm_pay_cred_90d_sum,
+
+             coalesce(sum(case when ct.document_date >= trunc(t.folder_date_create_mi) - 90
+                                    and ct.document_date < t.folder_date_create_mi
+                                    and ((ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'БЕЗНАЛИЧНОЕ ПОПОЛНЕНИЕ')
+                                          or (ct.product = 'KRED_PERS' and ct.cash_oper_name = 'ДОСРОЧНОЕ ГАШЕНИЕ КРЕДИТА')
+                                          or (ct.product = null and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                                          or (ct.product = 'KRED_PERS' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ')
+                                          or (ct.product = 'KAS_PC_DOG' and ct.cash_oper_name = 'ЗАЧИСЛЕНИЕ НА ТЕКУЩИЙ СЧЁТЧЕРЕЗ АВТО КАССУ'))
+                               then ct.amount end), 0) as trm_pay_cred_90d_sum_x,
+
+
+             count(case when ct.document_date >= trunc(t.folder_date_create_mi) - 90
+                             and ct.document_date < trunc(t.folder_date_create_mi)
+                         then ct.acash_doc_id end) as trm_pay_90d_cnt,
+
+             count(case when ct.document_date >= trunc(t.folder_date_create_mi) - 90
+                             and ct.document_date < t.folder_date_create_mi
+                         then ct.acash_doc_id end) as trm_pay_90d_cnt_x,
+
+
+             count(case when ct.cash_reg_group in ('Внешнии терминалы "Касса 24"', 'Street Терминалы Каспи банка')
+                             and ct.document_date >= trunc(t.folder_date_create_mi) - 90
+                             and ct.document_date < trunc(t.folder_date_create_mi)
+                         then ct.acash_doc_id end) as trm_ext_pay_90d_cnt,
+
+             count(case when ct.cash_reg_group in ('Внешнии терминалы "Касса 24"', 'Street Терминалы Каспи банка')
+                             and ct.document_date >= trunc(t.folder_date_create_mi) - 90
+                             and ct.document_date < t.folder_date_create_mi
+                         then ct.acash_doc_id end) as trm_ext_pay_90d_cnt_x
+
+      from U1.M_APP_MINER_BAS t
+      join U1.M_CLIENT_LINK cl on cl.rfo_client_id = t.rfo_client_id
+      join U1.M_CASH_TERMINAL ct on ct.rbo_client_id = cl.rbo_client_id
+                                    and ct.document_date >= trunc(t.folder_date_create_mi) - 90
+                                    and ct.document_date < t.folder_date_create_mi
+
+      where t.folder_date_create_mi >= to_date('01-01-2015','dd-mm-yyyy')
+      group by t.app_id
+) x;
+grant select on U1.M_APP_MINER_CASH_TERM to LOADDB;
+
+

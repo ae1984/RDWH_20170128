@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_APP_MINER_RBO_BAS_PRE2
+build deferred
+refresh force on demand
+as
+select am.app_id
+
+       ,sum(case when t1.cred_program_code not in ('DEP_CARD','ZP_KASPI_GOLD','ZP_CARDS')
+                 then pc.amount end) as card_pay_cred_90d_sum
+
+from U1.M_APP_MINER_BAS am
+left join U1.M_RBO_CONTRACT_BAS t1 on t1.rfo_client_id = am.rfo_client_id
+                                      and t1.begin_date < trunc(am.folder_date_create_mi)
+
+left join u1.M_RBO_PAYMENT_CARD pc on pc.rbo_contract_id = t1.rbo_contract_id
+                                      and trunc(pc.oper_date) < trunc(am.folder_date_create_mi)
+                                      and trunc(pc.oper_date) >= trunc(am.folder_date_create_mi) - 90
+
+where am.folder_date_create_mi >= to_date('2015-01-01','yyyy-mm-dd')
+group by am.app_id;
+grant select on U1.M_APP_MINER_RBO_BAS_PRE2 to LOADDB;
+
+

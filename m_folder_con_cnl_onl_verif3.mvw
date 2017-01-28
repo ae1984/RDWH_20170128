@@ -1,0 +1,45 @@
+﻿create materialized view U1.M_FOLDER_CON_CNL_ONL_VERIF3
+refresh force on demand
+as
+select zz.*,
+       case when zz.total_pmts >= 6 then 1 else 0 end as is_not_fraud
+     from (
+        select t.folder_id,
+               t.claim_id,
+
+               --Кол-во платежей
+               sum(case when ch.monthly_client_pmt_bonus < 0 then 0
+                        else ch.monthly_client_pmt_bonus end) as total_pmts
+        from (select ft.rfo_client_id,
+                     ft.folder_id,
+                     ft.claim_id,
+                     ft.folder_date_create_mi
+              from M_FOLDER_CON_CANCEL ft
+              where ft.process_name = 'ОНЛАЙН КРЕДИТ'
+
+              union all
+              select ft2.rfo_client_id,
+                     ft2.folder_id,
+                     ft2.claim_id,
+                     ft2.folder_date_create_mi
+              from M_FOLDER_CON_CANCEL_ONLINE ft2
+              ) t
+
+        --Кол-во платежей
+        left join V_CLIENT_RFO_BY_ID xcl on xcl.rfo_client_id = t.rfo_client_id
+        left join V_CLIENT_CAL cc on cc.client_iin_last = xcl.iin or
+                                     cc.client_rnn_last = xcl.rnn
+        left join (select r111.client_id,
+                          r111.yy_mm_report,
+                          max(r111.planned_pmt_bonus) + min(r111.pmt_penalty) as monthly_client_pmt_bonus
+                   from v_report_cal_1 r111
+                   group by r111.yy_mm_report,
+                            r111.client_id) ch on ch.client_id = cc.client_id and
+                                                  to_date(ch.yy_mm_report, 'yyyy - mm') < t.folder_date_create_mi
+       group by t.folder_id,
+                 t.claim_id
+        ) zz;
+grant select on U1.M_FOLDER_CON_CNL_ONL_VERIF3 to LOADDB;
+grant select on U1.M_FOLDER_CON_CNL_ONL_VERIF3 to LOADER;
+
+

@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_TMP_J_CON_PREV_CON_KN_TK_NC
+refresh complete on demand
+as
+select f.deal_number,
+       count(distinct d.deal_number) as prev_con_cnt,
+       case when count(distinct d.deal_number) > 0 then 0 else 1 end as is_client_new,
+       sum(case when d.actual_end_date is null or d.actual_end_date> trunc(f.begin_date) then 1 else 0 end) as ACTIV_credit_num,
+       sum(months_between (coalesce(d.actual_end_date, trunc(f.begin_date)),d.x_start_date)) as MONTHS_LIVED,
+       min(d.x_start_date_actual) as first_con_start_date,
+       max(d.x_start_date_actual) as last_con_start_date,
+       max(d.actual_end_date) as last_con_actual_end_date,
+       floor(months_between(trunc(min(f.x_start_date_actual)), min(d.x_start_date_actual))) as first_con_start_mon_ago,
+       floor(months_between(trunc(min(f.x_start_date_actual)), max(d.x_start_date_actual))) as last_con_start_mon_ago,
+       floor(months_between(trunc(min(f.x_start_date_actual)), max(d.actual_end_date))) as last_con_actual_end_mon_ago,
+     sum(case when d.is_refin = 1 and d.actual_end_date<=trunc(f.begin_date) then 1 else 0 end) as NUM_REFIN
+from u1.V_DWH_PORTFOLIO_CURRENT f
+left join (select * from u1.V_DWH_PORTFOLIO_CURRENT d1
+          join u1.m_contract_cal_Del_plus cdp on d1.deal_number = cdp.contract_number
+          )d on d.client_iin = f.client_iin and
+                                       d.x_start_date_actual < trunc(f.x_start_date_actual) and
+                                       d.x_is_credit_issued = 1 and
+                                       d.x_product_type in ('ДЕНЬГИ','ТОВАРЫ') and d.x_is_card = 0
+where f.x_is_credit_issued = 1 and
+      f.x_start_date_actual is not null
+group by f.deal_number;
+grant select on U1.M_TMP_J_CON_PREV_CON_KN_TK_NC to LOADDB;
+grant select on U1.M_TMP_J_CON_PREV_CON_KN_TK_NC to LOADER;
+
+

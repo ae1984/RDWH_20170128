@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_RFO_KAS_CLIENT_CLAIMS90D
+build deferred
+refresh force on demand
+as
+select /*+paralle(1)*/ c.c_inn,
+       count(tt.id) as amount_of_claims_90days
+
+  from (select  t.c_form_client_st#inn as c_inn,
+                max(b.c_date_create)   as c_date_create
+          from u1.t_RFO_Z#KAS_ONLINE_CLAIM t
+          join u1.t_rfo_z#kas_online_buy b on b.id = t.c_buy_ref
+          group by t.c_form_client_st#inn) c
+left join u1.t_RFO_Z#KAS_ONLINE_CLAIM tt on tt.c_form_client_st#inn = c.c_inn
+join u1.t_rfo_z#kas_online_buy bb        on tt.c_buy_ref = bb.id
+                                         and bb.c_date_create  >= c.c_date_create - 90
+
+group by c.c_inn;
+grant select on U1.M_RFO_KAS_CLIENT_CLAIMS90D to LOADDB;
+
+

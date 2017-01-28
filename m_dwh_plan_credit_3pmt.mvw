@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_DWH_PLAN_CREDIT_3PMT
+refresh complete on demand
+as
+select q.crdtplanr_date_plan_pay as date_due,
+       q.crdt_number as deal_number,
+       q.crdtplanr_number as date_due_rn,
+       sum(q.crdtplanr_plan_payment_amount) as pmt_amount
+  from u1.M_DWH_PLAN_OPER_CREDIT q
+ where q.crdtplanr_number < 4
+ group by q.crdtplanr_date_plan_pay, q.crdt_number, q.crdtplanr_number;
+grant select on U1.M_DWH_PLAN_CREDIT_3PMT to LOADDB;
+grant select on U1.M_DWH_PLAN_CREDIT_3PMT to LOADER;
+
+

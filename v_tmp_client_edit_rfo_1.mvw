@@ -1,0 +1,42 @@
+﻿create materialized view U1.V_TMP_CLIENT_EDIT_RFO_1
+using no index
+refresh complete on demand
+as
+select
+p.id,
+t.folder_id,
+t.folder_state,
+t.folder_date_create,
+t.route_point_code,
+t.route_point_name,
+t.rfo_client_id,
+t.is_credit_issued,
+t.process_code,
+t.process_name,
+t.route_code,
+t.route_name,
+       p.c_cl_req_old#inn,
+       p.c_cl_req_new#inn,
+       p.c_cl_req_new#kas_iin,
+       p.c_cl_req_old#pasport#type,
+       p.c_cl_req_new#pasport#type as c_main_doc#type,
+       p.c_cl_req_old#pasport#num,
+       p.c_cl_req_new#pasport#num as c_main_doc#num,
+       p.c_cl_req_old#pasport#seria,
+       p.c_cl_req_new#pasport#seria as c_main_doc#seria,
+       p.c_cl_req_old#pasport#date_doc,
+       p.c_cl_req_new#pasport#date_doc as c_main_doc#date_doc,
+       p.c_cl_req_old#pasport#date_end,
+       p.c_cl_req_new#pasport#date_end as c_main_doc#date_end
+from u1.V_FOLDER_ALL_RFO t
+join u1.V_RFO_Z#RDOC rd on rd.collection_id = t.fld_c_docs
+join u1.V_RFO_Z#FDOC fd on fd.id = rd.c_doc
+join u1.V_RFO_Z#REQ_EDIT_CL_PRIV p on p.id = fd.id
+where t.route_code = 'EDIT_CL_PRIV'
+--and p.c_cl_req_new#pasport#date_doc is not null
+and p.c_cl_req_new#inn is not null
+and t.route_point_name not in ('ОТМЕНЕНО', 'ОТКАЗ КОНТРОЛЕРА', 'ОТКАЗ КЛИЕНТА', 'ОТКАЗАНО', 'ОТКЛОНЕНА', 'ОТКАЗ ОПЕРАТОРА');
+grant select on U1.V_TMP_CLIENT_EDIT_RFO_1 to LOADDB;
+grant select on U1.V_TMP_CLIENT_EDIT_RFO_1 to LOADER;
+
+

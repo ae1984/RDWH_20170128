@@ -1,0 +1,97 @@
+﻿create materialized view U1.M_TMP_R_DEL_REP
+refresh force on demand
+as
+select /* noparallel */ t.rep_date,
+       max (to_char(c.rep_date,'yyyy - mm')) as rep_months,
+       max (to_char(c.x_start_date_actual,'yyyy - mm')) as start_months,
+       case when t.delinq_days = 8 then t.total_debt end as delinq_days_8,
+       case when t.delinq_days = 31 then t.total_debt end as delinq_days_31,
+       case when t.delinq_days >= 8 and t.delinq_days < 31 then t.total_debt end as del_8_30,
+       case when t.delinq_days >= 31 and t.delinq_days < 61 then t.total_debt end as del_31_60,
+       sum(t.total_debt),
+       max(q.brand),
+       max(q.model),
+       max(q.color),
+       max(q.engine_volume),
+       max(q.prod_year),
+       max(m.children),
+       max(c.unp_name),
+       max(q.age_full_years_cat),
+       max(m.work_expr_last_place_mon_floor),
+       max(m.cli_age_con_cat),
+       --max(a.initial_payment)
+       max(q.auto_price_cat),
+       max(q.initial_payment_cat)
+
+
+
+from DWH_PORT t
+join V_DWH_PORTFOLIO_CURRENT c on c.deal_number = t.deal_number
+join v_folder_all_rfo fa on fa.folder_id = c.folder_id_first
+join (
+      select /*+ noparallel */ t.form_client_id,
+           (case when t.age_full_years<=20 then '18-20'
+            when  t.age_full_years<=25 then '21-25'
+            when t.age_full_years<=30 then '26-30'
+            when t.age_full_years<=35 then '31-35'
+            when t.age_full_years<=40 then '36-40'
+            when t.age_full_years<=45 then '41-45'
+            when t.age_full_years<=50 then '46-50'
+            when t.age_full_years<=55 then '51-55'
+            when t.age_full_years is null then 'blank' else '>55' end) as age_full_years_cat
+      from v_form_client_all_rfo t )q on q.form_client_id = fa.form_client_id
+join (select /*+ noparallel */  (case when cli_age_basing_on_con_mon_fl = 0 then '0'
+       when cli_age_basing_on_con_mon_fl is null then 'blank'
+       when cli_age_basing_on_con_mon_fl < 0 then '<0'
+       when cli_age_basing_on_con_mon_fl > 0 and cli_age_basing_on_con_mon_fl <= 6 then '<=6'
+       when cli_age_basing_on_con_mon_fl > 6 and cli_age_basing_on_con_mon_fl <= 12 then '6-12'
+       when cli_age_basing_on_con_mon_fl > 12 and cli_age_basing_on_con_mon_fl <= 24 then '12-24'
+       when cli_age_basing_on_con_mon_fl > 24 and cli_age_basing_on_con_mon_fl <= 36 then '24-36'
+       when cli_age_basing_on_con_mon_fl > 36 and cli_age_basing_on_con_mon_fl <= 48 then '36-48'
+       when cli_age_basing_on_con_mon_fl > 48 and cli_age_basing_on_con_mon_fl <= 60 then '48-60'
+       when cli_age_basing_on_con_mon_fl > 60 and cli_age_basing_on_con_mon_fl <= 72 then '60-72'
+       when cli_age_basing_on_con_mon_fl > 72 and cli_age_basing_on_con_mon_fl <= 84 then '72-84'
+       when cli_age_basing_on_con_mon_fl > 84 and cli_age_basing_on_con_mon_fl <= 96 then '84-96'
+       when cli_age_basing_on_con_mon_fl > 96 and cli_age_basing_on_con_mon_fl <= 108 then '96-108'
+       else '>108' end) as cli_age_con_cat,
+       q.*
+     from m_folder_con_miner q) m on m.contract_number = t.deal_number
+join (
+       select distinct (z.contract_number), z. initial_payment_cat,
+            z.brand,z.model,z.color, z.cr_program_code,
+            z.engine_volume, z.dealer_org, z.prod_year, z.auto_price_cat
+      from (
+            select case when t.auto_price <=500000 then '500'
+                         when t.auto_price <=1000000 then '1mln'
+                         when t.auto_price <=1500000 then '1.5mln'
+                         when t.auto_price <=2000000 then '2mln'
+                         when t.auto_price <=2500000 then '2.5mln'
+                         when t.auto_price <=3000000 then '3mln'
+                         when t.auto_price <=3500000 then '3.5mln'
+                         when t.auto_price is null then 'blsnk' else '>3.5mln' end as auto_price_cat,
+                   case when (t.initial_payment/t.auto_price)*100 = 0 then '0%'
+                        when (t.initial_payment/t.auto_price)*100 <=10 then '10%'
+                          when (t.initial_payment/t.auto_price)*100 <= 20 then '20%'
+                          when (t.initial_payment/t.auto_price)*100 <= 30 then '30%'
+                          when (t.initial_payment/t.auto_price)*100 <= 50 then '50%'
+                          when (t.initial_payment/t.auto_price)*100 <= 70 then '70%'
+                          when (t.initial_payment/t.auto_price)*100 >70 then '>70%'
+                          when (t.initial_payment/t.auto_price)*100 is null then 'blank' end as initial_payment_cat,
+                    t.contract_number, t.brand,t.model,t.color, t.cr_program_code,
+                    t.engine_volume, t.dealer_org, t.prod_year
+            from V_CONTRACT_ALL_RFO_AUTO t
+            where t.contract_number is not null and t.date_end is not null
+       )z--этих договоров еще нет в РБO
+   )q
+           on q.contract_number = t.deal_number
+where t.rep_date >= to_date('2014-10-01','yyyy-mm-dd')
+group by t.rep_date,
+         case when t.delinq_days = 8 then t.total_debt end,
+         case when t.delinq_days = 31 then t.total_debt end ,
+         case when t.delinq_days >= 8 and t.delinq_days < 31 then t.total_debt end ,
+         case when t.delinq_days >= 31 and t.delinq_days < 61 then t.total_debt end ,
+         case when t.delinq_days >= 91 then t.total_debt end;
+grant select on U1.M_TMP_R_DEL_REP to LOADDB;
+grant select on U1.M_TMP_R_DEL_REP to LOADER;
+
+

@@ -1,0 +1,35 @@
+﻿create table U1.T_RDWH_PARTNER_TYPE
+(
+  id              NUMBER,
+  partner_code    VARCHAR2(200) not null,
+  activ_type      VARCHAR2(200) not null,
+  shop_group_name VARCHAR2(200),
+  partner_type    VARCHAR2(2) not null
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RDWH_PARTNER_TYPE
+  is 'Данные по видам партнеров';
+comment on column U1.T_RDWH_PARTNER_TYPE.id
+  is 'Идентификатор';
+comment on column U1.T_RDWH_PARTNER_TYPE.partner_code
+  is 'Код партнера (Z#KAS_PARTNER)';
+comment on column U1.T_RDWH_PARTNER_TYPE.activ_type
+  is 'Вид деятельности';
+comment on column U1.T_RDWH_PARTNER_TYPE.shop_group_name
+  is 'Группа магазинов';
+comment on column U1.T_RDWH_PARTNER_TYPE.partner_type
+  is 'Тип партнера';
+grant select on U1.T_RDWH_PARTNER_TYPE to LOADDB;
+grant select on U1.T_RDWH_PARTNER_TYPE to LOADER;
+

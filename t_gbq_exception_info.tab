@@ -1,0 +1,27 @@
+﻿create table U1.T_GBQ_EXCEPTION_INFO
+(
+  id          NUMBER,
+  hit_id      VARCHAR2(50),
+  description VARCHAR2(600),
+  is_fatal    NUMBER(1),
+  idate       TIMESTAMP(6)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on column U1.T_GBQ_EXCEPTION_INFO.id
+  is 'Идентификатор';
+comment on column U1.T_GBQ_EXCEPTION_INFO.hit_id
+  is 'ID посещения страницы';
+grant select on U1.T_GBQ_EXCEPTION_INFO to LOADDB;
+

@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_RBO_CALENDAR_VALUE
+build deferred
+refresh complete on demand
+as
+select distinct
+      calendar_name,
+      value,
+      type
+ from rdwh.V_RBO_CALENDAR_VALUE@rdwh_exd
+union all
+select 'HOLIDAYS_W',to_date('01-01-2013','dd-mm-yyyy'),'+'
+from dual
+union all
+select 'HOLIDAYS_W',to_date('02-01-2013','dd-mm-yyyy'),'+'
+from dual
+union all
+select 'HOLIDAYS_W',to_date('06-07-2010','dd-mm-yyyy'),'+'
+from dual
+union all
+select 'HOLIDAYS_W',to_date('06-07-2011','dd-mm-yyyy'),'+'
+from dual
+union all
+select 'HOLIDAYS_W',to_date('06-07-2012','dd-mm-yyyy'),'+'
+from dual
+union all
+select 'HOLIDAYS_W',to_date('06-07-2015','dd-mm-yyyy'),'+'
+from dual
+union all
+select 'HOLIDAYS_W',to_date('07-05-2012','dd-mm-yyyy'),'+'
+from dual
+union all
+select 'HOLIDAYS_W',to_date('21-03-2008','dd-mm-yyyy'),'+'
+from dual
+union all
+select 'HOLIDAYS_W',to_date('01-01-2012','dd-mm-yyyy'),'+'
+from dual
+union all
+select 'HOLIDAYS_W',to_date('02-01-2012','dd-mm-yyyy'),'+'
+from dual
+union all
+select calendar_name, value, type from T_CALENDAR_VALUE_HST;
+grant select on U1.M_RBO_CALENDAR_VALUE to LOADDB;
+
+

@@ -1,0 +1,33 @@
+﻿create table U1.NT_RDWH_PROC_OBJECT_HIST
+(
+  sdt                  DATE,
+  type_load            VARCHAR2(20) not null,
+  proc_name            VARCHAR2(50) not null,
+  object_name          VARCHAR2(250) not null,
+  priority             NUMBER(5,2) not null,
+  object_type          VARCHAR2(15) not null,
+  proc_priority        NUMBER(5),
+  is_critical          NUMBER(1),
+  is_used              NUMBER(1) not null,
+  comments             VARCHAR2(2000),
+  is_main_object       VARCHAR2(1),
+  id                   NUMBER(32) not null,
+  load_group           VARCHAR2(50),
+  reference_from_event VARCHAR2(50),
+  check_proc           VARCHAR2(50)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_RDWH_PROC_OBJECT_HIST to LOADDB;
+

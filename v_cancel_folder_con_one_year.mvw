@@ -1,0 +1,81 @@
+﻿create materialized view U1.V_CANCEL_FOLDER_CON_ONE_YEAR
+refresh complete on demand
+as
+select f.folder_id,
+       f.contract_id as rfo_contract_id,
+       fa.rfo_client_id,
+       cc.contract_number,
+       to_char(f.folder_date_create,'yyyy - mm') as folder_date_month,
+       trunc(f.folder_date_create) as folder_date_day,
+       to_char(trunc(f.folder_date_create),'yyyy-mm-dd') as folder_date_day_text,
+
+       f.cred_prog_code,
+       f.cred_prog_name,
+       f.is_card,
+       f.contract_date_begin,
+       f.set_revolve_date,
+       f.contract_amount,
+       f.is_credit_issued,
+
+       fa.folder_state,
+       cc.contract_status_name as contract_status,
+       fa.process_name,
+       fa.route_name,
+       po.dnp_region,
+       b.branch_name,
+       fa.dnp_name,
+       po.pos_code,
+       po.pos_name,
+       po.partner,
+       fa.expert_name,
+
+       c.folder_id as cancel_folder_id,
+       c.cancel_type_group,
+       c.cancel_type_code,
+       c.cancel_type_name,
+       c.scorecard,
+       c.user_name as cancel_user_name,
+       c.user_num_tab as cancel_user_num_tab,
+       case when fa.folder_state like 'ОТКАЗ%' then fa.folder_state end as cancel_folder_state,
+       case when c.cancel_type_group in ('AUTO','GCVP') then 1 else 0 end as is_prescoring_cancel,
+
+       case when c.cancel_type_group in ('AUTO','GCVP') then 'PRESCORING'
+            else c.cancel_type_group end as cancel_type_group_new,
+
+       fa.is_daytime_decision_folder,
+       cc.cr_scheme_name as cred_scheme,
+       cc.tariff_plan_name as tariff_plan,
+       cc.is_aa_approved,
+       p.pkb_rep_status,
+
+       case when f.cred_prog_code in ('BEST_MONEY','POST_MONEY','OSOB_CLIENT','MONEY_KN_P',
+                                      'MONEY','EC_MONEY','OSOB_CLIENT_MONEY','EC_MANY') then 'ДЕНЬГИ'
+            when f.cred_prog_code in ('OSOB_CLIENT_PC','PC_POST_CLIENT','PC_BEST_CLIENT',
+                                      'KAS_PC_DOG','ZP_CARDS','PROST_KART') then 'КАРТЫ'
+            when f.cred_prog_code in ('AUTO_SERV','GU_AVTO','AUTO_USE','GU_AVTO_REF','GU_AVTO_BU','GU_AVTO_ZALOG') then 'АВТО'
+            when f.cred_prog_code in ('EC_GOODS','EC_SERVICE','EC_GOODS_STAND','EC_SERVICE_STAND') then 'ТОВАРЫ'
+            else 'ДРУГОЕ' end as product_type,
+       case when fm.folder_id is not null then 1 else 0 end as is_mo_reject_mixed
+from V_FOLDER_CON_ONE_YEAR f
+join V_FOLDER_ALL_RFO fa on fa.folder_id = f.folder_id
+left join V_CANCEL_ONE_YEAR c on c.folder_id = f.folder_id and c.cancel_level = 1 --and f.is_credit_issued = 0
+left join V_CONTRACT_ALL_RFO cc on cc.rfo_contract_id = f.contract_id
+left join (
+    select pkb.folder_id,
+           decode(max(decode(pkb.report_status,'OK',2,'БЕКИ',1)),2,'OK',1,'БЕКИ') as pkb_rep_status
+    from V_PKB_REPORT pkb
+    where pkb.rfo_report_date >= add_months(trunc(sysdate,'mm'),-12) and pkb.folder_id is not null
+    group by pkb.folder_id
+) p on p.folder_id = f.folder_id
+left join V_POS po on po.pos_code = fa.pos_code
+left join V_BRANCH b on b.dep_code = po.branch_code
+left join (
+  select distinct c1.folder_id from V_CANCEL_ONE_YEAR c1
+  where c1.cancel_level = 1 and c1.cancel_type_group = 'MO-MO_SCO_REJECT'
+  group by c1.folder_id having count(*) > 1
+) fm on fm.folder_id = f.folder_id
+where f.cred_prog_code != 'INSURANCE';
+grant select on U1.V_CANCEL_FOLDER_CON_ONE_YEAR to LOADDB;
+grant select on U1.V_CANCEL_FOLDER_CON_ONE_YEAR to LOADER;
+
+

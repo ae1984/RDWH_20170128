@@ -1,0 +1,42 @@
+﻿create materialized view U1.M_TMP_J_K2_E
+refresh force on demand
+as
+select --c.yy_mm_start_last, -- месяц выдачи кредита или выдачи/установки револьверности по карте
+       /*p.pkb_contract_status || ' ' || */--p.contract_status_clean as pkb_con_status,
+--    p.report_type, p.pkb_contract_status, p.contract_status_clean,
+--    p.contract_status_clean, p.pkb_contract_status, /*p.c_subj_role,*/  /*p.c_fin_inst,*/ /*p.c_cr_purpose, p.c_subj_role, p.c_dog_type,*/
+--         floor(/*nvl(*/p.delinq_amount/*,0)*//3000)*3000 as delinq_amount,--, floor(p.total_debt/25000)*25000 as total_debt,
+
+    -- ПРОВЕРКА
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt, -- проверка - если эти два поля равны, значит выборка верна
+    -- ПРОДАЖИ
+    round(sum(c.max_debt_used) / 1000000) as sales_mln, -- USE THIS! - продажи, млн
+    round(sum(c.max_debt_used)) as sales, -- продажи
+    -- ПРОСРОЧКА
+    round(sum(c.delinq_rate_b_w * c.max_debt_used) / sum(c.max_debt_used),4) as del_rate_b_w, -- USE THIS! - просрочка всего по-новому
+--    round(sum(c.delinq_rate_g * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_g, -- USE THIS! - просрочка всего по-новому
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate, -- просрочка всего по-старому
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1, -- USE THIS! - просрочка 1-го платежа
+    round(sum(c.delinq_rate_npl * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_npl -- USE THIS! - просрочка по NPL (>=90 days)
+from M_CONTRACT_CAL_DEL c
+join V_CONTRACT_CAL cc on cc.contract_number = c.contract_number
+
+--join M_FOLDER_CON_CANCEL f on f.folder_id = c.folder_id_first and --f.is_refin = 0 --and
+--                              f.contract_number = c.contract_number
+--left join M_TMP_J_K3 p on p.folder_id = c.folder_id_first --and p.pkb_contract_status ='АКТИВНЫЙ' --and
+                          --and p.report_type = 'ПЕРВИЧНЫЙ'
+                               --nvl(p.total_debt,1000000000) >= 4500
+join M_TMP_J_K6 k on k.deal_number = c.contract_number
+where not exists (select null from M_FOLDER_CON_CANCEL f where f.folder_id = c.folder_id_first and f.is_refin = 1) and
+      not exists (select null from M_REJECTED_CONTRACTS r where r.contract_number = c.contract_number) and
+      --cc.is_refin_restruct_first != 1 and ----- !!!!!!!!!!!!!!!!!!!!!
+      (c.yy_mm_start_last like '2013 - %') and
+      cc.product_start_last = 'КН' and
+--      c.yy_mm_start_last in ('2014 - 01','2014 - 02','2014 - 03','2014 - 04','2014 - 05','2014 - 05','2014 - 06')) --and
+--      k.kdn_simple_nom_rate >= 100 and k.kdn_simple_nom_rate < 150 and
+      k.kdn_simple_nom_rate > 0 and k.kdn_simple_nom_rate < 10 and
+      cc.contract_term_months_last >= 48 and cc.contract_term_months_last <= 59;
+grant select on U1.M_TMP_J_K2_E to LOADDB;
+grant select on U1.M_TMP_J_K2_E to LOADER;
+
+

@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_TMP_J_SN_2
+refresh complete on demand
+as
+select s.folder_id, s.rfo_client_id, s.rfo_client_id_circle_1,
+       c.iin as rfo_client_iin_circle_1,
+       trunc(f.folder_date_create) as folder_date_create
+from M_TMP_J_SN_1 s
+join V_CLIENT_RFO_BY_ID c on c.rfo_client_id = s.rfo_client_id_circle_1
+join V_FOLDER_ALL_RFO f on f.folder_id = s.folder_id;
+grant select on U1.M_TMP_J_SN_2 to LOADDB;
+grant select on U1.M_TMP_J_SN_2 to LOADER;
+
+

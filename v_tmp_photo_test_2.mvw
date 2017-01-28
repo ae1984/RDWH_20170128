@@ -1,0 +1,30 @@
+﻿create materialized view U1.V_TMP_PHOTO_TEST_2
+using no index
+refresh complete on demand
+as
+select * from (
+select distinct
+a.rfo_client_id,
+a.folder_id,
+a.folder_date_create,
+a.folder_state,
+a.process_name,
+c.iin,
+d.photo_date,
+d.photo_name,
+d.c_uid
+from v_folder_all_rfo a
+join v_verification b on a.folder_id = b.folder_id
+and b.verif_photo_result = 'ОДОБРЕНИЕ'
+join V_CLIENT_RFO_BY_ID c on a.rfo_client_id = c.rfo_client_id
+join V_CLIENT_IMAGES d on c.iin = d.iin and trunc(b.verif_doc_date)-trunc(d.photo_date)=0 and d.photo_name not like '%DOC_UD_LICHNOST%' and d.photo_name not like '%УД%'
+where a.process_name in ('КАСПИЙСКИЙ. ВЫДАЧА АВТОКРЕДИТА НА КАРТУ',
+'КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НА КАРТУ',
+'КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НАЛИЧНЫМИ НА КАРТУ')
+and trunc(a.folder_date_create) >= to_date('01.08.2014', 'dd.mm.yyyy')
+order by a.folder_date_create) a
+where rownum<=30000;
+grant select on U1.V_TMP_PHOTO_TEST_2 to LOADDB;
+grant select on U1.V_TMP_PHOTO_TEST_2 to LOADER;
+
+

@@ -1,0 +1,37 @@
+﻿create table U1.NT_TASKS_EXECUTE_HIST2
+(
+  id            NUMBER,
+  ins_dt        DATE,
+  group_num     NUMBER,
+  task_num      NUMBER,
+  task_name     VARCHAR2(100),
+  sql_exec      CLOB,
+  task_start    DATE,
+  task_end      DATE,
+  err           CLOB,
+  status        VARCHAR2(100),
+  detail        VARCHAR2(1000),
+  object_name   VARCHAR2(100),
+  job_prefix    VARCHAR2(100),
+  update_log_id NUMBER,
+  send_mail     DATE,
+  task_id       NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+alter table U1.NT_TASKS_EXECUTE_HIST2
+  add constraint BIN$P0rui01wCTbgUwoRFFV45Q==$0
+  check ("ID" IS NOT NULL);
+grant select on U1.NT_TASKS_EXECUTE_HIST2 to LOADDB;
+

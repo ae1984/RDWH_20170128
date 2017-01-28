@@ -1,0 +1,496 @@
+﻿create table U1.T_MO_RFOLDER_PAR_VALUE_2015
+(
+  id                     NUMBER not null,
+  rfolder_id             NUMBER not null,
+  d_par_id               NUMBER not null,
+  value_text             VARCHAR2(2048),
+  value_date             DATE,
+  value_number           NUMBER,
+  date_create            TIMESTAMP(6) default systimestamp not null,
+  date_update            TIMESTAMP(6),
+  d_par_datatype_id      NUMBER default 1 not null,
+  calc_par_value_last_id NUMBER,
+  value_index            NUMBER,
+  d_par_object_id        NUMBER,
+  d_system_id            NUMBER,
+  value_index2           NUMBER
+)
+partition by range (DATE_CREATE) interval (NUMTOYMINTERVAL(1, 'MONTH'))
+subpartition by hash (RFOLDER_ID)
+(
+  partition P0 values less than (TIMESTAMP' 2015-02-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP3825 tablespace USERS_ARC,
+    subpartition SYS_SUBP3826 tablespace USERS_ARC,
+    subpartition SYS_SUBP3827 tablespace USERS_ARC,
+    subpartition SYS_SUBP3828 tablespace USERS_ARC,
+    subpartition SYS_SUBP3829 tablespace USERS_ARC,
+    subpartition SYS_SUBP3830 tablespace USERS_ARC,
+    subpartition SYS_SUBP3831 tablespace USERS_ARC,
+    subpartition SYS_SUBP3832 tablespace USERS_ARC,
+    subpartition SYS_SUBP3833 tablespace USERS_ARC,
+    subpartition SYS_SUBP3834 tablespace USERS_ARC,
+    subpartition SYS_SUBP3835 tablespace USERS_ARC,
+    subpartition SYS_SUBP3836 tablespace USERS_ARC,
+    subpartition SYS_SUBP3837 tablespace USERS_ARC,
+    subpartition SYS_SUBP3838 tablespace USERS_ARC,
+    subpartition SYS_SUBP3839 tablespace USERS_ARC,
+    subpartition SYS_SUBP3840 tablespace USERS_ARC,
+    subpartition SYS_SUBP3841 tablespace USERS_ARC,
+    subpartition SYS_SUBP3842 tablespace USERS_ARC,
+    subpartition SYS_SUBP3843 tablespace USERS_ARC,
+    subpartition SYS_SUBP3844 tablespace USERS_ARC,
+    subpartition SYS_SUBP3845 tablespace USERS_ARC,
+    subpartition SYS_SUBP3846 tablespace USERS_ARC,
+    subpartition SYS_SUBP3847 tablespace USERS_ARC,
+    subpartition SYS_SUBP3848 tablespace USERS_ARC,
+    subpartition SYS_SUBP3849 tablespace USERS_ARC,
+    subpartition SYS_SUBP3850 tablespace USERS_ARC,
+    subpartition SYS_SUBP3851 tablespace USERS_ARC,
+    subpartition SYS_SUBP3852 tablespace USERS_ARC,
+    subpartition SYS_SUBP3853 tablespace USERS_ARC,
+    subpartition SYS_SUBP3854 tablespace USERS_ARC,
+    subpartition SYS_SUBP3855 tablespace USERS_ARC,
+    subpartition SYS_SUBP3856 tablespace USERS_ARC
+  ),
+  partition SYS_P3889 values less than (TIMESTAMP' 2015-03-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP3857 tablespace USERS_ARC,
+    subpartition SYS_SUBP3858 tablespace USERS_ARC,
+    subpartition SYS_SUBP3859 tablespace USERS_ARC,
+    subpartition SYS_SUBP3860 tablespace USERS_ARC,
+    subpartition SYS_SUBP3861 tablespace USERS_ARC,
+    subpartition SYS_SUBP3862 tablespace USERS_ARC,
+    subpartition SYS_SUBP3863 tablespace USERS_ARC,
+    subpartition SYS_SUBP3864 tablespace USERS_ARC,
+    subpartition SYS_SUBP3865 tablespace USERS_ARC,
+    subpartition SYS_SUBP3866 tablespace USERS_ARC,
+    subpartition SYS_SUBP3867 tablespace USERS_ARC,
+    subpartition SYS_SUBP3868 tablespace USERS_ARC,
+    subpartition SYS_SUBP3869 tablespace USERS_ARC,
+    subpartition SYS_SUBP3870 tablespace USERS_ARC,
+    subpartition SYS_SUBP3871 tablespace USERS_ARC,
+    subpartition SYS_SUBP3872 tablespace USERS_ARC,
+    subpartition SYS_SUBP3873 tablespace USERS_ARC,
+    subpartition SYS_SUBP3874 tablespace USERS_ARC,
+    subpartition SYS_SUBP3875 tablespace USERS_ARC,
+    subpartition SYS_SUBP3876 tablespace USERS_ARC,
+    subpartition SYS_SUBP3877 tablespace USERS_ARC,
+    subpartition SYS_SUBP3878 tablespace USERS_ARC,
+    subpartition SYS_SUBP3879 tablespace USERS_ARC,
+    subpartition SYS_SUBP3880 tablespace USERS_ARC,
+    subpartition SYS_SUBP3881 tablespace USERS_ARC,
+    subpartition SYS_SUBP3882 tablespace USERS_ARC,
+    subpartition SYS_SUBP3883 tablespace USERS_ARC,
+    subpartition SYS_SUBP3884 tablespace USERS_ARC,
+    subpartition SYS_SUBP3885 tablespace USERS_ARC,
+    subpartition SYS_SUBP3886 tablespace USERS_ARC,
+    subpartition SYS_SUBP3887 tablespace USERS_ARC,
+    subpartition SYS_SUBP3888 tablespace USERS_ARC
+  ),
+  partition SYS_P3922 values less than (TIMESTAMP' 2015-04-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP3890 tablespace USERS_ARC,
+    subpartition SYS_SUBP3891 tablespace USERS_ARC,
+    subpartition SYS_SUBP3892 tablespace USERS_ARC,
+    subpartition SYS_SUBP3893 tablespace USERS_ARC,
+    subpartition SYS_SUBP3894 tablespace USERS_ARC,
+    subpartition SYS_SUBP3895 tablespace USERS_ARC,
+    subpartition SYS_SUBP3896 tablespace USERS_ARC,
+    subpartition SYS_SUBP3897 tablespace USERS_ARC,
+    subpartition SYS_SUBP3898 tablespace USERS_ARC,
+    subpartition SYS_SUBP3899 tablespace USERS_ARC,
+    subpartition SYS_SUBP3900 tablespace USERS_ARC,
+    subpartition SYS_SUBP3901 tablespace USERS_ARC,
+    subpartition SYS_SUBP3902 tablespace USERS_ARC,
+    subpartition SYS_SUBP3903 tablespace USERS_ARC,
+    subpartition SYS_SUBP3904 tablespace USERS_ARC,
+    subpartition SYS_SUBP3905 tablespace USERS_ARC,
+    subpartition SYS_SUBP3906 tablespace USERS_ARC,
+    subpartition SYS_SUBP3907 tablespace USERS_ARC,
+    subpartition SYS_SUBP3908 tablespace USERS_ARC,
+    subpartition SYS_SUBP3909 tablespace USERS_ARC,
+    subpartition SYS_SUBP3910 tablespace USERS_ARC,
+    subpartition SYS_SUBP3911 tablespace USERS_ARC,
+    subpartition SYS_SUBP3912 tablespace USERS_ARC,
+    subpartition SYS_SUBP3913 tablespace USERS_ARC,
+    subpartition SYS_SUBP3914 tablespace USERS_ARC,
+    subpartition SYS_SUBP3915 tablespace USERS_ARC,
+    subpartition SYS_SUBP3916 tablespace USERS_ARC,
+    subpartition SYS_SUBP3917 tablespace USERS_ARC,
+    subpartition SYS_SUBP3918 tablespace USERS_ARC,
+    subpartition SYS_SUBP3919 tablespace USERS_ARC,
+    subpartition SYS_SUBP3920 tablespace USERS_ARC,
+    subpartition SYS_SUBP3921 tablespace USERS_ARC
+  ),
+  partition SYS_P3955 values less than (TIMESTAMP' 2015-05-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP3923 tablespace USERS_ARC,
+    subpartition SYS_SUBP3924 tablespace USERS_ARC,
+    subpartition SYS_SUBP3925 tablespace USERS_ARC,
+    subpartition SYS_SUBP3926 tablespace USERS_ARC,
+    subpartition SYS_SUBP3927 tablespace USERS_ARC,
+    subpartition SYS_SUBP3928 tablespace USERS_ARC,
+    subpartition SYS_SUBP3929 tablespace USERS_ARC,
+    subpartition SYS_SUBP3930 tablespace USERS_ARC,
+    subpartition SYS_SUBP3931 tablespace USERS_ARC,
+    subpartition SYS_SUBP3932 tablespace USERS_ARC,
+    subpartition SYS_SUBP3933 tablespace USERS_ARC,
+    subpartition SYS_SUBP3934 tablespace USERS_ARC,
+    subpartition SYS_SUBP3935 tablespace USERS_ARC,
+    subpartition SYS_SUBP3936 tablespace USERS_ARC,
+    subpartition SYS_SUBP3937 tablespace USERS_ARC,
+    subpartition SYS_SUBP3938 tablespace USERS_ARC,
+    subpartition SYS_SUBP3939 tablespace USERS_ARC,
+    subpartition SYS_SUBP3940 tablespace USERS_ARC,
+    subpartition SYS_SUBP3941 tablespace USERS_ARC,
+    subpartition SYS_SUBP3942 tablespace USERS_ARC,
+    subpartition SYS_SUBP3943 tablespace USERS_ARC,
+    subpartition SYS_SUBP3944 tablespace USERS_ARC,
+    subpartition SYS_SUBP3945 tablespace USERS_ARC,
+    subpartition SYS_SUBP3946 tablespace USERS_ARC,
+    subpartition SYS_SUBP3947 tablespace USERS_ARC,
+    subpartition SYS_SUBP3948 tablespace USERS_ARC,
+    subpartition SYS_SUBP3949 tablespace USERS_ARC,
+    subpartition SYS_SUBP3950 tablespace USERS_ARC,
+    subpartition SYS_SUBP3951 tablespace USERS_ARC,
+    subpartition SYS_SUBP3952 tablespace USERS_ARC,
+    subpartition SYS_SUBP3953 tablespace USERS_ARC,
+    subpartition SYS_SUBP3954 tablespace USERS_ARC
+  ),
+  partition SYS_P3988 values less than (TIMESTAMP' 2015-06-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP3956 tablespace USERS_ARC,
+    subpartition SYS_SUBP3957 tablespace USERS_ARC,
+    subpartition SYS_SUBP3958 tablespace USERS_ARC,
+    subpartition SYS_SUBP3959 tablespace USERS_ARC,
+    subpartition SYS_SUBP3960 tablespace USERS_ARC,
+    subpartition SYS_SUBP3961 tablespace USERS_ARC,
+    subpartition SYS_SUBP3962 tablespace USERS_ARC,
+    subpartition SYS_SUBP3963 tablespace USERS_ARC,
+    subpartition SYS_SUBP3964 tablespace USERS_ARC,
+    subpartition SYS_SUBP3965 tablespace USERS_ARC,
+    subpartition SYS_SUBP3966 tablespace USERS_ARC,
+    subpartition SYS_SUBP3967 tablespace USERS_ARC,
+    subpartition SYS_SUBP3968 tablespace USERS_ARC,
+    subpartition SYS_SUBP3969 tablespace USERS_ARC,
+    subpartition SYS_SUBP3970 tablespace USERS_ARC,
+    subpartition SYS_SUBP3971 tablespace USERS_ARC,
+    subpartition SYS_SUBP3972 tablespace USERS_ARC,
+    subpartition SYS_SUBP3973 tablespace USERS_ARC,
+    subpartition SYS_SUBP3974 tablespace USERS_ARC,
+    subpartition SYS_SUBP3975 tablespace USERS_ARC,
+    subpartition SYS_SUBP3976 tablespace USERS_ARC,
+    subpartition SYS_SUBP3977 tablespace USERS_ARC,
+    subpartition SYS_SUBP3978 tablespace USERS_ARC,
+    subpartition SYS_SUBP3979 tablespace USERS_ARC,
+    subpartition SYS_SUBP3980 tablespace USERS_ARC,
+    subpartition SYS_SUBP3981 tablespace USERS_ARC,
+    subpartition SYS_SUBP3982 tablespace USERS_ARC,
+    subpartition SYS_SUBP3983 tablespace USERS_ARC,
+    subpartition SYS_SUBP3984 tablespace USERS_ARC,
+    subpartition SYS_SUBP3985 tablespace USERS_ARC,
+    subpartition SYS_SUBP3986 tablespace USERS_ARC,
+    subpartition SYS_SUBP3987 tablespace USERS_ARC
+  ),
+  partition SYS_P4021 values less than (TIMESTAMP' 2015-07-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP3989 tablespace USERS_ARC,
+    subpartition SYS_SUBP3990 tablespace USERS_ARC,
+    subpartition SYS_SUBP3991 tablespace USERS_ARC,
+    subpartition SYS_SUBP3992 tablespace USERS_ARC,
+    subpartition SYS_SUBP3993 tablespace USERS_ARC,
+    subpartition SYS_SUBP3994 tablespace USERS_ARC,
+    subpartition SYS_SUBP3995 tablespace USERS_ARC,
+    subpartition SYS_SUBP3996 tablespace USERS_ARC,
+    subpartition SYS_SUBP3997 tablespace USERS_ARC,
+    subpartition SYS_SUBP3998 tablespace USERS_ARC,
+    subpartition SYS_SUBP3999 tablespace USERS_ARC,
+    subpartition SYS_SUBP4000 tablespace USERS_ARC,
+    subpartition SYS_SUBP4001 tablespace USERS_ARC,
+    subpartition SYS_SUBP4002 tablespace USERS_ARC,
+    subpartition SYS_SUBP4003 tablespace USERS_ARC,
+    subpartition SYS_SUBP4004 tablespace USERS_ARC,
+    subpartition SYS_SUBP4005 tablespace USERS_ARC,
+    subpartition SYS_SUBP4006 tablespace USERS_ARC,
+    subpartition SYS_SUBP4007 tablespace USERS_ARC,
+    subpartition SYS_SUBP4008 tablespace USERS_ARC,
+    subpartition SYS_SUBP4009 tablespace USERS_ARC,
+    subpartition SYS_SUBP4010 tablespace USERS_ARC,
+    subpartition SYS_SUBP4011 tablespace USERS_ARC,
+    subpartition SYS_SUBP4012 tablespace USERS_ARC,
+    subpartition SYS_SUBP4013 tablespace USERS_ARC,
+    subpartition SYS_SUBP4014 tablespace USERS_ARC,
+    subpartition SYS_SUBP4015 tablespace USERS_ARC,
+    subpartition SYS_SUBP4016 tablespace USERS_ARC,
+    subpartition SYS_SUBP4017 tablespace USERS_ARC,
+    subpartition SYS_SUBP4018 tablespace USERS_ARC,
+    subpartition SYS_SUBP4019 tablespace USERS_ARC,
+    subpartition SYS_SUBP4020 tablespace USERS_ARC
+  ),
+  partition SYS_P4054 values less than (TIMESTAMP' 2015-08-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP4022 tablespace USERS_ARC,
+    subpartition SYS_SUBP4023 tablespace USERS_ARC,
+    subpartition SYS_SUBP4024 tablespace USERS_ARC,
+    subpartition SYS_SUBP4025 tablespace USERS_ARC,
+    subpartition SYS_SUBP4026 tablespace USERS_ARC,
+    subpartition SYS_SUBP4027 tablespace USERS_ARC,
+    subpartition SYS_SUBP4028 tablespace USERS_ARC,
+    subpartition SYS_SUBP4029 tablespace USERS_ARC,
+    subpartition SYS_SUBP4030 tablespace USERS_ARC,
+    subpartition SYS_SUBP4031 tablespace USERS_ARC,
+    subpartition SYS_SUBP4032 tablespace USERS_ARC,
+    subpartition SYS_SUBP4033 tablespace USERS_ARC,
+    subpartition SYS_SUBP4034 tablespace USERS_ARC,
+    subpartition SYS_SUBP4035 tablespace USERS_ARC,
+    subpartition SYS_SUBP4036 tablespace USERS_ARC,
+    subpartition SYS_SUBP4037 tablespace USERS_ARC,
+    subpartition SYS_SUBP4038 tablespace USERS_ARC,
+    subpartition SYS_SUBP4039 tablespace USERS_ARC,
+    subpartition SYS_SUBP4040 tablespace USERS_ARC,
+    subpartition SYS_SUBP4041 tablespace USERS_ARC,
+    subpartition SYS_SUBP4042 tablespace USERS_ARC,
+    subpartition SYS_SUBP4043 tablespace USERS_ARC,
+    subpartition SYS_SUBP4044 tablespace USERS_ARC,
+    subpartition SYS_SUBP4045 tablespace USERS_ARC,
+    subpartition SYS_SUBP4046 tablespace USERS_ARC,
+    subpartition SYS_SUBP4047 tablespace USERS_ARC,
+    subpartition SYS_SUBP4048 tablespace USERS_ARC,
+    subpartition SYS_SUBP4049 tablespace USERS_ARC,
+    subpartition SYS_SUBP4050 tablespace USERS_ARC,
+    subpartition SYS_SUBP4051 tablespace USERS_ARC,
+    subpartition SYS_SUBP4052 tablespace USERS_ARC,
+    subpartition SYS_SUBP4053 tablespace USERS_ARC
+  ),
+  partition SYS_P4284 values less than (TIMESTAMP' 2015-09-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP4252 tablespace USERS_ARC,
+    subpartition SYS_SUBP4253 tablespace USERS_ARC,
+    subpartition SYS_SUBP4254 tablespace USERS_ARC,
+    subpartition SYS_SUBP4255 tablespace USERS_ARC,
+    subpartition SYS_SUBP4256 tablespace USERS_ARC,
+    subpartition SYS_SUBP4257 tablespace USERS_ARC,
+    subpartition SYS_SUBP4258 tablespace USERS_ARC,
+    subpartition SYS_SUBP4259 tablespace USERS_ARC,
+    subpartition SYS_SUBP4260 tablespace USERS_ARC,
+    subpartition SYS_SUBP4261 tablespace USERS_ARC,
+    subpartition SYS_SUBP4262 tablespace USERS_ARC,
+    subpartition SYS_SUBP4263 tablespace USERS_ARC,
+    subpartition SYS_SUBP4264 tablespace USERS_ARC,
+    subpartition SYS_SUBP4265 tablespace USERS_ARC,
+    subpartition SYS_SUBP4266 tablespace USERS_ARC,
+    subpartition SYS_SUBP4267 tablespace USERS_ARC,
+    subpartition SYS_SUBP4268 tablespace USERS_ARC,
+    subpartition SYS_SUBP4269 tablespace USERS_ARC,
+    subpartition SYS_SUBP4270 tablespace USERS_ARC,
+    subpartition SYS_SUBP4271 tablespace USERS_ARC,
+    subpartition SYS_SUBP4272 tablespace USERS_ARC,
+    subpartition SYS_SUBP4273 tablespace USERS_ARC,
+    subpartition SYS_SUBP4274 tablespace USERS_ARC,
+    subpartition SYS_SUBP4275 tablespace USERS_ARC,
+    subpartition SYS_SUBP4276 tablespace USERS_ARC,
+    subpartition SYS_SUBP4277 tablespace USERS_ARC,
+    subpartition SYS_SUBP4278 tablespace USERS_ARC,
+    subpartition SYS_SUBP4279 tablespace USERS_ARC,
+    subpartition SYS_SUBP4280 tablespace USERS_ARC,
+    subpartition SYS_SUBP4281 tablespace USERS_ARC,
+    subpartition SYS_SUBP4282 tablespace USERS_ARC,
+    subpartition SYS_SUBP4283 tablespace USERS_ARC
+  ),
+  partition SYS_P4382 values less than (TIMESTAMP' 2015-10-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP4350 tablespace USERS_ARC,
+    subpartition SYS_SUBP4351 tablespace USERS_ARC,
+    subpartition SYS_SUBP4352 tablespace USERS_ARC,
+    subpartition SYS_SUBP4353 tablespace USERS_ARC,
+    subpartition SYS_SUBP4354 tablespace USERS_ARC,
+    subpartition SYS_SUBP4355 tablespace USERS_ARC,
+    subpartition SYS_SUBP4356 tablespace USERS_ARC,
+    subpartition SYS_SUBP4357 tablespace USERS_ARC,
+    subpartition SYS_SUBP4358 tablespace USERS_ARC,
+    subpartition SYS_SUBP4359 tablespace USERS_ARC,
+    subpartition SYS_SUBP4360 tablespace USERS_ARC,
+    subpartition SYS_SUBP4361 tablespace USERS_ARC,
+    subpartition SYS_SUBP4362 tablespace USERS_ARC,
+    subpartition SYS_SUBP4363 tablespace USERS_ARC,
+    subpartition SYS_SUBP4364 tablespace USERS_ARC,
+    subpartition SYS_SUBP4365 tablespace USERS_ARC,
+    subpartition SYS_SUBP4366 tablespace USERS_ARC,
+    subpartition SYS_SUBP4367 tablespace USERS_ARC,
+    subpartition SYS_SUBP4368 tablespace USERS_ARC,
+    subpartition SYS_SUBP4369 tablespace USERS_ARC,
+    subpartition SYS_SUBP4370 tablespace USERS_ARC,
+    subpartition SYS_SUBP4371 tablespace USERS_ARC,
+    subpartition SYS_SUBP4372 tablespace USERS_ARC,
+    subpartition SYS_SUBP4373 tablespace USERS_ARC,
+    subpartition SYS_SUBP4374 tablespace USERS_ARC,
+    subpartition SYS_SUBP4375 tablespace USERS_ARC,
+    subpartition SYS_SUBP4376 tablespace USERS_ARC,
+    subpartition SYS_SUBP4377 tablespace USERS_ARC,
+    subpartition SYS_SUBP4378 tablespace USERS_ARC,
+    subpartition SYS_SUBP4379 tablespace USERS_ARC,
+    subpartition SYS_SUBP4380 tablespace USERS_ARC,
+    subpartition SYS_SUBP4381 tablespace USERS_ARC
+  ),
+  partition SYS_P4415 values less than (TIMESTAMP' 2015-11-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP4383 tablespace USERS_ARC,
+    subpartition SYS_SUBP4384 tablespace USERS_ARC,
+    subpartition SYS_SUBP4385 tablespace USERS_ARC,
+    subpartition SYS_SUBP4386 tablespace USERS_ARC,
+    subpartition SYS_SUBP4387 tablespace USERS_ARC,
+    subpartition SYS_SUBP4388 tablespace USERS_ARC,
+    subpartition SYS_SUBP4389 tablespace USERS_ARC,
+    subpartition SYS_SUBP4390 tablespace USERS_ARC,
+    subpartition SYS_SUBP4391 tablespace USERS_ARC,
+    subpartition SYS_SUBP4392 tablespace USERS_ARC,
+    subpartition SYS_SUBP4393 tablespace USERS_ARC,
+    subpartition SYS_SUBP4394 tablespace USERS_ARC,
+    subpartition SYS_SUBP4395 tablespace USERS_ARC,
+    subpartition SYS_SUBP4396 tablespace USERS_ARC,
+    subpartition SYS_SUBP4397 tablespace USERS_ARC,
+    subpartition SYS_SUBP4398 tablespace USERS_ARC,
+    subpartition SYS_SUBP4399 tablespace USERS_ARC,
+    subpartition SYS_SUBP4400 tablespace USERS_ARC,
+    subpartition SYS_SUBP4401 tablespace USERS_ARC,
+    subpartition SYS_SUBP4402 tablespace USERS_ARC,
+    subpartition SYS_SUBP4403 tablespace USERS_ARC,
+    subpartition SYS_SUBP4404 tablespace USERS_ARC,
+    subpartition SYS_SUBP4405 tablespace USERS_ARC,
+    subpartition SYS_SUBP4406 tablespace USERS_ARC,
+    subpartition SYS_SUBP4407 tablespace USERS_ARC,
+    subpartition SYS_SUBP4408 tablespace USERS_ARC,
+    subpartition SYS_SUBP4409 tablespace USERS_ARC,
+    subpartition SYS_SUBP4410 tablespace USERS_ARC,
+    subpartition SYS_SUBP4411 tablespace USERS_ARC,
+    subpartition SYS_SUBP4412 tablespace USERS_ARC,
+    subpartition SYS_SUBP4413 tablespace USERS_ARC,
+    subpartition SYS_SUBP4414 tablespace USERS_ARC
+  ),
+  partition SYS_P4481 values less than (TIMESTAMP' 2015-12-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP4449 tablespace USERS_ARC,
+    subpartition SYS_SUBP4450 tablespace USERS_ARC,
+    subpartition SYS_SUBP4451 tablespace USERS_ARC,
+    subpartition SYS_SUBP4452 tablespace USERS_ARC,
+    subpartition SYS_SUBP4453 tablespace USERS_ARC,
+    subpartition SYS_SUBP4454 tablespace USERS_ARC,
+    subpartition SYS_SUBP4455 tablespace USERS_ARC,
+    subpartition SYS_SUBP4456 tablespace USERS_ARC,
+    subpartition SYS_SUBP4457 tablespace USERS_ARC,
+    subpartition SYS_SUBP4458 tablespace USERS_ARC,
+    subpartition SYS_SUBP4459 tablespace USERS_ARC,
+    subpartition SYS_SUBP4460 tablespace USERS_ARC,
+    subpartition SYS_SUBP4461 tablespace USERS_ARC,
+    subpartition SYS_SUBP4462 tablespace USERS_ARC,
+    subpartition SYS_SUBP4463 tablespace USERS_ARC,
+    subpartition SYS_SUBP4464 tablespace USERS_ARC,
+    subpartition SYS_SUBP4465 tablespace USERS_ARC,
+    subpartition SYS_SUBP4466 tablespace USERS_ARC,
+    subpartition SYS_SUBP4467 tablespace USERS_ARC,
+    subpartition SYS_SUBP4468 tablespace USERS_ARC,
+    subpartition SYS_SUBP4469 tablespace USERS_ARC,
+    subpartition SYS_SUBP4470 tablespace USERS_ARC,
+    subpartition SYS_SUBP4471 tablespace USERS_ARC,
+    subpartition SYS_SUBP4472 tablespace USERS_ARC,
+    subpartition SYS_SUBP4473 tablespace USERS_ARC,
+    subpartition SYS_SUBP4474 tablespace USERS_ARC,
+    subpartition SYS_SUBP4475 tablespace USERS_ARC,
+    subpartition SYS_SUBP4476 tablespace USERS_ARC,
+    subpartition SYS_SUBP4477 tablespace USERS_ARC,
+    subpartition SYS_SUBP4478 tablespace USERS_ARC,
+    subpartition SYS_SUBP4479 tablespace USERS_ARC,
+    subpartition SYS_SUBP4480 tablespace USERS_ARC
+  ),
+  partition SYS_P4547 values less than (TIMESTAMP' 2016-01-01 00:00:00')
+    tablespace USERS_ARC
+    pctfree 0
+    initrans 1
+    maxtrans 255
+  (
+    subpartition SYS_SUBP4515 tablespace USERS_ARC,
+    subpartition SYS_SUBP4516 tablespace USERS_ARC,
+    subpartition SYS_SUBP4517 tablespace USERS_ARC,
+    subpartition SYS_SUBP4518 tablespace USERS_ARC,
+    subpartition SYS_SUBP4519 tablespace USERS_ARC,
+    subpartition SYS_SUBP4520 tablespace USERS_ARC,
+    subpartition SYS_SUBP4521 tablespace USERS_ARC,
+    subpartition SYS_SUBP4522 tablespace USERS_ARC,
+    subpartition SYS_SUBP4523 tablespace USERS_ARC,
+    subpartition SYS_SUBP4524 tablespace USERS_ARC,
+    subpartition SYS_SUBP4525 tablespace USERS_ARC,
+    subpartition SYS_SUBP4526 tablespace USERS_ARC,
+    subpartition SYS_SUBP4527 tablespace USERS_ARC,
+    subpartition SYS_SUBP4528 tablespace USERS_ARC,
+    subpartition SYS_SUBP4529 tablespace USERS_ARC,
+    subpartition SYS_SUBP4530 tablespace USERS_ARC,
+    subpartition SYS_SUBP4531 tablespace USERS_ARC,
+    subpartition SYS_SUBP4532 tablespace USERS_ARC,
+    subpartition SYS_SUBP4533 tablespace USERS_ARC,
+    subpartition SYS_SUBP4534 tablespace USERS_ARC,
+    subpartition SYS_SUBP4535 tablespace USERS_ARC,
+    subpartition SYS_SUBP4536 tablespace USERS_ARC,
+    subpartition SYS_SUBP4537 tablespace USERS_ARC,
+    subpartition SYS_SUBP4538 tablespace USERS_ARC,
+    subpartition SYS_SUBP4539 tablespace USERS_ARC,
+    subpartition SYS_SUBP4540 tablespace USERS_ARC,
+    subpartition SYS_SUBP4541 tablespace USERS_ARC,
+    subpartition SYS_SUBP4542 tablespace USERS_ARC,
+    subpartition SYS_SUBP4543 tablespace USERS_ARC,
+    subpartition SYS_SUBP4544 tablespace USERS_ARC,
+    subpartition SYS_SUBP4545 tablespace USERS_ARC,
+    subpartition SYS_SUBP4546 tablespace USERS_ARC
+  )
+);
+create index U1.T_MO_RFOLDER_PAR_VAL_15T_IDX1 on U1.T_MO_RFOLDER_PAR_VALUE_2015 (RFOLDER_ID)
+  nologging  local;
+create index U1.T_MO_RFOLDER_PAR_VAL_15T_IDX2 on U1.T_MO_RFOLDER_PAR_VALUE_2015 (DATE_CREATE)
+  nologging  local;
+grant select on U1.T_MO_RFOLDER_PAR_VALUE_2015 to LOADDB;
+grant select on U1.T_MO_RFOLDER_PAR_VALUE_2015 to LOADER;
+

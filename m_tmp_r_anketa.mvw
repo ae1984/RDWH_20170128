@@ -1,0 +1,33 @@
+﻿create materialized view U1.M_TMP_R_ANKETA
+refresh force on demand
+as
+select /*+ noparallel */ to_char(t.form_client_date, 'mm-yyyy') A_DATE,
+round(count(case when t.citizenship is null then t.form_client_id end) / count(distinct t.form_client_id) * 100, 1) citizenship,
+round(count(case when t.dependants_count is null then t.form_client_id end) / count(distinct t.form_client_id) * 100, 1) dependants,
+round(count(case when t.marital_status is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) marital_status,
+round(count(case when t.is_resident is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) is_resident,
+round(count(case when t.reg_address_region is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) reg_addr_region,
+round(count(case when t.reg_address_district is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) reg_address_district,
+round(count(case when t.reg_address_city is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) reg_address_city,
+round(count(case when t.reg_address_house is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) reg_addr_house,
+round(count(case when t.reg_address_street is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) reg_addr_street,
+round(count(case when t.reg_address_house_part is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) reg_addr_house_part,
+round(count(case when t.fact_address_region is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) fact_address_region,
+round(count(case when t.fact_address_district is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) fact_address_district,
+round(count(case when t.fact_address_city is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) fact_address_city,
+round(count(case when t.fact_address_street is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) fact_address_street,
+round(count(case when t.fact_address_house_part is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) fact_address_house_part,
+round(count(case when t.fact_address_house is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) fact_address_house,
+round(count(case when t.education is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) education,
+round(count(case when t.real_estate_relation is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) real_estate_relation,
+round(count(case when t.is_auto_exists is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) is_auto_exists,
+round(count(case when t.is_garage_exists is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) is_garage_exists,
+round(count(case when t.org_name is null then t.form_client_id end) /count(distinct t.form_client_id) * 100, 1) org_name
+
+from v_form_client_all_rfo t
+--where t.form_client_date >= add_months(trunc(sysdate,'month'),-6)
+group by to_char(t.form_client_date, 'mm-yyyy');
+grant select on U1.M_TMP_R_ANKETA to LOADDB;
+grant select on U1.M_TMP_R_ANKETA to LOADER;
+
+

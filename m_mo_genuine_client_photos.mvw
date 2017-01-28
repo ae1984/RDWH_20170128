@@ -1,0 +1,6 @@
+﻿create materialized view U1.M_MO_GENUINE_CLIENT_PHOTOS
+build deferred
+refresh force on demand
+as
+select * from u1.t_genuine_client_photos@mo1_prod;
+

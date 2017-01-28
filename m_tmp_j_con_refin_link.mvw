@@ -1,0 +1,41 @@
+﻿create materialized view U1.M_TMP_J_CON_REFIN_LINK
+refresh complete on demand
+as
+select -- представление создает связь между закрытыми договорами и картами, куда они рефинансировались,
+       -- посредством поиска оптимизирующего спец предложения в день закрытия договора (+-1 день)
+       t.deal_number,
+       d.deal_number as deal_number_to,
+       trunc(min(rc.spof_end_date)) as sp_date_min,
+       count(distinct trunc(rc.spof_end_date)) as sp_cnt,
+       min(rc.restr_type) keep (dense_rank first order by rc.restr_priority) as restr_type, -- чтобы знать HARD или SOFT
+       min(rc.restructing_type_code) keep (dense_rank first order by rc.restr_priority) as restructing_type_code,
+       min(rc.restr_priority) as restr_priority
+from V_DWH_PORTFOLIO_CURRENT t -- первичные договора
+join ( -- спец предложения по оптимизации по клиенту и дате
+      select c.x_client_id, r.spof_end_date,
+             max(c2.deal_number) keep (dense_rank last
+                      order by c2.begin_date) as deal_number_to, -- самая поздняя карта по дате выдачи
+                                                                 -- (куда рефинансировали)
+             min(r.restr_type) keep (dense_rank first order by r.restr_prior) as restr_type,
+             min(r.restructing_type_code) keep (dense_rank first order by r.restr_prior) as restructing_type_code,
+             min(r.restr_prior) as restr_priority
+      from M_DWH_ACC_SPECIAL_OFFER_CON r
+      join V_DWH_PORTFOLIO_CURRENT c on c.deal_number = r.contract_number and -- чтобы выйти на клиента
+                                        c.x_is_credit_issued = 1
+      join V_DWH_PORTFOLIO_CURRENT c2 on c2.x_client_id = c.x_client_id and -- тот же клиент
+                  c2.x_is_card = 1 and --- но карта
+                  c2.begin_date <= trunc(r.spof_end_date) and -- которая выдана не позже отработки оптимизиции
+                  c2.x_is_credit_issued = 1
+      where r.spof_spec_offer_status_cd in ('WORK', 'DEFAULT', 'EXECUTED')
+      group by c.x_client_id, r.spof_end_date
+) rc on rc.x_client_id = t.x_client_id and
+        abs(trunc(rc.spof_end_date) - t.actual_end_date) <= 1 -- СП отработало по этому клиенту, и в пределах +-1 день
+                                                              -- закрыт первичный договор
+join V_DWH_PORTFOLIO_CURRENT d on d.deal_number = rc.deal_number_to and -- договор, на который произошел рефинанс
+                                  d.x_is_credit_issued = 1 -- выданные
+where t.x_is_credit_issued = 1 -- выданные
+group by t.deal_number, d.deal_number;
+grant select on U1.M_TMP_J_CON_REFIN_LINK to LOADDB;
+grant select on U1.M_TMP_J_CON_REFIN_LINK to LOADER;
+
+

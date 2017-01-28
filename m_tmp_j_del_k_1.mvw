@@ -1,0 +1,38 @@
+﻿create materialized view U1.M_TMP_J_DEL_K_1
+refresh force on demand
+as
+select c.yy_mm_start_last, -- месяц выдачи кредита или выдачи/установки револьверности по карте
+
+    -- ПРОВЕРКА
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt, -- проверка - если эти два поля равны, значит выборка верна
+
+    -- ПРОДАЖИ
+    round(sum(c.max_debt_used) / 1000000) as sales_mln, -- USE THIS! - продажи, млн
+    round(sum(c.max_debt_used)) as sales, -- продажи
+
+    -- ПРОСРОЧКА
+    round(sum(c.delinq_rate_b_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b_w, -- USE THIS! - просрочка всего по-новому
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate, -- просрочка всего по-старому
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1, -- USE THIS! - просрочка 1-го платежа
+
+    round(sum(c.delinq_rate_npl * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_npl, -- USE THIS! - просрочка по NPL (>=90 days)
+
+    -- ПРИБЫЛЬ
+    round(sum(c.profit) / 1000000) as profit_mln -- USE THIS! - прибыль, млн (доход - расход)
+
+from M_CONTRACT_CAL_DEL c
+join V_DWH_PORTFOLIO_CURRENT dc on dc.deal_number = c.contract_number
+join M_TMP_J_K5 k on k.deal_number = c.contract_number
+where (c.yy_mm_start_last like '2013 - %' or c.yy_mm_start_last like '2014 - %') and
+       dc.prod_type in ('КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ') and
+       k.form_income_gcvp_salary_max > 0 and
+       k.is_kdn_regulated_sal_max = 1 and
+--       k.form_income_gcvp_salary_max <= 240000 and
+--       k.kdn_form > 50 and
+       k.kdn_form_salary_max > 50 and
+       k.is_error = 0
+group by c.yy_mm_start_last having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_J_DEL_K_1 to LOADDB;
+grant select on U1.M_TMP_J_DEL_K_1 to LOADER;
+
+

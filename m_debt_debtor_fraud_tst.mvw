@@ -1,0 +1,79 @@
+﻿create materialized view U1.M_DEBT_DEBTOR_FRAUD_TST
+build deferred
+refresh complete on demand
+as
+select trunc(sysdate) as rep_date,
+       rfo_client_id,
+       client_name,
+       contract_number,
+       trunc(date_prov) as date_prov,
+       coalesce(sum(case when sys_name like '%ЗАЧИСЛЕНИЕ%'  then summa_contract_po end),
+                sum(case when sys_name like '%ЗАЧИСЛЕНИЕ%' or sys_name like '%ПЕРЕНОС%' then null else summa_contract_po end)-
+                nvl(sum(case when sys_name like '%ПЕРЕНОС%'  then  summa_contract_po end),0)) as summa_contract_po,
+       x_dnp_name,
+       contract_amount,
+       begin_date,
+       create_username,
+       pl_usv_num_correspond,
+       is_depn_contract
+  from (
+select distinct
+       cb.rfo_client_id,
+       cl.c_name                                  as client_name,
+       coalesce(pc.c_num_dog,kpd.c_num_dog,dd.c_num_dog,
+       cast(coalesce(regexp_substr(md.c_nazn,'R[[:digit:]]{7}-[[:digit:]]{3}',1,1),
+                     replace(regexp_substr(md.c_nazn,'№[[:digit:]]{7}-[[:digit:]]{3}',1,1),'№','')) as varchar2(2000)))       as contract_number,
+       coalesce(fo.c_kas_date_prov,pf.c_doc_date,trunc(md.c_date_prov)) as date_prov,
+       coalesce(fo.c_summa,pf.c_summa, md.c_sum)            as summa_contract_po,
+       substr(pu_dt.c_num,1,4)                              as pl_usv_dt,
+       coalesce(fo.id,pf.id, md.id)                         as id_fo,
+       vod.sys_name,
+       cb.x_dnp_name,
+       cb.contract_amount,
+       cb.begin_date,
+       cb.create_username,
+       coalesce(substr(ff_pu.c_num,1,4),'1860') as pl_usv_num_correspond,
+       case when dd.id is not null then 1 else 0 end as is_depn_contract
+  from u1.M_ACC_FRAUD_OPER    fo_kt
+  join u1.T_RBO_Z#MAIN_DOCUM_FRAUD md  on (md.c_acc_dt = fo_kt.rbo_ac_fin_id
+                                      or md.c_acc_kt = fo_kt.rbo_ac_fin_id)
+                                     and md.state_id = 'PROV'
+  left join u1.T_RBO_Z#MAIN_DOCUM_FRAUD md_k on md_k.c_quit_doc = md.id
+                                     and md_k.state_id = 'PROV'
+  left join u1.T_RBO_Z#MAIN_DOCUM_FRAUD md_v on md_v.id = md.c_quit_doc
+                                     and md_v.state_id = 'PROV'
+  left join u1.T_RBO_Z#FACT_OPER fo   on (fo.c_doc = md.id
+                                      or fo.c_doc = md_k.id
+                                      or fo.c_doc = md_v.id)
+                                     and nvl(fo.c_obj_class,'PR_CRED') = 'PR_CRED'
+                                     and nvl(fo.c_is_storno,0) = 0
+  left join u1.T_RBO_Z#KAS_PC_FO pf   on (pf.c_doc_ref = md.id
+                                      or pf.c_doc_ref = md_k.id
+                                      or pf.c_doc_ref = md_v.id)
+                                     and nvl(pf.c_is_storno,0) = 0
+  join u1.V_RBO_Z#AC_FIN af_kt        on af_kt.id = md.c_acc_kt
+  join u1.V_RBO_Z#PL_USV pu_kt        on pu_kt.id = af_kt.c_main_usv
+  join u1.V_RBO_Z#AC_FIN af_dt        on af_dt.id = md.c_acc_dt
+  join u1.V_RBO_Z#PL_USV pu_dt        on pu_dt.id = af_dt.c_main_usv
+  left join u1.V_RBO_Z#PR_CRED pc     on pc.c_list_pay = fo.collection_id
+  left join u1.V_RBO_Z#KAS_PC_DOG kpd on kpd.c_fo_arr = pf.collection_id
+  left join u1.V_RBO_Z#DEPN        dd on dd.c_list_pay = fo.collection_id
+  left join u1.V_RBO_Z#CLIENT     cl  on cl.id = coalesce(pc.c_client,kpd.c_client_ref,dd.c_client)
+  left join u1.V_RBO_Z#VID_OPER_DOG vod  on vod.id = coalesce(fo.c_oper,pf.c_vid_oper_ref)
+  left join u1.M_RBO_CONTRACT_BAS  cb on cb.rbo_contract_id = coalesce(pc.id,kpd.id)
+  left join u1.T_RBO_Z#MAIN_DOCUM_FRAUD ff on ff.c_acc_kt = md.c_acc_dt                   --Определяем счет ГК, чтобы проанализировать погащение за счет ДЗ(1860) или нет
+                                          and ff.c_sum_nt = md.c_sum_nt
+                                          and trunc(ff.c_date_doc) = trunc(md.c_date_doc)
+                                          and ff.state_id = 'PROV'
+  left join u1.V_RBO_Z#AC_FIN       ff_af  on ff_af.id = ff.c_acc_dt
+  left join u1.V_RBO_Z#PL_USV       ff_pu  on ff_pu.id = ff_af.c_main_usv
+  )
+where client_name is not null
+  and pl_usv_dt in ('2860','1860')
+  and pl_usv_num_correspond in ('1860','9999')
+group by rfo_client_id, client_name, contract_number, trunc(date_prov),
+      x_dnp_name, contract_amount, begin_date, create_username,
+       pl_usv_num_correspond, is_depn_contract;
+grant select on U1.M_DEBT_DEBTOR_FRAUD_TST to LOADDB;
+
+

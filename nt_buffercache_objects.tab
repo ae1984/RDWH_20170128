@@ -1,0 +1,47 @@
+﻿create table U1.NT_BUFFERCACHE_OBJECTS
+(
+  sdt              DATE,
+  owner            VARCHAR2(150),
+  object_name      VARCHAR2(150),
+  object_type      VARCHAR2(50),
+  number_of_blocks NUMBER,
+  size_mb          NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_BUFFERCACHE_OBJECTS
+  is 'RDWH2.0 История. какие объекты находились в BufferCache';
+comment on column U1.NT_BUFFERCACHE_OBJECTS.sdt
+  is 'дата и время снятия показаний';
+comment on column U1.NT_BUFFERCACHE_OBJECTS.owner
+  is 'владелец';
+comment on column U1.NT_BUFFERCACHE_OBJECTS.number_of_blocks
+  is 'количество блоков';
+comment on column U1.NT_BUFFERCACHE_OBJECTS.size_mb
+  is 'размер в мегабайтах';
+create index U1.IDX_NT_BUFFERCACHE_OBJECTS_1 on U1.NT_BUFFERCACHE_OBJECTS (SDT)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.NT_BUFFERCACHE_OBJECTS to LOADDB;
+

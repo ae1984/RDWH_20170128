@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_TMP_ONLINE_CPR
+refresh force on demand
+as
+select
+t.shop_name,
+trunc(t.folder_date_create_mi) as date_ratif,
+sum(t.contract_amount),
+avg(t.contract_amount),
+sum(t.contract_amount)/count(distinct cl.id) as avg_req,
+sum(t.contract_amount)/count(distinct t.rfo_client_id) as avg_cli,
+count(distinct t.rfo_contract_id) as req_cnt,
+count(distinct t.contract_number) as con_cnt,
+count(distinct t.rfo_client_id) as cli_cnt
+from V_RFO_Z#KAS_ONLINE_CLAIM cl
+join V_RFO_Z#KAS_ONLINE_BUY f on cl.c_buy_ref = f.id
+join m_folder_con_cancel t on t.claim_id = cl.id and t.process_name = 'ОНЛАЙН КРЕДИТ'
+join V_TIME_DAYS td on td.yyyy_mm_dd = trunc(t.folder_date_create_mi)
+where trunc(t.folder_date_create_mi)>='01-06-2015' and t.x_dnp_name = 'АЛМАТЫ'
+group by
+t.shop_name,
+trunc(t.folder_date_create_mi);
+grant select on U1.M_TMP_ONLINE_CPR to LOADDB;
+grant select on U1.M_TMP_ONLINE_CPR to LOADER;
+
+

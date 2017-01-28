@@ -1,0 +1,61 @@
+﻿create materialized view U1.M_RBO_PORT_TMP2
+build deferred
+refresh force on demand
+as
+select /*+parallel(30)*/ xx.rep_date,
+         xx.rbo_contract_id,
+         xx.rbo_client_id,
+         xx.principal,
+         xx.interest,
+         xx.overlimit,
+         xx.overlimit_interest,
+         xx.overdraft,
+         xx.overdraft_interest,
+         xx.principal_del,
+         xx.interest_del,
+         xx.overlimit_del,
+         xx.overlimit_interest_del,
+         xx.overdraft_del,
+         xx.overdraft_interest_del,
+         xx.w_principal_del,
+         xx.w_interest_del,
+         xx.w_overlimit_del,
+         xx.w_overlimit_interest_del,
+         xx.w_overdraft_del,
+         xx.w_overdraft_interest_del,
+         xx.pc_cred_limit,                                            --свободный кредитный лимит
+         xx.delinq_days, --количество дней просчроки по договору
+         xx.delinq_date,
+         xx.delinq_days_cli,                     --количество дней прсрочки по клиенту
+         xx.date_delinq_date_cli,
+         xx.total_debt,
+         xx.delinq_amount,
+         xx.is_on_balance,
+         xx.is_card,
+         xx.total_debt_cli,
+         xx.del_amount_cli,
+         greatest(max(xx.total_debt) over (partition by xx.rbo_contract_id order by xx.rep_date rows unbounded preceding),
+                  nvl(pm.total_debt_max,0))                                                                                 as total_debt_max,
+         greatest(max(xx.total_debt_cli) over (partition by xx.rbo_client_id   order by xx.rep_date rows unbounded preceding),
+                  nvl(cm.total_debt_cli_max,0))                                                                             as total_debt_cli_max,
+         case when greatest(max(nvl(xx.delinq_days,0)) over (partition by xx.rbo_contract_id order by xx.rep_date rows unbounded preceding),
+                            nvl(pm.delinq_days_max,0)) = 0
+              then null
+              else greatest(max(nvl(xx.delinq_days,0)) over (partition by xx.rbo_contract_id order by xx.rep_date rows unbounded preceding),
+                            nvl(pm.delinq_days_max,0)) end                                                                   as del_days_max,
+
+         case when greatest(max(nvl(xx.delinq_days_cli,0)) over (partition by xx.rbo_client_id   order by xx.rep_date rows unbounded preceding),
+                            nvl(cm.del_days_cli_max,0)) = 0
+              then null
+              else greatest(max(nvl(xx.delinq_days_cli,0)) over (partition by xx.rbo_client_id   order by xx.rep_date rows unbounded preceding),
+                            nvl(cm.del_days_cli_max,0)) end                                                                  as del_days_cli_max,
+         greatest(max(xx.delinq_amount) over (partition by xx.rbo_contract_id order by xx.rep_date rows unbounded preceding),
+                  nvl(pm.delinq_amount_max,0))                                                                               as del_amount_max,
+         greatest(max(xx.del_amount_cli) over (partition by xx.rbo_client_id order by xx.rep_date rows unbounded preceding),
+                  nvl(cm.del_amount_cli_max,0))                                                                              as del_amount_cli_max
+    from M_RBO_PORT_TMP2_PRE4 xx
+   left join M_RBO_PORT_TMP2_PRE1    pm on pm.rbo_contract_id = xx.rbo_contract_id
+   left join M_RBO_PORT_TMP2_PRE2      cm on cm.rbo_client_id   = xx.rbo_client_id;
+grant select on U1.M_RBO_PORT_TMP2 to LOADDB;
+
+

@@ -1,0 +1,61 @@
+﻿create materialized view U1.M_MO_BAD_GOOD_CHECK
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30)*/
+       pf.value_number  as folder_id,
+       tt.rfolder_id    as rfolder_id,
+       tt.date_create   as date_create,
+       tt.bad_worked    as bad_worked,
+       b1.value         as bad_worked_value,
+       tt.good_worked   as good_worked,
+       g1.value         as good_worked_value,
+       pr.value_number  as sc_bad_check_only
+  from (
+        select t.rfolder_id,
+               t.date_create,
+               nvl(min(bad_worked), min(value_number))     as bad_worked,
+               nvl(min(good_worked), min(value_number))    as good_worked
+          from (
+                select /*+ parallel(30)*/
+                       pv.rfolder_id             as rfolder_id,
+                       trunc(pv.date_create)     as date_create,
+                       pv.value_number           as value_number,
+                       case
+                         when dp.code_int like 'SC_BAD_CHECK_WORKED_%' and pv.value_number > 0 then
+                             pv.value_number
+                       end              as bad_worked,
+                       case
+                         when dp.code_int like 'SC_GOOD_CHECK_WORKED_%' and pv.value_number > 0 then
+                             pv.value_number
+                       end                as good_worked
+                  from T_MO_RFOLDER_PAR_VALUE_DD pv
+                       inner join u1.V_MO_D_PAR   dp on dp.id = pv.d_par_id
+                                                    and dp.code_int in ( 'SC_BAD_CHECK_WORKED_1',
+                                                                         'SC_BAD_CHECK_WORKED_2',
+                                                                         'SC_BAD_CHECK_WORKED_3',
+                                                                         'SC_BAD_CHECK_WORKED_4',
+                                                                         'SC_BAD_CHECK_WORKED_5',
+                                                                         'SC_BAD_CHECK_WORKED_6',
+                                                                         'SC_GOOD_CHECK_WORKED_1',
+                                                                         'SC_GOOD_CHECK_WORKED_2',
+                                                                         'SC_GOOD_CHECK_WORKED_3',
+                                                                         'SC_GOOD_CHECK_WORKED_4',
+                                                                         'SC_GOOD_CHECK_WORKED_5',
+                                                                         'SC_GOOD_CHECK_WORKED_6',
+                                                                         'SC_BAD_CHECK_ONLY')
+                 --where pv.rfolder_id = 84847540
+                ) t
+         group by rfolder_id, date_create
+        ) tt
+        left  join T_TEST_MO_PARAM             b1 on         b1.id = tt.bad_worked
+        left  join T_TEST_MO_PARAM             g1 on         g1.id = tt.good_worked
+        left  join T_MO_RFOLDER_PAR_VALUE_DD  pr on pr.rfolder_id = tt.rfolder_id
+        inner join u1.V_MO_D_PAR               dp on         dp.id = pr.d_par_id
+                                                 and   dp.code_int in ('SC_BAD_CHECK_ONLY')
+        left  join T_MO_RFOLDER_PAR_VALUE_DD  pf on pf.rfolder_id = tt.rfolder_id
+        inner join u1.V_MO_D_PAR               df on         df.id = pf.d_par_id
+                                                 and   df.code_int in ('IN_SCO_FOLDER_ID');
+grant select on U1.M_MO_BAD_GOOD_CHECK to LOADDB;
+
+

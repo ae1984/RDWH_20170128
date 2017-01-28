@@ -1,0 +1,132 @@
+﻿create materialized view U1.M_AUTO_OUT_CANCEL
+build deferred
+refresh force on demand
+as
+select -- менеджер и клиент
+       t.folder_id,
+       trunc(t.folder_date_create_mi) FOLDER_DATE,
+       t.folder_date_create_mi,
+       t.iin,
+       t.pos_code,
+       t.pos_name,
+       t.x_dnp_name,
+       t.expert_name,
+       c.CANCEL_TYPE_NAME as CANCEL_TYPE_NAME,
+       f.manager_result_note as COMMENT_NOTE
+from M_FOLDER_CON_CANCEL t
+join T_CANCEL c on c.folder_id = t.folder_id
+join V_FOLDER_ALL_RFO f on f.folder_id = t.folder_id
+where t.is_credit_issued = 0 and t.is_refin = 0 and
+      t.folder_date_create_mi >=add_months(trunc(sysdate, 'month'),-6) and
+      t.cr_program_name in  ('АВТОКРЕДИТОВАНИЕ', 'АВТОКРЕДИТОВАНИЕ БУ') and
+      t.cancel_manager is not null and
+      (c.cancel_type_group in ('MANAGER') or (c.cancel_type_group in ('CLIENT_PC_TO_EKT') and
+                                                upper(c.cancel_notes) like '%ОТКАЗАЛСЯ%'))
+union
+---------------- Прескоринг
+select
+       t.folder_id,
+       trunc(t.folder_date_create_mi) FOLDER_DATE,
+       t.folder_date_create_mi,
+       t.iin,
+       t.pos_code,
+       t.pos_name,
+       t.x_dnp_name,
+       t.expert_name,
+       c.CANCEL_TYPE_NAME as CANCEL_TYPE_NAME,
+       null as COMMENT_NOTE
+from M_FOLDER_CON_CANCEL t
+join T_CANCEL c on c.folder_id = t.folder_id
+where t.is_credit_issued = 0 and t.is_refin = 0 and
+     t.folder_date_create_mi >= add_months(trunc(sysdate, 'month'),-6) and
+     t.cr_program_name in  ('АВТОКРЕДИТОВАНИЕ', 'АВТОКРЕДИТОВАНИЕ БУ') and
+     t.cancel_prescoring is not null and
+     c.cancel_type_code not in ('VERIFICATION_CONTACT','VERIFICATION_PHOTO') and
+--     c.cancel_type_code not in ('MO_SCO_REJECT','BL_REJECT_ASOKR') and
+     (c.cancel_level = 1 and
+                     (c.cancel_type_group in ('GCVP'/*,'NIGHT_PRS_PKB','NIGHT_PRS_FC'*/) or
+                     (c.cancel_type_group = 'AUTO' and c.cancel_type_code <> 'AA_CALC_4_3RD_LOAN')))
+union
+----------------Отказы ЦПР
+select
+       t.folder_id,
+       trunc(t.folder_date_create_mi) FOLDER_DATE,
+       t.folder_date_create_mi,
+       t.iin,
+       t.pos_code,
+       t.pos_name,
+       t.x_dnp_name,
+       t.expert_name,
+       c.CANCEL_TYPE_NAME as CANCEL_TYPE_NAME,
+       null as COMMENT_NOTE
+from M_FOLDER_CON_CANCEL t
+join T_CANCEL c on c.folder_id = t.folder_id
+where t.is_credit_issued = 0 and t.is_refin = 0 and
+      t.folder_date_create_mi >=add_months(trunc(sysdate, 'month'),-6) and
+      t.cr_program_name in  ('АВТОКРЕДИТОВАНИЕ', 'АВТОКРЕДИТОВАНИЕ БУ') and
+      (c.cancel_level = 1 and c.cancel_type_group = 'CPR'/* or (c.cancel_type_group = 'AUTO' and c.cancel_type_code = 'AA_CALC_4_3RD_LOAN')*/)
+union
+--------------------------- АА
+select
+       t.folder_id,
+       trunc(t.folder_date_create_mi) FOLDER_DATE,
+       t.folder_date_create_mi,
+       t.iin,
+       t.pos_code,
+       t.pos_name,
+       t.x_dnp_name,
+       t.expert_name,
+       'ОТКАЗ АВТОАНДЕРРАЙТИНГА' as CANCEL_TYPE_NAME,
+       ca.auto_calc_result as COMMENT_NOTE
+from M_FOLDER_CON_CANCEL t
+join V_CONTRACT_ALL_RFO ca on ca.rfo_contract_id = t.rfo_contract_id
+where t.is_credit_issued = 0 and t.is_refin = 0 and
+      t.folder_date_create_mi >=add_months(trunc(sysdate, 'month'),-6) and
+      t.cr_program_name in  ('АВТОКРЕДИТОВАНИЕ', 'АВТОКРЕДИТОВАНИЕ БУ') and
+      ca.is_aa_approved = 0
+union
+--------------------------- АА 2
+select
+       t.folder_id,
+       trunc(t.folder_date_create_mi) FOLDER_DATE,
+       t.folder_date_create_mi,
+       t.iin,
+       t.pos_code,
+       t.pos_name,
+       t.x_dnp_name,
+       t.expert_name,
+       c.CANCEL_TYPE_NAME as CANCEL_TYPE_NAME,
+       ca.auto_calc_result as COMMENT_NOTE
+from M_FOLDER_CON_CANCEL t
+left join V_CONTRACT_ALL_RFO ca on ca.rfo_contract_id = t.rfo_contract_id
+join T_CANCEL c on c.folder_id = t.folder_id
+where t.is_credit_issued = 0 and t.is_refin = 0 and
+      t.folder_date_create_mi >=add_months(trunc(sysdate, 'month'),-6) and
+      t.cr_program_name in  ('АВТОКРЕДИТОВАНИЕ', 'АВТОКРЕДИТОВАНИЕ БУ') and
+      c.cancel_type_group = 'AUTO' and
+      c.cancel_type_code = 'AA_CALC_4_3RD_LOAN'
+union
+--------------------------- Верификаторы
+select
+       t.folder_id,
+       trunc(t.folder_date_create_mi) FOLDER_DATE,
+       t.folder_date_create_mi,
+       t.iin,
+       t.pos_code,
+       t.pos_name,
+       t.x_dnp_name,
+       t.expert_name,
+       c.CANCEL_TYPE_NAME as CANCEL_TYPE_NAME,
+       v.verif_comment as COMMENT_NOTE
+from M_FOLDER_CON_CANCEL t
+join V_VERIFICATION V on v.folder_id = t.folder_id
+join T_CANCEL c on c.folder_id = t.folder_id
+where t.is_credit_issued = 0 and t.is_refin = 0 and
+      t.folder_date_create_mi >=add_months(trunc(sysdate, 'month'),-6) and
+      t.cr_program_name in  ('АВТОКРЕДИТОВАНИЕ', 'АВТОКРЕДИТОВАНИЕ БУ') and
+      c.cancel_type_code in ('VERIFICATION_CONTACT','VERIFICATION_PHOTO');
+grant select on U1.M_AUTO_OUT_CANCEL to AUTO_USER;
+grant select on U1.M_AUTO_OUT_CANCEL to LOADDB;
+grant select on U1.M_AUTO_OUT_CANCEL to LOADER;
+
+

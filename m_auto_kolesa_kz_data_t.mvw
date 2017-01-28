@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_AUTO_KOLESA_KZ_DATA_T
+build deferred
+refresh complete on demand
+as
+select  t.akk_data_id,
+        t.akk_brend,
+        t.akk_model,
+        t.akk_year_car,
+        t.akk_drive,
+        t.akk_engine_volume,
+        t.akk_kpp_type,
+        t.akk_body_type,
+        t.avg_price,t.confidence_level,t.price_correction
+
+from M_AUTO_KOLESA_KZ_DATA_T2 t
+group by t.akk_data_id,
+        t.akk_brend,
+        t.akk_model,
+        t.akk_year_car,
+        t.akk_drive,
+        t.akk_engine_volume,
+        t.akk_kpp_type,
+        t.akk_body_type,
+        t.avg_price,t.confidence_level,t.price_correction;
+grant select on U1.M_AUTO_KOLESA_KZ_DATA_T to LOADDB;
+grant select on U1.M_AUTO_KOLESA_KZ_DATA_T to LOAD_MO;
+
+

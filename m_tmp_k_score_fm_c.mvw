@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_TMP_K_SCORE_FM_C
+refresh complete on demand
+as
+select t.*,
+
+round(coalesce(t.contract_pmt,0) + coalesce(t.other_deal_pmt,0) + coalesce(t.pkb_pmt,0)) client_kdn_pmt,
+
+t2.inc_pred_target inc_pred_target2,
+t2.inc_pred inc_pred2,
+t2.kdn_pred kdn_pred2,
+t2.is_kdn_regulated_pred is_kdn_regulated_pred2,
+
+t3.inc_pred_target inc_pred_target3,
+t3.inc_pred inc_pred3,
+t3.kdn_pred kdn_pred3,
+t3.is_kdn_regulated_pred is_kdn_regulated_pred3,
+
+t4.inc_pred_target inc_pred_target4,
+t4.inc_pred inc_pred4,
+t4.kdn_pred kdn_pred4,
+t4.is_kdn_regulated_pred is_kdn_regulated_pred4
+
+from M_TMP_K_SCORE_F1_C t
+join M_TMP_K_SCORE_F2_C t2 on t2.deal_number = t.deal_number
+join M_TMP_K_SCORE_F3_C t3 on t3.deal_number = t.deal_number
+join M_TMP_K_SCORE_F4_C t4 on t4.deal_number = t.deal_number;
+grant select on U1.M_TMP_K_SCORE_FM_C to LOADDB;
+grant select on U1.M_TMP_K_SCORE_FM_C to LOADER;
+
+

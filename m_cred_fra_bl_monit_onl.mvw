@@ -1,0 +1,94 @@
+﻿create materialized view U1.M_CRED_FRA_BL_MONIT_ONL
+build deferred
+refresh force on demand
+as
+select
+distinct
+f.id,
+o.c_form_client_st#inn,
+b.c_date_create,
+--c.c_date,
+--cl.c_inn,
+u.c_name,
+ct.c_name as reason,
+
+tn.c_type_tov
+--pr.c_code
+
+/* m.folder_number as folder_number,
+ m.iin,
+ m.folder_date_create_mi,
+ u.c_name as manager,
+ ct.c_name as reason,
+ m.product_type as product_type*/
+ --tn.c_name as product
+
+  from IBS.Z#FOLDERS@rfo f
+  join IBS.Z#KAS_CANCEL@rfo c
+    on f.id = c.c_folders
+  join IBS.Z#KAS_CANCEL_TYPES@rfo ct
+    on ct.id = c.c_type
+  join IBS.Z#CM_CHECKPOINT@rfo cp
+    on cp.id = f.id
+  join IBS.Z#CM_HISTORY@rfo h
+    on h.collection_id=cp.c_history
+  join  IBS.Z#CM_LINE@rfo l
+    on h.c_line=l.id
+  join IBS.z#user@rfo u
+    on u.id=h.c_user
+  /*join IBS.Z#RDOC@rfo rd
+    on rd.collection_id=f.c_docs
+  join IBS.Z#FDOC@rfo fd
+    on fd.id=rd.c_doc
+  join IBS.Z#KAS_PC_DOG@rfo cd2
+    on fd.id = cd2.id
+  join IBS.Z#KAS_CARD_SCHEME@rfo kcs
+    on kcs.id = cd2.c_pc_scheme
+  join IBS.Z#PROPERTIES@rfo p
+    on kcs.c_add_prop = p.collection_id
+  join IBS.z#PROD_PROPERTY@rfo pr
+    on p.c_prop = pr.id
+  join IBS.Z#CREDIT_DOG@rfo cd
+    on p.COLLECTION_ID = cd.c_kas_add_prop
+  join IBS.Z#CLIENT@rfo cl
+    on cl.id=cd.c_client_ref*/
+
+  join IBS.Z#KAS_ONLINE_CLAIM@rfo o
+    on o.c_folder_ref = f.id
+  join IBS.Z#KAS_ONLINE_BUY@rfo b
+    on o.c_buy_ref = b.id
+  join IBS.Z#PROD_INFO@rfo i
+    on i.collection_id = b.c_prod_info
+  join IBS.Z#KAS_TOV_NAME@rfo tn
+    on tn.id = i.c_name_ref
+ where trunc(cp.c_date_create) >= trunc(sysdate)
+   and ((ct.c_code = 'ПОДОЗР. МОШЕННИЧЕСТВ') --ПОДОЗРЕНИЕ В МОШЕННИЧЕСТВЕ
+        or ((upper(c.c_note) like '%НЕ%ВНУШАЕТ%ДОВЕР%' or
+        upper(c.c_note) like '%ПРЕДОСТАВЛЕНИЕ%ЛОЖНОЙ%ИНФОРМАЦ%' or
+        upper(c.c_note) like '%ВЕДЕТ%СЕБЯ%ПОДОЗРИТЕЛЬН%' or
+        upper(c.c_note) like '%ПЕРЕПИСЫВ%С%БУМАГ%' or
+        upper(c.c_note) like '%ЧИТА%С%МОБИЛЬН%ТЕЛЕФОН%' or
+        upper(c.c_note) like '%ВЫЗЫВАЕТ%СОМНЕН%' or
+        upper(c.c_note) like '%ИНФОРМАЦ%С%БУМАЖК%ЧИТА%' or
+        upper(c.c_note) like '%ИНФОРМАЦ%ДАЕТ%НЕУВЕРЕНН%' or
+        upper(c.c_note) like '%НЕ%В%АДЕКВАТН%СОСТОЯН%' or
+        upper(c.c_note) like '%НЕ%ВНУЧАЕТ%ДОВЕР%' or
+        upper(c.c_note) like '%НЕ%ВЫЗЫВ%ДОВЕР%' or
+        upper(c.c_note) like '%ЯВЛЯЕТСЯ%ПОДОЗРИТЕЛЬН%' or
+        upper(c.c_note) like '%ПОДОЗРЕН%В%МОШЕННИЧЕСТВ%') and
+        ct.c_code in ('ТЕХПРИЧИНА',
+                          'ПРОЧЕЕ',
+                          'НЕ ТРЕЗВЫЙ',
+                          'НЕ УСТР. ПЕРЕПЛАТА',
+                          'ИЗМЕН. АНКЕТ. ДАННЫХ',
+                          'НЕТ СХЕМЫ',
+                          'НЕ УСТР. УСЛ. АЛЬТЕР')))
+ /*group by m.folder_number,
+          m.iin,
+          m.folder_date_create_mi,
+          u.c_name,
+          ct.c_name,
+          m.product_type;*/;
+grant select on U1.M_CRED_FRA_BL_MONIT_ONL to LOADDB;
+
+

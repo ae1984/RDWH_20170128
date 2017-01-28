@@ -1,0 +1,20 @@
+﻿create materialized view U1.V_CLIENT_CAL_TMP_REF
+using no index
+refresh complete on demand
+as
+select * from (
+select cc.client_id, cc.client_iin_last, t1.oper_date_min_dwh, t2.oper_date_min_sas
+from V_CLIENT_CAL cc
+left join (select c.client_id, min(d.rdf_rep_date) as oper_date_min_dwh
+      from V_DWH_REFIN_2013 d
+      join V_CONTRACT_CAL c on c.contract_number = d.rdf_res_deal_number
+      group by c.client_id) t1 on t1.client_id = cc.client_id
+left join (select c.client_id, min(s.operation_date) as oper_date_min_sas
+     from TMP_SAS_REFIN_RESTR_2013 s
+     join V_CONTRACT_CAL c on c.contract_number = s.contract_number_after
+     group by c.client_id) t2 on t2.client_id = cc.client_id
+) where oper_date_min_dwh is not null or oper_date_min_sas is not null;
+grant select on U1.V_CLIENT_CAL_TMP_REF to LOADDB;
+grant select on U1.V_CLIENT_CAL_TMP_REF to LOADER;
+
+

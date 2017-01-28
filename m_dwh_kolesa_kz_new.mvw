@@ -1,0 +1,47 @@
+﻿create materialized view U1.M_DWH_KOLESA_KZ_NEW
+build deferred
+refresh force on demand
+as
+select kolesa_id,
+        kolesa_brand,
+        kolesa_model,
+        kolesa_year,
+        kolesa_color,
+        kolesa_price,
+        kolesa_phone,
+        kolesa_email,
+        kolesa_region,
+        kolesa_fuel,
+        kolesa_volume,
+        kolesa$change_date,
+        kolesa_publication_date,
+        kolesa_created_at,
+        kolesa_updated_at,
+        kolesa_text,
+        kolesa_car_body,
+        kolesa_car_transm,
+        kolesa_emergency,
+        kolesa_car_order,
+        kolesa_custom,
+        kolesa_condition,
+        kolesa_sweel,
+        kolesa_price_currency,
+        kolesa_car_dwheel,
+        kolesa_car_run,
+        kolesa_torg,
+        kolesa_price_user,
+        kolesa_kas_date,
+        kolesa_kas_sto,
+        kolesa_kas_state,
+        kolesa_kas_electronics,
+        kolesa_kas_wheel,
+        kolesa_kas_engine,
+        kolesa_kas_interior,
+        kolesa_kas_body,
+        kolesa_kas_interest_free,
+        kolesa_color_m,
+        kolesa_avtosalon_ref
+ from DWH_STAGE.S64_KOLESA_KZ@rdwh_EXD;
+grant select on U1.M_DWH_KOLESA_KZ_NEW to LOADDB;
+
+

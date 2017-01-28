@@ -1,0 +1,34 @@
+﻿create table U1.T_KASPIRED_RULES_BY_PHONE
+(
+  phone_number VARCHAR2(200),
+  rule         VARCHAR2(200),
+  insert_date  DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.IDX_KASPIRED_RULES_BY_PHONE_1 on U1.T_KASPIRED_RULES_BY_PHONE (INSERT_DATE)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_KASPIRED_RULES_BY_PHONE to LOADDB;
+

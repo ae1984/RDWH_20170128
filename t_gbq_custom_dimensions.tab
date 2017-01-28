@@ -1,0 +1,33 @@
+﻿create table U1.T_GBQ_CUSTOM_DIMENSIONS
+(
+  id        NUMBER,
+  hit_id    VARCHAR2(50),
+  dim_index NUMBER(6),
+  dim_value VARCHAR2(100),
+  idate     TIMESTAMP(6)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_GBQ_CUSTOM_DIMENSIONS
+  is 'Информация';
+comment on column U1.T_GBQ_CUSTOM_DIMENSIONS.id
+  is 'Идентификатор';
+comment on column U1.T_GBQ_CUSTOM_DIMENSIONS.hit_id
+  is 'ID посещения страницы';
+comment on column U1.T_GBQ_CUSTOM_DIMENSIONS.dim_index
+  is 'Индекс(1-city,2-category,3-ProductName,4-MerchantName,5-MinPrice,6-MerchantPosition,7-Price,8-MerchanrReviews,9-MerchanrRating,10-Environment,14-k-stat,15-DeliveryType,16-Paymenttype,18-Button,19-LoggedIn';
+comment on column U1.T_GBQ_CUSTOM_DIMENSIONS.dim_value
+  is 'Значение индекса';
+grant select on U1.T_GBQ_CUSTOM_DIMENSIONS to LOADDB;
+

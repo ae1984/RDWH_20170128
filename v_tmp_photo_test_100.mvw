@@ -1,0 +1,47 @@
+﻿create materialized view U1.V_TMP_PHOTO_TEST_100
+using no index
+refresh complete on demand
+as
+select a.* from (
+select distinct a.folder_date_create_mi,
+       b.contract_number,
+       a.folder_id,
+       --a.folder_state,
+       a.rfo_contract_id,
+       a.rfo_client_id,
+       a.is_credit_issued,
+       a.cr_program_name,
+       b.delinq_rate,
+       a.iin,
+       c.folder_state,
+       d.verif_photo_result,
+       e.c_uid,
+       e.c_name,
+       e.c_date,
+       e.c_fold_id
+from m_folder_con_cancel a
+join m_contract_cal_del b on a.contract_number = b.contract_number
+     and a.folder_id = b.folder_id_first
+     and b.delinq_rate_pmt_1 = 0
+     and b.delinq_rate_pmt_1_7 = 0 and b.delinq_rate_pmt_1_45 = 0
+     and delinq_rate = 0
+     and delinq_rate_b_w = 0
+    /* v_contract_cal b on b.contract_number = a.contract_number and a.folder_id = b.folder_id_first
+     and b.delinq_days_max = 0*/
+join v_folder_all_rfo c on a.folder_id = c.folder_id
+join v_verification d on c.folder_id = d.folder_id and d.verif_photo_result = 'ОДОБРЕНИЕ'
+join v_rfo_z#images e on a.folder_id = e.c_fold_id and upper(e.c_name) like '%FOTO_FL%'
+     and trunc(e.c_date) = trunc(a.folder_date_create_mi)
+where trunc(a.folder_date_create_mi) < to_date('01.10.2014', 'dd.mm.yyyy')
+and a.cr_program_name not in ('РЕФИНАНСИРОВАНИЕ АВТОКРЕДИТА',
+'РЕФИНАНСИРОВАНИЕ/РЕСТРУКТУРИЗАЦИЯ',
+'РЕВОЛЬВЕРНЫЕ КАРТЫ',
+'ПРОСТАЯ КАРТА')
+and a.is_credit_issued = 1
+order by a.folder_date_create_mi desc) a
+where rownum < 30000
+and a.c_fold_id is not null;
+grant select on U1.V_TMP_PHOTO_TEST_100 to LOADDB;
+grant select on U1.V_TMP_PHOTO_TEST_100 to LOADER;
+
+

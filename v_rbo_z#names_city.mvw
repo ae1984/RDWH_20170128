@@ -1,0 +1,33 @@
+﻿create materialized view U1.V_RBO_Z#NAMES_CITY
+using no index
+refresh complete on demand
+as
+select t.id,
+       upper(t.c_name) as c_name,
+       t.c_country,
+       t.c_hours_zone,
+       t.c_cod_city,
+       t.c_admin_center,
+       t.c_region,
+       t.c_people_place,
+       t.c_area,
+       t.c_region_gni,
+       t.c_ows_code_city,
+       t.c_kladr,
+       t.c_lat_name,
+       t.c_short_name,
+       t.c_full_name,
+       t.c_tax_insp,
+       t.c_zip,
+       t.c_region_area,
+       t.c_new_name,
+       t.c_archaic,
+       t.c_main_city,
+       t.c_status,
+       t.c_kas_ext_id,
+       t.c_code_kato
+  from rdwh.V_RBO_Z#NAMES_CITY@rdwh_exd t;
+grant select on U1.V_RBO_Z#NAMES_CITY to LOADDB;
+grant select on U1.V_RBO_Z#NAMES_CITY to LOADER;
+
+

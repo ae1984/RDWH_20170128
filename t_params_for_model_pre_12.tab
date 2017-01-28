@@ -1,0 +1,25 @@
+﻿create table U1.T_PARAMS_FOR_MODEL_PRE_12
+(
+  rfo_client_id         NUMBER,
+  rfo_con_or_claim_id   NUMBER,
+  folder_id             NUMBER,
+  iin                   VARCHAR2(36),
+  folder_date_create_mi DATE,
+  phone_mobile          VARCHAR2(44),
+  popularity            NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_PARAMS_FOR_MODEL_PRE_12 to LOADDB;
+

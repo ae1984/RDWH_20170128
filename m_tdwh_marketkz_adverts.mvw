@@ -1,0 +1,62 @@
+﻿create materialized view U1.M_TDWH_MARKETKZ_ADVERTS
+using no index
+refresh complete on demand
+as
+select mn.id,
+            mn.parent_cat_id,
+            mn.adv_name,
+            mn.price,
+            mn.region_name,
+            mn.address,
+            mn.phone,
+            mn.seller_name,
+            mn.seller_url,
+            mn.publish_date,
+            mn.views_cnt,
+            mn.idate,
+            mn.udate,
+            mn.cat_name,
+            mn.cat_url,
+            mn.advert_url,
+            mn.phone1,
+            mn.phone2,
+            mn.phone3,
+            mn.phone4,
+            mn.phone5,
+            mn.phone6,
+            mn.phone7,
+            regexp_replace(
+                            regexp_replace(regexp_replace(mn.phone1,'[+]|^8','')
+                                           ,'([[:digit:]]{1})(701|702|707|705|777|775|747|771|778|700|776|708|776|700)([[:digit:]]{7})','\2\3')
+                          ,'(701|702|707|705|777|775|747|771|778|700|776|708|776|700)([[:digit:]]{7})(([[:digit:]]|))','\1\2') as PHONE1_clear,
+              regexp_replace(
+                            regexp_replace(regexp_replace(mn.phone2,'[+]|^8','')
+                                           ,'([[:digit:]]{1})(701|702|707|705|777|775|747|771|778|700|776|708|776|700)([[:digit:]]{7})','\2\3')
+                          ,'(701|702|707|705|777|775|747|771|778|700|776|708|776|700)([[:digit:]]{7})(([[:digit:]]|))','\1\2') as PHONE2_clear,
+              regexp_replace(
+                            regexp_replace(regexp_replace(mn.phone3,'[+]|^8','')
+                                           ,'([[:digit:]]{1})(701|702|707|705|777|775|747|771|778|700|776|708|776|700)([[:digit:]]{7})','\2\3')
+                          ,'(701|702|707|705|777|775|747|771|778|700|776|708|776|700)([[:digit:]]{7})(([[:digit:]]|))','\1\2') as PHONE3_clear,
+              regexp_replace(
+                            regexp_replace(regexp_replace(mn.phone4,'[+]|^8','')
+                                           ,'([[:digit:]]{1})(701|702|707|705|777|775|747|771|778|700|776|708|776|700)([[:digit:]]{7})','\2\3')
+                          ,'(701|702|707|705|777|775|747|771|778|700|776|708|776|700)([[:digit:]]{7})(([[:digit:]]|))','\1\2') as PHONE4_clear,
+              regexp_replace(
+                            regexp_replace(regexp_replace(mn.phone5,'[+]|^8','')
+                                           ,'([[:digit:]]{1})(701|702|707|705|777|775|747|771|778|700|776|708|776|700)([[:digit:]]{7})','\2\3')
+                          ,'(701|702|707|705|777|775|747|771|778|700|776|708|776|700)([[:digit:]]{7})(([[:digit:]]|))','\1\2') as PHONE5_clear,
+              regexp_replace(
+                            regexp_replace(regexp_replace(mn.phone6,'[+]|^8','')
+                                           ,'([[:digit:]]{1})(701|702|707|705|777|775|747|771|778|700|776|708|776|700)([[:digit:]]{7})','\2\3')
+                          ,'(701|702|707|705|777|775|747|771|778|700|776|708|776|700)([[:digit:]]{7})(([[:digit:]]|))','\1\2') as PHONE6_clear,
+              regexp_replace(
+                            regexp_replace(regexp_replace(mn.phone7,'[+]|^8','')
+                                           ,'([[:digit:]]{1})(701|702|707|705|777|775|747|771|778|700|776|708|776|700)([[:digit:]]{7})','\2\3')
+                          ,'(701|702|707|705|777|775|747|771|778|700|776|708|776|700)([[:digit:]]{7})(([[:digit:]]|))','\1\2') as PHONE7_clear,
+            mn.initial_publish_date,
+            mn.client_dwh_id
+       from KASPISHOP.MARKETKZ_ADVERTS@tdwh2 mn;
+grant select on U1.M_TDWH_MARKETKZ_ADVERTS to LOADDB;
+grant select on U1.M_TDWH_MARKETKZ_ADVERTS to LOADER;
+
+

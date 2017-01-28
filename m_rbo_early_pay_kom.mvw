@@ -1,0 +1,57 @@
+﻿create materialized view U1.M_RBO_EARLY_PAY_KOM
+refresh force on demand
+as
+select /*+ parallel 30*/
+          cr.id as rbo_contract_id,
+          cr.c_num_dog as contract_number,
+          cr.c_date_begin,
+          cr.c_date_begining,
+          cr.c_date_close,
+          cr.c_date_ending,
+          cl.c_name,
+          cl.c_inn,
+          fo.c_date,
+          sum(fo.c_summa) as komm_sum,
+          vod.c_code,
+          vod.sys_name,
+          case when poc.rbo_contract_id is not null then 1
+               when l.refin_rbo_contract_id is not null then 3
+               when cc.cnt_pay = 1 then 2
+               when cc.cnt_pay >1 then 4
+          end as pay_priz
+    from V_RBO_Z#PR_CRED cr
+    join T_RBO_Z#FACT_OPER fo on fo.collection_id = cr.c_list_pay
+    join V_RBO_Z#VID_OPER_DOG vod on vod.id = fo.c_oper
+    left join V_RBO_Z#CLIENT cl on cl.id = cr.c_client
+    left join M_RBO_PLAN_OPER_CREDIT_TST poc on poc.rbo_contract_id = cr.id and poc.is_decl_early_p in (4,4.2) and poc.date_early_p = cr.c_date_close
+    left join M_RBO_CONTRACT_REFIN_LINK l on l.refin_rbo_contract_id = cr.id and l.refin_date = cr.c_date_close
+    left join (select c.rbo_contract_id,plan_date_x,count(1) over (partition by c.rbo_contract_id order by plan_date_x desc range between unbounded preceding and 1 preceding) cnt_pay
+                from M_RBO_PLAN_OPER_CREDIT_TST c) cc  on cc.rbo_contract_id = cr.id and cc.plan_date_x = cr.c_date_close
+    where cr.c_date_close < cr.c_date_ending
+      and cr.c_date_close is not null
+      and fo.c_date = cr.c_date_close
+      and vod.c_code = 'КОМ_ВЕД'
+      and fo.c_reverse_fo is null
+      and not exists (select 1 from T_RBO_Z#FACT_OPER fo1 where fo1.c_reverse_fo = fo.id)
+    --  and cr.c_num_dog = 'R1046142-003/CRD-3'
+      group by cr.id ,
+          cr.c_num_dog ,
+          cr.c_date_begin,
+          cr.c_date_begining,
+          cr.c_date_close,
+          cr.c_date_ending,
+          cl.c_name,
+          cl.c_inn,
+          fo.c_date,
+          vod.c_code,
+          vod.sys_name,
+          cr.c_list_plan_pay,
+          case when poc.rbo_contract_id is not null then 1
+               when l.refin_rbo_contract_id is not null then 3
+               when cc.cnt_pay = 1 then 2
+               when cc.cnt_pay >1 then 4
+          end;
+grant select on U1.M_RBO_EARLY_PAY_KOM to LOADDB;
+grant select on U1.M_RBO_EARLY_PAY_KOM to LOADER;
+
+

@@ -1,0 +1,46 @@
+﻿create materialized view U1.V_DATA_GCVP_RFO
+using no index
+refresh complete on demand
+as
+select /*+parallel(15) parallel_index(15) */
+     fg.folder_id,
+     g.x_client_iin as iin,
+     g.x_client_rnn as rnn,
+     to_char(g.c_statement_date,'dd.mm.yyyy') as gcvp_date,
+     upper(g.c_surname) as surname,
+     upper(g.c_name) as first_name,
+     upper(g.c_middlename) as patronymic,
+     to_char(g.c_dateofbirth,'dd.mm.yyyy') as birth_date,
+     g.c_avg_gcvp_payment as avg_gcvp_payment,
+     g.c_sal as sal,
+     g.c_payment_qty as payment_qty,
+     grnn.org_rnn,
+     grnn.org_bin,
+     grnn.pmt_date_max,
+     grnn.pmt_date_min
+from V_RFO_Z#KAS_GCVP_REPORT g,
+    (select fld.id as folder_id,
+            max(a.id) as gcvp_id
+        from V_RFO_Z#KAS_GCVP_REPORT a,
+             V_RFO_Z#FDOC a1, V_RFO_Z#RDOC b,
+             V_RFO_Z#FOLDERS fld
+        where a.id = a1.id
+          and a1.class_id = 'KAS_GCVP_REPORT'
+          and b.c_doc = a1.id
+          and b.collection_id = fld.c_docs
+          and a.c_error_code = 0
+        group by fld.id) fg,
+     (select t.id as gcvp_id,
+       max(p.x_org_rnn) keep (dense_rank last order by p.id) as org_rnn,
+       max(p.x_org_bin) keep (dense_rank last order by p.id) as org_bin,
+       max(p.c_payment_date) as pmt_date_max,
+       min(p.c_payment_date) as pmt_date_min
+       from V_RFO_Z#KAS_GCVP_REPORT t, V_RFO_Z#KAS_GCVP_PAYMENT p
+       where t.c_payments_arr = p.collection_id
+       group by t.id) grnn
+where   g.id = fg.gcvp_id and
+        g.id = grnn.gcvp_id(+);
+grant select on U1.V_DATA_GCVP_RFO to LOADDB;
+grant select on U1.V_DATA_GCVP_RFO to LOADER;
+
+

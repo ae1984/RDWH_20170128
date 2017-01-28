@@ -1,0 +1,37 @@
+﻿create materialized view U1.V_TMP_JAN_REJ_EKT_NEW_RGOODS
+refresh force on demand
+as
+select contract_number from (
+      select contract_number, sum(new_risky_goods_same_count) as new_risky_goods_all_count,
+             max(new_risky_goods_same_count) as new_max_risky_goods_same_count,
+             case when max(contract_amount) >= 350000 then 1 else 0 end as cred_level
+      from (
+          select ce.contract_number, ce.product_name, count(*) as new_risky_goods_same_count, max(contract_amount) as contract_amount
+          from V_CONTRACT_EKT_DWH ce
+          join (select rg1.product_name from V_TMP_JAN_RGOODS_1 rg1
+                union select mr.title as product_name from V_MO_RISKY_GOODS mr) rg on rg.product_name = ce.product_name
+          group by ce.contract_number, ce.product_name
+      ) group by contract_number
+      ) a where
+              not (new_risky_goods_all_count = 1 and cred_level = 0 and new_max_risky_goods_same_count = 1) and
+              not (new_risky_goods_all_count = 2 and cred_level = 0 and new_max_risky_goods_same_count = 1) and
+              not (new_risky_goods_all_count = 2 and cred_level = 0 and new_max_risky_goods_same_count = 2) and
+              not (new_risky_goods_all_count = 3 and cred_level = 0 and new_max_risky_goods_same_count = 1) and
+              not (new_risky_goods_all_count = 3 and cred_level = 0 and new_max_risky_goods_same_count = 2) and
+              not (new_risky_goods_all_count = 3 and cred_level = 0 and new_max_risky_goods_same_count = 3) and
+              not (new_risky_goods_all_count = 4 and cred_level = 0 and new_max_risky_goods_same_count = 1) and
+              not (new_risky_goods_all_count = 4 and cred_level = 0 and new_max_risky_goods_same_count = 2) and
+              not (new_risky_goods_all_count = 4 and cred_level = 0 and new_max_risky_goods_same_count = 3) and
+              not (new_risky_goods_all_count = 4 and cred_level = 0 and new_max_risky_goods_same_count = 4) and
+              not (new_risky_goods_all_count = 5 and cred_level = 0 and new_max_risky_goods_same_count = 1) and
+              not (new_risky_goods_all_count = 5 and cred_level = 0 and new_max_risky_goods_same_count = 2) and
+              not (new_risky_goods_all_count = 0 and cred_level = 1 and new_max_risky_goods_same_count = 0) and
+              not (new_risky_goods_all_count = 1 and cred_level = 1 and new_max_risky_goods_same_count = 1) and
+              not (new_risky_goods_all_count = 2 and cred_level = 1 and new_max_risky_goods_same_count = 1) and
+              not (new_risky_goods_all_count = 2 and cred_level = 1 and new_max_risky_goods_same_count = 2) and
+              not (new_risky_goods_all_count = 3 and cred_level = 1 and new_max_risky_goods_same_count = 1) and
+              not (new_risky_goods_all_count = 4 and cred_level = 1 and new_max_risky_goods_same_count = 1);
+grant select on U1.V_TMP_JAN_REJ_EKT_NEW_RGOODS to LOADDB;
+grant select on U1.V_TMP_JAN_REJ_EKT_NEW_RGOODS to LOADER;
+
+

@@ -1,0 +1,22 @@
+﻿create table U1.NT_RDWH_OBJ_NUMROWS_TMP
+(
+  dt       DATE,
+  obj_name VARCHAR2(100),
+  numrows  NUMBER,
+  err      NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_RDWH_OBJ_NUMROWS_TMP to LOADDB;
+

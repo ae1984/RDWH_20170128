@@ -1,0 +1,39 @@
+﻿create table U1.NT_RDWH_HOST_CPU_UTILIZATION
+(
+  dt    DATE,
+  value NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_RDWH_HOST_CPU_UTILIZATION
+  is 'Инф. по заргуженности процессора хоста (Host CPU Utilization (%))';
+comment on column U1.NT_RDWH_HOST_CPU_UTILIZATION.dt
+  is 'Дата и время снятия показаний';
+comment on column U1.NT_RDWH_HOST_CPU_UTILIZATION.value
+  is 'значение';
+create index U1.IDX_HOST_CPU_UTILIZATION_DT on U1.NT_RDWH_HOST_CPU_UTILIZATION (DT)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.NT_RDWH_HOST_CPU_UTILIZATION to LOADDB;
+

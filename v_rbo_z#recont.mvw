@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_RBO_Z#RECONT
+refresh complete on demand
+as
+select  ID,
+        COLLECTION_ID,
+        C_DATE_RECOUNT,
+        C_COURSE,
+        C_UNIT,
+        C_USER
+   from rdwh.V_RBO_Z#RECONT@rdwh_exd;
+grant select on U1.V_RBO_Z#RECONT to LOADDB;
+grant select on U1.V_RBO_Z#RECONT to LOADER;
+
+

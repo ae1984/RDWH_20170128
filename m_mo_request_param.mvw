@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_MO_REQUEST_PARAM
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30*/ folder_id,
+                  max(date_create) as date_create,
+                  max(akk_model) keep (dense_rank  last order by t.date_create) as akk_model,
+                  max(akk_brend) keep (dense_rank  last order by t.date_create) as akk_brend
+          from (
+          select folder_id,
+                 date_create,
+                 akk_model,
+                 akk_brend
+          from(
+                select r.folder_id,r.date_create, s.field_code,s.value
+                from u1.MO_AA_REQUEST r
+                join u1.MO_AA_REQUEST_STR s on s.aa_request_id = r.id
+                where r.code_process = 'MO_AUTO_EVAL'
+                and field_code in ( 'AKK_MODEL' ,'AKK_BREND')
+                ) pivot (
+                          max(value)
+                          for field_code in ('AKK_MODEL' as AKK_MODEL,
+                                           'AKK_BREND' as AKK_BREND)
+                                  )
+          ) t
+          group by folder_id;
+grant select on U1.M_MO_REQUEST_PARAM to LOADDB;
+grant select on U1.M_MO_REQUEST_PARAM to LOADER;
+
+

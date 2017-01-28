@@ -1,0 +1,64 @@
+﻿create materialized view U1.M_DATA_ALL_TST2
+refresh complete on demand
+as
+select /*+parallel(15) parallel_index(15) */
+    d.id,
+    d.yy_mm_report,
+        to_number(substr(d.yy_mm_report,1,4)||substr(d.yy_mm_report,8,2)) as
+    yy_mm_report_num,
+        to_date(d.yy_mm_report, 'yyyy - mm') as
+    yy_mm_report_date,
+    --null as report_date,--ubrala
+    d.contract_no,
+        substr(ltrim(d.contract_no, 'R'),1,7) as
+    client_id,
+    d.rnn,
+--    d.iin,
+    nvl(d.iin, rc.iin) as iin,
+        translate(upper(d.client_name),chr(53388)||chr(53384)||chr(53383)||
+        chr(53904)||chr(53390)||chr(53380)||chr(53381),'ҚӘҮӨҰҒҢ') as
+    client_name,
+--    d.client_name,
+--    d.product,
+    nvl(rp.product, 'UNKNOWN') as product,
+    nvl(rp.product_refin, 'UNKNOWN') as product_refin,
+    d.product_programm,
+    d.contract_amount,
+    d.yy_mm_start,
+    d.start_date,
+    --null as set_revolving_date,--ubrala
+    d.end_date,
+    d.total_debt,
+    d2.delinq_days_max_client as delinq_days,
+    d.pos_code,
+    d.branch_name,
+    d.expert_name,
+        round(nvl(d.el_principal_del,0) + nvl(d.el_interest_del,0) + nvl(d.cc_principal_del,0) +
+        nvl(d.cc_overlimit_del,0) + nvl(d.cc_overdraft_del,0) + nvl(d.cc_interest_del,0),0) as
+    delinq_amount,
+    d.delinq_days as delinq_days_old,
+    --null as contract_status,--ubrala
+    --null as contract_status_prev,--ubrala
+    case when d.end_date is null then 1 else 0 end as is_card
+from DATA_ALL d
+join (select da.yy_mm_report,
+             substr(ltrim(da.contract_no,'R'),1,7) as client_id,
+             max(da.delinq_days) as delinq_days_max_client
+          from DATA_ALL da
+          group by da.yy_mm_report,
+                   substr(ltrim(da.contract_no,'R'),1,7)
+      ) d2 on d2.yy_mm_report = d.yy_mm_report and
+              d2.client_id = substr(ltrim(d.contract_no,'R'),1,7)
+left join REF_PRODUCTS rp on rp.product_program = d.product_programm
+left join (select t.x_rnn as rnn,
+                max(t.x_iin) keep (dense_rank last order by t.id) as iin
+            from V_RFO_Z#CLIENT t
+            where t.x_rnn is not null and
+                  t.class_id = 'CL_PRIV'
+            group by t.x_rnn
+           ) rc on rc.rnn = d.rnn
+where to_date(d.yy_mm_report, 'yyyy - mm') < to_date('2012-12-01','yyyy-mm-dd');
+grant select on U1.M_DATA_ALL_TST2 to LOADDB;
+grant select on U1.M_DATA_ALL_TST2 to LOADER;
+
+

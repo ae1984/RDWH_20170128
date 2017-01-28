@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_TMP_J_D_P
+refresh force on demand
+as
+select dc.prod_type,
+    -- ПРОВЕРКА
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt, -- проверка - если эти два поля равны, значит выборка верна
+    -- ПРОСРОЧКА
+    round(sum(c.delinq_rate_b_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b_w, -- USE THIS! - просрочка всего по-новому
+    case when c.yy_mm_start_last <= to_char(add_months(sysdate,-8),'yyyy - mm') then round(sum(c.delinq_rate_b_w * c.max_debt_used) / sum(c.max_debt_used),1) end as del_rate_b_w_toler,
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate, -- просрочка всего по-старому
+    round(sum(c.delinq_rate_pmt_1_45 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1_45, -- USE THIS! - просрочка 1-го платежа
+    round(sum(c.delinq_rate_npl * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_npl -- USE THIS! - просрочка по NPL (>=90 days)
+from M_CONTRACT_CAL_DEL c
+join V_DWH_PORTFOLIO_CURRENT dc on dc.deal_number = c.contract_number
+where /*c.yy_mm_start_last like '2013 - %' or */(c.yy_mm_start_last like '2014 - %'  or c.yy_mm_start_last like '2015 - %')
+      and c.yy_mm_start_last != '2015 - 07'
+      and dc.x_is_credit_issued = 1
+group by dc.prod_type,
+         c.yy_mm_start_last
+having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_J_D_P to LOADDB;
+grant select on U1.M_TMP_J_D_P to LOADER;
+
+

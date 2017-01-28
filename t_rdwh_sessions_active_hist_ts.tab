@@ -1,0 +1,36 @@
+﻿create table U1.T_RDWH_SESSIONS_ACTIVE_HIST_TS
+(
+  s_date               DATE,
+  os_usr               VARCHAR2(50),
+  usr                  VARCHAR2(50),
+  sess                 NUMBER,
+  sess_used            NUMBER,
+  sql_start_time       DATE,
+  time_min             NUMBER,
+  wait_min             NUMBER,
+  time_sec             NUMBER,
+  wait_sec             NUMBER,
+  is_locked            VARCHAR2(50),
+  sql_text             VARCHAR2(4000),
+  sql_text_cursors     VARCHAR2(4000),
+  machine              VARCHAR2(100),
+  sql_id               VARCHAR2(100),
+  job                  NUMBER,
+  what                 VARCHAR2(4000),
+  blocked_objects_list VARCHAR2(4000)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RDWH_SESSIONS_ACTIVE_HIST_TS to LOADDB;
+

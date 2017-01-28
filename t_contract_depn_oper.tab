@@ -1,0 +1,86 @@
+﻿create table U1.T_CONTRACT_DEPN_OPER
+(
+  rbo_contract_id   NUMBER(20) not null,
+  c_code_debt       VARCHAR2(75) not null,
+  c_name_debt       VARCHAR2(300),
+  c_code_oper       VARCHAR2(150) not null,
+  c_name_oper       VARCHAR2(300),
+  c_date_begin_oper DATE not null,
+  c_sum_oper_db     NUMBER(17,2),
+  c_sum_oper_cr     NUMBER(17,2),
+  c_cur_short       VARCHAR2(9)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_CONTRACT_DEPN_OPER
+  is 'Рассчитанные суммы операций по основному вкладу депозитов';
+comment on column U1.T_CONTRACT_DEPN_OPER.rbo_contract_id
+  is 'Id депозитного договора';
+comment on column U1.T_CONTRACT_DEPN_OPER.c_code_debt
+  is 'Код вида задолженности';
+comment on column U1.T_CONTRACT_DEPN_OPER.c_name_debt
+  is 'Наименование вида задолженности';
+comment on column U1.T_CONTRACT_DEPN_OPER.c_code_oper
+  is 'Код операции по договору';
+comment on column U1.T_CONTRACT_DEPN_OPER.c_name_oper
+  is 'Наименование операции по договору';
+comment on column U1.T_CONTRACT_DEPN_OPER.c_date_begin_oper
+  is 'Дата проводки документа';
+comment on column U1.T_CONTRACT_DEPN_OPER.c_sum_oper_db
+  is 'Сумма операций по дебету';
+comment on column U1.T_CONTRACT_DEPN_OPER.c_sum_oper_cr
+  is 'Сумма операций по кредиту';
+comment on column U1.T_CONTRACT_DEPN_OPER.c_cur_short
+  is 'Валюта';
+create index U1.T_CONTRACT_DEPN_OPER_IND1 on U1.T_CONTRACT_DEPN_OPER (RBO_CONTRACT_ID, C_CODE_DEBT, C_DATE_BEGIN_OPER)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_CONTRACT_DEPN_OPER_IND2 on U1.T_CONTRACT_DEPN_OPER (C_DATE_BEGIN_OPER)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_CONTRACT_DEPN_OPER_IND3 on U1.T_CONTRACT_DEPN_OPER (RBO_CONTRACT_ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_CONTRACT_DEPN_OPER to LOADDB;
+grant select on U1.T_CONTRACT_DEPN_OPER to LOADER;
+

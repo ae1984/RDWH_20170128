@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_TMP_J_PKB_BD
+refresh complete on demand
+as
+select p.iin_rnn, max(p.birth_date) as bd_max
+from V_PKB_ALL p
+where p.iin_rnn is not null and p.birth_date is not null
+group by p.iin_rnn;
+grant select on U1.M_TMP_J_PKB_BD to LOADDB;
+grant select on U1.M_TMP_J_PKB_BD to LOADER;
+
+

@@ -1,0 +1,31 @@
+﻿create table U1.EMAIL_LOG_TST
+(
+  id             NUMBER not null,
+  email_code     VARCHAR2(32) not null,
+  date_start     TIMESTAMP(6) not null,
+  date_end       TIMESTAMP(6),
+  send_status    NUMBER not null,
+  send_error_msg VARCHAR2(2048),
+  email_body     CLOB,
+  subject        VARCHAR2(200),
+  attach_dir     VARCHAR2(200),
+  attach_file    VARCHAR2(200),
+  with_attach    NUMBER(1),
+  is_html        NUMBER(1) default 0
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.EMAIL_LOG_TST to LOADDB;
+grant select on U1.EMAIL_LOG_TST to LOADER;
+

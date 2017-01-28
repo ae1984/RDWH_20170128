@@ -1,0 +1,105 @@
+﻿create materialized view U1.M_FOLDER_MATRIX_2015
+refresh force on demand
+as
+select /*+ parallel 30 */
+       *
+
+/*
+PRSC_GCVP_PKB_ACTIVE_CONTRACTS_RES_PRE
+PRSC_CLN_4D8M_RES_PRE
+PRSC_PROD_MATRIX_RES_PRE
+SC_IS_CATEG_A
+SC_KDN_REGUL
+PRSC_REJECT_PRE_81
+*/
+from (
+    select r.id rfolder_id,
+           r.date_create,
+           dp.code_int,
+           case when dp.d_par_datatype_code = 'NUMBER' then TO_CHAR(t.value_number)
+           else t.value_text end as value_number
+    from u1.MO_RFOLDER r
+    join u1.T_MO_RFOLDER_PAR_VALUE_2015 dd on dd.rfolder_id = r.id
+                                 and dd.d_par_id = 1327 --IN_SCO_SYSTEM_SOURCE
+                                 --1340 --FAST_APPR
+                                 --and (dd.value_text is null or dd.value_text !=  'KASPI_SHOPPING')
+                                 and (dd.value_text = 'KASPI_SHOPPING')
+    join u1.T_MO_RFOLDER_PAR_VALUE_2015 t on t.rfolder_id = dd.rfolder_id
+    join u1.V_MO_D_PAR dp on dp.id = t.d_par_id
+                          and dp.code_int in ('IN_SCO_FOLDER_ID',
+                                              'IN_SCO_CLIENT_ID',
+                                              'IN_SCO_IIN',
+                                              'PRSC_IS_CLIENT_LK',
+
+                                              'PRSC_PROD_MATRIX_1_CON_CNT',
+                                              'PRSC_PROD_MATRIX_1_PROD',
+                                              'PRSC_PROD_MATRIX_1_SUM',
+                                              'PRSC_PROD_MATRIX_2_CON_CNT',
+                                              'PRSC_PROD_MATRIX_2_PROD',
+                                              'PRSC_PROD_MATRIX_2_SUM',
+                                              'PRSC_PROD_MATRIX_2TH_RES_PRE',
+                                              'PRSC_PROD_MATRIX_3TH_RES_PRE',
+                                              'PRSC_PROD_MATRIX_ONL_CNT',
+                                              'PRSC_PROD_MATRIX_ONL_SUM',
+
+                                              'PRSC_PROD_MATRIX_PROD_CNT',
+                                              'PRSC_PROD_MATRIX_PROD_CNT_CALC',
+
+                                              'PRSC_PROD_MATRIX_RES_PRE',
+                                              'PRSC_GCVP_PKB_ACTIVE_CONTRACTS_RES_PRE',
+                                              'PRSC_CLN_4D8M_RES_PRE',
+
+                                              'IN_SCO_CLN_MONEY_CRED_EXIST',
+                                              'IN_SCO_4D8M30',
+                                              'IN_SCO_PKB_ACT_CRD_CNT',
+
+
+                                              'SC_KDN_REGUL',
+                                              'SC_IS_CATEG_A',
+                                              'MO_SCO_REJECT',
+                                              'PRSC_REJECT_PRE_81',
+                                              'IN_SCO_PRESCORING'
+                                              )
+    where r.date_create >= to_date('01012015', 'ddmmyyyy')
+          --and r.date_create < to_date('01-01-2016', 'dd-mm-yyyy')
+          /*and r.id = 35894176*/
+) pivot (
+    max(value_number)
+    for code_int in ( 'IN_SCO_FOLDER_ID' IN_SCO_FOLDER_ID,
+                      'IN_SCO_CLIENT_ID' IN_SCO_CLIENT_ID,
+                      'IN_SCO_IIN' IN_SCO_IIN,
+                      'PRSC_IS_CLIENT_LK' PRSC_IS_CLIENT_LK,
+                      'PRSC_PROD_MATRIX_1_CON_CNT' PRSC_PROD_MATRIX_1_CON_CNT,
+                      'PRSC_PROD_MATRIX_1_PROD' PRSC_PROD_MATRIX_1_PROD,
+                      'PRSC_PROD_MATRIX_1_SUM' PRSC_PROD_MATRIX_1_SUM,
+                      'PRSC_PROD_MATRIX_2_CON_CNT' PRSC_PROD_MATRIX_2_CON_CNT,
+                      'PRSC_PROD_MATRIX_2_PROD' PRSC_PROD_MATRIX_2_PROD,
+                      'PRSC_PROD_MATRIX_2_SUM' PRSC_PROD_MATRIX_2_SUM,
+                      'PRSC_PROD_MATRIX_2TH_RES_PRE' PRSC_PROD_MATRIX_2TH_RES_PRE,
+                      'PRSC_PROD_MATRIX_3TH_RES_PRE' PRSC_PROD_MATRIX_3TH_RES_PRE,
+                      'PRSC_PROD_MATRIX_ONL_CNT' PRSC_PROD_MATRIX_ONL_CNT,
+                      'PRSC_PROD_MATRIX_ONL_SUM' PRSC_PROD_MATRIX_ONL_SUM,
+
+                      'PRSC_PROD_MATRIX_PROD_CNT' PRSC_PROD_MATRIX_PROD_CNT,
+                      'PRSC_PROD_MATRIX_PROD_CNT_CALC' PRSC_PROD_MATRIX_PROD_CNT_CALC,
+
+                      'PRSC_PROD_MATRIX_RES_PRE' PRSC_PROD_MATRIX_RES_PRE,
+                      'PRSC_GCVP_PKB_ACTIVE_CONTRACTS_RES_PRE' PRSC_GCVP_PKB_ACTIVE_CONTRACTS,
+                      'PRSC_CLN_4D8M_RES_PRE' PRSC_CLN_4D8M_RES_PRE,
+
+                      'IN_SCO_CLN_MONEY_CRED_EXIST' IN_SCO_CLN_MONEY_CRED_EXIST,
+                      'IN_SCO_4D8M30' IN_SCO_4D8M30,
+                      'IN_SCO_PKB_ACT_CRD_CNT' IN_SCO_PKB_ACT_CRD_CNT,
+
+
+                      'SC_KDN_REGUL' SC_KDN_REGUL,
+                      'SC_IS_CATEG_A' SC_IS_CATEG_A,
+                      'MO_SCO_REJECT' MO_SCO_REJECT,
+                      'PRSC_REJECT_PRE_81' PRSC_REJECT_PRE_81,
+                      'IN_SCO_PRESCORING' IN_SCO_PRESCORING)
+)
+--where IN_SCO_FOLDER_ID is not null;
+grant select on U1.M_FOLDER_MATRIX_2015 to LOADDB;
+grant select on U1.M_FOLDER_MATRIX_2015 to LOADER;
+
+

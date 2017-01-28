@@ -1,0 +1,68 @@
+﻿create materialized view U1.M_APP_MINER_FORM_GUESS_PRE4X
+build deferred
+refresh force on demand
+as
+select t.app_id,
+
+       /*t.folder_date_create,
+       t.folder_date_create - 180,
+       last_value(t.folder_date_create) over ( order by t.folder_date_create
+                                   range between unbounded preceding and 180 preceding) as folder_date_create_180d,
+       t.folder_date_create_mi,
+       f2.inc_sal,
+       f2.inc_all,
+       (t.folder_date_create_mi - trunc(t.folder_date_create_mi)),*/
+
+       --previos object values
+       --inc_sal
+       max(f2.inc_sal) keep (dense_rank last order by t2.folder_date_create_mi) as inc_sal_last_x,
+
+       --inc_all
+       max(f2.inc_all) keep (dense_rank last order by t2.folder_date_create_mi) as inc_all_last_x,
+
+       --children
+       max(f2.children) keep (dense_rank last order by t2.folder_date_create_mi) as children_last_x,
+
+       --marital
+       max(f2.marital_status) keep (dense_rank last order by t2.folder_date_create_mi) as marital_last_x,
+
+       --phone_mobile
+       max(f2.phone_mobile) keep (dense_rank last order by t2.folder_date_create_mi) as phone_mob_last_x,
+
+       --phone_home
+       max(f2.phone_home) keep (dense_rank last order by t2.folder_date_create_mi) as phone_home_last_x
+
+
+       /*--previos object 180 days values
+       --inc_sal
+       last_value(f2.inc_sal) over ( order by t2.folder_date_create
+                                   range between unbounded preceding and 180 preceding) as inc_sal_last_180d,
+       --inc_all
+       last_value(f2.inc_all) over ( order by t2.folder_date_create
+                                   range between unbounded preceding and 180 preceding) as inc_all_last_180d,
+       --children
+       last_value(f2.children) over ( order by t2.folder_date_create
+                                   range between unbounded preceding and 180 preceding) as children_last_180d,
+       --marital
+       last_value(f2.marital_status) over ( order by t2.folder_date_create
+                                          range between unbounded preceding and 180 preceding) as marital_last_180d,
+       --phone_mobile
+       last_value(f2.phone_mobile) over ( order by t2.folder_date_create
+                                       range between unbounded preceding and 180 preceding) as phone_mob_last_180d,
+       --phone_home
+       last_value(f2.phone_home) over ( order by t2.folder_date_create
+                                     range between unbounded preceding and 180 preceding) as phone_home_last_180d*/
+
+from u1.M_APP_MINER_BAS t
+left join u1.M_APP_MINER_FORM_CLIENT f on f.app_id = t.app_id
+left join u1.M_APP_MINER_BAS t2 on t2.rfo_client_id = t.rfo_client_id
+                                         and t2.app_id != t.app_id
+                                         and t2.folder_date_create_mi < t.folder_date_create_mi
+left join u1.M_APP_MINER_FORM_CLIENT f2 on f2.app_id = t2.app_id
+where t.folder_date_create >= to_date('01012015', 'ddmmyyyy')
+/*where t.rfo_client_id = 22792275
+order by t.folder_date_create_mi*/
+group by t.app_id;
+grant select on U1.M_APP_MINER_FORM_GUESS_PRE4X to LOADDB;
+
+

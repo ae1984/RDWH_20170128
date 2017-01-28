@@ -1,0 +1,241 @@
+﻿create materialized view U1.M_RFO_ZALOG_ESTIMATE_TST2
+build deferred
+refresh complete on demand
+as
+with DAT_TIME as (select /*+ parallel(30)*/ *
+                    from (
+                           select h.collection_id                                                                            as collection_id,
+                                  h.c_line_time                                                                              as c_line_time,
+                                  p.c_code                                                                                   as c_code,
+                                  lead(h.c_line_time,1,null) over(partition by h.collection_id order by h.c_line_time,h.id ) as c_line_time_out,
+                                  lead(h.c_user,1,null) over(partition by h.collection_id order by h.c_line_time,h.id)       as user_id,
+                                  lead(p.c_name) over(partition by h.collection_id order by h.c_line_time,h.id)              as point_to_name
+                             from U1.V_RFO_Z#CM_HISTORY h
+                                  inner join U1.V_RFO_Z#CM_LINE    l on l.id = h.c_line
+                                  inner join U1.V_RFO_Z#CM_POINT   p on p.id = l.c_to_p
+                            where l.c_code like '%KAS_ZAL_ESTIMATE%'
+                          )
+                   where c_code = 'KAS_ZAL_ESTIMATE'),
+     MO_EVAL as ( select /*+ parallel(30)*/
+                         max(id) keep (dense_rank  last order by t.date_create)                           as id,
+                         max(date_create)                                                                 as date_create,
+                         max(rfo_folder_id)  keep (dense_rank  last order by t.date_create)               as rfo_folder_id,
+                         folder_id                                                                        as folder_id,
+                         max(auto_eval_price)  keep (dense_rank  last order by t.date_create)             as auto_eval_price,
+                         max(auto_eval_confidence_level)  keep (dense_rank  last order by t.date_create)  as auto_eval_confidence_level
+                    from (
+                         select id,
+                                date_create,
+                                rfo_folder_id,
+                                folder_id,
+                                auto_eval_price,
+                                auto_eval_confidence_level
+                           from (
+                                  select r.id             as id,
+                                         r.date_create    as date_create,
+                                         dp.code_int      as code_int,
+                                         t.value_number   as value_number,
+                                         r.rfo_folder_id  as rfo_folder_id
+                                    from U1.MO_RFOLDER r
+                                         inner join U1.MO_RFOLDER_PAR_VALUE t on   t.rfolder_id = r.id
+                                                                             and t.date_create >= to_date('01.01.2015','dd.mm.yyyy')
+                                         inner join U1.V_MO_D_PAR          dp on          dp.id = t.d_par_id
+                                                                             and dp.code_int in ( 'IN_AA_FOLDER_ID',
+                                                                                                  'AUTO_EVAL_PRICE',
+                                                                                                  'AUTO_EVAL_CONFIDENCE_LEVEL' )
+                                ) pivot ( max(value_number)
+                                          for code_int in ( 'IN_AA_FOLDER_ID'            as folder_id,
+                                                            'AUTO_EVAL_PRICE'            as auto_eval_price,
+                                                            'AUTO_EVAL_CONFIDENCE_LEVEL' as auto_eval_confidence_level)
+                                        )
+                         ) t
+                   group by folder_id  )
+
+select /*+ parallel(30)*/
+       to_char(chl.c_line_time,'yyyy - mm')                                    as date_estimate_yyyymm,
+       x.folder_id                                                             as folder_id,
+       chl.c_line_time                                                         as date_estimate,
+       chl.c_line_time_out                                                     as date_end_estimate,
+       cu.c_beg_time                                                           as cm_begin_time,
+       cu.c_end_time                                                           as cm_end_time,
+       case
+         when chl.c_line_time_out is not null and chl.c_line_time is not null then
+           ceil((chl.c_line_time_out - chl.c_line_time) * 24 * 60  )
+       end                                                                     as estim_time_rep,
+       case
+         when chl.c_line_time_out is not null and cu.c_beg_time is not null and chl.c_line_time_out > cu.c_beg_time then
+           ceil((chl.c_line_time_out - cu.c_beg_time) * 24 * 60)
+       end                                                                     as estim_time_fact,
+       u3.c_name                                                               as line_user_name,
+       x.brand                                                                 as brand,
+       x.model                                                                 as model,
+       x.year                                                                  as year,
+       x.vin                                                                   as vin,
+       x.point_name                                                            as point_name,
+       chl.point_to_name                                                       as point_to_name,
+       count(x.folder_id) over (partition by x.folder_id)                      as cnt_estimate,
+       dense_rank() over (partition by x.folder_id order by chl.c_line_time)   as num_estimate,
+       me.auto_eval_price                                                      as auto_eval_price,
+       nvl(me.auto_eval_confidence_level,0)                                    as auto_eval_confidence_level,
+       x.estim_user                                                            as estim_user,
+       x.is_auto_estim                                                         as is_auto_estim,
+       x.estim_id                                                              as estim_id,
+       x.info_id                                                               as info_id,
+       x.process_code                                                          as process_code,
+       chl.user_id                                                             as user_id,
+       p.c_price                                                               as oz_price,
+
+
+       --> Kazymbetov_30023  Для отчета
+       x.reg_num               as reg_num,            -- Регистрационный номер
+       x.eng_size              as eng_size,           -- Объем двиг-ля
+       x.eng_type              as eng_type,           -- Вид топлива
+       x.type_body             as type_body,          -- Тип кузова
+       x.type_of_drive         as type_of_drive,      -- Привод
+       x.type_salon            as type_salon,         -- Тип салона
+       x.transmission          as transmission,       -- Тип КПП
+       x.options               as options,            -- Комплектация
+       x.owner                 as owner,              -- Владелец  (предыдущий владелец)
+       x.estime_date           as estime_date,        -- Дата поступления в УОЗ
+       x.nok_date              as nok_date,           -- Время отправки в НОК
+       x.nok_name              as nok_name,           -- Наимен. НОК
+       x.nok_num               as nok_num,            -- № НОК
+       x.date_end              as date_end,           -- Дата выполнения заявки
+       x.time_end              as time_end            -- Время выполнения заявки
+       --< Kazymbetov_30023  Для отчета
+  from (
+         select /*+ parallel(30)*/
+                f.id            as folder_id,
+                tb.c_name       as brand,
+                tm.c_name       as model,
+                ia.c_year       as year,
+                ia.c_body_num   as vin,
+                cc.c_history    as c_history,
+                cp.c_name       as point_name,
+                u.c_name        as estim_user,
+                ud.c_name       as is_auto_estim,
+                oe.id           as estim_id,
+                ia.id           as info_id,
+                bp.c_code       as process_code,
+                cc.c_users      as cm_user_id,
+
+                --> Kazymbetov_30023  Для отчета
+                ia.c_reg_num                       as reg_num,            -- Регистрационный номер
+                ia.c_eng_size                      as eng_size,           -- Объем двиг-ля
+                ft.c_name                          as eng_type,           -- Вид топлива
+                b.c_name                           as type_body,          -- Тип кузова
+                r.c_name                           as type_of_drive,      -- Привод
+                st.c_name                          as type_salon,         -- Тип салона
+                t.c_name                           as transmission,       -- Тип КПП
+                ia.c_options                       as options,            -- Комплектация
+                ow.c_last_name || ' ' ||
+                ow.c_first_name || ' ' ||
+                ow.c_sur_name                      as owner,             -- Владелец  (предыдущий владелец)
+                oe.c_estim_date                    as estime_date,        -- Дата поступления в УОЗ
+                oe.c_nok_date                      as nok_date,           -- Время отправки в НОК
+                n.c_name                           as nok_name,           -- Наимен. НОК
+                oe.c_nok_num                       as nok_num,            -- № НОК
+                trunc(oe.c_date_end)               as date_end,           -- Дата выполнения заявки
+                to_char(oe.c_date_end, 'hh24:mi')  as time_end            -- Время выполнения заявки
+                --< Kazymbetov_30023  Для отчета
+           from U1.V_RFO_Z#CM_POINT cp
+                inner join U1.V_RFO_Z#CM_CHECKPOINT   cc on       cc.c_point = cp.id
+                inner join U1.V_RFO_Z#FOLDERS          f on             f.id = cc.id
+                inner join U1.V_RFO_Z#BUS_PROCESS     bp on            bp.id = f.c_business
+                inner join U1.V_RFO_Z#RDOC            rd on rd.collection_id = f.c_docs
+                inner join U1.V_RFO_Z#FDOC            fd on            fd.id = rd.c_doc
+                                                        and      fd.class_id = 'KAS_AUTO_ESTIM'
+                inner join U1.V_RFO_Z#KAS_AUTO_ESTIM  oe on            oe.id = fd.id
+                left  join U1.V_RFO_Z#USER             u on  oe.c_estim_user = u.id
+                inner join U1.V_RFO_Z#KAS_INFO_AUTO   ia on            ia.id = oe.c_kas_inf_auto_ref
+                inner join U1.V_RFO_Z#TRANSPORT_MODEL tm on            tm.id = ia.c_ts_model
+                inner join U1.V_RFO_Z#TRANSPORT_BRAND tb on            tb.id = tm.c_brand
+                left  join U1.V_RFO_Z#KAS_SIGNS        s on  s.collection_id = tm.c_kas_sign_avto#signs_arr_ref
+                left  join U1.V_RFO_Z#KAS_UNIVERSAL_D ud on            ud.id = s.c_sign_ref
+                --> Kazymbetov_30023  Для отчета
+                left  join U1.V_RFO_Z#KAS_UNIVERSAL_D  ft on            ft.id = ia.c_fuel_type
+                left  join U1.V_RFO_Z#TRANSPORT_BODY    b on             b.id = ia.c_type_body
+                left  join U1.V_RFO_Z#KAS_UNIVERSAL_D   r on             r.id = ia.c_type_of_drive
+                left  join U1.V_RFO_Z#KAS_UNIVERSAL_D  st on            st.id = ia.c_type_salon
+                left  join U1.V_RFO_Z#KAS_UNIVERSAL_D   t on             t.id = ia.c_transmission
+                left  join U1.V_RFO_Z#KAS_UNIVERSAL_D   n on             n.id = oe.c_nok_ref
+                left  join U1.V_RFO_Z#CL_PRIV          ow on            ow.id = ia.c_prev_owner
+                --< Kazymbetov_30023  Для отчета
+          where cc.class_id = 'FOLDERS'
+            and bp.c_code = 'KAS_ZAL_EST'
+
+          union all
+
+         select /*+ parallel(30)*/
+                f.id            as folder_id,
+                tb.c_name       as brand,
+                tm.c_name       as model,
+                ia.c_year       as year,
+                ia.c_body_num   as c_body_num,
+                cc.c_history    as c_history,
+                cp.c_name       as point_name,
+                u.c_name        as estim_user,
+                ud.c_name       as is_auto_estim,
+                oe.id           as estim_id,
+                ia.id           as info_id,
+                bp.c_code       as process_code,
+                cc.c_users      as cm_user_id,
+                --> Kazymbetov_30023  Для отчета
+                ia.c_reg_num                       as reg_num,            -- Регистрационный номер
+                ia.c_eng_size                      as eng_size,           -- Объем двиг-ля
+                ft.c_name                          as eng_type,           -- Вид топлива
+                b.c_name                           as type_body,          -- Тип кузова
+                r.c_name                           as type_of_drive,      -- Привод
+                st.c_name                          as type_salon,         -- Тип салона
+                t.c_name                           as transmission,       -- Тип КПП
+                ia.c_options                       as options,            -- Комплектация
+                ow.c_last_name || ' ' ||
+                ow.c_first_name || ' ' ||
+                ow.c_sur_name                      as owner,             -- Владелец  (предыдущий владелец)
+                oe.c_estim_date                    as estime_date,        -- Дата поступления в УОЗ
+                oe.c_nok_date                      as nok_date,           -- Время отправки в НОК
+                n.c_name                           as nok_name,           -- Наимен. НОК
+                oe.c_nok_num                       as nok_num,            -- № НОК
+                trunc(oe.c_date_end)               as date_end,           -- Дата выполнения заявки
+                to_char(oe.c_date_end, 'hh24:mi')  as time_end            -- Время выполнения заявки
+                --< Kazymbetov_30023  Для отчета
+           from U1.V_RFO_Z#CM_POINT cp
+                inner join U1.V_RFO_Z#CM_CHECKPOINT   cc on            cc.c_point = cp.id
+                inner join U1.V_RFO_Z#FOLDERS          f on                  f.id = cc.id
+                inner join U1.V_RFO_Z#BUS_PROCESS     bp on                 bp.id = f.c_business
+                inner join U1.V_RFO_Z#RDOC            rd on      rd.collection_id = f.c_docs
+                inner join U1.V_RFO_Z#FDOC            fd on                 fd.id = rd.c_doc
+                                                        and           fd.class_id = 'CREDIT_DOG'
+                inner join U1.V_RFO_Z#CREDIT_DOG cd      on                 cd.id = fd.id
+                inner join U1.V_RFO_Z#KAS_INFO_AUTO   ia on      ia.collection_id = cd.c_red#kas_auto#kas_info_auto20
+                left  join U1.V_RFO_Z#KAS_AUTO_ESTIM  oe on oe.c_kas_inf_auto_ref = ia.id
+                left  join U1.V_RFO_Z#USER             u on       oe.c_estim_user = u.id
+                inner join U1.V_RFO_Z#TRANSPORT_MODEL tm on                 tm.id = ia.c_ts_model
+                inner join U1.V_RFO_Z#TRANSPORT_BRAND tb on                 tb.id = tm.c_brand
+                left  join U1.V_RFO_Z#KAS_SIGNS        s on       s.collection_id = tm.c_kas_sign_avto#signs_arr_ref
+                left  join U1.V_RFO_Z#KAS_UNIVERSAL_D ud on                 ud.id = s.c_sign_ref
+                --> Kazymbetov_30023  Для отчета
+                left  join U1.V_RFO_Z#KAS_UNIVERSAL_D  ft on            ft.id = ia.c_fuel_type
+                left  join U1.V_RFO_Z#TRANSPORT_BODY    b on             b.id = ia.c_type_body
+                left  join U1.V_RFO_Z#KAS_UNIVERSAL_D   r on             r.id = ia.c_type_of_drive
+                left  join U1.V_RFO_Z#KAS_UNIVERSAL_D  st on            st.id = ia.c_type_salon
+                left  join U1.V_RFO_Z#KAS_UNIVERSAL_D   t on             t.id = ia.c_transmission
+                left  join U1.V_RFO_Z#KAS_UNIVERSAL_D   n on             n.id = oe.c_nok_ref
+                left  join U1.V_RFO_Z#CL_PRIV          ow on            ow.id = ia.c_prev_owner
+                --< Kazymbetov_30023  Для отчета
+          where cc.class_id = 'FOLDERS'
+            and bp.c_code = 'KAS_AUTO_CRED_PRIV_PC' ) x
+
+       inner join DAT_TIME              chl on     chl.collection_id = x.c_history
+       left  join MO_EVAL                me on          me.folder_id = x.folder_id
+                                           and trunc(me.date_create) = trunc(chl.c_line_time)
+       left  join U1.V_RFO_Z#USER        u3 on           chl.user_id = u3.id
+       left  join U1.V_RFO_Z#CM_USER     cu on      cu.collection_id = x.cm_user_id
+                                           and             cu.c_user = chl.user_id
+                                           and         cu.c_beg_time < chl.c_line_time_out
+                                           and trunc(chl.c_line_time_out)-trunc(cu.c_beg_time) < 2
+                                           and         cu.c_beg_time > chl.c_line_time
+       left  join U1.V_RFO_Z#PROD_INFO    p on                  p.id = x.info_id;
+grant select on U1.M_RFO_ZALOG_ESTIMATE_TST2 to LOADDB;
+
+

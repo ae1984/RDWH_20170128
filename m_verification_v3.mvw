@@ -1,0 +1,61 @@
+﻿create materialized view U1.M_VERIFICATION_V3
+build deferred
+refresh force on demand
+as
+with tt2 as (select /*+ parallel 30 */
+                    ss.id,
+                    ss.process_id,
+                    s1.open_time,
+                    s1.close_time,
+                    ss.script_name,
+                    ss.schema_type,
+                    ss.schema_result
+               from M_OUT_DWH_SCHEMA ss
+               join (select min(s1.id) as id, min(s1.open_time) as open_time, max(s1.close_time) as close_time, s1.process_id
+                       from M_OUT_DWH_SCHEMA s1
+                    group by s1.process_id) s1 on ss.process_id = s1.process_id and ss.id = s1.id
+               )
+
+select /*+ parallel 30 */
+       v.id as verification_id,  --Идентификатор верификации
+       v.client_id as rfo_client_id,  --Идентификатор клиента в РФО(FK на z#client)
+       d.folder_id as demand_folder_id,
+       v.folders_id as verify_folder_id,
+       p.person_tabnum,
+       v.from_rfo_to_is as send_to_verification_dtm,  --Время получения заявки в ИС.Дата и время отправки на верификацию
+       p.close_time as verification_date ,                   --Дата верификации
+       cast (upper(decode(p.verify_result,0,'Отказ',1,'Подтверждён','Не определено')) as varchar2(200)) as verification_status,
+       p.verification_type as verification_type_id,
+       p.open_time         as demand_open_dtm,
+       p.close_time        as demand_close_dtm,
+       s.open_time         as smart_script_begin_dtm,
+       s.close_time        as smart_script_finish_dtm,
+       round((d.verif_demand_date_in - d.verif_demand_date_out) * 24 * 60 * 60) as time_work_demand,
+       round((d.verif_date_create - v.from_rfo_to_is) * 24 * 60 * 60)           as time_wait_in_stock_demand,
+       round((s.close_time - s.open_time) * 24 * 60 * 60)                       as smart_script_work_time,
+       v.segment_group     as segment_group,
+       v.verify_group,
+       p.employee_group,
+       v.verify_pr_cr,
+       s.script_name as smart_script_name,
+       s.schema_type as verification_scheme,
+       cast (case when p.repeat_photo = 1 then 'ПЕРЕФОТОГРАФИРОВАНИЕ'
+                  else upper(decode(s.schema_result,1, 'Успех' ,0,'Отказ', 'Не успех'))
+              end as varchar2(200)) as smart_script_result,
+       cast(to_number(q.code) as number) as smart_script_step_code,
+       q.code||'. '||q.name as smart_script_step_name,
+       q.text as question,
+       upper(a.name) as answer_name,
+       upper(a.value) as answer_text,
+       v.verify_status as verification_result_ido
+  from M_OUT_DWH_VERIFICATION    v
+  join M_OUT_DWH_PROCESS p on p.verification_id = v.id
+                           and p.id in (select min(pp.id) from  M_OUT_DWH_PROCESS pp where pp.verification_id = v.id group by pp.verification_type)
+  join tt2 s on s.process_id = p.id
+  join M_OUT_VERIFICATION_DEMAND d on d.verification_demand_id = v.verification_id
+  left join T_OUT_DWH_QUESTION        q on q.schema_id = s.id
+  left join M_OUT_DWH_VAR             a on a.question_id = q.id;
+grant select on U1.M_VERIFICATION_V3 to LOADDB;
+grant select on U1.M_VERIFICATION_V3 to LOADER;
+
+

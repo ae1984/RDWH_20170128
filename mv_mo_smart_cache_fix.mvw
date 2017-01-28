@@ -1,0 +1,30 @@
+﻿create materialized view U1.MV_MO_SMART_CACHE_FIX
+refresh complete on demand
+as
+select 19715802543 "CLIENT_REF",
+       '730521401118' "IIN",
+       'PKB' "REPORT_KIND",
+       to_date('10062014', 'ddmmyyyy') "DATE_EXPIRE",
+       21159004614 "REPORT_ID",
+       4 "REPORT_TYPE"
+from dual
+union all
+select 19715802543 "CLIENT_REF",
+       '730521401118' "IIN",
+       'PKB' "REPORT_KIND",
+       to_date('10062014', 'ddmmyyyy') "DATE_EXPIRE",
+       21159004614 "REPORT_ID",
+       2 "REPORT_TYPE"
+from dual
+union all
+select 19715802543 "CLIENT_REF",
+       '730521401118' "IIN",
+       'GCVP' "REPORT_KIND",
+       to_date('10062014', 'ddmmyyyy') "DATE_EXPIRE",
+       21174722906 "REPORT_ID",
+       null "REPORT_TYPE"
+from dual;
+grant select on U1.MV_MO_SMART_CACHE_FIX to LOADDB;
+grant select on U1.MV_MO_SMART_CACHE_FIX to LOADER;
+
+

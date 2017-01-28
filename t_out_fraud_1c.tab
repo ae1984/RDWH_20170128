@@ -1,0 +1,28 @@
+﻿create table U1.T_OUT_FRAUD_1C
+(
+  id                NUMBER not null,
+  t_rdwh_esb_xml_id NUMBER,
+  dateoperation     DATE,
+  sumoperation      NUMBER,
+  office            VARCHAR2(2000),
+  uid_num           VARCHAR2(2000),
+  document          VARCHAR2(2000),
+  os                VARCHAR2(2000),
+  provision         VARCHAR2(1)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_OUT_FRAUD_1C to LOADDB;
+grant select on U1.T_OUT_FRAUD_1C to LOADER;
+

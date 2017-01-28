@@ -1,0 +1,74 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_1
+build deferred
+refresh force on demand
+as
+select
+     --t.rfo_client_id
+     --,t.date_create
+     t.claim_id
+     --,t.folder_id
+     ,case when trunc((t.date_create - nvl(a.date_of_birth,c.birth_date))/365.25) between 18 and 70
+        then trunc((t.date_create - nvl(a.date_of_birth,c.birth_date))/365.25)
+        else case when to_number(substr(t.claim_client_iin,5,2)) between 1 and 31 and to_number(substr(t.claim_client_iin,3,2)) between 1 and 12
+                  then trunc((t.date_create -
+                              case when to_number(substr(t.claim_client_iin,1,2)) between 0 and to_number(to_char(sysdate,'yy'))
+                                   then
+                                      to_date(substr(t.claim_client_iin,5,2)||'.'|| substr(t.claim_client_iin,3,2)||'.20'|| substr(t.claim_client_iin,1,2),'dd.mm.yyyy')
+                                   else
+                                      to_date(substr(t.claim_client_iin,5,2)||'.'|| substr(t.claim_client_iin,3,2)||'.19'|| substr(t.claim_client_iin,1,2),'dd.mm.yyyy')
+                                   end
+                              )/365.25)
+             end
+      end as age
+
+     ,round(t.date_create - max(a.reg_date)) as reg_kaspikz_length
+     ,round(trunc(t.date_create) - max(case when a.reg_date < trunc(t.date_create) then a.reg_date end)) as reg_kaspikz_length_v3
+
+     ,avg(case when b.pay_date>=t.date_create-30 and b.pay_date < trunc(t.date_create) then b.pay_amount end) as avg_sum_pay_kspkz_30_d
+     ,count(distinct case when b.pay_date>=add_months(t.date_create,-6) and b.pay_date < trunc(t.date_create) then trunc(b.pay_date,'mm') end) as count_month_kaspikz_6_m
+     ,count(distinct case when b.pay_date>=t.date_create-30 and b.pay_date < trunc(t.date_create) then b.pay_info_id end) as count_pay_kspkz_30_d
+     ,count(distinct case when b.pay_date>=add_months(t.date_create,-6) and b.pay_date < trunc(t.date_create) then b.category_name end) as count_serv_kspkz_6_m ---
+     ,count(distinct case when b.pay_date>=add_months(t.date_create,-6) and b.pay_date < trunc(t.date_create) and b.category_name = 'КОМУСЛУГИ' then trunc(b.pay_date,'mm') end) as kommunalka_kaspikz_6_m
+
+     ,count(distinct case when b.category_name = 'MOBILE' and b.pay_date < trunc(t.date_create) then b.pay_param_clear end) as count_mob_kspkz
+     --,count(distinct case when b.category_name = 'MOBILE' and b.pay_date < t.date_create then b.pay_param_clear end) as count_mob_kspkz_x
+
+     ,sum(case when b.pay_date >= trunc(t.date_create)-30 and b.pay_date < trunc(t.date_create) then b.pay_amount end) as sum_pay_kspkz_30_d
+     --,sum(case when b.pay_date >= trunc(t.date_create)-30 and b.pay_date < t.date_create then b.pay_amount end) as sum_pay_kspkz_30_d_x
+
+     ,round(count(distinct case when b.pay_date >= add_months(trunc(t.date_create),-6) and b.pay_date < trunc(t.date_create) then trunc(b.pay_date, 'mm') end)/6, 4) as share_month_kaspikz_6_m
+
+from u1.M_FOLDER_CON_CANCEL_ONLINE_1 t
+left join (
+  select  t.user_id
+          ,t.rfo_id
+          ,a.date_of_birth
+          ,a.reg_date
+  from u1.M_KASPIKZ_USERS_ALL t
+  left join u1.M_KASPIKZ_USERS a on a.id = t.user_id
+) a on a.rfo_id = to_char(t.rfo_client_id) and a.reg_date <= t.date_create
+left join u1.M_KASPIKZ_PAY b on b.rfo_client_id = t.rfo_client_id and b.pay_date<=t.date_create
+left join u1.M_CLIENT_RFO_BAS c on c.client_id_rfo = t.rfo_client_id
+--where t.rfo_client_id = 31393192
+group by
+      --t.rfo_client_id
+     --,t.date_create
+     t.claim_id
+     --,t.folder_id
+     ,case when trunc((t.date_create - nvl(a.date_of_birth,c.birth_date))/365.25) between 18 and 70
+        then trunc((t.date_create - nvl(a.date_of_birth,c.birth_date))/365.25)
+        else case when to_number(substr(t.claim_client_iin,5,2)) between 1 and 31 and to_number(substr(t.claim_client_iin,3,2)) between 1 and 12
+                  then trunc((t.date_create -
+                              case when to_number(substr(t.claim_client_iin,1,2)) between 0 and to_number(to_char(sysdate,'yy'))
+                                   then
+                                      to_date(substr(t.claim_client_iin,5,2)||'.'|| substr(t.claim_client_iin,3,2)||'.20'|| substr(t.claim_client_iin,1,2),'dd.mm.yyyy')
+                                   else
+                                      to_date(substr(t.claim_client_iin,5,2)||'.'|| substr(t.claim_client_iin,3,2)||'.19'|| substr(t.claim_client_iin,1,2),'dd.mm.yyyy')
+                                   end
+                              )/365.25)
+             end
+      end
+     ,t.date_create;
+grant select on U1.M_RFO_FRAUD_SEARCH_1 to LOADDB;
+
+

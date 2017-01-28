@@ -1,0 +1,20 @@
+﻿create materialized view U1.V_RFO_Z#CM_HISTORY_LAST_ONL_DD
+build deferred
+refresh force on demand
+as
+select /*+parallel(1)*/ *
+from
+     (select /*+parallel(1)*/ h.id,
+                                upper(u.c_name) user_name,
+                                h.collection_id, h.c_line,
+                                h.c_user,
+                                h.c_line_time, h.c_is_last,
+                                h.c_num,
+                                row_number () over (partition by collection_id order by c_line_time desc) as rn
+        from GG_RFO.Z#CM_HISTORY h
+        left join u1.T_RFO_Z#USER u on u.id=c_user
+        where c_line_time>=trunc(sysdate))
+ where rn = 1;
+grant select on U1.V_RFO_Z#CM_HISTORY_LAST_ONL_DD to LOADDB;
+
+

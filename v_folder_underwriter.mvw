@@ -1,0 +1,33 @@
+﻿create materialized view U1.V_FOLDER_UNDERWRITER
+refresh complete on demand
+as
+select coalesce(x1.folder_id, x2.folder_id) as folder_id,
+       x1.underwriter_name,
+       x2.senior_underwriter_name
+from (
+    select folder_id,
+           max(underwriter_name) keep (dense_rank last order by history_id) as underwriter_name
+    from (
+      select c.id as folder_id, h.id as history_id, u.c_name as underwriter_name
+      from V_RFO_Z#CM_CHECKPOINT c
+      join V_RFO_Z#CM_HISTORY h on h.collection_id = c.c_history
+      join V_RFO_Z#CM_LINE l on l.id = h.c_line
+      join V_RFO_Z#CM_POINT p on p.id = l.c_from_p and upper(p.c_name) = 'ПРОВЕРКА ЦПР'
+      join V_RFO_Z#USER u on u.id = h.c_user
+    ) group by folder_id
+) x1 full outer join (
+    select folder_id,
+           max(underwriter_name) keep (dense_rank last order by history_id) as senior_underwriter_name
+    from (
+      select c.id as folder_id, h.id as history_id, u.c_name as underwriter_name
+      from V_RFO_Z#CM_CHECKPOINT c
+      join V_RFO_Z#CM_HISTORY h on h.collection_id = c.c_history
+      join V_RFO_Z#CM_LINE l on l.id = h.c_line
+      join V_RFO_Z#CM_POINT p on p.id = l.c_from_p and upper(p.c_name) = 'ПОДТВЕРЖДЕНИЕ ЦПР'
+      join V_RFO_Z#USER u on u.id = h.c_user
+    ) group by folder_id
+) x2 on x2.folder_id = x1.folder_id;
+grant select on U1.V_FOLDER_UNDERWRITER to LOADDB;
+grant select on U1.V_FOLDER_UNDERWRITER to LOADER;
+
+

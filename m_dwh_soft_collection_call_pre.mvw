@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_DWH_SOFT_COLLECTION_CALL_PRE
+refresh force on demand
+as
+select /*+ parallel 20 */
+       cc.id,
+        case when regexp_like(cc.phone_number, '^[7-8]{1}[[:digit:]]{10}$') then  regexp_replace(cc.phone_number,'^[7-8]{1}','')
+             when regexp_like(cc.phone_number, '^[7-8]{2}[[:digit:]]{10}$') then  regexp_replace(cc.phone_number,'^[7-8]{2}','')
+             when regexp_like(cc.phone_number, '^[+]7[[:digit:]]{10}$') then regexp_replace(cc.phone_number,'^[+]7','')
+             else to_char(cc.phone_number)
+         end as phone_number_clear
+  from U1.M_DWH_SOFT_COLLECTION_CALLS cc;
+grant select on U1.M_DWH_SOFT_COLLECTION_CALL_PRE to LOADDB;
+grant select on U1.M_DWH_SOFT_COLLECTION_CALL_PRE to LOADER;
+
+

@@ -1,0 +1,34 @@
+﻿create materialized view U1.M_CLIENT_CAL_CATEG_PRE1
+build deferred
+refresh force on demand
+as
+select /*+ parallel(5)*/ f.rfo_client_id,
+             p1.amount_max_before,
+             p1.prev_con_closed_cnt,
+             p2.clsd_and_active_cont_cnt,
+             p2.prior_optim_count,
+             p3.fact_pmt_mon_before,
+             p3.fact_pmt_mon_before_12_mon,
+             p3.prev_con_del_days_max
+
+            /*   max(d2.x_amount) as amount_max_before,
+               count(distinct d2.deal_number) as prev_con_closed_cnt,
+               count(distinct o.spof_end_date) as prior_optim_count,
+               max(ch.delinq_days_in_month) as prev_con_del_days_max,
+               count(distinct case
+                       when ch.fact_pmts_in_month > 0 then
+                        ch.yyyy_mm_num
+                     end) as fact_pmt_mon_before,
+               count(distinct case
+                       when ch.yyyy_mm_num >=
+                            to_number(to_char(add_months((sysdate - 1), -12),
+                                              'yyyymm')) and
+                            ch.fact_pmts_in_month > 0 then
+                        ch.yyyy_mm_num
+                     end) as fact_pmt_mon_before_12_mon,
+               count(distinct d3.deal_number) AS clsd_and_active_cont_cnt*/
+          from u1.V_CLIENT_RFO_BY_ID f
+          left join M_CLIENT_CAL_CATEG_PRE11 p1 on p1.rfo_client_id=f.rfo_client_id
+          left join M_CLIENT_CAL_CATEG_PRE12 p2 on p2.rfo_client_id=f.rfo_client_id
+          left join M_CLIENT_CAL_CATEG_PRE13 p3 on p3.rfo_client_id=f.rfo_client_id;
+

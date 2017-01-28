@@ -1,0 +1,30 @@
+﻿create materialized view U1.V_RFO_Z#CONTACTS
+refresh complete on demand
+as
+select ID,
+      C_ACTIV,
+      c_numb,
+      C_TYPE,
+      COLLECTION_ID,
+      C_PRIVATE,
+      C_AFFIRMED,
+      C_ALLOW_COLLECTION,
+      C_ID_DEAL,
+      C_ID_RBO,
+      C_CID_RBO,
+      C_KAS_VERIFICATED,
+      C_DATE_AUDIT,
+      C_ALLOW_CC_2,
+      SN,
+      SU,
+       case when c_numb like '+7%' or c_numb like '8%' then
+          replace(replace(replace(replace(TRIM(c_numb),'+7','8'),'(',''),')',''),'-','')
+       else
+         c_numb
+   end as c_numb_clear
+from IBS.Z#CONTACTS@RFO_SNAP;
+grant select on U1.V_RFO_Z#CONTACTS to LOADDB;
+grant select on U1.V_RFO_Z#CONTACTS to LOADER;
+grant select on U1.V_RFO_Z#CONTACTS to RISK_VERIF;
+
+

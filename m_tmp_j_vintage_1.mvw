@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_TMP_J_VINTAGE_1
+refresh complete on demand
+as
+select t.yy_mm_start_date, t.yy_mm_report, t.ppm, t.cred_program_name,
+       count(*) as cnt, count(distinct t.rbo_contract_id) as con_cnt,
+       sum(t.max_debt_used_x) / 1000000 as max_debt_used_x_mln,
+       sum(t.total_debt_x) / 1000000 as total_debt_x_mln,
+       sum(case when t.del_days_x > 7 then t.total_debt_x end) / 1000000 as total_debt_x_del_7_mln,
+       sum(case when t.del_days_x > 30 then t.total_debt_x end) / 1000000 as total_debt_x_del_30_mln,
+       sum(case when t.del_days_x > 60 then t.total_debt_x end) / 1000000 as total_debt_x_del_60_mln,
+       sum(case when t.del_days_x > 90 then t.total_debt_x end) / 1000000 as total_debt_x_del_90_mln
+from T_RBO_CONTRACT_PORTFOLIO t
+group by t.yy_mm_start_date, t.yy_mm_report, t.ppm, t.cred_program_name;
+grant select on U1.M_TMP_J_VINTAGE_1 to LOADDB;
+grant select on U1.M_TMP_J_VINTAGE_1 to LOADER;
+
+

@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_APP_MINER_RBO_BAS_PRE5
+build deferred
+refresh force on demand
+as
+select x.app_id
+
+       ,x.kspgl_contract_cnt
+       ,case when x.kspgl_contract_cnt > 0 then 1 else 0 end as kspgl_is_active
+
+       ,x.dep_card_cont_cnt
+       ,case when x.dep_card_cont_cnt > 0 then 1 else 0 end as dep_card_is_active
+
+from (
+      select t.app_id
+
+             ,count(distinct case when a.cred_program_code = 'ZP_KASPI_GOLD' then a.rbo_contract_id end) as kspgl_contract_cnt
+
+             ,count(distinct case when a.cred_program_code = 'DEP_CARD' then a.rbo_contract_id end) as dep_card_cont_cnt
+
+      from u1.M_APP_MINER_BAS t
+      join u1.M_RBO_CONTRACT_BAS a on a.rfo_client_id = t.rfo_client_id
+                                      --and a.cred_program_code = 'ZP_KASPI_GOLD'
+                                      and a.start_date < trunc(t.folder_date_create_mi)
+                                      and coalesce(a.date_fact_end, trunc(t.folder_date_create_mi)) >= trunc(t.folder_date_create_mi)
+
+      where t.folder_date_create_mi >= to_date('01-01-2015','dd-mm-yyyy')
+      group by t.app_id
+) x;
+grant select on U1.M_APP_MINER_RBO_BAS_PRE5 to LOADDB;
+
+

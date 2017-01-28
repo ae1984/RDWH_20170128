@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_7
+refresh force on demand
+as
+select
+             t.rfo_client_id
+             ,t.date_create
+             ,t.claim_id
+             ,t.payment_date
+             ,t.c_sal as INCOME_GCVP
+             ,trunc(t.date_create - t.payment_date) as DAYS_LAST_GCVP
+   from (
+       select
+             t.rfo_client_id
+             ,t.date_create
+             ,t.claim_id
+             ,t.folder_id
+             ,a.c_sal
+             ,a.payment_date
+             ,a.x_client_iin
+             ,row_number() over (partition by a.x_client_iin order by a.dt desc) as nn
+        from M_FOLDER_CON_CANCEL_ONLINE_1 t
+        join (
+            select t.x_client_iin,c_statement_date as dt, max(a.c_payment_date) as payment_date,t.c_sal from V_RFO_Z#KAS_GCVP_report t
+            join v_rfo_z#kas_gcvp_payment a on a.collection_id = t.c_payments_arr
+            --where t.c_iin = '840112300300'
+            group by t.x_client_iin,c_statement_date, t.c_sal
+        ) a on a.x_client_iin = t.claim_client_iin and a.dt <= t.date_create + 5
+   ) t where t.nn =1;
+grant select on U1.M_RFO_FRAUD_SEARCH_7 to LOADDB;
+
+

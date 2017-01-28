@@ -1,0 +1,20 @@
+﻿create materialized view U1.M_PORTFOLIO_CON_ORD_PRE_2
+using no index
+refresh complete on demand
+as
+select * from (
+   select r1.yy_mm_report, r1.client_id, d.product, nvl(tt.con_order_by_cli,0) as con_order_by_cli,
+          r1.pmt_in_rep_sum_by_cli, r1.con_amount_in_rep_sum_by_cli, r1.total_debt_in_rep_sum_by_cli
+   from V_REPORT_CAL_1 r1
+   join V_DATA_ALL d on d.id = r1.id
+   left join M_PORTFOLIO_CON_ORD_PRE_1 tt on tt.id = r1.id
+   --where tt.yy_mm_report in ('2014 - 03','2014 - 02') and tt.client_id in (1016420, 1016347)
+) pivot (
+   max(product) as product
+   for con_order_by_cli in (1 as ord_1, 2 as ord_2, 3 as ord_3, 4 as ord_4, 5 as ord_5,
+                            6 as ord_6, 7 as ord_7, 8 as ord_8, 9 as ord_9, 0 as ord_none)
+);
+grant select on U1.M_PORTFOLIO_CON_ORD_PRE_2 to LOADDB;
+grant select on U1.M_PORTFOLIO_CON_ORD_PRE_2 to LOADER;
+
+

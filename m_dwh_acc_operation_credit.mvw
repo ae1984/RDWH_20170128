@@ -1,0 +1,42 @@
+﻿create materialized view U1.M_DWH_ACC_OPERATION_CREDIT
+build deferred
+refresh force on demand
+as
+select crop_gid,
+       crop$change_date,
+       crop$row_status,
+       crop$audit_id,
+       crop$hash,
+       crop$source,
+       crop$source_pk,
+       crop$provider,
+       crop_as_of_date,
+       crop_as_of_time,
+       crop_operation_type_cd,
+       crop_crnc_gid,
+       crop_amount,
+       crop_amount_eq,
+       crop_no_vat_amount,
+       crop_no_vat_amount_eq,
+       crop_is_fact_flg,
+       crop_credit_oper_fee_cd,
+       crop_description,
+       crop_dept_gid,
+       crop_branch_dept_gid,
+       crop_crfl_gid,
+       crop_advanced_repayment_flg,
+       crop_deal_index_type_cd,
+       crop_rest_change_type_cd,
+       crop_crdt_gid,
+       crop_reg_date,
+       crop_create_empl_gid,
+       crop_crcsh_gid,
+       crop_doc_gid,
+       crop_is_reversed_flg,
+       crop_document_status_cd,
+       crop_number,
+       crop_reverse_crop_gid
+  from dwh_main.acc_operation_credit@rdwh_exd;
+grant select on U1.M_DWH_ACC_OPERATION_CREDIT to LOADDB;
+
+

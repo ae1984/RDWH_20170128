@@ -1,0 +1,35 @@
+﻿create table U1.T_RDWH_RECOVER_TYPE
+(
+  segment_name    VARCHAR2(30),
+  recover_frst_6m NUMBER(1),
+  recover_plp     NUMBER(1),
+  recover_last_6m NUMBER(1),
+  recover_last_1m NUMBER(1)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RDWH_RECOVER_TYPE
+  is 'Таблица для определения сегментов оптимизации';
+comment on column U1.T_RDWH_RECOVER_TYPE.segment_name
+  is 'Название сегмента';
+comment on column U1.T_RDWH_RECOVER_TYPE.recover_frst_6m
+  is 'Выздоровление в первые 6 месяцев после оптимизации(1-выздоровел, 0-не выздоровел,2 - не полный период)';
+comment on column U1.T_RDWH_RECOVER_TYPE.recover_plp
+  is 'Восстановление PLP(1-выздоровел, 0-не выздоровел)';
+comment on column U1.T_RDWH_RECOVER_TYPE.recover_last_6m
+  is 'Выздоровление в последние 6 месяцев после оптимизации(1-выздоровел, 0-не выздоровел,2 - не полный период)';
+comment on column U1.T_RDWH_RECOVER_TYPE.recover_last_1m
+  is 'Выздоровление в последний месяц после оптимизации(1-выздоровел, 0-не выздоровел,2 - не полный период)';
+grant select on U1.T_RDWH_RECOVER_TYPE to LOADDB;
+grant select on U1.T_RDWH_RECOVER_TYPE to LOADER;
+

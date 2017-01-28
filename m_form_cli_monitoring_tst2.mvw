@@ -1,0 +1,133 @@
+﻿create materialized view U1.M_FORM_CLI_MONITORING_TST2
+refresh force on demand
+as
+select * from (
+select  date_create,
+        product_type,
+        field_name,
+        ff.field_perc_now,
+        case when field_name in ('AMOUNT','TERM_DURATION')  then
+          0.95
+        else
+          round(max(ff.field_perc_now)  over (partition by  ff.field_name,ff.product_type order by ff.date_create range between interval '6' month preceding and interval '1' day preceding),2)
+        end as max_6_month,
+        round(avg(ff.field_perc_now)  over (partition by  ff.field_name,ff.product_type order by ff.date_create range between interval '6' month preceding and interval '1' day preceding),2) as avg_6_month
+from  (
+        select date_create,cnt_all,cnt_folder,product_type, field_name,field_perc_now
+        from(
+          select trunc(fa.folder_date_create) date_create,
+                count(1) cnt_all,
+                count(distinct ff.folder_id) as cnt_folder,
+                case when fa.process_code = 'ONLINE_CRED' then 'ТОВАРЫ-ОНЛАЙН'
+                   else ff.product_type end as product_type,
+                round(sum(case when fc.amount is not null then 1 else 0 end)/count(distinct ff.folder_id),2) amount,
+                round(sum(case when fc.term_duration is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as term_duration,
+                round(sum(case when fc.term_unit is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as term_unit,
+                round(sum(case when fc.sex is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as sex,
+                round(sum(case when fc.reg_address_region is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as reg_address_region,
+                round(sum(case when fc.reg_address_city is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as reg_address_city,
+                round(sum(case when fc.reg_address_date_begin is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as reg_address_date_begin,
+                round(sum(case when fc.fact_address_region is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as fact_address_region,
+                round(sum(case when fc.fact_address_city is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as fact_address_city,
+                round(sum(case when fc.fact_address_date_begin is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as fact_address_date_begin,
+                round(sum(case when fc.education is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as education,
+                round(sum(case when fc.marital_status is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as marital_status,
+                round(sum(case when fc.children is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as children,
+                round(sum(case when fc.job_position is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as job_position,
+                round(sum(case when fc.org_activity is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as org_activity,
+                round(sum(case when fc.org_sector is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as org_sector,
+                round(sum(case when fc.org_type is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as org_type,
+                round(sum(case when fc.job_position_type is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as job_position_type,
+                round(sum(case when fc.is_bank_account_exists is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as is_bank_account_exists,
+                round(sum(case when fc.is_auto_exists is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as is_auto_exists,
+                round(sum(case when fc.real_estate_relation is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as real_estate_relation,
+                round(sum(case when fc.is_garage_exists is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as is_garage_exists,
+                round(sum(case when fc.work_experience_last_place is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as work_experience_last_place,
+                round(sum(case when fc.age_full_years is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as age_full_years,
+                round(sum(case when fc.dependants_count is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as dependants_count,
+                round(sum(case when fc.inc_sal is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as inc_sal,
+                round(sum(case when fc.inc_sal_add is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as inc_sal_add,
+                round(sum(case when fc.inc_sal_spouse is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as inc_sal_spouse,
+                round(sum(case when fc.inc_rent is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as inc_rent,
+                round(sum(case when fc.inc_pension_benefits is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as inc_pension_benefits,
+                round(sum(case when fc.inc_interest is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as inc_interest,
+                round(sum(case when fc.exp_utilities is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as exp_utilities,
+                round(sum(case when fc.exp_transport is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as exp_transport,
+                round(sum(case when fc.exp_children is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as exp_children,
+                round(sum(case when fc.exp_nutrition is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as exp_nutrition,
+                round(sum(case when fc.exp_clothes is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as exp_clothes,
+                round(sum(case when fc.exp_obligations is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as exp_obligations,
+                round(sum(case when fc.exp_other is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as exp_other,
+                round(sum(case when fc.patronymic is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as patronymic,
+                round(sum(case when fc.fact_address_street is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as fact_address_street,
+                round(sum(case when fc.fact_address_house is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as fact_address_house,
+                round(sum(case when fc.fact_address_house_part is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as fact_address_house_part,
+                round(sum(case when fc.fact_address_flat  is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as fact_address_flat,
+                round(sum(case when fc.c_address_equal is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as c_address_equal,
+                round(sum(case when fc.iin is not null then 1 else 0 end)/count(distinct ff.folder_id),2) as iin
+          from M_FOLDER_CON_CANCEL_BASE ff
+           join V_FORM_CLIENT_ALL_RFO fc on ff.form_client_id = fc.form_client_id
+           join V_FOLDER_ALL_RFO fa on fa.folder_id = ff.folder_id
+          where fc.form_client_date  is not null
+            and trunc(fa.folder_date_create) < trunc(sysdate)
+            and trunc(fa.folder_date_create) >= to_date('01-01-2013','dd-mm-yyyy')
+          group by trunc(fa.folder_date_create),
+                   case when fa.process_code = 'ONLINE_CRED' then 'ТОВАРЫ-ОНЛАЙН' else ff.product_type end
+           )
+           unpivot
+                  (field_perc_now for field_name in
+                          ( amount,
+                            term_duration,
+                            term_unit,
+                            sex,
+                            reg_address_region,
+                            reg_address_city,
+                            reg_address_date_begin,
+                            fact_address_region,
+                            fact_address_city,
+                            fact_address_date_begin,
+                            education,
+                            marital_status,
+                            children,
+                            job_position,
+                            org_activity,
+                            org_sector,
+                            org_type,
+                            job_position_type,
+                            is_bank_account_exists,
+                            is_auto_exists,
+                            real_estate_relation,
+                            is_garage_exists,
+                            work_experience_last_place,
+                            age_full_years,
+                            dependants_count,
+                            inc_sal,
+                            inc_sal_add,
+                            inc_sal_spouse,
+                            inc_rent,
+                            inc_pension_benefits,
+                            inc_interest,
+                            exp_utilities,
+                            exp_transport,
+                            exp_children,
+                            exp_nutrition,
+                            exp_clothes,
+                            exp_obligations,
+                            exp_other,
+                            term_duration,
+                            patronymic,
+                            fact_address_street,
+                            fact_address_house,
+                            fact_address_house_part,
+                            fact_address_flat,
+                            c_address_equal,
+                            iin)
+                  )
+    ) ff
+where ff.date_create >= add_months(trunc(sysdate),-7)
+   and ff.product_type != 'ОПТИМИЗАЦИЯ'
+) where  date_create between trunc(sysdate)-15 and trunc(sysdate)-1;
+grant select on U1.M_FORM_CLI_MONITORING_TST2 to LOADDB;
+grant select on U1.M_FORM_CLI_MONITORING_TST2 to LOADER;
+
+

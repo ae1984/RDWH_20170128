@@ -1,0 +1,35 @@
+﻿create materialized view U1.M_PRESC_CL_CONT_STAT_PHONE_CNT
+refresh force on demand
+as
+select rfo_client_id,
+       max(cl_cont_ph_cnt_priv) as cl_cont_ph_cnt_priv,
+       max(cl_cont_ph_cnt_form) as cl_cont_ph_cnt_form
+from ((select cl.id rfo_client_id,
+              count(distinct con.c_numb) as cl_cont_ph_cnt_priv,
+              0 CL_CONT_PH_CNT_FORM
+         from V_RFO_Z#CL_PRIV clp
+         join V_RFO_Z#CLIENT cl on clp.id = cl.id and
+                                   cl.class_id = 'CL_PRIV'
+         join V_RFO_Z#CONTACTS con on con.collection_id = cl.c_contacts
+         join V_RFO_Z#OWNER_COM ow on ow.id = con.c_private and
+                                      ow.c_code in ('WORK', 'HOME')
+        where con.c_type = 23068 -- телефон
+        group by cl.id)
+
+       union all
+      (select f.c_client rfo_client_id,
+              0 cl_cont_ph_cnt_priv,
+              count(distinct cp.c_phone#numb) as cl_cont_ph_cnt_form
+         from V_RFO_Z#FORM_CLIENT fc
+         join V_RFO_z#CONTACT_PERSON cp on fc.c_contact_persons = cp.collection_id
+         join V_RFO_Z#FDOC fd on fd.id = fc.id and
+                                 fd.class_id = 'FORM_CLIENT'
+         join V_RFO_Z#RDOC rd on rd.c_doc = fd.id
+         join V_RFO_Z#FOLDERS f on f.c_docs = rd.collection_id
+        group by f.c_client))
+group by rfo_client_id;
+grant select on U1.M_PRESC_CL_CONT_STAT_PHONE_CNT to LOADDB;
+grant select on U1.M_PRESC_CL_CONT_STAT_PHONE_CNT to LOADER;
+grant select on U1.M_PRESC_CL_CONT_STAT_PHONE_CNT to LOAD_MO;
+
+

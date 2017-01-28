@@ -1,0 +1,34 @@
+﻿create materialized view U1.M_CLIENT_CAL_SCO3
+refresh force on demand
+as
+select x.*,
+       (x.actual_end_date - x.x_start_date) diff,
+       case when x.actual_end_date < x.plan_end_date and
+                 (x.actual_end_date - x.x_start_date) <= 61 and
+                 x.report_status = 'БЕКИ' then 1 else 0 end as last_cash_early_repay_2mm,
+
+       case when x.actual_end_date < x.plan_end_date and
+                 (x.actual_end_date - x.x_start_date) <= 61 and
+                 x.report_status = 'БЕКИ' then x.actual_end_date end as last_cash_close_date
+from (
+    select /*+ parallel(5) */
+        max(p.actual_end_date) keep (dense_rank last order by p.x_start_date, fol.folder_create_date) actual_end_date,
+        max(p.plan_end_date)   keep (dense_rank last order by p.x_start_date, fol.folder_create_date) plan_end_date,
+        max(p.x_start_date)    keep (dense_rank last order by p.x_start_date, fol.folder_create_date) x_start_date,
+        max(re.report_status)  keep (dense_rank last order by p.x_start_date, fol.folder_create_date) report_status,
+        p.client_iin
+        --, p.x_client_id as client_id
+        --, dense_rank() over (partition by p.client_iin order by p.x_start_date desc, fol.folder_create_date desc) rank_by_cli
+    from v_dwh_portfolio_current p
+    join v_pkb_report re on re.folder_id = p.folder_id_first
+    join v_folder_all fol on fol.folder_id = p.folder_id_first
+    where p.x_product_type = 'ДЕНЬГИ'
+          and p.x_is_card = 0
+          and p.x_is_credit_issued = 1
+    group by p.client_iin
+) x;
+grant select on U1.M_CLIENT_CAL_SCO3 to LOADDB;
+grant select on U1.M_CLIENT_CAL_SCO3 to LOADER;
+grant select on U1.M_CLIENT_CAL_SCO3 to LOAD_MO;
+
+

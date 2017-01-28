@@ -1,0 +1,25 @@
+﻿create table U1.T_RDWH_RESOURCE_LIMIT_HIST
+(
+  dt                  DATE,
+  resource_name       VARCHAR2(30),
+  current_utilization NUMBER,
+  max_utilization     NUMBER,
+  initial_allocation  VARCHAR2(40),
+  limit_value         VARCHAR2(40),
+  con_id              NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RDWH_RESOURCE_LIMIT_HIST to LOADDB;
+

@@ -1,0 +1,16 @@
+﻿create materialized view U1.V_RFO_Z#KAS_SERV_CONTACT
+refresh complete on demand
+as
+select id,
+      collection_id,
+      c_service,
+      c_contact,
+      c_adresses,
+      c_dogovor,
+      c_set_date,
+      c_end_date
+from  ibs.Z#KAS_SERV_CONTACT@rfo_snap;
+grant select on U1.V_RFO_Z#KAS_SERV_CONTACT to LOADDB;
+grant select on U1.V_RFO_Z#KAS_SERV_CONTACT to LOADER;
+
+

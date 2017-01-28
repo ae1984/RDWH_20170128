@@ -1,0 +1,32 @@
+﻿create table U1.T_FOLDER_CPR_SENDED
+(
+  folder_id   NUMBER,
+  date_create DATE default sysdate
+)
+tablespace USERS_ARC
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+nologging;
+create index U1.T_FOLDER_CPR_SENDED on U1.T_FOLDER_CPR_SENDED (FOLDER_ID)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_FOLDER_CPR_SENDED to LOADDB;
+

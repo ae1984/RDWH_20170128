@@ -1,0 +1,41 @@
+﻿create table U1.SNAPSHOT_T_MO_CLIENT_PHOTO
+(
+  id                NUMBER,
+  proccess_type     VARCHAR2(100),
+  cred_program      VARCHAR2(100),
+  client_id         NUMBER(20),
+  proccess_id       NUMBER(20),
+  photo_type        VARCHAR2(20),
+  source_user_type  VARCHAR2(50),
+  system_code       VARCHAR2(10),
+  photo_type_id     VARCHAR2(70),
+  source_user       VARCHAR2(30),
+  photo_luna_id     NUMBER(20),
+  photo_date_create DATE,
+  process_status    VARCHAR2(20),
+  error_code        VARCHAR2(100),
+  verif_id          NUMBER,
+  pos_code          VARCHAR2(100),
+  date_update       DATE,
+  date_insert       DATE,
+  date_insert_luna  DATE,
+  date_insert_front DATE,
+  request_id        NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.SNAPSHOT_T_MO_CLIENT_PHOTO
+  is 'копия таблицы T_MO_CLIENT_PHOTO на  7/06/2016';
+grant select on U1.SNAPSHOT_T_MO_CLIENT_PHOTO to LOADDB;
+

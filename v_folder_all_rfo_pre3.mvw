@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_FOLDER_ALL_RFO_PRE3
+build deferred
+refresh complete on demand
+as
+select /*+parallel(2)*/ rd.collection_id,
+      fd.id as kas_decision_id,
+      kd.c_underwriter
+      , kd.c_high_underwriter
+from V_RFO_Z#RDOC rd
+join V_RFO_Z#FDOC fd on fd.id = rd.c_doc and fd.class_id = 'KAS_DECISION'
+join V_RFO_Z#KAS_DECISION kd on kd.id = fd.id and kd.c_underwriter is not null;
+grant select on U1.V_FOLDER_ALL_RFO_PRE3 to LOADDB;
+
+

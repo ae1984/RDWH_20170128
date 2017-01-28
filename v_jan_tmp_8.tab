@@ -1,0 +1,37 @@
+﻿create table U1.V_JAN_TMP_8
+(
+  pkb_report_id    NUMBER not null,
+  pkb_contract_id  NUMBER not null,
+  iin              VARCHAR2(36),
+  report_date      DATE,
+  report_type      VARCHAR2(22),
+  c_last_update    DATE,
+  c_fin_inst       VARCHAR2(600),
+  c_appl_date      DATE,
+  c_date_begin     DATE,
+  c_date_end       DATE,
+  c_fact_gash_date DATE,
+  c_contr_status   VARCHAR2(600),
+  currency         VARCHAR2(12),
+  c_overdue_sum    NUMBER,
+  c_total_amount   NUMBER,
+  c_credit_limit   NUMBER,
+  c_dog_type       VARCHAR2(300),
+  c_cr_purpose     VARCHAR2(300)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.V_JAN_TMP_8 to LOADDB;
+grant select on U1.V_JAN_TMP_8 to LOADER;
+

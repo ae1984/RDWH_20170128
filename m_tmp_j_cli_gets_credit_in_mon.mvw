@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_TMP_J_CLI_GETS_CREDIT_IN_MON
+refresh complete on demand
+as
+select d.client_iin, trunc(d.x_start_date_actual,'mm') as start_mon,
+       1 as is_client_gets_credit
+from V_DWH_PORTFOLIO_CURRENT d
+where d.x_is_credit_issued = 1 and d.x_start_date_actual is not null and
+      d.x_product_type != 'ОПТИМИЗАЦИЯ'
+group by d.client_iin, trunc(d.x_start_date_actual,'mm');
+grant select on U1.M_TMP_J_CLI_GETS_CREDIT_IN_MON to LOADDB;
+grant select on U1.M_TMP_J_CLI_GETS_CREDIT_IN_MON to LOADER;
+
+

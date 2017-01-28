@@ -1,0 +1,49 @@
+﻿create table U1.PARTNER_INFO
+(
+  shop_id            NUMBER,
+  shop_name          VARCHAR2(500),
+  chop_city          VARCHAR2(500),
+  ks_reg_date        DATE,
+  shop_bin           VARCHAR2(255),
+  ownership_type     VARCHAR2(10),
+  ownership_reg_date DATE,
+  jur_name           VARCHAR2(255),
+  jur_adress         VARCHAR2(500),
+  fact_adress        VARCHAR2(500),
+  tel_num            VARCHAR2(20),
+  tel_num2           VARCHAR2(20),
+  web_adress         VARCHAR2(255),
+  kind_of_activity   VARCHAR2(500),
+  onwer_fio          VARCHAR2(255),
+  owner_iin          VARCHAR2(255),
+  owner_doc_num      VARCHAR2(255),
+  owner_tel_num      VARCHAR2(20),
+  owner_tel_num2     VARCHAR2(20),
+  owner_reg_adress   VARCHAR2(255),
+  owner_fact_adress  VARCHAR2(255),
+  shop_director      VARCHAR2(255),
+  landlord_fio       VARCHAR2(255),
+  landlord_org       VARCHAR2(255),
+  rent_deal_adress   VARCHAR2(255),
+  rent_deal_date     DATE,
+  contact_person_fio VARCHAR2(255),
+  cont_per_tel_num   VARCHAR2(255),
+  cont_per_tel_num2  VARCHAR2(255),
+  mall               VARCHAR2(255),
+  status             VARCHAR2(50)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.PARTNER_INFO to LOADDB;
+

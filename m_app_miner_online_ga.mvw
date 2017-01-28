@@ -1,0 +1,42 @@
+﻿create materialized view U1.M_APP_MINER_ONLINE_GA
+build deferred
+refresh force on demand
+as
+select tt.app_id,
+
+       count(distinct case when tt.rfo_client_id <> tt1.rfo_client_id
+                            and tt1.folder_date_create_mi >= trunc(tt.folder_date_create_mi) - 30
+                            and tt1.folder_date_create_mi < tt.folder_date_create_mi then tt1.rfo_client_id end)  as onl_cl_ga_eq_30d_cnt_x,
+
+       count(distinct case when tt.rfo_client_id <> tt1.rfo_client_id
+                            and tt1.folder_date_create_mi >= trunc(tt.folder_date_create_mi) - 30
+                            and tt1.folder_date_create_mi < trunc(tt.folder_date_create_mi) then tt1.rfo_client_id end)  as onl_cl_ga_eq_30d_cnt
+
+from (
+      select t.rfo_client_id,
+             t.app_id,
+             t.folder_date_create,
+             t.folder_date_create_mi,
+             ko.p_gaclientid
+
+      from U1.M_APP_MINER_BAS t
+      join U1.M_FOLDER_ONLINE_T1 rt on rt.claim_id = t.claim_id
+      join U1.M_KASPISH_ORDERS ko on   ko.code = rt.buy_process_id) tt
+
+left join ( select t.rfo_client_id,
+                   t.app_id,
+                   t.folder_date_create,
+                   t.folder_date_create_mi,
+                   ko.p_gaclientid
+            from U1.M_APP_MINER_BAS t
+            join U1.M_FOLDER_ONLINE_T1 rt on rt.claim_id = t.claim_id
+            join U1.M_KASPISH_ORDERS ko on ko.code = rt.buy_process_id) tt1 on tt1.p_gaclientid = tt.p_gaclientid
+                                                                               --and tt1.app_id != tt.app_id
+                                                                               and tt1.folder_date_create_mi >= trunc(tt.folder_date_create) - 30
+                                                                               and tt1.folder_date_create_mi < tt.folder_date_create_mi
+
+where tt.folder_date_create >= to_date('01012015', 'ddmmyyyy')
+group by tt.app_id;
+grant select on U1.M_APP_MINER_ONLINE_GA to LOADDB;
+
+

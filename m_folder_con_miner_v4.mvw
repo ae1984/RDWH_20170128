@@ -1,0 +1,263 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_V4
+build deferred
+refresh force on demand
+as
+select --count(1)
+      fcm.rfo_contract_id,
+      fcm.folder_id,
+      fcm.contract_number,
+      fol.fol_manag_day  , -- Частота заведения новых заявок на том же менеджере
+      fol.kol_fol_1d,   -- Частота заведения новых заявок в 1 дня
+      fol.kol_fol_3d,   -- Частота заведения новых заявок в 3 дня
+      fol.kol_fol_7d, -- Частота заведения новых заявок в 7 дней
+      fol.kol_fol_1m, -- Частота заведения новых заявок в 1 месяц
+      fol.kol_fol_3m, -- Частота заведения новых заявок в 3 месяца
+      fol.folder_prev_min, --Время с последней заявки
+      cl_call.calls_1_month, --Количество звонков Soft Collection за 1 месяц
+      cl_call.calls_6_month, --Количество звонков Soft Collection за 6 месяцев
+      cl_call.calls_1_year, --Количество звонков Soft Collection за 1 год
+      cl_call.calls_all_time, --Количество звонков Soft Collection всего
+      og.is_surname_chng as gcvp_surname_chng,  --кол-во изменений в отчетах ГЦВП за 30 дней в разрезе всех полей
+      og.is_name_chng as gcvp_name_chng,
+      og.is_middlnm_chng as gcvp_middlnm_chng,
+      og.is_dtbirth_chng as gcvp_dtbirth_chng,
+      og.is_sal_chng as gcvp_sal_chng,
+      og.is_avg_gcvp_paymnt_chng as gcvp_avg_gcvp_paymnt_chng,
+      og.is_paymnt_qty_chng as gcvp_paymnt_qty_chng,
+      og.is_org_count_chng as gcvp_org_count_chng,
+      og.is_org_bin_chng as gcvp_org_bin_chng,
+      og.is_org_rnn_chng  as gcvp_org_rnn_chng,
+      og.is_max_pmt_dt_chng as gcvp_max_pmt_dt_chng,
+      og.is_min_pmt_dt_chng as gcvp_min_pmt_dt_chng,
+      og.report_count  as gcvp_report_count, -- кол-во отчетов  ГЦВП за посл 30 дней
+      fol.count_pos_change as count_pos_change, -- Частота смены менеджером точки продаж
+      case when fcm.age_full_years <=29 and ci.c_code = 'INDEX_FAMILY_STATUS_2' then 1 else 0 end as is_young_family,-- Молодая семья
+      gcvp_sal.chng_1m_sal,  -- изменения по зп из отчета гцвп за 1 мес
+      gcvp_sal.chng_3m_sal, -- среднемесячное изменение по зп из отчета гцвп за 3 мес
+      gcvp_sal.chng_6m_sal, -- среднемесячное изменение по зп из отчета гцвп за 6 мес
+      gcvp_sal.chng_1y_sal, -- среднемесячное изменение по зп из отчета гцвп за 1 год
+      case when z1c.iin is not null then 1 else 0 end as employ, --является ли клиент сотрудником банка 1 да 0 нет
+      man.manager_experience_mon , -- стаж менеджера работы в банке
+      man.manager_year,   -- Возраст менеджера продаж
+      fol.pos_code||'_'||fol.expert_login as  pos_expert, -- Комбинация ТП_МП
+      fcm.age_full_years ||'_'||tov.tov_name as full_years_prod, --Комбинация Возраст_Товар
+      fl.c_sex#0||'_'||tov.tov_name as sex_prod, --Комбинация Пол_Товар (Пол(1-Мужской,2-Женский))
+      fl.c_sex#0||'_'||tov.tov_type as sex_type_prod,  --Комбинация Возраст_категория товара
+      fol.minute_client , -- общее время обслуживаня клиента в день
+      fol.folder_to_asocr_min,  --  Время от создания заявки до отправки на АСОКР (в минутах)
+     to_char(fcm.folder_date_create  ,'IW') as  week_number, --Номер недели в году
+     pk.pkb_delinq_days,   --Максимальное количество дней просрочки по отчету ПКБ
+     pk.is_pkb_neg_status,   -- Статусы договоров из отчета ПКБ
+     pkb.pkb_bank_count,     -- Поменял много банков из ПКБ отчета - сколько разных банков в течение 10 лет.
+     case when pkb.client_start_date is not null then floor(months_between(fcm.folder_date_create,pkb.client_start_date)/12) end  as pkb_client_year, --Продолжительность кредитной истории клиента в годах из отчета ПКБ
+     fol.folder_in_working_hours, -- Рабочее время (1) или вне рабочего времени (0)
+     fol.is_holiday,             -- Рабочий день (0) или выходной (1)
+     fol.manager10_issue_grade,  --Уровень одобрения по менеджеру по последним 10 заявкам
+     fol.manager20_issue_grade,  --Уровень одобрения по менеджеру по последним 20 заявкам
+     fol.manager50_issue_grade,   --Уровень одобрения по менеджеру по последним 30 заявкам
+     org_fol.org_folder_grade_3m,    -- Уровень изменения кол-ва заявок от сотрудников одной организации за 1 месяц к кол-ву заявок за 3 месяца
+     org_fol.org_folder_grade_6m,    -- Уровень изменения кол-ва заявок от сотрудников одной организации за 1 месяц к кол-ву заявок за 6 месяцев
+     org_fol.org_folder_grade_12m,    -- Уровень изменения кол-ва заявок от сотрудников одной организации за 1 месяц к кол-ву заявок за 12 месяцев
+     cp.relations,                  --
+     rcd.max_del_1_m,
+     rcd.max_del_3_m,
+     rcd.max_del_6_m,
+     rcd.max_del_1_y,
+     rcm.cnt_del_month_6m,
+     rcm.cnt_del_month_12m,
+     rcm.cnt_del_month_18m,
+     rcm.cnt_del_month_24m,
+     rcm.cnt_del_month_all
+from M_FOLDER_CON_MINER fcm
+left join V_CLIENT_RFO_BY_ID c on c.rfo_client_id = fcm.rfo_client_id
+left join V_RFO_Z#FORM_CLIENT fl on fl.id = fcm.form_client_id
+left join V_RFO_Z#CLIENT_INDEX ci on ci.id = fl.c_family
+left join M_ZUP_1C_STAFF_OUT z1c on z1c.iin = c.iin and z1c.hiring_date < fcm.folder_date_create and
+                                     nvl(z1c.firing_date,sysdate+1) > fcm.folder_date_create
+left join M_FOLDER_MANAGER_INFO fol on fol.folder_id = fcm.folder_id
+left join (select  fcc.folder_id,
+                 sum(case when scc.phone_date between add_months(fcc.folder_date_create_mi,-1) and fcc.folder_date_create_mi then 1 else 0 end) as calls_1_month,
+                 sum(case when scc.phone_date between add_months(fcc.folder_date_create_mi,-6) and fcc.folder_date_create_mi then 1 else 0 end) as calls_6_month,
+                 sum(case when scc.phone_date between add_months(fcc.folder_date_create_mi,-12) and fcc.folder_date_create_mi then 1 else 0 end) as calls_1_year,
+                 count(scc.phone_date) calls_all_time
+         from   M_FOLDER_CON_CANCEL fcc
+          join V_CLIENT_RFO_BY_ID c on c.rfo_client_id = fcc.rfo_client_id
+          join V_DWH_SOFT_COLLECTION_CALLS scc on scc.clnt_inn = c.iin and scc.phone_date< fcc.folder_date_create_mi
+         group by  fcc.folder_id) cl_call on cl_call.folder_id = fcm.folder_id
+left join (        select  folder_id,
+                rfo_client_id ,
+                sum(is_surname_chng) is_surname_chng,
+                sum(is_name_chng) is_name_chng,
+                sum(is_middlnm_chng) is_middlnm_chng,
+                sum(is_dtbirth_chng) is_dtbirth_chng,
+                sum(is_sal_chng) is_sal_chng,
+                sum(is_avg_gcvp_paymnt_chng) is_avg_gcvp_paymnt_chng,
+                sum(is_paymnt_qty_chng) is_paymnt_qty_chng,
+                sum(is_org_count_chng) is_org_count_chng,
+                sum(is_org_bin_chng) is_org_bin_chng,
+                sum(is_org_rnn_chng) is_org_rnn_chng ,
+                sum(is_max_pmt_dt_chng) is_max_pmt_dt_chng,
+                sum(is_min_pmt_dt_chng) is_min_pmt_dt_chng,
+                count(gcvp_rep_id) report_count
+           from (  select fcm1.folder_id,
+                           c.rfo_client_id as rfo_client_id,
+                            gr.rep_date ,
+                           case when (nvl(gr.client_surname ,0) = nvl(lag(gr.client_surname, 1, gr.client_surname) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), 0)) then 0 else 1 end is_surname_chng,
+                           case when (nvl(gr.client_name,0) = nvl(lag(gr.client_name, 1, gr.client_name) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), 0)) then 0 else 1 end is_name_chng,
+                           case when (nvl(gr.client_middlename,0) = nvl(lag(gr.client_middlename, 1, gr.client_middlename) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), 0)) then 0 else 1 end is_middlnm_chng,
+                           case when (nvl(gr.dateofbirth ,trunc(sysdate)) = nvl(lag(gr.dateofbirth, 1,gr.dateofbirth ) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), trunc(sysdate))) then 0 else 1 end is_dtbirth_chng,
+                           case when (nvl(gr.salary ,0) = nvl(lag(gr.salary, 1, gr.salary) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), 0)) then 0 else 1 end is_sal_chng,
+                           case when (nvl(gr.avg_gcvp_payment,0) = nvl(lag(gr.avg_gcvp_payment, 1, gr.avg_gcvp_payment) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), 0)) then 0 else 1 end is_avg_gcvp_paymnt_chng,
+                           case when (nvl(gr.pmts_count_from_rep,0) = nvl(lag(gr.pmts_count_from_rep, 1, gr.pmts_count_from_rep) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), 0)) then 0 else 1 end is_paymnt_qty_chng,
+                           case when (nvl(gr.org_count,0) = nvl(lag(gr.org_count, 1, gr.org_count) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), 0)) then 0 else 1 end is_org_count_chng,
+                           case when (nvl(gr.org_bin_last,0) =  nvl(lag(gr.org_bin_last, 1, gr.org_bin_last) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date), 0)) then 0 else 1 end is_org_bin_chng,
+                           case when (nvl(gr.org_rnn_last ,0) = nvl(lag(gr.org_rnn_last, 1, gr.org_rnn_last) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), 0)) then 0 else 1 end  is_org_rnn_chng,
+                           case when (nvl(gr.max_pmt_date ,trunc(sysdate)) = nvl(lag(gr.max_pmt_date, 1, gr.max_pmt_date) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), trunc(sysdate))) then 0 else 1 end  is_max_pmt_dt_chng,
+                           case when (nvl(gr.min_pmt_date ,trunc(sysdate)) = nvl(lag(gr.min_pmt_date, 1, gr.min_pmt_date) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), trunc(sysdate))) then 0 else 1 end  is_min_pmt_dt_chng,
+                           gr.gcvp_rep_id
+                 from M_FOLDER_CON_MINER fcm1
+                  join V_CLIENT_RFO_BY_ID c on fcm1.rfo_client_id = c.rfo_client_id
+                  join V_GCVP_REPORT gr  on c.iin = gr.client_iin and gr.rep_date >= to_date('01-01-2013','dd-mm-yyyy')
+                   where gr.is_from_cache = 0
+                   and gr.rep_date between trunc(fcm1.folder_date_create) -30 and fcm1.folder_date_create
+             union all
+                   select fcm1.folder_id,
+                           c.rfo_client_id as rfo_client_id,
+                            gr.rep_date ,
+                           case when (nvl(gr.client_surname ,0) = nvl(lag(gr.client_surname, 1, gr.client_surname) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), 0)) then 0 else 1 end is_surname_chng,
+                           case when (nvl(gr.client_name,0) = nvl(lag(gr.client_name, 1, gr.client_name) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), 0)) then 0 else 1 end is_name_chng,
+                           case when (nvl(gr.client_middlename,0) = nvl(lag(gr.client_middlename, 1, gr.client_middlename) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), 0)) then 0 else 1 end is_middlnm_chng,
+                           case when (nvl(gr.dateofbirth ,trunc(sysdate)) = nvl(lag(gr.dateofbirth, 1,gr.dateofbirth ) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), trunc(sysdate))) then 0 else 1 end is_dtbirth_chng,
+                           case when (nvl(gr.salary ,0) = nvl(lag(gr.salary, 1, gr.salary) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), 0)) then 0 else 1 end is_sal_chng,
+                           case when (nvl(gr.avg_gcvp_payment,0) = nvl(lag(gr.avg_gcvp_payment, 1, gr.avg_gcvp_payment) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), 0)) then 0 else 1 end is_avg_gcvp_paymnt_chng,
+                           case when (nvl(gr.pmts_count_from_rep,0) = nvl(lag(gr.pmts_count_from_rep, 1, gr.pmts_count_from_rep) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), 0)) then 0 else 1 end is_paymnt_qty_chng,
+                           case when (nvl(gr.org_count,0) = nvl(lag(gr.org_count, 1, gr.org_count) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), 0)) then 0 else 1 end is_org_count_chng,
+                           case when (nvl(gr.org_bin_last,0) =  nvl(lag(gr.org_bin_last, 1, gr.org_bin_last) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date), 0)) then 0 else 1 end is_org_bin_chng,
+                           case when (nvl(gr.org_rnn_last ,0) = nvl(lag(gr.org_rnn_last, 1, gr.org_rnn_last) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), 0)) then 0 else 1 end  is_org_rnn_chng,
+                           case when (nvl(gr.max_pmt_date ,trunc(sysdate)) = nvl(lag(gr.max_pmt_date, 1, gr.max_pmt_date) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), trunc(sysdate))) then 0 else 1 end  is_max_pmt_dt_chng,
+                           case when (nvl(gr.min_pmt_date ,trunc(sysdate)) = nvl(lag(gr.min_pmt_date, 1, gr.min_pmt_date) over (partition by  c.rfo_client_id,fcm1.folder_date_create order by gr.rep_date ), trunc(sysdate))) then 0 else 1 end  is_min_pmt_dt_chng,
+                           gr.gcvp_rep_id
+                 from M_FOLDER_CON_MINER fcm1
+                  join V_CLIENT_RFO_BY_ID c on fcm1.rfo_client_id = c.rfo_client_id
+                  join V_GCVP_REPORT gr  on c.rnn = gr.client_rnn and gr.rep_date < to_date('01-01-2013','dd-mm-yyyy')
+                   where gr.is_from_cache = 0
+                   and gr.rep_date between trunc(fcm1.folder_date_create) -30 and fcm1.folder_date_create
+        ) t
+        group by folder_id,rfo_client_id) og on og.folder_id = fcm.folder_id
+ left join (select folder_id,chng_1m_sal,chng_3m_sal,chng_6m_sal,chng_1y_sal
+               from (
+                    select  f.folder_id,f.folder_date_create,g.rep_date,
+                           case when avg(g.salary) over (partition by c.rfo_client_id,f.folder_id  order by g.rep_date range between interval '1' MONTH preceding and current row) > 0
+                             then
+                              round(g.salary/ avg(g.salary) over (partition by c.rfo_client_id,f.folder_id  order by g.rep_date range between interval '1' MONTH preceding and current row),2)
+                           end as chng_1m_sal,
+                           case when avg(g.salary) over (partition by c.rfo_client_id,f.folder_id  order by g.rep_date range between interval '3' MONTH preceding and current row) > 0
+                             then round(g.salary/ avg(g.salary) over (partition by c.rfo_client_id,f.folder_id  order by g.rep_date range between interval '3' MONTH preceding and current row),2)
+                           end as chng_3m_sal,
+                           case when avg(g.salary) over (partition by c.rfo_client_id,f.folder_id  order by g.rep_date range between interval '6' MONTH preceding and current row) > 0
+                             then
+                               round(g.salary/avg(g.salary) over (partition by c.rfo_client_id,f.folder_id  order by g.rep_date range between interval '6' MONTH preceding and current row),2)
+                           end as chng_6m_sal,
+                           case when avg(g.salary) over (partition by c.rfo_client_id,f.folder_id  order by g.rep_date range between interval '12' MONTH preceding and current row) > 0
+                             then
+                              round(g.salary /avg(g.salary) over (partition by c.rfo_client_id,f.folder_id  order by g.rep_date range between interval '12' MONTH preceding and current row),2)
+                           end as chng_1y_sal,
+                           row_number() over (partition by f.folder_id order by g.rep_date desc,g.error_code) as row_num
+                         from  V_FOLDER_ALL_RFO f
+                          join v_client_rfo_by_id c on c.rfo_client_id = f.rfo_client_id
+                          join V_GCVP_REPORT  g on (g.client_rnn = c.rnn or g.client_iin = c.iin)  and g.rep_date < f.folder_date_create
+                    )t
+                where t.row_num = 1) gcvp_sal on gcvp_sal.folder_id =  fcm.folder_id
+  left join (select v.folder_id, v.EXPERT_LOGIN  ,
+              case when mz.hiring_date is not null then floor(months_between(v.folder_date_create,mz.hiring_date) ) end as manager_experience_mon,
+              floor(months_between(v.folder_date_create,cl.birth_date)/12 )  manager_year
+              from  V_FOLDER_ALL_RFO v
+              join V_RFO_Z#USER u on v.expert_login = u.c_username
+              join V_CLIENT_RFO_BY_ID cl on cl.rfo_client_id = u.c_empl
+              left join M_ZUP_1C_STAFF_OUT mz on mz.iin = cl.iin and v.folder_date_create between mz.hiring_date and nvl(mz.firing_date,trunc(sysdate)+1)
+            ) man on man.folder_id = fcm.folder_id
+ left join (
+          select distinct rfo_contract_id,
+                 listagg(c_name||decode(tov_count ,1,null,tov_count),'_') within group (order by c_name) over (partition by rfo_contract_id) as tov_name ,
+                 listagg(decode(tov_type_num,1,tov_type,null),'_') within group (order by tov_type)  over (partition by rfo_contract_id) as tov_type
+          from(
+              select d.id as rfo_contract_id,
+                    n.c_name,
+                    kz.c_name tov_type,
+                    count( n.c_name) tov_count,
+                    row_number() over (partition by d.id,kz.c_name order by kz.c_name) tov_type_num
+               from V_RFO_Z#CREDIT_DOG d
+              join V_RFO_Z#PROD_INFO i on d.c_d#type_cred#prod#prod_info11 = i.collection_id
+              join V_RFO_Z#KAS_TOV_NAME n on n.id = i.c_name_ref
+              join V_RFO_Z#KIND_ZAL_BODY kz on kz.id = i.c_type_tov
+              where  i.collection_id is not null
+             -- and d.id = 1106178775
+             and d.id like '%%'
+              group by d.id,n.c_name,kz.c_name
+          )
+     ) tov on tov.rfo_contract_id = fcm.rfo_contract_id
+ left join (select fc.folder_id,
+            max(nvl(pp.c_ovrd_instalments,0)) as pkb_delinq_days ,
+            sum(case when pp.contract_status  like '%НЕЛИКВИДНОСТЬ%'
+                       or pp.contract_status  like '%СПИСАН%'
+                       or pp.contract_status  like 'ПРОСР%ЗАДОЛЖЕННОСТЬ%'
+                       or pp.contract_status  like '%РЕКРАЩЁН%'
+                     then 1
+                       else 0 end) as is_pkb_neg_status
+            from M_FOLDER_CON_MINER fc
+            join M_PKB_REPORT_PARAM1 pp on pp.folder_id = fc.folder_id
+            group by fc.folder_id
+        ) pk on pk.folder_id = fcm.folder_id
+ left join (select  folder_id ,
+                    count(distinct case when report_date > add_months(folder_date_create,-120) then fin_inst end) as pkb_bank_count,--кол-во банков в которых клиент брал кредиты за 10 лет
+                    min(c_date_begin) as client_start_date
+            from (
+            select fcc.folder_id,pr.fin_inst,pr.report_date,to_date(pr.date_begin,'dd-mm-yyyy') as c_date_begin ,trunc(fcc.folder_date_create_mi) as folder_date_create
+              from M_FOLDER_CON_CANCEL fcc
+              join T_PKB_REPORT pr on pr.iin_rnn = fcc.iin and pr.report_date >= to_date('01-01-2013','dd-mm-yyyy') -- после перехода на иин
+                                   and pr.report_date <= trunc(fcc.folder_date_create_mi)
+            union all
+            select fcc.folder_id,pr.fin_inst,pr.report_date,to_date(pr.date_begin,'dd-mm-yyyy') as c_date_begin,trunc(fcc.folder_date_create_mi) as folder_date_create
+              from M_FOLDER_CON_CANCEL fcc
+              join V_CLIENT_RFO_BY_ID c on c.rfo_client_id = fcc.rfo_client_id
+              join T_PKB_REPORT  pr on pr.iin_rnn = c.rnn and pr.report_date < to_date('01-01-2013','dd-mm-yyyy') -- до перехода на иин
+                                    and pr.report_date <= trunc(fcc.folder_date_create_mi)
+            )
+          group by folder_id
+          ) pkb on pkb.folder_id = fcm.folder_id
+ left join (select folder_id,
+                    case when nvl(org_folder_count_3m  ,0) > 0 then
+                      round(org_folder_count_1m/org_folder_count_3m,2)
+                    end org_folder_grade_3m,
+                    case when nvl(org_folder_count_6m  ,0) > 0 then
+                      round(org_folder_count_1m/org_folder_count_6m,2)
+                    end org_folder_grade_6m,
+                    case when nvl(org_folder_count_3m  ,0) > 0 then
+                      round(org_folder_count_1m/org_folder_count_12m,2)
+                    end org_folder_grade_12m
+             from
+               (
+                select  f.folder_id,
+                       count(f.folder_id) over (partition by f.org_bin order by f.folder_date_create range between interval '1'  MONTH preceding and current row) as org_folder_count_1m,
+                       count(f.folder_id) over (partition by f.org_bin order by f.folder_date_create range between interval  '3'  MONTH preceding and current row) as org_folder_count_3m,
+                       count(f.folder_id) over (partition by f.org_bin order by f.folder_date_create range between interval '6'  MONTH preceding and current row) as org_folder_count_6m,
+                       count(f.folder_id) over (partition by f.org_bin order by f.folder_date_create range between  interval '12' MONTH preceding and current row) as org_folder_count_12m
+               from V_FOLDER_ALL_RFO f
+               where f.org_bin is not null and f.org_bin  != 'RNN '
+                   and f.is_credit_process = 1
+                )
+             ) org_fol on org_fol.folder_id = fcm.folder_id
+left join
+        (
+        select cp1.collection_id,
+               listagg(substr(ci.c_code,20,2) ,'') within group (order by cp1.id)  relations
+         from    V_RFO_Z#CONTACT_PERSON cp1
+           join  V_RFO_Z#CLIENT_INDEX  ci on cp1.c_status_owner = ci.id
+         where cp1.collection_id is not null
+        group by cp1.collection_id) cp on cp.collection_id = fl.c_contact_persons
+left join m_rbo_contract_bas  rc on rc.contract_number = fcm.contract_number and rc.folder_id_first = fcm.folder_id
+left join m_rbo_contract_del_day rcd on rcd.rbo_contract_id = rc.rbo_contract_id
+left join m_rbo_contract_del_month rcm on rcm.rbo_contract_id = rc.rbo_contract_id;
+grant select on U1.M_FOLDER_CON_MINER_V4 to LOADDB;
+
+

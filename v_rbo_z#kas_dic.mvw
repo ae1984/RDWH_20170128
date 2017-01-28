@@ -1,0 +1,17 @@
+﻿create materialized view U1.V_RBO_Z#KAS_DIC
+using no index
+refresh complete on demand
+as
+select cast (id	as number) as id,
+       cast (c_group_code	as varchar2(150)) as c_group_code,
+       cast (c_code	as varchar2(150)) as c_code,
+       cast (c_name	as varchar2(750)) as c_name,
+       cast (c_order_num	as number(5)) as c_order_num,
+       cast (c_text	as varchar2(4000)) as c_text,
+       cast (c_property_arr	as number) as c_property_arr,
+       cast (c_activ	as varchar2(3)) as c_activ
+from rdwh.V_RBO_Z#KAS_DIC@rdwh_exd;
+grant select on U1.V_RBO_Z#KAS_DIC to LOADDB;
+grant select on U1.V_RBO_Z#KAS_DIC to LOADER;
+
+

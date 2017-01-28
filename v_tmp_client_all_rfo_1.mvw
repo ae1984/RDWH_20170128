@@ -1,0 +1,82 @@
+﻿create materialized view U1.V_TMP_CLIENT_ALL_RFO_1
+using no index
+refresh complete on demand
+as
+select distinct
+       b1.folder_id,
+       b1.folder_date_create,
+       b1.rfo_client_id,
+       b1.is_credit_issued,
+       b1.folder_state,
+       b1.route_point_code,
+       b1.route_point_name,
+       a.form_client_id,
+       a.form_client_date,
+       a.rnn,
+       a.iin,
+       a.surname,
+       a.first_name,
+       a.patronymic,
+       a.citizenship,
+       a.birth_date,
+       a.personal_id_doc_num,
+       b2.id,
+       b2.c_main_doc#type,
+       b2.c_main_doc#num,
+       b2.c_main_doc#seria,
+       b2.c_main_doc#date_doc,
+       b2.c_main_doc#date_end,
+       null as c_cl_req_old#pasport#type,
+       null as c_cl_req_old#pasport#num,
+       null as c_cl_req_old#pasport#seria,
+       null as c_cl_req_old#pasport#date_doc,
+       null as c_cl_req_old#pasport#date_end,
+       b1.route_code,
+       b1.route_name
+from u1.v_folder_all_rfo b1
+left join u1.v_form_client_all_rfo a on b1.form_client_id = a.form_client_id
+left join u1.V_RFO_Z#FORM_CLIENT b2 on a.form_client_id = b2.id
+where b1.route_code <> 'EDIT_CL_PRIV'
+--where b1.is_credit_issued = 1
+union all
+select
+p.folder_id,
+p.folder_date_create,
+p.rfo_client_id,
+null,
+p.folder_state,
+p.route_point_code,
+p.route_point_name,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+null,
+/*p.c_main_doc#type,
+p.c_main_doc#num,
+p.c_main_doc#seria,
+p.c_main_doc#date_doc,
+p.c_main_doc#date_end,*/
+p.c_cl_req_new#pasport#type,
+p.c_cl_req_new#pasport#num,
+p.c_cl_req_new#pasport#seria,-- as c_main_doc#seria,
+p.c_cl_req_new#pasport#date_doc,-- as c_main_doc#date_doc,
+p.c_cl_req_new#pasport#date_end,-- as c_main_doc#date_end,
+p.c_cl_req_old#pasport#type,
+p.c_cl_req_old#pasport#num,
+p.c_cl_req_old#pasport#seria,
+p.c_cl_req_old#pasport#date_doc,
+p.c_cl_req_old#pasport#date_end,
+p.route_code,
+p.route_name
+from V_TMP_CLIENT_EDIT_RFO p;
+grant select on U1.V_TMP_CLIENT_ALL_RFO_1 to LOADDB;
+grant select on U1.V_TMP_CLIENT_ALL_RFO_1 to LOADER;
+
+

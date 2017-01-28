@@ -1,0 +1,26 @@
+﻿create table U1.T_PTP_CONTRACT_LOAD
+(
+  contract_number VARCHAR2(50) not null,
+  date_load       VARCHAR2(7) default to_char(trunc(sysdate),'mm-yyyy') not null
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_PTP_CONTRACT_LOAD
+  is 'Список контрактов, по которым были частично или полностью исполнены ПТП';
+comment on column U1.T_PTP_CONTRACT_LOAD.contract_number
+  is 'Номер контракта';
+comment on column U1.T_PTP_CONTRACT_LOAD.date_load
+  is 'Дата загрузки(значение по умолчанию)';
+grant select on U1.T_PTP_CONTRACT_LOAD to LOADDB;
+grant select on U1.T_PTP_CONTRACT_LOAD to LOADER;
+

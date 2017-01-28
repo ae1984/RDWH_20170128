@@ -1,0 +1,42 @@
+﻿create table U1.T_NPS_DICT_RFO_DSO
+(
+  x_dnp_name VARCHAR2(1024),
+  dep_name   VARCHAR2(1024),
+  cl_cnt     NUMBER,
+  oper       NUMBER,
+  wave       NUMBER,
+  cl_avg     NUMBER,
+  dep_code   VARCHAR2(258)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 16K
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_NPS_DICT_RFO_DSO
+  is 'Справочник кол-во обзвона на отделение';
+comment on column U1.T_NPS_DICT_RFO_DSO.x_dnp_name
+  is 'город';
+comment on column U1.T_NPS_DICT_RFO_DSO.dep_name
+  is 'отделение';
+comment on column U1.T_NPS_DICT_RFO_DSO.cl_cnt
+  is 'кол-во клиентов для обзвона для этого отделения';
+comment on column U1.T_NPS_DICT_RFO_DSO.oper
+  is '№оператора';
+comment on column U1.T_NPS_DICT_RFO_DSO.wave
+  is '№волны(всего пока три волны 10:00,12:00,14:00)';
+comment on column U1.T_NPS_DICT_RFO_DSO.cl_avg
+  is 'среднее кол-во клиентов в месяц';
+comment on column U1.T_NPS_DICT_RFO_DSO.dep_code
+  is 'код-отделения';
+grant select on U1.T_NPS_DICT_RFO_DSO to LOADDB;
+grant select on U1.T_NPS_DICT_RFO_DSO to LOADER;
+

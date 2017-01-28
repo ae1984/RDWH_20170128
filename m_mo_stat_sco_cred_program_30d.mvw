@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_MO_STAT_SCO_CRED_PROGRAM_30D
+build deferred
+refresh force on demand
+as
+select /*+ parallel(10)*/ ppv.value_number as card_num, ppv2.value_text as cr_program_code,
+       count(*) as process_count_30days
+from MO_PROCESS_PAR_VALUE ppv
+join MO_PROCESS_PAR_VALUE ppv2 on ppv2.process_id = ppv.process_id and
+                                  ppv2.d_par_id = 1004 and ppv2.date_create > trunc(sysdate) - 30
+where ppv.d_par_id = 1030 and ppv.date_create > sysdate - 30
+group by ppv.value_number, ppv2.value_text;
+grant select on U1.M_MO_STAT_SCO_CRED_PROGRAM_30D to LOADDB;
+
+

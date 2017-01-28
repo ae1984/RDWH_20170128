@@ -1,0 +1,57 @@
+﻿create table U1.M_CLIENT_DRAW_DOWN
+(
+  rfo_client_id      NUMBER,
+  client_name        VARCHAR2(752 CHAR),
+  client_iin         VARCHAR2(36),
+  folder_id          NUMBER not null,
+  folder_date_create DATE,
+  op_sum_kzt         NUMBER(17,2),
+  currency           VARCHAR2(9),
+  is_verification    NUMBER,
+  create_user_name   VARCHAR2(100 CHAR),
+  depart_code        VARCHAR2(150),
+  draw_down_id       NUMBER not null
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.M_CLIENT_DRAW_DOWN
+  is 'Информация по списаниям с депозитных счетов';
+create index U1.IDX_CLIENT_DRAW_DOWN_1 on U1.M_CLIENT_DRAW_DOWN (FOLDER_ID)
+  tablespace USERS
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_CLIENT_DRAW_DOWN_2 on U1.M_CLIENT_DRAW_DOWN (FOLDER_DATE_CREATE, FOLDER_ID)
+  tablespace USERS
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.M_CLIENT_DRAW_DOWN to LOADDB;
+

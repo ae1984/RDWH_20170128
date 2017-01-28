@@ -1,0 +1,67 @@
+﻿create materialized view U1.V_RDBOARD_SALE_CENTR_DAY2
+refresh complete on demand
+as
+with days as
+ ( -- средние значения с учетом текущего дня недели за 6 месяца
+  -- основное назначение - вычисление rise_coefficient для расчетов и визуализации
+  /*  select  tt.yyyy_mm_dd, tt.day_num_of_week
+    from V_TIME_DAYS tt
+   where tt.yyyy = 2014 and to_char(tt.yyyy_mm_dd,'dd')=(to_char(sysdate+1,'dd')) and tt.day_num_of_week =
+         (select t.day_num_of_week
+            from V_TIME_DAYS t
+           where t.yyyy_mm_dd = trunc(sysdate))
+     and tt.month_num_of_year = 12 -- TODO : VREMENNO! только на декабрь день в день просьба ДВКП, убрать после НГ
+     */
+  select  tt.yyyy_mm_dd, tt.day_num_of_week
+    from V_TIME_DAYS tt
+   where ((tt.yyyy_mm_dd >=
+         add_months(trunc(sysdate), -7) and
+         tt.yyyy_mm_dd < trunc(sysdate))
+         or
+         (tt.yyyy_mm_dd >=
+         add_months(trunc(sysdate), -12.5) and
+         tt.yyyy_mm_dd <
+         add_months(trunc(sysdate), -10.5))
+         )
+     and tt.day_num_of_week =
+         (select t.day_num_of_week
+            from V_TIME_DAYS t
+           where t.yyyy_mm_dd = trunc(sysdate))
+     and tt.month_num_of_year != 12
+  )
+select  z.* , case when fld_cnt_mov_avg_med_5_prev > 0 then
+              fld_cnt_mov_avg_med_5 / fld_cnt_mov_avg_med_5_prev else 1 end as rise_coefficient
+  from (select y.text_hh_10mi,
+               y.day_num_of_week,
+               y.fld_cnt_avg,
+               y.fld_cnt_med,
+               avg(y.fld_cnt_avg) over(partition by null order by y.text_hh_10mi rows between 4 preceding and 4 following) as fld_cnt_mov_avg_avg_5, -- moving average of 9 avg rows
+               avg(y.fld_cnt_avg) over(partition by null order by y.text_hh_10mi rows between 5 preceding and 3 following) as fld_cnt_mov_avg_avg_5_prev, -- previous moving average
+               avg(y.fld_cnt_med) over(partition by null order by y.text_hh_10mi rows between 4 preceding and 4 following) as fld_cnt_mov_avg_med_5, -- moving average of 9 median rows
+               avg(y.fld_cnt_med) over(partition by null order by y.text_hh_10mi rows between 5 preceding and 3 following) as fld_cnt_mov_avg_med_5_prev -- previous moving average
+          from (select x.text_hh_10mi,
+                       avg(x.day_num_of_week) as day_num_of_week,
+                       avg(x.fld_cnt) as fld_cnt_avg,
+                       median(x.fld_cnt) as fld_cnt_med
+                  from (select tm.yyyy_mm_dd,
+                               tm.text_hh_10mi,
+                               avg(d.day_num_of_week) as day_num_of_week,
+                               count(f.rfo_contract_id) as fld_cnt
+                          from V_TIME_MINUTES tm
+                          join days d
+                            on d.yyyy_mm_dd = tm.yyyy_mm_dd
+                          left join (select * from M_FOLDER_CON_CANCEL mf join t_nps_dict_region_city drc on trim(upper(mf.x_dnp_name))=trim(upper(drc.city))) f
+                            on trunc(f.folder_date_create_mi, 'mi') =
+                               tm.yyyy_mm_dd_hh_mi
+                           and (f.cr_program_name =
+                               'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР'   or f.cr_program_name =
+                               'ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)' )  AND F.IS_CREDIT_ISSUED=1 and f.is_point_active=0 and f.region='ЦЕНТР'
+                             --  and f.x_dnp_region='ЦЕНТР'
+                         where to_number(to_char(tm.yyyy_mm_dd_hh_mi, 'hh24mi')) >= 845
+                           and to_number(to_char(tm.yyyy_mm_dd_hh_mi, 'hh24mi')) <= 2200
+                         group by tm.yyyy_mm_dd, tm.text_hh_10mi) x
+                 group by x.text_hh_10mi) y) z;
+grant select on U1.V_RDBOARD_SALE_CENTR_DAY2 to LOADDB;
+grant select on U1.V_RDBOARD_SALE_CENTR_DAY2 to LOADER;
+
+

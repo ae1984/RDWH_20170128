@@ -1,0 +1,131 @@
+﻿create materialized view U1.M_CONTRACT_OPTIM_FIX
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30*/
+       rep_date,
+       rbo_contract_id,
+       contract_number,
+       case
+         when del_days > 90 then 'NPL'
+         when date_fact_end <= rep_date then 'CLOSED'
+         when total_debt = 0 then 'DEBT = 0'
+         else rs.segment_name
+       end as optim_type,
+       case
+         when del_days > 90 then 'NPL'
+         when date_fact_end <= rep_date then 'CLOSED'
+         when total_debt = 0 then 'DEBT = 0'
+         else rs2.segment_name
+       end as optim_type2,
+       del_days,
+       total_debt,
+       date_fact_end,
+       yy_mm_report,
+       pmt_full_code_3,
+       rs.is_well_plp,
+       rs.is_well_frst_6m,
+       rs.is_well_last_6m,
+       rs.is_well_last_1m,
+       rs2.is_well_plp as is_well_plp2
+from (
+  select rep_date,
+         rbo_contract_id,
+         contract_number,
+         del_days,
+         date_fact_end,
+         pmt_full_code_3,
+         frst_6m,
+         last_6m,
+         last_1m ,
+         total_debt,
+         yy_mm_report,
+         case when length(nvl(t.frst_6m,'0')) < 6 then 2 -- не полный период, если нет 6 месяцев
+             when instr(t.frst_6m,'2') > 0 or instr(t.frst_6m,'3') > 0 or instr(t.frst_6m,'R') > 0 then 0
+               else 1
+          end as is_well_frst_6m,
+
+         case when length(nvl(t.last_6m,'0')) < 6 then 2 -- не полный период, если нет 6 месяцев
+             when instr(t.last_6m,'2') > 0 or instr(t.last_6m,'3') > 0 or instr(t.last_6m,'R') > 0 then 0
+               else 1
+          end as is_well_last_6m,
+
+         case
+             when t.last_1m = '2' or t.last_1m = '3' or t.last_1m = 'R' or t.last_1m is null then 0
+               else 1
+          end as is_well_last_1m,
+          is_well_plp,
+          is_well_plp2
+
+  from (
+        select pb.rep_date,
+               pb.rbo_contract_id,
+               pb.contract_number,
+               pb.del_days,
+               b.date_fact_end,
+               nvl(pb.total_debt,0) as total_debt,
+               pb.yy_mm_report,
+               case
+                 when instr(pb.pmt_full_code_3,'R') > 0 then
+                   substr(pb.pmt_full_code_3,instr(pb.pmt_full_code_3,'R')+1,6)
+               end as frst_6m,
+               case
+                 when instr(pb.pmt_full_code_3,'R') > 0 and instr(pb.pmt_full_code_3,'R') >= length(pb.pmt_full_code_3)-5 then
+                  substr(pb.pmt_full_code_3,instr(pb.pmt_full_code_3,'R')+1 ,6)
+                 when instr(pb.pmt_full_code_3,'R') > 0 and instr(pb.pmt_full_code_3,'R') < length(pb.pmt_full_code_3)-5 then
+                  substr(pb.pmt_full_code_3,length(pb.pmt_full_code_3)-5 ,6)
+               end as last_6m,
+               case
+                 when instr(pb.pmt_full_code_3,'R') > 0 and instr(pb.pmt_full_code_3,'R') != length(pb.pmt_full_code_3) then
+                   substr(pb.pmt_full_code_3,length(pb.pmt_full_code_3),1)
+               end as last_1m,
+               pb.pmt_full_code_3,
+              max(case when trunc(hh.month_last_date,'mm') = trunc(pb.rep_date,'mm') then decode(hh.status_healthy,'Y',1,0) else 0 end) as is_well_plp,
+               max(decode(hh.status_healthy,'Y',1,0)) as is_well_plp2
+        from u1.M_RBO_CONTRACT_PORTFOLIO_BASE pb
+        join u1.M_RBO_CONTRACT_BAS b on b.rbo_contract_id = pb.rbo_contract_id
+        join u1.T_OP_FIX fx on fx.contract_number = pb.contract_number --портфель FIX
+        left join (select h.month_last_date,
+                              h.deal_number,
+                              max(h.status_healthy) as status_healthy
+                       from u1.M_DWH_STATUS_HEALTHY h
+                       group by h.month_last_date,
+                              h.deal_number
+                  ) hh on trunc(hh.month_last_date,'mm') <= trunc(pb.rep_date,'mm') and hh.deal_number = pb.contract_number
+
+        where pb.pmt_full_code_3 like '%R%'
+       group by pb.rep_date,
+               pb.rbo_contract_id,
+               pb.contract_number,
+               pb.del_days,
+               b.date_fact_end,
+               nvl(pb.total_debt,0) ,
+               pb.yy_mm_report,
+               case
+                 when instr(pb.pmt_full_code_3,'R') > 0 then
+                   substr(pb.pmt_full_code_3,instr(pb.pmt_full_code_3,'R')+1,6)
+               end ,
+               case
+                 when instr(pb.pmt_full_code_3,'R') > 0 and instr(pb.pmt_full_code_3,'R') >= length(pb.pmt_full_code_3)-5 then
+                  substr(pb.pmt_full_code_3,instr(pb.pmt_full_code_3,'R')+1 ,6)
+                 when instr(pb.pmt_full_code_3,'R') > 0 and instr(pb.pmt_full_code_3,'R') < length(pb.pmt_full_code_3)-5 then
+                  substr(pb.pmt_full_code_3,length(pb.pmt_full_code_3)-5 ,6)
+               end,
+               case
+                 when instr(pb.pmt_full_code_3,'R') > 0 and instr(pb.pmt_full_code_3,'R') != length(pb.pmt_full_code_3) then
+                   substr(pb.pmt_full_code_3,length(pb.pmt_full_code_3),1)
+               end,
+               pb.pmt_full_code_3
+      ) t
+)tt
+left join u1.T_RDWH_REFIN_SEGMENT rs on rs.is_well_frst_6m = tt.is_well_frst_6m and
+                                                rs.is_well_plp = tt.is_well_plp and
+                                                rs.is_well_last_6m = tt.is_well_last_6m and
+                                                rs.is_well_last_1m = tt.is_well_last_1m
+left join u1.T_RDWH_REFIN_SEGMENT rs2 on rs2.is_well_frst_6m = tt.is_well_frst_6m and
+                                                 rs2.is_well_plp = tt.is_well_plp2 and
+                                                 rs2.is_well_last_6m = tt.is_well_last_6m and
+                                                 rs2.is_well_last_1m = tt.is_well_last_1m;
+grant select on U1.M_CONTRACT_OPTIM_FIX to LOADDB;
+
+

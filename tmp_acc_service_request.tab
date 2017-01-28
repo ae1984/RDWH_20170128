@@ -1,0 +1,38 @@
+﻿create table U1.TMP_ACC_SERVICE_REQUEST
+(
+  risk                 VARCHAR2(8 CHAR),
+  srvrq_rqst_num       VARCHAR2(64 CHAR),
+  srvrq_status_name    VARCHAR2(255 CHAR),
+  srvrq_last_upd       DATE,
+  srvrq_assign_date    DATE,
+  srvrq_start_date     DATE,
+  srvrq_inc_num        VARCHAR2(50 CHAR),
+  srvrq_city           VARCHAR2(50 CHAR),
+  srvrq_branch         VARCHAR2(50 CHAR),
+  srvrq_clnt_name      VARCHAR2(101 CHAR),
+  srvrq_inn            VARCHAR2(50 CHAR),
+  clnt_cont_theme_name VARCHAR2(255 CHAR),
+  request_type_name    VARCHAR2(255 CHAR),
+  empl_name            VARCHAR2(254 CHAR),
+  srvrq_dscrptn        VARCHAR2(50 CHAR),
+  deal                 VARCHAR2(40),
+  srvrq_legal_term     VARCHAR2(10 CHAR),
+  srvrq_actual_term    VARCHAR2(10 CHAR),
+  srvrq_close_date     DATE,
+  srvrq_prlngtn_date   DATE,
+  srvrq_prprtn_date    DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+

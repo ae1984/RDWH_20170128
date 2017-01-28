@@ -1,0 +1,45 @@
+﻿create materialized view U1.M_CLIENT_REP_BAS
+refresh complete on demand
+as
+select /*+ parallel(30) parallel_index(30)*/
+  c.client_id as client_id_rep,
+  c_iin.client_iin_last as iin,
+  c1.client_rnn_last as rnn,
+  c.client_name as client_name,
+  substr(c.client_name,1, instr(c.client_name,' ')-1) as name_last,
+  case when regexp_count(trim(regexp_replace(c.client_name,' +',' ')),' ')>1
+       then substr(trim(regexp_replace(c.client_name,' +',' ')),
+                   instr(trim(regexp_replace(c.client_name,' +',' ')),' ')+1,
+                 instr(trim(regexp_replace(c.client_name,' +',' ')), ' ',
+                 instr(trim(regexp_replace(c.client_name,' +',' ')), ' ')+1)-
+                 instr(trim(regexp_replace(c.client_name,' +',' ')),' ')-1)
+       else substr(trim(regexp_replace(c.client_name,' +',' ')),
+                  instr(trim(regexp_replace(c.client_name,' +',' ')),' ')+1,
+                  length(trim(regexp_replace(c.client_name,' +',' '))))
+       end as name_first,
+  case when regexp_count(trim(regexp_replace(c.client_name,' +',' ')),' ')>1
+       then substr(trim(regexp_replace(c.client_name,' +',' ')),
+               instr(trim(regexp_replace(c.client_name,' +',' ')), ' ',
+               instr(trim(regexp_replace(c.client_name,' +',' ')), ' ')+1)+1,
+               length(trim(regexp_replace(c.client_name,' +',' '))))
+       else null end as name_patronymic,
+f.birth_date_client as birth_date
+from      (select d.client_id,
+                  max(d.client_name) keep (dense_rank last order by d.yy_mm_report) as client_name
+           from v_data_all d
+           group by d.client_id ) c
+left join (select d2.client_id,
+                  min(d2.rnn) keep (dense_rank last order by d2.yy_mm_report) as client_rnn_last
+           from v_data_all d2
+           where d2.rnn is not null
+           group by d2.client_id) c1 on c1.client_id = c.client_id
+left join (select d3.client_id,
+                   min(d3.iin) keep (dense_rank last order by d3.yy_mm_report) as client_iin_last
+            from v_data_all d3
+            where d3.iin is not null
+            group by d3.client_id) c_iin on c_iin.client_id = c.client_id
+left join V_CLIENT_FOLDER_ALL_CAL f on f.client_iin = c_iin.client_iin_last;
+grant select on U1.M_CLIENT_REP_BAS to LOADDB;
+grant select on U1.M_CLIENT_REP_BAS to LOADER;
+
+

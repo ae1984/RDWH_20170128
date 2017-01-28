@@ -1,0 +1,53 @@
+﻿create table U1.REF_PRODUCTS
+(
+  id                   NUMBER(38) not null,
+  product_program      VARCHAR2(100),
+  product              VARCHAR2(20),
+  is_refin_restruct    NUMBER(1),
+  product_refin        VARCHAR2(20),
+  first_pmt_days       NUMBER(3),
+  first_pmt_days_refin NUMBER(3)
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+create index U1.REF_PRODUCTS_IND1 on U1.REF_PRODUCTS (PRODUCT_PROGRAM)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.REF_PRODUCTS
+  add constraint REF_PRODUCTS_PK1 primary key (ID)
+  using index 
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.REF_PRODUCTS_PK1 nologging;
+grant select on U1.REF_PRODUCTS to LOADDB;
+grant select on U1.REF_PRODUCTS to LOADER;
+

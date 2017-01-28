@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_VERIFICATION_ROTATION_PRE1
+build deferred
+refresh force on demand
+as
+select
+      v.id
+      ,v.client_id
+      ,v1.id as id1
+      ,v1.client_id as client_id1
+      ,v.verification_id
+      ,trunc (v.folders_date,'mon') as folder_mon
+      ,trunc (v.folders_date) as folder_day
+      ,v.folders_date
+      ,p.person_tabnum
+      ,p.id as process_id
+      ,d.client_name as verificator_name
+    from U1.M_OUT_DWH_VERIFICATION v
+    join U1.M_OUT_DWH_VERIFICATION v1 on v1.folders_id = v.folders_id
+    join U1.M_OUT_DWH_PROCESS p on p.verification_id = v.id and p.verification_type = 'PHOTO'
+    left join U1.M_ZUP_1C_STAFF_OUT2 sf on sf.tab_num = p.person_tabnum
+    left join u1.V_CLIENT_RFO_BY_ID d on d.iin = sf.iin;
+grant select on U1.M_VERIFICATION_ROTATION_PRE1 to LOADDB;
+
+

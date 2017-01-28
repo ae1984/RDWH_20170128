@@ -1,0 +1,64 @@
+﻿create materialized view U1.M_CLIENT_CAL_CATEG_PRE3
+build deferred
+refresh force on demand
+as
+selecT /*+ parallel(10)*/ x.RFO_CLIENT_ID,
+                    sum(x.PREV_CON_CNT) as PREV_CON_CNT,
+                    0 as IS_CLIENT_NEW,
+                    sum(case
+                          when x.actual_end_date is null then
+                           1
+                          else
+                           0
+                        end) as ACTIV_CREDIT_NUM,
+                    sum(months_between(coalesce(x.actual_end_date,
+                                                trunc(sysdate)),
+                                       x.x_start_date_actual)) as MONTHS_LIVED,
+                    floor(months_between(trunc(sysdate),
+                                         min(x.x_start_date_actual))) as FIRST_CON_START_MON_AGO,
+                    floor(months_between(trunc(sysdate),
+                                         max(x.x_start_date_actual))) as LAST_CON_START_MON_AGO,
+                    max(x.GOOD_MONTHS_BEFORE_CNT) as GOOD_MONTHS_BEFORE_CNT,
+                    max(x.BAD_MONTHS_BEFORE_CNT) as BAD_MONTHS_BEFORE_CNT,
+                    min(x.CONTRACT_AMOUNT_MIN_DEL) as CONTRACT_AMOUNT_MIN_DEL
+               from (selecT k.RFO_CLIENT_ID,
+                            count(distinct k.deal_number) as PREV_CON_CNT,
+                            max(k.GOOD_MONTHS_BEFORE_CNT) as GOOD_MONTHS_BEFORE_CNT,
+                            max(k.BAD_MONTHS_BEFORE_CNT) as BAD_MONTHS_BEFORE_CNT,
+                            min(k.CONTRACT_AMOUNT_MIN_DEL) as CONTRACT_AMOUNT_MIN_DEL,
+                            k.actual_end_date,
+                            k.x_start_date_actual
+                       from (selecT f.RFO_CLIENT_ID,
+                                    f.deal_number,
+                                    f.actual_end_date,
+                                    f.x_start_date_actual,
+                                    count(distinct case
+                                            when da.contract_amount > 0 and
+                                                 da.total_debt > 0 and
+                                                 coalesce(da.delinq_days, 0) < 8 then
+                                             da.yy_mm_report_date
+                                          end) over(partition by f.rfo_client_id) as GOOD_MONTHS_BEFORE_CNT,
+                                    count(distinct case
+                                            when da.contract_amount > 0 and
+                                                 da.total_debt > 0 and
+                                                 coalesce(da.delinq_days, 0) > 7 then
+                                             da.yy_mm_report_date
+                                          end) over(partition by f.rfo_client_id) as BAD_MONTHS_BEFORE_CNT,
+                                    min(distinct case
+                                          when da.contract_amount > 0 and
+                                               da.total_debt > 0 and
+                                               coalesce(da.delinq_days, 0) > 7 then
+                                           da.contract_amount
+                                        end) over(partition by f.rfo_client_id) as CONTRACT_AMOUNT_MIN_DEL
+                               from u1.V_DWH_PORTFOLIO_CURRENT f
+                               join u1.V_DATA_ALL da
+                                 on da.contract_no = f.deal_number
+                              where f.x_is_credit_issued = 1
+                                   -- and f.x_product_type in
+                                   --   ('ДЕНЬГИ', 'ТОВАРЫ')
+                                and f.x_is_card = 0) k
+                      group by k.rfo_client_id,
+                               k.actual_end_date,
+                               k.x_start_date_actual) x
+              group by x.rfo_client_id;
+

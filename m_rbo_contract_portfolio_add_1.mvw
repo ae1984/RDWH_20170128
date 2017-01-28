@@ -1,0 +1,26 @@
+﻿create materialized view U1.M_RBO_CONTRACT_PORTFOLIO_ADD_1
+build deferred
+refresh force on demand
+as
+select /*+ parallel (30)*/ c.rbo_contract_id,
+       cl.c_inn as client_iin,
+       c.rep_date,
+       count(distinct case when d.x_start_date_actual < c.rep_date then
+                   d.deal_number end) as prev_con_cnt,
+       count(distinct (case when d.x_start_date_actual < c.rep_date and d.actual_end_date < c.rep_date and d.x_product_type != 'ОПТИМИЗАЦИЯ' then
+                        d.deal_number else null end)) as prev_con_closed_cnt,
+       max(case when d.x_start_date_actual < c.rep_date and d.actual_end_date < c.rep_date and d.x_product_type != 'ОПТИМИЗАЦИЯ' then
+                 d.x_amount end) as amount_max_before,
+       count(distinct o.spof_end_date) as prior_optim_count
+from u1.T_RBO_CONTRACT_PORTFOLIO c
+join u1.V_RBO_Z#CLIENT cl on cl.id = c.rbo_client_id
+left join u1.V_DWH_PORTFOLIO_CURRENT d on d.client_iin = cl.c_inn and
+                                       d.x_is_credit_issued = 1
+left join u1.M_DWH_ACC_SPECIAL_OFFER_CON o on o.contract_number = d.deal_number and
+                                           o.spof_spec_offer_status_cd in ('EXECUTED','DEFAULT','WORK') and
+                                           o.spof_end_date < c.rep_date
+group by c.rbo_contract_id,c.rep_date,cl.c_inn;
+grant select on U1.M_RBO_CONTRACT_PORTFOLIO_ADD_1 to LOADDB;
+grant select on U1.M_RBO_CONTRACT_PORTFOLIO_ADD_1 to LOADER;
+
+

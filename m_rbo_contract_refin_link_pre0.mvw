@@ -1,0 +1,6 @@
+﻿create materialized view U1.M_RBO_CONTRACT_REFIN_LINK_PRE0
+build deferred
+refresh force on demand
+as
+select /*+parallel(5)*/ distinct rbo_contract_id_to, refin_date from M_RBO_CONTRACT_REFIN_LINK_PRE;
+

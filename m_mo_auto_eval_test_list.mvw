@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_MO_AUTO_EVAL_TEST_LIST
+build deferred
+refresh complete on demand
+as
+select brend,
+       model,
+       year_release,
+       drive,
+       engine_volume,
+       transmission_type,
+       body_type
+  from T_AUTO_EVAL_TEST_LIST@mo1_prod;
+grant select on U1.M_MO_AUTO_EVAL_TEST_LIST to LOADDB;
+
+

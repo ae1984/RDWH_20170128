@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_REF_RESTR_CONS_ZHOMART_PIV
+refresh force on demand
+as
+select * from (
+select * from M_REF_RESTR_CONS_ZHOMART tt
+) pivot (
+   max(contract_number_old) as contract_number_old,
+   max(yy_mm_start_last_old) as yy_mm_start_last_old
+   for product_last_old in ('АВТО','АВТО_БУ','ЗК','КК','КН','КН-15','КНП','ЛК','ЛКН','Н_ЗК','Н_КВ',
+                                   'Н_П','ПК','ПКН','ПРК','ТК','ХК','ЭКД')
+);
+grant select on U1.M_REF_RESTR_CONS_ZHOMART_PIV to LOADDB;
+grant select on U1.M_REF_RESTR_CONS_ZHOMART_PIV to LOADER;
+
+

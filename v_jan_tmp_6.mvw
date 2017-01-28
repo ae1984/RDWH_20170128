@@ -1,0 +1,53 @@
+﻿create materialized view U1.V_JAN_TMP_6
+refresh force on demand
+as
+select * from (
+select /* leading(p c) index(c V_CONTRACT_CAL_IND12) index(p V_PORTFOLIO_IND6) use_hash(p c)*/ /* parallel(30) parallel_index(30) */
+    c.yms, --c.product_refin_last,
+--    ca.cr_scheme_name, f.is_credit_issued,
+--    cc.is_edit_cli_fld_five_days_aft, -- 6
+    c.product_refin_last, cc.is_edit_cli_fld_five_days_aft, -- 7
+--    count(c.contract_number) as con_cnt, --count(distinct p.contract_number) as s_con_cnt_distinct,
+/*    round(sum(case when p.delinq_days > 0 and p.delinq_days < 8 then p.total_debt * 0.45
+                   when p.delinq_days > 7 then p.total_debt
+                   else 0 end) / sum(p.max_debt_used) * 100, 2) as del_rate,*/
+    round(sum(case when p1.delinq_days > 0 and p1.delinq_days < 8 then p1.total_debt * 0.45
+                   when p1.delinq_days > 7 then p1.total_debt
+                   else 0 end) / sum(p.max_debt_used) * 100, 2) as del_rate_pmt_1,
+    round(sum(p.max_debt_used) / 1000000) as sales_mln
+from V_CONTRACT_CAL c
+join V_PORTFOLIO p on c.contract_id = p.contract_id and p.report_month_all_contracts = '2013 - 12'
+left join V_PORTFOLIO p1 on c.contract_id = p1.contract_id and p1.planned_pmt_month_new = 1
+--left join V_FOLDER_ALL_RFO f on f.folder_id = c.folder_id_first
+--left join V_CONTRACT_ALL_RFO ca on ca.rfo_contract_id = f.card_contract_id
+left join V_TMP_CON_EDIT_CL_PRIV_BEF_AFT cc on cc.contract_number = c.contract_number
+where --c.yms = '2013 - 10' and
+      c.yms like '2013 - %' --and c.product_refin_last = 'ЛК И ПК'
+--group by c.yms, cc.is_edit_cli_fld_five_days_aft -- 6
+group by c.yms, c.product_refin_last, cc.is_edit_cli_fld_five_days_aft -- 7
+
+--group by c.yms,/*, c.product_refin_last,*/ cc.is_edit_cli_fld_same_day_bef--, cc.is_edit_cli_fld_same_day_aft
+--group by c.yms, c.product_refin_last
+--group by ca.cr_scheme_name, f.is_credit_issued
+having sum(p.max_debt_used) > 0 and count(c.contract_number) = count(distinct p.contract_number)
+
+/*) pivot (max(con_cnt) as con_cnt,  max(del_rate) as del_rate, -- 6
+        max(del_rate_pmt_1) as del_rate_pmt_1, max(sales_mln) as sales_mln
+    for is_edit_cli_fld_five_days_aft in (0 as fivedaft0, 1 as fivedaft1)
+);*/
+) pivot (
+--        max(con_cnt) as con_cnt, -- 7
+--        max(del_rate) as del_rate,
+        max(del_rate_pmt_1) as del_rate_pmt_1,
+        max(sales_mln) as sales_mln
+    for (product_refin_last, is_edit_cli_fld_five_days_aft) in (
+        ('КН',0), ('КН',1), ('КН-15',0), ('КН-15',1),
+        ('ТК',0), ('ТК',1), ('АВТО',0), ('АВТО',1),
+        ('ЛК И ПК',0), ('ЛК И ПК',1), ('КК',0), ('КК',1),
+        ('КНП',0), ('КНП',1)
+    )
+);
+grant select on U1.V_JAN_TMP_6 to LOADDB;
+grant select on U1.V_JAN_TMP_6 to LOADER;
+
+

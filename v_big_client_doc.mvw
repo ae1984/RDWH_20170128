@@ -1,0 +1,8 @@
+﻿create materialized view U1.V_BIG_CLIENT_DOC
+refresh force on demand
+as
+select * from user_1.V_CLIENT_DOC@b28;
+grant select on U1.V_BIG_CLIENT_DOC to LOADDB;
+grant select on U1.V_BIG_CLIENT_DOC to LOADER;
+
+

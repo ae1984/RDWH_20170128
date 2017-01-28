@@ -1,0 +1,40 @@
+﻿create materialized view U1.M_CLIENT_CAL_SCO6
+refresh complete on demand
+as
+select /*+ no_parallel*/
+x.c_client as rfo_client_id,
+count(folder_id) as cnl_fld_cnt,
+count(fold_hist) as cnl_fld_hist
+
+
+
+from  (
+      (select /*+ no_parallel*/ f.c_client, f.id folder_id, c.c_date_create, c.c_history
+      from V_RFO_Z#FOLDERS f
+      join V_RFO_Z#BUS_PROCESS bp on bp.id = f.c_business and bp.c_code in ('KAS_CREDIT_CASH_PRIV_PC','KAS_AUTO_CRED_PRIV_PC')
+      join V_RFO_Z#CM_CHECKPOINT c on f.id=c.id
+      join V_RFO_Z#CM_POINT p on p.id=c.c_point and (p.c_status_group = '#CANCELED#'  or instr (p.c_code,'CANCEL') = 1)
+      and c.c_date_create >= trunc(sysdate) - 2
+      union
+      select f.c_client, f.id folder_id, c.c_date_create, c.c_history
+      from  V_RFO_Z#FOLDERS f
+      join V_RFO_Z#CM_CHECKPOINT c on f.id=c.id
+      join V_RFO_Z#KAS_ARCH_DATA k on f.id=k.c_folder_ref and k.c_cancel_point is not null
+      where c.c_date_create >= trunc(sysdate) - 2) x
+left join (select /*+ no_parallel*/ hh.c_line_time,
+                  hh.collection_id, c.id as fold_hist
+           from V_RFO_Z#CM_CHECKPOINT c
+           join V_RFO_Z#CM_HISTORY hh on hh.collection_id=c.c_history
+           join V_RFO_Z#CM_LINE l  on l.id = hh.c_line
+           join V_RFO_Z#CM_POINT p on p.id = l.c_to_p and (p.c_status_group = '#CANCELED#'  or instr (p.c_code,'CANCEL') = 1)
+           and hh.c_line_time >= trunc(sysdate) - 1
+           ) h on h.collection_id = x.c_history
+
+        )
+
+group by   x.c_client;
+grant select on U1.M_CLIENT_CAL_SCO6 to LOADDB;
+grant select on U1.M_CLIENT_CAL_SCO6 to LOADER;
+grant select on U1.M_CLIENT_CAL_SCO6 to LOAD_MO;
+
+

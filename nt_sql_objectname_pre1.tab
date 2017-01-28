@@ -1,0 +1,23 @@
+﻿create table U1.NT_SQL_OBJECTNAME_PRE1
+(
+  sql_id            VARCHAR2(13),
+  plan_object_name  VARCHAR2(30),
+  plan_object_owner VARCHAR2(30),
+  cnt_obj_by_sql    NUMBER,
+  object_name       VARCHAR2(30)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_SQL_OBJECTNAME_PRE1 to LOADDB;
+

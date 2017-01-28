@@ -1,0 +1,23 @@
+﻿create table U1.NT_TABLE_UPDATE_HIST
+(
+  sdt         DATE,
+  object_name VARCHAR2(100),
+  last_commit DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_TABLE_UPDATE_HIST
+  is 'rdwh2.0 запись раз в сутки информации о времени последнего коммита на таблице';
+grant select on U1.NT_TABLE_UPDATE_HIST to LOADDB;
+

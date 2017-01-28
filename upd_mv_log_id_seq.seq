@@ -1,0 +1,7 @@
+﻿create sequence U1.UPD_MV_LOG_ID_SEQ
+minvalue 1
+maxvalue 9999999999999999999999999999
+start with 565336
+increment by 1
+nocache;
+

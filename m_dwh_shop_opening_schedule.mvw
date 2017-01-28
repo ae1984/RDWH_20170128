@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_DWH_SHOP_OPENING_SCHEDULE
+refresh force on demand
+as
+select /*+ noparallel */
+       opening_schedule_id as shop_opening_schedule_id,
+       opening_time,
+       closing_time,
+       weekday
+  from DWH_STAGE.S43_OPENING_SCHEDULE@dwh_prod2;
+grant select on U1.M_DWH_SHOP_OPENING_SCHEDULE to LOADDB;
+grant select on U1.M_DWH_SHOP_OPENING_SCHEDULE to LOADER;
+
+

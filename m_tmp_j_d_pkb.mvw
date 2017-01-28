@@ -1,0 +1,82 @@
+﻿create materialized view U1.M_TMP_J_D_PKB
+refresh force on demand
+as
+select c.yy_mm_start_last, -- месяц выдачи кредита или выдачи/установки револьверности по карте
+       --dc.prod_type,
+    -- ПРОВЕРКА
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt, -- проверка - если эти два поля равны, значит выборка верна
+
+    -- ПРОДАЖИ
+    round(sum(c.max_debt_used) / 1000000) as sales_mln, -- USE THIS! - продажи, млн
+    round(sum(c.max_debt_used)) as sales, -- продажи
+    round(sum(c.total_debt_fpd_1_7),0) as total_debt_fpd_1_7,
+    round(sum(c.total_debt_fpd_8_30),0) as total_debt_fpd_8_30,
+    round(sum(c.total_debt_last_rep_new_npl),0) as total_debt_last_rep_new_npl,
+    round(sum(c.total_debt_last_rep_new_b),0) as total_debt_last_rep_new_b,
+    round(sum(c.total_debt_last_rep_newd_w),0) as total_debt_last_rep_newd_w,
+
+    -- ПРОСРОЧКА
+    round(sum(c.delinq_rate_b_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b_w, -- USE THIS! - просрочка всего по-новому
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate, -- просрочка всего по-старому
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1, -- USE THIS! - просрочка 1-го платежа
+
+    round(sum(c.delinq_rate_npl * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_npl -- USE THIS! - просрочка по NPL (>=90 days)
+
+from M_CONTRACT_CAL_DEL c
+--join V_CONTRACT_CAL cc on cc.contract_number = c.contract_number and cc.is_refin_restruct_first = 0
+--join M_FOLDER_CON_CANCEL f on f.folder_id = c.folder_id_first and f.is_refin = 0 and
+--                              f.contract_number = c.contract_number
+--join V_DWH_PORTFOLIO_CURRENT dc on dc.deal_number = c.contract_number
+--join M_TMP_J_K1 k1 on k1.deal_number = c.contract_number
+--join V_PKB_REPORT r on r.folder_id = c.folder_id_first
+join M_TMP_J_K1 k1 on k1.deal_number = c.contract_number and k1.pkb_rep_found_type in (6,0)
+--join M_TMP_J_K4 k4 on k4.report_id = k1.pkb_rep_id
+--join V_POS p on p.pos_code = dc.dept_number and p.pos_type = 'ОТДЕЛЕНИЕ'
+--join M_FOLDER_CON_MINER_X m on m.contract_id = c.contract_id
+where not exists (select null from M_FOLDER_CON_CANCEL f where f.folder_id = c.folder_id_first and f.is_refin = 1) and
+      --dc.prod_type != 'РЕФИНАНСИРОВАНИЕ/РЕСТРУКТУРИЗАЦИЯ' and
+      --dc.prod_type in ('ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ','ЛУЧШИЙ КЛИЕНТ НАЛИЧНЫМИ') and
+--      k4.overdue_sum > 4500 and
+      --dc.prod_type = 'PC.ПОСТОЯННЫЙ КЛИЕНТ' and
+      (--c.yy_mm_start_last like '2011 - %' or c.yy_mm_start_last like '2012 - %' or
+       c.yy_mm_start_last like '2013 - %' or c.yy_mm_start_last like '2014 - %')
+       --c.yy_mm_start_last in ('2014 - 07','2014 - 08')
+       /* and
+       exists (select null from M_TMP_J_K3 p where p.folder_id = c.folder_id_first and
+                      --p.delinq_amount > 4500 and
+--                      p.c.report_type = 'ПЕРВИЧНЫЙ' and
+                     -- p.pkb_contract_status ='АКТИВНЫЙ' and
+                      p.contract_status_clean in (
+                        'ПРОСРЕЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 31 ДО 60 ДНЕЙ',
+                        'ПРОСРЕЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 61 ДО 90 ДНЕЙ',
+                        'ПРОСРЕЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 7 ДО 30 ДНЕЙ',
+                        'ПРОСРОЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 61 ДО 90 ДНЕЙ',
+                        'ПРОСРОЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 91 ДО 360 ДНЕЙ'
+--                        'ССУДНАЯ ЗАДОЛЖЕННОСТЬ СПИСАНА ЗА БАЛАНС'
+                          )
+                          )*/
+ /*
+                      p.pkb_contract_status || ' ' || p.contract_status_clean in (
+                            'ЗАКРЫТЫЙ ПРОСРЕЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 31 ДО 60 ДНЕЙ',
+                            'АКТИВНЫЙ ССУДА ПЕРЕВЕДЕНА В РАЗРЯД УБЫТКОВ, 100% НЕЛИКВИДНОСТЬ, НА БАЛАНСОВЫХ СЧЕТАХ',
+                            'ЗАКРЫТЫЙ ПРОСРОЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 91 ДО 360 ДНЕЙ',
+                            'АКТИВНЫЙ ПРОСРЕЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 31 ДО 60 ДНЕЙ',
+                            'АКТИВНЫЙ ПРОСРЕЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 61 ДО 90 ДНЕЙ',
+                            'АКТИВНЫЙ ССУДНАЯ ЗАДОЛЖЕННОСТЬ СПИСАНА ЗА БАЛАНС',
+                            'АКТИВНЫЙ ПРОСРЕЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 7 ДО 30 ДНЕЙ',
+                            'АКТИВНЫЙ ПРОСРОЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 61 ДО 90 ДНЕЙ',
+                            'АКТИВНЫЙ ПРОСРОЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 91 ДО 360 ДНЕЙ',
+
+                            'ЗАКРЫТЫЙ ПРЕКРАЩЁН В СВЯЗИ С НЕСВОЕВРЕМЕННЫМ ПОГАШЕНИЕМ',
+                            'АКТИВНЫЙ ПРОСРОЧЕННАЯ ЗАДОЛЖЕННОСТЬ ОТ 31 ДО 60 ДНЕЙ'
+                      )
+
+--                           and nvl(p.total_debt_all,1000000000) >= 4500 --and p.pkb_contract_status ='АКТИВНЫЙ'
+                      ) */
+--       dc.prod_type in (/*'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР')--,*/'КРЕДИТ НАЛИЧНЫМИ'/*,'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ'*/)
+--       m.cr_program_name in (/*'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР')--,*/'КРЕДИТ НАЛИЧНЫМИ'/*,'КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ'*/)
+group by c.yy_mm_start_last having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_J_D_PKB to LOADDB;
+grant select on U1.M_TMP_J_D_PKB to LOADER;
+
+

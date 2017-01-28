@@ -1,0 +1,24 @@
+﻿create table U1.T_CLIENT_TWIN_HIST
+(
+  sdt                DATE,
+  rfo_client_id      NUMBER not null,
+  client_iin         VARCHAR2(36),
+  twin_rfo_client_id NUMBER,
+  twin_client_iin    VARCHAR2(36),
+  twin_cnt           NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_CLIENT_TWIN_HIST to LOADDB;
+

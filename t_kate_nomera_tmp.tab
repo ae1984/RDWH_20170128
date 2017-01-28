@@ -1,0 +1,86 @@
+﻿create table U1.T_KATE_NOMERA_TMP
+(
+  mobile_tel                  VARCHAR2(20),
+  status__kcell               VARCHAR2(100),
+  client_tel_num_cnt          NUMBER,
+  client_dwh_id               NUMBER,
+  iin                         VARCHAR2(20),
+  rbo_id                      NUMBER,
+  home_tel                    VARCHAR2(100),
+  client_surname              VARCHAR2(100),
+  client_name                 VARCHAR2(100),
+  client_patronymic           VARCHAR2(100),
+  gender_id                   VARCHAR2(100),
+  address_value_rgn           VARCHAR2(150),
+  mail_address_value          VARCHAR2(150),
+  iad_count                   NUMBER,
+  iad_date_last               VARCHAR2(100),
+  iad_status_last             VARCHAR2(100),
+  kn_count                    NUMBER,
+  kn_date_open_last           VARCHAR2(100),
+  kn_status_last              VARCHAR2(100),
+  kn_name_last                VARCHAR2(150),
+  ekt_count                   NUMBER,
+  ekt_date_open_last          VARCHAR2(100),
+  ekt_status_last             VARCHAR2(100),
+  ekt_name_last               VARCHAR2(150),
+  auto_count                  NUMBER,
+  auto_date_open_last         VARCHAR2(100),
+  auto_status_last            VARCHAR2(100),
+  auto_name_last              VARCHAR2(150),
+  card_count                  NUMBER,
+  card_date_open_last         VARCHAR2(100),
+  card_status_last            VARCHAR2(100),
+  card_name_last              VARCHAR2(150),
+  depn_count                  NUMBER,
+  depn_date_open_last         VARCHAR2(100),
+  depn_status_last            VARCHAR2(100),
+  kaspikz_date_reg_first      VARCHAR2(100),
+  kaspikz_tel_first           VARCHAR2(100),
+  kaspikz_date_reg_last       VARCHAR2(100),
+  kaspikz_tel_last            VARCHAR2(100),
+  all_date_pay_last           VARCHAR2(100),
+  all_pay_last_10000          NUMBER,
+  all_dt_last_pay_10000       VARCHAR2(100),
+  depn_date_last_pay          VARCHAR2(100),
+  depn_summ_last_pay_10000    NUMBER,
+  depn_dt_last_pay_10000      VARCHAR2(100),
+  zp_pay_last                 VARCHAR2(100),
+  zp_summ_last_pay_10000      NUMBER,
+  zp_date_last_pay_10000      VARCHAR2(100),
+  card_pay_last               VARCHAR2(100),
+  card_summ_last_pay_10000    NUMBER,
+  card_date_last_pay_10000    VARCHAR2(100),
+  card_dt_pay_last_othr_bnk   VARCHAR2(100),
+  card_sum_pay_othr_10000     NUMBER,
+  card_dat_pay_lst_othr_10000 VARCHAR2(100),
+  purse_date_pay_last         VARCHAR2(100),
+  purse_sum_pay_last_10000    NUMBER,
+  purse_dat_pay_last_10000    VARCHAR2(100),
+  inc_call_count              NUMBER,
+  inc_call_date_last          VARCHAR2(100),
+  out_call_count              NUMBER,
+  out_call_date_last_soft     VARCHAR2(100),
+  out_call_count_market       NUMBER,
+  out_call_date_last_market   VARCHAR2(100),
+  service_pay_name            VARCHAR2(150),
+  number1                     VARCHAR2(100),
+  number2                     VARCHAR2(100),
+  number3                     VARCHAR2(100)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_KATE_NOMERA_TMP to LOADDB;
+grant select on U1.T_KATE_NOMERA_TMP to LOADER;
+

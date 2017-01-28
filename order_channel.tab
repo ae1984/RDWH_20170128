@@ -1,0 +1,27 @@
+﻿create table U1.ORDER_CHANNEL
+(
+  iin       VARCHAR2(256),
+  order_num VARCHAR2(4000),
+  channel   VARCHAR2(32)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on column U1.ORDER_CHANNEL.iin
+  is 'ИИН';
+comment on column U1.ORDER_CHANNEL.order_num
+  is 'Номер заказа';
+comment on column U1.ORDER_CHANNEL.channel
+  is 'Канал';
+grant select on U1.ORDER_CHANNEL to LOADDB;
+

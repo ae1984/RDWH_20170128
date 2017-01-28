@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_OUT_DWH_VERIFICATION_COMMENT
+build deferred
+refresh force on demand
+as
+select id,
+       cpr_text,
+       manager_text,
+       verification_type,
+       verification_id
+  from verificator.H_COMMENT@verifais;
+grant select on U1.M_OUT_DWH_VERIFICATION_COMMENT to LOADDB;
+grant select on U1.M_OUT_DWH_VERIFICATION_COMMENT to LOADER;
+
+

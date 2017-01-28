@@ -1,0 +1,56 @@
+﻿create table U1.T_RFO_Z#KAS_PKB_PC
+(
+  id                NUMBER not null,
+  c_payment_title   VARCHAR2(36),
+  c_payment_overdue VARCHAR2(24),
+  collection_id     NUMBER,
+  sn                NUMBER,
+  su                NUMBER,
+  c_payment_date    DATE
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RFO_Z#KAS_PKB_PC
+  is 'KAS. ПКБ Календарь платежей';
+comment on column U1.T_RFO_Z#KAS_PKB_PC.id
+  is 'Id записи';
+comment on column U1.T_RFO_Z#KAS_PKB_PC.c_payment_title
+  is 'Дата платежа';
+comment on column U1.T_RFO_Z#KAS_PKB_PC.c_payment_overdue
+  is 'Кол-во дней просрочки';
+comment on column U1.T_RFO_Z#KAS_PKB_PC.collection_id
+  is 'Collection на Z#KAS_PKB_CI.C_PC';
+comment on column U1.T_RFO_Z#KAS_PKB_PC.sn
+  is 'UNKNOWN';
+comment on column U1.T_RFO_Z#KAS_PKB_PC.su
+  is 'UNKNOWN';
+comment on column U1.T_RFO_Z#KAS_PKB_PC.c_payment_date
+  is 'Месяц платежа';
+create unique index U1.T_RFO_Z#KAS_PKB_PC_IND1 on U1.T_RFO_Z#KAS_PKB_PC (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#KAS_PKB_PC
+  add constraint T_RFO_Z#KAS_PKB_PC_PK primary key (ID);
+grant select on U1.T_RFO_Z#KAS_PKB_PC to LOADDB;
+grant select on U1.T_RFO_Z#KAS_PKB_PC to LOADER;
+

@@ -1,0 +1,123 @@
+﻿create materialized view U1.M_APP_FRAUD_CARDS_CNT
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30)*/
+       t.app_id as app_id,
+       t.folder_date_create_mi,
+       count(distinct case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%')  -- Карты
+                           then trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss')) end)                          as days_all,
+
+       count(case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                   and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                   and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%')   -- Карты
+                   and n.fld_026 not in (6010, 6011)  -- Кроме банкоматов и терминалов
+                  then n.fld_012 end)                                                                            as operations_all,
+
+       count(distinct case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%')  -- Карты
+                           then n.fld_026 end)                                                                   as categories_all,
+
+       count(distinct case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%')   -- Карты
+                            and n.fld_026 in (6011) -- Банкоматы
+                           then trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss')) end)                          as days_atm,
+
+       count(case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                   and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                   and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%') -- Карты
+                   and n.fld_026 in (6011)  -- Банкоматы
+                  then trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss')) end)                                   as operations_atm,
+
+       count(distinct case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%')  -- Карты
+                            and n.fld_026 in (6011)  -- Банкоматы
+                           then n.fld_026 end)                                                                   as categories_atm,
+
+       count(distinct case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%')  -- Карты
+                            and n.fld_026 = 5732  -- Каспий кз
+                           then trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss')) end)                          as days_kspkz,
+
+       count(case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                   and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                   and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%')  -- Карты
+                   and n.fld_026 = 5732  -- Каспий кз
+                  then n.fld_012 end)                                                                            as operation_kspkz,
+
+       count(distinct case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                   and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                   and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%')  -- Карты
+                   and n.fld_026 = 5732 -- Каспий кз
+                  then k.category_name end)                                                                      as categories_kspkz,
+
+       count(distinct case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%')  -- Карты
+                            and n.fld_026 not in (6010, 6011) -- Кроме банкоматов и терминалов
+                            and substr(n.fld_022, 7, 1) not in ('1', 'S', 'T', 'U', 'V')  -- кроме операций по интернету отсекаем коды, у которых седьмая цифра равна: 1, S, T, U, V
+                            and not (n.fld_032 in (417661, 011540) and n.fld_026 = 5732) --кроме операций на kaspi.kz, отсекаем коды: 5732 при FLD_032 равном 417661 и 011540
+                           then trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss')) end)                          as days_pos,
+
+       count(case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                   and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                   and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%')  -- Карты
+                   and n.fld_026 not in (6010, 6011) -- Кроме банкоматов и терминалов
+                   and substr(n.fld_022, 7, 1) not in ('1', 'S', 'T', 'U', 'V') -- кроме операций по интернету отсекаем коды, у которых седьмая цифра равна: 1, S, T, U, V
+                   and not (n.fld_032 in (417661, 011540) and n.fld_026 = 5732) -- кроме операций на kaspi.kz, отсекаем коды: 5732 при FLD_032 равном 417661 и 011540
+                  then trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss')) end)                                   as operation_pos,
+
+       count(distinct case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%')  -- Карты
+                            and n.fld_026 not in (6010, 6011)  -- Кроме банкоматов и терминалов
+                            and substr(n.fld_022, 7, 1) not in ('1', 'S', 'T', 'U', 'V') -- кроме операций по интернету отсекаем коды, у которых седьмая цифра равна: 1, S, T, U, V
+                            and not (n.fld_032 in (417661, 011540) and n.fld_026 = 5732)  -- кроме операций на kaspi.kz, отсекаем коды: 5732 при FLD_032 равном 417661 и 011540
+                           then n.fld_026 end)                                                                   as categories_pos,
+
+       count(distinct case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%') -- Карты
+                            and n.fld_026 not in (6010, 6011)  -- Кроме банкоматов и терминалов
+                            and substr(n.fld_022, 7, 1) in ('1', 'S', 'T', 'U', 'V')  -- операции через интернет
+                            and not (n.fld_032 in (417661, 011540) and n.fld_026 = 5732)  -- кроме операций на kaspi.kz, отсекаем коды: 5732 при FLD_032 равном 417661 и 011540
+                            and n.fld_039 <> 600
+                           then trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss')) end)                          as days_int,
+
+       count(case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                   and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                   and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%') -- Карты
+                   and n.fld_026 not in (6010, 6011)  -- Кроме банкоматов и терминалов
+                   and substr(n.fld_022, 7, 1) in ('1', 'S', 'T', 'U', 'V')  -- операции через интернет
+                   and not (n.fld_032 in (417661, 011540) and n.fld_026 = 5732)  -- кроме операций на kaspi.kz, отсекаем коды: 5732 при FLD_032 равном 417661 и 011540
+                   and n.fld_039 <> 600
+                  then trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss')) end)                                   as operation_int,
+       count(distinct case when trunc(t.folder_date_create_mi) - 90 <= trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and trunc(t.folder_date_create_mi) > trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                            and (n.fld_002 like '486390%' or n.fld_002 like '516949%' or n.fld_002 like '999999%') -- Карты
+                            and n.fld_026 not in (6010, 6011)  -- Кроме банкоматов и терминалов
+                            and substr(n.fld_022, 7, 1) in ('1', 'S', 'T', 'U', 'V')  -- операции через интернет
+                            and not (n.fld_032 in (417661, 011540) and n.fld_026 = 5732)  -- кроме операций на kaspi.kz, отсекаем коды: 5732 при FLD_032 равном 417661 и 011540
+                            and n.fld_039 <> 600
+                           then n.fld_026 end)                                                                   as categories_int
+  from U1.M_APP_MINER_BAS t
+  join U1.M_CLIENT_LINK       cl on    cl.rfo_client_id = t.rfo_client_id
+  join U1.V_RBO_Z#KAS_PC_CARD  c on      c.c_client_ref = cl.rbo_client_id
+  join U1.TM_SOAP_NOTIFY       n on n.stip_fld_102_bank = c.c_acc_num
+  join U1.M_KASPIKZ_PAY        k on k.rfo_client_id = t.rfo_client_id
+                                and trunc(k.pay_date) = trunc(to_date(n.fld_012, 'yyyy.mm.dd hh24:mi:ss'))
+                                and k.is_prov = 1
+ where t.folder_date_create >= to_date('01.01.2015', 'dd.mm.yyyy')
+   and n.iia_card_param_grp_1 not in ('A66','A57')
+   and n.fld_039 in (000)
+ group by t.app_id,
+          t.folder_date_create_mi;
+grant select on U1.M_APP_FRAUD_CARDS_CNT to LOADDB;
+
+

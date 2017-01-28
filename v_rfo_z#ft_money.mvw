@@ -1,0 +1,32 @@
+﻿create materialized view U1.V_RFO_Z#FT_MONEY
+build deferred
+refresh complete on demand
+as
+select id,
+       c_cur_short,
+       c_start_date_cur,
+       c_val_cource,
+       c_val_unit,
+       c_code_iso,
+       c_end_date_cur,
+       c_code_me,
+       c_code_acc,
+       c_cur_iso,
+       c_cur_attr#cur_sex,
+       c_cur_attr#cur_down,
+       c_cur_attr#cur_p_2unit,
+       c_cur_attr#cur_p_3unit,
+       c_cur_attr#cur_p_5unit,
+       c_cur_attr#entier,
+       c_cur_attr#no_entier,
+       c_cur_attr#name_one_dec,
+       c_cur_attr#name_two_dec,
+       c_cur_attr#name_five_dec,
+       c_jour_recont,
+       c_min_banknote,
+       sn,
+       su
+  from ibs.Z#FT_MONEY@rfo_snap;
+grant select on U1.V_RFO_Z#FT_MONEY to LOADDB;
+
+

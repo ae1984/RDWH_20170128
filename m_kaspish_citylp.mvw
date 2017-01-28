@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_KASPISH_CITYLP
+build deferred
+refresh force on demand
+as
+select ITEMPK,
+       ITEMTYPEPK,
+       LANGPK,
+       P_NAME,
+       P_NAMEIN
+  from kaspi.citylp@ks_std
+ where rownum > 0;
+grant select on U1.M_KASPISH_CITYLP to LOADDB;
+
+

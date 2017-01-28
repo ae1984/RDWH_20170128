@@ -1,0 +1,179 @@
+﻿create table U1.T_RFO_Z#KAS_PKB_CI
+(
+  id                 NUMBER not null,
+  collection_id      NUMBER,
+  c_dog_type         VARCHAR2(100 CHAR),
+  c_num_dog          VARCHAR2(50 CHAR),
+  c_cr_purpose       VARCHAR2(100 CHAR),
+  c_contr_status     VARCHAR2(200 CHAR),
+  c_guarantee_type   VARCHAR2(100 CHAR),
+  c_guarantee_val    VARCHAR2(50 CHAR),
+  c_dog_class        VARCHAR2(200 CHAR),
+  c_total_ammount    VARCHAR2(50 CHAR),
+  c_instalments_num  VARCHAR2(10 CHAR),
+  c_payments_period  VARCHAR2(100 CHAR),
+  c_payments_method  VARCHAR2(100 CHAR),
+  c_monthly_payment  VARCHAR2(20 CHAR),
+  c_last_update      VARCHAR2(12 CHAR),
+  c_type_of_founding VARCHAR2(200 CHAR),
+  c_currency         VARCHAR2(10 CHAR),
+  c_appl_date        VARCHAR2(12 CHAR),
+  c_date_begin       VARCHAR2(12 CHAR),
+  c_date_end         VARCHAR2(12 CHAR),
+  c_fact_gash_date   VARCHAR2(12 CHAR),
+  c_oustanding_num   VARCHAR2(10 CHAR),
+  c_outstanding_sum  VARCHAR2(40 CHAR),
+  c_overdue_sum      VARCHAR2(40 CHAR),
+  c_subj_role        VARCHAR2(100 CHAR),
+  c_fin_inst         VARCHAR2(200 CHAR),
+  c_pc               NUMBER,
+  c_add_info         VARCHAR2(100 CHAR),
+  c_amount           VARCHAR2(40 CHAR),
+  c_credit_usage     VARCHAR2(100 CHAR),
+  c_residual_amount  VARCHAR2(40 CHAR),
+  c_credit_limit     VARCHAR2(40 CHAR),
+  c_ovrd_instalments VARCHAR2(10 CHAR),
+  c_dop_field        CLOB,
+  sn                 NUMBER,
+  su                 NUMBER,
+  c_cr_object        VARCHAR2(200 CHAR),
+  c_pledge_type_val  NUMBER not null
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_dog_type
+  is 'Вид договора';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_num_dog
+  is 'Номер договора';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_cr_purpose
+  is 'Цель кредита';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_contr_status
+  is 'Статус договора';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_guarantee_type
+  is 'Вид обеспечения';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_guarantee_val
+  is 'Стоимость обеспечения';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_dog_class
+  is 'Классификация договора';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_total_ammount
+  is 'Общая сумма';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_instalments_num
+  is 'Кол-во периодических платежей';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_payments_period
+  is 'Периодичность платежей';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_payments_method
+  is 'Форма расчёта';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_monthly_payment
+  is 'Сумма ежемесячного платежа';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_last_update
+  is 'Дата последнего обновления';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_type_of_founding
+  is 'Вид финансирования';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_currency
+  is 'Код валюты';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_appl_date
+  is 'Дата заявки';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_date_begin
+  is 'Фактическая дата выдачи кредита';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_date_end
+  is 'Дата завершения срока действия договора';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_fact_gash_date
+  is 'Фактическая дата погашения';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_oustanding_num
+  is 'Кол-во непогашенных (предстоящих) платежей';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_outstanding_sum
+  is 'Непогашенная сумма по кредиту';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_overdue_sum
+  is 'Сумма просроченных взносов';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_subj_role
+  is 'Роль субъекта';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_fin_inst
+  is 'Источник информации (Кредитор)';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_pc
+  is 'Календарь платежей(COLLECTION в Z#KAS_PKB_PC)';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_add_info
+  is 'Дополнительная информация по адресу';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_amount
+  is 'Использованная сумма';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_credit_usage
+  is 'ID использования кредита';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_residual_amount
+  is 'Oстаточнaя cумма';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_credit_limit
+  is 'Kредитный лимит';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_ovrd_instalments
+  is 'Кол-во дней просрочки';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_dop_field
+  is 'Дополнительные поля';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_cr_object
+  is 'Объект кредитования';
+comment on column U1.T_RFO_Z#KAS_PKB_CI.c_pledge_type_val
+  is 'Виды обеспечения(COLLECTION в Z#KAS_PLED_VAL)';
+create index U1.T_RFO_Z#KAS_PKB_CI_IND1 on U1.T_RFO_Z#KAS_PKB_CI (COLLECTION_ID, C_CONTR_STATUS)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RFO_Z#KAS_PKB_CI_IND2 on U1.T_RFO_Z#KAS_PKB_CI (COLLECTION_ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_RFO_Z#KAS_PKB_CI_IND3 on U1.T_RFO_Z#KAS_PKB_CI (COLLECTION_ID, C_MONTHLY_PAYMENT)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+alter table U1.T_RFO_Z#KAS_PKB_CI
+  add constraint PK_T_RFO_Z#KAS_PKB_CI_ID primary key (ID)
+  using index 
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.PK_T_RFO_Z#KAS_PKB_CI_ID nologging;
+grant select on U1.T_RFO_Z#KAS_PKB_CI to LOADDB;
+grant select on U1.T_RFO_Z#KAS_PKB_CI to LOADER;
+

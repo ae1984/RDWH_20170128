@@ -1,0 +1,132 @@
+﻿create materialized view U1.M_FOLDER_CON_CNL_ONL_VERIF2
+refresh force on demand
+as
+select zz.*,
+      case when (zz.is_rfo_cancel_exists + zz.is_mo_cancel_exists) > 0 then 1 else 0 end is_cancel_exists,
+       --Одобрение после фрод отказа
+      case when nvl(zz.approve_fld_date_create, to_date('01-01-1900','dd-mm-yyyy')) >
+                      greatest(nvl(zz.rfo_cancel_fld_date_create, to_date('01-01-1900','dd-mm-yyyy')),
+                               nvl(zz.mo_cancel_fld_date_create, to_date('01-01-1900','dd-mm-yyyy')))
+                 then 1 else 0 end as is_approve_after_fraud
+     from (
+        select t.folder_id,
+               t.claim_id,
+               --фрод отказы РФО
+               max(case when cnl.folder_id is null then 0 else 1 end) as is_rfo_cancel_exists,
+               max(cnl.folder_date_create) as rfo_cancel_fld_date_create,
+
+               --фрод отказы MO
+               max(case when mo_cnl.folder_id is null then 0 else 1 end) as is_mo_cancel_exists,
+               max(mo_cnl.folder_date_create) as mo_cancel_fld_date_create,
+
+               --Одобрение заявок до текущей
+               max(case when rfc.folder_id is null then 0 else 1 end) as is_approve_fld_exists,
+               max(rfc.folder_date_create) as approve_fld_date_create
+
+        from (select ft.rfo_client_id,
+                     ft.folder_id,
+                     ft.claim_id,
+                     ft.folder_date_create_mi
+              from M_FOLDER_CON_CANCEL ft
+              where ft.process_name = 'ОНЛАЙН КРЕДИТ'
+
+              union all
+              select ft2.rfo_client_id,
+                     ft2.folder_id,
+                     ft2.claim_id,
+                     ft2.folder_date_create_mi
+              from M_FOLDER_CON_CANCEL_ONLINE ft2
+              ) t
+      --фрод отказы РФО
+        left join (select cx.rfo_client_id,
+                          f.folder_id,
+                          f.folder_date_create
+                       from T_CANCEL cx
+                       join V_FOLDER_ALL_RFO f on f.folder_id = cx.folder_id
+                       where cx.cancel_level = 1
+                         and cx.cancel_type_code in ( 'VERIFICATION_CONTACT',
+                                                      'VERIFICATION_RATING',
+                                                      'VERIFICATION_PHOTO',
+                                                      'НЕАДЕКВАТНЫЙ',
+                                                      'ЛОЖНАЯ ИНФОРМАЦИЯ',
+                                                      'НЕ УСТРАИВАЕТ ФОТО',
+                                                      'НЕ ТРЕЗВЫЙ',
+                                                      'ДОК.НЕ СООТВЕТСВУЮТ',
+                                                      '1480',
+                                                      '1420',
+                                                      '1430',
+                                                      '1440',
+                                                      '1450',
+                                                      '1090',
+                                                      '1010',
+                                                      '1040',
+                                                      '1050',
+                                                      '1030',
+                                                      '1390',
+                                                      '1400',
+                                                      '1340',
+                                                      '1350',
+                                                      '1380',
+                                                      '1370',
+                                                      '1360',
+                                                      '1300',
+                                                      '1410')
+                       ) cnl on cnl.rfo_client_id = t.rfo_client_id and
+                                cnl.folder_date_create < t.folder_date_create_mi
+
+        --Фрод отказы МО
+        left join (select cx.rfo_client_id,
+                          f.folder_date_create,
+                          f.folder_id
+                   from T_CANCEL cx
+                   join V_FOLDER_ALL_RFO f on f.folder_id = cx.folder_id
+                   where cx.cancel_type_group = 'MO-MO_SCO_REJECT' and
+                         cx.cancel_type_code in (
+                                  select par_code from (
+                                    select x.*, case when (par_name like '%СКОРКАРТА%' or par_name like '%КДН%' or
+                                                           par_name like '%AR1%' or par_name like '%ПРОВЕРКА ПО ЧС КЛИЕНТОВ%' or
+                                                           par_name like '% J1%' or par_name like '%РИСКОВЫЕ ОРГАНИЗАЦИИ%' or
+                                                           par_name like 'ПРОВЕРКА ПО ЧС УТЕРЯННЫХ ДОКУМЕНТОВ'
+                                                           ) and
+                                                          (par_name not like '%FRAUD%')
+                                                           then 0 else 1 end as is_antifraud
+                                    from (
+                                      select distinct dp.code_int as par_code, dp.name as par_name from V_MO_D_PAR dp
+                                        join V_MO_D_CALC_PAR cp on cp.d_par_code = dp.code_int and cp.is_out = 1
+                                        join V_MO_D_CALC dc on dc.code = cp.d_calc_code and
+                                              (dc.d_calc_group_code like 'SC_%' or dc.d_calc_group_code in ('AR1_EKT','AR1_KN','AR1_KN15_LKN_PKN','AR1_KNP'))
+                                        where dp.code_int like '%_RES_PRE%' or
+                                              dp.code_int in ('CLIENT_BL_EXISTS_SCO', 'CLIENT_DOC_BL_EXISTS',
+                                                              'RISK_AUTO_AMOUNT_BEKI_GCVP', 'SC_RISK_EKT_UNMARRIED_BEKI_LOW_SAL',
+                                                              'SC_RISK_KN_KDN_HIGH_INCOME', 'SC_RISK_KN_KDN_LOW_INCOME',
+                                                              'SC_AR1_KN15_LKN_PKN','SC_AR1_EKT','SC_AR1_KN','SC_AR1_KNP',
+                                                              'SC_2_KN_RULES_SET_J1','SC_22_ANTIFRAUD_201405','SC_8_ANTIFRAUD_201405',
+                                                              'SC_17_ANTIFRAUD_201406','SC_CHECK_MAN_REJ', 'SC_AUTO_GAI_NO_GCVP'
+                                                             )
+
+                                      ) x
+                                  ) y where is_antifraud = 1
+                                                   )
+                   ) mo_cnl on mo_cnl.rfo_client_id = t.rfo_client_id and
+                               mo_cnl.folder_date_create < t.folder_date_create_mi
+
+        --Одобрение заявок до текущей
+        left join (select fa.rfo_client_id,
+                          fa.folder_date_create,
+                          fa.folder_id
+                   from V_FOLDER_ALL_RFO fa
+                   join V_CONTRACT_ALL_RFO ca on ca.folder_id = fa.folder_id
+                   join V_VERIFICATION v on v.folder_id = ca.folder_id
+                  where ca.is_card = 0
+                    and ca.is_credit_issued = 1
+                    and v.verif_doc_status = 'ПОДТВЕРЖДЕН'
+                    and v.verif_photo_result = 'ОДОБРЕНИЕ'
+                  ) rfc on rfc.rfo_client_id = t.rfo_client_id and
+                           rfc.folder_date_create < t.folder_date_create_mi
+        group by t.folder_id,
+                 t.claim_id
+        ) zz;
+grant select on U1.M_FOLDER_CON_CNL_ONL_VERIF2 to LOADDB;
+grant select on U1.M_FOLDER_CON_CNL_ONL_VERIF2 to LOADER;
+
+

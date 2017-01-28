@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_TMP_J_BL_PROBLEM
+refresh complete on demand
+as
+select to_char(c.folder_date_create_mi,'yyyy-mm') as fld_mon,
+       trunc(c.folder_date_create_mi) as fld_date,
+       d.prod_type,
+       c.source_system, t.note_type,
+       count(distinct n.rfo_client_id) as cli_cnt,
+       count(distinct d.deal_number) as con_cnt
+from M_FOLDER_CON_CANCEL c
+join V_DWH_PORTFOLIO_CURRENT d on d.deal_number = c.contract_number and d.x_is_credit_issued = 1
+join V_CLIENT_RFO_BY_ID n on n.rfo_client_id = c.rfo_client_id
+join V_RFO_BLACK_LIST t on t.iin = c.iin or
+        (t.surname = n.name_last and t.first_name = n.name_first and t.patronymic = n.name_patronymic and
+         t.birth_date_text = to_char(n.birth_date,'dd.mm.yyyy'))
+where c.is_credit_issued = 1 and
+      trunc(c.folder_date_create_mi) > to_date(t.date_add_text, 'dd.mm.yyyy')
+group by to_char(c.folder_date_create_mi,'yyyy-mm'), trunc(c.folder_date_create_mi),
+         d.prod_type,
+         c.source_system, t.note_type;
+grant select on U1.M_TMP_J_BL_PROBLEM to LOADDB;
+grant select on U1.M_TMP_J_BL_PROBLEM to LOADER;
+
+

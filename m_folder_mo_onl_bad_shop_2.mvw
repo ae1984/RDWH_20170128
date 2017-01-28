@@ -1,0 +1,63 @@
+﻿create materialized view U1.M_FOLDER_MO_ONL_BAD_SHOP_2
+refresh force on demand
+as
+select *
+from (
+    select /*+ parallel 30 */
+           r.id rfolder_id,
+           r.date_create,
+           dp.code_int,
+           case when dp.d_par_datatype_code = 'NUMBER' then to_char(t.value_number)
+                when dp.d_par_datatype_code = 'DATE' then to_char(t.value_date, 'dd-mm-yyyy hh24:mi:ss')
+           else t.value_text end as value_number
+    from MO_RFOLDER r
+    join T_MO_RFOLDER_PAR_VALUE_2015 t on t.rfolder_id = r.id
+    join T_MO_RFOLDER_PAR_VALUE_2015 t2 on t2.rfolder_id = r.id and
+                                           t2.d_par_id = 1004 and
+                                           t2.value_text = 'EC_GOODS'
+    join V_MO_D_PAR dp on dp.id = t.d_par_id
+                           and dp.code_int in ('IN_SCO_IIN',
+                                               'IN_SCO_CLIENT_ID',
+                                               'IN_SCO_FOLDER_ID',
+                                               'IN_SCO_POS_CODE',
+
+                                               'SC_IS_CATEG_A',
+                                               'SC_IS_CATEG_B',
+                                               'IN_SCO_GCVP_PAYMENT_QTY',
+                                               'SC_GCVP_SAL_TO_SAL',
+
+                                               'SC_GENERAL_CONTRACT_AMOUNT',
+                                               'SC_IS_ACTIVITY_MATCHE',
+
+                                               'SC_EKT_NOT_A_BAD_GCVP_BAD_SHOP_RES_PRE',
+
+                                               'MO_SCO_REJECT_8',
+                                               'MO_SCO_REJECT'
+                                              )
+    where r.date_create >= trunc(sysdate)
+          /*and r.id = 35894176*/
+) pivot (
+    max(value_number)
+    for code_int in ( 'IN_SCO_IIN' as iin,
+                      'IN_SCO_CLIENT_ID' as rfo_client_id,
+                      'IN_SCO_FOLDER_ID' as rfo_folder_id,
+
+                      'IN_SCO_POS_CODE' as IN_SCO_POS_CODE,
+
+                     'SC_IS_CATEG_A' as SC_IS_CATEG_A,
+                     'SC_IS_CATEG_B' as SC_IS_CATEG_B,
+                     'IN_SCO_GCVP_PAYMENT_QTY' as SCO_GCVP_PAYMENT_QTY,
+                     'SC_GCVP_SAL_TO_SAL' as SC_GCVP_SAL_TO_SAL,
+
+                     'SC_GENERAL_CONTRACT_AMOUNT' as SC_GENERAL_CONTRACT_AMOUNT,
+                     'SC_IS_ACTIVITY_MATCHE' as SC_IS_ACTIVITY_MATCHE,
+
+                     'SC_EKT_NOT_A_BAD_GCVP_BAD_SHOP_RES_PRE' as SC_EKT_NOT_A_BAD_GCVP_BAD_SHOP,
+
+                     'MO_SCO_REJECT_8' as MO_SCO_REJECT_8,
+                      'MO_SCO_REJECT' as MO_SCO_REJECT)
+);
+grant select on U1.M_FOLDER_MO_ONL_BAD_SHOP_2 to LOADDB;
+grant select on U1.M_FOLDER_MO_ONL_BAD_SHOP_2 to LOADER;
+
+

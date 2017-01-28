@@ -1,0 +1,35 @@
+﻿create materialized view U1.M_RDBOARD_ONL_FLD_DAY_CNL_PH
+refresh force on demand
+as
+select /*+ parallel 5*/
+       t.*,
+
+      case
+         when upper(trim(vc.question)) like '%СРАВНИТЬ%4%ФОТОГРАФИИ%КЛИЕНТА%' then 'QUESTION_1'
+         when upper(trim(vc.question)) like '%НА%ДОКУМЕНТЕ%УД%ЛИЧНОСТИ%И%ФОТО%КЛИЕНТА%ИЗОБРАЖЕН%ОДИН%ЧЕЛОВЕК%' then 'QUESTION_2'
+         when upper(trim(vc.question)) like '%С%ФОТО%ИЗ%ПРЕДЫДУЩЕЙ%ЗАЯВКИ%' then 'QUESTION_3'
+         when upper(trim(vc.question)) like '%ФОТО%КЛИЕНТА%И%ФОТО%ДОКУМЕНТА%ЦВЕТНЫЕ%(ПОХОЖИ%НА%ОРИГИНАЛ)%' then 'QUESTION_4'
+         when upper(trim(vc.question)) like '%ФОТО%КЛИЕНТА%И%ФОТО%ДОКУМЕНТА%ЦВЕТНЫЕ%' then 'QUESTION_5'
+       else
+          'UNKNOWN'
+       end as question,
+
+       vc.verification_date,
+       vc.verification_id
+        /*
+       , case when tt.folder_id = t.folder_id then 1 else 0 end as is_folder_fraud
+       , tt.**/
+from u1.M_RDBOARD_ONLINE_FLD_DAY t
+join u1.M_OUT_DWH_VERIF_CANCEL_DAY vc on vc.folder_id = t.folder_id and
+                                      (upper(trim(vc.question)) like '%СРАВНИТЬ%4%ФОТОГРАФИИ%КЛИЕНТА%' or
+                                       upper(trim(vc.question)) like '%НА%ДОКУМЕНТЕ%УД%ЛИЧНОСТИ%И%ФОТО%КЛИЕНТА%ИЗОБРАЖЕН%ОДИН%ЧЕЛОВЕК%' or
+                                       upper(trim(vc.question)) like '%С%ФОТО%ИЗ%ПРЕДЫДУЩЕЙ%ЗАЯВКИ%' or
+                                       upper(trim(vc.question)) like '%ФОТО%КЛИЕНТА%И%ФОТО%ДОКУМЕНТА%ЦВЕТНЫЕ%(ПОХОЖИ%НА%ОРИГИНАЛ)%' or
+                                       upper(trim(vc.question)) like '%ФОТО%КЛИЕНТА%И%ФОТО%ДОКУМЕНТА%ЦВЕТНЫЕ%')
+
+/*left join u1.M_RFO_ONLINE_FLD_DAY tt on tt.c_create_user = t.c_create_user and
+                                        tt.c_date_create >= t.c_date_create*/;
+grant select on U1.M_RDBOARD_ONL_FLD_DAY_CNL_PH to LOADDB;
+grant select on U1.M_RDBOARD_ONL_FLD_DAY_CNL_PH to LOADER;
+
+

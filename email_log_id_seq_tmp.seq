@@ -1,0 +1,7 @@
+﻿create sequence U1.EMAIL_LOG_ID_SEQ_TMP
+minvalue 1
+maxvalue 9999999999999999999999999999
+start with 2350
+increment by 1
+nocache;
+

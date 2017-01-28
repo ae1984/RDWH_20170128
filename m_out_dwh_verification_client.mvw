@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_OUT_DWH_VERIFICATION_CLIENT
+build deferred
+refresh force on demand
+as
+select id,
+       date_birth,
+       fio,
+       first_name,
+       iin,
+       last_name,
+       rfo_client_id,
+       sur_name,
+       last_mclient
+  from verificator.H_CLIENT@verifais;
+grant select on U1.M_OUT_DWH_VERIFICATION_CLIENT to LOADDB;
+grant select on U1.M_OUT_DWH_VERIFICATION_CLIENT to LOADER;
+grant select on U1.M_OUT_DWH_VERIFICATION_CLIENT to RISK_VERIF;
+
+

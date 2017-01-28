@@ -1,0 +1,137 @@
+﻿create materialized view U1.V_TMP_CRED_PREP_SH
+refresh force on demand
+as
+select distinct fo.expert_name as expert_name,
+       fo.expert_position,
+       case when fo.expert_name like '%(БЛОК)%' then 'blocked' else 'not blocked' end as blocked,
+       case when pp.x_amount < 10000 then '<10000'
+            when pp.x_amount >= 10000 and pp.x_amount <= 20000 then '10000-20000'
+            when pp.x_amount >= 20001 and pp.x_amount <= 30000 then '20001-30000'
+            when pp.x_amount >= 30001 and pp.x_amount <= 40000 then '30001-40000'
+            when pp.x_amount >= 40001 and pp.x_amount <= 50000 then '40001-50000'
+            when pp.x_amount > 50000 then '>50000'
+                 else '>50000' end as x_amount,
+       case when pp.actual_end_date - pp.x_start_date = 1 then 'early_rep_1' else 'not_early_rep_1' end as early_rep_1,
+       case when pp.actual_end_date - pp.x_start_date = 2 then 'early_rep_2' else 'not_early_rep_2' end as early_rep_2,
+       case when pp.actual_end_date - pp.x_start_date = 3 then 'early_rep_3' else 'not_early_rep_3' end as early_rep_3,
+
+       trunc(pp.x_start_date, 'mm') as x_start_date,
+
+       count(distinct pp.deal_number) as cnt,
+       count(*) as cnt_all
+       --count(distinct case when pp.x_amount <= 30000 then pp.deal_number end) as "<30 000",
+       --count(distinct case when pp.actual_end_date - pp.x_start_date = 1 then pp.deal_number end) as early_rep_1,
+       --count(distinct case when pp.actual_end_date - pp.x_start_date = 2 then pp.deal_number end) as early_rep_2,
+       --count(distinct case when pp.x_amount <= 30000 and pp.actual_end_date - pp.x_start_date = 1 then pp.deal_number end) as "<30 000 and early_rep_1",
+       --count(distinct case when pp.x_amount <= 30000 and pp.actual_end_date - pp.x_start_date = 2 then pp.deal_number end) as "<30 000 and early_rep_2"
+from u1.v_Dwh_Portfolio_Current pp
+--left join u1.v_client_cal d on d.client_iin_last = pp.client_iin
+join U1.M_FOLDER_CON_CANCEL fo on fo.contract_number = pp.deal_number
+where pp.x_amount > 0
+and pp.x_start_date >= to_date('2014-01-01','yyyy-mm-dd')
+and pp.x_is_credit_issued = 1
+/*and pp.create_empl_name in ('НУРБАТЫРОВ ЕРДЕН ЕРБОЛОВИЧ',
+'ОРУНБАСАРОВА КУНДУЗ АЙЫТЖАНОВНА',
+'АРЫМБЕКОВА НАЗГУЛЬ ТЕМИРХАНОВНА',
+'КУЛЬКЕБАЕВА МАКИРА ОНАЛОВНА(БЛОК)',
+'ШАРИПОВА ОКСАНА ФАНИЛЬЕВНА',
+'ВАЩЕНКО ВЕРАНИКА АНДРЕЕВНА',
+'КОРЕНОВА ЖАМАЛ СМАИЛОВНА',
+'АЛЖАНОВ АЙДОС ЫКЫЛАСБЕКОВИЧ',
+'НУРГАЗИН АДИЛЬ БЕКБОЛАТОВИЧ',
+'БАЗАРБАЕВА МАРЖАН МАРАТОВНА',
+'КОШАНОВА БАЛАУСА ЖЕТПИСБАЕВНА',
+'ЕЛМУРАТОВА СЫМБАТ РАХАТОВНА',
+'АЛДАБЕРГЕНОВА САЛТАНАТ ЕРЛАНҚЫЗЫ',
+'МИХАЙЛОВА ВИКТОРИЯ АЛЕКСЕЕВНА',
+'АСАУБАЕВ АДИЛЕТ ДОСТАЕВИЧ',
+'КУСЕМБЕКОВА АСЕЛЬ МУРАТБЕКОВНА',
+'ЖАМПЕИСОВА АЙГУЛЯ АСЫЛХАНОВНА',
+'ТЫНЫСОВА МОЛДИР СЕРИКБАЕВНА',
+'ШАХМЕТОВА ЗАРИНА ЕРБОЛАТОВНА',
+'СОКОЛОВА ОЛЬГА МИХАЙЛОВНА',
+'МАМЕДОВ НАМИК САБИР-ОГЛЫ',
+'МУЛЛАГАЛИЕВА ЛИЛИЯ ФАНДУСОВНА',
+'ГУЦАЛЮК КРИСТИНА ПАВЛОВНА',
+'МУСТАФИН ТАЛГАТ МУХАМЕДИНОВИЧ',
+'ДЕРЯБИН ЭДУАРД АЛЕКСАНДРОВИЧ',
+'ВЕРНЕР МАРИНА ВЛАДИМИРОВНА',
+'МАХМУТОВА ДИНА ТОКТАРБАЕВНА',
+'САУЛЕБАЕВА АЛЬМИРА БУЛАТОВНА',
+'БОЙЧУК ИРИНА ВЛАДИМИРОВНА(БЛОК)',
+'ШАЙМЕРДЕНОВА КАРИНА ФИЗДРАХМАНОВНА',
+'АБИЛПАСОВА ЛАУРА МУКАНОВНА',
+'МАЖЕНОВА АНАРА ДАУЛЕТБАЕВНА',
+'ЖУМАДИЛДАЕВА ЛАУРА АЙГАЛИЕВНА',
+'ИЩАНОВА ЖАНАР ЖОМАРТОВНА',
+'ВОРОБЬЁВА ОЛЬГА ИГОРЕВНА',
+'КОРОЛЕВА ОЛЬГА ВЛАДИМИРОВНА',
+'СОВЕТОВ БАУЫРЖАН АДИЛУЛЫ',
+'ҚАЛЫҚБЕРГЕНОВА АЙДАНА МОЛДАҚАШҚЫЗЫ',
+'МАГЗУМОВА МАДИНА МАГЗУМОВНА',
+'АБСАТОВА ГАЛИЯ КАДЫРБЕРГЕНОВНА',
+'БИБОСИНОВА АРМАНГУЛЬ КУАТОВНА',
+'ПАЦЕЛЬ МАРИЯ СЕРГЕЕВНА',
+'ЖИЛА МАРИНА ВАЛЕРЬЕВНА',
+'БУЛЕЙКО КСЕНИЯ ЮРЬЕВНА',
+'КИМБАЕВА ДИНАРА ДЖУМАНОВНА',
+'МЕЙРЕМБАЕВА ДИНАРА КАБДРАШЕВНА',
+'ФАТХУТДИНОВА ТАТЬЯНА МИХАЙЛОВНА',
+'ЯГАФАРОВА АЛЬФИЯ ИЛЬФАТОВНА',
+'ШАХАЕВА ФАРИЗА НАГИЕВНА',
+'АЖИБАЕВА АЛИЯ АРСПЕКОВНА',
+'АМРЕНОВА МЕРУЕРТ ГАЛЫМБЕКОВНА',
+'ЦАЙ ВЕРОНИКА АЛЕКСАНДРОВНА',
+'БЕРЕЗНИКОВА АНАСТАСИЯ ОЛЕГОВНА',
+'КУЛЫМБЕТОВА НУРШАТАЙ МАРДЕНОВНА',
+'ШОБАЛАЕВА АЙГЕРИМ КУАНЫШЕВНА',
+'ДОБРЕНЬКОВА ЕВГЕНИЯ ЮРЬЕВНА',
+'ТОКЕНОВА КАМШАТ ТЕМИРХАНОВНА',
+'ОСПАНОВА ЖАНАР КАЛЖАНОВНА',
+'КОЗЛОВА ТАТЬЯНА ВЛАДИМИРОВНА',
+'СОСИНА ЮЛИЯ ЮРЬЕВНА(БЛОК)',
+'КЕНШИМБАЕВА ЖАНЕРКЕ АЙТБАЕВНА',
+'АСЫЛБАЕВА АКМАРАЛ АЙТБАЕВНА',
+'МИНГАЗОВА КСЕНИЯ СЕРГЕЕВНА',
+'ЛАШКЕВИЧ ЮЛИЯ ИГОРЕВНА',
+'АУБАКИРОВА АЙГЕРИМ АБЗАЛОВНА',
+'ШАЙМУХАНБЕТОВА АЙГЕРИМ САКЕНОВНА',
+'ЕРКИНОВА ГУЛСАУЛЕ НУРЛАНОВНА',
+'САБИРОВА АРАЙЛЫМ ЖАНДОСОВНА',
+'АЙТКУЛОВА ЛАУРА ГАБИДОЛЛАЕВНА',
+'ВОРОНИНА ОКСАНА СЕРГЕЕВНА',
+'ПАНИНА ЕЛЕНА СЕРГЕЕВНА',
+'ӘДІЛХАНҚЫЗЫ БАҚЫТГҮЛ ',
+'НУРЖАНОВА АЙЖАН МУРАТБЕКОВНА',
+'АУБАКИРОВА АЛЬБИНА КАИРБЕКОВНА',
+'ОМАШЕВА АЙДАНА АЙТМАНОВНА',
+'ГРАБОВЕЦКАЯ АНАСТАСИЯ ВЯЧЕСЛАВОВНА',
+'ДРАГУНОВА ЖАННА НИКОЛАЕВНА',
+'ДӘУЖАНОВА ӘЙГЕРІМ БЕКБОЛАТҚЫЗЫ(БЛОК)',
+'УТЕПКАЛИЕВА АЙДАНА АСКАРОВНА',
+'ПАН АЛЁНА ЛЕОНИДОВНА(БЛОК)',
+'СЕРГЕЕВА ЮЛИЯ ИГОРЕВНА',
+'ХАСЕНОВА ЗАРИНА БАГДАТОВНА',
+'РЫБАЛКО ДАРЬЯ ВАСИЛЬЕВНА',
+'ПЕТРЕНКО ОЛЕСЯ ВАСИЛЬЕВНА',
+'ХАМЗИНА МАРЖАН ТОЛЕУТАЕВНА',
+'ПОЛЬШИКОВА СВЕТЛАНА СЕРГЕЕВНА',
+'САКИБДЖАНОВА ДАНАРА СОВЕТХАНОВНА')*/
+group by fo.expert_name,
+       fo.expert_position,
+       case when fo.expert_name like '%(БЛОК)%' then 'blocked' else 'not blocked' end,
+       case when pp.x_amount < 10000 then '<10000'
+            when pp.x_amount >= 10000 and pp.x_amount <= 20000 then '10000-20000'
+            when pp.x_amount >= 20001 and pp.x_amount <= 30000 then '20001-30000'
+            when pp.x_amount >= 30001 and pp.x_amount <= 40000 then '30001-40000'
+            when pp.x_amount >= 40001 and pp.x_amount <= 50000 then '40001-50000'
+            when pp.x_amount > 50000 then '>50000'
+                 else '>50000' end,
+       case when pp.actual_end_date - pp.x_start_date = 1 then 'early_rep_1' else 'not_early_rep_1' end,
+       case when pp.actual_end_date - pp.x_start_date = 2 then 'early_rep_2' else 'not_early_rep_2' end,
+       case when pp.actual_end_date - pp.x_start_date = 3 then 'early_rep_3' else 'not_early_rep_3' end,
+       trunc(pp.x_start_date, 'mm');
+grant select on U1.V_TMP_CRED_PREP_SH to LOADDB;
+grant select on U1.V_TMP_CRED_PREP_SH to LOADER;
+
+

@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_REF_RESTR_CONS_AGR_X
+using no index
+refresh complete on demand
+as
+select tt.contract_number_new, tt.ref_res_first_date, tt.ref_res_first_yy_mm, tt.ref_res_last_date, tt.ref_res_count,
+       tt.client_id,
+       LISTAGG(tt.product_old, ';') within group (order by tt.yy_mm_start_old) as product_last_old,
+       LISTAGG(tt.yy_mm_start_old, ';') within group (order by tt.yy_mm_start_old) as yy_mm_start_last_old,
+       LISTAGG(tt.contract_number_old, ';') within group (order by tt.yy_mm_start_old) as contract_number_old
+--from M_REF_RESTR_CONS_ZHOMART_EXT tt
+from M_REF_RESTR_CONS_EXT tt
+group by tt.contract_number_new, tt.ref_res_first_date, tt.ref_res_first_yy_mm, tt.ref_res_last_date, tt.ref_res_count,
+       tt.client_id;
+grant select on U1.M_REF_RESTR_CONS_AGR_X to LOADDB;
+grant select on U1.M_REF_RESTR_CONS_AGR_X to LOADER;
+
+

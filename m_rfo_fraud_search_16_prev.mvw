@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_16_PREV
+build deferred
+refresh force on demand
+as
+select t.claim_id
+
+       ,avg(a.p_salary) as avg_zp_h
+       ,max(a.p_salary) as max_zp_h
+from u1.M_FOLDER_CON_CANCEL_ONLINE_1 t
+left join (
+     select --avg(kl.p_salary)     as avg_zp_h,
+           kl.p_salary,
+           d.c_client_ref       as rfo_client_id,
+           c.c_date_create      as c_date_create
+      from u1.M_KASPISH_ORDERS a
+      join u1.V_RFO_Z#KAS_ONLINE_BUY          c on c.c_process_id = a.code
+      join u1.V_RFO_Z#KAS_ONLINE_CLAIM        d on d.c_buy_ref = c.id
+      left join u1.M_KASPISH_LOANAPPLICATION kl on kl.pk = a.p_loanapplicationform
+) a on a.rfo_client_id = t.rfo_client_id and a.c_date_create between t.date_create - 90 and trunc(t.date_create)
+--where t.rfo_client_id = 31393192
+group by t.claim_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_16_PREV to LOADDB;
+
+

@@ -1,0 +1,50 @@
+﻿create table U1.MO_AA_REQUEST
+(
+  id                 NUMBER not null,
+  process_request_id NUMBER not null,
+  client_id          NUMBER,
+  folder_id          NUMBER,
+  code_process       VARCHAR2(64),
+  date_create        TIMESTAMP(6)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+create index U1.IDX_MO_AA_REQUEST_1 on U1.MO_AA_REQUEST (DATE_CREATE)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_MO_AA_REQUEST_2 on U1.MO_AA_REQUEST (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.MO_AA_REQUEST to LOADDB;
+grant select on U1.MO_AA_REQUEST to LOADER;
+

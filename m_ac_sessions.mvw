@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_AC_SESSIONS
+refresh complete on demand
+as
+select t."Id" as id,
+       to_date(to_char(t."StartTime", 'dd-mm-yyyy hh24:mi:ss'), 'dd-mm-yyyy hh24:mi:ss') as start_time,
+       to_date(to_char(t."LastActTime", 'dd-mm-yyyy hh24:mi:ss'), 'dd-mm-yyyy hh24:mi:ss') as last_act_time,
+       to_date(to_char(t."CloseTime", 'dd-mm-yyyy hh24:mi:ss'), 'dd-mm-yyyy hh24:mi:ss') as close_time,
+       to_char(t."IsClosed") as is_closed,
+       to_char(t."IsValid") as is_valid,
+       t."UserId" as users_id,
+       t."ClientIp" as client_ip,
+       t."NodeIp" as node_ip
+  from "tb_framework_sessions"@"db_ar" t
+ where t."ClientIp" is not null
+   and to_date(to_char(t."StartTime", 'dd-mm-yyyy hh24:mi:ss'), 'dd-mm-yyyy hh24:mi:ss') >= to_date('01012013', 'ddmmyyyy');
+grant select on U1.M_AC_SESSIONS to LOADDB;
+grant select on U1.M_AC_SESSIONS to LOADER;
+
+

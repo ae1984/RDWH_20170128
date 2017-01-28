@@ -1,0 +1,12 @@
+﻿create materialized view U1.V_FORM_CLIENT_ALL_RFO_PRE12
+build deferred
+refresh force on demand
+as
+select /*+parallel(2)*/
+      distinct pr11.collection_id, pr11.c_bool as prop_name
+             from V_RFO_Z#PROPERTIES pr11
+             join V_RFO_Z#PROPERTY_GRP pg11 on pg11.id = pr11.c_group_prop
+            where pg11.c_code = 'UCH_YL'     --Являетесь ли вы учредителем юр. лица;
+grant select on U1.V_FORM_CLIENT_ALL_RFO_PRE12 to LOADDB;
+
+

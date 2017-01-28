@@ -1,0 +1,19 @@
+﻿create materialized view U1.M_RFO_CRED_SCHEME_TYPE
+refresh force on demand
+as
+select t.rfo_contract_id,
+       t.cr_scheme_code,
+       t.cr_scheme_name,
+       case when sc.c_code is null then 'СТАНДАРТ' else 'РАССРОЧКА' end as cr_scheme_type
+from V_CONTRACT_ALL_RFO t
+left join (select t2.c_code
+          from v_rfo_z#CRED_SCHEME t2
+          join v_rfo_z#properties_all tt on tt.COLLECTION_ID = t2.c_add_prop and
+                                            tt.c_bool = '1' --значение Грейс на весь период - Да
+          join v_rfo_z#property_grp g on g.id = tt.C_GROUP_PROP and
+                                         g.c_code = 'KAS_CS_CALC_COMPR' --Грейс на весь период
+                        ) sc on sc.c_code = t.cr_scheme_code;
+grant select on U1.M_RFO_CRED_SCHEME_TYPE to LOADDB;
+grant select on U1.M_RFO_CRED_SCHEME_TYPE to LOADER;
+
+

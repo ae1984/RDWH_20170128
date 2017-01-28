@@ -1,0 +1,75 @@
+﻿create materialized view U1.M_RBO_PORT_TMP2_PRE4
+build deferred
+refresh force on demand
+as
+select /*+ parallel(30)*/
+               md.rep_date,
+               md.rbo_contract_id,
+               md.rbo_client_id,
+               md.principal,
+               md.interest,
+               md.overlimit,
+               md.overlimit_interest,
+               md.overdraft,
+               md.overdraft_interest,
+               md.principal_del,
+               md.interest_del,
+               md.overlimit_del,
+               md.overlimit_interest_del,
+               md.overdraft_del,
+               md.overdraft_interest_del,
+               md.w_principal_del,
+               md.w_interest_del,
+               md.w_overlimit_del,
+               md.w_overlimit_interest_del,
+               md.w_overdraft_del,
+               md.w_overdraft_interest_del,
+               md.pc_cred_limit,                                            --свободный кредитный лимит
+               (md.rep_date - min(coalesce(crd.date_delinq_days,cdd.delinq_date)) + 1) as delinq_days, --количество дней просчроки по договору
+               min(coalesce(crd.date_delinq_days,cdd.delinq_date)) as delinq_date,
+               (md.rep_date - (min(min(coalesce(crd.date_delinq_days,cdd.delinq_date))) keep (dense_rank first order by min(coalesce(crd.date_delinq_days,cdd.delinq_date)))
+                   over (partition by md.rbo_client_id, md.rep_date)) + 1) as delinq_days_cli,                     --количество дней прсрочки по клиенту
+               min(min(coalesce(crd.date_delinq_days,cdd.delinq_date))) keep (dense_rank first order by min(coalesce(crd.date_delinq_days,cdd.delinq_date)))
+                   over (partition by md.rbo_client_id, md.rep_date) as date_delinq_date_cli,
+               md.principal+md.interest+md.overlimit+md.overlimit_interest+md.overdraft+md.overdraft_interest+
+               md.principal_del+md.interest_del+md.overlimit_del+md.overlimit_interest_del+md.overdraft_del+
+               md.overdraft_interest_del+md.w_principal_del+md.w_interest_del+md.w_overlimit_del+md.w_overlimit_interest_del+
+               md.w_overdraft_del+md.w_overdraft_interest_del as total_debt,
+               md.principal_del+md.interest_del+md.overlimit_del+md.overlimit_interest_del+md.overdraft_del+
+               md.overdraft_interest_del as delinq_amount,
+               (case when md.is_card = 0 and nvl(so.c_old_schema_overdue,'0') = '1'
+                      then 2
+                      when (md.w_principal_del+md.w_interest_del+md.w_overlimit_del+md.w_overlimit_interest_del+
+                            md.w_overdraft_del+md.w_overdraft_interest_del) !=0
+                      then 0
+                      else 1
+                 end) as is_on_balance,
+                md.is_card,
+                sum(md.principal+md.interest+md.overlimit+md.overlimit_interest+md.overdraft+md.overdraft_interest+
+                    md.principal_del+md.interest_del+md.overlimit_del+md.overlimit_interest_del+md.overdraft_del+
+                    md.overdraft_interest_del+md.w_principal_del+md.w_interest_del+md.w_overlimit_del+md.w_overlimit_interest_del+
+                    md.w_overdraft_del+md.w_overdraft_interest_del) over (partition by md.rbo_client_id, md.rep_date)          as total_debt_cli,
+                sum(md.principal_del+md.interest_del+md.overlimit_del+md.overlimit_interest_del+md.overdraft_del+
+                    md.overdraft_interest_del) over (partition by md.rbo_client_id, md.rep_date)                               as del_amount_cli
+          from M_RBO_PORT_TMP2_PRE3 md
+           left join U1.M_CONTR_CRED_DELINQ_DAYS crd on md.rbo_contract_id = crd.rbo_cred_id
+                           and md.rep_date >= crd.d_fo
+                           and md.rep_date <= crd.d_fo_next
+           left join M_CONTRACT_CRED_SCHEMA_OVRD so on so.rbo_contract_id = md.rbo_contract_id
+                           and md.rep_date between so.c_date_begin and coalesce(so.c_date_end,md.rep_date)
+           left join M_CONTR_CARD_DELINQ_DAYS cdd on cdd.rbo_contract_id = md.rbo_contract_id
+                                                 and md.rep_date >= cdd.del_date_begin
+                                                 and md.rep_date <= coalesce(cdd.del_date_end,md.rep_date)
+           where (md.principal+md.interest+md.overlimit+md.overlimit_interest+md.overdraft+md.overdraft_interest+
+                 md.principal_del+md.interest_del+md.overlimit_del+md.overlimit_interest_del+md.overdraft_del+
+                 md.overdraft_interest_del+md.w_principal_del+md.w_interest_del+md.w_overlimit_del+md.w_overlimit_interest_del+
+                 md.w_overdraft_del+md.w_overdraft_interest_del) != 0
+           group by md.rep_date,             md.rbo_contract_id,    md.rbo_client_id,             md.principal,
+               md.interest,             md.overlimit,             md.overlimit_interest,             md.overdraft,             md.overdraft_interest,
+               md.principal_del,             md.interest_del,             md.overlimit_del,             md.overlimit_interest_del,
+               md.overdraft_del,             md.overdraft_interest_del,             md.w_principal_del,             md.w_interest_del,
+               md.w_overlimit_del,             md.w_overlimit_interest_del,             md.w_overdraft_del,             md.w_overdraft_interest_del,
+               md.pc_cred_limit, md.is_card, so.c_old_schema_overdue;
+grant select on U1.M_RBO_PORT_TMP2_PRE4 to LOADDB;
+
+

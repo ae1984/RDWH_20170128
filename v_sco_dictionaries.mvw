@@ -1,0 +1,19 @@
+﻿create materialized view U1.V_SCO_DICTIONARIES
+refresh complete on demand
+as
+select ID_SYSTEM
+      ,ID
+      ,IDX
+      ,REGEXP_REPLACE(CONVERT(VAL,'AL32UTF8','RU8PC866'), '[^[:alnum:]-_() =><#;&/.]') as VAL
+      ,ID_ACTUAL
+      ,CREATE_DATE
+      ,ID_USER
+      ,REF
+      ,DELETED_BY
+      ,DELETED_DATE
+      ,VAL as VAL_ORIG
+from V_MO_DICTIONARIES@sc18;
+grant select on U1.V_SCO_DICTIONARIES to LOADDB;
+grant select on U1.V_SCO_DICTIONARIES to LOADER;
+
+

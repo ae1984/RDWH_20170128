@@ -1,0 +1,11 @@
+﻿create materialized view U1.V_FOLDER_ALL_RFO_PRE1
+build deferred
+refresh complete on demand
+as
+select /*+parallel(1)*/ ar.c_folder_ref,
+       max(ar.c_cancel_point) as c_cancel_point
+from V_RFO_Z#KAS_ARCH_DATA ar
+group by ar.c_folder_ref;
+grant select on U1.V_FOLDER_ALL_RFO_PRE1 to LOADDB;
+
+

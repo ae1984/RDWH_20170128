@@ -1,0 +1,52 @@
+﻿create materialized view U1.V_RBO_Z#KIND_CREDITS
+build deferred
+refresh complete on demand
+as
+select id,
+       c_name,
+       c_code,
+       c_period_consider,
+       c_subdiv_conclus,
+       c_list_doc_decl,
+       c_coeff,
+       c_min_prc_rate,
+       c_max_prc_rate,
+       c_min_period_ms,
+       c_max_period_ms,
+       c_invoice,
+       c_reg_rules,
+       c_currency,
+       c_param_for_plan,
+       c_min_period_num,
+       c_max_period_num,
+       c_file_shabl_dog,
+       c_num_shabl,
+       c_classes_list,
+       c_filial,
+       c_depart,
+       c_debt_priority,
+       c_priority,
+       c_transh_period_u,
+       c_transh_period_n,
+       c_transh_period_c,
+       c_min_period_c,
+       c_max_period_c,
+       c_copy_to_transh,
+       c_is_for_cred_card,
+       c_plan_end,
+       c_type_po_for_date,
+       c_gr_risk_cond,
+       c_edistr_pay_cls,
+       c_print_doc,
+       c_cred_program,
+       c_date_begining,
+       c_date_ending,
+       c_deb_day_prc,
+       c_deb_day_vnb,
+       c_plan_from_early,
+       c_pro_calc
+  from rdwh.V_RBO_Z#KIND_CREDITS@rdwh_exd;
+grant select on U1.V_RBO_Z#KIND_CREDITS to LOADDB;
+grant select on U1.V_RBO_Z#KIND_CREDITS to LOADER;
+
+

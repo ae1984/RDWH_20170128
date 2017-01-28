@@ -1,0 +1,43 @@
+﻿create table U1.T_CALENDAR_VALUE_HST
+(
+  calendar_name VARCHAR2(64) not null,
+  value         DATE not null,
+  type          CHAR(1) not null
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_CALENDAR_VALUE_HST
+  is 'Таблица с недостающими датами в период до 31-12-2007';
+comment on column U1.T_CALENDAR_VALUE_HST.calendar_name
+  is 'тип даты';
+comment on column U1.T_CALENDAR_VALUE_HST.value
+  is 'дата';
+comment on column U1.T_CALENDAR_VALUE_HST.type
+  is 'тип';
+alter table U1.T_CALENDAR_VALUE_HST
+  add constraint T_CALENDAR_VALUE_HST_UK unique (CALENDAR_NAME, VALUE)
+  using index 
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.T_CALENDAR_VALUE_HST_UK nologging;
+grant select on U1.T_CALENDAR_VALUE_HST to LOADDB;
+

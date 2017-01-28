@@ -1,0 +1,23 @@
+﻿create materialized view U1.V_RFO_Z#PROPERTIES_2013
+build deferred
+refresh complete on demand
+as
+select distinct
+       p.c_prop, p.c_str,
+       (case when t.c_type_value = 'BOOLEAN'
+            then max(c_bool) keep (dense_rank last order by p.c_date_beg)
+                   over (partition by p.collection_id, p.c_group_prop)
+            else p.c_bool end ) as c_bool,
+       p.c_group_prop, p.collection_id, p.c_obj, p.c_v_date, c_date_beg, c_date_end
+  from T_RFO_Z#PROPERTIES p--V_RFO_Z#PROPERTIES_ALL p
+  join V_RFO_Z#PROPERTY_GRP t on t.id = p.c_group_prop
+ where t.c_code in ('KAS_AUTO_CALC_STATE','JOB_2','ORG_ACTIVITY','JOB','NAL_SCH',
+                    'GARAZH','NEDVIZHIMOST','NALICHIE_AUTO','OT_BEL','KAS_CRED_PROGRAM',
+                    'STAZH_DATE','KAS_WIFE_PHONE_MOBILE','IS_IN_KART2','HAVE_CRED',
+                    'UCH_YL','CASTA_NOW','PL_BIRTH_USA','ADR_USA','RES_USA','KAS_ESTATE_E',
+                    'VER_VECTOR_GR', 'PHOTO_AGREE')
+and p.collection_id > 9966624770;
+grant select on U1.V_RFO_Z#PROPERTIES_2013 to LOADDB;
+grant select on U1.V_RFO_Z#PROPERTIES_2013 to LOADER;
+
+

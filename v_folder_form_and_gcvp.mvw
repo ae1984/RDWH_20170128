@@ -1,0 +1,41 @@
+﻿create materialized view U1.V_FOLDER_FORM_AND_GCVP
+using no index
+refresh force on demand
+as
+select /*+parallel(30) parallel_index(30) */
+  x.*,
+  sgc1.categ as SAL_GCVP_TO_SAL_FORM_CATEG
+from (
+  select
+      fld1.id as folder_id,
+      nvl(df1.inc_sal, 0) as inc_sal,
+      nvl(df1.inc_sal_add, 0) as inc_sal_add,
+      nvl(df1.inc_sal_spouse, 0) as inc_sal_spouse,
+      nvl(df1.inc_rent, 0) as inc_rent,
+      nvl(df1.inc_pension_benefits, 0) as inc_pension_benefits,
+      nvl(df1.inc_interest, 0) as inc_interest,
+      dg1.sal as gcvp_sal,
+        /*case when nvl(df1.inc_sal,0) !=0 and nvl(dg1.sal,0) !=0
+        then round(nvl(dg1.sal,0) / df1.inc_sal * 100, 4)
+        else null end as*/
+         case when df1.inc_sal > 0 then floor(nvl(dg1.sal,0) / df1.inc_sal * 100)
+              else 0 end as
+      sal_gcvp_to_sal_form_perc,
+      dg1.org_rnn,
+      dg1.org_bin
+  from
+      V_RFO_Z#FOLDERS fld1,
+      V_DATA_FORM_RFO df1,
+      V_DATA_GCVP_RFO dg1
+  where
+      fld1.id = df1.folder_id(+) and
+      fld1.id = dg1.folder_id(+)
+  ) x,
+  REF_SAL_GCVP_TO_SAL_FORM_CATEG sgc1
+where
+  (sgc1.amount_from <= nvl(x.sal_gcvp_to_sal_form_perc,-1)
+  and sgc1.amount_to > nvl(x.sal_gcvp_to_sal_form_perc,-1));
+grant select on U1.V_FOLDER_FORM_AND_GCVP to LOADDB;
+grant select on U1.V_FOLDER_FORM_AND_GCVP to LOADER;
+
+

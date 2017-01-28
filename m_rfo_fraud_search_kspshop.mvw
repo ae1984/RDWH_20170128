@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_KSPSHOP
+build deferred
+refresh force on demand
+as
+select t.claim_id,
+         t.date_create,
+         t.rfo_client_id
+         ,x.is_loan_guest
+         ,count(case when x.is_loan_guest = 1 then t.claim_id end)
+           over (partition by t.rfo_client_id order by trunc(t.date_create) range between 30 preceding and 1 preceding) as count_visit_guest
+         ,count(case when x.is_loan_guest = 0 then t.claim_id end)
+           over (partition by t.rfo_client_id order by trunc(t.date_create) range between 30 preceding and 1 preceding) as count_visit_client
+         ,dense_rank() over (partition by t.rfo_client_id, trunc(t.date_create) order by t.date_create) as ord_1d
+         ,count(case when x.is_loan_guest = 1 then t.claim_id end)
+           over (partition by t.rfo_client_id order by t.date_create range between 30 preceding and 1/24/60/60 preceding) as count_visit_guest_x
+         ,count(case when x.is_loan_guest = 0 then t.claim_id end)
+           over (partition by t.rfo_client_id order by t.date_create range between 30 preceding and 1/24/60/60 preceding) as count_visit_client_x
+  from u1.M_FOLDER_CON_CANCEL_ONLINE_1 t
+  left join (
+            select  a.pk,
+                    a.code,
+                    max(case when upper(t.p_description) like '%ГОСТ%' then 1 else 0 end) as is_loan_guest
+            from u1.M_KASPISH_ORDERS a
+            join u1.M_KASPISH_ORDERHISTORYENTRIES t on t.p_order = a.pk
+            group by a.pk,
+                     a.code
+           ) x on x.code = t.process_id;
+grant select on U1.M_RFO_FRAUD_SEARCH_KSPSHOP to LOADDB;
+
+

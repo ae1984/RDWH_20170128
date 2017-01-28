@@ -1,0 +1,224 @@
+﻿create materialized view U1.M_SCCL_RFO_FLD_PAR1_GDS
+build deferred
+refresh force on demand
+as
+select  /*+ parallel(30) */
+        x.rfo_client_id
+
+        ,x.app_30d_gds_cnt
+        --,x.app_30d_cnt_x
+        ,x.app_90d_gds_cnt
+        --,x.app_90d_cnt_x
+
+        --,x.app_30d_pr_cnt
+        --,x.app_30d_pr_cnt_x
+        --,x.app_90d_pr_cnt
+        --,x.app_90d_pr_cnt_x
+
+        /*,x.app_kn_30d_gds_cnt
+        --,x.app_kn_30d_cnt_x
+        ,x.app_kn_90d_gds_cnt
+        --,x.app_kn_90d_cnt_x*/
+
+        ,x.app_fail_30d_gds_cnt
+        --,x.app_fail_30d_cnt_x
+        --,x.app_fail_30d_pr_cnt
+        --,x.app_fail_30d_pr_cnt_x
+
+        /*,x.app_fail_kn_30d_gds_cnt
+        --,x.app_fail_kn_30d_cnt_x*/
+
+        ,case when x.app_30d_gds_cnt > 0 then round(x.app_fail_30d_gds_cnt/x.app_30d_gds_cnt*100) end as app_fail_30d_gds_rat
+        --,case when x.app_30d_cnt_x > 0 then round(x.app_fail_30d_cnt_x/x.app_30d_cnt_x*100) end as app_fail_30d_rat_x
+
+        --,case when x.app_30d_pr_cnt > 0 then round(x.app_fail_30d_pr_cnt/x.app_30d_pr_cnt*100) end as app_fail_30d_pr_rat
+        --,case when x.app_30d_pr_cnt_x > 0 then round(x.app_fail_30d_pr_cnt_x/x.app_30d_pr_cnt_x*100) end as app_fail_30d_pr_rat_x
+
+        /*--,x.app_tk_30d_cnt_x
+        ,x.app_tk_30d_cnt
+        --,x.app_tk_cnl_30d_cnt_x
+        ,x.app_tk_cnl_30d_cnt
+        --,x.app_fail_tk_30d_cnt_x
+        ,x.app_fail_tk_30d_cnt*/
+
+from (
+      select cl.rfo_client_id
+
+             ,count(case when am.folder_date_create_mi >= trunc(sysdate) - 30 then am.app_id end) as app_30d_gds_cnt
+
+/*             ,count(am.app_id) over (partition by am.rfo_client_id order by am.folder_date_create_mi
+                                     range between 30 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as app_30d_cnt_x*/
+
+             ,count(case when am.folder_date_create_mi >= trunc(sysdate) - 90 then am.app_id end) as app_90d_gds_cnt
+
+/*             ,count(am.app_id) over (partition by am.rfo_client_id order by am.folder_date_create_mi
+                                     range between 90 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as app_90d_cnt_x*/
+
+/*             --product
+             ,count(am.app_id) over (partition by am.rfo_client_id, am.product_type order by trunc(am.folder_date_create_mi)
+                                     range between 30 preceding and 1 preceding) as app_30d_pr_cnt
+
+             ,count(am.app_id) over (partition by am.rfo_client_id, am.product_type order by am.folder_date_create_mi
+                                     range between 30 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as app_30d_pr_cnt_x
+
+             ,count(am.app_id) over (partition by am.rfo_client_id, am.product_type order by trunc(am.folder_date_create_mi)
+                                     range between 90 preceding and 1 preceding) as app_90d_pr_cnt
+
+             ,count(am.app_id) over (partition by am.rfo_client_id, am.product_type order by am.folder_date_create_mi
+                                     range between 90 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as app_90d_pr_cnt_x*/
+
+/*             --KN
+             ,count(case when am.product_type = 'ДЕНЬГИ'
+                              and am.folder_date_create_mi >= trunc(sysdate) - 30
+                         then am.app_id end) as app_kn_30d_cnt
+
+\*             ,count(case when am.product_type = 'ДЕНЬГИ' then am.app_id end) over (partition by am.rfo_client_id order by am.folder_date_create_mi
+                                     range between 30 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as app_kn_30d_cnt_x*\
+
+             ,count(case when am.product_type = 'ДЕНЬГИ'
+                              and am.folder_date_create_mi >= trunc(sysdate) - 90
+                         then am.app_id end) as app_kn_90d_cnt*/
+
+/*             ,count(case when am.product_type = 'ДЕНЬГИ' then am.app_id end) over (partition by am.rfo_client_id order by am.folder_date_create_mi
+                                     range between 90 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as app_kn_90d_cnt_x*/
+
+             --
+             ,count(case when ((coalesce(am.cancel_prescoring, 0)
+                                        + coalesce(am.cancel_middle_office, 0)
+                                        + coalesce(am.cancel_controller, 0)
+                                        --+ coalesce(a.cancel_client, 0)
+                                        + coalesce(am.cancel_manager, 0)
+                                        + coalesce(am.cancel_cpr_aa, 0)
+                                        + coalesce(am.cancel_verificator, 0)
+                                        --+ coalesce(a.cancel_undefined, 0)
+                                        ) > 0 or am.is_credit_rejected = 1)
+                               and am.folder_date_create_mi >= trunc(sysdate) - 30
+                         then am.app_id end) as app_fail_30d_gds_cnt
+
+/*             ,count(case when (coalesce(am.cancel_prescoring, 0)
+                                        + coalesce(am.cancel_middle_office, 0)
+                                        + coalesce(am.cancel_controller, 0)
+                                        --+ coalesce(am.cancel_client, 0)
+                                        + coalesce(am.cancel_manager, 0)
+                                        + coalesce(am.cancel_cpr_aa, 0)
+                                        + coalesce(am.cancel_verificator, 0)
+                                        --+ coalesce(am.cancel_undefined, 0)
+                                        ) > 0 or am.is_credit_rejected = 1 then am.app_id end)
+                    over (partition by am.rfo_client_id order by am.folder_date_create_mi
+                          range between 30 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as app_fail_30d_cnt_x*/
+              --
+              /*,count(case when ((coalesce(am.cancel_prescoring, 0)
+                                        + coalesce(am.cancel_middle_office, 0)
+                                        + coalesce(am.cancel_controller, 0)
+                                        --+ coalesce(a.cancel_client, 0)
+                                        + coalesce(am.cancel_manager, 0)
+                                        + coalesce(am.cancel_cpr_aa, 0)
+                                        + coalesce(am.cancel_verificator, 0)
+                                        --+ coalesce(a.cancel_undefined, 0)
+                                        ) > 0 or am.is_credit_rejected = 1)
+                                and am.folder_date_create_mi >= trunc(sysdate) - 30
+                           then am.app_id end) as app_fail_30d_pr_cnt*/
+
+/*             ,count(case when (coalesce(am.cancel_prescoring, 0)
+                                        + coalesce(am.cancel_middle_office, 0)
+                                        + coalesce(am.cancel_controller, 0)
+                                        --+ coalesce(am.cancel_client, 0)
+                                        + coalesce(am.cancel_manager, 0)
+                                        + coalesce(am.cancel_cpr_aa, 0)
+                                        + coalesce(am.cancel_verificator, 0)
+                                        --+ coalesce(am.cancel_undefined, 0)
+                                        ) > 0 or am.is_credit_rejected = 1 then am.app_id end)
+                    over (partition by am.rfo_client_id, am.product_type order by am.folder_date_create_mi
+                          range between 30 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as app_fail_30d_pr_cnt_x*/
+
+              --
+/*              ,count(case when (coalesce(am.cancel_prescoring, 0)
+                                + coalesce(am.cancel_middle_office, 0)
+                                + coalesce(am.cancel_controller, 0)
+                                --+ coalesce(am.cancel_client, 0)
+                                + coalesce(am.cancel_manager, 0)
+                                + coalesce(am.cancel_cpr_aa, 0)
+                                + coalesce(am.cancel_verificator, 0)
+                                --+ coalesce(am.cancel_undefined, 0)
+                                ) > 0
+                                and am.product_type = 'ДЕНЬГИ'
+                                and am.folder_date_create_mi >= trunc(sysdate) - 30
+                          then am.app_id end) as app_fail_kn_30d_cnt*/
+
+/*              ,count(case when (coalesce(am.cancel_prescoring, 0)
+                                + coalesce(am.cancel_middle_office, 0)
+                                + coalesce(am.cancel_controller, 0)
+                                --+ coalesce(am.cancel_client, 0)
+                                + coalesce(am.cancel_manager, 0)
+                                + coalesce(am.cancel_cpr_aa, 0)
+                                + coalesce(am.cancel_verificator, 0)
+                                --+ coalesce(am.cancel_undefined, 0)
+                                ) > 0 and am.product_type = 'ДЕНЬГИ' then am.app_id end)
+                    over (partition by am.rfo_client_id order by am.folder_date_create_mi
+                          range between 30 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as app_fail_kn_30d_cnt_x
+*/
+              --TK
+              /*,count(case when am.product_type = 'ТОВАРЫ' then am.app_id end) over (partition by am.rfo_client_id order by trunc(am.folder_date_create_mi)
+                                     range between 30 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as app_tk_30d_cnt_x
+
+              ,count(case when am.product_type = 'ТОВАРЫ'
+                               and am.is_credit_issued = 0
+                          then am.app_id end)
+                    over (partition by am.rfo_client_id order by trunc(am.folder_date_create_mi)
+                          range between 30 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as app_tk_cnl_30d_cnt_x*/
+               --T-1
+              /*,count(case when am.product_type = 'ТОВАРЫ'
+                               and am.folder_date_create_mi >= trunc(sysdate) - 30
+                          then am.app_id end) as app_tk_30d_cnt
+
+              ,count(case when am.product_type = 'ТОВАРЫ'
+                               and am.is_credit_issued = 0
+                               and am.folder_date_create_mi >= trunc(sysdate) - 30
+                          then am.app_id end) as app_tk_cnl_30d_cnt
+
+              ,count(case when (coalesce(am.cancel_prescoring, 0)
+                                + coalesce(am.cancel_middle_office, 0)
+                                + coalesce(am.cancel_controller, 0)
+                                --+ coalesce(am.cancel_client, 0)
+                                + coalesce(am.cancel_manager, 0)
+                                + coalesce(am.cancel_cpr_aa, 0)
+                                + coalesce(am.cancel_verificator, 0)
+                                --+ coalesce(am.cancel_undefined, 0)
+                                ) > 0
+                                and am.product_type = 'ТОВАРЫ'
+                                and am.folder_date_create_mi >= trunc(sysdate) - 30
+                           then am.app_id end) as app_fail_tk_30d_cnt*/
+
+/*              ,count(case when (coalesce(am.cancel_prescoring, 0)
+                                + coalesce(am.cancel_middle_office, 0)
+                                + coalesce(am.cancel_controller, 0)
+                                --+ coalesce(am.cancel_client, 0)
+                                + coalesce(am.cancel_manager, 0)
+                                + coalesce(am.cancel_cpr_aa, 0)
+                                + coalesce(am.cancel_verificator, 0)
+                                --+ coalesce(am.cancel_undefined, 0)
+                                ) > 0 and am.product_type = 'ТОВАРЫ' then am.app_id end)
+                    over (partition by am.rfo_client_id order by am.folder_date_create_mi
+                          range between 30 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as app_fail_tk_30d_cnt_x*/
+
+/*               ,count(case when am.product_type = 'ДЕНЬГИ'
+                               and am.is_credit_issued = 0
+                          then am.app_id end)
+                    over (partition by am.rfo_client_id order by trunc(am.folder_date_create_mi)
+                          range between 30 + (am.folder_date_create_mi - trunc(am.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as app_kn_cnl_30d_cnt_x*/
+
+/*               ,count(case when am.product_type = 'ДЕНЬГИ'
+                               and am.is_credit_issued = 0
+                               and am.folder_date_create_mi >= trunc(sysdate) - 30
+                          then am.app_id end) as app_kn_cnl_30d_cnt*/
+
+      from u1.V_CLIENT_RFO_BY_ID cl
+      left join u1.M_APP_MINER_BAS am on am.rfo_client_id = cl.rfo_client_id
+                                         and am.product_type = 'ТОВАРЫ'
+                                         and am.folder_date_create >= trunc(sysdate) - 90
+      group by cl.rfo_client_id
+) x;
+grant select on U1.M_SCCL_RFO_FLD_PAR1_GDS to LOADDB;
+grant select on U1.M_SCCL_RFO_FLD_PAR1_GDS to LOAD_MO;
+
+

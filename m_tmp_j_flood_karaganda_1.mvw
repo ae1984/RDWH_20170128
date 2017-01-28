@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_TMP_J_FLOOD_KARAGANDA_1
+refresh complete on demand
+as
+select fc.fact_address_region, fc.fact_address_district, fc.fact_address_city, count(distinct fc.form_client_id)
+from V_FORM_CLIENT_ALL_RFO fc
+where fc.fact_address_region = 'КАРАГАНДИНСКАЯ' and
+      fc.fact_address_district in ('КАРКАРАЛИНСКИЙ','АБАЙСКИЙ','ЖАНА-АРКИНСКИЙ','ШЕТСКИЙ','БУХАР-ЖЫРАУСКИЙ')
+group by fc.fact_address_region, fc.fact_address_district, fc.fact_address_city;
+grant select on U1.M_TMP_J_FLOOD_KARAGANDA_1 to LOADDB;
+grant select on U1.M_TMP_J_FLOOD_KARAGANDA_1 to LOADER;
+
+

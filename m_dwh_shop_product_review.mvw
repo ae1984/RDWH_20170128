@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_DWH_SHOP_PRODUCT_REVIEW
+refresh force on demand
+as
+select /*+ parallel 15 */
+       product_review_id as shop_product_review_id,
+       product_id as shop_product_id,
+       user_id,
+       date_comment,
+       rating,
+       product_comment
+
+  from dwh_stage.S43_PRODUCT_REVIEW@dwh_prod2;
+grant select on U1.M_DWH_SHOP_PRODUCT_REVIEW to LOADDB;
+grant select on U1.M_DWH_SHOP_PRODUCT_REVIEW to LOADER;
+
+

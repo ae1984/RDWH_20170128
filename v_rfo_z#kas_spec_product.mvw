@@ -1,0 +1,22 @@
+﻿create materialized view U1.V_RFO_Z#KAS_SPEC_PRODUCT
+refresh force on demand
+as
+select id,
+      class_id,
+      collection_id,
+      c_type_product#0,
+      c_prop_product,
+      c_dep_scheme,
+      c_cred_scheme,
+      c_card_scheme,
+      c_tarif_plan,
+      c_date_end,
+      c_date_edit,
+      c_user,
+      sn,
+      su
+from ibs.Z#KAS_SPEC_PRODUCT@rfo_snap;
+grant select on U1.V_RFO_Z#KAS_SPEC_PRODUCT to LOADDB;
+grant select on U1.V_RFO_Z#KAS_SPEC_PRODUCT to LOADER;
+
+

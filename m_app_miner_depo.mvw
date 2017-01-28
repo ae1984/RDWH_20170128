@@ -1,0 +1,46 @@
+﻿create materialized view U1.M_APP_MINER_DEPO
+build deferred
+refresh complete on demand
+as
+select x.app_id,
+       x.folder_date_create,
+       x.cnt_depo,                --количество всех депозитов
+       x.cnt_work_depo,           --количество открытых депозитов
+       x.cnt_close_depo,          --количество закрытых депозитов
+       x.max_period_work_depo,    --максимальный период работы депозита среди действующих депозитов
+       x.max_period_closed_depo,   --максимальный период работы депозита среди закрытых депозитов
+       dp.cnt_count6_cr, --количество пополнений за последние 6 месяцев
+       dp.cnt_count12_cr,  --количество пополнений за последние 12 месяцев
+       --
+       dp.cnt_count6_db, --количество снятий за последние 6 месяцев
+       dp.cnt_count12_db,  --количество снятий за последние 12 месяцев
+       --
+       dp.avg_sum6_cr, --средняя сумма пополнений за последние 6 месяцев
+       dp.avg_sum12_cr,  --средняя сумма пополнений за последние 12 месяцев
+       --
+       dp.avg_sum6_db,  --средняя сумма снятий за последние 6 месяцев
+       dp.avg_sum12_db, --средняя сумма снятий за последние 12 месяцев
+       dp.total_bal,  --сумма депозитов на день заведения заявки
+       dp.max_total_bal_closed                        --максимальная сумма по закрытым депозитам
+  from (select mb.app_id,
+               mb.folder_date_create,
+               count(dd.contract_number) as cnt_depo,                --количество всех депозитов
+               count(case when coalesce(dd.closed_date, trunc(sysdate)+1) > mb.folder_date_create
+                          then dd.contract_number end) as cnt_work_depo,           --количество открытых депозитов
+               count(case when dd.closed_date <= mb.folder_date_create
+                          then dd.contract_number end) as cnt_close_depo,          --количество закрытых депозитов
+               max(case when coalesce(dd.closed_date, trunc(sysdate)+1) > mb.folder_date_create
+                        then trunc(mb.folder_date_create) - dd.begin_date + 1 end) as max_period_work_depo,    --максимальный период работы депозита среди действующих депозитов
+               max(case when dd.closed_date <=  mb.folder_date_create
+                        then dd.closed_date - dd.begin_date + 1 end) as max_period_closed_depo   --максимальный период работы депозита среди закрытых депозитов
+          from U1.M_APP_MINER_BAS mb
+          join u1.M_CLIENT_LINK              cl on  cl.rfo_client_id = mb.rfo_client_id
+          left join U1.M_RBO_CONTRACT_DEPOSIT_BAS dd on dd.rbo_client_id = cl.rbo_client_id
+                                                            and dd.is_has_timeout = 1   --только срочные депозиты
+                                                            and dd.begin_date <= trunc(mb.folder_date_create)    --открытых до даты заявки
+         group by mb.app_id,
+               mb.folder_date_create) x
+  left join U1.M_APP_MINER_DEPO_PRE       dp on dp.app_id = x.app_id;
+grant select on U1.M_APP_MINER_DEPO to LOADDB;
+
+

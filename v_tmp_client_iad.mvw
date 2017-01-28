@@ -1,0 +1,67 @@
+﻿create materialized view U1.V_TMP_CLIENT_IAD
+using no index
+refresh complete on demand
+as
+select distinct t.rfo_client_id,
+                t.folder_id,
+                t.folder_date_create,
+                t.folder_state,
+                t.process_name,
+                bc.iin as iin_cur,
+                bc.client_name as cl_name_cur,
+                bc.birth_date as birth_date_cur,
+                p.c_cl_req_old#last_name,
+                p.c_cl_req_old#first_name,
+                p.c_cl_req_old#sur_name,
+                p.c_cl_req_old#date_pers,
+                p.c_cl_req_old#pasport#type,
+                p.c_cl_req_old#pasport#num,
+                p.c_cl_req_old#pasport#seria,
+                p.c_cl_req_old#pasport#who,
+                p.c_cl_req_old#pasport#date_doc,
+                p.c_cl_req_old#pasport#date_end,
+                p.c_cl_req_old#inn,
+                p.c_cl_req_old#contacts,
+                --co1.c_numb as c_numb_old,
+                --co1.c_type as c_type_old,
+                --co1.c_private as c_private_old,
+                --co1.collection_id as collection_id_old,
+                --co1.c_affirmed as c_affirmed_old,
+                --co1.c_kas_verificated as c_kas_verificated_old,
+                --co1.c_date_audit as c_date_audit_old,
+
+                p.c_cl_req_new#last_name,
+                p.c_cl_req_new#first_name,
+                p.c_cl_req_new#sur_name,
+                p.c_cl_req_new#date_pers,
+                p.c_cl_req_new#pasport#type,
+                p.c_cl_req_new#pasport#num,
+                p.c_cl_req_new#pasport#seria,
+                p.c_cl_req_new#pasport#who,
+                p.c_cl_req_new#pasport#date_doc,
+                p.c_cl_req_new#pasport#date_end,
+                p.c_cl_req_new#inn,
+                p.c_cl_req_new#contacts
+                --co.c_numb,
+                --co.c_type,
+                --co.c_private,
+                --co.collection_id,
+                --co.c_affirmed,
+                --co.c_kas_verificated,
+                --co.c_date_audit
+from V_FOLDER_ALL_RFO t
+left join V_CLIENT_RFO_BY_ID bc on t.rfo_client_id = bc.rfo_client_id
+--left join V_VERIFICATION v on v.folder_id = t.folder_id
+--left join V_RFO_Z#KAS_VERIFICATION kv on v.verif_doc_id = kv.id
+left join u1.V_RFO_Z#RDOC rd on rd.collection_id = t.fld_c_docs
+left join u1.V_RFO_Z#FDOC fd on fd.id = rd.c_doc
+left join u1.V_RFO_Z#REQ_EDIT_CL_PRIV p on p.id = fd.id
+--left join V_RFO_Z#CONTACTS co on co.collection_id = p.c_cl_req_new#contacts --and co.id is not null and co.c_private = 690120
+--left join V_RFO_Z#CONTACTS co1 on co1.collection_id = p.c_cl_req_old#contacts --and co1.id is not null and co1.c_private = 690120 and co1.c_affirmed = 1
+where t.process_name = 'ИЗМЕНЕНИЕ АНКЕТНЫХ ДАННЫХ КЛИЕНТА'
+--and trunc(t.folder_date_create) >= to_date ('01.01.2012', 'dd.mm.yyyy')
+and p.id is not null;
+grant select on U1.V_TMP_CLIENT_IAD to LOADDB;
+grant select on U1.V_TMP_CLIENT_IAD to LOADER;
+
+

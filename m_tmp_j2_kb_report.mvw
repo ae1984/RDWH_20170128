@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_TMP_J2_KB_REPORT
+build deferred
+refresh complete on demand
+as
+select /*+parallel(2)*/
+       p.id as report_id,
+       p.c_rnn as iin_rnn,
+       trunc(fd.c_doc_date) as report_date,
+       fd.c_doc_date as report_date_time,
+       case when p.c_rpt_type = 4 then 'STANDARD'
+            when p.c_rpt_type = 6 then 'EXTENDED'
+            else 'PRIMARY' end as report_type,
+       upper(p.c_status) as report_status,
+       decode(p.c_rep_source, 1, 'GKB', 'PKB') as report_source,
+       upper(d.c_name) as err_status,
+       case when p.c_pkb_report_ref is not null then 1 else 0 end as is_from_cache,
+       case when p.c_si_noec like '%(%' then to_number(substr(p.c_si_noec,1,instr(p.c_si_noec,'(')-2))
+            when p.c_si_noec is not null then to_number(p.c_si_noec) end as active_contracts,
+       case when p.c_si_notc like '%(%' then to_number(substr(p.c_si_notc,1,instr(p.c_si_notc,'(')-2))
+            when p.c_si_notc is not null then to_number(p.c_si_notc) end as closed_contracts
+--       u1.get_pkb_debt_from_text(p.c_si_tod, coalesce(trunc(fd.c_doc_date), trunc(sysdate))) as total_debt,
+--       u1.get_pkb_debt_from_text(p.c_si_tdo, coalesce(trunc(fd.c_doc_date), trunc(sysdate))) as delinq_amount
+--       p.c_si_subj_role,
+--       s.c_subj_role
+from u1.V_RFO_Z#PKB_REPORT p
+join u1.V_RFO_Z#FDOC fd on fd.id = p.id and fd.class_id = 'PKB_REPORT'
+--left join u1.V_RFO_Z#KAS_PKB_SI s on s.collection_id = p.c_si_subj_role
+left join u1.V_RFO_Z#KAS_UNIVERSAL_D d on d.id = p.c_error_status;
+grant select on U1.M_TMP_J2_KB_REPORT to LOADDB;
+
+

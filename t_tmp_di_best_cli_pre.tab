@@ -1,0 +1,30 @@
+﻿create table U1.T_TMP_DI_BEST_CLI_PRE
+(
+  barcode_cat       VARCHAR2(103),
+  upcode_cat        VARCHAR2(50),
+  client_id         VARCHAR2(7 CHAR),
+  yyyy_mm_num_min   NUMBER,
+  yyyy_mm_num_max   NUMBER,
+  pmt_code          VARCHAR2(4000),
+  pmt_code_new      VARCHAR2(4000),
+  opt_code          VARCHAR2(4000),
+  pmt_up_code       VARCHAR2(4000),
+  pmt_full_code     VARCHAR2(4000),
+  pmt_full_code_new VARCHAR2(4000)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_DI_BEST_CLI_PRE to LOADDB;
+grant select on U1.T_TMP_DI_BEST_CLI_PRE to LOADER;
+

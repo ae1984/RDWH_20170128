@@ -1,0 +1,44 @@
+﻿create materialized view U1.V_MO_RESULT_SCO_TMP_NEW
+using no index
+refresh complete on demand
+as
+select w.id as mogw_process_id, to_char(w.id) as mogw_process_id_txt,
+       cast(w.date_start as date) as mogw_date_start,
+       px.process_id, px.rfolder_id,
+       px.pr_par_IN_SCO_NUM_SCORING, px.pr_par_IN_SCO_FOLDER_ID,
+       px.pr_par_IN_SCO_CLIENT_ID, px.pr_par_IN_SCO_IIN,
+       nvl(px.calc_par_MO_SCO_REJECT_PRE,pr_par_MO_SCO_REJECT) as calc_par_MO_SCO_REJECT_PRE,
+       px.calc_par_MO_SCO_REJECT_PRE as calc_par_MO_SCO_REJECT_PRE_RAW,
+       px.pr_par_MO_SCO_REJECT,
+       r.rfo_res_from_mo_id, r.res_date as rfo_res_date, r.c_client_ref as rfo_client_id,
+       r.c_folder_ref as rfo_folder_id, r.c_result as rfo_result
+from V_MOGW_PROCESS_MO_1 w
+left join V_MO_RES_RFO_KAS_RES_FROM_MO r on r.c_res_mo_id = w.id
+left join (select
+       p.id as process_id, max(p.rfolder_id) as rfolder_id,
+       avg(decode(dp.code_int, 'IN_SCO_NUM_SCORING', ppv.value_number)) as pr_par_IN_SCO_NUM_SCORING,
+       avg(decode(dp.code_int, 'IN_SCO_FOLDER_ID', ppv.value_number)) as pr_par_IN_SCO_FOLDER_ID,
+       avg(decode(dp.code_int, 'IN_SCO_CLIENT_ID', ppv.value_number)) as pr_par_IN_SCO_CLIENT_ID,
+       avg(decode(dp.code_int, 'IN_SCO_IIN', ppv.value_text)) as pr_par_IN_SCO_IIN,
+       avg(case when dp2.code_int like 'MO_SCO_REJECT_PRE_%'
+           then cpv.value_number end) as calc_par_MO_SCO_REJECT_PRE,
+       avg(decode(dp.code_int, 'MO_SCO_REJECT', ppv.value_number)) as pr_par_MO_SCO_REJECT
+from V_MO_PROCESS p
+join V_MO_D_PROCESS dpr on dpr.id = p.d_process_id and dpr.code = 'MO_SCO'
+join V_MO_PROCESS_PAR_VALUE ppv on ppv.process_id = p.id
+join V_MO_D_PAR dp on dp.id = ppv.d_par_id
+join V_MO_CALC c on c.process_id = p.id
+join V_MO_D_CALC dc on dc.id = c.d_calc_id --and dc.code like 'C_MO_SCO_REJECT_PRE_%'
+join V_MO_CALC_PAR_VALUE cpv on cpv.calc_id = c.id
+join V_MO_D_CALC_PAR dcp on dcp.id = cpv.d_calc_par_id and dcp.is_out = 1
+join V_MO_D_PAR dp2 on dp2.id = cpv.d_par_id
+where p.date_start > to_date('2013-10-16 14:00','yyyy-mm-dd hh24:mi') and -- min date
+      p.date_start < to_date('2013-10-17 17:00','yyyy-mm-dd hh24:mi')
+group by p.id) px on px.process_id = w.process_id
+where w.date_start > to_date('2013-10-16 14:00','yyyy-mm-dd hh24:mi') and
+      w.date_start < to_date('2013-10-17 17:00','yyyy-mm-dd hh24:mi') and
+      w.process_code = 'MO_SCO';
+grant select on U1.V_MO_RESULT_SCO_TMP_NEW to LOADDB;
+grant select on U1.V_MO_RESULT_SCO_TMP_NEW to LOADER;
+
+

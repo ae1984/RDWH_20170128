@@ -1,0 +1,16 @@
+﻿create materialized view U1.M_TMP_R_ADDRESS_WIFE_BY_IIN
+refresh force on demand
+as
+select /*+ noparallel */d.client_iin, q.address, max(d.client_name),
+max(cl.last_name_wife||' '||cl.first_name_wife||' '||cl.sur_name_wife)
+from v_dwh_portfolio_current d
+join M_TMP_R_ADDRESS_BY_IIN_0515 q on q.iin = d.client_iin
+join v_form_client_all_rfo cl on cl.iin = d.client_iin
+where d.x_is_credit_issued = 1
+ and cl.fio_wife||cl.last_name_wife||cl.first_name_wife||cl.sur_name_wife is not null
+group by d.client_iin, q.address
+having count(1) > 1;
+grant select on U1.M_TMP_R_ADDRESS_WIFE_BY_IIN to LOADDB;
+grant select on U1.M_TMP_R_ADDRESS_WIFE_BY_IIN to LOADER;
+
+

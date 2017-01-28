@@ -1,0 +1,39 @@
+﻿create materialized view U1.M_APP_MINER_PKB
+build deferred
+refresh complete on demand
+as
+select mb.app_id,
+       pa.report_id,
+       pa.report_date,
+       cast (case when pa.report_type = 'СТАНДАРТНЫЙ' then 'STANDARD'
+                  when pa.report_type = 'ПЕРВИЧНЫЙ'   then 'PRIMARY'
+                  when pa.report_type = 'РАСШИРЕННЫЙ' then 'EXTENDED'
+              end as varchar2(8)) as report_type,
+       cast (case when pa.report_status = 'БЕКИ' then 'SUBJECTNOTFOUND' else pa.report_status end as varchar2(60)) as report_status,
+       pa.err_status,
+       cast (case when pa.report_source = 'ПКБ' then 'PKB'
+                  when pa.report_source = 'ГКБ' then 'GKB'
+              end as varchar2(3)) as report_source,
+       pa.cred_hist_age_years,
+       pa.cred_hist_age_months,
+       pa.con_active_cnt,
+       pa.con_closed_cnt,
+       pa.con_closed_12m_cnt,
+       pa.con_closed_6m_cnt,
+       pa.del_days_max,
+       pa.del_days_12m_max,
+       pa.del_days_6m_max,
+       pa.pmt_cnt,
+       pa.pmt_12m_cnt,
+       pa.pmt_6m_cnt,
+       pa.total_debt_old,
+       pa.total_debt,
+       pa.total_debt_close,
+       pa.is_from_cache,
+       case when pa.report_status = 'БЕКИ' and pa.err_status is null then 'БЭКИ' end is_beki
+  from u1.M_APP_MINER_BAS mb
+  left join u1.M_FOLDER_CON_LINK   fl on fl.app_id = mb.app_id
+  left join U1.M_PKB_REPORT_ADD    pa on pa.report_id = fl.pkb_report_id;
+grant select on U1.M_APP_MINER_PKB to LOADDB;
+
+

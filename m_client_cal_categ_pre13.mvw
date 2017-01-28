@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_CLIENT_CAL_CATEG_PRE13
+build deferred
+refresh force on demand
+as
+select /*+ parallel(15)*/ f.rfo_client_id,
+                max(ch.delinq_days_in_month) as prev_con_del_days_max,
+               count(distinct case
+                       when ch.fact_pmts_in_month > 0 then
+                        ch.yyyy_mm_num
+                     end) as fact_pmt_mon_before,
+               count(distinct case
+                       when ch.yyyy_mm_num >=
+                            to_number(to_char(add_months((sysdate - 1), -12),
+                                              'yyyymm')) and
+                            ch.fact_pmts_in_month > 0 then
+                        ch.yyyy_mm_num
+                     end) as fact_pmt_mon_before_12_mon
+
+          from u1.V_CLIENT_RFO_BY_ID f
+          left join u1.V_CLIENT_CAL cc on cc.client_iin_last = f.iin
+          left join u1.V_CLIENT_HISTORY ch on ch.client_id = cc.client_id
+         group by f.rfo_client_id;
+

@@ -1,0 +1,607 @@
+﻿create table U1.M_RBO_CONTRACT_DATA_PMT
+(
+  rep_date                    DATE,
+  rbo_contract_id             NUMBER,
+  mp_rbo_contract_id          NUMBER,
+  mp7_rbo_contract_id         NUMBER,
+  mp30_rbo_contract_id        NUMBER,
+  mp60_rbo_contract_id        NUMBER,
+  total_debt_pmt_1_0          NUMBER,
+  total_debt_pmt_1_1          NUMBER,
+  total_debt_pmt_1_7          NUMBER,
+  total_debt_pmt_1_15         NUMBER,
+  total_debt_pmt_1_16         NUMBER,
+  total_debt_pmt_1_30         NUMBER,
+  total_debt_pmt_1_60         NUMBER,
+  total_debt_pmt_1_90         NUMBER,
+  total_debt_pmt_1_0_old      NUMBER,
+  total_debt_pmt_2_0          NUMBER,
+  total_debt_pmt_2_7          NUMBER,
+  total_debt_pmt_2_30         NUMBER,
+  total_debt_pmt_2_60         NUMBER,
+  total_debt_pmt_2_90         NUMBER,
+  total_debt_pmt_3_0          NUMBER,
+  total_debt_pmt_3_7          NUMBER,
+  total_debt_pmt_3_30         NUMBER,
+  total_debt_pmt_3_60         NUMBER,
+  total_debt_pmt_3_90         NUMBER,
+  total_debt_pmt_4_0          NUMBER,
+  total_debt_pmt_4_7          NUMBER,
+  total_debt_pmt_4_30         NUMBER,
+  total_debt_pmt_4_60         NUMBER,
+  total_debt_pmt_4_90         NUMBER,
+  total_debt_pmt_5_0          NUMBER,
+  total_debt_pmt_5_7          NUMBER,
+  total_debt_pmt_5_30         NUMBER,
+  total_debt_pmt_5_60         NUMBER,
+  total_debt_pmt_5_90         NUMBER,
+  total_debt_pmt_6_0          NUMBER,
+  total_debt_pmt_6_7          NUMBER,
+  total_debt_pmt_6_30         NUMBER,
+  total_debt_pmt_6_60         NUMBER,
+  total_debt_pmt_6_90         NUMBER,
+  total_debt_pmt_7_0          NUMBER,
+  total_debt_pmt_7_7          NUMBER,
+  total_debt_pmt_7_30         NUMBER,
+  total_debt_pmt_7_60         NUMBER,
+  total_debt_pmt_7_90         NUMBER,
+  max_debt_used_pmt_1_0       NUMBER,
+  max_debt_used_pmt_1_1       NUMBER,
+  max_debt_used_pmt_1_7       NUMBER,
+  max_debt_used_pmt_1_15      NUMBER,
+  max_debt_used_pmt_1_16      NUMBER,
+  max_debt_used_pmt_1_30      NUMBER,
+  max_debt_used_pmt_1_60      NUMBER,
+  max_debt_used_pmt_1_90      NUMBER,
+  max_debt_used_pmt_1_0_old   NUMBER,
+  max_debt_used_pmt_2_0       NUMBER,
+  max_debt_used_pmt_2_7       NUMBER,
+  max_debt_used_pmt_2_30      NUMBER,
+  max_debt_used_pmt_2_60      NUMBER,
+  max_debt_used_pmt_2_90      NUMBER,
+  max_debt_used_pmt_3_0       NUMBER,
+  max_debt_used_pmt_3_7       NUMBER,
+  max_debt_used_pmt_3_30      NUMBER,
+  max_debt_used_pmt_3_60      NUMBER,
+  max_debt_used_pmt_3_90      NUMBER,
+  max_debt_used_pmt_4_0       NUMBER,
+  max_debt_used_pmt_4_7       NUMBER,
+  max_debt_used_pmt_4_30      NUMBER,
+  max_debt_used_pmt_4_60      NUMBER,
+  max_debt_used_pmt_4_90      NUMBER,
+  max_debt_used_pmt_5_0       NUMBER,
+  max_debt_used_pmt_5_7       NUMBER,
+  max_debt_used_pmt_5_30      NUMBER,
+  max_debt_used_pmt_5_60      NUMBER,
+  max_debt_used_pmt_5_90      NUMBER,
+  max_debt_used_pmt_6_0       NUMBER,
+  max_debt_used_pmt_6_7       NUMBER,
+  max_debt_used_pmt_6_30      NUMBER,
+  max_debt_used_pmt_6_60      NUMBER,
+  max_debt_used_pmt_6_90      NUMBER,
+  max_debt_used_pmt_7_0       NUMBER,
+  max_debt_used_pmt_7_7       NUMBER,
+  max_debt_used_pmt_7_30      NUMBER,
+  max_debt_used_pmt_7_60      NUMBER,
+  max_debt_used_pmt_7_90      NUMBER,
+  delinq_days_pmt_1_0         NUMBER,
+  delinq_days_pmt_1_1         NUMBER,
+  delinq_days_pmt_1_7         NUMBER,
+  delinq_days_pmt_1_15        NUMBER,
+  delinq_days_pmt_1_16        NUMBER,
+  delinq_days_pmt_1_30        NUMBER,
+  delinq_days_pmt_1_60        NUMBER,
+  delinq_days_pmt_1_90        NUMBER,
+  delinq_days_pmt_1_0_old     NUMBER,
+  delinq_days_pmt_2_0         NUMBER,
+  delinq_days_pmt_2_7         NUMBER,
+  delinq_days_pmt_2_30        NUMBER,
+  delinq_days_pmt_2_60        NUMBER,
+  delinq_days_pmt_2_90        NUMBER,
+  delinq_days_pmt_3_0         NUMBER,
+  delinq_days_pmt_3_7         NUMBER,
+  delinq_days_pmt_3_30        NUMBER,
+  delinq_days_pmt_3_60        NUMBER,
+  delinq_days_pmt_3_90        NUMBER,
+  delinq_days_pmt_4_0         NUMBER,
+  delinq_days_pmt_4_7         NUMBER,
+  delinq_days_pmt_4_30        NUMBER,
+  delinq_days_pmt_4_60        NUMBER,
+  delinq_days_pmt_4_90        NUMBER,
+  delinq_days_pmt_5_0         NUMBER,
+  delinq_days_pmt_5_7         NUMBER,
+  delinq_days_pmt_5_30        NUMBER,
+  delinq_days_pmt_5_60        NUMBER,
+  delinq_days_pmt_5_90        NUMBER,
+  delinq_days_pmt_6_0         NUMBER,
+  delinq_days_pmt_6_7         NUMBER,
+  delinq_days_pmt_6_30        NUMBER,
+  delinq_days_pmt_6_60        NUMBER,
+  delinq_days_pmt_6_90        NUMBER,
+  delinq_days_pmt_7_0         NUMBER,
+  delinq_days_pmt_7_7         NUMBER,
+  delinq_days_pmt_7_30        NUMBER,
+  delinq_days_pmt_7_60        NUMBER,
+  delinq_days_pmt_7_90        NUMBER,
+  total_debt_x_pmt_1_0        NUMBER,
+  total_debt_x_pmt_1_1        NUMBER,
+  total_debt_x_pmt_1_7        NUMBER,
+  total_debt_x_pmt_1_15       NUMBER,
+  total_debt_x_pmt_1_16       NUMBER,
+  total_debt_x_pmt_1_30       NUMBER,
+  total_debt_x_pmt_1_60       NUMBER,
+  total_debt_x_pmt_1_90       NUMBER,
+  total_debt_x_pmt_1_0_old    NUMBER,
+  total_debt_x_pmt_2_0        NUMBER,
+  total_debt_x_pmt_2_7        NUMBER,
+  total_debt_x_pmt_2_30       NUMBER,
+  total_debt_x_pmt_2_60       NUMBER,
+  total_debt_x_pmt_2_90       NUMBER,
+  total_debt_x_pmt_3_0        NUMBER,
+  total_debt_x_pmt_3_7        NUMBER,
+  total_debt_x_pmt_3_30       NUMBER,
+  total_debt_x_pmt_3_60       NUMBER,
+  total_debt_x_pmt_3_90       NUMBER,
+  total_debt_x_pmt_4_0        NUMBER,
+  total_debt_x_pmt_4_7        NUMBER,
+  total_debt_x_pmt_4_30       NUMBER,
+  total_debt_x_pmt_4_60       NUMBER,
+  total_debt_x_pmt_4_90       NUMBER,
+  total_debt_x_pmt_5_0        NUMBER,
+  total_debt_x_pmt_5_7        NUMBER,
+  total_debt_x_pmt_5_30       NUMBER,
+  total_debt_x_pmt_5_60       NUMBER,
+  total_debt_x_pmt_5_90       NUMBER,
+  total_debt_x_pmt_6_0        NUMBER,
+  total_debt_x_pmt_6_7        NUMBER,
+  total_debt_x_pmt_6_30       NUMBER,
+  total_debt_x_pmt_6_60       NUMBER,
+  total_debt_x_pmt_6_90       NUMBER,
+  total_debt_x_pmt_7_0        NUMBER,
+  total_debt_x_pmt_7_7        NUMBER,
+  total_debt_x_pmt_7_30       NUMBER,
+  total_debt_x_pmt_7_60       NUMBER,
+  total_debt_x_pmt_7_90       NUMBER,
+  max_debt_used_x_pmt_1_0     NUMBER,
+  max_debt_used_x_pmt_1_1     NUMBER,
+  max_debt_used_x_pmt_1_7     NUMBER,
+  max_debt_used_x_pmt_1_15    NUMBER,
+  max_debt_used_x_pmt_1_16    NUMBER,
+  max_debt_used_x_pmt_1_30    NUMBER,
+  max_debt_used_x_pmt_1_60    NUMBER,
+  max_debt_used_x_pmt_1_90    NUMBER,
+  max_debt_used_x_pmt_1_0_old NUMBER,
+  max_debt_used_x_pmt_2_0     NUMBER,
+  max_debt_used_x_pmt_2_7     NUMBER,
+  max_debt_used_x_pmt_2_30    NUMBER,
+  max_debt_used_x_pmt_2_60    NUMBER,
+  max_debt_used_x_pmt_2_90    NUMBER,
+  max_debt_used_x_pmt_3_0     NUMBER,
+  max_debt_used_x_pmt_3_7     NUMBER,
+  max_debt_used_x_pmt_3_30    NUMBER,
+  max_debt_used_x_pmt_3_60    NUMBER,
+  max_debt_used_x_pmt_3_90    NUMBER,
+  max_debt_used_x_pmt_4_0     NUMBER,
+  max_debt_used_x_pmt_4_7     NUMBER,
+  max_debt_used_x_pmt_4_30    NUMBER,
+  max_debt_used_x_pmt_4_60    NUMBER,
+  max_debt_used_x_pmt_4_90    NUMBER,
+  max_debt_used_x_pmt_5_0     NUMBER,
+  max_debt_used_x_pmt_5_7     NUMBER,
+  max_debt_used_x_pmt_5_30    NUMBER,
+  max_debt_used_x_pmt_5_60    NUMBER,
+  max_debt_used_x_pmt_5_90    NUMBER,
+  max_debt_used_x_pmt_6_0     NUMBER,
+  max_debt_used_x_pmt_6_7     NUMBER,
+  max_debt_used_x_pmt_6_30    NUMBER,
+  max_debt_used_x_pmt_6_60    NUMBER,
+  max_debt_used_x_pmt_6_90    NUMBER,
+  max_debt_used_x_pmt_7_0     NUMBER,
+  max_debt_used_x_pmt_7_7     NUMBER,
+  max_debt_used_x_pmt_7_30    NUMBER,
+  max_debt_used_x_pmt_7_60    NUMBER,
+  max_debt_used_x_pmt_7_90    NUMBER,
+  delinq_days_x_pmt_1_0       NUMBER,
+  delinq_days_x_pmt_1_1       NUMBER,
+  delinq_days_x_pmt_1_7       NUMBER,
+  delinq_days_x_pmt_1_15      NUMBER,
+  delinq_days_x_pmt_1_16      NUMBER,
+  delinq_days_x_pmt_1_30      NUMBER,
+  delinq_days_x_pmt_1_60      NUMBER,
+  delinq_days_x_pmt_1_90      NUMBER,
+  delinq_days_x_pmt_1_0_old   NUMBER,
+  delinq_days_x_pmt_2_0       NUMBER,
+  delinq_days_x_pmt_2_7       NUMBER,
+  delinq_days_x_pmt_2_30      NUMBER,
+  delinq_days_x_pmt_2_60      NUMBER,
+  delinq_days_x_pmt_2_90      NUMBER,
+  delinq_days_x_pmt_3_0       NUMBER,
+  delinq_days_x_pmt_3_7       NUMBER,
+  delinq_days_x_pmt_3_30      NUMBER,
+  delinq_days_x_pmt_3_60      NUMBER,
+  delinq_days_x_pmt_3_90      NUMBER,
+  delinq_days_x_pmt_4_0       NUMBER,
+  delinq_days_x_pmt_4_7       NUMBER,
+  delinq_days_x_pmt_4_30      NUMBER,
+  delinq_days_x_pmt_4_60      NUMBER,
+  delinq_days_x_pmt_4_90      NUMBER,
+  delinq_days_x_pmt_5_0       NUMBER,
+  delinq_days_x_pmt_5_7       NUMBER,
+  delinq_days_x_pmt_5_30      NUMBER,
+  delinq_days_x_pmt_5_60      NUMBER,
+  delinq_days_x_pmt_5_90      NUMBER,
+  delinq_days_x_pmt_6_0       NUMBER,
+  delinq_days_x_pmt_6_7       NUMBER,
+  delinq_days_x_pmt_6_30      NUMBER,
+  delinq_days_x_pmt_6_60      NUMBER,
+  delinq_days_x_pmt_6_90      NUMBER,
+  delinq_days_x_pmt_7_0       NUMBER,
+  delinq_days_x_pmt_7_7       NUMBER,
+  delinq_days_x_pmt_7_30      NUMBER,
+  delinq_days_x_pmt_7_60      NUMBER,
+  delinq_days_x_pmt_7_90      NUMBER,
+  plan_date_x_pmt_1           DATE,
+  plan_date_x_pmt_2           DATE,
+  plan_date_x_pmt_3           DATE,
+  plan_date_x_pmt_4           DATE,
+  plan_date_x_pmt_5           DATE,
+  plan_date_x_pmt_6           DATE,
+  plan_date_x_pmt_7           DATE,
+  plan_date_pmt_1             DATE,
+  plan_date_pmt_2             DATE,
+  plan_date_pmt_3             DATE,
+  plan_date_pmt_4             DATE,
+  plan_date_pmt_5             DATE,
+  plan_date_pmt_6             DATE,
+  plan_date_pmt_7             DATE
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.rbo_contract_id
+  is 'Идентификатор контракта РБО(FK на M_RBO_CONTRACT_BAS)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.mp_rbo_contract_id
+  is 'Идентификатор контракта РБО(заполняется в случае, если на платеже был рефинанс)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.mp7_rbo_contract_id
+  is 'Идентификатор контракта РБО(заполняется в случае, если на платеже+7 дней был рефинанс)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.mp30_rbo_contract_id
+  is 'Идентификатор контракта РБО(заполняется в случае, если на платеже+30 дней был рефинанс)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.mp60_rbo_contract_id
+  is 'Идентификатор контракта РБО(заполняется в случае, если на платеже+60 дней был рефинанс)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_1_0
+  is 'Сумма задолженности на дату 1-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_1_1
+  is 'Сумма задолженности на дату 1-го платежа + 1 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_1_7
+  is 'Сумма задолженности на дату 1-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_1_15
+  is 'Сумма задолженности на дату 1-го платежа + 15 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_1_16
+  is 'Сумма задолженности на дату 1-го платежа + 16 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_1_30
+  is 'Сумма задолженности на дату 1-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_1_60
+  is 'Сумма задолженности на дату 1-го платежа + 60 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_1_0_old
+  is 'Сумма задолженности на дату 1-го платежа(без переноса выходного на рабочий день)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_2_0
+  is 'Сумма задолженности на дату 2-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_2_7
+  is 'Сумма задолженности на дату 2-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_2_30
+  is 'Сумма задолженности на дату 2-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_2_60
+  is 'Сумма задолженности на дату 2-го платежа + 60 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_3_0
+  is 'Сумма задолженности на дату 3-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_3_7
+  is 'Сумма задолженности на дату 3-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_3_30
+  is 'Сумма задолженности на дату 3-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_4_0
+  is 'Сумма задолженности на дату 4-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_4_7
+  is 'Сумма задолженности на дату 4-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_4_30
+  is 'Сумма задолженности на дату 4-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_5_0
+  is 'Сумма задолженности на дату 5-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_5_7
+  is 'Сумма задолженности на дату 5-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_5_30
+  is 'Сумма задолженности на дату 5-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_6_0
+  is 'Сумма задолженности на дату 6-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_6_7
+  is 'Сумма задолженности на дату 6-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_pmt_6_30
+  is 'Сумма задолженности на дату 6-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_1_0
+  is 'Максимальная сумма задолженности на дату 1-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_1_1
+  is 'Максимальная сумма задолженности на дату 1-го платежа + 1 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_1_7
+  is 'Максимальная сумма задолженности на дату 1-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_1_15
+  is 'Максимальная сумма задолженности на дату 1-го платежа + 15 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_1_16
+  is 'Максимальная сумма задолженности на дату 1-го платежа + 16 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_1_30
+  is 'Максимальная сумма задолженности на дату 1-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_1_60
+  is 'Максимальная сумма задолженности на дату 1-го платежа + 60 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_1_0_old
+  is 'Максимальная сумма задолженности на дату 1-го платежа(без переноса выходного на рабочий день)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_2_0
+  is 'Максимальная сумма задолженности на дату 2-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_2_7
+  is 'Максимальная сумма задолженности на дату 2-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_2_30
+  is 'Максимальная сумма задолженности на дату 2-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_2_60
+  is 'Максимальная сумма задолженности на дату 2-го платежа + 60 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_3_0
+  is 'Максимальная сумма задолженности на дату 3-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_3_7
+  is 'Максимальная сумма задолженности на дату 3-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_3_30
+  is 'Максимальная сумма задолженности на дату 3-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_4_0
+  is 'Максимальная сумма задолженности на дату 4-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_4_7
+  is 'Максимальная сумма задолженности на дату 4-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_4_30
+  is 'Максимальная сумма задолженности на дату 4-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_5_0
+  is 'Максимальная сумма задолженности на дату 5-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_5_7
+  is 'Максимальная сумма задолженности на дату 5-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_5_30
+  is 'Максимальная сумма задолженности на дату 5-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_6_0
+  is 'Максимальная сумма задолженности на дату 6-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_6_7
+  is 'Максимальная сумма задолженности на дату 6-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_pmt_6_30
+  is 'Максимальная сумма задолженности на дату 6-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_1_0
+  is 'Количество дней на просрочке на дату 1-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_1_1
+  is 'Количество дней на просрочке на дату 1-го платежа + 1 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_1_7
+  is 'Количество дней на просрочке на дату 1-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_1_15
+  is 'Количество дней на просрочке на дату 1-го платежа + 15 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_1_16
+  is 'Количество дней на просрочке на дату 1-го платежа + 16 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_1_30
+  is 'Количество дней на просрочке на дату 1-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_1_60
+  is 'Количество дней на просрочке на дату 1-го платежа + 60 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_1_0_old
+  is 'Количество дней на просрочке на дату 1-го платежа(без переноса выходного на рабочий день)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_2_0
+  is 'Количество дней на просрочке на дату 2-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_2_7
+  is 'Количество дней на просрочке на дату 2-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_2_30
+  is 'Количество дней на просрочке на дату 2-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_2_60
+  is 'Количество дней на просрочке на дату 2-го платежа + 60 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_3_0
+  is 'Количество дней на просрочке на дату 3-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_3_7
+  is 'Количество дней на просрочке на дату 3-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_3_30
+  is 'Количество дней на просрочке на дату 3-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_4_0
+  is 'Количество дней на просрочке на дату 4-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_4_7
+  is 'Количество дней на просрочке на дату 4-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_4_30
+  is 'Количество дней на просрочке на дату 4-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_5_0
+  is 'Количество дней на просрочке на дату 5-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_5_7
+  is 'Количество дней на просрочке на дату 5-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_5_30
+  is 'Количество дней на просрочке на дату 5-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_6_0
+  is 'Количество дней на просрочке на дату 6-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_6_7
+  is 'Количество дней на просрочке на дату 6-го платежа + 7 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_pmt_6_30
+  is 'Количество дней на просрочке на дату 6-го платежа + 30 дней';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_1_0
+  is 'Сумма задолженности на дату 1-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_1_1
+  is 'Сумма задолженности на дату 1-го платежа + 1 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_1_7
+  is 'Сумма задолженности на дату 1-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_1_15
+  is 'Сумма задолженности на дату 1-го платежа + 15 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_1_16
+  is 'Сумма задолженности на дату 1-го платежа + 16 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_1_30
+  is 'Сумма задолженности на дату 1-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_1_60
+  is 'Сумма задолженности на дату 1-го платежа + 60 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_1_0_old
+  is 'Сумма задолженности на дату 1-го платежа с учетом рефинансирования(без переноса выходного на рабочий день)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_2_0
+  is 'Сумма задолженности на дату 2-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_2_7
+  is 'Сумма задолженности на дату 2-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_2_30
+  is 'Сумма задолженности на дату 2-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_2_60
+  is 'Сумма задолженности на дату 2-го платежа + 60 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_3_0
+  is 'Сумма задолженности на дату 3-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_3_7
+  is 'Сумма задолженности на дату 3-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_3_30
+  is 'Сумма задолженности на дату 3-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_4_0
+  is 'Сумма задолженности на дату 4-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_4_7
+  is 'Сумма задолженности на дату 4-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_4_30
+  is 'Сумма задолженности на дату 4-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_5_0
+  is 'Сумма задолженности на дату 5-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_5_7
+  is 'Сумма задолженности на дату 5-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_5_30
+  is 'Сумма задолженности на дату 5-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_6_0
+  is 'Сумма задолженности на дату 6-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_6_7
+  is 'Сумма задолженности на дату 6-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.total_debt_x_pmt_6_30
+  is 'Сумма задолженности на дату 6-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_1_0
+  is 'Максимальная сумма задолженности на дату 1-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_1_1
+  is 'Максимальная сумма задолженности на дату 1-го платежа + 1 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_1_7
+  is 'Максимальная сумма задолженности на дату 1-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_1_15
+  is 'Максимальная сумма задолженности на дату 1-го платежа + 15 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_1_16
+  is 'Максимальная сумма задолженности на дату 1-го платежа + 16 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_1_30
+  is 'Максимальная сумма задолженности на дату 1-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_1_60
+  is 'Максимальная сумма задолженности на дату 1-го платежа + 60 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_1_0_old
+  is 'Максимальная сумма задолженности на дату 1-го платежа с учетом рефинансирования(без переноса выходного на рабочий день)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_2_0
+  is 'Максимальная сумма задолженности на дату 2-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_2_7
+  is 'Максимальная сумма задолженности на дату 2-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_2_30
+  is 'Максимальная сумма задолженности на дату 2-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_2_60
+  is 'Максимальная сумма задолженности на дату 2-го платежа + 60 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_3_0
+  is 'Максимальная сумма задолженности на дату 3-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_3_7
+  is 'Максимальная сумма задолженности на дату 3-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_3_30
+  is 'Максимальная сумма задолженности на дату 3-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_4_0
+  is 'Максимальная сумма задолженности на дату 4-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_4_7
+  is 'Максимальная сумма задолженности на дату 4-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_4_30
+  is 'Максимальная сумма задолженности на дату 4-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_5_0
+  is 'Максимальная сумма задолженности на дату 5-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_5_7
+  is 'Максимальная сумма задолженности на дату 5-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_5_30
+  is 'Максимальная сумма задолженности на дату 5-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_6_0
+  is 'Максимальная сумма задолженности на дату 6-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_6_7
+  is 'Максимальная сумма задолженности на дату 6-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.max_debt_used_x_pmt_6_30
+  is 'Максимальная сумма задолженности на дату 6-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_1_0
+  is 'Количество дней на просрочке на дату 1-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_1_1
+  is 'Количество дней на просрочке на дату 1-го платежа + 1 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_1_7
+  is 'Количество дней на просрочке на дату 1-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_1_15
+  is 'Количество дней на просрочке на дату 1-го платежа + 15 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_1_16
+  is 'Количество дней на просрочке на дату 1-го платежа + 16 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_1_30
+  is 'Количество дней на просрочке на дату 1-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_1_60
+  is 'Количество дней на просрочке на дату 1-го платежа + 60 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_1_0_old
+  is 'Количество дней на просрочке на дату 1-го платежа с учетом рефинансирования(без переноса выходного на рабочий день)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_2_0
+  is 'Количество дней на просрочке на дату 2-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_2_7
+  is 'Количество дней на просрочке на дату 2-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_2_30
+  is 'Количество дней на просрочке на дату 2-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_2_60
+  is 'Количество дней на просрочке на дату 2-го платежа + 60 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_3_0
+  is 'Количество дней на просрочке на дату 3-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_3_7
+  is 'Количество дней на просрочке на дату 3-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_3_30
+  is 'Количество дней на просрочке на дату 3-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_4_0
+  is 'Количество дней на просрочке на дату 4-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_4_7
+  is 'Количество дней на просрочке на дату 4-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_4_30
+  is 'Количество дней на просрочке на дату 4-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_5_0
+  is 'Количество дней на просрочке на дату 5-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_5_7
+  is 'Количество дней на просрочке на дату 5-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_5_30
+  is 'Количество дней на просрочке на дату 5-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_6_0
+  is 'Количество дней на просрочке на дату 6-го платежа с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_6_7
+  is 'Количество дней на просрочке на дату 6-го платежа + 7 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.delinq_days_x_pmt_6_30
+  is 'Количество дней на просрочке на дату 6-го платежа + 30 дней с учетом рефинансирования';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.plan_date_x_pmt_1
+  is 'Плановая дата 1-го платежа с учетом переноса на первый рабочий день(в случае если платеж выпал на выходной/праздничный день)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.plan_date_x_pmt_2
+  is 'Плановая дата 2-го платежа с учетом переноса на первый рабочий день(в случае если платеж выпал на выходной/праздничный день)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.plan_date_x_pmt_3
+  is 'Плановая дата 3-го платежа с учетом переноса на первый рабочий день(в случае если платеж выпал на выходной/праздничный день)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.plan_date_x_pmt_4
+  is 'Плановая дата 4-го платежа с учетом переноса на первый рабочий день(в случае если платеж выпал на выходной/праздничный день)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.plan_date_x_pmt_5
+  is 'Плановая дата 5-го платежа с учетом переноса на первый рабочий день(в случае если платеж выпал на выходной/праздничный день)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.plan_date_x_pmt_6
+  is 'Плановая дата 6-го платежа с учетом переноса на первый рабочий день(в случае если платеж выпал на выходной/праздничный день)';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.plan_date_pmt_1
+  is 'Плановая дата 1-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.plan_date_pmt_2
+  is 'Плановая дата 2-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.plan_date_pmt_3
+  is 'Плановая дата 3-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.plan_date_pmt_4
+  is 'Плановая дата 4-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.plan_date_pmt_5
+  is 'Плановая дата 5-го платежа';
+comment on column U1.M_RBO_CONTRACT_DATA_PMT.plan_date_pmt_6
+  is 'Плановая дата 6-го платежа';
+create index U1.T_RBO_CONTRACT_DATA_PMT_IND1 on U1.M_RBO_CONTRACT_DATA_PMT (RBO_CONTRACT_ID)
+  tablespace USERS_F
+  pctfree 0
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.M_RBO_CONTRACT_DATA_PMT to LOADDB;
+

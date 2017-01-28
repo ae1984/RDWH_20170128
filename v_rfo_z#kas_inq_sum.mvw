@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_RFO_Z#KAS_INQ_SUM
+refresh force on demand
+as
+select id,
+      collection_id,
+      c_fdog_ref,
+      c_code,
+      c_name,
+      c_summa
+from ibs.Z#KAS_INQ_SUM@rfo_snap;
+grant select on U1.V_RFO_Z#KAS_INQ_SUM to LOADDB;
+grant select on U1.V_RFO_Z#KAS_INQ_SUM to LOADER;
+
+

@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_TMP_J_K_AA
+refresh force on demand
+as
+select
+t.*,
+a.*,
+c.contract_amount,
+case when (f.marital_status = 'ГРАЖДАНСКИЙ БРАК/СОВМЕСТНОЕ ПРОЖИВАНИЕ'
+          or f.marital_status = 'ЖЕНАТ/ЗАМУЖЕМ') then 1
+     when f.marital_status is null then null
+     else 0 end marital_status,
+
+decode(f.dependants_count, '1', 1,
+                           '2', 2,
+                           '3', 3,
+                           '4', 4,
+                           '5 И БОЛЕЕ', 5,
+                           'НЕТ', 0,
+                           null) dependants_count
+
+from M_TMP_J_K5 t
+left join M_TMP_J_K_AA_RES a on a.aa_deal_number = t.deal_number
+left join V_FORM_CLIENT_ALL_RFO f on f.form_client_id = t.form_client_id
+left join (
+select cc.contract_number,
+       max(cc.contract_amount) contract_amount
+from M_FOLDER_CON_CANCEL cc
+group by cc.contract_number) c on c.contract_number = t.deal_number;
+grant select on U1.M_TMP_J_K_AA to LOADDB;
+grant select on U1.M_TMP_J_K_AA to LOADER;
+
+

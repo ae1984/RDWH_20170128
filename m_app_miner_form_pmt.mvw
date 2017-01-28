@@ -1,0 +1,108 @@
+﻿create materialized view U1.M_APP_MINER_FORM_PMT
+build deferred
+refresh force on demand
+as
+select t.app_id
+
+       ,floor(t.folder_date_create - gr.max_pmt_date) as days_last_gcvp
+
+       ,frm.inc_sal - gr.salary as diff_zp_form_gcvp
+       ,frm.inc_all - gr.salary as diff_zp_form_all_gcvp
+
+       --product
+       /*--ЗП за 30 дней
+       ,avg(frm.inc_sal) over (partition by t.rfo_client_id, t.product_type order by trunc(t.folder_date_create_mi)
+                               range between 30 preceding and 1 preceding) as avg_zp_30d_pr
+
+       ,avg(frm.inc_sal) over (partition by t.rfo_client_id, t.product_type order by t.folder_date_create_mi
+                               range between 30 + (t.folder_date_create_mi - trunc(t.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as avg_zp_30d_pr_x
+
+       ,max(frm.inc_sal) over (partition by t.rfo_client_id, t.product_type order by trunc(t.folder_date_create_mi)
+                               range between 30 preceding and 1 preceding) as max_zp_30d_pr
+
+       ,max(frm.inc_sal) over (partition by t.rfo_client_id, t.product_type order by t.folder_date_create_mi
+                               range between 30 + (t.folder_date_create_mi - trunc(t.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as max_zp_30d_pr_x
+
+       --ЗП за 90 дней
+       ,avg(frm.inc_sal) over (partition by t.rfo_client_id, t.product_type order by trunc(t.folder_date_create_mi)
+                               range between 90 preceding and 1 preceding) as avg_zp_90d_pr
+
+       ,avg(frm.inc_sal) over (partition by t.rfo_client_id, t.product_type order by t.folder_date_create_mi
+                               range between 90 + (t.folder_date_create_mi - trunc(t.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as avg_zp_90d_pr_x
+
+       ,max(frm.inc_sal) over (partition by t.rfo_client_id, t.product_type order by trunc(t.folder_date_create_mi)
+                               range between 90 preceding and 1 preceding) as max_zp_90d_pr
+
+       ,max(frm.inc_sal) over (partition by t.rfo_client_id, t.product_type order by t.folder_date_create_mi
+                               range between 90 + (t.folder_date_create_mi - trunc(t.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as max_zp_90d_pr_x*/
+
+
+       --all
+       /*--ЗП за 30 дней
+       ,avg(frm.inc_sal) over (partition by t.rfo_client_id order by trunc(t.folder_date_create_mi)
+                               range between 30 preceding and 1 preceding) as avg_zp_30d
+
+       ,avg(frm.inc_sal) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                               range between 30 + (t.folder_date_create_mi - trunc(t.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as avg_zp_30d_x
+
+       ,max(frm.inc_sal) over (partition by t.rfo_client_id order by trunc(t.folder_date_create_mi)
+                               range between 30 preceding and 1 preceding) as max_zp_30d
+
+       ,max(frm.inc_sal) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                               range between 30 + (t.folder_date_create_mi - trunc(t.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as max_zp_30d_x
+
+       --ЗП за 90 дней
+       ,avg(frm.inc_sal) over (partition by t.rfo_client_id order by trunc(t.folder_date_create_mi)
+                               range between 90 preceding and 1 preceding) as avg_zp_90d
+
+       ,avg(frm.inc_sal) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                               range between 90 + (t.folder_date_create_mi - trunc(t.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as avg_zp_90d_x
+
+       ,max(frm.inc_sal) over (partition by t.rfo_client_id order by trunc(t.folder_date_create_mi)
+                               range between 90 preceding and 1 preceding) as max_zp_90d
+
+       ,max(frm.inc_sal) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                               range between 90 + (t.folder_date_create_mi - trunc(t.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as max_zp_90d_x*/
+
+
+
+       ,case when frm.inc_sal != 0 then (coalesce(ml.monthly_pay, p1.plan_pmt_first_sum, p2.pmt_avg_07, p3.sc_pmt_rbo, p3.sc_pmt_nom_rate)/frm.inc_sal)*100 end as install_incom_avg
+
+       ,avg(case when frm.inc_sal != 0 then (coalesce(ml.monthly_pay, p1.plan_pmt_first_sum, p2.pmt_avg_07, p3.sc_pmt_rbo, p3.sc_pmt_nom_rate)/frm.inc_sal)*100 end)
+            over (partition by t.rfo_client_id, t.product_type order by trunc(t.folder_date_create_mi)
+                  range between 30 preceding and 1 preceding) as install_incom_avg_30d_pr
+
+       ,avg(case when frm.inc_sal != 0 then (coalesce(ml.monthly_pay,p1.plan_pmt_first_sum, p2.pmt_avg_07, p3.sc_pmt_rbo, p3.sc_pmt_nom_rate)/frm.inc_sal)*100 end)
+           over (partition by t.rfo_client_id, t.product_type order by t.folder_date_create_mi
+                 range between 30 + (t.folder_date_create_mi - trunc(t.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as install_incom_avg_30d_pr_x
+
+       ,avg(case when frm.inc_sal != 0 then (coalesce(ml.monthly_pay, p1.plan_pmt_first_sum, p2.pmt_avg_07, p3.sc_pmt_rbo, p3.sc_pmt_nom_rate)/frm.inc_sal)*100 end)
+            over (partition by t.rfo_client_id order by trunc(t.folder_date_create_mi)
+                  range between 30 preceding and 1 preceding) as install_incom_avg_30d
+
+       ,avg(case when frm.inc_sal != 0 then (coalesce(ml.monthly_pay,p1.plan_pmt_first_sum, p2.pmt_avg_07, p3.sc_pmt_rbo, p3.sc_pmt_nom_rate)/frm.inc_sal)*100 end)
+           over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                 range between 30 + (t.folder_date_create_mi - trunc(t.folder_date_create_mi)) preceding and 1/24/60/60 preceding) as install_incom_avg_30d_x
+
+from U1.M_APP_MINER t
+left join U1.M_APP_MINER_FORM_CLIENT frm on frm.app_id = t.app_id
+left join U1.M_APP_MINER_GCVP gr on gr.app_id = t.app_id
+--
+left join U1.M_FOLDER_CON_CANCEL_ONLINE_1 ml on ml.claim_id = t.claim_id
+left join U1.M_RBO_CONTRACT_CREDIT_PMT p1 on p1.rbo_contract_id = t.rbo_contract_id
+left join ( select cp.rbo_contract_id,
+                   min(cp.pmt_avg_07) keep (dense_rank first order by cp.date_begin) as pmt_avg_07
+            from U1.M_RBO_CONTRACT_CARD_PMT cp
+            group by rbo_contract_id) p2 on p2.rbo_contract_id = t.rbo_contract_id
+left join (select p32.folder_id,
+                  max(p32.sc_pmt_nom_rate) keep (dense_rank last order by p32.date_create) as sc_pmt_nom_rate,
+                  max(p32.sc_pmt_rbo) keep (dense_rank last order by p32.date_create) as sc_pmt_rbo
+           from (select * from U1.M_FOLDER_MO_PMT_2015 p15
+                 union all
+                 select * from U1.M_FOLDER_MO_PMT_2016 p16) p32
+           group by p32.folder_id) p3 on p3.folder_id = t.folder_id
+
+where t.folder_date_create >= to_date('2015-01-01','yyyy-mm-dd') - 90;
+grant select on U1.M_APP_MINER_FORM_PMT to LOADDB;
+
+

@@ -1,0 +1,23 @@
+﻿create table U1.T_MO_REJECT_PARAM
+(
+  reject_code VARCHAR2(100),
+  param_code  VARCHAR2(100),
+  lv          NUMBER,
+  batch_id    NUMBER,
+  batch_date  DATE
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.T_MO_REJECT_PARAM to LOADDB;
+grant select on U1.T_MO_REJECT_PARAM to LOADER;
+

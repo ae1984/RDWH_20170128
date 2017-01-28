@@ -1,0 +1,36 @@
+﻿create table U1.M_TDWH_EGOV_ADDRESSES_COPY
+(
+  id                 NUMBER not null,
+  iin                VARCHAR2(16),
+  error_msg          VARCHAR2(200),
+  country            VARCHAR2(120),
+  oblast_city        VARCHAR2(120),
+  district           VARCHAR2(120),
+  settlement         VARCHAR2(120),
+  street             VARCHAR2(120),
+  corpus             VARCHAR2(120),
+  building           VARCHAR2(120),
+  flat               VARCHAR2(120),
+  client_dwh_id      VARCHAR2(120),
+  idcard             VARCHAR2(30),
+  account_id         VARCHAR2(15),
+  idate              DATE,
+  hash_address       NUMBER,
+  count_hash_address NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.M_TDWH_EGOV_ADDRESSES_COPY to LOADDB;
+grant select on U1.M_TDWH_EGOV_ADDRESSES_COPY to LOADER;
+

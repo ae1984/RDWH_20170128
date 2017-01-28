@@ -1,0 +1,22 @@
+﻿create table U1.T_PHOTO_VERIFICATION_REP_RES2
+(
+  photo_candidate     VARCHAR2(1000),
+  photo_template      VARCHAR2(1000),
+  probability_percent VARCHAR2(1000)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_PHOTO_VERIFICATION_REP_RES2 to LOADDB;
+grant select on U1.T_PHOTO_VERIFICATION_REP_RES2 to LOADER;
+

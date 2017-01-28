@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_RFO_ONLINE_BUY_KASPIKZ_PROP
+build deferred
+refresh force on demand
+as
+select b.id as buy_id,
+       c.id as claim_id,
+       max(decode(pg.c_code, 'USER_AGENT', p.c_str, null)) as user_agent,
+       max(decode(pg.c_code, 'NSCLIENT_IP', p.c_str, null)) as nsclient_ip,
+       max(decode(pg.c_code, 'CLIENT_IP', p.c_str, null)) as client_ip,
+       upper(max(decode(pg.c_code, 'ASPNET_SESSIONID', p.c_str, null))) as aspnet_sessionid
+from u1.v_rfo_z#kas_online_buy b
+
+join u1.v_rfo_z#kas_online_claim c on c.c_buy_ref = b.id
+--join u1.v_rfo_z#form_client fc on fc.id = c.c_form_client_ref
+join u1.t_rfo_z#properties p on p.collection_id = --fc.c_add_prop
+                                                  c.c_form_client_st#add_prop
+--join v_rfo_z#prod_property pr on pr.id = p.c_prop
+join v_rfo_z#property_grp pg on pg.id = p.c_group_prop--pr.c_group_prop
+                                      /*and pg.id in (70329974277,
+                                                    70329974279,
+                                                    70329974281
+                                                    )*/
+/*where \*b.c_process_id = '25578188'
+and *\b.c_date_create > trunc(sysdate) - 1
+and b.c_process_id = '25572472'*/
+group by b.id,
+         c.id;
+grant select on U1.M_RFO_ONLINE_BUY_KASPIKZ_PROP to LOADDB;
+
+

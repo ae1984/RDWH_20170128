@@ -1,0 +1,32 @@
+﻿create materialized view U1.V_TMP_CLIENT_ALL_RFO_1_UDL
+using no index
+refresh complete on demand
+as
+select --+noparallel
+distinct
+a.*,
+b.prev_con_cnt,
+b.is_client_new,
+e.c_main_doc#date_doc,
+--c.folder_date_create,
+case when e.c_main_doc#date_doc < '25.08.2009' then
+  case when d.age_full_years >=16 and d.age_full_years<25 then '9'
+       when d.age_full_years >=25 and d.age_full_years <45 then '20'
+       when d.age_full_years >=45 then '>20' end
+else case when e.c_main_doc#date_doc >= '25.08.2009' then '10' end
+end as srok_deistviya,
+case when e.c_main_doc#date_doc < '25.08.2009' then 'OLD' else 'NEW' end as type_doc
+from m_folder_con_miner a
+join M_TMP_J_FLD_PREV_CON b on a.rfo_contract_id = b.rfo_contract_id
+--join v_folder_all_rfo c on a.folder_id = c.folder_id
+left join v_form_client_all_rfo d on a.form_client_id = d.form_client_id
+left join V_RFO_Z#FORM_CLIENT e on a.form_client_id = e.id
+--left join V_TMP_CLIENT_EDIT_RFO f on
+--join V_TMP_CLIENT_ALL_RFO_1 d on a.folder_id = d.folder_id
+--left join V_TMP_CLIENT_ALL_RFO_1 d1 on a.folder_id = d1.folder_id
+where  folder_date_create > to_date('01.06.2013', 'dd.mm.yyyy')
+and  folder_date_create < to_date('01.07.2014', 'dd.mm.yyyy');
+grant select on U1.V_TMP_CLIENT_ALL_RFO_1_UDL to LOADDB;
+grant select on U1.V_TMP_CLIENT_ALL_RFO_1_UDL to LOADER;
+
+

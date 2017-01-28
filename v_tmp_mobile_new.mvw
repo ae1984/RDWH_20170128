@@ -1,0 +1,22 @@
+﻿create materialized view U1.V_TMP_MOBILE_NEW
+using no index
+refresh complete on demand
+as
+select /*+ no_parallel*/distinct
+f.folder_id,
+f.folder_date_create,
+f.folder_state,
+p.c_cl_req_new#contacts,
+co_new.c_numb,
+co_new.c_affirmed,
+co_new.c_date_audit
+from v_folder_all_rfo f
+join u1.V_RFO_Z#RDOC rd on rd.collection_id = f.fld_c_docs
+join u1.V_RFO_Z#FDOC fd on fd.id = rd.c_doc
+join u1.V_RFO_Z#REQ_EDIT_CL_PRIV p on p.id = fd.id
+left join v_rfo_z#contacts co_new on c_cl_req_new#contacts = co_new.collection_id and co_new.c_private = 690120
+where f.process_name = 'ИЗМЕНЕНИЕ АНКЕТНЫХ ДАННЫХ КЛИЕНТА';
+grant select on U1.V_TMP_MOBILE_NEW to LOADDB;
+grant select on U1.V_TMP_MOBILE_NEW to LOADER;
+
+

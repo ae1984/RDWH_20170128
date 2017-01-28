@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_RBO_CONTRACT_DEPOSIT_BAS
+build deferred
+refresh complete on demand
+as
+select
+       d.c_client as rbo_client_id,
+       cl.rfo_client_id,
+       d.id       as rbo_contract_id,
+       d.c_num_dog as contract_number,
+       m.c_cur_short as currency,
+       coalesce(pc.prol_begin_date,d.c_date_begin) as begin_date,
+       d.c_date_ending    as end_date,
+       d.c_date_close     as closed_date,
+       pc.prol_end_date,
+       d.c_summa_dog as contract_amount,
+       vd.c_has_timeout as is_has_timeout
+  from u1.V_RBO_Z#DEPN         d
+  join u1.V_RBO_Z#FT_MONEY     m on m.id = d.c_fintool
+  join u1.V_RBO_Z#VID_DEPOSIT vd on vd.id = d.c_vid_dog
+  left join (select min(pc1.c_prol_begin) as prol_begin_date,
+                    max(pc1.c_prol_end)   as prol_end_date,
+                    pc1.collection_id
+               from u1.V_RBO_Z#PROL_CONTRACT pc1
+              group by pc1.collection_id) pc on pc.collection_id = d.c_list_prol
+  left join M_CLIENT_LINK     cl on cl.rbo_client_id = d.c_client;
+grant select on U1.M_RBO_CONTRACT_DEPOSIT_BAS to LOADDB;
+
+

@@ -1,0 +1,27 @@
+﻿create materialized view U1.V_RBO_Z#DECL_EARLY_P
+build deferred
+refresh complete on demand
+as
+select de.id,
+       de.class_id,
+       de.state_id,
+       de.c_num,
+       de.c_cred_ref,
+       de.c_kind,
+       de.c_plan_oper,
+       de.c_fact_oper,
+       de.c_new_prc,
+       de.c_recalc_pp,
+       de.c_plan_oper_prc,
+       de.c_sum_decl,
+       de.c_date_reg,
+       de.c_pplan_hist,
+       de.c_plan_exec,
+       de.c_plan_oper_com,
+       de.c_agent,
+       de.c_no_peny
+  from rdwh.V_RBO_Z#DECL_EARLY_P@rdwh_exd de;
+grant select on U1.V_RBO_Z#DECL_EARLY_P to LOADDB;
+grant select on U1.V_RBO_Z#DECL_EARLY_P to LOADER;
+
+

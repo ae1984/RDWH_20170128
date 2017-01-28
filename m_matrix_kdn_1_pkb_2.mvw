@@ -1,0 +1,43 @@
+﻿create materialized view U1.M_MATRIX_KDN_1_PKB_2
+build deferred
+refresh complete on demand
+as
+select /*+parallel(2)*/ pm.rfo_contract_id,
+       pm.pkb_report_id,
+       p.pkb_pmt_credits_not_kaspi,
+       p.pkb_delinq_amount_not_kaspi,
+       p.pkb_credit_limit_not_kaspi / 10 as pkb_pmt_cards_not_kaspi,
+       coalesce(p.pkb_pmt_credits_not_kaspi,0) +
+       coalesce(p.pkb_delinq_amount_not_kaspi,0) +
+       coalesce(p.pkb_credit_limit_not_kaspi / 10,0) as pkb_pmt_not_kaspi
+from (    select fcc.rfo_contract_id,
+                 max(p.report_id) as pkb_report_id
+          from M_FOLDER_CON_CANCEL fcc
+          join V_PKB_REPORT p on
+                    p.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ') and
+                    (
+                        p.folder_id = fcc.folder_id or
+                        (
+                            p.report_iin_rnn = fcc.iin and
+                            (
+                                 p.rfo_report_date >= trunc(fcc.folder_date_create_mi) - 60 and
+                                 p.rfo_report_date <= trunc(fcc.folder_date_create_mi)
+                            )
+                        )
+                    )
+          group by fcc.rfo_contract_id
+) pm
+join (select pa.report_id,
+             sum(case when pa.fin_inst not like '%KASPI%' and
+                           pa.fin_inst not like '%КАСПИ%' then pa.monthly_payment end) as pkb_pmt_credits_not_kaspi,
+             sum(case when pa.fin_inst not like '%KASPI%' and
+                           pa.fin_inst not like '%КАСПИ%' then pa.delinq_amount end) as pkb_delinq_amount_not_kaspi,
+             sum(case when pa.fin_inst not like '%KASPI%' and
+                           pa.fin_inst not like '%КАСПИ%' then /*get_pkb_debt_from_text(pa.c_credit_limit, pa.report_date)*/ pa.credit_limit end) as pkb_credit_limit_not_kaspi
+          from u1.t_pkb_report pa
+          where pa.pkb_contract_status = 'АКТИВНЫЙ'
+          group by pa.report_id
+) p on p.report_id = pm.pkb_report_id;
+grant select on U1.M_MATRIX_KDN_1_PKB_2 to LOADDB;
+
+

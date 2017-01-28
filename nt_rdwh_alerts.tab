@@ -1,0 +1,32 @@
+﻿create table U1.NT_RDWH_ALERTS
+(
+  sdt        DATE default sysdate,
+  alert_name VARCHAR2(100),
+  alert_desc VARCHAR2(1000),
+  alert_flag NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_RDWH_ALERTS
+  is 'Оповещения о проблеме';
+comment on column U1.NT_RDWH_ALERTS.sdt
+  is 'дата время проверки';
+comment on column U1.NT_RDWH_ALERTS.alert_name
+  is 'название предупреждения';
+comment on column U1.NT_RDWH_ALERTS.alert_desc
+  is 'описание предупреждения';
+comment on column U1.NT_RDWH_ALERTS.alert_flag
+  is 'есть, нет проблемы (1/0)';
+grant select on U1.NT_RDWH_ALERTS to LOADDB;
+

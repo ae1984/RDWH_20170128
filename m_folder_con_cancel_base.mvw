@@ -1,0 +1,299 @@
+﻿create materialized view U1.M_FOLDER_CON_CANCEL_BASE
+build deferred
+refresh force on demand
+as
+select --+ parallel(30) parallel_index(30)
+           fff.folder_date_create_mi,
+           fff.rfo_contract_id, fff.folder_id, fff.folder_number, fff.rfo_client_id, fff.iin,
+           fff.x_dnp_region, fff.x_dnp_name, fff.pos_code, fff.pos_name, fff.pos_type,
+           fff.shop_code, fff.shop_name,
+           fff.expert_name, fff.expert_position, fff.is_card, fff.cr_program_name,
+           fff.product_type,
+           fff.is_point_active,
+           fff.is_credit_issued,
+           fff.is_credit_issued_new,
+           fff.is_credit_issued_mix,
+           fff.contract_status_code, fff.contract_status_name,
+           fff.contract_number, fff.contract_amount,
+           --fff.rep_contract_number, fff.max_debt_used, fff.delinq_rate,  -- закомментировать для дэшбоарда!
+           ----------------------
+           -- выбираем приоритетный отказ (ставим 1) и ставим 0 если отказ был, но не приоритетный
+           fff.cancel_prescoring,
+           case when fff.cancel_middle_office = 1 then
+                     case when fff.cancel_prescoring = 1 then 0 else 1 end
+                end as cancel_middle_office,
+
+/*           case when fff.cancel_manager_client = 1 then
+                     case when fff.cancel_prescoring = 1 or fff.cancel_middle_office = 1 then 0 else 1 end
+                when fff.cancel_manager_client is null and -- если нет явного отказа менеджера и нет других отказов,
+                                                    -- а папка в неактивном состоянии (например ПРОСРОЧЕННАЯ) и кредит не выдан,
+                                                    -- то помечаем как отказ менеджера/клиента
+                       fff.cancel_prescoring is null and fff.cancel_middle_office is null and
+                       fff.cancel_verificator is null and fff.cancel_cpr_aa is null and
+                       fff.is_point_active = 0 and fff.is_credit_issued = 0 then 1
+                end as cancel_manager_client,*/
+
+           case when fff.cancel_controller = 1 then
+                     case when fff.cancel_prescoring = 1 or fff.cancel_middle_office = 1 then 0 else 1 end
+                end as cancel_controller,
+
+           case when fff.cancel_client = 1 then
+                     case when fff.cancel_prescoring = 1 or fff.cancel_middle_office = 1 or
+                               fff.cancel_controller = 1 then 0 else 1 end
+                end as cancel_client,
+
+           case when fff.cancel_manager = 1 then
+                     case when fff.cancel_prescoring = 1 or fff.cancel_middle_office = 1 or
+                               fff.cancel_controller = 1 or fff.cancel_client = 1 then 0 else 1 end
+/*                          when fff.cancel_manager is null and -- если нет явного отказа менеджера и нет других отказов,
+                                                              -- а папка в неактивном состоянии (например ПРОСРОЧЕННАЯ) и кредит не выдан,
+                                                              -- то помечаем как отказ менеджера/клиента
+                                 fff.cancel_client is null and fff.cancel_controller is null and
+                                 fff.cancel_prescoring is null and fff.cancel_middle_office is null and
+                                 fff.cancel_verificator is null and fff.cancel_cpr_aa is null and
+                                 fff.is_point_active = 0 and fff.is_credit_issued = 0 then 1*/
+                end as cancel_manager,
+
+           case when fff.cancel_cpr_aa = 1 then
+                     case when fff.cancel_prescoring = 1 or fff.cancel_middle_office = 1 or
+                               fff.cancel_manager = 1 or fff.cancel_client = 1 or fff.cancel_controller = 1 then 0 else 1 end
+                end as cancel_cpr_aa,
+
+           case when fff.cancel_verificator = 1 then
+                     case when fff.cancel_prescoring = 1 or fff.cancel_middle_office = 1 or
+                               fff.cancel_manager = 1 or fff.cancel_client = 1 or fff.cancel_controller = 1 or
+                               fff.cancel_cpr_aa = 1 then 0 else 1 end
+                end as cancel_verificator,
+
+           case when fff.cancel_manager is null and -- если нет явного отказа менеджера и нет других отказов,
+                                                    -- а папка в неактивном состоянии (например ПРОСРОЧЕННАЯ) и кредит не выдан,
+                                                    -- то помечаем как отказ менеджера/клиента
+                                 fff.cancel_client is null and fff.cancel_controller is null and
+                                 fff.cancel_prescoring is null and fff.cancel_middle_office is null and
+                                 fff.cancel_verificator is null and fff.cancel_cpr_aa is null and
+                                 fff.is_point_active = 0 and fff.is_credit_issued = 0 then 1
+                end as cancel_undefined,
+
+           ----------------
+           fff.is_aa_reject,
+           fff.process_name, fff.route_name, fff.route_point_code, fff.folder_state,
+           fff.is_daytime_decision_folder, fff.source_system,
+           fff.delivery_type, fff.is_refin,
+           fff.contract_date_begin, fff.contract_set_revolving_date,
+           fff.cr_scheme_name, fff.tariff_plan_name,
+           fff.form_client_id,
+           fff.pos_credit_type,
+           fff.expert_id,
+           fff.rnn,
+           fff.is_alt
+    from (
+        select trunc(f.folder_date_create,'mi') as folder_date_create_mi,
+               c.rfo_contract_id, f.folder_id, f.folder_number,
+               coalesce(c.rfo_client_id,f.rfo_client_id) as rfo_client_id,
+               cln.iin,
+               p.x_dnp_region, p.x_dnp_name, p.pos_code, p.pos_name,
+               p.pos_type as pos_type,
+               c.shop_code, s.shop_name,
+               f.expert_name, f.expert_position,
+               c.is_card, c.cr_program_name,
+               -- тип продукта (4 типа) -- перенести в справочник продуктов
+               case when c.cr_program_code in ('BEST_MONEY','POST_MONEY','OSOB_CLIENT','MONEY_KN_P','EC_MANY',
+                                                  'MONEY','EC_MONEY','OSOB_CLIENT_MONEY') then 'ДЕНЬГИ'
+                    when c.cr_program_code in ('OSOB_CLIENT_PC','PC_POST_CLIENT','PC_BEST_CLIENT',
+                                                  'KAS_PC_DOG','ZP_CARDS','PROST_KART') then 'КАРТЫ'
+                    when c.cr_program_code in ('AUTO','GU_AVTO','GU_AVTO_BU','AUTO_USE','GU_AVTO_ZALOG') then 'АВТО'
+                    when c.cr_program_code in ('EC_GOODS','EC_SERVICE','AUTO_SERV','EC_GOODS_STAND','EC_SERVICE_STAND') then 'ТОВАРЫ' -- включая автозапчасти
+                    when c.cr_program_code in ('PC_REFIN_RESTR','GU_AVTO_REF') then 'ОПТИМИЗАЦИЯ'
+                    when c.cr_program_code = 'KASPI_RED' then 'KASPI RED'
+                    else 'ДРУГОЕ' end as product_type,  -- такого варианта не должно быть, если есть ДРУГОЕ, то это проблема
+
+               nvl(rpo.is_point_active,0) as is_point_active, -- папки, по которым взаимодействие с клиентом ещё не закончилось
+                                                              -- обработка null нужна т.к. некотрых точен нет в маршрутах
+                                                              -- (единичные случаи)
+               case when (f.is_credit_issued = 0 or c.is_credit_issued = 0) then 0
+                    else 1 end as is_credit_issued, -- т.к. может быть отказ по одному из договоров в папке
+
+               case when (f.is_credit_issued_new = 0 or c.is_credit_issued = 0) then 0
+                    else 1 end as is_credit_issued_new,
+
+               case when (f.is_credit_issued = 0 or c.is_credit_issued = 0 or f.is_credit_issued_new = 0) then 0
+                    else 1 end as is_credit_issued_mix,
+
+               c.contract_status_code, c.contract_status_name,
+               c.contract_number, c.contract_amount,
+--               c2.contract_number as rep_contract_number, c2.max_debt_used, c2.delinq_rate, -- закомментировать для дэшбоарда!
+
+               -------------
+               -- добавляем к отказам состояния папки (точки маршрута)
+               case when (f.is_credit_issued = 0 or c.is_credit_issued = 0) and
+                         (cc.ps_cancel = 1 --or
+                          /*coalesce(c.is_aa_approved, f_bk_aa.is_aa_approved) = 0 or
+                          f.folder_state = 'ОТКАЗ АВТОАНДДЕРАЙТИНГА' or*/
+                          --f.route_point_code = 'CANCEL_PRESCORING'
+                          ) then 1 end
+                    as cancel_prescoring, -- прескоринг
+
+               case when (f.is_credit_issued = 0 or c.is_credit_issued = 0) and
+                         (cc.vr_cancel = 1 /*or
+                          f.folder_state in ('ОТКАЗ ЦПР','ОТКАЗ СБ')*/) then 1 end
+                    as cancel_verificator, -- верификаторы
+
+               case when (f.is_credit_issued = 0 or c.is_credit_issued = 0) and
+                         (cc.mo_cancel = 1 or
+                         (f.route_point_code = 'CANCEL_SCORING' or (f.source_system = 'BPM' and f.route_point_name = 'ОТКАЗ АСОКР'))
+                         ) then 1 end
+                    as cancel_middle_office, -- Мидл-офис
+
+               case when (f.is_credit_issued = 0 or c.is_credit_issued = 0) and
+                         (cc.cp_cancel = 1 or
+                         f.folder_state in ('ОТКАЗ ЦПР','ОТКАЗ АВТОАНДДЕРАЙТИНГА','ОТКАЗ СБ') or
+                         coalesce(c.is_aa_approved, f_bk_aa.is_aa_approved) = 0
+                         ) then 1 end
+                    as cancel_cpr_aa, -- ЦПР, Автоандеррайтинг и СБ (в прошлом)
+
+/*               case when (f.is_credit_issued = 0 or c.is_credit_issued = 0) and
+                         (cc.mc_cancel = 1 or
+                          f.folder_state in ('ОТКАЗ МЕНЕДЖЕРА ПРОДАЖ','ОТКАЗ КЛИЕНТА',\*'ОТКАЗ ЦПР',*\
+                                             'ОТКАЗАНО','ОТКАЗ КОНТРОЛЕРА')) then 1 end
+                    as cancel_manager_client, -- менеджер, клиент, контроллер (т.к. отказ менеджера сложно отделить от отказа клиента)
+*/
+                case when (f.is_credit_issued = 0 or c.is_credit_issued = 0) and
+                         (cc.mn_cancel = 1 or
+                          f.folder_state in ('ОТКАЗ МЕНЕДЖЕРА ПРОДАЖ') or
+                          (f.folder_state in ('ОТКАЗАНО') and f.process_name != 'ОНЛАЙН КРЕДИТ')
+                          ) then 1 end
+                    as cancel_manager,
+               case when (f.is_credit_issued = 0 or c.is_credit_issued = 0) and
+                         (cc.cl_cancel = 1 or
+                          f.folder_state in ('ОТКАЗ КЛИЕНТА')) then 1 end
+                    as cancel_client,
+
+               case when (f.is_credit_issued = 0 or c.is_credit_issued = 0) and
+                         (f.folder_state in ('ОТКАЗ КОНТРОЛЕРА')) then 1 end
+                    as cancel_controller,
+               --------------
+               case when coalesce(c.is_aa_approved, f_bk_aa.is_aa_approved) = 0 then 1
+                    when coalesce(c.is_aa_approved, f_bk_aa.is_aa_approved) = 1 then 0 end
+                    as is_aa_reject, --
+               f.process_name, f.route_name, f.route_point_code, f.folder_state,
+               f.is_daytime_decision_folder, f.source_system,
+               f.delivery_type,
+
+               -- папки по рефинансированию также показываем, но при расчете одобрения их не надо учитывать
+               case when c.cr_program_code in ('PC_REFIN_RESTR','GU_AVTO_REF') or -- Рефинансирование/Реструктуризация, Рефинансирование автокредита
+                         c.cr_scheme_name like 'РЕФИНАНСИРОВАНИЕ%' or
+                         ref_view.folder_id is not null
+                        /*or f.delivery_type = 'РЕФИНАНСИРОВАНИЕ'*/
+                    then 1 else 0 end as is_refin, -- перенести на папку, это признак папки
+
+               c.date_begin as contract_date_begin, c.set_revolving_date as contract_set_revolving_date,
+               c.cr_scheme_name, c.tariff_plan_name,
+               f.form_client_id ,
+               vyezd.pos_credit_type,
+               f.expert_id,
+               cln.rnn,
+               f.is_alt
+        from V_FOLDER_ALL_RFO f
+        join V_CONTRACT_ALL_RFO c on c.folder_id = f.folder_id and
+                                c.cr_program_code != 'INSURANCE' and -- страховки не показываем
+                                --c.cr_scheme_code != 'REFIN' and -- рефин не показываем - сейчас показываем
+                                c.cr_program_code != 'DEP_CARD' and -- КАРТА ВКЛАДЧИКА
+/*                              (c.contract_status_code != 'RFO_CLOSE' or -- служебные не учитываем
+                                (c.contract_status_code = 'RFO_CLOSE' and f.is_credit_issued = 1
+                                      and c.cr_program_name in ('КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ','КРЕДИТ НАЛИЧНЫМИ'))) and*/
+                                not (nvl(f.delivery_type,'NONE') = 'БК' and c.is_card = 0) -- по БК
+                                                         -- (безопасный кредит/управляемый кредит) показываем только карту
+                                                         -- подумать по признакам на договор
+        left join (
+            select f.folder_id, max(c.is_aa_approved) as is_aa_approved -- получаем is_aa_approved с кредита БК
+            from V_FOLDER_ALL_RFO f                                     -- для вставки на карту
+            join V_CONTRACT_ALL_RFO c on c.folder_id = f.folder_id
+            where f.delivery_type = 'БК' -- управляемый кредит
+            group by f.folder_id
+        ) f_bk_aa on f_bk_aa.folder_id = f.folder_id
+--        left join V_CONTRACT_CAL c2 on c2.contract_number = c.contract_number  -- закомментировать для дэшбоарда!
+        left join V_POS p on p.pos_code = f.pos_code
+        left join V_SHOP s on s.rfo_shop_id = c.shop_id
+        left join ( -- отказы по виду
+              select * from (
+                    select y.c_folders as folder_id, y.cancel_type, 1 as is_cancel
+                    from (
+                          select c.c_folders,
+                                 case  when ct.c_code in ('VERIFICATION_CONTACT','VERIFICATION_PHOTO') --or ct.c_type = 'CPR'
+                                          then 'VERIFICATION'
+                                       when ct.c_code in ('MO_SCO_REJECT','BL_REJECT_ASOKR')
+                                          then 'MIDDLE_OFFICE'
+                                       when ct.c_type in ('GCVP','GCVP_OLD','NIGHT_PRS_PKB','NIGHT_PRS_PKB_OLD','NIGHT_PRS_FC','NIGHT_PRS_FC_OLD') or
+                                               (ct.c_type in ('AUTO','AUTO_OLD') and ct.c_code <> 'AA_CALC_4_3RD_LOAN')
+                                          then 'PRESCORING'
+                                       when ct.c_type in ('CPR','CPR_OLD') or (ct.c_type in ('AUTO','AUTO_OLD') and ct.c_code = 'AA_CALC_4_3RD_LOAN')
+                                          then 'CPR'
+/*                                       when ct.c_type in ('MANAGER') or
+                                           (ct.c_type in ('CLIENT_PC_TO_EKT') and
+                                                upper(c.c_note) like '%ОТКАЗАЛСЯ%') -- отказ клиента от лимита на карту с др кредитом
+                                          then 'MANAGER_CLIENT'*/
+                                       when ct.c_type in ('MANAGER','MANAGER_OLD') and
+                                              upper(ct.c_code) not in ('НЕ УСТР. ПРОЦЕНТ','НЕ УСТР. КОМИССИИ','НЕ УСТР. ОБСЛУЖИВ.','ХОЧЕТ В ДРУГОЙ БАНК',
+                                                                    'НЕ УСТРАИВАЕТ СРОК','НЕ УСТРАИВАЕТ СУММА','ХОЧЕТ ДРУГОЙ ПРОДУКТ',
+                                                                    'НЕ УСТР. УСЛ. АЛЬТЕР','НЕ УСТР. ПЕРЕПЛАТА')
+                                          then 'MANAGER'
+                                       when ct.c_type in ('MANAGER','MANAGER_OLD','CLIENT_PC_TO_EKT')
+                                           and -- отказ клиента от лимита на карту с др кредитом
+                                                upper(ct.c_code) in ('НЕ УСТР. ПРОЦЕНТ','НЕ УСТР. КОМИССИИ','НЕ УСТР. ОБСЛУЖИВ.','ХОЧЕТ В ДРУГОЙ БАНК',
+                                                                    'НЕ УСТРАИВАЕТ СРОК','НЕ УСТРАИВАЕТ СУММА','ХОЧЕТ ДРУГОЙ ПРОДУКТ',
+                                                                    'НЕ УСТР. УСЛ. АЛЬТЕР','НЕ УСТР. ПЕРЕПЛАТА')
+                                          then 'CLIENT'
+                                end as cancel_type
+                          from V_RFO_Z#KAS_CANCEL c
+                          join V_RFO_Z#KAS_CANCEL_TYPES ct on ct.id = c.c_type
+                          where --c.c_date >= add_months(trunc(sysdate,'mm'),-36) and -- за 3 года
+                                c.c_folders is not null and
+                                (c.c_hist_err_level = 1 or -- выбираем критичные отказы
+                                    (ct.c_type in ('CLIENT_PC_TO_EKT') and upper(c.c_note) like '%ОТКАЗАЛСЯ%')
+                                ) ) y group by y.c_folders, y.cancel_type
+              ) pivot (max(is_cancel) as cancel
+                        for cancel_type in (
+                          'PRESCORING' as PS,
+                          'VERIFICATION' as VR,
+                          'MIDDLE_OFFICE' as MO,
+                          'CPR' as CP,
+--                          'MANAGER_CLIENT' as MC,
+                          'MANAGER' as MN,
+                          'CLIENT' as CL)
+              )
+        ) cc on cc.folder_id = f.folder_id
+        left join V_CLIENT_RFO_BY_ID cln on cln.rfo_client_id = c.rfo_client_id
+        left join ( -- ищем заявку на рефинансирование - как признак рефинанса
+             select f11f.folder_id
+             from V_FOLDER_ALL_RFO f11f
+             join V_RFO_Z#RDOC rd on f11f.fld_c_docs = rd.collection_id
+             join V_RFO_Z#KAS_REQ_REFIN re on rd.c_doc = re.id
+        ) ref_view on ref_view.folder_id = f.folder_id
+        left join V_RFO_POINTS rpo on rpo.point_code = f.route_point_code and rpo.way_code = f.route_code
+        left join  (select sd.*,p.c_name as pos_credit_type
+                   from u1.V_RFO_Z#STRUCT_DEPART sd
+                    left join u1.V_RFO_Z#TYPE_STRUCT_DEP p on p.id = sd.c_type_depart) vyezd on p.pos_code = vyezd.c_code
+
+        where f.is_credit_process = 1 --and -- только кредитные процессы
+        and f.folder_date_create < trunc(sysdate)
+        and not exists (select null from V_FOLDER_ALL_RFO f1
+                        join V_CONTRACT_ALL_RFO w1 on w1.folder_id = f1.folder_id
+                        where /*w1.folder_id = c.folder_id and*/ w1.rfo_contract_id = c.rfo_contract_id and
+                              w1.is_card = 1 and
+                              f1.folder_date_create >= to_date('30.06.2014','dd.mm.yyyy') and
+                              w1.cr_program_code = 'KAS_PC_DOG' and  -- Револьверные карты
+                              w1.tariff_plan_code = 'PRIVILEGE' and -- Привелигированный
+                              f1.process_code in (
+                                  'KAS_AUTO_CRED_PRIV_PC',   -- Каспийский. Выдача автокредита на карту
+                                  'KAS_CREDIT_CASH_PRIV_PC', --'КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НАЛИЧНЫМИ НА КАРТУ',
+                                  'OPEN_CRED_PRIV_PC'))      --'КАСПИЙСКИЙ. ВЫДАЧА КРЕДИТА НА КАРТУ'
+
+   ) fff
+/*) ff on ff.folder_date_create_mi = tm.yyyy_mm_dd_hh_mi
+where tm.yyyy_mm_dd_hh_mi >= add_months(trunc(sysdate,'mm'),-36) and -- за 3 года
+      tm.yyyy_mm_dd_hh_mi < trunc(sysdate) --and
+--      tm.num_hh >= 9 and tm.num_hh <= 21; -- ограничение по часам для дэшбоардов*/;
+grant select on U1.M_FOLDER_CON_CANCEL_BASE to LOADDB;
+grant select on U1.M_FOLDER_CON_CANCEL_BASE to LOADER;
+
+

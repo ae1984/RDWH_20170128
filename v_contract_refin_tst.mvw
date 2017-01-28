@@ -1,0 +1,28 @@
+﻿create materialized view U1.V_CONTRACT_REFIN_TST
+using no index
+refresh complete on demand
+as
+select distinct r.rdf_old_deal_number,--номер договора до рефинансирования
+       d1.product as product_old,--до рефинанс
+       d1.product_refin as product_refin_old,--до рефинанс
+       d1.product_programm as product_programm_old,--до рефинанс
+       d1.start_date as start_date_old,--до рефинанс
+       c1.yms as yms_old,
+       r.rdf_rep_date as refin_date,--дата рефинансирования
+       r.rdf_res_deal_number,--номер договроа после рефинансировани
+       d2.product as product_ref,--после рефинанс
+       d2.product_refin as product_refin_ref,--после рефинанс
+       d2.product_programm as product_programm_ref,--после рефинанс
+       d2.start_date as start_date_ref,--после рефинанс
+       c2.yms as yms_ref
+from V_DWH_REFIN/*_2013*/ r
+left join V_DATA_ALL d1 on d1.contract_no = r.rdf_old_deal_number and
+                           add_months(d1.yy_mm_report_date,1) = trunc(r.rdf_rep_date,'mm')
+left join V_DATA_ALL d2 on d2.contract_no = r.rdf_res_deal_number and
+                           d2.yy_mm_report_date = trunc(r.rdf_rep_date,'mm')
+left join V_CONTRACT_CAL c1 on c1.contract_number = r.rdf_old_deal_number
+left join V_CONTRACT_CAL c2 on c2.contract_number = r.rdf_res_deal_number;
+grant select on U1.V_CONTRACT_REFIN_TST to LOADDB;
+grant select on U1.V_CONTRACT_REFIN_TST to LOADER;
+
+

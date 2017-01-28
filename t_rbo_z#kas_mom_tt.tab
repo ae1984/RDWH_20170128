@@ -1,0 +1,54 @@
+﻿create table U1.T_RBO_Z#KAS_MOM_TT
+(
+  id               NUMBER not null,
+  c_type           VARCHAR2(90),
+  c_done           VARCHAR2(30),
+  c_status         VARCHAR2(75),
+  c_date_create    DATE,
+  c_date_send      DATE,
+  c_action         VARCHAR2(75),
+  c_err_msg        VARCHAR2(4000),
+  c_class_id       VARCHAR2(90),
+  c_date_delivered DATE,
+  c_date_error     DATE,
+  c_num_dog        VARCHAR2(66)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RBO_Z#KAS_MOM_TT
+  is 'KAS. Таблица обмена сообщений ESB';
+comment on column U1.T_RBO_Z#KAS_MOM_TT.c_type
+  is 'Тип';
+comment on column U1.T_RBO_Z#KAS_MOM_TT.c_done
+  is 'Составлено';
+comment on column U1.T_RBO_Z#KAS_MOM_TT.c_status
+  is 'Статус';
+comment on column U1.T_RBO_Z#KAS_MOM_TT.c_date_create
+  is 'Дата создания';
+comment on column U1.T_RBO_Z#KAS_MOM_TT.c_date_send
+  is 'Дата запроса';
+comment on column U1.T_RBO_Z#KAS_MOM_TT.c_action
+  is 'Действие';
+comment on column U1.T_RBO_Z#KAS_MOM_TT.c_err_msg
+  is 'Текст ошибки';
+comment on column U1.T_RBO_Z#KAS_MOM_TT.c_class_id
+  is 'Класс';
+comment on column U1.T_RBO_Z#KAS_MOM_TT.c_date_delivered
+  is 'Дата доставки';
+comment on column U1.T_RBO_Z#KAS_MOM_TT.c_date_error
+  is 'Дата ошибки';
+comment on column U1.T_RBO_Z#KAS_MOM_TT.c_num_dog
+  is 'Номер договора';
+grant select on U1.T_RBO_Z#KAS_MOM_TT to LOADDB;
+grant select on U1.T_RBO_Z#KAS_MOM_TT to LOADER;
+

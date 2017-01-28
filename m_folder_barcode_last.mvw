@@ -1,0 +1,40 @@
+﻿create materialized view U1.M_FOLDER_BARCODE_LAST
+build deferred
+refresh force on demand
+as
+select t.folder_id,
+       t.barcode,
+       t.reject_cnt,
+       t.folder_date_create_mi,
+       t.rule_index
+  from M_FOLDER_BARCODE_2013 t
+
+ union
+
+select t.folder_id,
+       t.barcode,
+       t.reject_cnt,
+       t.folder_date_create_mi,
+       t.rule_index
+  from M_FOLDER_BARCODE_2014 t
+
+ union
+
+select t.folder_id,
+       t.barcode,
+       t.reject_cnt,
+       t.folder_date_create_mi,
+       t.rule_index
+  from M_FOLDER_BARCODE_2015 t
+
+ union
+
+select t.folder_id,
+       t.barcode,
+       t.reject_cnt,
+       t.folder_date_create_mi,
+       t.rule_index
+  from M_FOLDER_BARCODE_2016 t;
+grant select on U1.M_FOLDER_BARCODE_LAST to LOADDB;
+
+

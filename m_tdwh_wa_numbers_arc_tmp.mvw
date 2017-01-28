@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_TDWH_WA_NUMBERS_ARC_TMP
+using no index
+refresh complete on demand
+as
+select mn.id,
+            mn.mob_num,
+            case when regexp_like(mn.mob_num, '^[7-8]{2}[[:digit:]]{10}') then  regexp_replace(mn.mob_num,'^[7-8]{2}','')
+                 when regexp_like(mn.mob_num, '^[7-8]{1}[[:digit:]]{10}') then  regexp_replace(mn.mob_num,'^[7-8]{1}','')
+                 when regexp_like(mn.mob_num, '^[+]7[[:digit:]]{10}') then regexp_replace(mn.mob_num,'^[+7]','')
+                 else to_char(mn.mob_num)
+            end as mob_num_clear,
+            mn.is_whatsapp_number,
+            mn.last_seen_date,
+            mn.last_check_date,
+            mn.client_dwh_id,
+            mn.idate
+       from WA.WA_NUMBERS_ARC@tdwh2 mn;
+grant select on U1.M_TDWH_WA_NUMBERS_ARC_TMP to LOADDB;
+grant select on U1.M_TDWH_WA_NUMBERS_ARC_TMP to LOADER;
+
+

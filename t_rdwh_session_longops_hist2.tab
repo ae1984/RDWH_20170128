@@ -1,0 +1,31 @@
+﻿create table U1.T_RDWH_SESSION_LONGOPS_HIST2
+(
+  dt               DATE,
+  sid              NUMBER,
+  serial#          NUMBER,
+  sql_id           VARCHAR2(13),
+  sql_exec_start   DATE,
+  start_time       DATE,
+  last_update_time DATE,
+  elapsed_seconds  NUMBER,
+  username         VARCHAR2(30),
+  target           VARCHAR2(64),
+  opname           VARCHAR2(64),
+  time_remaining   NUMBER,
+  sql_id_ses       VARCHAR2(13)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_RDWH_SESSION_LONGOPS_HIST2 to LOADDB;
+

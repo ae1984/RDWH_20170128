@@ -1,0 +1,29 @@
+﻿create table U1.MO_RFOL_GCVP_REPORT_PMT
+(
+  gcvpp_id           NUMBER not null,
+  gcvpr_id           NUMBER not null,
+  foldr_id           NUMBER,
+  foldr_client       NUMBER,
+  gcvpp_payment_date DATE,
+  gcvpp_organization VARCHAR2(765),
+  gcvpp_org_rnn      VARCHAR2(36),
+  gcvpp_org_bin      VARCHAR2(60),
+  clien_id           NUMBER,
+  fdocx_doc_date     DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO_RFOL_GCVP_REPORT_PMT to LOADDB;
+grant select on U1.MO_RFOL_GCVP_REPORT_PMT to LOADER;
+

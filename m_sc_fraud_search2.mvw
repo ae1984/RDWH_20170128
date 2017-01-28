@@ -1,0 +1,45 @@
+﻿create materialized view U1.M_SC_FRAUD_SEARCH2
+build deferred
+refresh force on demand
+as
+select t1.rfo_client_id as rfo_client_id,
+       t1.avg_term_cred_plan,
+       t1.rbo_contract_date_first,
+       t1.count_kn_ever,
+       t1.count_visit_guest,
+       t1.count_visit_client,
+
+       t2.count_fail_online_30_d,
+       t2.max_sum_online_ekt_3_m,
+       t2.min_sum_online_ekt_3_m,
+       t2.avg_sum_online_ekt_3_m,
+       t2.max_count_app_onl_day,
+       t2.avg_count_app_onl_day,
+       t2.count_shops_on_client,
+       t2.count_category_3_m,
+
+       t3.avg_zp_h,
+       t3.max_zp_h,
+       t3.installment_incom_avg_30d,
+
+       t4.sum_pay_kspkz_30_d,
+       t4.share_month_kaspikz_6_m,
+       t4.count_mob_kspkz,
+
+       t5.terminal_share_count,
+
+       t6.min_sum_appl_kn_30_d,
+       t6.count_fail_30_d,
+       t6.max_sum_appl_kn_30_d,
+       t6.count_appl_kn_30_d
+
+ from u1.M_SC_FRAUD_SEARCH2_PRE1 t1
+ left join u1.M_SC_FRAUD_SEARCH2_PRE2 t2 on t2.rfo_client_id = t1.rfo_client_id
+ left join u1.M_SC_FRAUD_SEARCH2_PRE3 t3 on t3.rfo_client_id = t1.rfo_client_id
+ left join u1.M_SC_FRAUD_SEARCH2_PRE4 t4 on t4.rfo_client_id = t1.rfo_client_id
+ left join u1.M_SC_FRAUD_SEARCH2_PRE5 t5 on t5.rfo_client_id = t1.rfo_client_id
+ left join u1.M_SC_FRAUD_SEARCH2_PRE6 t6 on t6.rfo_client_id = t1.rfo_client_id;
+grant select on U1.M_SC_FRAUD_SEARCH2 to LOADDB;
+grant select on U1.M_SC_FRAUD_SEARCH2 to LOAD_MO;
+
+

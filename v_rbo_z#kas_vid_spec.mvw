@@ -1,0 +1,30 @@
+﻿create materialized view U1.V_RBO_Z#KAS_VID_SPEC
+build deferred
+refresh complete on demand
+as
+select
+       vs.id,
+       vs.c_code,
+       vs.c_name,
+       vs.c_is_canceled,
+       vs.c_prioritet,
+       vs.c_property_arr,
+       vs.c_is_closed,
+       vs.c_dont_send_rfo,
+       vs.c_depend_spec_arr,
+       vs.c_signs_arr,
+       rt.restr_type,
+       rt.restr_prior
+  from s02.Z#KAS_VID_SPEC@rdwh_exd vs
+  join (select 'HARD' restr_type, 1 restr_prior from dual
+          union all
+        select 'SOFT' restr_type, 2 restr_prior from dual
+          union all
+        select 'NOT_USE' restr_type, null restr_prior from dual) rt
+        on rt.restr_type = (case when vs.c_code in ('DELAY_PAY_DHK','RESTRUCT_AUTO_DHK','REFIN_NEW_DHK') then 'HARD'
+                                 when vs.c_code in ('RESTRUCT','REFIN_PROBLEM','DELAY_PAY','DELAY_PAY_PROBLEM','REFIN_STOP_CALC',
+                                                    'REFIN_DISCOUNT_BSERV','RESTRUCT_WORK_DOG','REFIN_PROBLEM_WORK_D','REFIN_KARAMELKA') then 'SOFT'
+                                 else 'NOT_USE' end);
+grant select on U1.V_RBO_Z#KAS_VID_SPEC to LOADDB;
+
+

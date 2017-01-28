@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_FOLDER_ONLINE_RFO_LAST
+refresh force on demand
+as
+select f.rfo_client_id,
+       max(f.folder_id) keep (dense_rank last order by f.folder_date_create) folder_id,
+       max(f.folder_date_create) keep (dense_rank last order by f.folder_date_create) folder_date_create,
+       max(f.folder_state) keep (dense_rank last order by f.folder_date_create) folder_state
+from v_folder_all_rfo f
+where f.process_code = 'ONLINE_CRED'
+group by f.rfo_client_id;
+grant select on U1.M_FOLDER_ONLINE_RFO_LAST to LOADDB;
+grant select on U1.M_FOLDER_ONLINE_RFO_LAST to LOADER;
+
+

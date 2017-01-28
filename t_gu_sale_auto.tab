@@ -1,0 +1,68 @@
+﻿create table U1.T_GU_SALE_AUTO
+(
+  id              NUMBER not null,
+  contract_number VARCHAR2(66),
+  fio             VARCHAR2(200),
+  summ            NUMBER,
+  description     VARCHAR2(2000),
+  date_info       DATE
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_GU_SALE_AUTO
+  is 'Данные по проданным залоговым авто';
+comment on column U1.T_GU_SALE_AUTO.id
+  is 'Идентификатор';
+comment on column U1.T_GU_SALE_AUTO.contract_number
+  is 'Номер ГУ';
+comment on column U1.T_GU_SALE_AUTO.fio
+  is 'ФИО';
+comment on column U1.T_GU_SALE_AUTO.summ
+  is 'Сумма распределения';
+comment on column U1.T_GU_SALE_AUTO.description
+  is 'Описание';
+comment on column U1.T_GU_SALE_AUTO.date_info
+  is 'Дата информации оп родажи';
+alter table U1.T_GU_SALE_AUTO
+  add constraint T_GU_SALE_AUTO_PK primary key (ID)
+  using index 
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.T_GU_SALE_AUTO_PK nologging;
+alter table U1.T_GU_SALE_AUTO
+  add constraint T_GU_SALE_AUTO_UNQ unique (CONTRACT_NUMBER)
+  using index 
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+alter index U1.T_GU_SALE_AUTO_UNQ nologging;
+grant select on U1.T_GU_SALE_AUTO to LOADDB;
+grant select on U1.T_GU_SALE_AUTO to LOADER;
+

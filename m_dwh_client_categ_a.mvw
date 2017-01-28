@@ -1,0 +1,50 @@
+﻿create materialized view U1.M_DWH_CLIENT_CATEG_A
+build deferred
+refresh complete on demand
+as
+select /*+parallel(5)*/ a.iin,
+       a.contract_closed_cnt,
+       a.del_days_max_now,
+       b.del_days_max_history,
+       a.contract_opt_all_cnt,
+       b.fact_pmts_all,
+       b.fact_pmts_12_mon
+from (
+    select /*+parallel(5)*/ d.client_iin as iin,
+           count(distinct case when d.is_credit_active = 0
+                               then d.deal_number end) as contract_closed_cnt,
+           coalesce(max(d.x_delinq_days),0) as del_days_max_now,
+           count(distinct case when d.x_product_type = 'ОПТИМИЗАЦИЯ'
+                               then d.deal_number end) as contract_opt_all_cnt
+    from V_DWH_PORTFOLIO_CURRENT d
+    where d.x_is_credit_issued = 1 and
+          d.client_iin is not null and
+          d.x_start_date_actual is not null
+    group by d.client_iin
+    having count(distinct case when d.is_credit_active = 0 then d.deal_number end) >= 2 and
+           coalesce(max(d.x_delinq_days),0) <= 15 and
+           count(distinct case when d.x_product_type = 'ОПТИМИЗАЦИЯ' then d.deal_number end) = 0
+) a
+join (
+    select /*+parallel(5)*/  cc.client_iin_last,
+           max(t.total_fact_pmts) as fact_pmts_all,
+           coalesce(max(t.delinq_days_in_month),0) as del_days_max_history,
+           count(distinct case when t.fact_pmts_in_month > 0 and
+                t.yyyy_mm_num > (select to_number(to_char(add_months(max(da.yy_mm_report_date),-12),
+                                            'yyyymm')) from V_DATA_ALL da)
+                then t.yyyy_mm_num end) as fact_pmts_12_mon
+    from V_CLIENT_HISTORY t
+    join V_CLIENT_CAL cc on cc.client_id = t.client_id
+    where cc.client_iin_last is not null
+    group by cc.client_iin_last
+    having max(t.total_fact_pmts) >= 12 and
+           coalesce(max(t.delinq_days_in_month),0) <= 15 and
+           count(distinct case when t.fact_pmts_in_month > 0 and
+                t.yyyy_mm_num > (select to_number(to_char(add_months(max(da.yy_mm_report_date),-12),
+                                            'yyyymm')) from V_DATA_ALL da)
+                then t.yyyy_mm_num end) > 0
+) b on b.client_iin_last = a.iin;
+grant select on U1.M_DWH_CLIENT_CATEG_A to LOADDB;
+grant select on U1.M_DWH_CLIENT_CATEG_A to LOADER;
+
+

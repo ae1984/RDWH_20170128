@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_CONTRACT_PORT_DISCOUNT_TST2
+build deferred
+refresh complete on demand
+as
+select coalesce(pd.c_num_dog,c.c_num_dog,d.c_num_dog) contract_number,
+       coalesce(pd.id,c.id,d.id) rbo_contract_id,
+       vtd.currdate rep_date,
+       mdt.total total_discount,
+       mdt.is_card,
+       coalesce(c.c_num_dog,d.c_num_dog) contract_number_discount,
+       coalesce(c.id,d.id) rbo_contract_id_discount
+  from u1.M_CONTRACT_DISCOUNT mdt
+  join (select level n,
+                     to_date('2013-01-01','yyyy-mm-dd') - 1 + numtodsinterval(level,'day') as currdate
+                from dual
+             connect by rownum < trunc(sysdate) - to_date('2013-01-01','yyyy-mm-dd') + 1) vtd
+                               on vtd.currdate >= mdt.c_date_in
+                              and vtd.currdate <= mdt.c_date_out
+   left join M_CONTRACT_PORT_DISCOUNT_PRE pd
+                         on mdt.rbo_contract_id = coalesce(pd.c_kas_pc_dog_ref,pd.c_kas_pc_dog_t_ref)
+                        and pd.c_date_begin <= vtd.currdate
+                        and pd.c_date_close >= vtd.currdate
+                        and pd.c_limit_saldo is not null
+   left join u1.V_RBO_Z#PR_CRED c on c.id = mdt.rbo_contract_id
+   left join u1.V_RBO_Z#KAS_PC_DOG d on d.id = mdt.rbo_contract_id;
+grant select on U1.M_CONTRACT_PORT_DISCOUNT_TST2 to LOADDB;
+
+

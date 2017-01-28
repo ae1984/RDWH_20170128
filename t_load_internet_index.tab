@@ -1,0 +1,23 @@
+﻿create table U1.T_LOAD_INTERNET_INDEX
+(
+  client_dwh_id           NUMBER,
+  innet_index             VARCHAR2(50),
+  innet_index_not_kaspikz VARCHAR2(50)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_LOAD_INTERNET_INDEX
+  is 'Таблица для загрузки данных по интернет-индексам';
+grant select on U1.T_LOAD_INTERNET_INDEX to LOADDB;
+

@@ -1,0 +1,9 @@
+﻿create materialized view U1.M_TDWH_SLANDOKZ_END_CATS
+using no index
+refresh complete on demand
+as
+select * from KASPISHOP.SLANDOKZ_END_CATS@tdwh;
+grant select on U1.M_TDWH_SLANDOKZ_END_CATS to LOADDB;
+grant select on U1.M_TDWH_SLANDOKZ_END_CATS to LOADER;
+
+

@@ -1,0 +1,34 @@
+﻿create materialized view U1.V_REPORT_CAL_3_TMP
+refresh complete on demand
+as
+select r1.client_id,r1.contract_number, r1.yy_mm_report,
+
+       (r1.planned_pmt_month - lag(r1.planned_pmt_month,2) over (partition by r1.contract_number order by r1.yy_mm_report))-
+       (r1.fact_pmts - lag(r1.fact_pmts,2) over (partition by r1.contract_number order by r1.yy_mm_report)) as undone_pmts_three_months,
+
+       (r1.planned_pmt_month - lag(r1.planned_pmt_month,5) over (partition by r1.contract_number order by r1.yy_mm_report))-
+       (r1.fact_pmts - lag(r1.fact_pmts,5) over (partition by r1.contract_number order by r1.yy_mm_report)) as undone_pmts_six_months,
+
+/*       (r1.planned_pmt_month - lag(r1.planned_pmt_month,8) over (partition by r1.contract_number order by r1.yy_mm_report))-
+       (r1.fact_pmts - lag(r1.fact_pmts,8) over (partition by r1.contract_number order by r1.yy_mm_report)) as undone_pmts_nine_months,*/
+
+       (r1.planned_pmt_month - lag(r1.planned_pmt_month,11) over (partition by r1.contract_number order by r1.yy_mm_report))-
+       (r1.fact_pmts - lag(r1.fact_pmts,11) over (partition by r1.contract_number order by r1.yy_mm_report)) as undone_pmts_twelve_months,/*,
+
+       (r1.planned_pmt_month - lag(r1.planned_pmt_month,17) over (partition by r1.contract_number order by r1.yy_mm_report))-
+       (r1.fact_pmts - lag(r1.fact_pmts,17) over (partition by r1.contract_number order by r1.yy_mm_report)) as undone_pmts_eighteen_months,
+
+       (r1.planned_pmt_month - lag(r1.planned_pmt_month,23) over (partition by r1.contract_number order by r1.yy_mm_report))-
+       (r1.fact_pmts - lag(r1.fact_pmts,23) over (partition by r1.contract_number order by r1.yy_mm_report)) as undone_pmts_two_years*/
+
+       max(r1.delinq_days) over (partition by r1.client_id order by r1.yy_mm_report rows between unbounded preceding and current row)
+       as port_deling_days_max
+
+
+
+ from V_REPORT_CAL_1 r1
+ where r1.yy_mm_report >= '2011 - 01';
+grant select on U1.V_REPORT_CAL_3_TMP to LOADDB;
+grant select on U1.V_REPORT_CAL_3_TMP to LOADER;
+
+

@@ -1,0 +1,61 @@
+﻿create table U1.T_FOLDER_CON_CANCEL_ONL_TMP
+(
+  claim_id           NUMBER not null,
+  buy_process_id     VARCHAR2(300),
+  claim_date         DATE,
+  claim_date_time    DATE,
+  mobile_phone       VARCHAR2(300),
+  iin                VARCHAR2(20),
+  client_name        VARCHAR2(2252),
+  birth_date         DATE,
+  shop_name          VARCHAR2(300),
+  is_credit_rejected NUMBER,
+  prod_info          NUMBER not null,
+  producer           VARCHAR2(300),
+  product_name       VARCHAR2(300),
+  product_model      VARCHAR2(300),
+  quantity           NUMBER(4),
+  goods_cost         NUMBER(17,2),
+  bill_sum           NUMBER(17,2),
+  goods_price        NUMBER(17,2),
+  kind_name          VARCHAR2(750),
+  tov_categ_code     VARCHAR2(75),
+  tov_categ_name     VARCHAR2(750),
+  tov_name_code      VARCHAR2(150),
+  tov_name_name      VARCHAR2(750),
+  product_type_name  VARCHAR2(750),
+  rfo_client_id      NUMBER,
+  form_client_ref    NUMBER,
+  shop_code          VARCHAR2(150),
+  limit_sum          NUMBER,
+  monthly_pay        NUMBER,
+  term_period        NUMBER,
+  stage              NUMBER,
+  check_route        NUMBER,
+  exec_comment       VARCHAR2(4000),
+  mng_vis_scen       NUMBER not null,
+  check_result       NUMBER,
+  ver_date           DATE,
+  status_code        VARCHAR2(150),
+  status_name        VARCHAR2(300),
+  total_amount       NUMBER,
+  folder_id          NUMBER,
+  is_sign_require    NUMBER,
+  rfo_shop_id        NUMBER,
+  city_name          VARCHAR2(510)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_FOLDER_CON_CANCEL_ONL_TMP to LOADDB;
+

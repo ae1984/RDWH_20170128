@@ -1,0 +1,88 @@
+﻿create materialized view U1.M_CONTRACT_START_CON_ORD_X
+using no index
+refresh complete on demand
+as
+select case when r.contract_number_old is not null then 1 else 0 end as is_res_ref_source,
+       case when r2.contract_number_new is not null then 1 else 0 end as is_res_ref_result,
+--       r.contract_number_old, r.total_debt_old_perc,
+
+       case when r.contract_number_old is not null then -- был источником (X 1)
+                                       -- берем долг с результата и умножаем на долю данного договора при реф/рестр
+                round(nvl(c.total_debt_last_rep,0) * nvl(r.total_debt_old_perc,0) / 100)
+
+            when r.contract_number_old is null and r2.contract_number_new is null then
+                                       -- не был ни источником, ни результатом (0 0) -- оставляем долг, как есть
+                t.total_debt_last_rep
+          end as -- если договор был только результатом, то total_debt_last_rep_new пустой (долг переходит на источники)
+       total_debt_last_rep_new,
+
+       case when r.contract_number_old is not null then -- was a source (X 1)
+                c.delinq_days_last_rep
+
+            when r.contract_number_old is null and r2.contract_number_new is null then
+                                       -- was neither a source nor a result (0 0)
+                t.delinq_days_last_rep
+          end as
+       delinq_days_last_rep_new,
+---
+/*
+           case when r.total_debt_old_perc > 0 then
+              round(c.total_debt_last_rep * r.total_debt_old_perc / 100)
+            else
+              t.total_debt_last_rep
+            end as
+       total_debt_last_rep_new,
+
+           case when r.contract_number_old is not null then c.delinq_days_last_rep
+            else t.delinq_days_last_rep end as
+       delinq_days_last_rep_new,
+*/
+---
+
+       t.*,
+
+       r.contract_number_new,
+       r.ref_res_first_yy_mm,
+       r.ref_res_first_date,
+       r.ref_res_last_date,
+       r.ref_res_count,
+       r.yy_mm_start_last_new,
+       r.product_last_new,
+       r.contract_amount_first_new,
+       r.contract_number_old,
+       r.product_old,
+       r.total_debt_old,
+       r.yy_mm_start_old,
+       r.total_debt_by_cli_in_rep_old,
+       r.total_debt_old_perc,
+
+       ra.product_last_old as product_last_old_aggr,
+       ra.yy_mm_start_last_old as yy_mm_start_last_old_aggr,
+       ra.contract_number_old as contract_number_old_aggr,
+
+       coalesce(ra.product_last_old, t.product_last) as product
+from M_CONTRACT_START_CON_ORD t
+left join (
+    select ttt.* from M_REF_RESTR_CONS_EXT ttt
+            join (
+                --select t.ref_res_first_date, t.client_id, max(t.contract_number_new) as contract_number_new_max
+                select t.contract_number_old, max(t.contract_number_new) as contract_number_new_max
+                --select t.client_id, max(t.contract_number_new) as contract_number_new_max
+                from M_REF_RESTR_CONS_EXT t
+                where t.contract_number_new != 'R2551134-001'
+                --group by t.ref_res_first_date, t.client_id
+                group by t.contract_number_old
+                --group by t.client_id
+            --) x on x.contract_number_new_max = ttt.contract_number_new
+            ) x on x.contract_number_new_max = ttt.contract_number_new and x.contract_number_old = ttt.contract_number_old
+            --) x on x.contract_number_new_max = ttt.contract_number_new
+            where ttt.contract_number_old is not null
+) r on r.contract_number_old = t.contract_number
+left join V_CONTRACT_CAL c on c.contract_number = r.contract_number_new
+left join (select distinct contract_number_new from M_REF_RESTR_CONS_EXT) r2 on
+                  r2.contract_number_new = t.contract_number
+left join M_REF_RESTR_CONS_AGR_X ra on ra.contract_number_new = c.contract_number;
+grant select on U1.M_CONTRACT_START_CON_ORD_X to LOADDB;
+grant select on U1.M_CONTRACT_START_CON_ORD_X to LOADER;
+
+

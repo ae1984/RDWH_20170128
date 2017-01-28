@@ -1,0 +1,28 @@
+﻿create table U1.T_OUT_REPORT_FRAUD_TYPE
+(
+  type_report       VARCHAR2(500) not null,
+  type_event_risk   VARCHAR2(500) not null,
+  depart_name       VARCHAR2(4000 CHAR),
+  object_event      VARCHAR2(4000 CHAR),
+  description_event VARCHAR2(4000 CHAR),
+  reason_event      VARCHAR2(4000 CHAR),
+  type_event        VARCHAR2(4000 CHAR),
+  after_event       VARCHAR2(4000 CHAR),
+  result_event      VARCHAR2(4000 CHAR)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_OUT_REPORT_FRAUD_TYPE to LOADDB;
+grant select on U1.T_OUT_REPORT_FRAUD_TYPE to LOADER;
+

@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_RFO_Z#CONT_KIND
+build deferred
+refresh complete on demand
+as
+select id,
+       c_code,
+       c_name,
+       c_tbp,
+       sn,
+       su
+  from IBS.Z#CONT_KIND@RFO_SNAP;
+grant select on U1.V_RFO_Z#CONT_KIND to LOADDB;
+
+

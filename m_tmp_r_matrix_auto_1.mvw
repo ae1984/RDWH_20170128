@@ -1,0 +1,137 @@
+﻿create materialized view U1.M_TMP_R_MATRIX_AUTO_1
+refresh complete on demand
+as
+select td.yyyy, td.text_yyyy_mm, td.week_text,
+     f.product, f.is_categ_a, f.is_credit_issued,
+     a.dealer_org, a.brand, a.color, a.prod_year, f.city,
+     a.initial_payment,a.prod_region,
+     a.fuel_type, a.engine_volume,m.contract_term_months,
+     m.client_new_fresh_old,
+case when a.initial_payment>0 and a.initial_payment<=10 then '10'
+     when a.initial_payment>10 and a.initial_payment<=20 then '20'
+     when a.initial_payment>20 and a.initial_payment<=30 then '30'
+     when a.initial_payment>30 and a.initial_payment<=40 then '40'
+     when a.initial_payment>40 and a.initial_payment<=50 then '50'
+     when a.initial_payment>50 and a.initial_payment<=60 then '60'
+     when a.initial_payment>60 and a.initial_payment<=70 then '70'
+     when a.initial_payment>70 and a.initial_payment<=80 then '80'
+     when a.initial_payment>80 and a.initial_payment<=90 then '90'
+     when a.initial_payment>90 and a.initial_payment<=100 then '100'
+     when a.initial_payment=0 then '0' else 'null' end as initial_pmt_gr,    -- ПВ
+case when dealer_org like '%ТОО БИПЭК%' then '1' else '0' end as BYPEK,      -- BYPEK
+case when round(b.start_date_actual - f.a_date,0) <=0 then 0
+     when round(b.start_date_actual - f.a_date,0) >60 then 60
+     when round(b.start_date_actual - f.a_date,0) is null then 1000
+          else round(b.start_date_actual - f.a_date,0) end as  TIME_TO_YES,   --TIME_TO_YES
+
+       ---
+     count(*) as cnt, count(distinct f.claim_id) as claim_cnt, count(distinct f.rfo_contract_id) as rfo_con_cnt,
+     count(distinct f.rfo_con_or_claim_id) as rfo_con_or_claim_cnt, -- кол-во заявок, включая онлайн
+     count(distinct f.folder_id) as fld_cnt,
+     sum(f.contract_amount) / 1000000 as amount_requested_mln,
+     min(f.contract_amount) as amount_requested_min,
+     max(f.contract_amount) as amount_requested_max,
+     ---
+     count(b.rbo_contract_id) as contract_cnt,
+     count(distinct b.rbo_contract_id) as contract_cnt_dist,
+
+     sum(d.max_debt_used_x) / 1000000 as sales_mln,
+
+     sum(case when trunc(sysdate) - b.start_date>=37 then max_debt_used_x end) Max_debt_used_7D,
+     sum(case when trunc(sysdate) - b.start_date>=60 then max_debt_used_x end) Max_debt_used_30D,
+     sum(case when trunc(sysdate) - b.start_date>=90 then max_debt_used_x end) Max_debt_used_60D,
+     sum(case when trunc(sysdate) - b.start_date>=120 then max_debt_used_x end) Max_debt_used_90D,
+
+     sum(case when d.del_days_x > 7  then d.total_debt_x end) / 1000000 as del_debt_7d_mln,
+     sum(case when d.del_days_x > 30 then d.total_debt_x end) / 1000000 as del_debt_30d_mln,
+     sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_mln,
+     sum(case when d.del_days_x > 90 then d.total_debt_x end) / 1000000 as del_debt_90d_mln,
+
+     sum(case when d.del_days_max_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_ever_mln,
+     sum(case when d.del_days_max_x > 90 then d.total_debt_x end) / 1000000 as del_debt_90d_ever_mln,
+
+     sum(d.total_debt_x_pmt_1_0) / 1000000 as pmt_1_0d_del_debt_mln,
+     sum(d.max_debt_used_x_pmt_1_0) / 1000000 as pmt_1_0d_sales_mln,
+     sum(d.total_debt_x_pmt_1_7) / 1000000 as pmt_1_7d_del_debt_mln,
+     sum(d.max_debt_used_x_pmt_1_7) / 1000000 as pmt_1_7d_sales_mln,
+     sum(d.total_debt_x_pmt_1_30) / 1000000 as pmt_1_30d_del_debt_mln,
+     sum(d.max_debt_used_x_pmt_1_30) / 1000000 as pmt_1_30d_sales_mln,
+     sum(d.total_debt_x_pmt_1_60) / 1000000 as pmt_1_60d_del_debt_mln,
+     sum(d.max_debt_used_x_pmt_1_60) / 1000000 as pmt_1_60d_sales_mln
+
+from (
+      select 'ОНЛАЙН-КРЕДИТ' as product_type, 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(f.folder_date_create_mi) as a_date,
+             case when f.is_categ_a = 1 then 'КАТЕГОРИЯ А' when f.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+             case when f.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when f.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+             case when f.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when f.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+             case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+             case when f.is_sign_require = 1 then 'С ПОДПИСАНИЕМ' when f.is_sign_require = 0 then 'БЕЗ ПОДПИСАНИЯ' end as is_signing_required,
+             f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+             f.rfo_contract_id as rfo_con_or_claim_id,
+             f.x_dnp_name as city, f.x_dnp_region as region,
+             f.cancel_prescoring, f.cancel_middle_office, f.cancel_controller, f.cancel_client, f.cancel_manager,
+             f.cancel_cpr_aa, f.cancel_verificator, f.cancel_undefined
+      from u1.M_FOLDER_CON_CANCEL f
+      where f.process_name = 'ОНЛАЙН КРЕДИТ' and
+             f.claim_id is not null and
+             f.folder_date_create_mi >= to_date('2013-01-01','yyyy-mm-dd')
+union all
+      select 'ОНЛАЙН-КРЕДИТ' as product_type, 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(fo.folder_date_create_mi) as a_date,
+             case when fo.is_categ_a = 1 then 'КАТЕГОРИЯ А' when fo.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+             case when fo.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when fo.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+             case when fo.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when fo.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+             case when fo.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when fo.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+             case when fo.is_sign_require = 1 then 'С ПОДПИСАНИЕМ' when fo.is_sign_require = 0 then 'БЕЗ ПОДПИСАНИЯ' end as is_signing_required,
+             fo.claim_id, fo.contract_number, fo.rfo_client_id, fo.contract_amount, fo.folder_id, fo.form_client_id, fo.rfo_contract_id,
+             fo.claim_id as rfo_con_or_claim_id,
+             fo.x_dnp_name as city, fo.x_dnp_region as region,
+             fo.cancel_prescoring, fo.cancel_middle_office, fo.cancel_controller, fo.cancel_client, fo.cancel_manager,
+             fo.cancel_cpr_aa, fo.cancel_verificator, fo.cancel_undefined
+      from u1.M_FOLDER_CON_CANCEL_ONLINE fo
+      where fo.folder_date_create_mi >= to_date('2013-01-01','yyyy-mm-dd') --to_date('2014-12-08','yyyy-mm-dd')
+      union all
+      select f.product_type, f.cr_program_name as product, trunc(f.folder_date_create_mi) as a_date,
+             case when f.is_categ_a = 1 then 'КАТЕГОРИЯ А' when f.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+             case when f.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when f.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+             case when f.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when f.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+             case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+             case when f.is_sign_require = 1 then 'С ПОДПИСАНИЕМ' when f.is_sign_require = 0 then 'БЕЗ ПОДПИСАНИЯ' end as is_signing_required,
+             f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+             f.rfo_contract_id as rfo_con_or_claim_id,
+             f.x_dnp_name as city, f.x_dnp_region as region,
+             f.cancel_prescoring, f.cancel_middle_office, f.cancel_controller, f.cancel_client, f.cancel_manager,
+             f.cancel_cpr_aa, f.cancel_verificator, f.cancel_undefined
+      from u1.M_FOLDER_CON_CANCEL f
+      where f.process_name != 'ОНЛАЙН КРЕДИТ'
+      ) f
+join V_TIME_DAYS td on td.yyyy_mm_dd = f.a_date
+left join M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+left join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+left join V_CONTRACT_ALL_RFO_AUTO a on a.rfo_contract_id = f.rfo_contract_id
+left join m_folder_con_miner m on m.rfo_contract_id = f.rfo_contract_id
+group by td.yyyy, td.text_yyyy_mm, td.week_text,
+     f.product, f.is_categ_a, f.is_credit_issued,
+     a.dealer_org, a.brand, a.color, a.prod_year, f.city,
+     a.initial_payment,a.prod_region,
+     a.fuel_type, a.engine_volume,m.contract_term_months,
+     m.client_new_fresh_old,
+case when a.initial_payment>0 and a.initial_payment<=10 then '10'
+     when a.initial_payment>10 and a.initial_payment<=20 then '20'
+     when a.initial_payment>20 and a.initial_payment<=30 then '30'
+     when a.initial_payment>30 and a.initial_payment<=40 then '40'
+     when a.initial_payment>40 and a.initial_payment<=50 then '50'
+     when a.initial_payment>50 and a.initial_payment<=60 then '60'
+     when a.initial_payment>60 and a.initial_payment<=70 then '70'
+     when a.initial_payment>70 and a.initial_payment<=80 then '80'
+     when a.initial_payment>80 and a.initial_payment<=90 then '90'
+     when a.initial_payment>90 and a.initial_payment<=100 then '100'
+     when a.initial_payment=0 then '0' else 'null' end,
+case when dealer_org like '%ТОО БИПЭК%' then '1' else '0' end,
+case when round(b.start_date_actual - f.a_date,0) <=0 then 0
+     when round(b.start_date_actual - f.a_date,0) >60 then 60
+     when round(b.start_date_actual - f.a_date,0) is null then 1000
+          else round(b.start_date_actual - f.a_date,0) end;
+grant select on U1.M_TMP_R_MATRIX_AUTO_1 to LOADDB;
+grant select on U1.M_TMP_R_MATRIX_AUTO_1 to LOADER;
+
+

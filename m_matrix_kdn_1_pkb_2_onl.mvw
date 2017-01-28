@@ -1,0 +1,58 @@
+﻿create materialized view U1.M_MATRIX_KDN_1_PKB_2_ONL
+build deferred
+refresh force on demand
+as
+select pm.claim_id, pm.pkb_report_id,
+       ---
+/*       p.pkb_pmt_credits_all, p.pkb_delinq_amount_all,
+       p.pkb_credit_limit_all / 10 as pkb_pmt_cards,
+       coalesce(p.pkb_pmt_credits_all,0) +
+                       coalesce(p.pkb_delinq_amount_all,0) +
+                       coalesce(p.pkb_credit_limit_all / 10,0) as pkb_pmt_all,*/
+       ---
+       p.pkb_pmt_credits_not_kaspi,  p.pkb_delinq_amount_not_kaspi,
+       p.pkb_credit_limit_not_kaspi / 10 as pkb_pmt_cards_not_kaspi,
+       coalesce(p.pkb_pmt_credits_not_kaspi,0) +
+                       coalesce(p.pkb_delinq_amount_not_kaspi,0) +
+                       coalesce(p.pkb_credit_limit_not_kaspi / 10,0) as pkb_pmt_not_kaspi
+from (    select fcc.claim_id,
+                 max(p.report_id) as pkb_report_id
+          from u1.M_FOLDER_CON_CANCEL_ONLINE fcc
+          join u1.V_PKB_REPORT p on
+                    p.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ') and
+                    (
+                        /*p.folder_id = fcc.folder_id or
+                        (*/
+                            p.report_iin_rnn = fcc.iin and
+                            (
+                                 p.rfo_report_date >= trunc(fcc.folder_date_create_mi) - 60 and
+                                 p.rfo_report_date <= trunc(fcc.folder_date_create_mi)
+                            )
+                        /*)*/
+                    )
+          group by fcc.claim_id
+) pm
+join (select pa.report_id,
+             ---
+/*             sum(pa.monthly_payment) as pkb_pmt_credits_all,
+             sum(pa.delinq_amount) as pkb_delinq_amount_all,
+             sum(get_pkb_debt_from_text(pa.c_credit_limit,pa.report_date_time)) as pkb_credit_limit_all,*/
+             ---
+             sum(case when pa.c_fin_inst not like '%KASPI%' and
+                           pa.c_fin_inst not like '%КАСПИ%' then pa.monthly_payment end) as pkb_pmt_credits_not_kaspi,
+             sum(case when pa.c_fin_inst not like '%KASPI%' and
+                           pa.c_fin_inst not like '%КАСПИ%' then pa.delinq_amount end) as pkb_delinq_amount_not_kaspi,
+             sum(case when pa.c_fin_inst not like '%KASPI%' and
+                           pa.c_fin_inst not like '%КАСПИ%' then
+                               --get_pkb_debt_from_text(pa.c_credit_limit, pa.report_date)
+                               pa.credit_limit
+                 end
+             ) as pkb_credit_limit_not_kaspi
+          from M_PKB_REPORT_PARAM1 pa
+          where pa.pkb_contract_status = 'АКТИВНЫЙ'
+          group by pa.report_id
+) p on p.report_id = pm.pkb_report_id;
+grant select on U1.M_MATRIX_KDN_1_PKB_2_ONL to LOADDB;
+grant select on U1.M_MATRIX_KDN_1_PKB_2_ONL to LOADER;
+
+

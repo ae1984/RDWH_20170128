@@ -1,0 +1,9 @@
+﻿create materialized view U1.V_SIEBEL_S_SRC_PAYMENT
+using no index
+refresh complete on demand
+as
+select * from SIEBEL.S_SRC_PAYMENT@AMSG_PROD t;
+grant select on U1.V_SIEBEL_S_SRC_PAYMENT to LOADDB;
+grant select on U1.V_SIEBEL_S_SRC_PAYMENT to LOADER;
+
+

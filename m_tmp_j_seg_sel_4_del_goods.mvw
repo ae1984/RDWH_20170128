@@ -1,0 +1,25 @@
+﻿create materialized view U1.M_TMP_J_SEG_SEL_4_DEL_GOODS
+refresh complete on demand
+as
+select to_char(d.x_start_date_actual, 'yyyy - mm') as start_mon,
+       count(*) as cnt, count(distinct d.deal_number) as con_cnt,
+       count(distinct d.client_iin) as cli_cnt, -- sum(d.x_total_debt) as total_debt,
+       sum(coalesce(greatest(c.max_debt_used,d.x_total_debt), c.max_debt_used,d.x_total_debt))/1000000 as sales_mln,
+       sum(case when d.x_delinq_days > 7 then d.x_total_debt end) /
+           sum(coalesce(greatest(c.max_debt_used,d.x_total_debt), c.max_debt_used,d.x_total_debt)) as del_7_rate_by_vol,
+       count(case when cd.is_del_60_plus = 1 then d.deal_number end) / count(d.deal_number) as del_60_plus_rate_by_quant
+from V_DWH_PORTFOLIO_CURRENT d
+join V_CONTRACT_CAL c on c.contract_number = d.deal_number -- для max_debt_used
+join M_CONTRACT_CAL_DEL_PLUS cd on cd.contract_number = c.contract_number
+join M_FOLDER_CON_CANCEL fcc on fcc.contract_number = d.deal_number and fcc.folder_id = d.folder_id_first
+join M_TMP_J_SEG_SEL_4 s4 on s4.rfo_contract_id = fcc.rfo_contract_id
+where d.x_is_credit_issued = 1 and fcc.is_refin = 0 and -- выданные не рефин
+      d.x_start_date_actual >= to_date('2012','yyyy') and
+      d.x_start_date_actual < trunc(sysdate,'mm') and-- d.x_start_date_actual is not null and
+      d.x_product_type in (/*'ДЕНЬГИ'*/'ТОВАРЫ')
+group by to_char(d.x_start_date_actual, 'yyyy - mm')
+having sum(coalesce(greatest(c.max_debt_used,d.x_total_debt), c.max_debt_used,d.x_total_debt)) > 0;
+grant select on U1.M_TMP_J_SEG_SEL_4_DEL_GOODS to LOADDB;
+grant select on U1.M_TMP_J_SEG_SEL_4_DEL_GOODS to LOADER;
+
+

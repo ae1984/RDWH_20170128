@@ -1,0 +1,217 @@
+﻿create table U1.TDWH_E#VIN_INFO
+(
+  id                             NUMBER not null,
+  ar_comment#                    VARCHAR2(4000),
+  d#ar#origin_country            NUMBER,
+  ar_model_year                  NUMBER,
+  d#ar#mark                      NUMBER,
+  d#ar#model                     NUMBER,
+  d#ar#manufacture_factory       NUMBER,
+  d#ar#body_type                 NUMBER,
+  d#ar#engine_description        NUMBER,
+  d#ar#assemblage_country        NUMBER,
+  d#ar#engine_volume             NUMBER,
+  d#ar#doors_count               NUMBER,
+  d#ar#car_type                  NUMBER,
+  d#ar#market                    NUMBER,
+  d#ar#engine_series             NUMBER,
+  d#ar#engine_type               NUMBER,
+  d#ar#kpp_type                  NUMBER,
+  d#ar#steering_column_place     NUMBER,
+  d#ar#body_name                 NUMBER,
+  d#ar#drive                     NUMBER,
+  d#ar#modification              NUMBER,
+  d#ar#passive_security_system   NUMBER,
+  d#ar#grm_type                  NUMBER,
+  d#ar#forsage                   NUMBER,
+  d#ar#fuel_type                 NUMBER,
+  d#ar#supercharge               NUMBER,
+  d#ar#valve_per_cylinder        NUMBER,
+  d#ar#engine_purpose            NUMBER,
+  d#ar#manufacture_period        NUMBER,
+  d#ar#line                      NUMBER,
+  d#ar#wheelbase                 NUMBER,
+  d#ar#full_car_mass             NUMBER,
+  d#ar#engine_number             NUMBER,
+  d#ar#window_number             NUMBER,
+  d#ar#body_production_period    NUMBER,
+  d#ar#modle_production_period   NUMBER,
+  d#ar#seat_number               NUMBER,
+  d#ar#configuration             NUMBER,
+  d#ar#region                    NUMBER,
+  d#ar#fuel                      NUMBER,
+  d#ar#power#                    NUMBER,
+  d#ar#class#                    NUMBER,
+  d#ar#note                      NUMBER,
+  d#ar#eco_standard              NUMBER,
+  d#ar#engine_production_country NUMBER,
+  d#ar#manufacture_date          NUMBER,
+  d#ar#brake_gear                NUMBER,
+  d#ar#kpp_series                NUMBER,
+  ar_unknown#                    NUMBER,
+  d#ar#tnvd_type                 NUMBER,
+  d#ar#roof                      NUMBER,
+  d#ar#body_description          NUMBER,
+  ar_manufacturer                NUMBER,
+  d#ar#execution                 NUMBER,
+  d#ar#reduction_degree          NUMBER,
+  d#ar#length_mm                 NUMBER,
+  d#ar#chassis                   NUMBER,
+  d#ar#carburation               NUMBER,
+  d#ar#purpose                   NUMBER,
+  d#ar#main_pair_gear_ration     NUMBER,
+  d#ar#cabine_type               NUMBER,
+  d#ar#unknown_parameter         NUMBER,
+  d#ar#weight_class              NUMBER,
+  ar_chassis_number              NUMBER,
+  d#esbd#color                   NUMBER,
+  esbd_righthanddrive            NUMBER(1),
+  esbd_enginepower               NUMBER,
+  esbd_enginenumber              VARCHAR2(4000),
+  esbd_enginevolume              NUMBER,
+  esbd_prodmonth                 NUMBER,
+  esbd_prodyear                  NUMBER,
+  esbd_typeid                    NUMBER,
+  ar_parsed                      NUMBER(1) not null,
+  esbd_parsed                    NUMBER(1),
+  e#vin$vin                      VARCHAR2(4000),
+  ar_serial_number               VARCHAR2(4000),
+  ar_parse_date                  TIMESTAMP(6),
+  esbd_parse_date                TIMESTAMP(6),
+  e#err$esbd                     NUMBER,
+  e#err$ar                       NUMBER,
+  d#esbd#mark                    NUMBER,
+  d#esbd#model                   NUMBER
+)
+partition by range (AR_PARSE_DATE) interval (NUMTOYMINTERVAL(1,'MONTH'))
+(
+  partition P0 values less than (TIMESTAMP' 2010-01-01 00:00:00')
+    tablespace USERS
+    pctfree 10
+    initrans 1
+    maxtrans 255,
+  partition SYS_P1374 values less than (TIMESTAMP' 2013-11-01 00:00:00')
+    tablespace USERS
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1375 values less than (TIMESTAMP' 2013-12-01 00:00:00')
+    tablespace USERS
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1376 values less than (TIMESTAMP' 2014-01-01 00:00:00')
+    tablespace USERS
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P1840 values less than (TIMESTAMP' 2014-02-01 00:00:00')
+    tablespace USERS
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P2093 values less than (TIMESTAMP' 2014-03-01 00:00:00')
+    tablespace USERS
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P2541 values less than (TIMESTAMP' 2014-04-01 00:00:00')
+    tablespace USERS
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P3064 values less than (TIMESTAMP' 2014-05-01 00:00:00')
+    tablespace USERS
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P3768 values less than (TIMESTAMP' 2014-06-01 00:00:00')
+    tablespace USERS
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    ),
+  partition SYS_P4348 values less than (TIMESTAMP' 2014-07-01 00:00:00')
+    tablespace USERS
+    pctfree 10
+    initrans 1
+    maxtrans 255
+    storage
+    (
+      initial 8M
+      next 1M
+      minextents 1
+      maxextents unlimited
+    )
+);
+create index U1.TDWH_E#VIN_INFO_IND1 on U1.TDWH_E#VIN_INFO (E#VIN$VIN)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 167
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.TDWH_E#VIN_INFO to LOADDB;
+grant select on U1.TDWH_E#VIN_INFO to LOADER;
+

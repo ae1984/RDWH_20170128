@@ -1,0 +1,83 @@
+﻿create materialized view U1.M_RFO_ONLINE_FLD_EKT_PHON_UNIQ
+refresh complete on demand
+as
+select distinct f.c_num_dog as contract_number,
+                sd.c_code POS_CODE,
+                sd.c_name POS_NAME,
+                u.c_name as manager_name,
+                f.cred_date_begin BEGIN_DATE,
+                f.c_info_cred#term_cred#quant CONTRACT_TERM_MONTHS,
+                upper(f.c_producer) as producer,
+                upper(f.c_name) as product_name,
+                f.c_cost as goods_cost,
+                f.c_bill_summ as bill_sum,
+                f.cred_summa_full CONTRACT_AMOUNT,
+                f.c_inn as cient_iin,
+                translate(upper(f.c_last_name) || ' ' ||
+                          upper(f.c_first_name) || ' ' ||
+                          upper(f.c_sur_name),
+                          chr(53388) || chr(53384) || chr(53383) ||
+                          chr(53904) || chr(53390) || chr(53380) ||
+                          chr(53381),
+                          chr(53914) || chr(54168) || chr(53934) ||
+                          chr(54184) || chr(53936) || chr(53906) ||
+                          chr(53922)) as client_name,
+                po.x_dnp_name UNP_NAME,
+                f.c_numb Contact,
+                f.c_date_create time_date,
+                activ.prod_type_list
+  from M_RFO_ONLINE_FLD_EKT_2H f
+  left join M_NPS_CL_ACTIV_PRODUCT activ
+    on activ.client_iin = f.c_inn
+  left join V_RFO_Z#PROD_PROPERTY pr2
+    on f.cr_program_id = pr2.id
+  join V_RFO_Z#BUS_PROCESS bp
+    on bp.id = f.c_business
+   and bp.c_code != 'ONLINE_CRED'
+  join V_RFO_Z#STRUCT_DEPART sd
+    on sd.id = f.c_st_depart
+  join V_RFO_Z#CM_POINT cmp
+    on cmp.id = f.c_point
+  join V_POS po
+    on po.pos_code = sd.c_code
+  left join V_RFO_Z#USER u
+    on u.id = f.c_create_user
+  join V_RFO_POINTS rp
+    on rp.way_id = f.c_way
+   and rp.point_code = cmp.c_code
+   and rp.is_point_active = 0
+   and (po.x_dnp_name = 'АЛМАТЫ' /* or
+                     sd.c_code in ('001-116-441',
+                                    '001-110-655',
+                                    '001-107-385',
+                                    '001-111-613',
+                                    '001-103-357',
+                                    '001-107-413')*/
+       )
+   and  not exists (select null
+                  from T_NPS_CLIENT_PHONED_ALL k
+                 where insert_date < sysdate - 1 / 24
+                   and k.client_iin = f.c_inn)
+---вырежим тех клиентов кому уже звонили;
+ where (f.is_credit_issued_con = 1 and
+       (cmp.c_code in ('EXECUTE',
+                        'CREDIT_EXEC',
+                        'KAS_CHK_DOC_PACK',
+                        'TO_RECLAMATION',
+                        'ARCHIVE',
+                        'ERR_ARCHIVE',
+                        'KAS_SENT_PKD',
+                        'KAS_WITHDRAWN1',
+                        'KAS_WITHDRAWN2',
+                        'KAS_PKD_CONTROL',
+                        'KAS_PKD_REV',
+                        'TR_CHANGED',
+                        'TAKE_DEPART') or cmp.c_priority >= 80))
+   and not exists (select null
+          from M_ZUP_1C_STAFF_OUT pe
+         where pe.iin = f.c_inn
+           and pe.firing_date is null);
+grant select on U1.M_RFO_ONLINE_FLD_EKT_PHON_UNIQ to LOADDB;
+grant select on U1.M_RFO_ONLINE_FLD_EKT_PHON_UNIQ to LOADER;
+
+

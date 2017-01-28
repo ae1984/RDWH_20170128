@@ -1,0 +1,105 @@
+﻿create table U1.T_CONTRACT_DEPN_OPER_ALL
+(
+  rbo_client_id        NUMBER,
+  rbo_contract_id      NUMBER not null,
+  contract_number      VARCHAR2(24 CHAR),
+  contract_currency_id NUMBER,
+  contract_currency    VARCHAR2(3 CHAR),
+  product_name         VARCHAR2(1400 CHAR),
+  is_has_timeout       VARCHAR2(1 CHAR),
+  oper_dog_code        VARCHAR2(50 CHAR),
+  oper_dog_name        VARCHAR2(100 CHAR),
+  is_dt_ct             VARCHAR2(1 CHAR),
+  amount_oper          NUMBER(17,2),
+  date_doc_prov        DATE,
+  main_docum_id        NUMBER,
+  fact_oper_id         NUMBER not null,
+  is_storno            VARCHAR2(3),
+  reverse_fo_id        NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_CONTRACT_DEPN_OPER_ALL
+  is 'Фактические одобренные операции по остатку основного вклажа по депозитным/текущим счетам с 01-01-2014';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL.rbo_client_id
+  is 'Идентификатор клиента РБО';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL.rbo_contract_id
+  is 'Идентификатор контракта РБО';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL.contract_number
+  is 'Номер контракта';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL.contract_currency_id
+  is 'Идентификатор валюты контракта';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL.product_name
+  is 'Наименование продукта';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL.is_has_timeout
+  is 'Признак срочности: 1-срочный депозит,0-текущий счет';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL.oper_dog_code
+  is 'Код операции';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL.oper_dog_name
+  is 'Наименование операции';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL.is_dt_ct
+  is 'Признак дебета/кредита:1-дебет(списание),0-кредит(зачисление)';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL.amount_oper
+  is 'Сумма операции';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL.date_doc_prov
+  is 'Дата проведения операции(одобрения)';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL.main_docum_id
+  is 'Ссылка на идентификатор операции в ibs.Z#MAIN_DOCUM.id в РБО';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL.fact_oper_id
+  is 'Идентфиикатор операции';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL.is_storno
+  is 'Признак обратной операции:1-существует обратная операция,0-нет';
+comment on column U1.T_CONTRACT_DEPN_OPER_ALL.reverse_fo_id
+  is 'Ссылка на идентификатор обратной операции(FK на T_TBO_Z#FACT_OPER.id)';
+create unique index U1.T_CONTRACT_DEPN_OPER_ALL_IND1 on U1.T_CONTRACT_DEPN_OPER_ALL (FACT_OPER_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_CONTRACT_DEPN_OPER_ALL_IND2 on U1.T_CONTRACT_DEPN_OPER_ALL (RBO_CONTRACT_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.T_CONTRACT_DEPN_OPER_ALL_IND3 on U1.T_CONTRACT_DEPN_OPER_ALL (RBO_CLIENT_ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_CONTRACT_DEPN_OPER_ALL to LOADDB;
+grant select on U1.T_CONTRACT_DEPN_OPER_ALL to LOADER;
+

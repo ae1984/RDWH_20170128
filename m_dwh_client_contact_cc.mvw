@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_DWH_CLIENT_CONTACT_CC
+build deferred
+refresh complete on demand
+as
+select   cc.clctcc_gid as id,
+                 to_number(cl.clnt$rbo_source_pk)  as rbo_client_id,
+                -- mc.rfo_client_id,
+                 cl.clnt_iin,
+                 cc.clctcc_as_of_date as phone_date,
+                 cc.clctcc_cont_info_desc as phone_number,
+                 upper(ds.CLNT_CONT_STATUS_CODE) as status_code,
+                 upper(ds.CLNT_CONT_STATUS_NAME) as status_name,
+                 r.clnt_cont_result_cd as result_code,
+                 upper(cc.clctcc_result_desc) as result_desc,
+                 upper(r.clnt_cont_result_name) as result_name,
+                 upper(ct.CLNT_CONT_THEME_NAME) as cont_theme,
+                 cl.clnt_name,
+                 empl_login,
+                 empl_name,
+                 cc.clctcc_clnt_cont_direct_cd as direct_type,
+                 d.clnt_cont_direct_name as direct_desc,
+                 ct.contact_chnl_type_name as phone_type
+           from DWH_MAIN.ACC_CLIENT_CONTACT_CC@DWH_PROD2 cc  -- call center
+            left join DWH_MAIN.DICT_CLNT_CONT_STATUS@DWH_PROD2 ds on ds.clnt_cont_status_cd = cc.clctcc_clnt_cont_status_cd -- справочник статусов контакта с клиентом
+            left join DWH_MAIN.DICT_CONTACT_CHNL_TYPE@DWH_PROD2 ct on ct.contact_chnl_type_cd = cc.clctcc_contact_chnl_type_cd -- канал связи
+            left join DWH_MAIN.DICT_CLNT_CONT_THEME@DWH_PROD2 ct on ct.clnt_cont_theme_cd = cc.CLCTCC_CLNT_CONT_THEME_CD
+            left join DWH_MAIN.DICT_CLNT_CONT_RESULT@DWH_PROD2 r on r.clnt_cont_result_cd = cc.CLCTCC_clnt_cont_result_cd
+            join DWH_RAN.REF_CLIENT_V@DWH_PROD2 cl on cl.clnt_gid = cc.clctcc_clnt_gid and cl.clnt$end_date = to_date('31/12/9999','dd/mm/yyyy') -- берем только активную запись
+            join DWH_MAIN.DICT_CLNT_CONT_DIRECT@DWH_PROD2 d on cc.clctcc_clnt_cont_direct_cd  = d.clnt_cont_direct_cd --направление звонка
+            join DWH_MAIN.ref_employee@DWH_PROD2 re on cc.clctcc_empl_gid = re.empl_gid and re.empl$end_date = date'9999-12-31' and re.empl$row_status = 'A'--сотрудник
+
+           where ct.contact_chnl_type_cd = 101 --Телефон. Сотовая связь
+                 or ct.contact_chnl_type_cd = -1
+                    and regexp_like(cc.clctcc_cont_info_desc,'^([7-8])[[:digit:]]{10}$')
+                    and substr(cc.clctcc_cont_info_desc,2,3) in ('705','777','771','776','700','708','701','702','775','778','772','707','747')
+          /* and cc.clctcc_clnt_cont_status_cd in ( 150855440104831, --Разговор
+                                                  150302114935356, --На звонке
+                                                  151043359157018, --Обработан
+                                                  151036872088203)  --Звонок завершен*/;
+grant select on U1.M_DWH_CLIENT_CONTACT_CC to LOADDB;
+grant select on U1.M_DWH_CLIENT_CONTACT_CC to LOADER;
+grant select on U1.M_DWH_CLIENT_CONTACT_CC to RISK_VERIF;
+
+

@@ -1,0 +1,59 @@
+﻿create table U1.T_MO_FRAUD_SEARCH
+(
+  rfo_client_id           NUMBER,
+  date_create             DATE,
+  claim_id                NUMBER not null,
+  age                     NUMBER,
+  reg_kaspikz_length      NUMBER,
+  avg_sum_pay_kspkz_30_d  NUMBER,
+  count_month_kaspikz_6_m NUMBER,
+  count_pay_kspkz_30_d    NUMBER,
+  count_serv_kspkz_6_m    NUMBER,
+  kommunalka_kaspikz_6_m  NUMBER,
+  session_ksp_last_6_mnth NUMBER,
+  count_appl_kn_30_d      NUMBER,
+  count_applications_30_d NUMBER,
+  count_day_app_onl       NUMBER,
+  count_fail_30_d         NUMBER,
+  income_form             NUMBER,
+  max_count_fail_onl_day  NUMBER,
+  max_sum_appl_kn_30_d    NUMBER,
+  max_sum_online_ekt_3_m  NUMBER,
+  last_year_max_delay     NUMBER,
+  pkb_debt_kzt            NUMBER,
+  income_gcvp             NUMBER(17,2),
+  days_last_gcvp          NUMBER,
+  diff_zp_form_gcvp       NUMBER,
+  avg_sum_pay_cred_3_m    NUMBER,
+  count_visit_guest       NUMBER,
+  count_salary_6_m        NUMBER,
+  kaspi_gold_active       NUMBER,
+  max_tov_categ_code      VARCHAR2(75),
+  max_count_category_day  NUMBER,
+  max_prod_models_day     VARCHAR2(300),
+  max_count_models_day    NUMBER,
+  ex_terminal_share_count NUMBER,
+  fail_share_30_d_count   NUMBER,
+  terminal_share_count    NUMBER,
+  share_30_d_count        NUMBER,
+  ex_terminal_share       NUMBER,
+  fail_share_30_d         NUMBER,
+  avg_zp_h                NUMBER,
+  ii                      VARCHAR2(50),
+  process_id              VARCHAR2(300)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_MO_FRAUD_SEARCH to LOADDB;
+

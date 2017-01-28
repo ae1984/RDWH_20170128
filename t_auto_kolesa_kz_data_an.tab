@@ -1,0 +1,74 @@
+﻿create table U1.T_AUTO_KOLESA_KZ_DATA_AN
+(
+  v1_akk_brend              VARCHAR2(255 CHAR),
+  v1_akk_model              VARCHAR2(255 CHAR),
+  v1_akk_year_car           NUMBER,
+  v1_akk_drive              VARCHAR2(1020),
+  v1_akk_engine_volume      NUMBER,
+  v1_akk_kpp_type           VARCHAR2(1020),
+  v1_akk_body_type          VARCHAR2(1020),
+  v1_akk_price              NUMBER,
+  v1_median                 NUMBER,
+  v1_std                    NUMBER,
+  v1_count_price_confidence NUMBER,
+  v1_advert_cnt             NUMBER,
+  v1_avg_price              NUMBER,
+  v1_yyyy_mm_dd             DATE,
+  v2_akk_brend              VARCHAR2(255 CHAR),
+  v2_akk_model              VARCHAR2(255 CHAR),
+  v2_akk_year_car           NUMBER,
+  v2_akk_drive              VARCHAR2(1020),
+  v2_akk_engine_volume      NUMBER,
+  v2_akk_kpp_type           VARCHAR2(1020),
+  v2_akk_body_type          VARCHAR2(1020),
+  v2_akk_price              NUMBER,
+  v2_median                 NUMBER,
+  v2_std                    NUMBER,
+  v2_count_price_confidence NUMBER,
+  v2_advert_cnt             NUMBER,
+  v2_avg_price              NUMBER,
+  v2_yyyy_mm_dd             DATE,
+  v3_akk_brend              VARCHAR2(255 CHAR),
+  v3_akk_model              VARCHAR2(255 CHAR),
+  v3_akk_year_car           NUMBER,
+  v3_akk_drive              VARCHAR2(1020),
+  v3_akk_engine_volume      NUMBER,
+  v3_akk_kpp_type           VARCHAR2(1020),
+  v3_akk_body_type          VARCHAR2(1020),
+  v3_akk_price              NUMBER,
+  v3_median                 NUMBER,
+  v3_std                    NUMBER,
+  v3_count_price_confidence NUMBER,
+  v3_advert_cnt             NUMBER,
+  v3_avg_price              NUMBER,
+  v3_yyyy_mm_dd             DATE,
+  v4_akk_brend              VARCHAR2(255 CHAR),
+  v4_akk_model              VARCHAR2(255 CHAR),
+  v4_akk_year_car           NUMBER,
+  v4_akk_drive              VARCHAR2(1020),
+  v4_akk_engine_volume      NUMBER,
+  v4_akk_kpp_type           VARCHAR2(1020),
+  v4_akk_body_type          VARCHAR2(1020),
+  v4_akk_price              NUMBER,
+  v4_median                 NUMBER,
+  v4_std                    NUMBER,
+  v4_count_price_confidence NUMBER,
+  v4_advert_cnt             NUMBER,
+  v4_avg_price              NUMBER,
+  v4_yyyy_mm_dd             DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_AUTO_KOLESA_KZ_DATA_AN to LOADDB;
+

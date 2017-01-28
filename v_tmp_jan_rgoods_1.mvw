@@ -1,0 +1,82 @@
+﻿create materialized view U1.V_TMP_JAN_RGOODS_1
+refresh force on demand
+as
+select * from V_TMP_JAN_GOODS_1 t where t.title is null and (
+t.product_name like '%BLU RAY%' or
+t.product_name like '%BLUE RAY%' or
+t.product_name like '%DIGITAL CAMERA%' or
+t.product_name like '%IPAD%' or
+t.product_name like '%IPHONE%' or
+t.product_name like '%IPOD%' or
+t.product_name like '%LCD%' or
+t.product_name like 'LED%' or
+t.product_name like '%MACBOOK%' or
+t.product_name like '%NET BOOK%' or
+t.product_name like '%NOTEBOOK%' or
+t.product_name like '%PAD%' or
+t.product_name like '%APPLE%' or
+t.product_name like '%TAB%' or
+t.product_name like '%КОМПЬЮТЕР %' or
+t.product_name like '%TAB%' or
+t.product_name like '%ВИДЕОКАМЕРА%' or
+t.product_name like '%ФОТОАППАРАТ%' or
+t.product_name like '%ЦИФРОВАЯ%' or
+t.product_name like '%ВСТР.ДУХОВКА%' or
+t.product_name like '%ВСТР.ПОВЕРХНОСТЬ%' or
+t.product_name like '%ВСТР.ПОСУДОМОЙКА%' or
+t.product_name like '%ИГРОВАЯ КОНСОЛЬ%' or
+t.product_name like '%КОНДИЦИОНЕР%' or
+t.product_name like '%МОБИЛЬНЫЙ ТЕЛЕФОН%' or
+t.product_name like '%МОНИТОР%' or
+t.product_name like '%МОРОЗИЛЬНИК%' or
+t.product_name like '%МУЗ%ЦЕНТР%' or
+t.product_name like '%ПЛАНШЕТ%' or
+t.product_name like '%ПОСУДОМОЕЧНАЯ МАШИНА%' or
+t.product_name like '%СИНТЕЗАТОР%' or
+t.product_name like '%СИСТЕМНЫЙ БЛОК%' or
+t.product_name like '%СМАРТФОН%' or
+t.product_name like '%СТИР%МАШИНА%' or
+t.product_name like '%ТЕЛЕВИЗОР%' or
+t.product_name like '%ТЕЛЕФОН%' or
+t.product_name like '%ТУМБА%TV%' or
+t.product_name like '%TV%ТУМБА%' or
+t.product_name like '%ТУМБА%ТВ%' or
+t.product_name like '%ТУМБА%TV%' or
+t.product_name like '%УЛЬТРАБУК%' or
+t.product_name like '%ФОТОАППАРАТ%' or
+t.product_name like '%ХОЛОДИЛЬНИК%' or
+t.product_name like '%ЦИФРОВЫЕ%ФОТОАППАРАТЫ%' or
+t.product_name like '%ЭЛЕКТРОННАЯ%КНИГА%'
+
+) and not (
+t.product_name like '%ЧЕХОЛ%' or
+t.product_name like '%ЗАЩИТНАЯ ПЛЕНКА%' or
+t.product_name like '%АККУМУЛЯТОР%' or
+t.product_name like '%ДОК-СТАНЦИИ%' or
+t.product_name like '%TRIPOD%' or
+t.product_name like '%ДАТА-КАБЕЛЬ%' or
+t.product_name like '%ДОК-CТАНЦИИ%' or
+t.product_name like '%АКСЕССУАРЫ ДЛЯ%' or
+t.product_name like '%СУМКА ДЛЯ%' or
+t.product_name like '%РЮКЗАК ДЛЯ%'or
+t.product_name like '%ПОДСТАВКА ПОД%'or
+t.product_name like '%ПЕДАЛЬ ДЛЯ%' or
+t.product_name like '%ТЕЛЕФОННЫЙ КАБЕЛЬ%' or
+t.product_name like '%ГАРНИТУРЫ ДЛЯ%' or
+t.product_name like '%ЧЕХЛЫ ДЛЯ%' or
+t.product_name like '%КОЛОНКИ ДЛЯ%' or
+t.product_name like '%АКСЕССУАРЫ К МОБИЛЬНЫМ ТЕЛЕФОНАМ%' or
+t.product_name like '%СРЕДСТВА ДЛЯ УХОДА%' or
+t.product_name like '%СРЕДСТВО ДЛЯ ОЧИСТКИ%' or
+t.product_name like '%ПОГЛОТИТЕЛЬ ЗАПАХА ДЛЯ%' or
+t.product_name like '%АНТИБАКТЕРИАЛЬНЫЙ КОВРИК В%' or
+t.product_name like '%НАБОР ДЛЯ %' or
+t.product_name like '%КОВРИК ДЛЯ %' or
+t.product_name like '%АМОРТИЗИРУЮЩИЕ ПОДСТАВКИ ДЛЯ %' or
+t.product_name like '%ДЕКОРАТИВНАЯ НАКЛЕЙКА НА %'or
+t.product_name like '%ПОГЛОТИТЕЛЬ ЗАПАХОВ ДЛЯ%'
+);
+grant select on U1.V_TMP_JAN_RGOODS_1 to LOADDB;
+grant select on U1.V_TMP_JAN_RGOODS_1 to LOADER;
+
+

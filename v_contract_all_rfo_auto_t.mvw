@@ -1,0 +1,62 @@
+﻿create materialized view U1.V_CONTRACT_ALL_RFO_AUTO_T
+refresh complete on demand
+as
+select -- --+first_rows
+    cd.id as rfo_contract_id,
+    cd.c_num_dog as contract_number,
+    cd.c_client_ref as rfo_client_id,
+    fd.c_doc_date as contract_date,
+    sd.c_code as contract_status_code,
+    upper(sd.c_name) as contract_status_name,
+    pr.c_code as cr_program_code,
+    upper(pr.c_name) as cr_program_name,
+    cs.c_code as cr_scheme_code,
+    upper(cs.c_name) as cr_scheme_name,
+    cd.c_date_begin as date_begin,
+    cd.c_date_end as date_end,
+    sh.c_code as shop_code,
+    upper(sh.c_address#place) as shop_place,
+    upper(sh.c_name) as shop_name,
+    pi.c_price as auto_price,
+    ia.id as info_auto_id,
+    ia.c_body_num as vin,
+    upper(tb.c_name) as brand,
+    upper(tm.c_name) as model, upper(tp.c_name) as prod_region,
+    upper(ud.c_name) as fuel_type, ia.c_year as prod_year,
+    ia.c_pasport_date as tech_passport_date,
+    upper(trim(ia.c_color)) as color, ia.c_eng_size as engine_volume,
+    d.c_iin as dealer_iin, upper(d.c_fio) as dealer_fio,
+    trim(upper(d.c_org_name)) as dealer_org,
+    ia.c_state_numb as state_number, -- гос.номер
+    cd.c_info_cred#pay_now as initial_payment,
+    f.id as folder_id,
+    ia.c_vin as vin_code,
+    ia.c_reg_num as reg_num,
+    ia.c_date_agr as date_agr,
+    ia.c_pasport as tech_pasport,
+    ia.c_prev_owner as prev_owner,
+    case when sd.c_code = 'RFO_CLOSE' then 1 -- СЛУЖЕБНОЕ
+         when sd.c_code in ('CANCEL','PREPARE') then 0 --ОТКАЗ, ПОДГОТОВКА
+         else 1 end as
+    is_credit_issued
+from V_RFO_Z#CREDIT_DOG cd
+join V_RFO_Z#CRED_SCHEME cs on cs.id = cd.c_cred_scheme
+join V_RFO_Z#PROPERTIES p on p.collection_id = cs.c_add_prop
+join V_RFO_Z#PROD_PROPERTY pr on pr.id = p.c_prop and pr.c_code in ('GU_AVTO','GU_AVTO_BU')
+join V_RFO_Z#PROPERTY_GRP gr on gr.id = pr.c_group_prop and gr.c_code = 'KAS_CRED_PROGRAM'
+join V_RFO_Z#FDOC fd on fd.id = cd.id and fd.class_id = 'CREDIT_DOG'
+join V_RFO_Z#STATUS_DOG sd on sd.id = fd.c_status_doc
+left join V_RFO_Z#RDOC rd on rd.c_doc = fd.id
+left join V_RFO_Z#FOLDERS f on f.c_docs = rd.collection_id
+left join V_RFO_Z#SHOPS sh on sh.id = cd.c_shop
+left join V_RFO_Z#KAS_INFO_AUTO ia on ia.collection_id = cd.c_red#kas_auto#kas_info_auto20
+left join V_RFO_Z#PROD_INFO pi on pi.id = ia.id
+left join V_RFO_Z#TRANSPORT_MODEL tm on tm.id = ia.c_ts_model
+left join V_RFO_Z#TRANSPORT_BRAND tb on tb.id = tm.c_brand
+left join V_RFO_Z#TRANSPORT_PROD tp on tp.id = tb.c_production
+left join V_RFO_Z#KAS_UNIVERSAL_D ud on ud.id = ia.c_fuel_type
+left join V_RFO_Z#KAS_DEALERS_EMPL d on d.id = ia.c_dealer_fio;
+grant select on U1.V_CONTRACT_ALL_RFO_AUTO_T to LOADDB;
+grant select on U1.V_CONTRACT_ALL_RFO_AUTO_T to LOADER;
+
+

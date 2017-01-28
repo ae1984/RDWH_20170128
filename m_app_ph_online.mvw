@@ -1,0 +1,64 @@
+﻿create materialized view U1.M_APP_PH_ONLINE
+build deferred
+refresh force on demand
+as
+select t.app_id                                                                                           as app_id,
+       t.rfo_client_id                                                                                    as rfo_client_id,
+       t.claim_id                                                                                         as claim_id,
+       t.folder_date_create_mi                                                                            as folder_date_create_mi,
+       rt.mobile_phone                                                                                    as mobile_phone,
+       count(case when trunc(rt1.claim_date) >= trunc(rt.claim_date) - 30
+                   and rt1.claim_date < rt.claim_date then rt1.claim_id end)                              as cnt_ph,
+       count(case when upper(stp.p_name) = 'ОТМЕНЕН ПОКУПАТЕЛЕМ ЧЕРЕЗ CSC'
+                   and trunc(rt1.claim_date) >= trunc(rt.claim_date) - 30
+                   and rt1.claim_date < rt.claim_date then rt1.claim_id end)                              as cnt_ph_cancel,
+       count(case when t1.is_credit_issued = 1
+                   and trunc(rt1.claim_date) >= trunc(rt.claim_date) - 30
+                   and rt1.claim_date < rt.claim_date then rt1.claim_id end)                              as cnt_ph_app,
+       count(case when dp.p_name = 'Доставка'
+                   and trunc(rt1.claim_date) >= trunc(rt.claim_date) - 30
+                   and rt1.claim_date < rt.claim_date then rt1.claim_id end)                              as cnt_ph_delivered,
+       nvl(sum(case when trunc(rt1.claim_date) >= trunc(rt.claim_date) - 30
+                   and rt1.claim_date < rt.claim_date then rt1.total_amount end), 0)                      as sum_ph,
+       nvl(sum(case when t1.is_credit_issued = 1
+                     and trunc(rt1.claim_date) >= trunc(rt.claim_date) - 30
+                     and rt1.claim_date < rt.claim_date then rt.total_amount end), 0)                     as sum_ph_app,
+       count(distinct case when rt1.rfo_client_id <> rt.rfo_client_id
+                            and trunc(rt1.claim_date) >= trunc(rt.claim_date) - 30
+                            and rt1.claim_date < rt.claim_date then rt1.rfo_client_id end)                as cnt_ph_client,
+
+       --T-1
+       count(case when trunc(rt1.claim_date) >= trunc(rt.claim_date) - 30
+                   and trunc(rt1.claim_date) < trunc(rt.claim_date) then rt1.claim_id end)                as cnt_ph_t1,
+       count(case when upper(stp.p_name) = 'ОТМЕНЕН ПОКУПАТЕЛЕМ ЧЕРЕЗ CSC'
+                   and trunc(rt1.claim_date) >= trunc(rt.claim_date) - 30
+                   and trunc(rt1.claim_date) < trunc(rt.claim_date) then rt1.claim_id end)                as cnt_ph_cancel_t1,
+       count(case when t1.is_credit_issued = 1
+                   and trunc(rt1.claim_date) >= trunc(rt.claim_date) - 30
+                   and trunc(rt1.claim_date) < trunc(rt.claim_date) then rt1.claim_id end)                as cnt_ph_app_t1,
+       count(case when dp.p_name = 'Доставка'
+                   and trunc(rt1.claim_date) >= trunc(rt.claim_date) - 30
+                   and trunc(rt1.claim_date) < trunc(rt.claim_date) then rt1.claim_id end)                as cnt_ph_delivered_t1,
+       nvl(sum(case when trunc(rt1.claim_date) >= trunc(rt.claim_date) - 30
+                     and trunc(rt1.claim_date) < trunc(rt.claim_date) then rt1.total_amount end), 0)      as sum_ph_t1,
+       nvl(sum(case when t1.is_credit_issued = 1
+                     and trunc(rt1.claim_date) >= trunc(rt.claim_date) - 30
+                     and trunc(rt1.claim_date) < trunc(rt.claim_date) then rt.total_amount end), 0)       as sum_ph_app_t1,
+       count(distinct case when rt1.rfo_client_id <> rt.rfo_client_id
+                            and trunc(rt1.claim_date) >= trunc(rt.claim_date) - 30
+                            and trunc(rt1.claim_date) < trunc(rt.claim_date) then rt1.rfo_client_id end)  as cnt_ph_client_t1
+  from u1.m_app_miner_bas t
+       inner join u1.M_FOLDER_ONLINE_T1       rt on                  rt.claim_id = t.claim_id
+       left  join u1.M_FOLDER_ONLINE_T1      rt1 on             rt1.mobile_phone = rt.mobile_phone
+                                               /* and        trunc(rt1.claim_date) >= trunc(rt.claim_date) - 30
+                                                and               rt1.claim_date < rt.claim_date*/
+       left  join u1.M_APP_MINER_BAS t1 on t1.claim_id = rt1.claim_id
+       left  join u1.M_KASPISH_ORDERS               ko on ko.code = rt.buy_process_id
+       left  join u1.M_KASPISH_ENUMERATIONVALUES    st on st.pk = ko.p_cancellationreason
+       left  join u1.M_KASPISH_ENUMERATIONVALUESLP stp on stp.itempk = st.pk and stp.langpk = 8796093317152
+       left  join u1.m_kaspish_deliverymodes         d on d.pk = ko.deliverymodepk
+       left  join u1.m_kaspish_deliverymodeslp      dp on dp.itempk = d.pk and dp.langpk = 8796093317152
+ group by t.app_id, t.rfo_client_id, t.claim_id, t.folder_date_create_mi, rt.mobile_phone;
+grant select on U1.M_APP_PH_ONLINE to LOADDB;
+
+

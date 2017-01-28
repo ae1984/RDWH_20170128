@@ -1,0 +1,28 @@
+﻿create materialized view U1.M_OUT_PTP_CONTRACT
+refresh force on demand
+as
+select id as crt_which_must_set_ptp_dwh_id,
+      coalesce(c.dcard_contragent_clnt_gid,cred.crdt_contragent_clnt_gid, dep.dpst_contragent_clnt_gid) client_dwh_id,
+      account_dwh_id as account_dwh_id,
+      contract_dwh_id as contract_dwh_id,
+      has_dossier as have_scan_sign,
+      stage_set_ptp_at as date_send_uptp,
+      delay_days as delay_days_on_moment_send,
+      delay_sum as delay_amount_on_moment_send,
+      debt_sum as amount_total_dedt,
+      sent_to_archive_at as date_send_in_archives,
+      received_from_archive_at as date_got_from_archives,
+      stage_set_ptp_by as name_archivist,
+      ptp_forbidden as lock_ptp_sign
+from DWH_STAGE.S55_OUT_CONTRACT@RDWH_EXD sc
+left join DWH_MAIN.REF_DEAL_CARD@rdwh_exd c on c.dcard_crt_gid = sc.CONTRACT_DWH_ID and c.dcard$row_status = 'A'
+                                            AND sysdate BETWEEN c.dcard$start_date AND c.dcard$end_date
+left join DWH_MAIN.REF_DEAL_CREDIT@rdwh_exd cred on cred.crdt_crt_gid = sc.CONTRACT_DWH_ID and cred.crdt$row_status = 'A'
+                                                 AND sysdate BETWEEN cred.crdt$start_date AND cred.crdt$end_date
+
+left join DWH_MAIN.REF_DEAL_DEPOSIT@rdwh_exd dep on dep.dpst_crt_gid = sc.CONTRACT_DWH_ID and dep.dpst$row_status = 'A'
+                                                  AND sysdate BETWEEN dep.dpst$start_date AND dep.dpst$end_date;
+grant select on U1.M_OUT_PTP_CONTRACT to LOADDB;
+grant select on U1.M_OUT_PTP_CONTRACT to LOADER;
+
+

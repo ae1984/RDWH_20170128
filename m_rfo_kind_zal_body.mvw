@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_RFO_KIND_ZAL_BODY
+build deferred
+refresh force on demand
+as
+select t.*,
+       level lv,
+       PRIOR(t.id) as tov_categ_id,
+       upper(PRIOR(t.c_code)) as tov_categ_code,
+       upper(PRIOR(t.c_name)) as tov_categ_name,
+       upper(PRIOR(t.kind_name)) as tov_categ_kind_name,
+
+       CONNECT_BY_ROOT(t.id) as tov_categ_id_root,
+       upper(CONNECT_BY_ROOT(t.c_code)) as tov_categ_code_root,
+       upper(CONNECT_BY_ROOT(t.c_name)) as tov_categ_name_root,
+       upper(CONNECT_BY_ROOT(t.kind_name)) as tov_categ_kind_name_root
+from V_RFO_Z#KIND_ZAL_BODY t
+start with t.c_parent_ref is null
+connect by prior t.id = t.c_parent_ref;
+grant select on U1.M_RFO_KIND_ZAL_BODY to LOADDB;
+grant select on U1.M_RFO_KIND_ZAL_BODY to LOAD_MO;
+
+

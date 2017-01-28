@@ -1,0 +1,125 @@
+﻿create materialized view U1.V_CONTRACT_EKT_DWH_ONLINE
+build deferred
+refresh complete on demand
+as
+select /*+ parallel(5)*/
+     cast(null as number) as rfo_contract_id,
+     fo.folder_id,
+     fo.claim_id,
+     'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР' as cr_program_name,
+     cast(null as varchar2(300)) as contract_number,
+     cast(null as varchar2(254 char) ) as pos_code,
+     cast(null as varchar2(2400)) as pos_name,
+     cast(null as varchar2(9)) as start_month,
+     cast(null as date) as begin_date,
+     cast(null as number) as  contract_term_days,
+     cast(null as date) as actual_end_date,
+     cast(null as number) as contract_term_months,
+     upper( i.c_producer) as producer,
+     upper(i.c_name) as product_name,
+     upper(i.c_model) as product_model,
+     i.c_quant as quantity,
+     i.c_cost as goods_cost,
+     i.c_bill_summ as bill_sum,
+     i.c_price as goods_price,
+     kz.kind_name,
+     kz.c_code as tov_categ_code,
+     kz.c_name as tov_categ_name,
+     tn.c_code as tov_name_code,
+     tn.c_name as tov_name_name,
+     cast(null as number) as contract_amount,
+     kz.c_name as product_type_name,
+     cl.rnn as client_rnn,
+     cl.iin as client_iin,
+     cl.client_name ,
+     fo.rfo_shop_id,
+     fo.shop_code,
+     fo.shop_name,
+     fo.city_name,
+     cast(null as varchar2(254 char)) as fil_name,
+     cast(null as varchar2(254 char)) as unp_name,
+     i.id as goods_id,
+     cast(null as number) as servise_id,
+     cast (null as number) as initial_payment ,
+     fo.date_create
+  from M_FOLDER_CON_CANCEL_ONLINE_1 fo
+  left join V_RFO_Z#PROD_INFO i on i.collection_id = fo.prod_info
+  left join V_RFO_Z#KIND_ZAL_BODY kz on kz.id = i.c_type_tov
+  left join V_CLIENT_RFO_BY_ID  CL on cl.rfo_client_id = fo.rfo_client_id
+  left join V_RFO_Z#KAS_TOV_NAME tn on i.c_name_ref = tn.id
+  where  fo.folder_id is null
+union all
+select /*+ parallel(5)*/
+        f.rfo_contract_id,
+        f.folder_id,
+        f.claim_id as claim_id,
+        f.cr_program_name,
+        f.contract_number,
+        f.pos_code,
+        f.pos_name,
+        to_char(cc.begin_date,'yyyy - mm') as start_month,
+        cc.begin_date,
+        cc.plan_end_date - cc.begin_date as contract_term_days,
+        cc.actual_end_date,
+        round((cc.plan_end_date - cc.begin_date)/30,0) as contract_term_months,
+        upper(pr.c_producer) as producer,
+        upper(nvl(pr.c_name,us.c_name)) as product_name,
+        upper(pr.c_model) as product_model,
+        nvl(pr.c_quant,us.c_quant) as quantity,
+        nvl(pr.c_cost,us.c_cost) as goods_cost,
+        nvl(pr.c_bill_summ,us.c_bill_summ) as bill_sum,
+        nvl(pr.c_price,us.c_price) as goods_price,
+        pr.kind_name,
+        pr.tov_categ_code,
+        pr.tov_categ_name,
+        pr.tov_name_code,
+        pr.tov_name_name,
+        cc.amount as contract_amount,
+        nvl(pr.k_c_name,us.k_c_name) as product_type_name,
+        cl.rnn as client_rnn,
+        f.iin   as client_iin ,
+        cl.client_name,
+        c.id as rfo_shop_id,
+        f.shop_code,
+        f.shop_name,
+        s.city_name,
+        cc.fil_name,
+        cc.unp_name,
+        pr.id as goods_id,
+        us.id as servise_id,
+        c.c_info_cred#pay_now as initial_payment,
+        f.folder_date_create_mi as date_create
+from M_FOLDER_CON_CANCEL f
+left join V_DWH_PORTFOLIO_CURRENT cc on cc.deal_number = f.contract_number
+left join V_RFO_Z#CREDIT_DOG c on c.id = f.rfo_contract_id
+left join (
+            select /*+ parallel(2)*/ k.c_name as k_c_name, i.c_producer, i.c_name,
+                   i.c_model, i.c_quant, i.c_cost, i.c_bill_summ,
+                   i.c_price, i.id, i.collection_id, k.kind_name,
+                   k.c_code as tov_categ_code,
+                   k.c_name as tov_categ_name,
+                   tn.c_code as tov_name_code,
+                   tn.c_name as tov_name_name
+              from V_RFO_Z#PROD_INFO i,
+                   V_RFO_Z#KIND_ZAL_BODY k,
+                   V_RFO_Z#KAS_TOV_NAME  tn
+             where k.id = i.c_type_tov
+               and i.c_name_ref = tn.id
+) pr on pr.collection_id = c.c_d#type_cred#prod#prod_info11
+left join (
+            select /*+ parallel(2)*/ kk.c_name as k_c_name, ii.c_name, ii.c_quant,
+                   ii.c_cost, ii.c_bill_summ, ii.c_price, ii.id,
+                   ii.collection_id
+            from V_RFO_Z#service_Info ii,
+                 V_RFO_Z#KAS_SERV_NAME kk
+            where kk.c_type_serv = ii.c_type_serv and
+                  kk.id = ii.c_name_ref
+) us on us.collection_id = c.c_d#type_cred#serv#serv_info12
+left join V_CLIENT_RFO_BY_ID cl on cl.rfo_client_id = f.rfo_client_id
+left join V_SHOP s on s.rfo_shop_id =  c.c_shop
+where f.cr_program_name in ('ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР','ЭКСПРЕСС-КРЕДИТЫ (УСЛУГИ)','ЭКСПРЕСС-КРЕДИТЫ (ДЕНЬГИ)')
+and f.process_name = 'ОНЛАЙН КРЕДИТ';
+grant select on U1.V_CONTRACT_EKT_DWH_ONLINE to LOADDB;
+grant select on U1.V_CONTRACT_EKT_DWH_ONLINE to LOADER;
+
+

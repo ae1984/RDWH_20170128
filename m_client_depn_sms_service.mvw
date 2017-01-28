@@ -1,0 +1,65 @@
+﻿create materialized view U1.M_CLIENT_DEPN_SMS_SERVICE
+build deferred
+refresh complete on demand
+as
+select
+       cp.id   as rfo_client_id,
+       rcl.id  as rbo_client_id,
+       case when rr.id is not null then 1 else 0 end as is_rbo_mobile_affirmed, --Имеется ли подтвержденный мобильный в РБО (1, 0)
+       case when ff.id is not null then 1 else 0 end as is_rfo_mobile_affirmed, --Имеется ли подтвержденный мобильный в РФО (1, 0)
+       case when trunc(sysdate) between ksc.c_set_date and coalesce(ksc.c_end_date,trunc(sysdate))
+            then 1
+            else 0 end is_active_sms_service,                                   --Подключена ли сейчас клиенту услуга СМС-сервис по депозиту (1,0)
+       ksc.c_set_date as set_date,                                              --Дата подключения услуги СМС-сервис по депозиту (если есть)
+       ksc.c_end_date as end_date,                                               --Дата отключения услуги СМС-сервис по депозиту (если есть)
+       case when is_has_timeout > 0 then 1 else 0 end as is_has_timeout,
+       xx.is_dep_scheme_not_demand
+  from V_RFO_Z#CLIENT            cp
+  join M_CLIENT_LINK             cl on cl.rfo_client_id = cp.id
+  join V_RBO_Z#CLIENT           rcl on rcl.id = cl.rbo_client_id
+  left join V_RFO_Z#KAS_CLN_SERVICES kcs on cp.id = kcs.c_client
+  left join V_RFO_Z#KAS_SERV_CONTACT ksc on ksc.collection_id = kcs.c_services
+  left join V_RFO_Z#KAS_SERVICES      ks on ks.id = ksc.c_service
+                                        and ks.c_code = 'SMS_SERVICE'
+  left join (select fcc.id
+               from V_RFO_Z#OWNER_COM foc
+               join V_RFO_Z#CONTACTS   fc on fc.c_private = foc.id
+                                         and fc.c_affirmed = 1
+               join V_RFO_Z#CLIENT    fcc on fcc.c_contacts = fc.collection_id
+              where foc.c_code = 'MOBILE'
+              group by fcc.id ) ff on ff.id = cp.id
+  left join (select rcc.id
+               from V_RBO_Z#OWNER_COM roc
+               join V_RBO_Z#CONTACTS   rc on rc.c_private = roc.id
+                                         and rc.c_affirmed = 1
+               join V_RBO_Z#CLIENT    rcc on rcc.c_contacts = rc.collection_id
+              where roc.c_code = 'MOBILE'
+              group by rcc.id) rr on rr.id = rcl.id
+  left join (select d.c_client, sum(vd.c_has_timeout) as is_has_timeout
+               from V_RBO_Z#DEPN d
+               join V_RBO_Z#VID_DEPOSIT vd on vd.id = d.c_vid_dog
+              where d.c_date_close is null
+              group by c_client) dd on dd.c_client = rcl.id
+  left join (select dw.collection_id, max(ds.is_dep_scheme_not_demand) as is_dep_scheme_not_demand
+               from V_RFO_Z#KAS_DOG_WDOWN dw
+               join V_RFO_Z#FDOC          fd on fd.id = dw.c_dogovor
+                                            and fd.class_id = 'CONT_DEP'
+               join V_RFO_Z#CONT_DEP      cd on cd.id = fd.id
+               left join (select d.id,
+                                 case when pg.c_code in ('DEP_SCHEM_CAP','DEP_SCHEM_VIPL') then 1
+                                      when pg.c_code in ('DEP_SCHEM_AVAN','DEP_SCHEM_DOV','DEP_SCHEM_AVAN_PENSION') then 0
+                                 end is_dep_scheme_not_demand
+                            from V_RFO_Z#DEP_SCHEME      d
+                            join --V_RFO_Z#PROPERTIES_ALL  pa on pa.collection_id = d.c_kas_add_prop
+                                 T_RFO_Z#PROPERTIES  pa on pa.collection_id = d.c_kas_add_prop
+                            join V_RFO_Z#PROPERTY_GRP    pg on pg.id = pa.c_group_prop
+                           where pg.c_classes_list = 'DEP_SCHEME'
+                             and pg.c_code like 'DEP_SCHEM%'
+                             and pg.c_code not in ('DEP_SCHEM_AVAN_DEPPC','DEP_SCHEM_AVAN_ZP')
+                             and pa.c_bool = '1' ) ds on ds.id = cd.c_dep_scheme
+                           group by dw.collection_id) xx on xx.collection_id = ksc.c_dogovor
+ where exists
+ (select 1 from V_RBO_Z#DEPN dpn where dpn.c_client = rcl.id);
+grant select on U1.M_CLIENT_DEPN_SMS_SERVICE to LOADDB;
+
+

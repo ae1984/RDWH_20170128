@@ -1,0 +1,89 @@
+﻿create table U1.RFO_Z#KAS_SAS_OFFERS
+(
+  id                NUMBER not null,
+  c_contract_id     NUMBER,
+  c_client_id_rbo   NUMBER,
+  c_client_id_rfo   NUMBER,
+  c_fio             VARCHAR2(100),
+  c_rnn             VARCHAR2(20),
+  c_camp_type       VARCHAR2(100),
+  c_camp_type_code  NUMBER,
+  c_camp_name       VARCHAR2(100),
+  c_camp_name_code  NUMBER,
+  c_prod_code_lev1  VARCHAR2(10),
+  c_prod_desc_lev1  VARCHAR2(250),
+  c_prod_code_lev2  VARCHAR2(40),
+  c_prod_desc_lev2  VARCHAR2(250),
+  c_prod_code_lev3  VARCHAR2(40),
+  c_prod_desc_lev3  VARCHAR2(250),
+  c_smart_script_id VARCHAR2(40),
+  c_cell_package_sk NUMBER,
+  c_display_offer   NUMBER,
+  c_credit_sum      NUMBER(17,2),
+  c_param1_name     VARCHAR2(32),
+  c_param1_value    VARCHAR2(100),
+  c_param2_name     VARCHAR2(32),
+  c_param2_value    VARCHAR2(255),
+  c_param3_name     VARCHAR2(32),
+  c_param3_value    VARCHAR2(100),
+  c_param4_name     VARCHAR2(32),
+  c_param4_value    VARCHAR2(100),
+  c_param5_name     VARCHAR2(32),
+  c_param5_value    VARCHAR2(100),
+  c_param6_name     VARCHAR2(32),
+  c_param6_value    VARCHAR2(100),
+  c_param7_name     VARCHAR2(32),
+  c_param7_value    VARCHAR2(100),
+  c_param8_name     VARCHAR2(32),
+  c_param8_value    VARCHAR2(100),
+  c_param9_name     VARCHAR2(32),
+  c_param9_value    VARCHAR2(100),
+  c_param10_name    VARCHAR2(32),
+  c_param10_value   VARCHAR2(100),
+  c_param11_name    VARCHAR2(32),
+  c_param11_value   VARCHAR2(100),
+  c_param12_name    VARCHAR2(32),
+  c_param12_value   VARCHAR2(100),
+  c_param13_name    VARCHAR2(32),
+  c_param13_value   VARCHAR2(100),
+  c_param14_name    VARCHAR2(32),
+  c_param14_value   VARCHAR2(100),
+  c_param15_name    VARCHAR2(32),
+  c_param15_value   VARCHAR2(100),
+  c_param16_name    VARCHAR2(32),
+  c_param16_value   VARCHAR2(100),
+  c_param17_name    VARCHAR2(32),
+  c_param17_value   VARCHAR2(100),
+  c_param18_name    VARCHAR2(32),
+  c_param18_value   VARCHAR2(100),
+  c_param19_name    VARCHAR2(32),
+  c_param19_value   VARCHAR2(100),
+  c_param20_name    VARCHAR2(32),
+  c_param20_value   VARCHAR2(100),
+  c_created_dttm    DATE,
+  c_flag_execute    VARCHAR2(1),
+  c_note            VARCHAR2(2000),
+  c_client_dwh_id   VARCHAR2(40),
+  c_surname         VARCHAR2(100),
+  c_first_name      VARCHAR2(100),
+  c_atronymic       VARCHAR2(100),
+  c_birth_date      DATE,
+  change_date       DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select, insert, update, delete on U1.RFO_Z#KAS_SAS_OFFERS to ETL;
+grant select on U1.RFO_Z#KAS_SAS_OFFERS to LOADDB;
+grant select on U1.RFO_Z#KAS_SAS_OFFERS to LOADER;
+

@@ -1,0 +1,42 @@
+﻿create materialized view U1.M_KASPIKZ_PAY_PAY_INFO
+refresh force on demand
+as
+select id,
+    user_id,
+    service_id,
+    subscription_id,
+    pos_terminal_id,
+    reg_date,
+    amount,
+    amount_fee,
+    currency,
+    account_id,
+    account_simple_id,
+    account_type,
+    account_name,
+    bank_reference,
+    bank_result_code,
+    bank_payment_id,
+    bank_auth_ref,
+    prov_reference,
+    prov_result_code,
+    prov_status_code,
+    payment_type,
+    upper(descr) as descr,
+    deposit_account_number,
+    deposit_account_simple_id,
+    old_deposit_account_id,
+    transfer_id,
+    is_offline_payment,
+    ecomm_result_code,
+    ecomm_payment_id,
+    is_3ds,
+    host_name,
+    bonus_amount,
+    global_payment_id
+ from V_KASPI_PAY_PAY_INFO@RDWH11 t;
+grant select on U1.M_KASPIKZ_PAY_PAY_INFO to LOADDB;
+grant select on U1.M_KASPIKZ_PAY_PAY_INFO to LOADER;
+grant select on U1.M_KASPIKZ_PAY_PAY_INFO to RISK_VERIF;
+
+

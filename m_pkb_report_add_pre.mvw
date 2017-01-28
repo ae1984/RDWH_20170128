@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_PKB_REPORT_ADD_PRE
+build deferred
+refresh force on demand
+as
+select /*+ parallel 30*/ r.id,
+          trunc(fd.c_doc_date) as report_date,
+          min(to_date(v.c_date_begin,'dd.mm.yyyy')) as cred_hist_date_beg,
+          max(c.c_payment_overdue) as del_days_max,
+          max(case when c.c_payment_date between add_months(trunc(fd.c_doc_date),-12) and trunc(fd.c_doc_date) then
+                c.c_payment_overdue end)  as del_days_12m_max,
+          max(case when c.c_payment_date between add_months(trunc(fd.c_doc_date),-6) and trunc(fd.c_doc_date) then c.c_payment_overdue end) as del_days_6m_max,
+          sum(case when c.c_payment_overdue = '0' then 1 else 0 end) as pmt_cnt,
+          sum(case
+              when c.c_payment_date between add_months(trunc(fd.c_doc_date),-12) and trunc(fd.c_doc_date) and c_payment_overdue ='0' then
+               1
+              else 0 end) as pmt_12m_cnt,
+          sum(case
+              when c.c_payment_date between add_months(trunc(fd.c_doc_date),-6) and trunc(fd.c_doc_date) and c_payment_overdue = '0' then
+               1
+              else 0 end) as pmt_6m_cnt
+      from V_RFO_Z#PKB_REPORT r
+      join V_RFO_Z#FDOC fd on fd.id = r.id and fd.class_id = 'PKB_REPORT'
+      join M_PKB_REPORT_ALL v on v.iin_rnn = r.c_rnn and v.report_date <= trunc(fd.c_doc_date)
+      left join T_RFO_Z#KAS_PKB_PC c on c.collection_id = v.c_pc
+      where v.c_subj_role = 'ЗАЁМЩИК'
+     group by r.id,trunc(fd.c_doc_date);
+grant select on U1.M_PKB_REPORT_ADD_PRE to LOADDB;
+grant select on U1.M_PKB_REPORT_ADD_PRE to LOADER;
+
+

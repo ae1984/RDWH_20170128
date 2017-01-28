@@ -1,0 +1,23 @@
+﻿create materialized view U1.M_TMP_R_DEP_REJ
+refresh force on demand
+as
+select  f.*
+from m_folder_con_cancel f
+join V_FOLDER_ALL_RFO ff on ff.folder_id = f.folder_id
+join v_form_client_all_rfo fc on fc.form_client_id = ff.form_client_id
+join  (select t.c_inn, t.c_date_in, min(t.c_date_begin) as c_date_begin, sum(case when t.c_cur_short = 'EUR' then t.c_saldo_in * 211.5
+                  when t.c_cur_short = 'USD' then t.c_saldo_in * 185.5
+                  when t.c_cur_short = 'KZT' then t.c_saldo_in end) c_sum_saldo_depn
+           from M_RBO_PORT_DEPN_TST t
+           where c_date_begin <= c_date_in and t.c_inn is not null
+           group by t.c_inn, t.c_date_in
+           having sum(case when t.c_cur_short = 'EUR' then t.c_saldo_in * 211.5
+                  when t.c_cur_short = 'USD' then t.c_saldo_in * 185.5
+                  when t.c_cur_short = 'KZT' then t.c_saldo_in end) > 50000
+       )tt on tt.c_inn = fc.iin and tt.c_date_in = trunc(f.folder_date_create_mi,'mon') and
+                 trunc(ff.folder_date_create) - tt.c_date_begin > 90 and
+                f.cancel_middle_office  = 1;
+grant select on U1.M_TMP_R_DEP_REJ to LOADDB;
+grant select on U1.M_TMP_R_DEP_REJ to LOADER;
+
+

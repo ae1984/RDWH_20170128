@@ -1,0 +1,23 @@
+﻿create materialized view U1.V_RBO_Z#KAS_CASH_REG
+refresh complete on demand
+as
+select cast (id as number) as id,
+       cast (c_code as varchar2(150)) as c_code,
+       cast (c_name as varchar2(300)) as c_name,
+       cast (c_depart_ref as number) as c_depart_ref,
+       cast (c_com_status_ref as number) as c_com_status_ref,
+       cast (c_out_sys_id as varchar2(150)) as c_out_sys_id,
+       cast (c_acc_arr as number) as c_acc_arr,
+       cast (c_address_ref as number) as c_address_ref,
+       cast (c_reg_type_ref as number) as c_reg_type_ref,
+       cast (c_com_status_hist as number) as c_com_status_hist,
+       cast (c_depart_inst as number) as c_depart_inst,
+       cast (c_saldo_jrl_arr as number) as c_saldo_jrl_arr,
+       cast (c_group_ref as number) as c_group_ref,
+       cast (c_deploy_ref as number) as c_deploy_ref,
+       cast (c_dop_info as varchar2(1500)) as c_dop_info
+from rdwh.V_RBO_Z#KAS_CASH_REG@rdwh_exd;
+grant select on U1.V_RBO_Z#KAS_CASH_REG to LOADDB;
+grant select on U1.V_RBO_Z#KAS_CASH_REG to LOADER;
+
+

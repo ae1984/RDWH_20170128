@@ -1,0 +1,12 @@
+﻿create materialized view U1.M_RBO_CONTRACT_DATA_PMT_BUFF0
+build deferred
+refresh force on demand
+as
+select /*+parallel(10)*/ po.*
+  from u1.M_RBO_CONTRACT_PLAN_OPER po
+  join (
+         select distinct t.rbo_contract_id from M_RBO_CONTRACT_PLAN_OPER t
+         where t.cnt_pmt_plan in (1,2,3,4,5,6,7) and t.plan_date_x +181 > trunc(sysdate)
+       ) po1 on po1.rbo_contract_id=po.rbo_contract_id
+  where po.cnt_pmt_plan in (1,2,3,4,5,6,7);
+

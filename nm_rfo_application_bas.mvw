@@ -1,0 +1,165 @@
+﻿create materialized view U1.NM_RFO_APPLICATION_BAS
+build deferred
+refresh force on demand
+as
+select /*+ parallel(144)*/
+--RDWH2.0
+  rr.*
+  ,min(rr.folder_id) over (partition by rr.contract_number) as folder_id_first
+
+
+
+  ,case when rr.is_credit_issued=0 and rr.ps_cancel = 1 then 1 end                                             as cancel_prescoring -- прескоринг
+  ,case when rr.is_credit_issued=0 and rr.vr_cancel = 1 then 1 end                                             as cancel_verificator --верификаторы
+  ,case when rr.is_credit_issued=0 and (rr.mo_cancel = 1
+                                       or rr.cancel_type_point = 'CANCEL_MIDDLE_OFFICE') then 1 end            as cancel_middle_office -- Мидл-офис
+
+  ,case when rr.is_credit_issued=0 and (rr.cp_cancel = 1 or rr.cancel_type_point = 'CANCEL_CPR_AA'
+               or coalesce(rr.is_aa_approved,max(is_bk_aa_approved) over (partition by folder_id))  =0)
+               then 1 end                                                                                      as cancel_cpr_aa -- ЦПР, Автоандеррайтинг и СБ (в прошлом)
+
+  ,case when rr.is_credit_issued=0 and (rr.mn_cancel = 1 or rr.cancel_type_point = 'CANCEL_MANAGER'
+                                       or (rr.cancel_type_point='CANCEL'
+                                           and rr.process_name<>'ОНЛАЙН КРЕДИТ') )then 1 end                   as cancel_manager --
+  ,case when rr.is_credit_issued=0 and (rr.cl_cancel = 1 or rr.cancel_type_point = 'CANCEL_CLIENT')then 1 end  as cancel_client --
+  ,case when rr.is_credit_issued=0 and rr.cancel_type_point='CANCEL_CONTROLLER' then 1 end                     as cancel_controller --
+
+  ---------вывод для проверки----------------
+  -------------------------------------------
+  , max(is_bk_aa_approved) over (partition by folder_id) as is_bk_aa_approved_max
+
+from (
+      select
+          r.*
+         ,c.id as rfo_client_id
+         ,c.x_iin as iin
+         ,c.x_rnn as rnn
+
+         ,coalesce(upper(pr.c_name),r.product1) as product
+         ,coalesce(pr.product_type,r.product_type1) as product_type
+         ,pr.c_code as product_code
+         ,cl.ps_cancel as  ps_cancel
+         ,cl.vr_cancel as  vr_cancel
+         ,cl.mo_cancel as  mo_cancel
+         ,cl.cp_cancel as  cp_cancel
+         ,cl.mn_cancel as  mn_cancel
+         ,cl.cl_cancel as  cl_cancel
+         ,cmp.cancel_type as cancel_type_point
+         ,least(cmp.is_issued,sd.is_credit_issued) as is_credit_issued
+         ,p.is_aa_approved as is_aa_approved
+         ,upper(u1.c_name) as delivery_type
+         ,case when upper(u1.c_name) = 'БК' then r.folder_id end as bk_folder_id
+         ,case when upper(u1.c_name) = 'БК' then p.is_aa_approved end as is_bk_aa_approved
+         ,trunc(r.folder_con_date_time,'mi') as folder_date_create_mi
+         ,cmp.is_point_active
+         ,u2.c_code as tariff_plan_code
+      from (
+        select
+               oc.id as rfo_con_or_claim_id
+               ,'CLAIM' as rfo_con_claim_type
+               ,trunc(b.c_date_create) as folder_con_date
+               ,b.c_date_create as folder_con_date_time
+               ,null as folder_id
+               ,null as contract_number
+               ,b.c_total_amount as contract_amount
+               ,'ONLINE_CRED' as process_code
+               ,'ОНЛАЙН КРЕДИТ' as process_name
+               --служебное
+               ,null as cp_c_point
+               ,null as c_kas_vid_delivery
+               ,null as cs_c_add_prop
+               ,'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР' as product1
+               ,'ТОВАРЫ'  as product_type1
+               ,null as fd_c_status_doc
+               ,oc.c_client_ref as client_ref
+               ,null as cd_c_kas_add_prop
+               ,null as gu_contract_num
+               ,null as cd_c_kas_pc_dog_ref
+               ,null as tariff_ref
+        from u1.V_RFO_Z#KAS_ONLINE_CLAIM oc
+        left join u1.V_RFO_Z#KAS_ONLINE_BUY b on b.id = oc.c_buy_ref
+        where oc.c_folder_ref is null
+        union all
+        select cd.id as rfo_con_or_claim_id
+               ,'CREDIT' as rfo_con_claim_type
+               ,trunc(cp.c_date_create) as folder_con_date
+               ,cp.c_date_create as folder_con_date_time
+               ,cp.id as folder_id
+               ,cd.c_num_dog as contract_number
+               ,cd.c_info_cred#summa_cred_com as contract_amount
+               ,bp.c_code as process_code
+               ,upper(bp.c_name) as process_name
+               --служебное
+               ,cp.c_point as cp_c_point
+               ,fld.c_kas_vid_delivery as c_kas_vid_delivery
+               ,cs.c_add_prop as cs_c_add_prop
+               ,null as product1 --cr_program_name,
+               ,null as product_type1
+               ,fd.c_status_doc as fd_c_status_doc
+               ,cd.c_client_ref as client_ref
+               ,cd.c_kas_add_prop as cd_c_kas_add_prop
+               ,pcd.c_num_dog as gu_contract_num
+               ,cd.c_kas_pc_dog_ref as cd_c_kas_pc_dog_ref
+               ,cs.c_kas_tp_ref as tariff_ref
+        from u1.V_RFO_Z#CM_CHECKPOINT cp
+        join u1.V_RFO_Z#FOLDERS fld on fld.id = cp.id
+        join NV_RFO_BUS_PROCESS_WRAP bp on bp.id = fld.c_business and bp.is_credit_process = 1
+        join u1.V_RFO_Z#RDOC rd on rd.collection_id = fld.c_docs
+        join u1.V_RFO_Z#FDOC fd on fd.id = rd.c_doc and fd.class_id = 'CREDIT_DOG'
+        left join u1.V_RFO_Z#CREDIT_DOG cd on cd.id = fd.id
+        left join u1.V_RFO_Z#KAS_PC_DOG pcd on pcd.id = cd.c_kas_pc_dog_ref
+        left join u1.V_RFO_Z#CRED_SCHEME cs on cs.id = cd.c_cred_scheme
+        union all
+        select cd2.id as rfo_con_or_claim_id
+               ,'CARD' as rfo_con_claim_type
+               ,trunc(cp.c_date_create) as folder_con_date
+               ,cp.c_date_create as folder_con_date_time
+               ,cp.id as folder_id
+               ,cd2.c_num_dog as contract_number
+               ,cd2.c_credit_limit as contract_amount
+               ,bp.c_code as process_code
+               ,upper(bp.c_name) as process_name
+               --служебное
+               ,cp.c_point as cp_c_point
+               ,fld.c_kas_vid_delivery as c_kas_vid_delivery
+               ,cs.c_add_prop as cs_c_add_prop
+               ,null as product1
+               ,null as product_type1
+               ,fd.c_status_doc as fd_c_status_doc
+               ,cd2.c_client_ref as client_ref
+               ,cd2.c_kas_add_prop as cd_c_kas_add_prop
+               ,cd2.c_num_dog as gu_contract_num
+               ,null as cd_c_kas_pc_dog_ref
+               ,cd2.c_tariff_plan as tariff_ref
+        from u1.V_RFO_Z#CM_CHECKPOINT cp
+        join u1.V_RFO_Z#FOLDERS fld on fld.id = cp.id
+        join NV_RFO_BUS_PROCESS_WRAP bp on bp.id = fld.c_business and bp.is_credit_process = 1
+        join u1.V_RFO_Z#RDOC rd on rd.collection_id = fld.c_docs
+        join u1.V_RFO_Z#FDOC fd on fd.id = rd.c_doc and fd.class_id = 'KAS_PC_DOG'
+        left join u1.V_RFO_Z#KAS_PC_DOG cd2 on cd2.id = fd.id
+        left join u1.V_RFO_Z#KAS_CARD_SCHEME cs on cs.id = cd2.c_pc_scheme
+      ) r
+        left join u1.V_RFO_Z#CLIENT c on c.id = r.client_ref
+        left join u1.NV_RFO_STATUS_DOG_WRAP sd on sd.id = r.fd_c_status_doc
+        left join u1.NV_RFO_CM_POINT_WRAP cmp on cmp.id = r.cp_c_point
+        left join u1.NV_RFO_PROPERTIES_WRAP p on p.collection_id = r.cd_c_kas_add_prop and r.rfo_con_claim_type='CREDIT'
+        left join u1.NV_RFO_PROPERTIES_WRAP p1 on p1.collection_id = r.cs_c_add_prop --теряется 211343 записей
+        left join u1.NV_RFO_PROD_PROPERTY_WRAP pr on pr.id = p1.c_prop
+        left join V_RFO_Z#KAS_UNIVERSAL_D u1 on u1.id = r.c_kas_vid_delivery
+        left join V_RFO_Z#KAS_UNIVERSAL_D u2 on u2.id = r.tariff_ref
+        left join (
+                    select
+                      t.folder_id
+                      ,max(t.ps_cancel) as ps_cancel
+                      ,max(t.vr_cancel) as vr_cancel
+                      ,max(t.mo_cancel) as mo_cancel
+                      ,max(t.cp_cancel) as cp_cancel
+                      ,max(t.mn_cancel) as mn_cancel
+                      ,max(t.cl_cancel) as cl_cancel
+                    from NV_RFO_FOLDER_REASON_CANCEL t
+                    group by t.folder_id
+        ) cl on cl.folder_id = r.folder_id
+) rr;
+grant select on U1.NM_RFO_APPLICATION_BAS to LOADDB;
+
+

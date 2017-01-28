@@ -1,0 +1,26 @@
+﻿create materialized view U1.V_RFO_Z#KAS_AUTO_ESTIM
+refresh complete on demand
+as
+select t.id,
+       t.sn,
+       t.su,
+       t.c_kas_inf_auto_ref,
+       t.c_date_end,
+       t.c_auto_cond,
+       t.c_advert_num,
+       t.c_owner_trust#0,
+       t.c_phone_mobile,
+       t.c_cred_scheme,
+       t.c_summ_arr,
+       t.c_folder_ref,
+       t.c_add_info,
+       t.c_nok_ref,
+       t.c_nok_num,
+       t.c_nok_date,
+       t.c_estim_date,
+       t.c_estim_user
+  from ibs.Z#KAS_AUTO_ESTIM@rfo_snap t;
+grant select on U1.V_RFO_Z#KAS_AUTO_ESTIM to LOADDB;
+grant select on U1.V_RFO_Z#KAS_AUTO_ESTIM to LOADER;
+
+

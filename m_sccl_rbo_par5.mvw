@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_SCCL_RBO_PAR5
+build deferred
+refresh force on demand
+as
+select x.rfo_client_id
+
+       ,x.kspgl_contract_cnt
+       ,case when x.kspgl_contract_cnt > 0 then 1 else 0 end as kspgl_is_active
+
+       ,x.dep_card_cont_cnt
+       ,case when x.dep_card_cont_cnt > 0 then 1 else 0 end as dep_card_is_active
+
+from (
+      select /*+ parallel(30) */
+             cl.rfo_client_id
+
+             ,count(distinct case when a.cred_program_code = 'ZP_KASPI_GOLD' then a.rbo_contract_id end) as kspgl_contract_cnt
+
+             ,count(distinct case when a.cred_program_code = 'DEP_CARD' then a.rbo_contract_id end) as dep_card_cont_cnt
+
+      from u1.V_CLIENT_RFO_BY_ID cl
+      left join u1.M_RBO_CONTRACT_BAS a on a.rfo_client_id = cl.rfo_client_id
+                                           and a.date_fact_end is null
+      group by cl.rfo_client_id
+) x;
+grant select on U1.M_SCCL_RBO_PAR5 to LOADDB;
+grant select on U1.M_SCCL_RBO_PAR5 to LOAD_MO;
+grant select on U1.M_SCCL_RBO_PAR5 to RTS_RDWH;
+
+

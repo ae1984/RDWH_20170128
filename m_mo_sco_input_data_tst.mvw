@@ -1,0 +1,33 @@
+﻿create materialized view U1.M_MO_SCO_INPUT_DATA_TST
+build deferred
+refresh complete on demand
+as
+select
+       t.date_create, t.folder_id, t.client_id, n.field_code, to_char(n.value) as par_value
+from u1.mo_sco_request t
+join u1.mo_sco_request_numb n on n.sco_request_id = t.id
+where t.date_create >= to_date('01/09/15', 'dd/mm/yy')
+union all
+
+select
+       t.date_create, t.folder_id, t.client_id, s.field_code, s.value as par_value
+from u1.mo_sco_request t
+join u1.mo_sco_request_str s on s.sco_request_id = t.id
+where t.date_create >= to_date('01/09/15', 'dd/mm/yy')
+union all
+
+select
+       t.date_create, t.folder_id, t.client_id, d.field_code, to_char(d.value) as par_value
+from u1.mo_sco_request t
+join u1.mo_sco_request_date d on d.sco_request_id = t.id
+where t.date_create >= to_date('01/09/15', 'dd/mm/yy')
+union all
+
+select
+       t.date_create, t.folder_id, t.client_id, dd.field_code, dd.name as par_value
+from u1.mo_sco_request t
+join u1.mo_sco_request_dict dd on dd.sco_request_id = t.id
+where t.date_create >= to_date('01/09/15', 'dd/mm/yy');
+grant select on U1.M_MO_SCO_INPUT_DATA_TST to LOADDB;
+
+

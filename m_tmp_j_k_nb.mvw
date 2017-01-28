@@ -1,0 +1,52 @@
+﻿create materialized view U1.M_TMP_J_K_NB
+refresh force on demand
+as
+select c.*, cc.client_id, cc.client_iin_last, --cc2.contract_number,
+       dc.x_amount, cc.contract_amount_max, cc.max_debt_used,
+       cd.total_debt_last_rep, cd.total_debt_last_rep_new, cd.delinq_days_last_rep, cd.delinq_days_last_rep_new,
+       fa.process_name, trunc(fa.folder_date_create) as folder_all_date,
+       /*trunc(f.folder_date_create_mi) as folder_cred_date,*/ dc.begin_date, dc.set_revolving_date,
+       /*f.cr_program_name,*/ dc.prod_type,-- f.is_credit_issued
+       case when x.deal_number is not null then 1 else 0 end as is_ref_hard,
+       case when x_sd.deal_number is not null then 1 else 0 end as is_ref_hard_same_day,
+       cc.is_refin_restruct_first, cc.is_refin_restruct_last, cc.product_refin_first, cc.product_refin_last,
+       cc.product_program_first, cc.product_program_last, dc.prod_name,
+
+       k2.is_kdn_regulated_sal_max, k2.score_is_kdn_regulated_f2, k2.score_is_kdn_regulated_f,
+       k2.kdn_form_salary_max, k2.score_kdn_f2, k2.score_kdn_f,
+       k2.form_income_gcvp_salary_max, k2.score_inc_f2, k2.score_inc_f,
+       k2.inc_rise_prc2, k2.inc_rise_prc,
+       k2.pkb_rep_id, k2.pkb_rep_found_type, k2.pkb_age_days, k2.pkb_pmt, k2.other_deal_pmt, k2.contract_pmt
+--from T_TMP_NB_CONTRACT c
+from (select d2.deal_number as contract_number, a.dnp, a.dnp_hard -- также подключае транши после 1 апр
+      from T_TMP_NB_CONTRACT a
+      left join V_DWH_PORTFOLIO_CURRENT d2 on substr(d2.deal_number,1,12) = a.contract_number and
+                                   d2.begin_date >= to_date('2014-04-01','yyyy-mm-dd')) c
+join V_CONTRACT_CAL cc on cc.contract_number = c.contract_number
+left join M_CONTRACT_CAL_DEL cd on cd.contract_number = c.contract_number
+--left join V_CONTRACT_CAL cc2 on cc2.client_id = cc.client_id
+join V_DWH_PORTFOLIO_CURRENT dc on dc.deal_number = c.contract_number
+--left join M_FOLDER_CON_CANCEL f on f.contract_number = c.contract_number and f.folder_id = dc.folder_id_first
+left join V_FOLDER_ALL_RFO fa on fa.folder_id = dc.folder_id_first
+left join M_TMP_K_SCORE_RES_2_45_2 k2 on k2.deal_number = c.contract_number
+left join (select distinct dc.begin_date, dc.deal_number-- cc.contract_number -- были договора закрытые досрочно в день выдачи?
+            --from V_CONTRACT_CAL cc
+            from V_DWH_PORTFOLIO_CURRENT dc --on dc.deal_number = cc.contract_number
+            join V_DWH_PORTFOLIO_CURRENT dc2 on dc2.client_iin = dc.client_iin and
+                             /*dc2.deal_status = 'ПОГАШЕН ДОСРОЧНО' and*/ dc2.actual_end_date - dc.begin_date in (0,1) and
+                             (dc.prod_name like 'РЕФИНАНС%' or dc.prod_name like 'ИНДИВИДУАЛЬНЫЙ%')
+                             --cc.is_refin_restruct_first = 1
+) x on x.deal_number = c.contract_number
+left join (select distinct dc.begin_date, dc.deal_number-- cc.contract_number -- были договора закрытые досрочно в день выдачи?
+            --from V_CONTRACT_CAL cc
+            from V_DWH_PORTFOLIO_CURRENT dc --on dc.deal_number = cc.contract_number
+            join V_DWH_PORTFOLIO_CURRENT dc2 on dc2.client_iin = dc.client_iin and
+                             /*dc2.deal_status = 'ПОГАШЕН ДОСРОЧНО' and*/ dc2.actual_end_date - dc.begin_date in (0) and
+                             (dc.prod_name like 'РЕФИНАНС%' or dc.prod_name like 'ИНДИВИДУАЛЬНЫЙ%')
+                             --cc.is_refin_restruct_first = 1
+) x_sd on x_sd.deal_number = c.contract_number
+where dc.begin_date >= to_date('2014-04-01','yyyy-mm-dd');
+grant select on U1.M_TMP_J_K_NB to LOADDB;
+grant select on U1.M_TMP_J_K_NB to LOADER;
+
+

@@ -1,0 +1,23 @@
+﻿create table U1.T_S02_Z#PROPERTY
+(
+  id              NUMBER,
+  collection_id   NUMBER,
+  c_property_type NUMBER,
+  c_date_begin    DATE,
+  c_date_end      DATE,
+  c_date_set      DATE,
+  c_user          NUMBER,
+  c_ref_value     VARCHAR2(128),
+  c_num_value     NUMBER(30,10),
+  c_str_value     VARCHAR2(2000),
+  c_change_date   DATE
+)
+tablespace USERS_ARC
+  pctfree 10
+  initrans 1
+  maxtrans 255
+nologging;
+grant select, insert, update, delete on U1.T_S02_Z#PROPERTY to ETL;
+grant select on U1.T_S02_Z#PROPERTY to LOADDB;
+grant select on U1.T_S02_Z#PROPERTY to LOADER;
+

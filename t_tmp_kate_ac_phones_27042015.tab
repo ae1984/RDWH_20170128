@@ -1,0 +1,28 @@
+﻿create table U1.T_TMP_KATE_AC_PHONES_27042015
+(
+  folder_id          NUMBER,
+  client_id          NUMBER,
+  home_tel           VARCHAR2(100),
+  work_tel           VARCHAR2(100),
+  mobile_tel         VARCHAR2(100),
+  dop_tel            VARCHAR2(100),
+  wife_tel           VARCHAR2(100),
+  email              VARCHAR2(200),
+  folder_date_create VARCHAR2(20)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_KATE_AC_PHONES_27042015 to LOADDB;
+grant select on U1.T_TMP_KATE_AC_PHONES_27042015 to LOADER;
+

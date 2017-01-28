@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_REJ_EKT_GCVP_300115_2
+refresh force on demand
+as
+select t.contract_number
+from U1.M_FOLDER_CON_MINER t
+where upper(t.cr_program_name) = 'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР'
+  and t.contract_amount > 110000
+  and coalesce(t.inc_sal_spouse, 0) = 0
+  and t.gcvp_pmts_count_from_rep <= 5
+  and t.pkb_closed_contracts <= 1
+  and t.fld_number_in_1w >= 2;
+grant select on U1.M_REJ_EKT_GCVP_300115_2 to LOADDB;
+grant select on U1.M_REJ_EKT_GCVP_300115_2 to LOADER;
+
+

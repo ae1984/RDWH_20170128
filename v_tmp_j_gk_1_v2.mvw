@@ -1,0 +1,64 @@
+﻿create materialized view U1.V_TMP_J_GK_1_V2
+refresh complete on demand
+as
+select a.*,
+       case when c.iin is not null or c2.client_iin_last is not null
+                  then 1 else 0 end as is_cli_in_db,
+       case when depo.client_iin is not null or c2.client_iin_last is not null
+                  then 1 else 0 end as is_cli_with_contracts_active,
+       case when c2.client_iin_last is not null then 1 else 0 end as is_cli_credit_active,
+       case when depo.client_iin is not null then 1 else 0 end as is_cli_depo_active,
+       case when c2.delinq_days_max_last_rep >= 30 then 1 else 0 end as is_cli_credit_active_del30_now,
+       case when c3.client_iin_last is not null then 1 else 0 end as is_cli_credit_ever,
+       case when c3.client_status = 'B' then 1 else 0 end as is_cli_credit_bad_ever,
+
+       case when c2.delinq_days_max_last_rep >= 30 and c2.delinq_days_max_last_rep < 90
+            then 1 else 0 end as is_cli_credit_active_del30_90,
+       case when c2.delinq_days_max_last_rep >= 90
+            then 1 else 0 end as is_cli_credit_active_del90,
+
+       case when c3.delinq_days_max >= 30 and c3.delinq_days_max < 90
+            then 1 else 0 end as is_cli_credit_delmaxever30_90,
+       case when c3.delinq_days_max >= 90
+            then 1 else 0 end as is_cli_credit_delmaxever90
+from (
+        select t.rnn as iin, d.f2 as org_bin -- клиенты в орг за 3 мес
+        from V_G3_P_VIEW t
+        join V_G3_ADF d on d.f1 = t.p_key and d.f2 not in ('940440000910','060240016519')
+        where upper(t.p_name) not like '%KASPI BANK%'
+              and t.send_date >= to_date('2013-11-01','yyyy-mm-dd')
+              and t.send_date < to_date('2014-02-01','yyyy-mm-dd')
+--              and t.rnn = '740921301643'
+     group by t.rnn, d.f2
+) a
+left join V_CLIENT_RFO_BY_IIN c on c.iin = a.iin -- по данные РФО все
+left join (
+      select dc.clnt_inn as client_iin --, sum(dfc.dcf_accd_out_cur_value) as depo_sum -- депозитные активные
+              from V_DWH_DEPOSITS t
+              join V_DWH_CLIENT_PHYS_CURRENT dc on dc.clnt_gid = t.clnt_gid
+              join V_DWH_DEPOSITS_FACTS_30D dfc on dfc.dpst_gid = t.dpst_gid and
+                    dfc.dcf_bacnt_balance_num in (2205,2206,2207)
+              where t.is_active = 1 and dc.clnt_inn is not null and
+                    dfc.rep_date = (select max(rep_date) from V_DWH_DEPOSITS_FACTS_30D)
+              group by dc.clnt_inn having sum(dfc.dcf_accd_out_cur_value) > 0
+) depo on depo.client_iin = a.iin
+left join (select cc.client_iin_last, cc.delinq_days_max_last_rep, cc.client_status -- кредитные активные
+           from v_client_cal cc join (
+              select tc.client_iin_last as iin, max(tc.client_id) as client_id
+              from V_CLIENT_CAL tc
+              where tc.contract_amount_sum_last_rep > 0 or tc.total_debt_sum_last_rep > 0
+              group by tc.client_iin_last
+          ) x on x.client_id = cc.client_id
+) c2 on c2.client_iin_last = a.iin
+left join (select cc.client_iin_last, cc.delinq_days_max_last_rep, cc.client_status, -- все кредитные клиенты
+                  cc.delinq_days_max
+           from v_client_cal cc join (
+              select tc.client_iin_last as iin, max(tc.client_id) as client_id
+              from V_CLIENT_CAL tc
+              group by tc.client_iin_last
+          ) x on x.client_id = cc.client_id
+) c3 on c3.client_iin_last = a.iin;
+grant select on U1.V_TMP_J_GK_1_V2 to LOADDB;
+grant select on U1.V_TMP_J_GK_1_V2 to LOADER;
+
+

@@ -1,0 +1,29 @@
+﻿create materialized view U1.V_RFO_Z#KAS_RECL_HIST
+refresh complete on demand
+as
+select
+  t.id
+  ,t.sn
+  ,t.su
+  ,t.collection_id
+  ,t.c_date_create
+  ,t.c_date_repair
+  ,t.c_recl_cr_user
+  ,t.c_recl_rep_user
+  ,t.c_type_recl
+  ,t.c_doc_type
+  ,t.c_envelope
+  ,t.c_folder_ref
+  ,t.c_note
+  ,t.c_env_st_depart
+  ,t.c_kas_envelope
+  ,t.c_orr_user
+  ,t.c_date_ch_orr
+  ,t.c_date_print
+  ,t.c_kas_absent_recl
+  ,t.c_num_ved
+  ,t.c_kas_type_rec_arr
+from s01.Z#KAS_RECL_HIST@rdwh_exd t;
+grant select on U1.V_RFO_Z#KAS_RECL_HIST to LOADDB;
+
+

@@ -1,0 +1,37 @@
+﻿create materialized view U1.M_FOLDER_CON_MINER_ONL_2
+refresh force on demand
+as
+select /*+ parallel 30 */
+             t.folder_id, --t.folder_date_create_mi, t.rfo_client_id,
+             count(case when t.is_credit_issued = 0
+                             and t.process_name != 'ОНЛАЙН КРЕДИТ' then t.folder_id end) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 1 preceding and current row) as cancel_fld_cnt_wo_onl_in_24h,
+
+             count(case when t.is_credit_issued = 0
+                             and t.process_name != 'ОНЛАЙН КРЕДИТ' then t.folder_id end) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 2 preceding and current row) as cancel_fld_cnt_wo_onl_in_48h,
+
+             count(case when t.is_credit_issued = 0
+                             and t.process_name != 'ОНЛАЙН КРЕДИТ' then t.folder_id end) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 7 preceding and current row) as cancel_fld_cnt_wo_onl_in_1w,
+
+             count(case when t.is_credit_issued = 0
+                             and t.process_name != 'ОНЛАЙН КРЕДИТ' then t.folder_id end) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 30 preceding and current row) as cancel_fld_cnt_wo_onl_in_1m,
+
+             count(case when t.is_credit_issued = 0
+                             and t.process_name != 'ОНЛАЙН КРЕДИТ' then t.folder_id end) over (partition by t.rfo_client_id order by t.folder_date_create_mi
+                   range between 60 preceding and current row) as cancel_fld_cnt_wo_onl_in_2m
+      from (select tt.folder_id,
+                   tt.folder_date_create_mi,
+                   tt.process_name,
+                   max(tt.rfo_client_id) as rfo_client_id,
+                   max(tt.is_credit_issued) as is_credit_issued
+           from M_FOLDER_CON_CANCEL tt
+           group by tt.folder_id,
+                    tt.folder_date_create_mi,
+                    tt.process_name) t;
+grant select on U1.M_FOLDER_CON_MINER_ONL_2 to LOADDB;
+grant select on U1.M_FOLDER_CON_MINER_ONL_2 to LOADER;
+
+

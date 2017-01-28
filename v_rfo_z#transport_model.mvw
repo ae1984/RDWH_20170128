@@ -1,0 +1,24 @@
+﻿create materialized view U1.V_RFO_Z#TRANSPORT_MODEL
+build deferred
+refresh complete on demand
+as
+select t.id,
+       t.c_code,
+       t.c_name,
+       t.c_brand,
+       t.c_type_body,
+       t.c_type_comm,
+       t.sn,
+       t.su,
+       t.c_active,
+       t.c_max_age_cred,
+       t.c_years_arr,
+       t.c_not_cred_bu,
+       t.c_model_mo,
+       t.c_kas_sign_avto#signs_arr_ref,
+       t.c_kas_sign_avto#signs_str
+  from IBS.Z#TRANSPORT_MODEL@RFO_SNAP t;
+grant select on U1.V_RFO_Z#TRANSPORT_MODEL to LOADDB;
+grant select on U1.V_RFO_Z#TRANSPORT_MODEL to LOADER;
+
+

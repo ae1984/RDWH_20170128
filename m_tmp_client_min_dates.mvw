@@ -1,0 +1,24 @@
+﻿create materialized view U1.M_TMP_CLIENT_MIN_DATES
+using no index
+refresh force on demand
+as
+select a.*,
+       b.min_pkb_contract_date
+from (
+  select t.rfo_client_id,
+         min(t.folder_date_create) as client_min_folder_date,
+         min(case when t.is_credit_process = 1 then t.folder_date_create end) as client_min_credit_folder_date
+  from V_FOLDER_ALL_RFO t
+  group by t.rfo_client_id
+) a left join (
+  select c.rfo_client_id,
+         min(to_date(c2.c_date_begin,'dd.mm.yyyy')) as min_pkb_contract_date
+  from V_RFO_Z#PKB_REPORT p
+  join V_CLIENT_RFO_BY_ID c on (c.iin = p.c_rnn or c.rnn = p.c_rnn) and p.c_surname = c.name_last
+  join V_RFO_Z#KAS_PKB_CI c2 on c2.collection_id = p.c_ci or c2.collection_id = p.c_closed_ci
+  group by c.rfo_client_id
+) b on b.rfo_client_id = a.rfo_client_id;
+grant select on U1.M_TMP_CLIENT_MIN_DATES to LOADDB;
+grant select on U1.M_TMP_CLIENT_MIN_DATES to LOADER;
+
+

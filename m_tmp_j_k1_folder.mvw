@@ -1,0 +1,183 @@
+﻿create materialized view U1.M_TMP_J_K1_FOLDER
+refresh force on demand
+as
+select --+ parallel(30) parallel_index(30)
+  distinct -- т.к. строки множатся из-за связок
+  c.contract_number deal_number,
+  c.iin client_iin,
+  cast(null as number) x_client_id,
+  c.cr_program_name prod_type,
+  cast(null as date) x_start_date,
+  cast(null as varchar2(20)) yy_mm_start,
+  c.is_refin x_is_refin_prod_type,
+  c.folder_date_create_mi begin_date,
+  case when trunc(c.folder_date_create_mi) < to_date('01042014', 'ddmmyyyy') then 0 else 1 end is_dwh_open_after_x,
+  to_char(c.folder_date_create_mi, 'yyyy - mm') yy_mm_start_b,
+  c.rfo_client_id,
+  c.rfo_contract_id,
+
+  c.folder_id,
+
+  fc.form_client_id,
+  fc_link.form_client_found_type,
+  case when fc_link.form_client_age_days = 99999999 then null
+       else fc_link.form_client_age_days end form_client_age_days,
+  g.gcvp_rep_id,
+  gcvp_link.gcvp_rep_found_type,
+  gcvp_link.gcvp_age_days,
+  p.report_id as pkb_rep_id,
+  pkb_link.pkb_rep_found_type,
+  pkb_link.pkb_age_days,
+      case when fc.form_client_id is null or -- не нашли анкету
+                coalesce(pmt.pmt, null) is null or -- нет платежа по выдаваемому договору
+                (pkb_link.pkb_rep_found_type in (4,5,6) and -- или нашли только первичный
+                     not (pkb_link.pkb_rep_found_type in (4,5) and -- за исключением случаев, когда нашли первичный недавно
+                          p.report_type = 'ПЕРВИЧНЫЙ' and
+                          coalesce(p.active_contracts,0) in (0, 1))) -- и кол-во действующих договоров = 0 или 1
+           then 1 else 0 end as
+  is_error, -- ошибки, которые препятсвуют расчету КДН
+  -- доходы с анкеты
+  coalesce(fc.inc_sal,0) + coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) + coalesce(fc.inc_rent,0) +
+                           coalesce(fc.inc_pension_benefits,0) + coalesce(fc.inc_interest,0) as form_income_total,
+  coalesce(fc.inc_sal,0) as form_inc_sal,
+  coalesce(fc.inc_sal_add,0) as form_inc_sal_add,
+  coalesce(fc.inc_sal_spouse,0) as form_inc_sal_spouse,
+  coalesce(fc.inc_rent,0) as form_inc_rent,
+  coalesce(fc.inc_pension_benefits,0) as form_inc_pension_benefits,
+  coalesce(fc.inc_interest,0) as form_inc_interest,
+
+  case when coalesce(g.salary,0) > coalesce(fc.inc_sal,0) then
+                 coalesce(g.salary,0) + coalesce(fc.inc_sal_spouse,0) + coalesce(fc.inc_rent,0) +
+                 coalesce(fc.inc_pension_benefits,0) + coalesce(fc.inc_interest,0) + coalesce(fc.inc_sal_add,0)
+            else
+                 coalesce(fc.inc_sal,0) + coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) + coalesce(fc.inc_rent,0) +
+                 coalesce(fc.inc_pension_benefits,0) + coalesce(fc.inc_interest,0)
+            end as form_income_gcvp_salary_max,
+/*  case when coalesce(g.salary,0) > coalesce(fc.inc_sal,0) + coalesce(fc.inc_sal_add,0) then
+                 coalesce(g.salary,0) + coalesce(fc.inc_sal_spouse,0) + coalesce(fc.inc_rent,0) +
+                 coalesce(fc.inc_pension_benefits,0) + coalesce(fc.inc_interest,0)
+            else
+                 coalesce(fc.inc_sal,0) + coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) + coalesce(fc.inc_rent,0) +
+                 coalesce(fc.inc_pension_benefits,0) + coalesce(fc.inc_interest,0)
+            end as form_income_gcvp_salary_max,*/
+
+  -- платеж по договору
+  coalesce(pmt.pmt, null/*, pmt.pmt_old*/) as contract_pmt, --если нет средней ставки по выданным кредитам, то вычисляем pmt_old
+  pmt.rate_value_avg2 rate_value_avg,
+  -- зарплата с ГЦВП
+  coalesce(g.salary,0) as salary_gcvp,
+  cast(null as number) is_open_after_x,
+  cast(null as number) is_ref_res,
+  cast(null as number) is_pmt_rise,
+  cast(null as varchar2(20)) contract_number_new,
+
+  cast(null as number) is_result_open_after_x,
+  cast(null as number) is_result_ref_res,
+
+  /*case when x.deal_number is not null then 1 else 0 end as */cast(null as number) is_ref_hard,
+  /*case when x_sd.deal_number is not null then 1 else 0 end as */cast(null as number) is_ref_hard_same_day
+
+from M_FOLDER_CON_CANCEL c
+-- ищем анкету
+left join (select f2.folder_id,
+                  max(coalesce(fc1.form_client_id, fc2.form_client_id, fc3.form_client_id)) as form_client_id,
+                  case when max(fc1.form_client_id) is not null then 1
+                       when max(fc2.form_client_id) is not null then 2
+                       when max(fc3.form_client_id) is not null then 3 else 0 end as form_client_found_type,
+                  least(nvl(max(f2.folder_date_create) - max(trunc(fc2.form_client_date)),99999999),
+                        nvl(max(f2.folder_date_create) - max(trunc(fc3.form_client_date)),99999999)) as form_client_age_days
+            from V_FOLDER_ALL_RFO f2
+            left join V_CLIENT_RFO_BY_ID cl2 on cl2.rfo_client_id = f2.rfo_client_id
+            left join V_FORM_CLIENT_ALL_RFO fc1 on fc1.form_client_id = f2.form_client_id -- ищем анкету в папке
+            left join V_FORM_CLIENT_ALL_RFO fc2 on fc2.iin = cl2.iin and -- или ищем последнюю анкету до папки по ИИН
+                                                   trunc(fc2.form_client_date) <= f2.folder_date_create
+            left join V_FORM_CLIENT_ALL_RFO fc3 on fc3.rnn = cl2.rnn and -- или ищем последнюю анкету до папки по РНН
+                                                   trunc(fc3.form_client_date) <= f2.folder_date_create
+            group by f2.folder_id
+) fc_link on fc_link.folder_id = c.folder_id
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = fc_link.form_client_id
+
+-- ищем гцвп
+left join (select f3.folder_id,
+                  max(coalesce(g1.gcvp_rep_id, null/*, g2.gcvp_rep_id*/)) as gcvp_rep_id,
+                  case when max(g1.gcvp_rep_id) is not null then 1
+                       /*when max(g2.gcvp_rep_id) is not null then 2*/ else 0 end as gcvp_rep_found_type,
+                  max(f3.folder_date_create) - max(g1.rep_date) as gcvp_age_days
+            from V_FOLDER_ALL_RFO f3
+            left join V_CLIENT_RFO_BY_ID cl3 on cl3.rfo_client_id = f3.rfo_client_id
+            left join V_GCVP_REPORT g1 on g1.folder_id = f3.folder_id -- ищем гцвп в папке
+            /*left join V_GCVP_REPORT g2 on g2.client_iin = cl3.iin and
+                                          g2.rep_date <= f3.folder_date_create -- или ищем последний гцвп до папки*/
+            group by f3.folder_id
+) gcvp_link on gcvp_link.folder_id = c.folder_id
+left join V_GCVP_REPORT g on g.gcvp_rep_id = gcvp_link.gcvp_rep_id
+
+-- ищем пкб
+left join (select f4.folder_id,
+                  max(coalesce(p1.report_id, p2.report_id, p3.report_id,
+                               p4.report_id, p5.report_id, p6.report_id)) as pkb_rep_id,
+                  case when max(p1.report_id) is not null then 1
+                       when max(p2.report_id) is not null then 2
+                       when max(p3.report_id) is not null then 3
+                       when max(p4.report_id) is not null then 4
+                       when max(p5.report_id) is not null then 5
+                       when max(p6.report_id) is not null then 6 else 0 end as pkb_rep_found_type,
+                  max(f4.folder_date_create) - max(p6.rfo_report_date) as pkb_age_days
+            from V_FOLDER_ALL_RFO f4
+            left join V_CLIENT_RFO_BY_ID cl4 on cl4.rfo_client_id = f4.rfo_client_id
+            left join V_PKB_REPORT p1 on p1.folder_id = f4.folder_id and -- ищем станд или расш в папке
+                                         p1.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ')
+            left join V_PKB_REPORT p2 on p2.report_iin_rnn = cl4.iin and -- или в тот же день
+                                         p2.rfo_report_date = f4.folder_date_create and
+                                         p2.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ')
+            left join V_PKB_REPORT p3 on p3.report_iin_rnn = cl4.iin and -- или в течение 3 месяцев (для ночных или авто)
+                                         p3.rfo_report_date < f4.folder_date_create and
+                                         p3.rfo_report_date >= f4.folder_date_create - 90 and
+                                         p3.report_type in ('СТАНДАРТНЫЙ','РАСШИРЕННЫЙ')
+            left join V_PKB_REPORT p4 on p4.folder_id = f4.folder_id and -- если станд или расш нет, то ищем первичный в папке
+                                         p4.report_type = 'ПЕРВИЧНЫЙ'
+            left join V_PKB_REPORT p5 on p5.report_iin_rnn = cl4.iin and -- если нет, то в течение 90 дней
+                                         p5.rfo_report_date < f4.folder_date_create and
+                                         p5.rfo_report_date >= f4.folder_date_create - 90 and
+                                         p5.report_type in ('ПЕРВИЧНЫЙ')
+            left join V_PKB_REPORT p6 on p6.report_iin_rnn = cl4.iin and -- или ищем любой до папки
+                                         p6.rfo_report_date <= f4.folder_date_create
+            group by f4.folder_id
+) pkb_link on pkb_link.folder_id = c.folder_id
+left join V_PKB_REPORT p on p.report_id = pkb_link.pkb_rep_id
+
+/*left join risk_gkim.M_TMP_G_K_RES_REF re on re.deal_number = c.deal_number
+left join risk_gkim.M_TMP_G_K_RES_REF2 re2 on re2.deal_number = c.deal_number*/
+
+
+/*left join (select distinct dc.begin_date, dc.deal_number-- cc.contract_number -- были договора закрытые досрочно в день выдачи?
+            --from V_CONTRACT_CAL cc
+            from V_DWH_PORTFOLIO_CURRENT dc --on dc.deal_number = cc.contract_number
+            join V_DWH_PORTFOLIO_CURRENT dc2 on dc2.client_iin = dc.client_iin and
+                             \*dc2.deal_status = 'ПОГАШЕН ДОСРОЧНО' and*\ dc2.actual_end_date - dc.begin_date in (0,1) and
+                             (dc.prod_name like 'РЕФИНАНС%' or dc.prod_name like 'ИНДИВИДУАЛЬНЫЙ%')
+                             --cc.is_refin_restruct_first = 1
+            ) x on x.deal_number = c.deal_number*/
+
+/*left join (select distinct dc.begin_date, dc.deal_number-- cc.contract_number -- были договора закрытые досрочно в день выдачи?
+            --from V_CONTRACT_CAL cc
+            from V_DWH_PORTFOLIO_CURRENT dc --on dc.deal_number = cc.contract_number
+            join V_DWH_PORTFOLIO_CURRENT dc2 on dc2.client_iin = dc.client_iin and
+                             \*dc2.deal_status = 'ПОГАШЕН ДОСРОЧНО' and*\ dc2.actual_end_date - dc.begin_date in (0) and
+                             (dc.prod_name like 'РЕФИНАНС%' or dc.prod_name like 'ИНДИВИДУАЛЬНЫЙ%')
+                             --cc.is_refin_restruct_first = 1
+          ) x_sd on x_sd.deal_number = c.deal_number*/
+
+left join M_TMP_J_K1_FOLDER_PRE pmt on pmt.folder_id = c.folder_id
+
+
+where -- выбираем только те договора, по которым должен быть КДН - выданные, с лимитом или суммой, кроме АВТО - в 2013 и 2014
+      c.is_credit_issued = 0
+      --and c.x_start_date_actual is not null
+      and c.contract_amount > 0
+      --c.prod_type not in ('АВТОКРЕДИТОВАНИЕ','АВТОКРЕДИТОВАНИЕ БУ') and
+      and c.folder_date_create_mi >= to_date('20100101','yyyymmdd');
+grant select on U1.M_TMP_J_K1_FOLDER to LOADDB;
+grant select on U1.M_TMP_J_K1_FOLDER to LOADER;
+
+

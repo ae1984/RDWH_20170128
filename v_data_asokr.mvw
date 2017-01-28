@@ -1,0 +1,42 @@
+﻿create materialized view U1.V_DATA_ASOKR
+using no index
+refresh complete on demand
+enable query rewrite
+as
+with x as (
+      select trunc(t.mogw_date_start) as scoring_date,
+      --       null as folder_number,
+             t.rfo_folder_id as folder_id,
+      --       null as rnn, null as contract_number,
+             decode(t.pr_par_in_sco_prescoring,0,'ДОБРО',1,'ОТКАЗ',-1,'БЕКИ','СБОЙ') as prescoring_result,
+             case when t.pr_par_mo_sco_reject = 0 and t.calc_par_mo_sco_reject_pre = 1 then 'Х'
+                  end as scoring_status,
+             decode(t.calc_par_mo_sco_reject_pre,0,'Y',1,'N') as scoring_result,
+             substr(t.pr_par_in_sco_iin,1,12) as iin,
+             null as rnn,
+             t.pr_par_in_sco_num_scoring as card_number
+      from V_MO_RESULT_SCO t
+      where t.mogw_process_id in ( -- по папке берем последний результат MO_SCO
+                select max(m.mogw_process_id) from V_MO_RESULT_SCO m
+                where m.rfo_folder_id is not null and
+                      m.rfo_res_from_mo_id > ( -- берем со старта боевой эксплуатации
+                          select min(c.cancel_rfo_res_from_mo_id) - 1
+                          from V_MO_RES_RFO_CANCEL c
+                          where c.cancel_type_code = 'MO_SCO_REJECT')
+                group by m.rfo_folder_id)
+) select a.scoring_date,
+        a.folder_id,
+        a.prescoring_result,
+        a.scoring_status,
+        a.scoring_result,
+        a.iin,
+        a.rnn,
+        null as card_number
+from DATA_ASOKR a
+where not exists (select null from x where x.folder_id = a.folder_id)
+union all
+select * from x;
+grant select on U1.V_DATA_ASOKR to LOADDB;
+grant select on U1.V_DATA_ASOKR to LOADER;
+
+

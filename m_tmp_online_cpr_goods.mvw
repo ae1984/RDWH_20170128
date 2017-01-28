@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_TMP_ONLINE_CPR_GOODS
+refresh force on demand
+as
+select
+t.shop_name,
+trunc(t.folder_date_create_mi) as date_ratif,
+
+count(distinct ekt.product_type_name)/count(distinct t.rfo_contract_id) as avg_goods_type_req,
+count(distinct ekt.product_type_name)/count(distinct t.rfo_client_id) as avg_goods_type_cli,
+count(distinct ekt.product_name)/count(distinct t.rfo_contract_id) as avg_goods_req,
+count(distinct ekt.product_name)/count(distinct t.rfo_client_id) as avg_goods_cli,
+
+count(distinct ekt.product_name) as goods_cnt,
+count(distinct ekt.product_type_name) as goods_type_cnt,
+count(distinct t.rfo_contract_id) as req_cnt,
+count(distinct t.rfo_client_id) as cli_cnt
+from V_RFO_Z#KAS_ONLINE_CLAIM cl
+join V_RFO_Z#KAS_ONLINE_BUY f on cl.c_buy_ref = f.id
+join m_folder_con_cancel t on t.claim_id = cl.id and t.process_name = 'ОНЛАЙН КРЕДИТ'
+join V_TIME_DAYS td on td.yyyy_mm_dd = trunc(t.folder_date_create_mi)
+join V_CONTRACT_EKT_DWH ekt on ekt.contract_number = t.contract_number
+
+where trunc(t.folder_date_create_mi)>='01-06-2015' and t.x_dnp_name = 'АЛМАТЫ'
+group by
+t.shop_name,
+trunc(t.folder_date_create_mi);
+grant select on U1.M_TMP_ONLINE_CPR_GOODS to LOADDB;
+grant select on U1.M_TMP_ONLINE_CPR_GOODS to LOADER;
+
+

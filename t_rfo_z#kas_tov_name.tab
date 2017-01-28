@@ -1,0 +1,26 @@
+﻿create table U1.T_RFO_Z#KAS_TOV_NAME
+(
+  id              NUMBER not null,
+  c_code          VARCHAR2(50 CHAR),
+  c_name          VARCHAR2(250 CHAR),
+  c_type_tov      NUMBER,
+  c_bill_required VARCHAR2(1 CHAR),
+  sn              NUMBER,
+  su              NUMBER,
+  c_source_ref    NUMBER,
+  c_active        VARCHAR2(1 CHAR)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.T_RFO_Z#KAS_TOV_NAME to LOADDB;
+

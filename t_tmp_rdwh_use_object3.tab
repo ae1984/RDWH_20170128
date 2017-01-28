@@ -1,0 +1,23 @@
+﻿create table U1.T_TMP_RDWH_USE_OBJECT3
+(
+  object_name      VARCHAR2(128),
+  sql_id           VARCHAR2(13),
+  created          DATE,
+  last_ddl_time    DATE,
+  last_active_time DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_RDWH_USE_OBJECT3 to LOADDB;
+

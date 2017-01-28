@@ -1,0 +1,31 @@
+﻿create materialized view U1.V_MO_RISKY_GOODS_TOADD20140406
+refresh force on demand
+as
+select 199 + rownum as id, product_name, 5 as risk_level from (
+select r.product_name from V_TMP_JAN_RGOODS_1 r
+where not exists (select null from V_MO_RISKY_GOODS m where m.title = r.product_name)
+union (
+select 'ACCSDA ПОСУДА' from dual union all
+select 'PCP КАРТРИДЖИ' from dual union all
+select 'АКСЕССУАРЫ' from dual union all
+select 'АНТИВИРУСНАЯ ЗАЩИТА' from dual union all
+select 'БРИТВЫ РОТОРНЫЕ' from dual union all
+select 'ВОДОНАГРЕВАТЕЛЬ НАКОПИТЕЛЬНЫЙ' from dual union all
+select 'КУХОННЫЙ ГАРНИТУР' from dual union all
+select 'МАССАЖЕРЫ' from dual union all
+select 'НОСИТЕЛИ ИНФОРМАЦИИ' from dual union all
+select 'ПОСУДА' from dual union all
+select 'ПРИНТЕР ЛАЗЕРНЫЙ' from dual union all
+select 'ПРИНТЕР СТРУЙНЫЙ' from dual union all
+select 'ПЫЛЕСОСЫ БЫТОВЫЕ' from dual union all
+select 'СТОЛ' from dual union all
+select 'УХОД ЗА НОГТЯМИ' from dual union all
+select 'ФИЛЬМЫ/МУЗ DVD' from dual union all
+select 'ФИЛЬТРЫ ДЛЯ ВОДЫ' from dual union all
+select 'ШКАФ' from dual)
+order by 1
+);
+grant select on U1.V_MO_RISKY_GOODS_TOADD20140406 to LOADDB;
+grant select on U1.V_MO_RISKY_GOODS_TOADD20140406 to LOADER;
+
+

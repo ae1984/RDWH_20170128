@@ -1,0 +1,22 @@
+﻿create table U1.NT_ETL_OBJECTS_STAT
+(
+  sql_id      VARCHAR2(13),
+  cnt_process NUMBER,
+  sql_text    VARCHAR2(1000),
+  object_name VARCHAR2(320)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_ETL_OBJECTS_STAT to LOADDB;
+

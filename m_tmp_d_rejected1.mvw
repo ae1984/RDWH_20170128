@@ -1,0 +1,13 @@
+﻿create materialized view U1.M_TMP_D_REJECTED1
+refresh force on demand
+as
+select c.id as rfo_contract_id, c.c_num_dog as contract_number,round(c.c_info_cred#summa_cred) as credit_amount, pr.*
+from V_RFO_Z#CREDIT_DOG c
+left join (select k.c_name as k_c_name,i.c_producer,i.c_name,i.c_model,i.c_quant,i.c_cost,
+                  i.c_bill_summ,i.c_price,i.id,i.collection_id, k.kind_name
+             from V_RFO_Z#PROD_INFO i, V_RFO_Z#KIND_ZAL_BODY k where k.id = i.c_type_tov) pr on
+pr.collection_id = c.c_d#type_cred#prod#prod_info11;
+grant select on U1.M_TMP_D_REJECTED1 to LOADDB;
+grant select on U1.M_TMP_D_REJECTED1 to LOADER;
+
+

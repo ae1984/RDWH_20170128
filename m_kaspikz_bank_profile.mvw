@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_KASPIKZ_BANK_PROFILE
+build deferred
+refresh complete on demand
+as
+select cast(t.Id as number(20)) as id,
+       cast(t.BankingUserId as number(20)) as banking_user_id,
+       cast(t.BankProfileType as number(10)) as bank_profile_type,
+       cast(t.Iin as varchar2(50)) as iin,
+       t.BirthDate as birth_date,
+       cast(t.TmId as varchar2(50)) as tm_id,
+       cast(t.RboId as varchar2(50)) as rbo_id,
+       cast(t.RfoId as varchar2(50)) as rfo_id,
+       cast(t.SiebelId as varchar2(50)) as siebel_id,
+       cast(t.DwhId as varchar2(50)) as dwh_id,
+       cast(t.IsAuthenticated as number(3)) as is_authenticated,
+       t.TimeStamp time_stamp
+from s37.tb_Framework_BankProfile@rdwh_exd t;
+grant select on U1.M_KASPIKZ_BANK_PROFILE to LOADDB;
+grant select on U1.M_KASPIKZ_BANK_PROFILE to RISK_VERIF;
+
+

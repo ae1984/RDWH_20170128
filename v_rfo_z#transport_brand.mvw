@@ -1,0 +1,15 @@
+﻿create materialized view U1.V_RFO_Z#TRANSPORT_BRAND
+refresh complete on demand
+as
+select t.id,
+       t.c_code,
+       t.c_name,
+       t.c_production,
+       t.sn,
+       t.su,
+       t.c_active
+  from IBS.Z#TRANSPORT_BRAND@RFO_SNAP t;
+grant select on U1.V_RFO_Z#TRANSPORT_BRAND to LOADDB;
+grant select on U1.V_RFO_Z#TRANSPORT_BRAND to LOADER;
+
+

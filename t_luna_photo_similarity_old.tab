@@ -1,0 +1,26 @@
+﻿create table U1.T_LUNA_PHOTO_SIMILARITY_OLD
+(
+  similarity                  NUMBER,
+  rfo_client_id               NUMBER,
+  luna_id                     NUMBER,
+  luna_id_candidate           NUMBER,
+  photo_date_create           DATE,
+  photo_date_create_candidate DATE
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_LUNA_PHOTO_SIMILARITY_OLD to LOADDB;
+grant select, insert, update, delete, references, alter, index on U1.T_LUNA_PHOTO_SIMILARITY_OLD to RISK_ALEXEY;
+grant select, insert, update, delete, references, alter, index on U1.T_LUNA_PHOTO_SIMILARITY_OLD to RISK_ALEXEY2;
+

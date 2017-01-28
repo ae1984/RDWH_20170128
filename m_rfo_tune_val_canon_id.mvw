@@ -1,0 +1,22 @@
+﻿create materialized view U1.M_RFO_TUNE_VAL_CANON_ID
+refresh force on demand
+as
+select t.id,
+       t.c_canon_vals,
+       substr(t.c_canon_vals, 1, 16) as id1,
+       substr(t.c_canon_vals, 17, 16) as id2,
+       substr(t.c_canon_vals, 33, 16) as id3,
+       substr(t.c_canon_vals, 49, 16) as id4,
+       substr(t.c_canon_vals, 65, 16) as id5,
+       substr(t.c_canon_vals, 81, 16) as id6,
+       substr(t.c_canon_vals, 97, 16) as id7,
+       substr(t.c_canon_vals, 113, 16) as id8,
+       substr(t.c_canon_vals, 129, 16) as id9,
+       substr(t.c_canon_vals, 145, 16) as id10,
+       substr(t.c_canon_vals, 161, 16) as id11,
+       substr(t.c_canon_vals, 177, 16) as id12
+from V_RFO_Z#TUNE_VAL t;
+grant select on U1.M_RFO_TUNE_VAL_CANON_ID to LOADDB;
+grant select on U1.M_RFO_TUNE_VAL_CANON_ID to LOADER;
+
+

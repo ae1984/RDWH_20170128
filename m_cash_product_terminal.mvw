@@ -1,0 +1,35 @@
+﻿create materialized view U1.M_CASH_PRODUCT_TERMINAL
+build deferred
+refresh complete on demand
+as
+select mt.rbo_client_id,
+       mt.client_name,
+       mt.client_iin   as inn,
+       mt.acash_doc_id as document_id,
+       mt.document_date,
+       mt.amount       as document_amount,
+       case when mt.product = 'KAS_PC_DOG' then
+            case when type_contract = 'КОШЕЛЕК' then 'KОШЕЛЕК'
+                                                else  'КРЕДИТНАЯ КАРТА'
+            end
+            when mt.product in ('PR_CRED', 'KRED_PERS') then 'ПОГАШЕНИЕ КРЕДИТА'
+            when mt.product IN ('DEPN', 'DEPOSIT_PRIV') then 'ПОПОЛНЕНИЕ ДЕПОЗИТА' end as nazn,
+       mt.product,
+       mt.cash_reg_code,
+       mt.cash_reg_city as  city,
+       mt.cash_reg_address as reg_addres,
+       con.id as contact_id,
+       con.c_numb  as contact_number
+  from M_CASH_TERMINAL mt
+  join u1.V_RBO_Z#CLIENT          cl on cl.id = mt.rbo_client_id
+  join u1.V_RBO_Z#CONTACTS       con on con.collection_id = cl.c_contacts
+                                    and con.C_ACTIV = '1' -- активные
+                                    and con.C_AFFIRMED = '1'  --подтверждено
+  join V_RBO_Z#OWNER_COM          oc on oc.id = con.c_private
+                                    and oc.c_code =  'MOBILE'
+ where mt.product in ('KAS_PC_DOG','PR_CRED','KRED_PERS','DEPN','DEPOSIT_PRIV')
+   and mt.nasn_pay like '%IDDOG#%';
+grant select on U1.M_CASH_PRODUCT_TERMINAL to LOADDB;
+grant select on U1.M_CASH_PRODUCT_TERMINAL to LOADER;
+
+

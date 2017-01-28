@@ -1,0 +1,21 @@
+﻿create materialized view U1.M_TMP_J_1002_1
+refresh force on demand
+as
+select distinct dp.code_int/* as par_code, dp.name as par_name*/
+          from V_MO_D_PAR dp
+          join V_MO_D_CALC_PAR cp on cp.d_par_code = dp.code_int and cp.is_out = 1
+          join V_MO_D_CALC dc on dc.code = cp.d_calc_code and
+                (dc.d_calc_group_code like 'SC_%' or dc.d_calc_group_code in ('AR1_EKT','AR1_KN','AR1_KN15_LKN_PKN','AR1_KNP'))
+          where dp.code_int like '%_RES_PRE%' or
+                dp.code_int like 'MO_SCO_REJECT_PRE_%' or ---- интересно посмотреть
+                dp.code_int in ('CLIENT_BL_EXISTS_SCO', 'CLIENT_DOC_BL_EXISTS',
+                                'RISK_AUTO_AMOUNT_BEKI_GCVP', 'SC_RISK_EKT_UNMARRIED_BEKI_LOW_SAL',
+                                'SC_RISK_KN_KDN_HIGH_INCOME', 'SC_RISK_KN_KDN_LOW_INCOME',
+                                'SC_AR1_KN15_LKN_PKN','SC_AR1_EKT','SC_AR1_KN','SC_AR1_KNP',
+                                'SC_2_KN_RULES_SET_J1','SC_22_ANTIFRAUD_201405','SC_8_ANTIFRAUD_201405',
+                                'SC_17_ANTIFRAUD_201406','SC_CHECK_MAN_REJ', 'SC_AUTO_GAI_NO_GCVP'
+                                );
+grant select on U1.M_TMP_J_1002_1 to LOADDB;
+grant select on U1.M_TMP_J_1002_1 to LOADER;
+
+

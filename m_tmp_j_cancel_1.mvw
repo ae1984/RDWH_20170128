@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_TMP_J_CANCEL_1
+refresh complete on demand
+as
+select to_char(t.cancel_date,'yyyy-mm'), t.cancel_type_group, t.cancel_type_name,
+       ---
+       count(*) as cnt, count(distinct t.cancel_id) as cnt_cancel,
+       count(distinct t.rfo_client_id) as cli_cnt, count(distinct t.folder_id) as fld_cnt
+from V_CANCEL t
+where t.cancel_level = 1
+group by to_char(t.cancel_date,'yyyy-mm'), t.cancel_type_group, t.cancel_type_name;
+grant select on U1.M_TMP_J_CANCEL_1 to LOADDB;
+grant select on U1.M_TMP_J_CANCEL_1 to LOADER;
+
+

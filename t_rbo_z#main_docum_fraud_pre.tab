@@ -1,0 +1,90 @@
+﻿create table U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE
+(
+  id              NUMBER not null,
+  state_id        VARCHAR2(48),
+  c_document_date DATE,
+  c_sum_nt        NUMBER(17,2),
+  c_quit_doc      NUMBER,
+  c_sum           NUMBER(17,2),
+  c_rate_dt       NUMBER(20,6),
+  c_sum_po        NUMBER(17,2),
+  c_rate_kt       NUMBER(20,6),
+  c_vid_doc       NUMBER,
+  c_valuta        NUMBER,
+  c_valuta_po     NUMBER,
+  c_acc_dt        NUMBER,
+  c_acc_kt        NUMBER,
+  c_date_doc      DATE,
+  c_date_prov     DATE,
+  c_document_user NUMBER,
+  c_nazn          VARCHAR2(4000),
+  c_prov_user     NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE
+  is 'Операции по счетам дебиторской задолженности(мошенники)(предрасчета)';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.id
+  is 'Идентификатор таблицы';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.state_id
+  is 'Состояние проводки';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_document_date
+  is 'Дата создания';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_sum_nt
+  is 'Сумма нац.';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_quit_doc
+  is 'Квитующий документ(FK на Z#DOCUMENT)';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_sum
+  is 'Сумма Дт';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_rate_dt
+  is 'Курс Дт';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_sum_po
+  is 'Сумма Кт';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_rate_kt
+  is 'Курс Кт';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_vid_doc
+  is 'Вид документа(FK на Z#NAME_PAYDOC.id)';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_valuta
+  is 'Валюта Дт(FK на Z#FT_MONEY.id)';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_valuta_po
+  is 'Валюта Кт(FK на Z#FT_MONEY.id)';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_acc_dt
+  is 'Счет Дебет(FK на Z#AC_FIN.id)';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_acc_kt
+  is 'Счет Кредит(FK на Z#AC_FIN.id)';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_date_doc
+  is 'Дата документа';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_date_prov
+  is 'Дата проводки';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_document_user
+  is 'Создано пользователем(FK на Z#USER.id)';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_nazn
+  is 'Назначение платежа';
+comment on column U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE.c_prov_user
+  is 'Проведено пользователем(FK на Z#USER.id)';
+create unique index U1.T_RBO_Z#MAIN_DOC_FRD_PRE_IND1 on U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE to LOADDB;
+grant select on U1.T_RBO_Z#MAIN_DOCUM_FRAUD_PRE to LOADER;
+

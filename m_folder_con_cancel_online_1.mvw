@@ -1,0 +1,56 @@
+﻿create materialized view U1.M_FOLDER_CON_CANCEL_ONLINE_1
+build deferred
+refresh force on demand
+as
+select /*+ parallel(10)*/
+       c.id as claim_id,  -- id заявки
+       b.c_date_create as date_create , -- дата покупки
+       c.c_client_ref as rfo_client_id, -- Клиент(FK на Z#CLIENT)
+       cast(c.c_form_client_st#inn as varchar2(20)) as claim_client_iin,
+       c.C_FORM_CLIENT_REF   as FORM_CLIENT_REF, -- Последняя анкета клиента(FK на Z#FORM_CLIENT)
+       s.c_code as shop_code,       --Код магазина (V_RFO_Z#SHOPS)
+       s.c_name as shop_name,       --Название магазина
+       c.c_limit_sum as limit_sum, -- Сумма лимита. Отправить в поле CONTRACT_AMOUNT?
+       c.c_monthly_pay as monthly_pay, --Выбранный размер платежа
+       c.c_term_period as term_period, --Выбранный срок
+       c.c_stage as stage,       -- Текущий этап проверки(FK на Z#KAS_UNIVERSAL_D)
+       c.c_check_route as check_route, --Маршрут проверок(FK на Z#KAS_UNIVERSAL_D)
+       c.c_exec_comment as exec_comment, --Комментарий выполнения проверок
+       c.c_mng_vis_scen as mng_vis_scen, --Сценарий действий у менеджера(COLLECTION в Z#KAS_UNIVERSA_REF)
+       c.c_check_result as check_result, --Результат проверок(FK на Z#KAS_UNIVERSAL_D)
+       c.c_ver_date as ver_date,      --Дата проведения верификации
+       sd.c_code as status_code,         --Статус код
+       sd.c_name as status_name,         --Статус
+       b.c_total_amount as total_amount,
+       c_folder_ref as folder_id,
+       case when coalesce(cl_man.count_req,0)>0 then 1 else 0 end is_sign_require,
+       case when k.c_code in ('CANCEL_ONL','CANCEL_ONL_ALT') or sd.c_code = 'CREDIT_REJECTED' then 1 else 0 end as is_credit_rejected,
+        b.c_prod_info as prod_info,
+        s.id as rfo_shop_id,
+        upper(s.c_address#place) as city_name,
+
+        b.c_process_id as process_id
+      /* 0 as is_card,
+       'ТОВАРЫ' as product_type,
+       0 as is_point_active,
+       0 as is_credit_issued,
+       0 as is_credit_issued_new,
+       0 as is_credit_issued_mix,
+       'ЭКСПРЕСС-КРЕДИТОВАНИЕ-ТОВАР' as cr_program_name ,
+       (select iin from v_client_rfo_by_id where id = c.c_client_ref) iin
+       */
+from V_RFO_Z#KAS_ONLINE_CLAIM c
+left join V_RFO_Z#KAS_ONLINE_BUY b  on b.id = c.c_buy_ref
+left join V_RFO_Z#SHOPS s on s.id = b.c_shop
+left join V_RFO_Z#STATUS_DOG sd on sd.id = b.c_state_id
+left join V_RFO_Z#KAS_UNIVERSAL_D k on k.id = c.c_check_result
+left join (select c1.id,count(kd1.id) as count_req
+           from V_RFO_Z#KAS_ONLINE_CLAIM c1
+            join  V_RFO_Z#KAS_UNIVERSA_REF s1 on s1.collection_id = c1.c_mng_vis_scen
+            join V_RFO_Z#KAS_UNIVERSAL_D kd1 on kd1.id = s1.c_value
+            group by c1.id
+            )  cl_man on cl_man.id = c.id;
+grant select on U1.M_FOLDER_CON_CANCEL_ONLINE_1 to LOADDB;
+grant select on U1.M_FOLDER_CON_CANCEL_ONLINE_1 to LOAD_MO;
+
+

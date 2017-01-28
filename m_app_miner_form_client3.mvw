@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_APP_MINER_FORM_CLIENT3
+build deferred
+refresh complete on demand
+as
+select x.app_id
+
+       ,x.unique_contact_persons
+       ,x.unique_subs_on_a_number
+
+from (
+      select /*+ parallel(30) */
+             frm.app_id
+             ,frm.folder_date_create_mi
+
+             ,count(distinct case when con.rfo_client_id != frm.rfo_client_id
+                                      and con.phone_type_simple = 'КОНТАКТ'
+                                 then con.rfo_client_id end) as unique_contact_persons
+             ,count(distinct con.rfo_client_id) as unique_subs_on_a_number
+      from u1.M_APP_MINER_FORM_CLIENT frm
+      left join u1.V_FORM_CLIENT_CONTACT_PHONE con on con.phone_number = substr(trim(frm.phone_mobile), 1, 11)
+                                                      --and con.rfo_client_id = frm.rfo_client_id
+                                                      and con.folder_date < trunc(frm.folder_date_create_mi)
+      group by frm.app_id,
+               frm.folder_date_create_mi
+) x
+where x.folder_date_create_mi >= to_date('01.01.2015','dd.mm.yyyy');
+grant select on U1.M_APP_MINER_FORM_CLIENT3 to LOADDB;
+
+

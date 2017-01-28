@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_CONTRACT_CAL_START_TMP_1
+refresh force on demand
+as
+select c.contract_number,
+       -- все время
+       count(distinct d.contract_no) as con_any_bef,
+       count(distinct case when d.total_debt >= 10000 then d.contract_no end) as con_debt10K_bef,
+
+       max(d.delinq_days) as del_days_any_max_bef,
+       max(case when d.total_debt >= 10000 then d.delinq_days end) as del_days_debt10K_max_bef,
+
+       count(distinct case when d.total_debt >= 10000 then d.yy_mm_report_date end) as active_mon_debt10K_bef,
+       count(distinct case when d.total_debt >= 10000 and nvl(d.delinq_days,0) = 0
+                           then d.yy_mm_report_date end) as good_active_mon_debt10K_bef,
+       count(distinct case when d.total_debt >= 10000 and d.delinq_days > 0
+                           then d.yy_mm_report_date end) as bad_active_mon_debt10K_bef,
+       max(d.contract_amount) as amount_max_bef,
+       months_between(min(c.yy_mm_start_last_date), max(d.yy_mm_report_date)) - 1 as inactive_period,
+
+       -- 1 год
+       count(distinct dg.contract_no) as con_any_bef_1y,
+       count(distinct case when dg.total_debt >= 10000 then dg.contract_no end) as con_debt10K_bef_1y,
+
+       max(dg.delinq_days) as del_days_any_max_bef_1y,
+       max(case when dg.total_debt >= 10000 then dg.delinq_days end) as del_days_debt10K_max_bef_1y,
+
+       count(distinct case when dg.total_debt >= 10000 then dg.yy_mm_report_date end) as active_mon_debt10K_bef_1y,
+       count(distinct case when dg.total_debt >= 10000 and nvl(dg.delinq_days,0) = 0
+                           then dg.yy_mm_report_date end) as good_active_mon_debt10K_bef_1y,
+       count(distinct case when dg.total_debt >= 10000 and dg.delinq_days > 0
+                           then dg.yy_mm_report_date end) as bad_active_mon_debt10K_bef_1y,
+       max(dg.contract_amount) as amount_max_bef_1y,
+       months_between(min(c.yy_mm_start_last_date), max(dg.yy_mm_report_date)) - 1 as inactive_period_1y
+
+from M_CONTRACT_CAL_DEL c
+left join V_DATA_ALL d on d.client_id = c.client_id and d.yy_mm_report_date < c.yy_mm_start_last_date
+left join V_DATA_ALL dg on dg.client_id = c.client_id and dg.yy_mm_report_date < c.yy_mm_start_last_date and
+                       dg.yy_mm_report_date > add_months(c.yy_mm_start_last_date, -24)
+--where c.contract_number = 'R3440168-003/CRD-5'--'R3440168-001'
+group by c.contract_number;
+grant select on U1.M_CONTRACT_CAL_START_TMP_1 to LOADDB;
+grant select on U1.M_CONTRACT_CAL_START_TMP_1 to LOADER;
+
+

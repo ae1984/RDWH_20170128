@@ -1,0 +1,30 @@
+﻿create table U1.MOGW_1_MOGW_KAS_EDIT_PRD_RES
+(
+  id                 NUMBER not null,
+  id_object          NUMBER,
+  class_prd          VARCHAR2(128),
+  date_edit_astr     DATE,
+  process_request_id NUMBER,
+  date_query_start   TIMESTAMP(6),
+  date_query_end     TIMESTAMP(6),
+  date_create        TIMESTAMP(6),
+  obj_count          NUMBER,
+  date_job_start     TIMESTAMP(6),
+  job_indx           VARCHAR2(32)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MOGW_1_MOGW_KAS_EDIT_PRD_RES to LOADDB;
+grant select on U1.MOGW_1_MOGW_KAS_EDIT_PRD_RES to LOADER;
+

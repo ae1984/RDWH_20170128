@@ -1,0 +1,38 @@
+﻿create materialized view U1.M_TMP_DWH_PORT_17082015
+refresh force on demand
+as
+select /*+ parallel 15*/ p.rep_date,
+       p.deal_number,
+       c.prod_type,
+       p.total_debt,
+       p.delinq_days,
+       p.delinq_days_old,
+       abs(t.total_discount) discount,
+       ef.eff_rate eff_rate,
+       max(ac.reduced_cost) keep (dense_rank last order by ac.date_calc_mm) reduced_cost,     --Восстановленная стоимость
+       max(ac.market_cost) keep (dense_rank last order by ac.date_calc_mm) market_cost,       --Рыночная стоимость
+       max(ac.total_ts_cost) keep (dense_rank last order by ac.date_calc_mm) total_ts_cost,   --Итоговая оценочная стоимость (автомат)
+       max(ac.total_set_cost) keep (dense_rank last order by ac.date_calc_mm) total_set_cost, --Итоговая оценочная стоимость (ПОЗ)
+       max(ac.zalog_cost) keep (dense_rank last order by ac.date_calc_mm) zalog_cost,          --Залоговая стоимость
+       p.is_on_balance
+from DWH_PORT p
+left join v_dwh_portfolio_current c on c.deal_number = p.deal_number
+left join M_CONTRACT_PORT_DISCOUNT t on p.deal_number = t.contract_number -- по всем
+                                          and t.rep_date = to_date('17-08-2015', 'dd-mm-yyyy')
+left join T_EFF_RATE_OUR ef on ef.contract_number = p.deal_number  -- только по авто
+left join M_AUTO_COLLATERAL ac on ac.contract_number = p.deal_number
+                               and ac.date_calc_mm <= to_date('01-08-2015', 'dd-mm-yyyy')
+where p.rep_date = to_date('17-08-2015', 'dd-mm-yyyy')
+group by p.rep_date,
+         p.deal_number,
+         c.prod_type,
+         p.total_debt,
+         p.delinq_days,
+         p.delinq_days_old,
+         abs(t.total_discount),
+         ef.eff_rate,
+         p.is_on_balance;
+grant select on U1.M_TMP_DWH_PORT_17082015 to LOADDB;
+grant select on U1.M_TMP_DWH_PORT_17082015 to LOADER;
+
+

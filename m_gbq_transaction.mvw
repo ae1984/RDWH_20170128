@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_GBQ_TRANSACTION
+build deferred
+refresh force on demand
+as
+select id,
+      hit_id,
+      transaction_id,
+      revenue,
+      tax,
+      shipping,
+      coupon,
+      affiliation,
+      idate
+from GBQ.GBQ_TRANSACTION@KSVISIT;
+grant select on U1.M_GBQ_TRANSACTION to LOADDB;
+
+

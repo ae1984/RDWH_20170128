@@ -1,0 +1,30 @@
+﻿create materialized view U1.M_RFO_FRAUD_SEARCH_FOLDER_X
+build deferred
+refresh force on demand
+as
+select m.claim_id                        as claim_id,
+       m.rfo_client_id                   as rfo_client_id,
+       m.date_create                     as date_create,
+       m.count_fail_online_30_d          as count_fail_online_30_d,
+       nvl(m.min_sum_appl_kn_30_d, 0)    as min_sum_appl_kn_30_d,
+       nvl(m.avg_sum_online_ekt_3_m, 0)  as avg_sum_online_ekt_3_m,
+       sum(m.count_90) / 90              as avg_count_app_onl_day,
+       max(m.count_90)                   as max_count_app_onl_day
+  from (
+        select t.claim_id                        as claim_id,
+               t.rfo_client_id                   as rfo_client_id,
+               t.date_create                     as date_create,
+               count(case when tt.date_create >= t.date_create - 30 and trunc(tt.date_create) < trunc(t.date_create) then tt.claim_id end)           as count_fail_online_30_d,
+               min(case when tt.date_create >= t.date_create - 90 and trunc(tt.date_create) < trunc(t.date_create) then nvl(tt.total_amount, 0) end) as min_sum_appl_kn_30_d,
+               avg(case when tt.date_create >= t.date_create - 90 and trunc(tt.date_create) < trunc(t.date_create) then nvl(tt.total_amount, 0) end) as avg_sum_online_ekt_3_m,
+               count(case when tt.date_create >= t.date_create - 90 and trunc(tt.date_create) < trunc(t.date_create) then tt.claim_id end)           as count_90
+
+
+          from u1.M_FOLDER_CON_CANCEL_ONLINE_1 t
+               left  join u1.M_FOLDER_CON_CANCEL_ONLINE_1 tt on tt.rfo_client_id = t.rfo_client_id
+                                                            and tt.claim_id <> t.claim_id
+         group by t.claim_id, t.rfo_client_id, t.date_create) m
+ group by m.claim_id, m.rfo_client_id, m.date_create, m.count_fail_online_30_d, m.min_sum_appl_kn_30_d, m.avg_sum_online_ekt_3_m;
+grant select on U1.M_RFO_FRAUD_SEARCH_FOLDER_X to LOADDB;
+
+

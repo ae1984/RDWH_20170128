@@ -1,0 +1,32 @@
+﻿create materialized view U1.V_RFO_Z#KAS_GCVP_REPORT
+refresh complete on demand
+as
+select ID,
+      C_CIK,
+      C_RNN,
+      C_SURNAME,
+      C_NAME,
+      C_MIDDLENAME,
+      C_DATEOFBIRTH,
+      C_STATEMENT_ID,
+      C_STATEMENT_DATE,
+      C_QUERY_TYPE,
+      C_AVG_GCVP_PAYMENT,
+      C_ERROR_CODE,
+      C_QUERY_ID,
+      C_PAYMENTS_ARR,
+      C_SAL_STABLE,
+      C_SAL,
+      C_PAYMENT_QTY,
+      C_IIN,
+      C_GCVP_REPORT_REF,
+      SN,
+      SU,
+      C_ADD_PROP,
+      case when g.c_statement_date < to_date('2013-01-03','yyyy-mm-dd') then g.c_rnn else null end as x_client_rnn,
+          case when g.c_statement_date < to_date('2013-01-03','yyyy-mm-dd') then g.c_iin else c_rnn end as  x_client_iin
+from IBS.Z#KAS_GCVP_REPORT@RFO_SNAP g;
+grant select on U1.V_RFO_Z#KAS_GCVP_REPORT to LOADDB;
+grant select on U1.V_RFO_Z#KAS_GCVP_REPORT to LOADER;
+
+

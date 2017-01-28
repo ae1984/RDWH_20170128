@@ -1,0 +1,44 @@
+﻿create materialized view U1.M_RBO_CONTRACT_PORTFOLIO_BASV2
+build deferred
+refresh complete on demand
+as
+with dat_mr as (select rbo_contract_id,
+                       max(rep_date) as max_rep_contract
+                  from T_RBO_CONTRACT_PORTFOLIO
+                 group by rbo_contract_id),
+     dat_m  as (select max(rep_date) as max_rep
+                  from T_RBO_CONTRACT_PORTFOLIO)
+select lag(cp.rep_date) over (partition by cp.rbo_contract_id order by cp.rep_date) as rep_date_prev,
+       cp.rep_date,
+       cast (case when cp.rep_date < dat_mr.max_rep_contract
+                   then cp.yy_mm_report
+                  else to_char(dat_m.max_rep,'yyyy - mm')
+             end as varchar2(9)) as yy_mm_report_last,
+       cp.rbo_contract_id,
+       case when to_char(cp.rep_date,'yyyymm') > cl.yyyy_mm_num_end
+            then rpad(cl.pmt_full_code_3,months_between(trunc(cp.rep_date,'mm'),to_date('01'||cl.yyyy_mm_num_end,'ddyyyymm'))+length(cl.pmt_full_code_3),'0')
+            when to_char(rep_date,'yyyymm') <= cl.yyyy_mm_num_end and to_char(cp.rep_date,'yyyymm') >= 200812
+            then substr(cl.pmt_full_code_3,1,length(cl.pmt_full_code_3) + months_between(trunc(rep_date,'mm'),to_date('01'||cl.yyyy_mm_num_end,'ddyyyymm')))
+       end as pmt_full_code_3,
+       cast(
+       case when cc.is_categ_a = 1 then 'КАТЕГОРИЯ А'
+            when cc.is_categ_b = 1 then 'КАТЕГОРИЯ Б'
+            when cc.is_categ_b = 0 then
+              case when cc.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ'
+                   when cc.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ'
+              end
+       end as varchar2(250)) as client_categ,
+       fa.is_ind_enterpreneur_clear,
+       fa.is_ind_enterpreneur
+  from T_RBO_CONTRACT_PORTFOLIO cp
+  join M_RBO_CONTRACT_BAS       cb on cb.rbo_contract_id = cp.rbo_contract_id
+  join dat_mr on dat_mr.rbo_contract_id = cp.rbo_contract_id
+  join dat_m  on 1 = 1
+  left join M_FOLDER_CON_CANCEL cc on cc.contract_number = cb.contract_number
+                                  and cc.folder_id = cb.folder_id_first
+  left join M_CLIENT_BARCODE cl    on cl.client_id = substr(ltrim(cp.contract_number, 'R'),1,7)
+  left join V_FOLDER_ALL_RFO fa    on fa.folder_id = cb.folder_id_first;
+grant select on U1.M_RBO_CONTRACT_PORTFOLIO_BASV2 to LOADDB;
+grant select on U1.M_RBO_CONTRACT_PORTFOLIO_BASV2 to LOADER;
+
+

@@ -1,0 +1,23 @@
+﻿create table U1.T_REJ_SCORE_KN_BW40_2_1
+(
+  contract_number VARCHAR2(250 CHAR),
+  is_bad          NUMBER,
+  is_pred         NUMBER,
+  score_bal       NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_REJ_SCORE_KN_BW40_2_1 to LOADDB;
+grant select on U1.T_REJ_SCORE_KN_BW40_2_1 to LOADER;
+

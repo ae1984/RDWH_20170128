@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_VERIFY_CREDIT_PROGRAM
+refresh complete on demand
+as
+select id,
+       code,
+       name
+from verificator.H_VERIFY_CREDIT_PROGRAM@verifais;
+grant select on U1.M_VERIFY_CREDIT_PROGRAM to LOADDB;
+grant select on U1.M_VERIFY_CREDIT_PROGRAM to LOADER;
+
+

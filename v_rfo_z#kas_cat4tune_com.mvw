@@ -1,0 +1,48 @@
+﻿create materialized view U1.V_RFO_Z#KAS_CAT4TUNE_COM
+build deferred
+refresh complete on demand
+as
+select id,
+       sn,
+       su,
+       collection_id,
+       c_categ_ref,
+       c_kom_prod_online#com_type_ref,
+       c_kom_prod_online#base_calc#0,
+       c_kom_prod_online#com_unit#0,
+       c_kom_prod_online#com_sum,
+       c_kom_prod_online#com_rate,
+       c_kom_prod_online#sale_type,
+       c_kom_prod_online#com_ret,
+       c_m_prod_offline#com_type_ref9,
+       c_kom_prod_offline#base_calc#0,
+       c_kom_prod_offline#com_unit#0,
+       c_kom_prod_offline#com_sum,
+       c_kom_prod_offline#com_rate,
+       c_kom_prod_offline#sale_type,
+       c_kom_prod_offline#com_ret,
+       c_kom_cred_online,
+       c_kom_cred_offline,
+       c_kom_prod_online#com_cat,
+       c_kom_prod_offline#com_cat,
+       c_kom_tov_online#com_type_ref,
+       c_kom_tov_online#base_calc#0,
+       c_kom_tov_online#com_unit#0,
+       c_kom_tov_online#com_sum,
+       c_kom_tov_online#com_rate,
+       c_kom_tov_online#sale_type,
+       c_kom_tov_online#com_ret,
+       c_kom_tov_online#com_cat,
+       c__ks_cr_online#com_type_ref28,
+       c_kom_ks_cr_online#base_calc#0,
+       c_kom_ks_cr_online#com_unit#0,
+       c_kom_ks_cr_online#com_sum,
+       c_kom_ks_cr_online#com_rate,
+       c_kom_ks_cr_online#sale_type,
+       c_kom_ks_cr_online#com_ret,
+       c_kom_ks_cr_online#com_cat
+  from ibs.Z#KAS_CAT4TUNE_COM@rfo_snap;
+grant select on U1.V_RFO_Z#KAS_CAT4TUNE_COM to LOADDB;
+grant select on U1.V_RFO_Z#KAS_CAT4TUNE_COM to LOADER;
+
+

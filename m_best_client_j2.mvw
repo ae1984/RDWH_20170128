@@ -1,0 +1,32 @@
+﻿create materialized view U1.M_BEST_CLIENT_J2
+refresh force on demand
+as
+select a.client_iin
+from (
+    select distinct t.client_iin
+    from V_DWH_PORTFOLIO_CURRENT t
+    where t.x_is_credit_issued = 1 and
+          t.x_delinq_days is null and -- У клиента нет просрочки на текущий момент;
+          (t.restruct_type is null or t.restruct_type != 'HARD') and -- Клиент не попадал в хард коллекшн;
+          not exists (
+                select null -- У клиента может быть историческая просрочка за последние 6 месяцев не более 29-ти дней;
+                from u1.v_portfolio dc
+                where to_date(dc.yy_mm_report, 'yyyy - mm') >= add_months(trunc(sysdate) - 1, -6) and
+                      dc.delinq_days > 29 and
+                      dc.iin = t.client_iin
+          ) and
+          -- Клиент не попадал в черный список (РФО+МО черные списки).
+          not exists (select b1.iin from V_RFO_BLACK_LIST b1 where b1.iin = t.client_iin) and
+          not exists (select b2.iin from V_MO_BLACK_LIST b2 where b2.iin = t.client_iin)
+) a
+join (
+    select distinct p.client_iin
+    from V_DWH_PORTFOLIO_CURRENT p
+    where p.x_is_credit_issued =  1 and
+         (p.actual_end_date - p.begin_date >= 75 or --  У клиента был ранее кредит продолжительностью в 75 дней и более.
+              trunc(sysdate) - 1 - p.begin_date >= 75) --  Либо у клиента есть активный кредит, продолжительностью в 75 дней и более;
+) b on b.client_iin = a.client_iin;
+grant select on U1.M_BEST_CLIENT_J2 to LOADDB;
+grant select on U1.M_BEST_CLIENT_J2 to LOADER;
+
+

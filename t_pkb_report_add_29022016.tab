@@ -1,0 +1,40 @@
+﻿create table U1.T_PKB_REPORT_ADD_29022016
+(
+  report_id            NUMBER,
+  iin_rnn              VARCHAR2(36),
+  report_type          VARCHAR2(22),
+  report_status        VARCHAR2(60),
+  report_date          DATE,
+  report_source        VARCHAR2(6),
+  cred_hist_age_years  NUMBER,
+  cred_hist_age_months NUMBER,
+  con_active_cnt       NUMBER,
+  con_closed_cnt       NUMBER,
+  con_closed_12m_cnt   NUMBER,
+  con_closed_6m_cnt    NUMBER,
+  del_days_max         VARCHAR2(24),
+  del_days_12m_max     VARCHAR2(24),
+  del_days_6m_max      VARCHAR2(24),
+  pmt_cnt              NUMBER,
+  pmt_12m_cnt          NUMBER,
+  pmt_6m_cnt           NUMBER,
+  total_debt_old       NUMBER,
+  total_debt           NUMBER,
+  total_debt_close     NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_PKB_REPORT_ADD_29022016 to LOADDB;
+grant select on U1.T_PKB_REPORT_ADD_29022016 to LOADER;
+

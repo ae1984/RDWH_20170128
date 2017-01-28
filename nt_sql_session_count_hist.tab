@@ -1,0 +1,39 @@
+﻿create table U1.NT_SQL_SESSION_COUNT_HIST
+(
+  sdt            DATE,
+  sql_id         VARCHAR2(13),
+  username       VARCHAR2(30),
+  machine        VARCHAR2(64),
+  osuser         VARCHAR2(30),
+  module         VARCHAR2(64),
+  cnt_ses        NUMBER,
+  sql_exec_start DATE
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+create index U1.IDX_SQL_SESSION_COUNT_HIST_1 on U1.NT_SQL_SESSION_COUNT_HIST (SDT, CNT_SES)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.NT_SQL_SESSION_COUNT_HIST to LOADDB;
+

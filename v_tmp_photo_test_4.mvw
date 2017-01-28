@@ -1,0 +1,21 @@
+﻿create materialized view U1.V_TMP_PHOTO_TEST_4
+using no index
+refresh complete on demand
+as
+select
+b.rfo_client_id,
+b.folder_id,
+b.folder_date_create,
+i.c_date,
+i.c_name,
+i.c_uid,
+t.c_inn
+from T_SHOLPAN_TST2 a
+join v_folder_all_rfo b on a.g = b.folder_id
+join V_RFO_Z#CLIENT t on b.rfo_client_id = t.id
+join V_RFO_Z#IMAGES i on i.c_fold_id = b.folder_id and upper(i.c_name) like '%FOTO_FL%'
+where a.g not in (select folder_id from V_TMP_PHOTO_TEST_1);
+grant select on U1.V_TMP_PHOTO_TEST_4 to LOADDB;
+grant select on U1.V_TMP_PHOTO_TEST_4 to LOADER;
+
+

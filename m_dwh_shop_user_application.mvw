@@ -1,0 +1,17 @@
+﻿create materialized view U1.M_DWH_SHOP_USER_APPLICATION
+refresh force on demand
+as
+select /*+ noparallel */
+       user_application_id,
+       create_date,
+       user_id,
+       headline,
+       user_order_id,
+       priority,
+       application_state,
+       application_id
+  from DWH_STAGE.S43_USER_APPLICATION@dwh_prod2;
+grant select on U1.M_DWH_SHOP_USER_APPLICATION to LOADDB;
+grant select on U1.M_DWH_SHOP_USER_APPLICATION to LOADER;
+
+

@@ -1,0 +1,121 @@
+﻿create materialized view U1.M_REJ_SCORE_KN_BW_2_2
+using no index
+refresh complete on demand
+as
+select * from (
+select
+      ( case when w.age_full_years < -48 then 14
+             when w.age_full_years >= -48 and w.age_full_years < -37 then 12
+             when w.age_full_years >= -37 and w.age_full_years < -32 then 9
+             when w.age_full_years >= -32 and w.age_full_years < -26 then 7
+             when w.age_full_years >= -26 and w.age_full_years < -21 then 4
+             when w.age_full_years >= -21 and w.age_full_years < 24 then 2
+             when w.age_full_years >= 24 and w.age_full_years < 30 then 10
+             when (w.age_full_years >= 30 and w.age_full_years < 43) or w.age_full_years is null then 13
+             when w.age_full_years >= 43 and w.age_full_years < 47 then 14
+             when w.age_full_years >= 47 then 15 end) +
+      ( case when w.bad_active_mon_debt10k_bef_4y < 1 or w.bad_active_mon_debt10k_bef_4y is null then 10
+             when w.bad_active_mon_debt10k_bef_4y >= 1 then 1 end) +
+      ( case when w.contract_amount < 215000 then 11
+             when (w.contract_amount >= 215000 and w.contract_amount < 300000) or w.contract_amount is null then 10
+             when w.contract_amount >= 300000 and w.contract_amount < 330000 then 11
+             when w.contract_amount >= 330000 and w.contract_amount < 360000 then 9
+             when w.contract_amount >= 360000 and w.contract_amount < 440000 then 10
+             when w.contract_amount >= 440000 and w.contract_amount < 500000 then 9
+             when w.contract_amount >= 500000 and w.contract_amount < 575000 then 10
+             when w.contract_amount >= 575000 and w.contract_amount < 690000 then 9
+             when w.contract_amount >= 690000 and w.contract_amount < 1150000 then 9
+             when w.contract_amount >= 1150000 then 8 end) +
+      ( case when w.contract_term_months < 18 then 32
+             when w.contract_term_months >= 18 and w.contract_term_months < 24 then 19
+             when (w.contract_term_months >= 24 and w.contract_term_months < 36) or w.contract_term_months is null then 11
+             when w.contract_term_months >= 36 and w.contract_term_months < 48 then 4
+             when w.contract_term_months >= 48 then -11 end) +
+      ( case when w.gcvp_first_pmt_days_ago_floor < 113 then 1
+             when w.gcvp_first_pmt_days_ago_floor >= 113 and w.gcvp_first_pmt_days_ago_floor < 145 then 6
+             when w.gcvp_first_pmt_days_ago_floor >= 145 and w.gcvp_first_pmt_days_ago_floor < 155 then 12
+             when w.gcvp_first_pmt_days_ago_floor >= 155 and w.gcvp_first_pmt_days_ago_floor < 159 then 11
+             when w.gcvp_first_pmt_days_ago_floor >= 159 and w.gcvp_first_pmt_days_ago_floor < 163 then 9
+             when w.gcvp_first_pmt_days_ago_floor >= 163 and w.gcvp_first_pmt_days_ago_floor < 177 then 12
+             when w.gcvp_first_pmt_days_ago_floor >= 177 and w.gcvp_first_pmt_days_ago_floor < 179 then 11
+             when w.gcvp_first_pmt_days_ago_floor >= 179 and w.gcvp_first_pmt_days_ago_floor < 181 then 12
+             when w.gcvp_first_pmt_days_ago_floor >= 181 then 13
+             when w.gcvp_first_pmt_days_ago_floor is null then 1 end) +
+      ( case when w.kdn_pmt_nom_rate_to_gcvp_sal is null then 11
+             when w.kdn_pmt_nom_rate_to_gcvp_sal < 20 then 7
+             when w.kdn_pmt_nom_rate_to_gcvp_sal >= 20 and w.kdn_pmt_nom_rate_to_gcvp_sal < 25 then 8
+             when w.kdn_pmt_nom_rate_to_gcvp_sal >= 25 and w.kdn_pmt_nom_rate_to_gcvp_sal < 29 then 9
+             when w.kdn_pmt_nom_rate_to_gcvp_sal >= 29 and w.kdn_pmt_nom_rate_to_gcvp_sal < 40 then 8
+             when w.kdn_pmt_nom_rate_to_gcvp_sal >= 40 and w.kdn_pmt_nom_rate_to_gcvp_sal < 57 then 9
+             when w.kdn_pmt_nom_rate_to_gcvp_sal >= 57 and w.kdn_pmt_nom_rate_to_gcvp_sal < 107 then 10
+             when w.kdn_pmt_nom_rate_to_gcvp_sal >= 107 then 11 end) +
+      ( case when w.kdn_simple_nom_rate is null then 26
+             when w.kdn_simple_nom_rate <10.45 then 17
+             when w.kdn_simple_nom_rate >= 10.45 and w.kdn_simple_nom_rate < 13.02 then 12
+             when w.kdn_simple_nom_rate >= 13.02 and w.kdn_simple_nom_rate < 15.46 then 14
+             when w.kdn_simple_nom_rate >= 15.46 and w.kdn_simple_nom_rate < 22.52 then 11
+             when w.kdn_simple_nom_rate >= 22.52 and w.kdn_simple_nom_rate < 26.48 then 10
+             when w.kdn_simple_nom_rate >= 26.48 and w.kdn_simple_nom_rate < 31.46 then 8
+             when w.kdn_simple_nom_rate >= 31.46 and w.kdn_simple_nom_rate < 40.57 then 5
+             when w.kdn_simple_nom_rate >= 40.57 then -5 end) +
+      ( case when w.MARITAL_CHILDREN in ('ВДОВЕЦ/ВДОВА_5 И БОЛЕЕ','НИКОГДА В БРАКЕ НЕ СОСТОЯЛ(А)_5',
+                                                        'НИКОГДА В БРАКЕ НЕ СОСТОЯЛ(А)_НЕТ','РАЗВЕДЕН/РАЗВЕДЕНА_4',
+                                                        'РАЗВЕДЕН/РАЗВЕДЕНА_5 И БОЛЕЕ','_НЕТ') then 5
+             when w.MARITAL_CHILDREN in ('ВДОВЕЦ/ВДОВА_4','ГРАЖДАНСКИЙ БРАК/СОВМЕСТНОЕ ПРОЖИВАНИЕ_1',
+                                                        'РАЗВЕДЕН/РАЗВЕДЕНА_2','РАЗВЕДЕН/РАЗВЕДЕНА_3','РАЗВЕДЕН/РАЗВЕДЕНА_НЕТ') then 7
+             when w.MARITAL_CHILDREN in ('ЖЕНАТ/ЗАМУЖЕМ_НЕТ','РАЗВЕДЕН/РАЗВЕДЕНА_1') then 10
+             when w.MARITAL_CHILDREN in ('ЖЕНАТ/ЗАМУЖЕМ_1','НИКОГДА В БРАКЕ НЕ СОСТОЯЛ(А)_1',
+                                                        'НИКОГДА В БРАКЕ НЕ СОСТОЯЛ(А)_3') then 11
+             when w.MARITAL_CHILDREN in ('ВДОВЕЦ/ВДОВА_1','ВДОВЕЦ/ВДОВА_3','ЖЕНАТ/ЗАМУЖЕМ_4') then 12
+             when w.MARITAL_CHILDREN in ('ВДОВЕЦ/ВДОВА_2','ЖЕНАТ/ЗАМУЖЕМ_2','ЖЕНАТ/ЗАМУЖЕМ_5 И БОЛЕЕ',
+                                                        'НИКОГДА В БРАКЕ НЕ СОСТОЯЛ(А)_2','ВДОВЕЦ/ВДОВА_НЕТ',
+                                                        'ЖЕНАТ/ЗАМУЖЕМ_3','НИКОГДА В БРАКЕ НЕ СОСТОЯЛ(А)_4') then 13 end) +
+      ( case when w.paid_sal_count is null or w.paid_sal_count < 3 then 7
+             when w.paid_sal_count >= 3 and w.paid_sal_count < 5 then 8
+             when w.paid_sal_count >= 5 and w.paid_sal_count < 7 then 9
+             when w.paid_sal_count >= 7 and w.paid_sal_count < 12 then 10
+             when w.paid_sal_count >= 12 and w.paid_sal_count < 21 then 11
+             when w.paid_sal_count >= 21 then 12 end) +
+      ( case when w.pkb_closed_contracts is null then 7
+             when w.pkb_closed_contracts < 1 then 4
+             when w.pkb_closed_contracts >= 1 and w.pkb_closed_contracts < 2 then 11
+             when w.pkb_closed_contracts >= 2 and w.pkb_closed_contracts < 3 then 12
+             when w.pkb_closed_contracts >= 3 and w.pkb_closed_contracts < 4 then 15
+             when w.pkb_closed_contracts >= 4 and w.pkb_closed_contracts < 5 then 16
+             when w.pkb_closed_contracts >= 5 then 15 end) +
+      ( case when w.sal_gcvp_to_sal_form_prc_floor is null then 5
+             when w.sal_gcvp_to_sal_form_prc_floor < 48 then 3
+             when w.sal_gcvp_to_sal_form_prc_floor >= 48 and w.sal_gcvp_to_sal_form_prc_floor < 62 then 5
+             when w.sal_gcvp_to_sal_form_prc_floor >= 62 and w.sal_gcvp_to_sal_form_prc_floor < 79 then 7
+             when w.sal_gcvp_to_sal_form_prc_floor >= 79 and w.sal_gcvp_to_sal_form_prc_floor < 86 then 11
+             when w.sal_gcvp_to_sal_form_prc_floor >= 86 and w.sal_gcvp_to_sal_form_prc_floor < 91 then 13
+             when w.sal_gcvp_to_sal_form_prc_floor >= 91 and w.sal_gcvp_to_sal_form_prc_floor < 100 then 12
+             when w.sal_gcvp_to_sal_form_prc_floor >= 100 and w.sal_gcvp_to_sal_form_prc_floor < 111 then 14
+             when w.sal_gcvp_to_sal_form_prc_floor >= 111 and w.sal_gcvp_to_sal_form_prc_floor < 119 then 16
+             when w.sal_gcvp_to_sal_form_prc_floor >= 119 then 17 end) +
+      ( case when w.start_con_del_days_max_by_cli < 2 or w.start_con_del_days_max_by_cli is null then 12
+             when w.start_con_del_days_max_by_cli >= 2 then -26 end) +
+      ( case when w.work_expr_last_place_mon_floor < 12 or w.work_expr_last_place_mon_floor is null then 4
+             when w.work_expr_last_place_mon_floor >= 12 and w.work_expr_last_place_mon_floor < 18 then 5
+             when w.work_expr_last_place_mon_floor >= 18 and w.work_expr_last_place_mon_floor < 27 then 6
+             when w.work_expr_last_place_mon_floor >= 27 and w.work_expr_last_place_mon_floor < 33 then 8
+             when w.work_expr_last_place_mon_floor >= 33 and w.work_expr_last_place_mon_floor < 46 then 11
+             when w.work_expr_last_place_mon_floor >= 46 and w.work_expr_last_place_mon_floor < 55 then 9
+             when w.work_expr_last_place_mon_floor >= 55 and w.work_expr_last_place_mon_floor < 78 then 14
+             when w.work_expr_last_place_mon_floor >= 78 and w.work_expr_last_place_mon_floor < 94 then 15
+             when w.work_expr_last_place_mon_floor >= 94 and w.work_expr_last_place_mon_floor < 117 then 18
+             when w.work_expr_last_place_mon_floor >= 117 then 21 end) as cutoff,
+      w.contract_number
+from (
+select t.*,
+t.MARITAL_STATUS || '_' ||
+       case
+         when t.CHILDREN is null or t.CHILDREN = 'НЕТ' then 'НЕТ'
+         else t.CHILDREN end as MARITAL_CHILDREN
+from M_FOLDER_CON_MINER_v2 t
+ where t.cr_program_name = 'КРЕДИТ НАЛИЧНЫМИ') w) a
+where a.cutoff < 93;
+grant select on U1.M_REJ_SCORE_KN_BW_2_2 to LOADDB;
+grant select on U1.M_REJ_SCORE_KN_BW_2_2 to LOADER;
+
+

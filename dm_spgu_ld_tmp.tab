@@ -1,0 +1,70 @@
+﻿create table U1.DM_SPGU_LD_TMP
+(
+  exhd$change_date        DATE not null,
+  exhd$audit_id           NUMBER not null,
+  exhd_clnt_gid           NUMBER not null,
+  exhd_dcard_gid          NUMBER not null,
+  exhd_rep_date           DATE,
+  exhd_client_name        VARCHAR2(255 CHAR),
+  exhd_client_iin         VARCHAR2(12 CHAR),
+  exhd_client_rnn         VARCHAR2(40 CHAR),
+  exhd_client_rfo_id      VARCHAR2(2000 CHAR),
+  exhd_deal_number        VARCHAR2(250 CHAR),
+  exhd_currency           VARCHAR2(3 CHAR) not null,
+  exhd_begin_date         DATE,
+  exhd_plan_end_date      DATE,
+  exhd_actual_end_date    DATE,
+  exhd_amount             NUMBER,
+  exhd_deal_status        VARCHAR2(255 CHAR),
+  exhd_rate_value         NUMBER,
+  exhd_prod_name          VARCHAR2(255 CHAR),
+  exhd_prod_type          VARCHAR2(255 CHAR),
+  exhd_old_ovd_scheme     CHAR(1 CHAR) not null,
+  exhd_dept_name          VARCHAR2(254 CHAR),
+  exhd_dept_number        VARCHAR2(254 CHAR),
+  exhd_unp_name           VARCHAR2(254 CHAR),
+  exhd_unp_number         VARCHAR2(254 CHAR),
+  exhd_fil_name           VARCHAR2(254 CHAR),
+  exhd_fil_number         VARCHAR2(254 CHAR),
+  exhd_create_empl_name   VARCHAR2(100 CHAR),
+  exhd_create_empl_number VARCHAR2(10),
+  exhd_sign_empl_name     VARCHAR2(100 CHAR),
+  exhd_sign_empl_number   VARCHAR2(10),
+  exhd_fgu_as_of_date     DATE,
+  exhd_fgu_cred           NUMBER,
+  exhd_fgu_prc            NUMBER,
+  exhd_fgu_ovrd_cred      NUMBER,
+  exhd_fgu_ovrd_prc       NUMBER,
+  exhd_to_ovrd_date       DATE,
+  exhd_ovrd_days          NUMBER,
+  exhd_cl_to_ovrd_date    DATE,
+  exhd_cl_ovrd_days       NUMBER,
+  exhd_vnb_ovrd_cred      NUMBER,
+  exhd_vnb_ovrd_prc       NUMBER,
+  exhd_vnb_comm           NUMBER,
+  exhd_vnb_flag           VARCHAR2(10),
+  exhd_vnb_date           DATE,
+  exhd_pay_sale_type      VARCHAR2(128 CHAR),
+  exhd_pay_goods_price    NUMBER(17,2),
+  exhd_goods_count        VARCHAR2(250),
+  exhd_pay_comm_amount    NUMBER,
+  exhd_company_name       VARCHAR2(500),
+  exhd_fgu_overdraft      NUMBER,
+  exhd_fgu_ovrd_overdraft NUMBER,
+  exhd_vnb_overdraft      NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+grant select on U1.DM_SPGU_LD_TMP to LOADDB;
+grant select on U1.DM_SPGU_LD_TMP to LOADER;
+

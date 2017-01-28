@@ -1,0 +1,8 @@
+﻿create materialized view U1.M_TMP_CLIENT_6M
+build deferred
+refresh force on demand
+as
+select * from u1.M_TMP_CLIENT_6M@sc22;
+grant select on U1.M_TMP_CLIENT_6M to LOADDB;
+
+

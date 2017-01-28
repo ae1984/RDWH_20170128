@@ -1,0 +1,47 @@
+﻿create materialized view U1.M_TMP_J_C_BIG_PM_2
+refresh force on demand
+as
+select c.iin_merged as iin, c.con_all_cnt as p_con_all_cnt,
+       c.con_bad_cnt as p_con_bad_cnt, w.*
+from M_TMP_J_C_BIG_PM_1 c
+join M_GX_CLIENT_SAL_3_MON@EE13 g on g.iin = c.iin_merged
+left join (
+    select p.client_iin, count(distinct case when p.x_amount > 0 then p.deal_number end) as our_con_with_limit_cnt,
+           count(distinct case when p.x_amount > 0 and p.is_credit_active = 1 then p.deal_number end) as our_active_con_with_limit_cnt,
+           count(distinct case when p.x_amount > 0 and p.prod_type in (
+                          'КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ','ЛУЧШИЙ КЛИЕНТ НАЛИЧНЫМИ',
+                          'ОСОБЕННЫЙ КЛИЕНТ - КН','ОСОБЕННЫЙ КЛИЕНТ -КН 15','ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ','ЭКСПРЕСС-КРЕДИТЫ (ДЕНЬГИ)'
+                          )
+                 then p.deal_number end) as our_con_kn_cnt,
+           count(distinct case when p.x_amount > 0 and p.prod_type in (
+                          'КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ','ОСОБЕННЫЙ КЛИЕНТ - КН'
+                          )
+                 then p.deal_number end) as our_con_big_kn_cnt,
+           count(distinct case when p.x_amount > 0 and p.is_credit_active = 1 and p.prod_type in (
+                          'КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ 15 МИНУТ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ','ЛУЧШИЙ КЛИЕНТ НАЛИЧНЫМИ',
+                          'ОСОБЕННЫЙ КЛИЕНТ - КН','ОСОБЕННЫЙ КЛИЕНТ -КН 15','ПОСТОЯННЫЙ КЛИЕНТ - НАЛИЧНЫЕ','ЭКСПРЕСС-КРЕДИТЫ (ДЕНЬГИ)'
+                          )
+                 then p.deal_number end) as our_con_kn_active_cnt,
+           count(distinct case when p.x_amount > 0 and p.is_credit_active = 1 and p.prod_type in (
+                          'КРЕДИТ НАЛИЧНЫМИ','КРЕДИТ НАЛИЧНЫМИ ПОВТОРНИКУ','ОСОБЕННЫЙ КЛИЕНТ - КН'
+                          )
+                 then p.deal_number end) as our_con_big_kn_active_cnt,
+           count(distinct case when p.x_amount > 0 and p.prod_type in (
+                          'ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)'
+                          )
+                 then p.deal_number end) as our_con_ekt_cnt,
+           count(distinct case when p.x_amount > 0 and p.is_credit_active = 1 and p.prod_type in (
+                          'ЭКСПРЕСС-КРЕДИТЫ (ТОВАРЫ)'
+                          )
+                 then p.deal_number end) as our_con_ekt_active_cnt
+    from V_DWH_PORTFOLIO_CURRENT p
+    where p.x_is_credit_issued = 1
+    group by p.client_iin
+) w on w.client_iin = c.iin_merged
+where g.sal_by_cli_3_mon_avg >= 50000 and
+      not exists (select null from V_CLIENT_CAL cc where cc.client_iin_last = c.iin_merged and cc.delinq_days_max >= 30) and
+      not exists (select null from V_DWH_PORTFOLIO_CURRENT d2 where d2.client_iin = c.iin_merged and d2.x_delinq_days >= 30);
+grant select on U1.M_TMP_J_C_BIG_PM_2 to LOADDB;
+grant select on U1.M_TMP_J_C_BIG_PM_2 to LOADER;
+
+

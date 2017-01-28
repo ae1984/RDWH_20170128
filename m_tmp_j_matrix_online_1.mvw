@@ -1,0 +1,190 @@
+﻿create materialized view U1.M_TMP_J_MATRIX_ONLINE_1
+refresh complete on demand
+as
+select -- описание: матрица для расчета просрочки (все виды просрочки с продлением жизни),
+       -- одобрения (по кол-ву и сумме), уровней отказов по группам
+       -- по всем продуктам (онлайн-кредит отдельно от ЭКТ)
+       -- с 2013 года по неделям (годы, кварталы, месяцы, недели)
+       -- с укрупненными категориями клиентов (ПКБ, ГЦВП, возраст, пол, катег А и Б, ...) и географией
+       -- 3.5 млн строк, рассчитывается за 6.5 минут
+       -- для работы в Excel требует 2.5 ГБ памяти
+       td.yyyy, td.quarter, td.text_yyyy_mm, td.week_text, td.text_yyyy_mm_dd_week_day, td.week_day_short_ru,
+       f.product, f.is_categ_a, f.is_categ_b, f.is_client_new_by_con, f.is_credit_issued, f.is_signing_required,
+--       fc.age_full_years as client_age,
+       floor(fc.age_full_years / 10) * 10 as client_age,
+       fc.sex, --fc.education, fc.marital_status, fc.children,
+       substr(trim(fc.patronymic),-2) as client_patronymic_type,
+/*       round((coalesce(fc.inc_sal,0) + coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) +
+              coalesce(fc.inc_rent,0) + coalesce(fc.inc_pension_benefits,0) +
+              coalesce(fc.inc_interest,0)) / 10000) * 10000 as form_income_total,*/ -- fc.amount,
+       round(f.contract_amount / 50000) * 50000 as amount_requested,
+--       round(g.salary / 10000) * 10000 as gcvp_salary,
+/*       floor(case when g.salary is null then -1
+                      when g.salary < 3000 then 0
+                      else g.salary end / 15000) * 15000 as gcvp_salary,*/
+/*       case when g.salary is null then 'NA'
+            when g.salary < 3000 then '00'
+            when g.salary >= 3000 and g.salary < 15000 then '03-14'
+            when g.salary >= 15000 and g.salary < 65000 then '15-64'
+            else '65-..' end as gcvp_salary,*/
+       case when g.salary is null then 'ГЦВП NA'
+            when g.salary < 2500 then  'ГЦВП ЗП = 0'
+            when g.salary < 20000 then 'ГЦВП ЗП < 20К'
+            when g.salary >= 20000 then 'ГЦВП ЗП > 20К' end as gcvp_salary,
+       p.report_status as pkb_rep_status,
+       round(d.max_debt_used_x / 50000) * 50000 as amount_approved,
+       f.city, s.city_name as shop_city, f.region, f.shop_code, f.shop_name, f.expert_name,
+       f.cancel_prescoring, f.cancel_middle_office, f.cancel_controller, f.cancel_client, f.cancel_manager,
+       f.cancel_cpr_aa, f.cancel_verificator, f.cancel_undefined,
+
+       upper(pr.c_producer) as producer,
+       upper(pr.c_name) as product_name,
+--       pr.k_c_name as product_type_name,
+       case when pr.k_c_name like '%МОБИЛ%' or
+                 pr.k_c_name like '%КОМП%' or
+                 pr.k_c_name like '%АУДИО%' then 'MOB_PC_TV'
+            when pr.k_c_name like '%ФОТО%' then 'CAMERA'
+            when pr.k_c_name like '%ТЕХН%' or
+                 pr.k_c_name like '%ИГРОВ%' then 'TECH_GAME'
+            else 'OTHER' end as product_type_name,
+
+       ---
+       count(*) as cnt, count(distinct f.claim_id) as claim_cnt, count(distinct f.rfo_contract_id) as rfo_con_cnt,
+       count(distinct f.rfo_con_or_claim_id) as rfo_con_or_claim_cnt, -- кол-во заявок, включая онлайн
+       count(distinct f.folder_id) as fld_cnt,
+       sum(f.contract_amount) / 1000000 as amount_requested_mln,
+       min(f.contract_amount) as amount_requested_min,
+       max(f.contract_amount) as amount_requested_max,
+       ---
+       count(b.rbo_contract_id) as contract_cnt,
+       count(distinct b.rbo_contract_id) as contract_cnt_dist,
+
+       sum(d.max_debt_used_x) / 1000000 as sales_mln,
+       min(d.max_debt_used_x) as amount_approved_min,
+       max(d.max_debt_used_x) as amount_approved_max,
+
+       sum(case when d.del_days_x > 7  then d.total_debt_x end) / 1000000 as del_debt_7d_mln,
+       sum(case when d.del_days_x > 30 then d.total_debt_x end) / 1000000 as del_debt_30d_mln,
+       sum(case when d.del_days_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_mln,
+       sum(case when d.del_days_x > 90 then d.total_debt_x end) / 1000000 as del_debt_90d_mln,
+
+       sum(case when d.del_days_max_x > 30 then d.total_debt_x end) / 1000000 as del_debt_30d_ever_mln,
+       sum(case when d.del_days_max_x > 60 then d.total_debt_x end) / 1000000 as del_debt_60d_ever_mln,
+       sum(case when d.del_days_max_x > 90 then d.total_debt_x end) / 1000000 as del_debt_90d_ever_mln,
+
+       sum(d.total_debt_x_pmt_1_0) / 1000000 as pmt_1_0d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_1_0) / 1000000 as pmt_1_0d_sales_mln,
+       sum(d.total_debt_x_pmt_1_7) / 1000000 as pmt_1_7d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_1_7) / 1000000 as pmt_1_7d_sales_mln,
+       sum(d.total_debt_x_pmt_2_7) / 1000000 as pmt_2_7d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_2_7) / 1000000 as pmt_2_7d_sales_mln,
+       sum(d.total_debt_x_pmt_3_7) / 1000000 as pmt_3_7d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_3_7) / 1000000 as pmt_3_7d_sales_mln,
+       sum(d.total_debt_x_pmt_4_7) / 1000000 as pmt_4_7d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_4_7) / 1000000 as pmt_4_7d_sales_mln,
+       sum(d.total_debt_x_pmt_5_7) / 1000000 as pmt_5_7d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_5_7) / 1000000 as pmt_5_7d_sales_mln,
+       sum(d.total_debt_x_pmt_6_7) / 1000000 as pmt_6_7d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_6_7) / 1000000 as pmt_6_7d_sales_mln,
+
+       sum(d.total_debt_x_pmt_1_30) / 1000000 as pmt_1_30d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_1_30) / 1000000 as pmt_1_30d_sales_mln,
+       sum(d.total_debt_x_pmt_1_60) / 1000000 as pmt_1_60d_del_debt_mln,
+       sum(d.max_debt_used_x_pmt_1_60) / 1000000 as pmt_1_60d_sales_mln
+
+from (
+  select 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(f.folder_date_create_mi) as a_date,
+         case when f.is_categ_a = 1 then 'КАТЕГОРИЯ А' when f.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+         case when f.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when f.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+         case when f.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when f.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+         case when f.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when f.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         case when f.is_sign_require = 1 then 'С ПОДПИСАНИЕМ' when f.is_sign_require = 0 then 'БЕЗ ПОДПИСАНИЯ' end as is_signing_required,
+         f.claim_id, f.contract_number, f.rfo_client_id, f.contract_amount, f.folder_id, f.form_client_id, f.rfo_contract_id,
+         f.rfo_contract_id as rfo_con_or_claim_id,
+         f.x_dnp_name as city, f.x_dnp_region as region, f.shop_code, f.shop_name, f.expert_name,
+         f.cancel_prescoring, f.cancel_middle_office, f.cancel_controller, f.cancel_client, f.cancel_manager,
+         f.cancel_cpr_aa, f.cancel_verificator, f.cancel_undefined
+  from M_FOLDER_CON_CANCEL f
+  where f.process_name = 'ОНЛАЙН КРЕДИТ' and
+        f.claim_id is not null and
+        f.folder_date_create_mi >= to_date('2014-12-08','yyyy-mm-dd')
+  union all
+  select 'ОНЛАЙН-КРЕДИТ ЭКТ' as product, trunc(fo.folder_date_create_mi) as a_date,
+         case when fo.is_categ_a = 1 then 'КАТЕГОРИЯ А' when fo.is_categ_a = 0 then 'НЕ КАТЕГОРИЯ А' end as is_categ_a,
+         case when fo.is_categ_b = 1 then 'КАТЕГОРИЯ Б' when fo.is_categ_b = 0 then 'НЕ КАТЕГОРИЯ Б' end as is_categ_b,
+         case when fo.is_client_new_by_con = 1 then 'КЛИЕНТ НОВЫЙ' when fo.is_client_new_by_con = 0 then 'КЛИЕНТ ПОВТОРНЫЙ' end as is_client_new_by_con,
+         case when fo.is_credit_issued = 1 then 'КРЕДИТ ВЫДАН' when fo.is_credit_issued = 0 then 'КРЕДИТ НЕ ВЫДАН' end as is_credit_issued,
+         case when fo.is_sign_require = 1 then 'С ПОДПИСАНИЕМ' when fo.is_sign_require = 0 then 'БЕЗ ПОДПИСАНИЯ' end as is_signing_required,
+         fo.claim_id, fo.contract_number, fo.rfo_client_id, fo.contract_amount, fo.folder_id, fo.form_client_id, fo.rfo_contract_id,
+         fo.claim_id as rfo_con_or_claim_id,
+         fo.x_dnp_name as city, fo.x_dnp_region as region, fo.shop_code, fo.shop_name, fo.expert_name,
+         fo.cancel_prescoring, fo.cancel_middle_office, fo.cancel_controller, fo.cancel_client, fo.cancel_manager,
+         fo.cancel_cpr_aa, fo.cancel_verificator, fo.cancel_undefined
+  from M_FOLDER_CON_CANCEL_ONLINE fo
+  where fo.folder_date_create_mi >= to_date('2014-12-08','yyyy-mm-dd')
+) f
+join V_TIME_DAYS td on td.yyyy_mm_dd = f.a_date
+left join M_RBO_CONTRACT_BAS b on b.folder_id_first = f.folder_id and b.contract_number = f.contract_number
+left join M_RBO_CONTRACT_DEL d on d.rbo_contract_id = b.rbo_contract_id
+--left join M_RBO_CONTRACT_DEL_TST d on d.rbo_contract_id = b.rbo_contract_id
+---
+left join V_FORM_CLIENT_ALL_RFO fc on fc.form_client_id = f.form_client_id
+--left join V_CONTRACT_EKT_DWH e on e.rfo_contract_id = t.rfo_contract_id
+left join V_PKB_REPORT p on p.folder_id = f.folder_id
+left join (select fcc.rfo_contract_id, max(v.gcvp_rep_id) as gcvp_max_id
+          from V_GCVP_REPORT v
+          join M_FOLDER_CON_CANCEL fcc on fcc.iin = v.client_iin and
+               (v.rep_date >= trunc(fcc.folder_date_create_mi) - 60 and v.rep_date <= trunc(fcc.folder_date_create_mi))
+          where v.error_code = 0
+          group by fcc.rfo_contract_id
+) gm on gm.rfo_contract_id = f.rfo_contract_id
+left join (select v.gcvp_rep_id, max(v.salary) as salary,
+                  max(v.pmts_count_from_rep) as gcvp_pmts_count_from_rep
+          from V_GCVP_REPORT v
+          group by v.gcvp_rep_id
+) g on g.gcvp_rep_id = gm.gcvp_max_id
+--left join V_CONTRACT_EKT_DWH e on e.rfo_contract_id = f.rfo_con_or_claim_id
+left join V_RFO_Z#CREDIT_DOG c on c.id = f.rfo_con_or_claim_id
+left join (
+    select k.c_name as k_c_name, i.c_producer, i.c_name,
+           i.c_model, i.c_quant, i.c_cost, i.c_bill_summ,
+           i.c_price, i.id, i.collection_id, k.kind_name
+    from V_RFO_Z#PROD_INFO i,
+         V_RFO_Z#KIND_ZAL_BODY k
+    where k.id = i.c_type_tov
+) pr on pr.collection_id = c.c_d#type_cred#prod#prod_info11
+left join V_SHOP s on s.shop_code = f.shop_code
+group by td.yyyy, td.quarter, td.text_yyyy_mm, td.week_text, td.text_yyyy_mm_dd_week_day, td.week_day_short_ru,
+       f.product, f.is_categ_a, f.is_categ_b, f.is_client_new_by_con, f.is_credit_issued, f.is_signing_required,
+--       fc.age_full_years,
+       floor(fc.age_full_years / 10) * 10,
+       fc.sex, --fc.education, fc.marital_status, fc.children,
+       substr(trim(fc.patronymic),-2),
+/*       round((coalesce(fc.inc_sal,0) + coalesce(fc.inc_sal_add,0) + coalesce(fc.inc_sal_spouse,0) +
+              coalesce(fc.inc_rent,0) + coalesce(fc.inc_pension_benefits,0) +
+              coalesce(fc.inc_interest,0)) / 10000) * 10000,*/ -- fc.amount,
+       round(f.contract_amount / 50000) * 50000,
+       case when g.salary is null then 'ГЦВП NA'
+            when g.salary < 2500 then  'ГЦВП ЗП = 0'
+            when g.salary < 20000 then 'ГЦВП ЗП < 20К'
+            when g.salary >= 20000 then 'ГЦВП ЗП > 20К' end,
+       p.report_status,
+       round(d.max_debt_used_x / 50000) * 50000,
+       f.city, s.city_name, f.region, f.shop_code, f.shop_name, f.expert_name,
+       f.cancel_prescoring, f.cancel_middle_office, f.cancel_controller, f.cancel_client, f.cancel_manager,
+       f.cancel_cpr_aa, f.cancel_verificator, f.cancel_undefined,
+       upper(pr.c_producer),
+       upper(pr.c_name),
+--       pr.k_c_name
+       case when pr.k_c_name like '%МОБИЛ%' or
+                 pr.k_c_name like '%КОМП%' or
+                 pr.k_c_name like '%АУДИО%' then 'MOB_PC_TV'
+            when pr.k_c_name like '%ФОТО%' then 'CAMERA'
+            when pr.k_c_name like '%ТЕХН%' or
+                 pr.k_c_name like '%ИГРОВ%' then 'TECH_GAME'
+            else 'OTHER' end
+--);
+grant select on U1.M_TMP_J_MATRIX_ONLINE_1 to LOADDB;
+grant select on U1.M_TMP_J_MATRIX_ONLINE_1 to LOADER;
+
+

@@ -1,0 +1,69 @@
+﻿create materialized view U1.M_ONLINE_SIGMA_RES
+build deferred
+refresh complete on demand
+as
+select /*+ parallel 30 */
+    a.ORDER_ID,
+    a.A_DATE,
+    a.FULL_DATE,
+    a.SHOP_CODE,
+    a.SHOP_NAME,
+    a.CITY_NAME,
+    a.IIN,
+    a.PHONE_MOBILE,
+
+    a.TOTAL_AMOUNT,
+    a.PRODUCT_MODEL,
+
+    a.COUNT_7D,
+    a.AVG_AMOUNT_7D,
+    a.MEDIAN_7D,
+    a.STDDEV_7D,
+    count(a.total_amount_7d)  as COUNT_7D_COR,
+    avg(a.total_amount_7d)    as AVG_AMOUNT_7D_COR,
+    median(a.total_amount_7d) as MEDIAN_7D_COR,
+    stddev(a.total_amount_7d) as STDDEV_7D_COR
+from (
+  select
+    f1.ORDER_ID,
+    f1.A_DATE,
+    f1.FULL_DATE,
+    f1.SHOP_CODE,
+    f1.SHOP_NAME,
+    f1.CITY_NAME,
+    f1.IIN,
+    f1.PHONE_MOBILE,
+
+    f1.TOTAL_AMOUNT,
+    f7.TOTAL_AMOUNT as TOTAL_AMOUNT_7D,
+    f1.PRODUCT_MODEL,
+    f1.PRODCITY_ID,
+
+    count(f7.total_amount)  over (partition by f1.ORDER_ID,f7.PRODCITY_ID) as count_7d,
+    avg(f7.total_amount)    over (partition by f1.ORDER_ID,f7.PRODCITY_ID) as avg_amount_7d,
+    median(f7.total_amount) over (partition by f1.ORDER_ID,f7.PRODCITY_ID) as median_7d,
+    stddev(f7.total_amount) over (partition by f1.ORDER_ID,f7.PRODCITY_ID) as stddev_7d
+  from M_ONLINE_SIGMA_PRE f1
+  left join M_ONLINE_SIGMA_PRE f7 on f1.PRODCITY_ID=f7.PRODCITY_ID and f7.full_date<f1.full_date and f7.a_date>=f1.a_date-7
+) a
+where a.total_amount_7d>=a.median_7d-0.8*a.stddev_7d and a.total_amount_7d<=a.median_7d+0.8*a.stddev_7d
+group by
+    a.ORDER_ID,
+    a.A_DATE,
+    a.FULL_DATE,
+    a.SHOP_CODE,
+    a.SHOP_NAME,
+    a.CITY_NAME,
+    a.IIN,
+    a.PHONE_MOBILE,
+
+    a.TOTAL_AMOUNT,
+    a.PRODUCT_MODEL,
+
+    a.COUNT_7D,
+    a.AVG_AMOUNT_7D,
+    a.MEDIAN_7D,
+    a.STDDEV_7D;
+grant select on U1.M_ONLINE_SIGMA_RES to LOADDB;
+
+

@@ -1,0 +1,53 @@
+﻿create materialized view U1.M_CLIENT_DRAW_DOWN_EXD
+build deferred
+refresh complete on demand
+as
+select fld.c_client    as rfo_client_id,
+        upper(cp.c_last_name) || ' ' || upper(cp.c_first_name) || ' ' ||
+        upper(cp.c_sur_name) as  client_name,
+        cl.c_inn        as client_iin,
+        fld.id          as folder_id,
+        fd.c_doc_date   as folder_date_create,
+        mm.c_sum_nt     as op_sum_kzt,
+      /*  avg(mm.c_sum_nt) over (partition by fld.c_c
+      lient order by fd.c_doc_date
+                         range between unbounded preceding and current row) as op_sum_kzt_avg,
+        stddev(mm.c_sum_nt) over (partition by fld.c_client order by fd.c_doc_date
+                         range between unbounded preceding and current row) as op_sum_kzt_stddev,*/
+        ft.c_cur_short as currency,
+        case when vv.collection_id is not null then 1 else 0 end as is_verification,
+        u.c_name  as create_user_name,
+        sd.c_code as depart_code
+   from s01.Z#FOLDERS@rdwh_exd    fld
+   join s01.Z#CLIENT@rdwh_exd      cl on cl.id = fld.c_client
+   join s01.Z#CL_PRIV@rdwh_exd     cp on cp.id = cl.id
+   join s01.Z#BUS_PROCESS@rdwh_exd bp on bp.id = fld.c_business
+                              and bp.c_code = 'DRAW_DOWN'
+   join (select f1.id, f1.c_doc_date, r1.collection_id, f1.c_parent_fdoc
+           from s01.Z#RDOC@rdwh_exd  r1
+           join s01.Z#FDOC@rdwh_exd  f1 on f1.id = r1.c_doc
+                                and f1.class_id = 'DRAW_DOWN'
+           join s01.Z#STATUS_DOG@rdwh_exd  s1 on s1.id = f1.c_status_doc
+                                and s1.c_code = 'DRAW_DOWN'
+         ) fd on fd.collection_id = fld.c_docs
+   join (select f2.id, f2.c_doc_date, r2.collection_id
+           from s01.Z#RDOC@rdwh_exd  r2
+           join s01.Z#FDOC@rdwh_exd  f2 on f2.id = r2.c_doc
+                                and f2.class_id = 'MAIN_DOCUM'
+        ) md on md.collection_id = fld.c_docs
+   left join (select f3.id, f3.c_doc_date, r3.collection_id
+                from s01.Z#RDOC@rdwh_exd  r3
+                join s01.Z#FDOC@rdwh_exd  f3 on f3.id = r3.c_doc
+                                     and f3.class_id = 'KAS_VERIFICATION'
+              ) vv on vv.collection_id = fld.c_docs
+   join s01.Z#DRAW_DOWN@rdwh_exd    dd on dd.id = fd.id
+                               and dd.c_cash_type#0 = 1
+   join s01.Z#MAIN_DOCUM@rdwh_exd  mm on mm.id = md.id
+   join s01.Z#FT_MONEY@rdwh_exd    ft on ft.id = mm.c_valuta
+   join s01.Z#CM_CHECKPOINT@rdwh_exd cc on cc.id = fld.id
+   left join s01.Z#USER@rdwh_exd      u on u.id = cc.c_create_user
+   left join s01.Z#STRUCT_DEPART@rdwh_exd sd on sd.id = u.c_st_depart
+   left join V_RFO_Z#CONTRACT      cc on cc.id = fd.c_parent_fdoc;
+grant select on U1.M_CLIENT_DRAW_DOWN_EXD to LOADDB;
+
+

@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_KASPISH_LANGUAGES
+build deferred
+refresh force on demand
+as
+select
+"HJMPTS","TYPEPKSTRING","OWNERPKSTRING","MODIFIEDTS","CREATEDTS","PK","ACTIVEFLAG","ISOCODE","ACLTS","PROPTS"
+from kaspi.languages@ks_std
+where rownum >=0;
+grant select on U1.M_KASPISH_LANGUAGES to LOADDB;
+
+

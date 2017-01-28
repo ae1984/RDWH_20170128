@@ -1,0 +1,44 @@
+﻿create table U1.NT_SGA_BUFFCACHE_OBJ
+(
+  sdt              DATE,
+  owner            VARCHAR2(150),
+  object_name      VARCHAR2(150),
+  object_type      VARCHAR2(40),
+  number_of_blocks NUMBER,
+  size_mb          NUMBER,
+  status           VARCHAR2(10),
+  file#            NUMBER,
+  file_name        VARCHAR2(500),
+  block_size       NUMBER,
+  status_name      VARCHAR2(25)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.NT_SGA_BUFFCACHE_OBJ
+  is 'RDWH2.0 История. какие объекты находились в BufferCache';
+create index U1.IDX_SGA_BUFFCACHE_OBJ_1 on U1.NT_SGA_BUFFCACHE_OBJ (SDT)
+  tablespace USERS_ARC
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.NT_SGA_BUFFCACHE_OBJ to LOADDB;
+

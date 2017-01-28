@@ -1,0 +1,36 @@
+﻿create table U1.T_KASPIKZ_LOG_HTTP_REQUEST_TST
+(
+  id                 NUMBER not null,
+  method             VARCHAR2(100) not null,
+  referer_id         NUMBER,
+  uri_id             NUMBER,
+  user_agent_id      NUMBER,
+  user_id            NUMBER,
+  session_id         NUMBER,
+  asp_session_id     VARCHAR2(100),
+  date_start         DATE,
+  process_time       NUMBER,
+  server_name        VARCHAR2(100),
+  request_trace_guid VARCHAR2(2000),
+  client_ip          VARCHAR2(64),
+  nc_client_ip       VARCHAR2(64),
+  raw_uri_id         NUMBER,
+  actual_uri_id      NUMBER,
+  request_parameters VARCHAR2(4000),
+  security_tag_id    NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_KASPIKZ_LOG_HTTP_REQUEST_TST to LOADDB;
+

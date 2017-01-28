@@ -1,0 +1,23 @@
+﻿create table U1.T_KAZ_MRP
+(
+  change_date DATE,
+  mrp_amount  NUMBER
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on table U1.T_KAZ_MRP
+  is 'Месячный расчетный показатель (МРП)';
+grant select on U1.T_KAZ_MRP to LOADDB;
+grant select on U1.T_KAZ_MRP to LOADER;
+grant select on U1.T_KAZ_MRP to LOAD_MO;
+

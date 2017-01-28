@@ -1,0 +1,20 @@
+﻿create table U1.NT_TOTAL_PGA_ALLOCATED_HIST
+(
+  dt    DATE,
+  value NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_TOTAL_PGA_ALLOCATED_HIST to LOADDB;
+

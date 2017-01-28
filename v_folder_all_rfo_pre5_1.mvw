@@ -1,0 +1,12 @@
+﻿create materialized view U1.V_FOLDER_ALL_RFO_PRE5_1
+build deferred
+refresh complete on demand
+as
+select /*+parallel(5)*/ fld.id as folder_id, max(fd.id) as kas_gcvp_report_id
+    from V_RFO_Z#RDOC rd
+    join V_RFO_Z#FOLDERS fld on rd.collection_id = fld.c_docs
+    join V_RFO_Z#FDOC fd on fd.id = rd.c_doc and fd.class_id = 'KAS_GCVP_REPORT'
+    group by fld.id;
+grant select on U1.V_FOLDER_ALL_RFO_PRE5_1 to LOADDB;
+
+

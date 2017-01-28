@@ -1,0 +1,42 @@
+﻿create table U1.MO_RFOL_CONTRACT_CRED
+(
+  cmchp_id                   NUMBER,
+  foldr_client               NUMBER,
+  crdog_id                   NUMBER not null,
+  crdog_num_dog              VARCHAR2(300),
+  crdog_info_cred#summa_cred NUMBER(17,2),
+  crdog_date_begin           DATE,
+  crdog_date_end             DATE,
+  crscm_id                   NUMBER,
+  crscm_code                 VARCHAR2(120),
+  crscm_name                 VARCHAR2(300),
+  pprop_id__crdog_cr_prog    NUMBER,
+  pprop_code__crdog_cr_prog  VARCHAR2(105),
+  pprop_name__crdog_cr_prog  VARCHAR2(750),
+  stdog_id__crdog            NUMBER,
+  stdog_code__crdog          VARCHAR2(150),
+  stdog_name__crdog          VARCHAR2(300),
+  kunid_id__crdog_tar_pln    NUMBER,
+  kunid_code__crdog_tar_pln  VARCHAR2(120),
+  kunid_name__crdog_tar_pln  VARCHAR2(750),
+  shops_id                   NUMBER,
+  shops_code                 VARCHAR2(150),
+  shops_name                 VARCHAR2(300),
+  shops_address#place        VARCHAR2(510)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.MO_RFOL_CONTRACT_CRED to LOADDB;
+grant select on U1.MO_RFOL_CONTRACT_CRED to LOADER;
+

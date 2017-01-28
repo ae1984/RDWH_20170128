@@ -1,0 +1,65 @@
+﻿create materialized view U1.M_RFO_ONLINE_CLAIM_CNT
+refresh force on demand
+as
+select /*+ parallel(5) */
+      rfo_client_id,
+      iin,
+      case when goods_cnt>goods_cnt_dist then 1 else 0 end as is_goods_abnormal,
+      case when goods_type_cnt>goods_type_cnt_dist then 1 else 0 end as is_goods_type_abnormal
+from(
+
+      select
+            x.rfo_client_id,
+            x.iin,
+
+            count(x.product_name) as goods_cnt,
+            count(distinct x.product_name) as goods_cnt_dist,
+            count(x.product_type_name) as goods_type_cnt,
+            count(distinct x.product_type_name) as goods_type_cnt_dist
+            /*,
+            to_char(t.folder_date_create_mi, 'yyyy - mm') as month_ratif*/
+      from (
+            select
+                  tt.c_client as rfo_client_id,
+                  tt.c_inn as iin,
+                  tt.claim_id,
+                  tt.product_name,
+                  tt.product_type_name
+                  /*,
+                  to_char(t.folder_date_create_mi, 'yyyy - mm') as month_ratif*/
+            from (select * from M_RFO_ONLINE_CLAIM t
+                  union
+                  select * from M_RFO_ONLINE_CLAIM_DAY t) tt
+            --left join V_SHOP s on s.rfo_shop_id = tt.c_shop
+            join V_RFO_Z#STRUCT_DEPART sd on sd.id = tt.c_st_depart
+            join V_POS dnp on dnp.pos_code = sd.c_code
+            where dnp.x_dnp_name = 'АЛМАТЫ'
+
+
+            union all
+            select
+                  t.rfo_client_id,
+                  t.iin,
+                  t.claim_id,
+                  upper(ekt.product_name) as product_name,
+                  upper(ekt.product_type_name) as product_type_name
+                  /*,
+                  to_char(t.folder_date_create_mi, 'yyyy - mm') as month_ratif*/
+            from m_folder_con_cancel t
+            join (select * from M_RFO_ONLINE_CLAIM t
+                  union
+                  select * from M_RFO_ONLINE_CLAIM_DAY t) tt on t.rfo_client_id = tt.c_client
+            join V_RFO_Z#STRUCT_DEPART sd on sd.id = tt.c_st_depart
+            join V_POS dnp on dnp.pos_code = sd.c_code and dnp.x_dnp_name = 'АЛМАТЫ'
+            join V_CONTRACT_EKT_DWH ekt on ekt.contract_number = t.contract_number
+            where t.product_type = 'ТОВАРЫ' and
+                  t.folder_date_create_mi >= trunc(sysdate) - 60
+      ) x
+      group by x.rfo_client_id,
+               x.iin
+);
+grant select on U1.M_RFO_ONLINE_CLAIM_CNT to LOADDB;
+grant select on U1.M_RFO_ONLINE_CLAIM_CNT to LOADER;
+grant select on U1.M_RFO_ONLINE_CLAIM_CNT to LOAD_RDWH_PROD;
+
+

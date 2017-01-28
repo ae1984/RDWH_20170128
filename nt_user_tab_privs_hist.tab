@@ -1,0 +1,28 @@
+﻿create table U1.NT_USER_TAB_PRIVS_HIST
+(
+  sdt        DATE,
+  grantee    VARCHAR2(128),
+  owner      VARCHAR2(128),
+  table_name VARCHAR2(128),
+  grantor    VARCHAR2(128),
+  privilege  VARCHAR2(40),
+  grantable  VARCHAR2(3),
+  hierarchy  VARCHAR2(3),
+  common     VARCHAR2(3),
+  type       VARCHAR2(24)
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.NT_USER_TAB_PRIVS_HIST to LOADDB;
+

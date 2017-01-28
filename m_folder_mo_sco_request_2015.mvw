@@ -1,0 +1,57 @@
+﻿create materialized view U1.M_FOLDER_MO_SCO_REQUEST_2015
+build deferred
+refresh force on demand
+as
+select y.rfolder_id,
+       y.date_create,
+       y.folder_id,
+       y.rfo_client_id,
+       y.scorecard_num,
+       y.system_source,
+       y.sco_gcvp_real_need,
+       coalesce(y.mo_sco_reject, y.mo_sco_reject_kn) as mo_sco_reject
+from (
+    select /*+ parallel 30 */
+           r.id rfolder_id,
+           r.date_create,
+           dp.code_int,
+           case when dp.code_int = 'IN_SCO_SYSTEM_SOURCE' then
+                case when t.value_text = 'RFO' then 1
+                     when t.value_text = 'WEB' then 2
+                     when t.value_text = 'KASPI_SHOPPING' then 3
+                     when t.value_text = 'BPM' then 4
+                else 0 end
+           else t.value_number end as value_number
+    from MO_RFOLDER r
+    join T_MO_RFOLDER_PAR_VALUE_2015 t on t.rfolder_id = r.id
+    join V_MO_D_PAR dp on dp.id = t.d_par_id
+                          and dp.code_int in ('IN_SCO_FOLDER_ID',
+                                              'IN_SCO_CLIENT_ID',
+                                              'IN_SCO_NUM_SCORING',
+                                              'IN_SCO_SYSTEM_SOURCE',
+                                              'SC_GCVP_REAL_NEED',
+                                              'MO_SCO_REJECT',
+                                              'MO_SCO_REJECT_KN'
+                                              )
+    where r.date_create >= to_date('01-01-2015', 'dd-mm-yyyy')
+          and r.date_create < to_date('01-01-2016', 'dd-mm-yyyy')
+          /*and r.id = 35894176*/
+) pivot (
+    max(value_number)
+    for code_int in ('IN_SCO_FOLDER_ID' as folder_id,
+                     'IN_SCO_CLIENT_ID' as rfo_client_id,
+                     'IN_SCO_NUM_SCORING' as scorecard_num,
+                     'IN_SCO_SYSTEM_SOURCE' as system_source, /*
+                                                                BPM - 4
+                                                                KASPI_SHOPPING - 3
+                                                                WEB - 2
+                                                                RFO - 1
+                                                                */
+                     'SC_GCVP_REAL_NEED' as sco_gcvp_real_need,
+                     'MO_SCO_REJECT' as mo_sco_reject,
+                     'MO_SCO_REJECT_KN' as mo_sco_reject_kn)
+) y
+where folder_id is not null;
+grant select on U1.M_FOLDER_MO_SCO_REQUEST_2015 to LOADDB;
+
+

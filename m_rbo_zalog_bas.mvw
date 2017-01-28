@@ -1,0 +1,58 @@
+﻿create materialized view U1.M_RBO_ZALOG_BAS
+build deferred
+refresh force on demand
+as
+select s.id as zalog_id,
+        nvl(c.c_num_dog, k.c_num_dog) as contract_number,
+        s.c_num_dog                   as zalog_contract_number,
+        s.c_date_begin as date_open,                       --Дата создания договора
+        s.c_date_begining as date_begin,                   --Дата начала действия договора
+        s.c_date_close as date_close,                      --Дата закрытия договора
+        s.c_summa as zalog_amount,                         --Сумма обеспечения
+        s.c_valuta as valuta,
+        s.c_user_zalog as rfo_client_zalog_id,
+        s.c_zalog_body as zalog_body,
+        z_zal.zal_sale_date,
+        z_zal.zal_sale_amount,
+        z_zal.zal_mvd_date,
+        z_zal.zal_auto_seller_id,
+        us.c_username as zal_auto_seller,
+        g.id as gu_sale_id,
+        g.fio as gu_sale_fio,
+        g.summ as gu_sale_amount,
+        g.date_info as gu_sale_date_reg -- дата занесения информации о продаже авто
+        , case
+          when g.id is not null or z_zal.zal_sale_date is not null then
+           1
+         else
+           0
+         end as is_car_sale -- проданные машины
+  from V_RBO_Z#ZALOG s
+   join V_RBO_Z#PART_TO_LOAN lo on s.c_part_to_loan = lo.collection_id
+   left join V_RBO_Z#KAS_PC_DOG k on k.id = lo.c_product
+   left join V_RBO_Z#PR_CRED c on c.id = lo.c_product
+   left join ( SELECT z.id as zalog_id,
+                 max(case when pt.c_code = 'ZAL_AUTO_SALE_DATE' then
+                    to_date(c_str_value,'dd/mm/yyyy')
+                 end) as zal_sale_date,
+                 max(case when pt.c_code = 'ZAL_AUTO_SUMM' then
+                    c_num_value
+                 end) as zal_sale_amount,
+                 max(case when pt.c_code = 'ZAL_AUTO_SELLER' then
+                    c_num_value
+                 end) as zal_auto_seller_id,
+                 max(case when pt.c_code = 'ZAL_AUTO_JP_DATE' then
+                    to_date(c_str_value,'dd/mm/yyyy')
+                 end) as zal_mvd_date
+          FROM V_RBO_Z#ZALOG z
+          join V_RBO_Z#PROPERTY PR on pr.collection_id = z.c_prorerty_arr
+          join V_RBO_Z#PROPERTY_TYPE pt on pt.id = pr.c_property_type
+          where pt.c_code in ('ZAL_AUTO_SALE_DATE','ZAL_AUTO_SUMM','ZAL_AUTO_SELLER','ZAL_AUTO_JP_DATE')
+          group by z.id) z_zal on z_zal.zalog_id = s.id
+
+   left join V_RBO_Z#KAS_PC_DOG pd on pd.id = coalesce(c.c_kas_pc_dog_ref,c.c_kas_pc_dog_t_ref)
+   left join T_GU_SALE_AUTO g on g.contract_number = pd.c_num_dog --and g.date_info <= t.c_date_calc
+   left join V_RBO_Z#USER us on us.id = z_zal.zal_auto_seller_id;
+grant select on U1.M_RBO_ZALOG_BAS to LOADDB;
+
+

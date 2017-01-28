@@ -1,0 +1,49 @@
+﻿create materialized view U1.M_CLIENT_DWH_RFO_LINK
+build deferred
+refresh force on demand
+as
+with dwh as ( select /*+parallel(5)*/ x.x_client_id as client_id,
+                     max(x.client_iin_last) keep (dense_rank last order by x.x_start_date) as client_iin,
+                     max(x.client_rnn_last) keep (dense_rank last order by x.x_start_date) as client_rnn
+              from (
+                  select t.x_client_id,
+                         t.client_rnn,
+                         t.client_iin,
+                         t.x_start_date,
+                         last_value(t.client_iin) ignore nulls over (partition by t.x_client_id order by t.x_start_date
+                                                                    range between unbounded preceding and unbounded following) as client_iin_last,
+                         last_value(t.client_rnn) ignore nulls over (partition by t.x_client_id order by t.x_start_date
+                                                                     range between unbounded preceding and unbounded following) as client_rnn_last
+                  from V_DWH_PORTFOLIO_CURRENT t
+              ) x
+              group by x.x_client_id
+)
+/*select y.x_client_id,
+       y.client_iin,
+       y.client_rnn,
+       max(y.rfo_client_id) as rfo_client_id
+from ( */
+    select /*+parallel(5)*/ t.*,
+           cl.rfo_client_id
+    from dwh t
+    join u1.v_client_rfo_by_id cl on  (t.client_iin is not null and t.client_rnn is not null and cl.iin = t.client_iin and cl.rnn = t.client_rnn) or
+                                      (t.client_iin is not null and t.client_rnn is null and cl.iin = t.client_iin) or
+                                      (t.client_iin is null and t.client_rnn is not null and cl.rnn = t.client_rnn)
+    union
+    select /*+parallel(5)*/ t.*,
+           cl.rfo_client_id
+    from dwh t
+    join u1.v_client_rfo_by_id cl on (t.client_iin is not null and cl.iin = t.client_iin) or
+                                     (t.client_iin is null and t.client_rnn is not null and cl.rnn = t.client_rnn)
+    where not exists (select null
+                      from u1.v_client_rfo_by_id cl
+                      where (t.client_iin is not null and t.client_rnn is not null and cl.iin = t.client_iin and cl.rnn = t.client_rnn) or
+                            (t.client_iin is not null and t.client_rnn is null and cl.iin = t.client_iin) or
+                            (t.client_iin is null and t.client_rnn is not null and cl.rnn = t.client_rnn))
+/*) y
+group by y.x_client_id,
+         y.client_iin,
+         y.client_rnn */;
+grant select on U1.M_CLIENT_DWH_RFO_LINK to LOADDB;
+
+

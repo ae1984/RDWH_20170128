@@ -1,0 +1,200 @@
+﻿create materialized view U1.V_FORM_CLIENT_CONTACT_PHONE
+using no index
+refresh complete on demand
+as
+select /*+parallel(30) */
+       tab.form_client_id,
+       tab.folder_id,
+       tab.folder_date,
+       tab.form_client_date,
+       tab.rfo_client_id,
+       tab.phone_number,
+       regexp_replace(tab.phone_number,'^8','') as phone_number_clear,
+       tab.phone_type,
+       tab.phone_type_simple,
+       tab.contact_relation,
+       tab.is_input,
+       tab.contact_surname,
+       tab.contact_first_name,
+       tab.contact_patronymic
+  from (select /*+parallel(30) parallel_index(30) */fc.id as form_client_id,
+               fld.id as folder_id,
+               cp.c_date_create as folder_date,
+               nvl(fd.c_doc_date,fc.c_date_create) as form_client_date,
+               fld.c_client as rfo_client_id,
+               trim(fc.c_mobile#numb) as phone_number,
+               'МОБИЛЬНЫЙ' as phone_type,
+               'МОБИЛЬНЫЙ' as phone_type_simple,
+               'МОБИЛЬНЫЙ' as contact_relation,
+               1 as is_input,
+               upper(trim(fc.c_last_name)) as contact_surname,
+               upper(trim(fc.c_first_name)) as contact_first_name,
+               upper(trim(fc.c_sur_name)) as contact_patronymic
+        from V_RFO_Z#FORM_CLIENT fc, V_RFO_Z#FDOC fd, V_RFO_Z#RDOC rd, V_RFO_Z#FOLDERS fld, V_RFO_Z#CM_CHECKPOINT cp
+        where fd.id = fc.id and fd.class_id = 'FORM_CLIENT' and
+             rd.c_doc = fd.id and rd.collection_id = fld.c_docs and cp.id = fld.id and
+             fc.c_mobile#numb is not null and
+             REGEXP_LIKE(trim(fc.c_mobile#numb),'^[0-9]+$')
+        union ----------------------
+        select /*+parallel(30) parallel_index(30) */fc.id as form_client_id,
+               fld.id as folder_id,
+               cp.c_date_create as folder_date,
+               nvl(fd.c_doc_date,fc.c_date_create) as form_client_date,
+               fld.c_client as rfo_client_id,
+               trim(fc.c_phone_home#numb) as phone_number,
+               'ДОМАШНИЙ' as phone_type,
+               'ДОМАШНИЙ' as phone_type_simple,
+               'ДОМАШНИЙ' as contact_relation,
+               1 as is_input,
+               upper(trim(fc.c_last_name)) as contact_surname,
+               upper(trim(fc.c_first_name)) as contact_first_name,
+               upper(trim(fc.c_sur_name)) as contact_patronymic
+        from V_RFO_Z#FORM_CLIENT fc, V_RFO_Z#FDOC fd, V_RFO_Z#RDOC rd, V_RFO_Z#FOLDERS fld, V_RFO_Z#CM_CHECKPOINT cp
+        where fd.id = fc.id and fd.class_id = 'FORM_CLIENT' and
+             rd.c_doc = fd.id and rd.collection_id = fld.c_docs and cp.id = fld.id and
+             fc.c_phone_home#numb is not null and
+             REGEXP_LIKE(trim(fc.c_phone_home#numb),'^[0-9]+$')
+        union ----------------------
+        select /*+parallel(30) parallel_index(30) */fc.id as form_client_id,
+               fld.id as folder_id,
+               cp.c_date_create as folder_date,
+               nvl(fd.c_doc_date,fc.c_date_create) as form_client_date,
+               fld.c_client as rfo_client_id,
+               trim(fc.c_phone_wife) as phone_number,
+               'СУПРУГА' as phone_type, -- этот телефон не вводится с декабря 2013
+               'КОНТАКТ' as phone_type_simple,
+               'СУПРУГА' as contact_relation,
+               1 as is_input,
+               upper(trim(fc.c_last_name_wife)) as contact_surname,
+               upper(trim(fc.c_first_name_wife)) as contact_first_name,
+               upper(trim(fc.c_sur_name_wife)) as contact_patronymic
+        from V_RFO_Z#FORM_CLIENT fc, V_RFO_Z#FDOC fd, V_RFO_Z#RDOC rd, V_RFO_Z#FOLDERS fld, V_RFO_Z#CM_CHECKPOINT cp
+        where fd.id = fc.id and fd.class_id = 'FORM_CLIENT' and
+             rd.c_doc = fd.id and rd.collection_id = fld.c_docs and cp.id = fld.id and
+             fc.c_phone_wife is not null and
+             REGEXP_LIKE(trim(fc.c_phone_wife),'^[0-9]+$')
+        union -----------------------
+        select /*+parallel(30) parallel_index(30) */
+               fc.id as form_client_id,
+               fld.id as folder_id,
+               cp.c_date_create as folder_date,
+               nvl(fd.c_doc_date,fc.c_date_create) as form_client_date,
+               fld.c_client as rfo_client_id,
+               trim(p.c_str) as phone_number,
+               'МОБИЛЬНЫЙ СУПРУГИ' as phone_type,
+               'КОНТАКТ' as phone_type_simple,
+               'СУПРУГА' as contact_relation,
+               1 as is_input,
+               upper(trim(fc.c_last_name_wife)) as contact_surname,
+               upper(trim(fc.c_first_name_wife)) as contact_first_name,
+               upper(trim(fc.c_sur_name_wife)) as contact_patronymic
+        from V_RFO_Z#FORM_CLIENT fc, V_RFO_Z#FDOC fd, V_RFO_Z#RDOC rd, V_RFO_Z#FOLDERS fld,
+             V_RFO_Z#PROPERTIES p, V_RFO_Z#PROPERTY_GRP pg, V_RFO_Z#CM_CHECKPOINT cp
+        where fd.id = fc.id and fd.class_id = 'FORM_CLIENT' and
+             rd.c_doc = fd.id and rd.collection_id = fld.c_docs and
+             fc.c_add_prop = p.collection_id and p.c_group_prop = pg.id and cp.id = fld.id and
+             pg.c_code = 'KAS_WIFE_PHONE_MOBILE' and p.c_str is not null and
+             REGEXP_LIKE(trim(p.c_str),'^[0-9]+$')
+        union ------------------------
+        select /*+parallel(30) parallel_index(30) */fc.id as form_client_id,
+               fld.id as folder_id,
+               cp.c_date_create as folder_date,
+               nvl(fd.c_doc_date,fc.c_date_create) as form_client_date,
+               fld.c_client as rfo_client_id,
+               trim(fc.c_phone_work#numb) as phone_number,
+               'РАБОЧИЙ' as phone_type,
+               'РАБОЧИЙ' as phone_type_simple,
+               'ОРГАНИЗАЦИЯ' as contact_relation,
+               1 as is_input,
+               upper(trim(fc.c_name_org)) as contact_surname,
+               null as contact_first_name,
+               null as contact_patronymicnd
+        from V_RFO_Z#FORM_CLIENT fc, V_RFO_Z#FDOC fd, V_RFO_Z#RDOC rd, V_RFO_Z#FOLDERS fld, V_RFO_Z#CM_CHECKPOINT cp
+        where fd.id = fc.id and fd.class_id = 'FORM_CLIENT' and
+             rd.c_doc = fd.id and rd.collection_id = fld.c_docs and cp.id = fld.id and
+             fc.c_phone_work#numb is not null and
+             REGEXP_LIKE(trim(fc.c_phone_work#numb),'^[0-9]+$')
+        union ------------------------
+        select /*+parallel(30) parallel_index(30) */fc.id as form_client_id,
+               fld.id as folder_id,
+               cp.c_date_create as folder_date,
+               nvl(fd.c_doc_date,fc.c_date_create) as form_client_date,
+               fld.c_client as rfo_client_id,
+               trim(fc.c_phone_org) as phone_number,
+               'ОРГАНИЗАЦИЯ' as phone_type,
+               'РАБОЧИЙ' as phone_type_simple,
+               'ОРГАНИЗАЦИЯ' as contact_relation,
+               1 as is_input,
+               upper(trim(fc.c_name_org)) as contact_surname,
+               null as contact_first_name,
+               null as contact_patronymic
+        from V_RFO_Z#FORM_CLIENT fc, V_RFO_Z#FDOC fd, V_RFO_Z#RDOC rd, V_RFO_Z#FOLDERS fld, V_RFO_Z#CM_CHECKPOINT cp
+        where fd.id = fc.id and fd.class_id = 'FORM_CLIENT' and
+             rd.c_doc = fd.id and rd.collection_id = fld.c_docs and cp.id = fld.id and
+             fc.c_phone_org is not null and
+             REGEXP_LIKE(trim(fc.c_phone_org),'^[0-9]+$')
+        union ------------------------
+        select /*+parallel(30) parallel_index(30) */fc.id as form_client_id,
+               fld.id as folder_id,
+               cp.c_date_create as folder_date,
+               nvl(fd.c_doc_date,fc.c_date_create) as form_client_date,
+               fld.c_client as rfo_client_id,
+               trim(fc.c_phone_org_wife) as phone_number,
+               'ОРГАНИЗАЦИЯ СУПРУГИ' as phone_type,
+               'РАБОЧИЙ' as phone_type_simple,
+               'ОРГАНИЗАЦИЯ СУПРУГИ' as contact_relation,
+               1 as is_input,
+               upper(trim(fc.c_name_org_wife)) as contact_surname,
+               null as contact_first_name,
+               null as contact_patronymic
+        from V_RFO_Z#FORM_CLIENT fc, V_RFO_Z#FDOC fd, V_RFO_Z#RDOC rd, V_RFO_Z#FOLDERS fld, V_RFO_Z#CM_CHECKPOINT cp
+        where fd.id = fc.id and fd.class_id = 'FORM_CLIENT' and
+             rd.c_doc = fd.id and rd.collection_id = fld.c_docs and cp.id = fld.id and
+             fc.c_phone_org_wife is not null and
+             REGEXP_LIKE(trim(fc.c_phone_org_wife),'^[0-9]+$')
+        union -------------------------
+        select /*+parallel(30) parallel_index(30) */fc.id as form_client_id,
+              fld.id as folder_id,
+              cp.c_date_create as folder_date,
+              nvl(fd.c_doc_date,fc.c_date_create) as form_client_date,
+              fld.c_client as rfo_client_id,
+              trim(p.c_phone#numb) as phone_number,
+              'КОНТАКТ' as phone_type,
+              'КОНТАКТ' as phone_type_simple,
+              upper(trim(p.c_relation)) as contact_relation,
+              1 as is_input,
+              upper(trim(p.c_last_name)) as contact_surname,
+              upper(trim(p.c_first_name)) as contact_first_name,
+              upper(trim(p.c_sur_name)) as contact_patronymic
+        from V_RFO_Z#FORM_CLIENT fc, V_RFO_Z#FDOC fd, V_RFO_Z#RDOC rd, V_RFO_Z#FOLDERS fld, V_RFO_Z#CONTACT_PERSON p, V_RFO_Z#CM_CHECKPOINT cp
+        where fd.id = fc.id and fd.class_id = 'FORM_CLIENT' and
+             rd.c_doc = fd.id and rd.collection_id = fld.c_docs and
+             p.collection_id = fc.c_contact_persons and cp.id = fld.id and
+             p.c_phone#numb is not null and
+             REGEXP_LIKE(trim(p.c_phone#numb),'^[0-9]+$')
+        union -------------------------
+        select /*+parallel(30) parallel_index(30) */fc.id as form_client_id,
+              fld.id as folder_id,
+              cp.c_date_create as folder_date,
+              nvl(fd.c_doc_date,fc.c_date_create) as form_client_date,
+              fld.c_client as rfo_client_id,
+              trim(p.c_mob_number) as phone_number,
+              'КОНТАКТ-МОБИЛЬНЫЙ' as phone_type,
+              'КОНТАКТ' as phone_type_simple,
+              upper(trim(p.c_relation)) as contact_relation,
+              1 as is_input,
+              upper(trim(p.c_last_name)) as contact_surname,
+              upper(trim(p.c_first_name)) as contact_first_name,
+              upper(trim(p.c_sur_name)) as contact_patronymic
+        from V_RFO_Z#FORM_CLIENT fc, V_RFO_Z#FDOC fd, V_RFO_Z#RDOC rd, V_RFO_Z#FOLDERS fld, V_RFO_Z#CONTACT_PERSON p, V_RFO_Z#CM_CHECKPOINT cp
+        where fd.id = fc.id and fd.class_id = 'FORM_CLIENT' and
+             rd.c_doc = fd.id and rd.collection_id = fld.c_docs and
+             p.collection_id = fc.c_contact_persons and cp.id = fld.id and
+             p.c_mob_number is not null and
+             REGEXP_LIKE(trim(p.c_mob_number),'^[0-9]+$')) tab;
+grant select on U1.V_FORM_CLIENT_CONTACT_PHONE to LOADDB;
+grant select on U1.V_FORM_CLIENT_CONTACT_PHONE to LOADER;
+grant select on U1.V_FORM_CLIENT_CONTACT_PHONE to LOAD_MO;
+grant select on U1.V_FORM_CLIENT_CONTACT_PHONE to RISK_VERIF;
+
+

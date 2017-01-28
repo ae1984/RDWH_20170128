@@ -1,0 +1,108 @@
+﻿create materialized view U1.M_APP_MINER_FORM_CLIENT
+build deferred
+refresh complete on demand
+as
+select /*+ parallel(30) */
+       ap.app_id,
+       ap.rfo_client_id,
+       ap.folder_id,
+       ap.folder_date_create,
+       ap.folder_date_create_mi,
+       ap.form_client_id,
+       fa.form_client_date,
+       --О себе
+       fa.surname,  --Фамилия
+       fa.first_name,  --Имя
+       fa.patronymic,     --Отчество
+       fa.iin, -- ИИН
+       fa.sex , --Пол  пол(м-мужской,ж-женский)
+       fa.birth_date_date, -- Дата рождения
+       fa.birth_place, -- Место рождения
+       fa.citizenship, -- Гражданство/Страна
+       --Документ, удостоверяющий личность
+       /*Тип документа*/
+       fa.personal_id_doc_num , --№ документа
+       fa.personal_id_doc_who , --Кем выдан
+       fa.personal_id_doc_date, --Дата выдачи
+       /*Срок действия*/
+       --Адрес проживания
+       fa.fact_address_region,  --     Область
+       fa.fact_address_district, --    Район
+       fa.fact_address_city, --      Город/село
+       fa.fact_address_street, --        Улица
+       fa.fact_address_house_part, --          Корпус
+       fa.fact_address_house, --            Дом
+       fa.fact_address_flat, -- Квартира
+       fa.fact_address_date_begin, --              Проживает с даты
+       fa.c_address_equal   , --адреса регистрационный и фактический совпадают
+       --Адрес регистрации (если не совпадает с адресом проживания)
+       fa.reg_address_region, --  Область
+       fa.reg_address_district, --    Район
+       fa.reg_address_city, --     Город/село
+       fa.reg_address_street , --      Улица
+       fa.reg_address_house_part , --        Корпус
+       fa.reg_address_house , --          Дом
+       fa.reg_address_flat , --    Квартира
+       --Контакты
+       fa.phone_home , ---Домашний телефон
+       fa.phone_mobile, --- Мобильный телефон
+       --Данные о работе
+       fa.org_name, -- Наименование организации
+       fa.job_position,  -- Должность
+       fa.work_experience_last_place, -- Стаж на последнем месте работы
+       fa.phone_work_number, -- Рабочий телефон
+       --Доходы/Расходы
+       fa.inc_sal, -- Заработная плата
+       fa.inc_sal_spouse,-- Заработная плата супруги(а)
+       fa.inc_pension_benefits,-- Пособия, пенсии
+       fa.inc_sal_add, -- Дополнительные доходы
+       fa.inc_rent,
+       fa.inc_interest,
+       fa.exp_utilities, -- Аренда и коммунальные платежи / Коммунальные платежи
+       --Дополнительные сведение о заемщике
+       fa.marital_status,-- Семейное положение
+       fa.last_name_wife,--  Фамилия супруги(а)
+       fa.first_name_wife,--  Имя супруги(а)
+       fa.sur_name_wife,-- Отчество  супруги(а)
+       /*Дата рождения супруги(а)*/
+       fa.phone_wife, --Мобильный тел. супруги(а)
+       --Члены семьи на содержании - Дети до 18 лет / Данные о детях (при печати)
+       fa.children,  --количество детей
+       fa.education,  --Образование
+       --Жилье / Недвижимость/жилье
+       fa.real_estate_relation,-- отношение к жилищу
+       fa.is_have_cred,-- Есть кредит в нашем/другом банке? / Наличие ссудной задолженности
+     /*  --Контактное Лицо 1
+       Фамилия
+       Имя
+       Отчество
+       Кем приходится/Степень родства
+       Мобильный телефон
+       --Контактное Лицо 2
+       Фамилия
+       Имя
+       Отчество
+       Кем приходится/Степень родства
+       Мобильный телефон
+       --Вопросы КФМ  */
+       /*Наличие адреса регистрации/проживания в США --Страна проживания - США*/
+       fa.address_usa, --Адрес место жительство - США
+       fa.is_resident_usa, --являетесь ли вы налогоплательщиком сша Являетесь ли вы налогоплательшиком в США?
+       fa.offshore, --Наличие банковского счвета в Банке, расположенных в оффшорных зонах Да/Нет
+       fa.ipdl_relation, --Причастность к Иностранному публичному должностному лицу, его членам семьи и близким родственникам Да/Нет
+
+       coalesce(fa.inc_sal,0) + coalesce(fa.inc_sal_add,0) +
+       coalesce(fa.inc_sal_spouse,0) + coalesce(fa.inc_pension_benefits,0) as inc_all,
+
+
+       coalesce(fa.inc_sal,0) + coalesce(fa.inc_sal_add,0) +
+       coalesce(fa.inc_sal_spouse,0) + coalesce(fa.inc_pension_benefits,0) +
+       coalesce(fa.inc_rent, 0) + coalesce(fa.inc_interest, 0) as inc_all2,
+
+       fa.term_duration
+
+from u1.M_APP_MINER_BAS ap
+left join u1.V_FORM_CLIENT_ALL_RFO fa on fa.form_client_id = ap.form_client_id;
+grant select on U1.M_APP_MINER_FORM_CLIENT to LOADDB;
+
+

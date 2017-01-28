@@ -1,0 +1,24 @@
+﻿create table U1.ERROR_LOG
+(
+  id          NUMBER not null,
+  err_date    TIMESTAMP(6) default systimestamp not null,
+  operation   VARCHAR2(50),
+  err_code    NUMBER,
+  err_message VARCHAR2(2000),
+  object_id   NUMBER,
+  object_type VARCHAR2(50),
+  send_bool   NUMBER(1) default 1 not null
+)
+tablespace USERS
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 4096M
+    next 8M
+    minextents 1
+    maxextents unlimited
+  );
+grant select on U1.ERROR_LOG to LOADDB;
+

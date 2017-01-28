@@ -1,0 +1,176 @@
+﻿create table U1.DWH_AUTO_VIN
+(
+  start_date              DATE,
+  end_date                DATE,
+  auto_vin_dwh_id         VARCHAR2(500),
+  auto_vin_mvd_id         VARCHAR2(500),
+  mvd_date                DATE,
+  mvd_status_id           VARCHAR2(500),
+  mvd_iin                 VARCHAR2(500),
+  mvd_status_date         DATE,
+  ar_purpose              VARCHAR2(500),
+  ar_fuel                 VARCHAR2(500),
+  ar_engine_purpose       VARCHAR2(500),
+  ar_drive                VARCHAR2(500),
+  ar_kpp_type             VARCHAR2(500),
+  ar_engine_type          VARCHAR2(500),
+  ar_market               VARCHAR2(500),
+  ar_car_type             VARCHAR2(500),
+  ar_origin_country       VARCHAR2(500),
+  ar_manufacturer         VARCHAR2(500),
+  ar_manufacture_date     VARCHAR2(500),
+  ar_engine_volume        VARCHAR2(500),
+  ar_assemblage_countr    VARCHAR2(500),
+  ar_body_type            VARCHAR2(500),
+  ar_mark                 VARCHAR2(500),
+  ar_manufacture_factory  VARCHAR2(500),
+  ar_model                VARCHAR2(500),
+  ar_model_year           NUMBER,
+  auto_vin_id             VARCHAR2(500),
+  ar_parsed_flg           NUMBER,
+  esbd_parsed_flg         NUMBER,
+  esbd_mark               VARCHAR2(500),
+  esbd_engine_volume      VARCHAR2(500),
+  esbd_engine_number      VARCHAR2(500),
+  esbd_engine_power       VARCHAR2(500),
+  esbd_is_right_drive_flg VARCHAR2(500),
+  esbd_color              VARCHAR2(500),
+  esbd_type               VARCHAR2(500),
+  esbd_issue_year         VARCHAR2(500),
+  esbd_issue_month        VARCHAR2(500),
+  esbd_model              VARCHAR2(500),
+  vin                     VARCHAR2(500),
+  source_client_id        VARCHAR2(500),
+  dwh_client_id           VARCHAR2(500),
+  rbo_client_id           VARCHAR2(500),
+  valid_flg               NUMBER,
+  avg_current_price       NUMBER,
+  avg_current_price_3y    NUMBER,
+  avg_deal_price          NUMBER,
+  avg_deal_price_3y       NUMBER
+)
+tablespace USERS
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress;
+comment on column U1.DWH_AUTO_VIN.start_date
+  is 'Дата начала действия записи';
+comment on column U1.DWH_AUTO_VIN.end_date
+  is 'Дата окончания действия записи';
+comment on column U1.DWH_AUTO_VIN.auto_vin_dwh_id
+  is 'Идентификатор записи в DWH';
+comment on column U1.DWH_AUTO_VIN.auto_vin_mvd_id
+  is 'Идентификатор записи в базе МВД';
+comment on column U1.DWH_AUTO_VIN.mvd_date
+  is 'Дата вставки БД (МВД)';
+comment on column U1.DWH_AUTO_VIN.mvd_status_id
+  is 'МВД статусы (постановка/снятие с учета)';
+comment on column U1.DWH_AUTO_VIN.mvd_iin
+  is 'ИИН владельца из базы МВД';
+comment on column U1.DWH_AUTO_VIN.mvd_status_date
+  is 'Дата постановки(снятия) на(с) учет(а)';
+comment on column U1.DWH_AUTO_VIN.ar_purpose
+  is 'Назначение';
+comment on column U1.DWH_AUTO_VIN.ar_fuel
+  is 'Топливо';
+comment on column U1.DWH_AUTO_VIN.ar_engine_purpose
+  is 'Назначение двигателя';
+comment on column U1.DWH_AUTO_VIN.ar_drive
+  is 'Привод из Авто ру';
+comment on column U1.DWH_AUTO_VIN.ar_kpp_type
+  is 'Тип КПП из Авто ру';
+comment on column U1.DWH_AUTO_VIN.ar_engine_type
+  is 'Тип двигателя из Авто ру';
+comment on column U1.DWH_AUTO_VIN.ar_market
+  is 'Рынок сбыта';
+comment on column U1.DWH_AUTO_VIN.ar_car_type
+  is 'Тип транспортного средства из Авто ру';
+comment on column U1.DWH_AUTO_VIN.ar_origin_country
+  is 'Страна происхождения';
+comment on column U1.DWH_AUTO_VIN.ar_manufacturer
+  is 'Производитель';
+comment on column U1.DWH_AUTO_VIN.ar_manufacture_date
+  is 'Дата производства';
+comment on column U1.DWH_AUTO_VIN.ar_engine_volume
+  is 'Объем двигателя из Авто ру';
+comment on column U1.DWH_AUTO_VIN.ar_assemblage_countr
+  is 'Страна сборки';
+comment on column U1.DWH_AUTO_VIN.ar_body_type
+  is 'Тип кузова';
+comment on column U1.DWH_AUTO_VIN.ar_mark
+  is 'Марка';
+comment on column U1.DWH_AUTO_VIN.ar_manufacture_factory
+  is 'Сборочный завод';
+comment on column U1.DWH_AUTO_VIN.ar_model
+  is 'Модель из Авто ру';
+comment on column U1.DWH_AUTO_VIN.ar_model_year
+  is 'Год модели';
+comment on column U1.DWH_AUTO_VIN.auto_vin_id
+  is 'Идентификатор ТС';
+comment on column U1.DWH_AUTO_VIN.ar_parsed_flg
+  is 'Расшифровали ли с AUTO.RU (0,1)';
+comment on column U1.DWH_AUTO_VIN.esbd_parsed_flg
+  is 'Расшифровали ли с ЕСБД (0,1)';
+comment on column U1.DWH_AUTO_VIN.esbd_mark
+  is 'Идентификатор марки ESDB';
+comment on column U1.DWH_AUTO_VIN.esbd_engine_volume
+  is 'Объем двигателя (куб.см.) из ESBD';
+comment on column U1.DWH_AUTO_VIN.esbd_engine_number
+  is 'Номер двигателя';
+comment on column U1.DWH_AUTO_VIN.esbd_engine_power
+  is 'Мощность двигателя (квт.)';
+comment on column U1.DWH_AUTO_VIN.esbd_is_right_drive_flg
+  is 'Признак расположения руля (N – слева, Y – справа)';
+comment on column U1.DWH_AUTO_VIN.esbd_color
+  is 'Цвет';
+comment on column U1.DWH_AUTO_VIN.esbd_type
+  is 'Тип ТС из ESBD';
+comment on column U1.DWH_AUTO_VIN.esbd_issue_year
+  is 'Год выпуска ТС';
+comment on column U1.DWH_AUTO_VIN.esbd_issue_month
+  is 'Месяц выпуска ТС';
+comment on column U1.DWH_AUTO_VIN.esbd_model
+  is 'Модель из ESBD';
+comment on column U1.DWH_AUTO_VIN.vin
+  is 'VIN код';
+comment on column U1.DWH_AUTO_VIN.source_client_id
+  is 'ID клиента в источнике';
+comment on column U1.DWH_AUTO_VIN.dwh_client_id
+  is 'DWH_ID клиента';
+comment on column U1.DWH_AUTO_VIN.rbo_client_id
+  is 'RBO_ID клиента';
+comment on column U1.DWH_AUTO_VIN.valid_flg
+  is 'VIN-код правилен (1 - да; 0 - нет)';
+comment on column U1.DWH_AUTO_VIN.avg_current_price
+  is 'Средняя текущая цена марки автомобиля';
+comment on column U1.DWH_AUTO_VIN.avg_current_price_3y
+  is 'Средняя текущая цена марки автомобиля (+/- 1 год)';
+comment on column U1.DWH_AUTO_VIN.avg_deal_price
+  is 'Средня цена марки автомобиля на момент совершения сделки';
+comment on column U1.DWH_AUTO_VIN.avg_deal_price_3y
+  is 'Средняя цена марки автомобиля на момент совершения сделки (+/- 1 год)';
+create index U1.DWH_AUTO_VIN_IDX on U1.DWH_AUTO_VIN (AUTO_VIN_DWH_ID, MVD_DATE, MVD_STATUS_ID, MVD_IIN)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select, insert, update, delete on U1.DWH_AUTO_VIN to ETLSAS;
+grant select on U1.DWH_AUTO_VIN to LOADDB;
+grant select on U1.DWH_AUTO_VIN to LOADER;
+

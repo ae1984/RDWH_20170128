@@ -1,0 +1,32 @@
+﻿create table U1.T_TMP_E_ASKHAT
+(
+  id                NUMBER,
+  iin               NUMBER,
+  client_id         NUMBER,
+  opt_date          DATE,
+  breed             VARCHAR2(20),
+  age               NUMBER,
+  mrt_status        NUMBER,
+  gender            VARCHAR2(20),
+  lifetime_term     NUMBER,
+  op_sum            NUMBER,
+  prod_qty          VARCHAR2(20),
+  prod_seg_detailed VARCHAR2(60),
+  target            NUMBER
+)
+tablespace USERS_ARC
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+grant select on U1.T_TMP_E_ASKHAT to LOADDB;
+grant select on U1.T_TMP_E_ASKHAT to LOADER;
+

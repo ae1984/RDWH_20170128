@@ -1,0 +1,119 @@
+﻿create materialized view U1.M_TMP_TOP_MPPOS_DSO
+refresh force on demand
+as
+select c.yy_mm_start_last, fc.pos_name,/*fc.expert_name,*/fc.pos_code, fc.x_dnp_name,
+
+round(count(case when c.is_fraud_2_0 = 1 then c.contract_id end) / count(*) * 100, 2) as is_fraud_2_0_con_rate,
+    round(count(case when c.is_fraud_2_1 = 1 then c.contract_id end) / count(*) * 100, 2) as is_fraud_2_1_con_rate,
+    round(count(case when c.is_fraud_2_3 = 1 then c.contract_id end) / count(*) * 100, 2) as is_fraud_2_3_con_rate,
+    round(count(case when c.is_fraud_2_4 = 1 then c.contract_id end) / count(*) * 100, 2) as is_fraud_2_4_con_rate,
+
+
+    /*round(count(case when c.is_fraud_1 = 1 then c.contract_id end) / count(*) * 100, 2) as fraud_1_con_rate,
+    round(sum(case when c.is_fraud_1 = 1 then c.total_debt_last_rep_new end) / 1000000) as fraud_1_total_debt_mln,
+    round(sum(case when c.is_fraud_1 = 1 then c.total_debt_last_rep_new end)) as fraud_1_total_debt,
+
+    round(count(case when c.delinq_rate_pmt_4_0001 > 0 then c.contract_id end) / count(*) * 100, 2) as del_rate_pmt_4_0001_con_rate,
+    round(sum(case when c.delinq_rate_pmt_4_0001 > 0 then c.total_debt_last_rep_new end) / 1000000) as del_rate_pmt_4_0001_totaldebtm,
+    round(sum(case when c.delinq_rate_pmt_4_0001 > 0 then c.total_debt_last_rep_new end)) as del_rate_pmt_4_0001_totaldebt,*/
+
+    -- ПРОВЕРКА
+    count(*) as con_cnt, count(distinct c.contract_id) as con_dist_cnt -- проверка - если эти два поля равны, значит выборка верна
+
+    -- ПРОДАЖИ
+    /*round(sum(c.max_debt_used) / 1000000) as sales_mln, -- USE THIS! - продажи, млн
+    round(sum(c.max_debt_used)) as sales, -- продажи
+
+    round(sum(c.max_debt_used_b_w) / 1000000) as sales_b_w_mln, -- продажи по BAD и WATCH клиентам, млн
+    round(sum(c.max_debt_used_b) / 1000000) as sales_b_mln, -- продажи по BAD клиентам, млн
+    round(sum(c.max_debt_used_w) / 1000000) as sales_w_mln, -- продажи по WATCH клиентам, млн
+    round(sum(c.max_debt_used_g) / 1000000) as sales_g_mln, -- продажи по GOOD клиентам, млн
+    round(sum(c.max_debt_used_npl) / 1000000) as sales_npl_mln, -- продажи NPL, млн
+
+    round(sum(c.max_debt_used_b_w)) as sales_b_w, -- продажи по BAD и WATCH клиентам
+    round(sum(c.max_debt_used_b)) as sales_b, -- продажи по BAD клиентам
+    round(sum(c.max_debt_used_w)) as sales_w, -- продажи по WATCH клиентам
+    round(sum(c.max_debt_used_g)) as sales_g, -- продажи по GOOD клиентам
+    round(sum(c.max_debt_used_npl)) as sales_npl, -- продажи NPL
+
+    round(sum(c.max_debt_used_b_w) / sum(c.max_debt_used) * 100, 1) as sales_b_w_to_sales_ratio,
+
+
+    -- ПРОСРОЧКА
+    round(sum(c.delinq_rate_b_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b_w, -- USE THIS! - просрочка всего по-новому
+    round(sum(c.delinq_rate * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate, -- просрочка всего по-старому
+    round(sum(c.delinq_rate_pmt_1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_1, -- USE THIS! - просрочка 1-го платежа
+
+    round(sum(c.delinq_rate_npl * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_npl, -- USE THIS! - просрочка по NPL (>=90 days)
+    round(sum(c.delinq_rate_b * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_b, -- просрочка по BAD клиентам
+    round(sum(c.delinq_rate_w * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_w, -- просрочка по WATCH клиентам
+    round(sum(c.delinq_rate_g * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_g, -- просрочка по GOOD клиентам
+
+    round(sum(c.delinq_rate_pmt_2_x1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_2_x1,
+    round(sum(c.delinq_rate_pmt_2_01 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_2_01,
+    round(sum(c.delinq_rate_pmt_3_xx1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_3_xx1,
+    round(sum(c.delinq_rate_pmt_3_001 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_3_001,
+    round(sum(c.delinq_rate_pmt_4_xxx1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_4_xxx1,
+    round(sum(c.delinq_rate_pmt_4_0001 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_4_0001,
+    round(sum(c.delinq_rate_pmt_5_xxxx1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_5_xxxx1,
+    round(sum(c.delinq_rate_pmt_5_00001 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_5_00001,
+    round(sum(c.delinq_rate_pmt_6_xxxxx1 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_6_xxxxx1,
+    round(sum(c.delinq_rate_pmt_6_000001 * c.max_debt_used) / sum(c.max_debt_used),1) as del_rate_pmt_6_000001,
+
+    round(sum(c.delinq_rate_frd_1 * c.max_debt_used) / sum(c.max_debt_used),1) as delinq_rate_frd_1,
+ \*   round(sum(c.delinq_rate_frd_2 * c.max_debt_used) / sum(c.max_debt_used),1) as delinq_rate_frd_2,*\
+
+    round(count(case when c.delinq_rate > 0 then c.contract_number end) /
+               count(c.contract_number) * 100, 1) as del_rate_by_quant,
+    round(count(case when c.delinq_rate_pmt_1 > 0 then c.contract_number end) /
+               count(c.contract_number) * 100, 1) as del_rate_pmt_1_by_quant,
+
+    round(count(case when c.delinq_rate > 0 then c.contract_number end) /
+               count(case when c.max_debt_used > 0 then c.contract_number end) * 100, 1) as del_rate_by_quant_w_debt,
+    round(count(case when c.delinq_rate_pmt_1 > 0 then c.contract_number end) /
+               count(case when c.max_debt_used > 0 then c.contract_number end) * 100, 1) as del_rate_pmt_1_by_quant_w_debt,
+
+    -- ПРИБЫЛЬ
+    round(sum(c.profit) / 1000000) as profit_mln, -- USE THIS! - прибыль, млн (доход - расход)
+    round(sum(c.income) / 1000000) as income_mln, -- доход, млн (40% от продаж по GOOD клиентам)
+    round(sum(c.expense) / 1000000) as expense_mln, -- расход, млн (текущая задолженность по BAD и WATCH клиентам)
+
+    round(sum(c.profit)) as profit, -- прибыль
+    round(sum(c.income)) as income, -- доход
+    round(sum(c.expense)) as expense, -- расход
+
+    round(sum(c.profit)/sum(c.max_debt_used) * 100, 1) as profit_rate, -- уровень прибыли
+
+    -- ДОП ИНФОРМАЦИЯ
+    avg(c.total_debt_last_rep_new) as total_debt_last_rep_new_avg,
+    avg(c.max_debt_used) as max_debt_used_avg,
+    median(c.total_debt_last_rep_new) as total_debt_last_rep_new_med,
+    median(c.max_debt_used) as max_debt_used_med,
+    max(c.total_debt_last_rep_new) as total_debt_last_rep_new_max,
+    max(c.max_debt_used) as max_debt_used_max
+*/
+from M_CONTRACT_CAL_DEL c
+--join M_CASH_TRANSACTIONS_RBO_VERA v on c.contract_number = v.contract_number and
+                                   --v.pmt_cnt_1 = 3 --and v.pmt_cnt_1 < 5 --and -- 3 или 4 платежа внесли в день выдачи
+                                        --and v.credit_product_card_num is not null -- на карту
+join (select fcc.folder_id,
+             fcc.contract_number,
+             fcc.expert_name,
+             fcc.pos_code,
+             fcc.pos_name,
+             fcc.x_dnp_name
+             /*max(fcc.pos_code) keep (dense_rank last order by fcc.contract_date_begin) over(partition by fcc.expert_name) pos_code,
+             max(fcc.pos_name) keep (dense_rank last order by fcc.contract_date_begin) over(partition by fcc.expert_name) pos_name*/
+      from M_FOLDER_CON_CANCEL fcc
+      where fcc.pos_type = 'ОТДЕЛЕНИЕ' -- кредиты в отделениях
+        /*and fcc.expert_name not like '%(БЛОК)%'*/
+      ) fc on fc.folder_id = c.folder_id_first
+          and fc.contract_number = c.contract_number
+
+--where c.yy_mm_start_last in (/*'2014 - 02','2014 - 03','2014 - 04',*/'2014 - 05','2014 - 06','2014 - 07')
+group by /*fc.expert_name,*/ fc.pos_code, fc.pos_name, fc.x_dnp_name, c.yy_mm_start_last
+having sum(c.max_debt_used) > 0;
+grant select on U1.M_TMP_TOP_MPPOS_DSO to LOADDB;
+grant select on U1.M_TMP_TOP_MPPOS_DSO to LOADER;
+
+

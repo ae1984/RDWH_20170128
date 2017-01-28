@@ -1,0 +1,29 @@
+﻿create materialized view U1.M_APP_MINER_GCVP
+build deferred
+refresh complete on demand
+as
+select distinct   --добавлен из-за дублирования gcvp_report_id в V_GCVP_REPORT
+       am.app_id,
+       fcl.gcvp_report_id,
+       gr.rep_date,
+       gr.error_code as gcvp_error_status,
+       gr.salary,
+       gr.max_pmt_date,
+       gr.min_pmt_date,
+       gr.pmts_count_from_rep,
+       gr.pmts_count_all,
+       gr.pmts_count_10d,
+       gr.pmts_count_20d,
+       gr.pmts_count_30d,
+       gr.pmts_count_40d,
+       gr.pmts_count_50d,
+       gr.pmts_count_60d,
+       gr.rep_pmt_max_date_diff,
+       gr.rep_pmt_min_date_diff,
+       gr.org_count
+  from u1.M_APP_MINER_BAS am
+  left join u1.M_FOLDER_CON_LINK fcl on fcl.app_id = am.app_id
+  left join u1.V_GCVP_REPORT      gr on gr.gcvp_rep_id = fcl.gcvp_report_id;
+grant select on U1.M_APP_MINER_GCVP to LOADDB;
+
+

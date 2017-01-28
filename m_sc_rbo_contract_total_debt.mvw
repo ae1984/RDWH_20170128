@@ -1,0 +1,15 @@
+﻿create materialized view U1.M_SC_RBO_CONTRACT_TOTAL_DEBT
+build deferred
+refresh force on demand
+as
+select t.rfo_client_id,
+       sum(case when tt.total_debt > 0 then tt.total_debt end) as active_total_debt,
+       count(distinct case when tt.total_debt > 0 then t.rbo_contract_id end) as active_con_cnt,
+       max(tt.del_days_max) as total_max_delay
+from u1.M_RBO_CONTRACT_BAS t
+left join u1.M_RBO_CONTRACT_DEL_BAS tt on tt.rbo_contract_id = t.rbo_contract_id
+group by t.rfo_client_id;
+grant select on U1.M_SC_RBO_CONTRACT_TOTAL_DEBT to LOADDB;
+grant select on U1.M_SC_RBO_CONTRACT_TOTAL_DEBT to LOAD_MO;
+
+

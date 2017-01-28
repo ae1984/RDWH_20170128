@@ -1,0 +1,75 @@
+﻿create table U1.UPDATE_LOG
+(
+  id            NUMBER,
+  object_name   VARCHAR2(100),
+  begin_refresh DATE,
+  end_refresh   DATE,
+  status        VARCHAR2(30)
+)
+tablespace USERS_F
+  pctfree 10
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  );
+comment on table U1.UPDATE_LOG
+  is 'Логирование обновления объектов';
+comment on column U1.UPDATE_LOG.id
+  is 'Идентификатор таблицы';
+comment on column U1.UPDATE_LOG.object_name
+  is 'Наименование объекта';
+comment on column U1.UPDATE_LOG.begin_refresh
+  is 'Дата начала обновления';
+comment on column U1.UPDATE_LOG.end_refresh
+  is 'Дата окончания обновления';
+create index U1.IDX_UPDATE_LOG_1 on U1.UPDATE_LOG (ID)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_UPDATE_LOG_2 on U1.UPDATE_LOG (BEGIN_REFRESH)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+create index U1.IDX_UPDATE_LOG_3 on U1.UPDATE_LOG (END_REFRESH)
+  tablespace USERS_F
+  pctfree 10
+  initrans 2
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 1M
+    minextents 1
+    maxextents unlimited
+  )
+  nologging;
+grant select on U1.UPDATE_LOG to LOADDB;
+grant select on U1.UPDATE_LOG to LOADER;
+grant select on U1.UPDATE_LOG to LOAD_MO;
+grant select, insert, update, alter on U1.UPDATE_LOG to RISK_ALEXEY;
+grant select, insert, update, alter on U1.UPDATE_LOG to RISK_ALEXEY2;
+grant select on U1.UPDATE_LOG to RTS_RDWH;
+

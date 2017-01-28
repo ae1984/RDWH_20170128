@@ -1,0 +1,31 @@
+﻿create materialized view U1.M_PRESC_CL_BLANK_CRED_CNT
+refresh force on demand
+as
+select rfo_client_id,
+       count(*) cnt_blank
+from (select f.c_client as rfo_client_id,
+              f.id,
+              max(case when ct.c_code in ('КОЛ_АНК_БЛН_КРД', 'ТЕХПРИЧИНА') then 1 else 0 end) as is_tech_reason
+       from V_RFO_Z#CM_CHECKPOINT cp
+       join V_RFO_Z#FOLDERS f on f.ID = cp.id
+       join V_RFO_Z#BUS_PROCESS bp on bp.id = f.c_business and
+                                      bp.c_code in ('KAS_CREDIT_CASH_PRIV',
+                                                    'KAS_CREDIT_CASH_PRIV_PC',
+                                                    'OPEN_CRED_PRIV',
+                                                    'OPEN_CRED_PRIV_PC',
+                                                    'KAS_AUTO_CRED_PRIV',
+                                                    'MORT',
+                                                    'OPEN_PC',
+                                                    'SET_REVOLV')
+
+       left join v_rfo_Z#KAS_CANCEL c on f.id = c.c_folders
+       left join v_rfo_Z#KAS_CANCEL_TYPES ct on ct.id = c.c_type
+       where trunc(cp.c_date_create) > trunc(sysdate - 30)
+       group by f.c_client, f.id)
+where is_tech_reason = 0
+group by rfo_client_id;
+grant select on U1.M_PRESC_CL_BLANK_CRED_CNT to LOADDB;
+grant select on U1.M_PRESC_CL_BLANK_CRED_CNT to LOADER;
+grant select on U1.M_PRESC_CL_BLANK_CRED_CNT to LOAD_MO;
+
+

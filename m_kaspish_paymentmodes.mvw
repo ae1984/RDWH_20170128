@@ -1,0 +1,11 @@
+﻿create materialized view U1.M_KASPISH_PAYMENTMODES
+build deferred
+refresh force on demand
+as
+select
+"HJMPTS","TYPEPKSTRING","OWNERPKSTRING","MODIFIEDTS","CREATEDTS","PK","CODE","ACTIVEFLAG","PAYMENTINFOTYPE","ACLTS","PROPTS","P_NET"
+from kaspi.paymentmodes@ks_std
+where rownum >=0;
+grant select on U1.M_KASPISH_PAYMENTMODES to LOADDB;
+
+

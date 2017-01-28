@@ -1,0 +1,8 @@
+﻿create sequence U1.TMP_PURSHARED_T2_SQ
+minvalue 1
+maxvalue 100000
+start with 41
+increment by 1
+cache 10
+cycle;
+

@@ -1,0 +1,33 @@
+﻿create table U1.T_GBQ_EVENT_INFO
+(
+  id             NUMBER,
+  hit_id         VARCHAR2(50),
+  event_category VARCHAR2(40),
+  event_action   VARCHAR2(40),
+  event_label    VARCHAR2(40),
+  event_value    VARCHAR2(100),
+  idate          TIMESTAMP(6)
+)
+tablespace USERS_F
+  pctfree 0
+  initrans 1
+  maxtrans 255
+  storage
+  (
+    initial 64K
+    next 8M
+    minextents 1
+    maxextents unlimited
+  )
+compress
+nologging;
+comment on table U1.T_GBQ_EVENT_INFO
+  is 'Информация о событиях';
+comment on column U1.T_GBQ_EVENT_INFO.id
+  is 'Идентификатор';
+comment on column U1.T_GBQ_EVENT_INFO.hit_id
+  is 'ID посещения страницы';
+comment on column U1.T_GBQ_EVENT_INFO.event_category
+  is 'Категория события';
+grant select on U1.T_GBQ_EVENT_INFO to LOADDB;
+

@@ -1,0 +1,14 @@
+﻿create materialized view U1.M_DWH_PLAN_CARD_3PMT
+refresh complete on demand
+as
+select t.date_plan_pay as date_due,
+       t.dcard_number as deal_number,
+       t.cardplanr_number as date_due_rn,
+       sum(t.plan_payment_amount) as pmt_amount
+  from u1.M_DWH_PLAN_OPER_CARD t
+ where t.cardplanr_number < 4
+ group by t.date_plan_pay, t.dcard_number, t.cardplanr_number;
+grant select on U1.M_DWH_PLAN_CARD_3PMT to LOADDB;
+grant select on U1.M_DWH_PLAN_CARD_3PMT to LOADER;
+
+

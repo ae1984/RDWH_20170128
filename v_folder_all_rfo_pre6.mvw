@@ -1,0 +1,14 @@
+﻿create materialized view U1.V_FOLDER_ALL_RFO_PRE6
+build deferred
+refresh complete on demand
+as
+select /*+parallel(2)*/ cp.id, min(round(60*1440*(h.c_line_time - cp.c_date_create)/5)*5) as manager_input_time
+from V_RFO_Z#CM_CHECKPOINT cp
+join V_RFO_Z#CM_HISTORY h on h.collection_id = cp.c_history
+join V_RFO_Z#CM_LINE l on l.id = h.c_line
+join V_RFO_Z#CM_POINT p1 on p1.id = l.c_from_p
+join V_RFO_Z#CM_POINT p2 on p2.id = l.c_to_p and p1.c_name = 'Проверка АСОКР'
+group by cp.id;
+grant select on U1.V_FOLDER_ALL_RFO_PRE6 to LOADDB;
+
+

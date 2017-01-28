@@ -1,0 +1,36 @@
+﻿create materialized view U1.M_OUT_CLAIM_ONL1
+refresh force on demand
+as
+select /*+parallel(3)*/
+client_iin,
+req_cnt,
+con_cnt,
+req_cnt - rej_cnt as approved_cnt
+from
+(
+select
+coalesce(t.iin, t1.iin) as client_iin,
+count(distinct a.id) as req_cnt,
+count(distinct case when coalesce(t.is_credit_issued, t1.is_credit_issued) = 1 then a.id end) as con_cnt,
+count(distinct case when coalesce(t.is_credit_issued, t1.is_credit_issued) = 0 and
+                         (
+                         coalesce(t.cancel_prescoring, t1.cancel_prescoring) = 1 or
+                         coalesce(t.cancel_middle_office, t1.cancel_middle_office) = 1 or
+                         coalesce(t.cancel_cpr_aa, t1.cancel_cpr_aa) = 1 or
+                         (coalesce(t.cancel_undefined, t1.cancel_undefined) = 1 and t.folder_state not in ('ЗАКАЗ ОТМЕНЕН','ОТМЕНЕНО', 'ПРОСРОЧЕННАЯ')) or
+                         (coalesce(t.cancel_manager, t1.cancel_manager) = 1 /*and xx.folder_id is not null*/) or
+                         coalesce(t.cancel_verificator, t1.cancel_verificator) = 1 or
+                         coalesce(t.cancel_controller, t1.cancel_controller) = 1
+                         ) and
+                         coalesce(t.folder_state, coalesce(t1.folder_state, 'Пусто')) not in ('НА ВЫДАЧЕ ТОВАРА', 'ЗАПОЛНЕНИЕ АНКЕТЫ КЛИЕНТА', 'ПРОСРОЧЕННАЯ', 'СОГЛАСИЕ ПКБ/ГЦВП')  then a.id end) as rej_cnt
+
+from u1.V_RFO_Z#KAS_ONLINE_CLAIM a
+join u1.V_RFO_Z#KAS_ONLINE_BUY f on a.c_buy_ref = f.id and
+                                         trunc(f.c_date_create)>=to_date('15-12-2016','dd-mm-yyyy')
+left join u1.M_FOLDER_CON_CANCEL t on t.claim_id = a.id
+left join u1.M_FOLDER_CON_CANCEL_ONLINE t1 on t1.claim_id = a.id
+group by coalesce(t.iin, t1.iin)
+) where con_cnt >= 5 or req_cnt - rej_cnt >=5;
+grant select on U1.M_OUT_CLAIM_ONL1 to LOADDB;
+
+
